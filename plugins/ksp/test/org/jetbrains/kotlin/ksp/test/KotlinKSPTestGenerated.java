@@ -33,6 +33,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/allFunctions.kt");
     }
 
+    @TestMetadata("annotationValue.kt")
+    public void testAnnotationValue() throws Exception {
+        runTest("plugins/ksp/testData/api/annotationValue.kt");
+    }
+
     @TestMetadata("builtInTypes.kt")
     public void testBuiltInTypes() throws Exception {
         runTest("plugins/ksp/testData/api/builtInTypes.kt");
@@ -41,11 +46,6 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
     @TestMetadata("companion.kt")
     public void testCompanion() throws Exception {
         runTest("plugins/ksp/testData/api/companion.kt");
-    }
-
-    @TestMetadata("const.kt")
-    public void testConst() throws Exception {
-        runTest("plugins/ksp/testData/api/const.kt");
     }
 
     @TestMetadata("hello.kt")

@@ -5,12 +5,16 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
-import org.jetbrains.kotlin.resolve.constants.ArrayValue
-import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 
 class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnotation {
     companion object {
@@ -34,27 +38,37 @@ class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnot
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
     }
+
+    override fun toString(): String {
+        return "@${shortName.asString()}"
+    }
 }
 
-/**
- * Type information will be lost in KSValueArgument anyway.
- */
-fun <T> ConstantValue<T>.toValue(): Any? {
-    return when (this) {
-        is ArrayValue -> value.map { it.toValue() }
-        else -> value
+private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
+    val ksName = KSNameImpl(this.asSingleFqName().asString())
+    return ResolverImpl.instance.getClassDeclarationByName(ksName)
+}
+
+private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProjectedType()
+
+private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
+    is AnnotationValue -> KSAnnotationDescriptorImpl.getCached(value)
+    is ArrayValue -> value.map { it.toValue() }
+    is EnumValue -> value.first.findKSClassDeclaration()?.declarations?.find {
+        it is KSEnumEntryDeclaration && it.simpleName.asString() == value.second.asString()
+    }?.let { (it as KSClassDeclaration).asStarProjectedType() }
+    is KClassValue -> when (val classValue = value) {
+        is KClassValue.Value.NormalClass -> classValue.classId.findKSType()
+        is KClassValue.Value.LocalClass -> KSTypeImpl.getCached(classValue.type)
     }
+    is ErrorValue, is NullValue -> null
+    else -> value
 }
 
 fun AnnotationDescriptor.createKSValueArguments(): List<KSValueArgument> =
     allValueArguments.map { (name, constantValue) ->
-        val value = constantValue.toValue()
         KSValueArgumentLiteImpl.getCached(
             KSNameImpl.getCached(name.asString()),
-            when (value) {
-                is AnnotationDescriptor -> KSAnnotationDescriptorImpl.getCached(value)
-                // TODO: KClass
-                else -> value
-            }
+            constantValue.toValue()
         )
     }
