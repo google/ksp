@@ -162,8 +162,8 @@ class ResolverImpl(
 
     private val DeclarationDescriptor.containingScope: LexicalScope
         get() {
+            findPsi()?.let { return resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it) }
             val containingDescriptor = this.containingDeclaration
-            containingDescriptor?.findPsi()?.let { return resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it) }
             return when (containingDescriptor) {
                 is ClassDescriptorWithResolutionScopes -> containingDescriptor.scopeForInitializerResolution
                 is PackageFragmentDescriptor -> LexicalScope.Base(containingDescriptor.getMemberScope().memberScopeAsImportingScope(), this)
