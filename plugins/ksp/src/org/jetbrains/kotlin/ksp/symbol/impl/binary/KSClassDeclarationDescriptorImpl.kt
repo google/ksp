@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSEnumEntryDeclarationImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
@@ -110,9 +111,10 @@ class KSClassDeclarationDescriptorImpl(val descriptor: ClassDescriptor) : KSClas
                     is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(
                         it
                     )
-                    is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(
-                        it
-                    )
+                    is ClassDescriptor -> when (it.kind) {
+                        org.jetbrains.kotlin.descriptors.ClassKind.ENUM_ENTRY -> KSEnumEntryDeclarationDescriptorImpl.getCached(it)
+                        else -> KSClassDeclarationDescriptorImpl.getCached(it)
+                    }
                     else -> throw IllegalStateException()
                 }
             }
