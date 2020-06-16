@@ -494,6 +494,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
       repositories {
               gradlePluginPortal()
               maven("https://dl.bintray.com/kotlin/kotlin-eap")
+              google()
       }
   }
   ```
