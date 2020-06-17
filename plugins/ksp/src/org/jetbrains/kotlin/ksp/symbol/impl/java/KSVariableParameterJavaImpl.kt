@@ -43,6 +43,8 @@ class KSVariableParameterJavaImpl(val psi: PsiParameter) : KSVariableParameter {
         KSTypeReferenceJavaImpl.getCached(psi.type)
     }
 
+    override val hasDefault: Boolean = TODO()
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitVariableParameter(this, data)
     }

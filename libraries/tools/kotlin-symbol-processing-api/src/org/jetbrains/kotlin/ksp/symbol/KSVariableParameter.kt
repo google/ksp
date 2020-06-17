@@ -44,4 +44,9 @@ interface KSVariableParameter : KSAnnotated {
      * True if it is a variable
      */
     val isVar: Boolean
+
+    /**
+     * True if it has a default value
+     */
+    val hasDefault: Boolean
 }

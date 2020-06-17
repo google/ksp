@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
 
 class KSVariableParameterDescriptorImpl(val descriptor: ValueParameterDescriptor) : KSVariableParameter {
@@ -38,6 +39,8 @@ class KSVariableParameterDescriptorImpl(val descriptor: ValueParameterDescriptor
     override val type: KSTypeReference by lazy {
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
+
+    override val hasDefault: Boolean = descriptor.hasDefaultValue()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitVariableParameter(this, data)

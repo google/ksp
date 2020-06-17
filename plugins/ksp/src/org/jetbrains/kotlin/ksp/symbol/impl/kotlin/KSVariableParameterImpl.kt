@@ -43,6 +43,8 @@ class KSVariableParameterImpl(val ktParameter: KtParameter) : KSVariableParamete
         ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) }
     }
 
+    override val hasDefault: Boolean = ktParameter.hasDefaultValue()
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitVariableParameter(this, data)
     }

@@ -3,6 +3,7 @@
 // EXPECTED:
 // class: Foo
 // bar(): kotlin.Boolean
+// baz(kotlin.String,kotlin.String(hasDefault),kotlin.String(hasDefault)): kotlin.Boolean
 // contains(kotlin.Number): kotlin.Boolean
 // containsAll(kotlin.collections.Collection): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
@@ -26,6 +27,10 @@ abstract class Foo : C(), List<out Number> {
     }
 
     fun bar(): Boolean {
+        return false
+    }
+
+    fun baz(input: String, input2: String? = null, input3: String = ""): Boolean {
         return false
     }
 }

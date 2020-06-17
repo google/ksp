@@ -28,7 +28,14 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
     inner class AllFunctionsVisitor : KSVisitorVoid() {
         fun KSFunctionDeclaration.toSignature(): String {
             return "${this.simpleName.asString()}" +
-                    "(${this.parameters.map { it.type?.resolve()?.declaration?.qualifiedName?.asString() }.joinToString(",")})" +
+                    "(${this.parameters.map { 
+                        buildString {
+                            append(it.type?.resolve()?.declaration?.qualifiedName?.asString())
+                            if (it.hasDefault) {
+                                append("(hasDefault)")
+                            }
+                        }
+                    }.joinToString(",")})" +
                     ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString() ?: ""}"
         }
 
