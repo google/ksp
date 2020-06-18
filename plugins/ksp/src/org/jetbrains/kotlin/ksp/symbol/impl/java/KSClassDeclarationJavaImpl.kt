@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.java
 
-import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
@@ -64,10 +63,10 @@ class KSClassDeclarationJavaImpl(val psi: PsiClass) : KSClassDeclaration {
     }
 
     override val declarations: List<KSDeclaration> by lazy {
-        psi.allFields.map { KSPropertyDeclarationJavaImpl.getCached(it) } +
-                psi.allInnerClasses.map { KSClassDeclarationJavaImpl.getCached(it) } +
+        psi.fields.map { KSPropertyDeclarationJavaImpl.getCached(it) } +
+                psi.innerClasses.map { KSClassDeclarationJavaImpl.getCached(it) } +
                 psi.constructors.map { KSFunctionDeclarationJavaImpl.getCached(it) } +
-                psi.allMethods.map { KSFunctionDeclarationJavaImpl.getCached(it) }
+                psi.methods.map { KSFunctionDeclarationJavaImpl.getCached(it) }
     }
 
     override val modifiers: Set<Modifier> by lazy {
@@ -78,10 +77,6 @@ class KSClassDeclarationJavaImpl(val psi: PsiClass) : KSClassDeclaration {
         }
         if (psi.isEnum) {
             modifiers.add(Modifier.ENUM)
-        }
-        // inner class has a reference to out class object
-        if (psi.containingClass != null && !psi.hasModifier(JvmModifier.STATIC)) {
-            modifiers.add(Modifier.INNER)
         }
         modifiers
     }

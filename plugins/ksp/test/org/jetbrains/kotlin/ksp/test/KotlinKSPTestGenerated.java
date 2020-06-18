@@ -53,6 +53,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/hello.kt");
     }
 
+    @TestMetadata("javaModifiers.kt")
+    public void testJavaModifiers() throws Exception {
+        runTest("plugins/ksp/testData/api/javaModifiers.kt");
+    }
+
     @TestMetadata("javaTypes.kt")
     public void testJavaTypes() throws Exception {
         runTest("plugins/ksp/testData/api/javaTypes.kt");

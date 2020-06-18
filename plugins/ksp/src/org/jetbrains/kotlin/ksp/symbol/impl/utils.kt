@@ -26,6 +26,20 @@ import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 
+val jvmModifierMap = mapOf(
+    JvmModifier.PUBLIC to Modifier.PUBLIC,
+    JvmModifier.PRIVATE to Modifier.PRIVATE,
+    JvmModifier.ABSTRACT to Modifier.ABSTRACT,
+    JvmModifier.FINAL to Modifier.FINAL,
+    JvmModifier.PROTECTED to Modifier.PROTECTED,
+    JvmModifier.STATIC to Modifier.JAVA_STATIC,
+    JvmModifier.STRICTFP to Modifier.JAVA_STRICT,
+    JvmModifier.NATIVE to Modifier.JAVA_NATIVE,
+    JvmModifier.SYNCHRONIZED to Modifier.JAVA_SYNCHRONIZED,
+    JvmModifier.TRANSIENT to Modifier.JAVA_TRANSIENT,
+    JvmModifier.VOLATILE to Modifier.JAVA_VOLATILE
+)
+
 fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
     val modifiers = mutableSetOf<Modifier>()
     val modifierList = this.modifierList ?: return modifiers
@@ -69,22 +83,13 @@ fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
 
 fun PsiModifierListOwner.toKSModifiers(): Set<Modifier> {
     val modifiers = mutableSetOf<Modifier>()
-    val modifierMap = mapOf(
-        JvmModifier.PUBLIC to Modifier.PUBLIC,
-        JvmModifier.PRIVATE to Modifier.PRIVATE,
-        JvmModifier.ABSTRACT to Modifier.ABSTRACT,
-        JvmModifier.FINAL to Modifier.FINAL,
-        JvmModifier.PROTECTED to Modifier.PROTECTED
-    )
-
     modifiers.addAll(
-        modifierMap.entries.filter { this.hasModifier(it.key) }
+        jvmModifierMap.entries.filter { this.hasModifier(it.key) }
             .map { it.value }
             .toSet()
     )
-
-    if (!modifiers.contains(Modifier.FINAL)) {
-        modifiers.add(Modifier.OPEN)
+    if (this.modifierList?.hasExplicitModifier("default") == true) {
+        modifiers.add(Modifier.JAVA_DEFAULT)
     }
     return modifiers
 }

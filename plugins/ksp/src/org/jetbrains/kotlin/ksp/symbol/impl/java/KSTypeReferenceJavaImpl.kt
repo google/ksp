@@ -19,8 +19,7 @@ class KSTypeReferenceJavaImpl(val psi: PsiType) : KSTypeReference {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }
 
-    override val modifiers: Set<Modifier>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val modifiers: Set<Modifier> = emptySet()
 
     override val element: KSReferenceElement by lazy {
         val type = if (psi is PsiWildcardType) {
