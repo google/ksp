@@ -17,6 +17,8 @@ class KSVariableParameterImpl(val ktParameter: KtParameter) : KSVariableParamete
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSVariableParameterImpl(ktParameter) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotations: List<KSAnnotation> by lazy {
         ktParameter.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

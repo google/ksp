@@ -26,8 +26,9 @@ class KSFunctionDeclarationDescriptorImpl(val descriptor: FunctionDescriptor) : 
         fun getCached(descriptor: FunctionDescriptor) = cache.getOrPut(descriptor) { KSFunctionDeclarationDescriptorImpl(descriptor) }
     }
 
-    override val containingFile: KSFile? = null
+    override val origin = Origin.CLASS
 
+    override val containingFile: KSFile? = null
 
     override val parentDeclaration: KSDeclaration? by lazy {
         val containingDescriptor = descriptor.parents.first()

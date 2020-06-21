@@ -30,6 +30,8 @@ class KSClassDeclarationJavaImpl(val psi: PsiClass) : KSClassDeclaration {
         fun getCached(psi: PsiClass) = cache.getOrPut(psi) { KSClassDeclarationJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

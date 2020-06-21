@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSTypeArgumentJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.types.KotlinType
@@ -116,6 +117,9 @@ fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
         Visibilities.PROTECTED -> modifiers.add(Modifier.PROTECTED)
         Visibilities.PRIVATE -> modifiers.add(Modifier.PRIVATE)
         Visibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
+        // Since there is no modifier for package-private, use No modifier to tell if a symbol from binary is package private.
+        JavaVisibilities.PACKAGE_VISIBILITY -> Unit
+        else -> throw IllegalStateException("unhandled visibility: ${this.visibility}")
     }
     return modifiers
 }

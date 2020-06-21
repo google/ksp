@@ -20,6 +20,8 @@ class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration 
         fun getCached(psi: PsiMethod) = cache.getOrPut(psi) { KSFunctionDeclarationJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

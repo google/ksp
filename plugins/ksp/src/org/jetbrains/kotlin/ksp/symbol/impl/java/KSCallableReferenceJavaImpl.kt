@@ -16,6 +16,8 @@ class KSCallableReferenceJavaImpl(val psi: PsiMethodReferenceType) : KSCallableR
         fun getCached(psi: PsiMethodReferenceType) = cache.getOrPut(psi) { KSCallableReferenceJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val functionParameters: List<KSVariableParameter>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 

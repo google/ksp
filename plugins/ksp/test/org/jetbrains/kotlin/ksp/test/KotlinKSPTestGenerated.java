@@ -82,4 +82,9 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
     public void testVarianceTypeCheck() throws Exception {
         runTest("plugins/ksp/testData/api/varianceTypeCheck.kt");
     }
+
+    @TestMetadata("visibilities.kt")
+    public void testVisibilities() throws Exception {
+        runTest("plugins/ksp/testData/api/visibilities.kt");
+    }
 }

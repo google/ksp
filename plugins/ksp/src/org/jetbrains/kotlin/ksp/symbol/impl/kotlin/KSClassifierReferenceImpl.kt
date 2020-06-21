@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
+import org.jetbrains.kotlin.ksp.symbol.Origin
 import org.jetbrains.kotlin.psi.*
 
 class KSClassifierReferenceImpl(val ktUserType: KtUserType) : KSClassifierReference {
@@ -16,6 +17,7 @@ class KSClassifierReferenceImpl(val ktUserType: KtUserType) : KSClassifierRefere
         fun getCached(ktUserType: KtUserType) = cache.getOrPut(ktUserType) { KSClassifierReferenceImpl(ktUserType) }
     }
 
+    override val origin = Origin.KOTLIN
 
     override val typeArguments: List<KSTypeArgument> by lazy {
         ktUserType.typeArguments.map { KSTypeArgumentKtImpl.getCached(it) }

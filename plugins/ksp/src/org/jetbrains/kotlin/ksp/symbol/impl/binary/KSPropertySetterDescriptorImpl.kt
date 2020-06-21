@@ -17,6 +17,8 @@ class KSPropertySetterDescriptorImpl(val descriptor: PropertySetterDescriptor) :
         fun getCached(descriptor: PropertySetterDescriptor) = cache.getOrPut(descriptor) { KSPropertySetterDescriptorImpl(descriptor) }
     }
 
+    override val origin = Origin.CLASS
+
     override val annotations: List<KSAnnotation> by lazy {
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
     }

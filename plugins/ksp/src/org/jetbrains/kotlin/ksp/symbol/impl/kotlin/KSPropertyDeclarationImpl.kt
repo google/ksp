@@ -21,6 +21,8 @@ class KSPropertyDeclarationImpl(val ktProperty: KtProperty) : KSPropertyDeclarat
         fun getCached(ktProperty: KtProperty) = cache.getOrPut(ktProperty) { KSPropertyDeclarationImpl(ktProperty) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotations: List<KSAnnotation> by lazy {
         ktProperty.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

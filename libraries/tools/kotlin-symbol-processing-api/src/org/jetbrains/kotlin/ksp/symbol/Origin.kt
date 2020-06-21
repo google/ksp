@@ -5,14 +5,8 @@
 
 package org.jetbrains.kotlin.ksp.symbol
 
-/**
- * Visibility of the element
- */
-enum class Visibility {
-    PUBLIC,
-    PRIVATE,
-    PROTECTED,
-    INTERNAL,
-    LOCAL,
-    JAVA_PACKAGE,
+enum class Origin {
+    KOTLIN,
+    CLASS,
+    JAVA
 }

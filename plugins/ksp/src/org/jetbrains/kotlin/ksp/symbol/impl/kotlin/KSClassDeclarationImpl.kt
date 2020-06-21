@@ -25,6 +25,8 @@ class KSClassDeclarationImpl(val ktClassOrObject: KtClassOrObject) : KSClassDecl
         fun getCached(ktClassOrObject: KtClassOrObject) = cache.getOrPut(ktClassOrObject) { KSClassDeclarationImpl(ktClassOrObject) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotations: List<KSAnnotation> by lazy {
         ktClassOrObject.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

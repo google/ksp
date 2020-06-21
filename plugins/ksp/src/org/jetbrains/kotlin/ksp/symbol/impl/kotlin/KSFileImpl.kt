@@ -16,6 +16,8 @@ class KSFileImpl(val file: KtFile) : KSFile {
         fun getCached(file: KtFile) = cache.getOrPut(file) { KSFileImpl(file) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val packageName: KSName by lazy {
         KSNameImpl.getCached(file.packageFqName.toString())
     }

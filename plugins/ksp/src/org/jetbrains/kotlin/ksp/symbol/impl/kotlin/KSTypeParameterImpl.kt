@@ -18,6 +18,8 @@ class KSTypeParameterImpl(val ktTypeParameter: KtTypeParameter, val owner: KtTyp
         fun getCached(ktTypeParameter: KtTypeParameter, owner: KtTypeParameterListOwner) = cache.getOrPut(Pair(ktTypeParameter, owner)) { KSTypeParameterImpl(ktTypeParameter, owner) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val name: KSName by lazy {
         KSNameImpl.getCached(ktTypeParameter.name!!)
     }

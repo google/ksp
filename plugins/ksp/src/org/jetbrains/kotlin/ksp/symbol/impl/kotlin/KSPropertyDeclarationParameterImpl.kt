@@ -19,6 +19,8 @@ class KSPropertyDeclarationParameterImpl(val ktParameter: KtParameter) : KSPrope
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val extensionReceiver: KSTypeReference? = null
 
     override val getter: KSPropertyGetter? = null

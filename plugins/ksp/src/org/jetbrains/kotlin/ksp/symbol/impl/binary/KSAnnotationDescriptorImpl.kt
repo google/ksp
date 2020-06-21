@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
@@ -14,7 +13,6 @@ import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.resolve.constants.*
-import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 
 class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnotation {
     companion object {
@@ -22,6 +20,8 @@ class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnot
 
         fun getCached(descriptor: AnnotationDescriptor) = cache.getOrPut(descriptor) { KSAnnotationDescriptorImpl(descriptor) }
     }
+
+    override val origin = Origin.CLASS
 
     override val annotationType: KSTypeReference by lazy {
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)

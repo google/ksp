@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
+import org.jetbrains.kotlin.ksp.symbol.Origin
 import org.jetbrains.kotlin.types.KotlinType
 
 class KSClassifierReferenceDescriptorImpl(val kotlinType: KotlinType) : KSClassifierReference {
@@ -15,6 +16,8 @@ class KSClassifierReferenceDescriptorImpl(val kotlinType: KotlinType) : KSClassi
 
         fun getCached(kotlinType: KotlinType) = cache.getOrPut(kotlinType) { KSClassifierReferenceDescriptorImpl(kotlinType) }
     }
+
+    override val origin = Origin.CLASS
 
     override val qualifier: KSClassifierReference?
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

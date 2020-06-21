@@ -29,6 +29,7 @@ class KSClassDeclarationDescriptorImpl(val descriptor: ClassDescriptor) : KSClas
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSClassDeclarationDescriptorImpl(descriptor) }
     }
 
+    override val origin = Origin.CLASS
 
     override val annotations: List<KSAnnotation> by lazy {
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }

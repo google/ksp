@@ -14,7 +14,10 @@ class KSTypeReferenceLiteJavaImpl(val type: KSType) : KSTypeReference {
         fun getCached(type: KSType) = cache.getOrPut(type) { KSTypeReferenceLiteJavaImpl(type) }
     }
 
+    override val origin = Origin.JAVA
+
     override val element: KSReferenceElement? = null
+
     override val annotations: List<KSAnnotation> = emptyList()
 
     override val modifiers: Set<Modifier> = emptySet()

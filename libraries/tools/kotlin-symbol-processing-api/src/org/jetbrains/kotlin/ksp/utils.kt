@@ -51,11 +51,12 @@ fun KSTypeAlias.findActualType(): KSClassDeclaration {
  */
 fun KSDeclaration.getVisibility(): Visibility {
     return when {
-        this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
-        this.modifiers.contains(Modifier.PROTECTED) -> Visibility.PROTECTED
-        this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
         this.isLocal() -> Visibility.LOCAL
-        else -> Visibility.PUBLIC
+        this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
+        this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
+        this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
+        this.modifiers.contains(Modifier.PUBLIC) -> Visibility.PUBLIC
+        else -> if (this.origin != Origin.JAVA) Visibility.PUBLIC else Visibility.JAVA_PACKAGE
     }
 }
 
@@ -99,33 +100,69 @@ fun KSDeclaration.isOpen() = !this.isLocal()
         || this.modifiers.contains(Modifier.ABSTRACT)
         || this.modifiers.contains(Modifier.OPEN)
         || (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+        || (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA)
         )
 
-fun KSDeclaration.isPublic() = !this.modifiers.contains(Modifier.PRIVATE)
-        && !this.modifiers.contains(Modifier.PROTECTED)
-        && !this.modifiers.contains(Modifier.INTERNAL)
+fun KSDeclaration.isPublic() = this.getVisibility() == Visibility.PUBLIC
+
+fun KSDeclaration.isProtected() = this.getVisibility() == Visibility.PROTECTED
 
 fun KSDeclaration.isInternal() = this.modifiers.contains(Modifier.INTERNAL)
 
 fun KSDeclaration.isPrivate() = this.modifiers.contains(Modifier.PRIVATE)
 
+fun KSDeclaration.isJavaPackagePrivate() = this.getVisibility() == Visibility.JAVA_PACKAGE
+
+fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
+    if (this is KSClassDeclaration) {
+        return this
+    } else {
+        return this.parentDeclaration?.closestClassDeclaration()
+    }
+}
+
 // TODO: cross module visibility is not handled
 fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
+    fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean = this.containingFile?.packageName == other.containingFile?.packageName
+
+    // lexical scope for local declaration.
+    fun KSDeclaration.parentDeclarationsForLocal(): List<KSDeclaration> {
+        val parents = mutableListOf<KSDeclaration>()
+
+        var parentDeclaration = this.parentDeclaration!!
+
+        while (parentDeclaration.isLocal()) {
+            parents.add(parentDeclaration)
+            parentDeclaration = parentDeclaration.parentDeclaration!!
+        }
+
+        parents.add(parentDeclaration)
+
+        return parents
+    }
+
+    fun KSDeclaration.isVisibleInPrivate(other: KSDeclaration) =
+        (other.isLocal() && other.parentDeclarationsForLocal().contains(this.parentDeclaration))
+                || this.parentDeclaration == other.parentDeclaration
+                || this.parentDeclaration == other
+                || (
+                this.parentDeclaration == null
+                        && other.parentDeclaration == null
+                        && this.containingFile == other.containingFile
+                )
+
     return when {
         // locals are limited to lexical scope
-        this.isLocal() -> this.parentDeclaration == other
+        this.isLocal() -> this.parentDeclarationsForLocal().contains(other)
         // file visibility or member
-        this.isPrivate() -> {
-            this.parentDeclaration == other.parentDeclaration
-                    || this.parentDeclaration == other
-                    || (
-                    this.parentDeclaration == null
-                            && other.parentDeclaration == null
-                            && this.containingFile == other.containingFile
-                    )
-        }
+        // TODO: address nested class.
+        this.isPrivate() -> this.isVisibleInPrivate(other)
         this.isPublic() -> true
         this.isInternal() && other.containingFile != null && this.containingFile != null -> true
+        this.isJavaPackagePrivate() -> this.isSamePackage(other)
+        this.isProtected() -> this.isVisibleInPrivate(other) || other.closestClassDeclaration()?.let {
+            this.closestClassDeclaration()!!.asStarProjectedType().isAssignableFrom(it.asStarProjectedType())
+        } ?: false
         else -> false
     }
 

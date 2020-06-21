@@ -25,6 +25,8 @@ class KSFunctionDeclarationImpl(val ktFunction: KtFunction) : KSFunctionDeclarat
         fun getCached(ktFunction: KtFunction) = cache.getOrPut(ktFunction) { KSFunctionDeclarationImpl(ktFunction) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotations: List<KSAnnotation> by lazy {
         ktFunction.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

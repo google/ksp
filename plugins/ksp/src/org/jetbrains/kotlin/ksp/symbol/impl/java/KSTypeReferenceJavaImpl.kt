@@ -15,6 +15,8 @@ class KSTypeReferenceJavaImpl(val psi: PsiType) : KSTypeReference {
         fun getCached(psi: PsiType) = cache.getOrPut(psi) { KSTypeReferenceJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

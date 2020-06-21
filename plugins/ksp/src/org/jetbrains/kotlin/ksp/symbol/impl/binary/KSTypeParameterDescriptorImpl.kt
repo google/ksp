@@ -21,6 +21,8 @@ class KSTypeParameterDescriptorImpl(val descriptor: TypeParameterDescriptor) : K
         fun getCached(descriptor: TypeParameterDescriptor) = cache.getOrPut(descriptor) { KSTypeParameterDescriptorImpl(descriptor) }
     }
 
+    override val origin = Origin.CLASS
+
     override val bounds: List<KSTypeReference> by lazy {
         descriptor.upperBounds.map { KSTypeReferenceDescriptorImpl.getCached(it) }
     }

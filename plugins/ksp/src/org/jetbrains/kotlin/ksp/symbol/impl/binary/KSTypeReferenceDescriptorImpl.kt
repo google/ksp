@@ -20,6 +20,8 @@ class KSTypeReferenceDescriptorImpl(val kotlinType: KotlinType) : KSTypeReferenc
         fun getCached(kotlinType: KotlinType) = cache.getOrPut(kotlinType) { KSTypeReferenceDescriptorImpl(kotlinType) }
     }
 
+    override val origin = Origin.CLASS
+
     override val element: KSReferenceElement by lazy {
         when {
             kotlinType.constructor.declarationDescriptor is ClassDescriptor -> KSClassifierReferenceDescriptorImpl.getCached(kotlinType)

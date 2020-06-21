@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 import com.intellij.psi.PsiClassType
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
+import org.jetbrains.kotlin.ksp.symbol.Origin
 
 class KSClassifierReferenceJavaImpl(val psi: PsiClassType) : KSClassifierReference {
     companion object {
@@ -15,6 +16,8 @@ class KSClassifierReferenceJavaImpl(val psi: PsiClassType) : KSClassifierReferen
 
         fun getCached(psi: PsiClassType) = cache.getOrPut(psi) { KSClassifierReferenceJavaImpl(psi) }
     }
+
+    override val origin = Origin.JAVA
 
     override val qualifier: KSClassifierReference?
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

@@ -16,6 +16,7 @@ class KSVariableParameterJavaImpl(val psi: PsiParameter) : KSVariableParameter {
         fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSVariableParameterJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
 
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }

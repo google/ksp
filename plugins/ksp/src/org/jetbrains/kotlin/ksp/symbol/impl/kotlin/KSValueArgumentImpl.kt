@@ -5,11 +5,7 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.ksp.symbol.KSAnnotation
-import org.jetbrains.kotlin.ksp.symbol.KSName
-import org.jetbrains.kotlin.ksp.symbol.KSValueArgument
-import org.jetbrains.kotlin.ksp.symbol.KSVisitor
-import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.ksp.symbol.*
 
 class KSValueArgumentLiteImpl(override val name: KSName, override val value: Any?) : KSValueArgumentImpl() {
     companion object {
@@ -18,12 +14,14 @@ class KSValueArgumentLiteImpl(override val name: KSName, override val value: Any
         fun getCached(name: KSName, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentLiteImpl(name, value) }
     }
 
-    override val annotations: List<KSAnnotation> = emptyList()
-    override val isSpread: Boolean = false
+    override val origin = Origin.KOTLIN
 
+    override val annotations: List<KSAnnotation> = emptyList()
+
+    override val isSpread: Boolean = false
 }
 
-abstract class KSValueArgumentImpl() : KSValueArgument {
+abstract class KSValueArgumentImpl : KSValueArgument {
     override fun hashCode(): Int {
         return name.hashCode() * 31 + value.hashCode()
     }

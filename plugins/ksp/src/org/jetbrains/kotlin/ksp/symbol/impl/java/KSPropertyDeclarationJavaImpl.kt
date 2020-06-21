@@ -19,6 +19,8 @@ class KSPropertyDeclarationJavaImpl(val psi: PsiField) : KSPropertyDeclaration {
         fun getCached(psi: PsiField) = cache.getOrPut(psi) { KSPropertyDeclarationJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

@@ -5,10 +5,8 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.fir.types.ProjectionKind
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
-import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjection
 
 class KSTypeArgumentDescriptorImpl(val descriptor: TypeProjection) : KSTypeArgumentImpl() {
@@ -17,6 +15,8 @@ class KSTypeArgumentDescriptorImpl(val descriptor: TypeProjection) : KSTypeArgum
 
         fun getCached(descriptor: TypeProjection) = cache.getOrPut(descriptor) { KSTypeArgumentDescriptorImpl(descriptor) }
     }
+
+    override val origin = Origin.CLASS
 
     override val type: KSTypeReference by lazy {
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)

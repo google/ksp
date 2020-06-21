@@ -18,6 +18,8 @@ class KSTypeParameterJavaImpl(val psi: PsiTypeParameter) : KSTypeParameter {
         fun getCached(psi: PsiTypeParameter) = cache.getOrPut(psi) { KSTypeParameterJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

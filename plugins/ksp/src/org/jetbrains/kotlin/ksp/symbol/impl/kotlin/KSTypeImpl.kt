@@ -20,9 +20,11 @@ class KSTypeImpl(
     companion object {
         private val cache = mutableMapOf<KotlinType, KSTypeImpl>()
 
-        fun getCached(kotlinType: KotlinType,
-                      ksTypeArguments: List<KSTypeArgument>? = null,
-                      annotations: List<KSAnnotation> = listOf()) =
+        fun getCached(
+            kotlinType: KotlinType,
+            ksTypeArguments: List<KSTypeArgument>? = null,
+            annotations: List<KSAnnotation> = listOf()
+        ) =
             cache.getOrPut(kotlinType) { KSTypeImpl(kotlinType, ksTypeArguments, annotations) }
     }
 

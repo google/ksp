@@ -18,6 +18,8 @@ class KSTypeReferenceImpl(val ktTypeReference: KtTypeReference) : KSTypeReferenc
         fun getCached(ktTypeReference: KtTypeReference) = cache.getOrPut(ktTypeReference) { KSTypeReferenceImpl(ktTypeReference) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotations: List<KSAnnotation> by lazy {
         ktTypeReference.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

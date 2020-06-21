@@ -15,6 +15,8 @@ class KSCallableReferenceImpl(val ktFunctionType: KtFunctionType) : KSCallableRe
         fun getCached(ktFunctionType: KtFunctionType) = cache.getOrPut(ktFunctionType) { KSCallableReferenceImpl(ktFunctionType) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val typeArguments: List<KSTypeArgument> by lazy {
         ktFunctionType.typeArgumentsAsTypes.map { KSTypeArgumentLiteImpl.getCached(it) }
     }

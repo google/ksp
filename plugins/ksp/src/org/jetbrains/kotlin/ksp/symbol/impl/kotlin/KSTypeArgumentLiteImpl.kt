@@ -12,9 +12,16 @@ class KSTypeArgumentLiteImpl(override val type: KSTypeReference, override val va
     companion object {
         private val cache = mutableMapOf<Pair<KSTypeReference, Variance>, KSTypeArgumentLiteImpl>()
 
-        fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) { KSTypeArgumentLiteImpl(type, variance) }
-        fun getCached(type: KtTypeReference) = cache.getOrPut(Pair(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT)) { KSTypeArgumentLiteImpl(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT) }
+        fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) {
+            KSTypeArgumentLiteImpl(type, variance)
+        }
+
+        fun getCached(type: KtTypeReference) = cache.getOrPut(Pair(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT)) {
+            KSTypeArgumentLiteImpl(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT)
+        }
     }
+
+    override val origin = Origin.KOTLIN
 
     override val annotations: List<KSAnnotation> = type.annotations
 }

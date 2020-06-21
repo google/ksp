@@ -9,5 +9,6 @@ package org.jetbrains.kotlin.ksp.symbol
  * Base class of every visitable program elements.
  */
 interface KSNode {
+    val origin: Origin
     fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R
 }

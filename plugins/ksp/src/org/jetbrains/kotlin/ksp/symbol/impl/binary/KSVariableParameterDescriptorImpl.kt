@@ -18,6 +18,8 @@ class KSVariableParameterDescriptorImpl(val descriptor: ValueParameterDescriptor
         fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) { KSVariableParameterDescriptorImpl(descriptor) }
     }
 
+    override val origin = Origin.CLASS
+
     override val annotations: List<KSAnnotation> by lazy {
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
     }

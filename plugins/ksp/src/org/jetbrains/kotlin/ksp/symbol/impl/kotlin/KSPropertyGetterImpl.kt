@@ -19,6 +19,8 @@ class KSPropertyGetterImpl(val ktPropertyGetter: KtPropertyAccessor) : KSPropert
         fun getCached(ktPropertyGetter: KtPropertyAccessor) = cache.getOrPut(ktPropertyGetter) { KSPropertyGetterImpl(ktPropertyGetter) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val returnType: KSTypeReference? by lazy {
         val property = ktPropertyGetter.property
         if (property.typeReference != null) {

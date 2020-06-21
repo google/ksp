@@ -14,8 +14,12 @@ class KSTypeReferenceDeferredImpl(private val resolver: () -> KSType?) : KSTypeR
         fun getCached(resolver: () -> KSType?) = cache.getOrPut(resolver) { KSTypeReferenceDeferredImpl(resolver) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotations: List<KSAnnotation> = emptyList()
+
     override val element: KSReferenceElement? = null
+
     override val modifiers: Set<Modifier> = emptySet()
 
     private val resolved: KSType? by lazy {

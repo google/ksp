@@ -18,6 +18,8 @@ class KSAnnotationImpl(val ktAnnotationEntry: KtAnnotationEntry) : KSAnnotation 
         fun getCached(ktAnnotationEntry: KtAnnotationEntry) = cache.getOrPut(ktAnnotationEntry) { KSAnnotationImpl(ktAnnotationEntry) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val annotationType: KSTypeReference by lazy {
         KSTypeReferenceImpl.getCached(ktAnnotationEntry.typeReference!!)
     }

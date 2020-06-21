@@ -7,8 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import org.jetbrains.kotlin.ksp.symbol.KSAnnotation
 import org.jetbrains.kotlin.ksp.symbol.KSName
-import org.jetbrains.kotlin.ksp.symbol.KSValueArgument
-import org.jetbrains.kotlin.ksp.symbol.KSVisitor
+import org.jetbrains.kotlin.ksp.symbol.Origin
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentImpl
 
 class KSValueArgumentJavaImpl(override val name: KSName?, override val value: Any?) : KSValueArgumentImpl() {
@@ -17,6 +16,8 @@ class KSValueArgumentJavaImpl(override val name: KSName?, override val value: An
 
         fun getCached(name: KSName?, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentJavaImpl(name, value) }
     }
+
+    override val origin = Origin.JAVA
 
     override val isSpread: Boolean = false
 

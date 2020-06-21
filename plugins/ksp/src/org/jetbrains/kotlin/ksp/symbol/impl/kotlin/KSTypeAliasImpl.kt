@@ -17,6 +17,8 @@ class KSTypeAliasImpl(val ktTypeAlias: KtTypeAlias) : KSTypeAlias {
         fun getCached(ktTypeAlias: KtTypeAlias) = cache.getOrPut(ktTypeAlias) { KSTypeAliasImpl(ktTypeAlias) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val containingFile: KSFile by lazy {
         KSFileImpl.getCached(ktTypeAlias.containingKtFile)
     }

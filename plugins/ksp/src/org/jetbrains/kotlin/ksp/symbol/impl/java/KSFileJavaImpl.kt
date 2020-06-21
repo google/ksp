@@ -16,6 +16,8 @@ class KSFileJavaImpl(val psi: PsiJavaFile) : KSFile {
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotations: List<KSAnnotation> = emptyList()
 
     override val declarations: List<KSDeclaration> by lazy {
@@ -26,7 +28,7 @@ class KSFileJavaImpl(val psi: PsiJavaFile) : KSFile {
         psi.name
     }
 
-    override val packageName: KSName = KSNameImpl.getCached(psi.packageName)
+    override val packageName: KSName = KSNameImpl.getCached(if (psi.packageName == "") "<root>" else psi.packageName)
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFile(this, data)

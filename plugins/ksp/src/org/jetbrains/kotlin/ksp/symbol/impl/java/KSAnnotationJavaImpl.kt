@@ -17,6 +17,8 @@ class KSAnnotationJavaImpl(val psi: PsiAnnotation) : KSAnnotation {
         fun getCached(psi: PsiAnnotation) = cache.getOrPut(psi) { KSAnnotationJavaImpl(psi) }
     }
 
+    override val origin = Origin.JAVA
+
     override val annotationType: KSTypeReference by lazy {
         KSTypeReferenceLiteJavaImpl.getCached(KSClassDeclarationJavaImpl.getCached(psi.nameReferenceElement!!.resolve() as PsiClass).asType(emptyList()))
     }

@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
 
-abstract class KSTypeArgumentImpl() : KSTypeArgument {
+abstract class KSTypeArgumentImpl : KSTypeArgument {
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeArgument(this, data)
     }
@@ -32,6 +32,8 @@ class KSTypeArgumentKtImpl(val ktTypeArgument: KtTypeProjection) : KSTypeArgumen
 
         fun getCached(ktTypeArgument: KtTypeProjection) = cache.getOrPut(ktTypeArgument) { KSTypeArgumentKtImpl(ktTypeArgument) }
     }
+
+    override val origin = Origin.KOTLIN
 
     override val variance: Variance by lazy {
         when (ktTypeArgument.projectionKind) {

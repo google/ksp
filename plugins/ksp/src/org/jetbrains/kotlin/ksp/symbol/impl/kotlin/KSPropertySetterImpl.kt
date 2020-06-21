@@ -16,6 +16,8 @@ class KSPropertySetterImpl(val ktPropertySetter: KtPropertyAccessor) : KSPropert
         fun getCached(ktPropertySetter: KtPropertyAccessor) = cache.getOrPut(ktPropertySetter) { KSPropertySetterImpl(ktPropertySetter) }
     }
 
+    override val origin = Origin.KOTLIN
+
     override val parameter: KSVariableParameter by lazy {
         ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSVariableParameterImpl.getCached(it) } ?: throw IllegalStateException()
     }
