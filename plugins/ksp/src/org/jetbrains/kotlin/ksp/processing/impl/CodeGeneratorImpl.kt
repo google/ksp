@@ -7,14 +7,15 @@ package org.jetbrains.kotlin.ksp.processing.impl
 
 import org.jetbrains.kotlin.ksp.processing.CodeGenerator
 import java.io.File
+import java.io.OutputStream
 
 class CodeGeneratorImpl(private val outputDir: File) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
 
     // TODO: investigate if it works for Windows
-    override fun createNewFile(packageName: String, fileName: String, extensionName: String): File {
+    override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
         val path = "${outputDir.path}/${packageName.split(".").joinToString("/")}/$fileName.${extensionName}"
-        if (fileMap[path] != null) return fileMap[path]!!
+        if (fileMap[path] != null) return fileMap[path]!!.outputStream()
         val file = File(path)
         val parentFile = file.parentFile
         if (!parentFile.exists() && !parentFile.mkdirs()) {
@@ -22,6 +23,6 @@ class CodeGeneratorImpl(private val outputDir: File) : CodeGenerator {
         }
         file.writeText("")
         fileMap[path] = file
-        return file
+        return file.outputStream()
     }
 }

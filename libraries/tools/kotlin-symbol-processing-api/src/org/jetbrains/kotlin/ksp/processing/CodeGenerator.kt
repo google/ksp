@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ksp.processing
 
 import java.io.File
+import java.io.OutputStream
 
 /**
  * [CodeGenerator] creates and manages files.
@@ -15,14 +16,15 @@ import java.io.File
  * Files created without using this API, will not participate in incremental processing nor subsequent compilations.
  */
 interface CodeGenerator {
-    /*
+    /**
      * Creates a file which is managed by [CodeGenerator]
      *
      * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
      * @param fileName file name
      * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
      *                      Otherwise its creation is only considered in incremental processing.
+     * @return OutputStream for writing into files.
      * @see [CodeGenerator] for more details.
      */
-    fun createNewFile(packageName: String, fileName: String, extensionName: String = "kt"): File
+    fun createNewFile(packageName: String, fileName: String, extensionName: String = "kt"): OutputStream
 }
