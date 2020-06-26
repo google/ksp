@@ -5,7 +5,8 @@
 
 package org.jetbrains.kotlin.ksp.processing.impl
 
-import com.intellij.psi.PsiClass
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
@@ -19,7 +20,16 @@ import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassDeclarationDescriptorI
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeParameterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.java.KSTypeReferenceJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
+import org.jetbrains.kotlin.load.java.components.TypeUsage
+import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
+import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
+import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
+import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
+import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
+import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
+import org.jetbrains.kotlin.load.java.structure.impl.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
@@ -28,6 +38,7 @@ import org.jetbrains.kotlin.resolve.jvm.JavaDescriptorResolver
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.memberScopeAsImportingScope
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -49,6 +60,8 @@ class ResolverImpl(
         lateinit var instance: ResolverImpl
         lateinit var annotationResolver: AnnotationResolver
         lateinit var javaDescriptorResolver: JavaDescriptorResolver
+        lateinit var javaTypeResolver: JavaTypeResolver
+        lateinit var lazyJavaResolverContext: LazyJavaResolverContext
     }
 
     init {
@@ -59,6 +72,9 @@ class ResolverImpl(
         javaDescriptorResolver = componentProvider.get()
 
         ksFiles = files.map { KSFileImpl.getCached(it) }
+        val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
+        lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
+        javaTypeResolver = lazyJavaResolverContext.typeResolver
         nameToKSMap = mutableMapOf()
 
         val visitor = object : KSVisitorVoid() {
@@ -160,6 +176,11 @@ class ResolverImpl(
         }
     }
 
+    fun resolveJavaType(psi: PsiType): KotlinType {
+        val javaType = JavaTypeImpl.create(psi)
+        return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
+    }
+
     private val DeclarationDescriptor.containingScope: LexicalScope
         get() {
             findPsi()?.let { return resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it) }
@@ -206,6 +227,29 @@ class ResolverImpl(
             }
             is KSTypeReferenceDescriptorImpl -> {
                 return KSTypeImpl.getCached(type.kotlinType)
+            }
+            is KSTypeReferenceJavaImpl -> {
+                val psi = (type.psi as? PsiClassReferenceType)?.resolve()
+                if (psi is PsiTypeParameter) {
+                    val containingDeclaration = if (psi.owner is PsiClass) {
+                        javaDescriptorResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
+                    } else {
+                        javaDescriptorResolver.resolveClass(
+                            JavaMethodImpl(psi.owner as PsiMethod).containingClass
+                        )?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi.owner } as FunctionDescriptor
+                    } as DeclarationDescriptor
+                    return KSTypeImpl.getCached(
+                        LazyJavaTypeParameterDescriptor(
+                            lazyJavaResolverContext,
+                            JavaTypeParameterImpl(psi),
+                            psi.index,
+                            containingDeclaration
+                        ).defaultType
+                    )
+
+                } else {
+                    return KSTypeImpl.getCached(resolveJavaType(type.psi), type.element.typeArguments, type.annotations)
+                }
             }
             else -> throw IllegalStateException()
         }
