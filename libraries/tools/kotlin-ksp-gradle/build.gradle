@@ -9,19 +9,26 @@ pill {
 }
 
 dependencies {
-    compile project(':kotlin-gradle-plugin-api')
-    compile project(':kotlin-gradle-plugin-model')
+    if (hasProperty("kspBaseVersion")) {
+        String kspBaseVersion = properties["kspBaseVersion"] as String
+        compile "org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kspBaseVersion"
+        implementation "org.jetbrains.kotlin:kotlin-stdlib:$kspBaseVersion"
+    } else {
+        compile project(':kotlin-gradle-plugin-api')
+        compile project(':kotlin-gradle-plugin-model')
 
-    compile kotlinStdlib()
-    compileOnly project(path: ':kotlin-compiler-embeddable', configuration: 'runtimeJar')
-    compileOnly project(':kotlin-symbol-processing')
+        compile kotlinStdlib()
+        compileOnly project(path: ':kotlin-compiler-embeddable', configuration: 'runtimeJar')
+    }
 
     compileOnly gradleApi()
 
     testCompile gradleApi()
     testCompile "junit:junit:4.12"
+}
 
-    embedded(project(":kotlin-symbol-processing")) { transitive = false }
+repositories {
+    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
 }
 
 tasks.withType(project.compileKotlin.class) {

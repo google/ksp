@@ -98,5 +98,5 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
 
     override fun getCompilerPluginId() = "org.jetbrains.kotlin.ksp"
     override fun getPluginArtifact(): SubpluginArtifact =
-        SubpluginArtifact(groupId = "org.jetbrains.kotlin", artifactId = KSP_ARTIFACT_NAME)
+        SubpluginArtifact(groupId = "org.jetbrains.kotlin", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
 }

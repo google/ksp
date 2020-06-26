@@ -38,8 +38,16 @@ sourceSets {
 }
 
 dependencies {
-    implementation(kotlinStdlib())
-    compileOnly(kotlinBuiltins())
+    if (hasProperty("kspBaseVersion")) {
+        val kspBaseVersion = properties["kspBaseVersion"] as String
+        implementation(kotlin("stdlib", kspBaseVersion))
+    } else {
+        implementation(kotlinStdlib())
+    }
+}
+
+repositories {
+    maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
 
 publish()
