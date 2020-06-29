@@ -34,7 +34,6 @@ class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration 
         TODO("Not yet implemented")
     }
 
-    //TODO: whether we want to model it
     override val declarations: List<KSDeclaration> = emptyList()
 
     override val extensionReceiver: KSTypeReference? = null
