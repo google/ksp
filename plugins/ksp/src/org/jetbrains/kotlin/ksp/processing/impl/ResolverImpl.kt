@@ -104,15 +104,20 @@ class ResolverImpl(
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
         nameToKSMap[name]?.let { return it }
 
-        module.resolveClassByFqName(
-            FqName(name.asString()),
-            NoLookupLocation.FROM_BUILTINS
-        )?.let { return KSClassDeclarationDescriptorImpl.getCached(it) }
-
-        return module.resolveClassByFqName(
-            FqName(name.asString()),
-            NoLookupLocation.FROM_DESERIALIZATION
-        )?.let { KSClassDeclarationDescriptorImpl.getCached(it) }
+        return (module.resolveClassByFqName(FqName(name.asString()), NoLookupLocation.FROM_BUILTINS)
+            ?: module.resolveClassByFqName(FqName(name.asString()), NoLookupLocation.FROM_DESERIALIZATION))
+            ?.let {
+                val psi = it.findPsi()
+                if (psi != null) {
+                    when (psi) {
+                        is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
+                        is PsiClass -> KSClassDeclarationJavaImpl.getCached(psi)
+                        else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
+                    }
+                } else {
+                    KSClassDeclarationDescriptorImpl.getCached(it)
+                }
+            }
     }
 
     override fun getSymbolsWithAnnotation(annotationName: String): List<KSAnnotated> {

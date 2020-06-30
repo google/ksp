@@ -18,11 +18,9 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
-        val annotated = resolver.getSymbolsWithAnnotation("Test")
-        (annotated.single() as KSClassDeclaration).superTypes
-            .map { it.resolve()?.declaration }
-            .filter { it?.origin == Origin.JAVA }
-            .map { it?.accept(visitor, Unit) }
+        val symbol = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))
+        assert(symbol?.origin == Origin.JAVA)
+        symbol!!.accept(visitor, Unit)
     }
 
     inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>() {
