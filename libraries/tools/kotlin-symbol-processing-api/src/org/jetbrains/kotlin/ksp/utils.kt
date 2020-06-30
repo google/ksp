@@ -159,7 +159,8 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
         this.isPrivate() -> this.isVisibleInPrivate(other)
         this.isPublic() -> true
         this.isInternal() && other.containingFile != null && this.containingFile != null -> true
-        this.isJavaPackagePrivate() -> this.isSamePackage(other)
+        // Non-private symbols in Java are always visible in same package.
+        this.origin == Origin.JAVA -> this.isSamePackage(other)
         this.isProtected() -> this.isVisibleInPrivate(other) || other.closestClassDeclaration()?.let {
             this.closestClassDeclaration()!!.asStarProjectedType().isAssignableFrom(it.asStarProjectedType())
         } ?: false
