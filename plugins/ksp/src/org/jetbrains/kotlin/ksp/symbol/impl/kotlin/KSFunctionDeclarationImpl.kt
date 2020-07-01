@@ -42,11 +42,7 @@ class KSFunctionDeclarationImpl(val ktFunction: KtFunction) : KSFunctionDeclarat
             return false
         if (!overridee.isVisibleFrom(this))
             return false
-        val superDescriptor = if (overridee is KSFunctionDeclarationImpl) {
-            ResolverImpl.instance.resolveDeclaration(overridee.ktFunction) as FunctionDescriptor
-        } else {
-            (overridee as KSFunctionDeclarationDescriptorImpl).descriptor
-        }
+        val superDescriptor = ResolverImpl.instance.resolveFunctionDeclaration(overridee) ?: return false
         val subDescriptor = ResolverImpl.instance.resolveDeclaration(ktFunction) as FunctionDescriptor
         return OverridingUtil.DEFAULT.isOverridableBy(
             superDescriptor, subDescriptor, null

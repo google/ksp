@@ -17,9 +17,11 @@ import org.jetbrains.kotlin.ksp.processing.KSBuiltIns
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeParameterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSTypeReferenceJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
 import org.jetbrains.kotlin.load.java.components.TypeUsage
@@ -179,6 +181,24 @@ class ResolverImpl(
         } else {
             resolveSession.resolveToDescriptor(declaration)
         }
+    }
+
+    fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
+        return when (psi) {
+            is PsiClass -> javaDescriptorResolver.resolveClass(JavaClassImpl(psi))
+            is PsiMethod -> javaDescriptorResolver.resolveClass(JavaMethodImpl(psi).containingClass)
+                ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as FunctionDescriptor
+            else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
+        }
+    }
+
+    fun resolveFunctionDeclaration(function: KSFunctionDeclaration): FunctionDescriptor? {
+        return when (function) {
+            is KSFunctionDeclarationImpl -> resolveDeclaration(function.ktFunction)
+            is KSFunctionDeclarationDescriptorImpl -> function.descriptor
+            is KSFunctionDeclarationJavaImpl -> resolveJavaDeclaration(function.psi)
+            else -> throw IllegalStateException("unexpected class: ${function.javaClass}")
+        } as FunctionDescriptor?
     }
 
     fun resolveJavaType(psi: PsiType): KotlinType {

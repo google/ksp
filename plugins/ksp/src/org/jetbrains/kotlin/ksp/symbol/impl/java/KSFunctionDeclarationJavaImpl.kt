@@ -8,10 +8,17 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.ksp.isOpen
+import org.jetbrains.kotlin.ksp.isVisibleFrom
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.resolve.OverridingUtil
 
 class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration {
     companion object {
@@ -31,7 +38,16 @@ class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration 
     }
 
     override fun overrides(overridee: KSFunctionDeclaration): Boolean {
-        TODO("Not yet implemented")
+        if (!overridee.isOpen())
+            return false
+        if (!overridee.isVisibleFrom(this))
+            return false
+        val superDescriptor = ResolverImpl.instance.resolveFunctionDeclaration(overridee) ?: return false
+        val subDescriptor = ResolverImpl.instance.resolveJavaDeclaration(psi) as? FunctionDescriptor ?: return false
+        OverridingUtil.DEFAULT.isOverridableBy(
+            superDescriptor, subDescriptor, null
+        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
+        return true
     }
 
     override val declarations: List<KSDeclaration> = emptyList()
@@ -53,8 +69,9 @@ class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration 
         psi.findParentDeclaration()
     }
 
-    override val qualifiedName: KSName
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val qualifiedName: KSName by lazy {
+        KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
+    }
 
     override val returnType: KSTypeReference? by lazy {
         if (psi.returnType != null) {
