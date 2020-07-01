@@ -46,7 +46,7 @@ class KSClassDeclarationImpl(val ktClassOrObject: KtClassOrObject) : KSClassDecl
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
             .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
-            .map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
+            .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
     }
 
     override val declarations: List<KSDeclaration> by lazy {

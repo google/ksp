@@ -11,7 +11,9 @@ import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.MemberDescriptor
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
@@ -228,3 +230,12 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
 
         TypeProjectionImpl(variance, type)
     })
+
+internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration {
+    val psi = this.findPsi() ?: return KSFunctionDeclarationDescriptorImpl.getCached(this)
+    return when (psi) {
+        is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
+        is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
+        else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
+    }
+}

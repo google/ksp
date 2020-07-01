@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
+import org.jetbrains.kotlin.ksp.symbol.impl.toKSFunctionDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
@@ -60,7 +61,7 @@ class KSClassDeclarationJavaImpl(val psi: PsiClass) : KSClassDeclaration {
             it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
                 .toList()
                 .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
-                .map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
+                .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
         } ?: emptyList()
     }
 
