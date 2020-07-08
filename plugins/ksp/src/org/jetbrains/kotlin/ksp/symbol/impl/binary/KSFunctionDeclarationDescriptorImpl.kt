@@ -90,6 +90,10 @@ class KSFunctionDeclarationDescriptorImpl(val descriptor: FunctionDescriptor) : 
         }
     }
 
+    override val isAbstract: Boolean by lazy {
+        this.modifiers.contains(Modifier.ABSTRACT)
+    }
+
     override val modifiers: Set<Modifier> by lazy {
         val modifiers = mutableSetOf<Modifier>()
         modifiers.addAll(descriptor.toKSModifiers())

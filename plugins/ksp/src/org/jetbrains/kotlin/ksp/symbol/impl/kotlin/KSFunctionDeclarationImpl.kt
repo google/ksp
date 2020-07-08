@@ -77,6 +77,12 @@ class KSFunctionDeclarationImpl(val ktFunction: KtFunction) : KSFunctionDeclarat
         }
     }
 
+    override val isAbstract: Boolean by lazy {
+        this.modifiers.contains(Modifier.ABSTRACT) ||
+                ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+                        && !this.ktFunction.hasBody())
+    }
+
     override val modifiers: Set<Modifier> by lazy {
         ktFunction.toKSModifiers()
     }

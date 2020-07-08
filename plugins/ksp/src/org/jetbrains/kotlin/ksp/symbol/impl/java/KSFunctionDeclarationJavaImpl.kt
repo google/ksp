@@ -54,8 +54,13 @@ class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration 
 
     override val extensionReceiver: KSTypeReference? = null
 
-
     override val functionKind: FunctionKind = if (psi.hasModifier(JvmModifier.STATIC)) FunctionKind.STATIC else FunctionKind.MEMBER
+
+    override val isAbstract: Boolean by lazy {
+        this.modifiers.contains(Modifier.ABSTRACT) ||
+                ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE &&
+                        !this.modifiers.contains(Modifier.JAVA_DEFAULT))
+    }
 
     override val modifiers: Set<Modifier> by lazy {
         psi.toKSModifiers()

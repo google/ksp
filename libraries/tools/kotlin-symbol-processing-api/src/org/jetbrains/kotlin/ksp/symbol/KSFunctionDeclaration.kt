@@ -17,6 +17,11 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     val functionKind: FunctionKind
 
     /**
+     * Whether this function is abstract.
+     */
+    val isAbstract: Boolean
+
+    /**
      * Extension receiver of this function
      * @see [https://kotlinlang.org/docs/reference/extensions.html#extension-functions]
      */
