@@ -6,9 +6,13 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.ksp.isOpen
+import org.jetbrains.kotlin.ksp.isVisibleFrom
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parents
 
@@ -90,11 +94,24 @@ class KSPropertyDeclarationDescriptorImpl(val descriptor: VariableDescriptorWith
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
 
-    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitPropertyDeclaration(this, data)
+    override fun overrides(overridee: KSPropertyDeclaration): Boolean {
+        if (!overridee.isOpen())
+            return false
+        if (!overridee.isVisibleFrom(this))
+            return false
+        if (overridee.origin == Origin.JAVA)
+            return false
+        val superDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(overridee) ?: return false
+        return OverridingUtil.DEFAULT.isOverridableBy(
+                superDescriptor, descriptor, null
+        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
     }
 
     override fun isDelegated(): Boolean {
         return (descriptor as? PropertyDescriptor)?.delegateField != null
+    }
+
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+        return visitor.visitPropertyDeclaration(this, data)
     }
 }

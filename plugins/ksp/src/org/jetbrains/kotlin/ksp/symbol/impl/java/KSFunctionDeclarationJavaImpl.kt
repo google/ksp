@@ -44,10 +44,9 @@ class KSFunctionDeclarationJavaImpl(val psi: PsiMethod) : KSFunctionDeclaration 
             return false
         val superDescriptor = ResolverImpl.instance.resolveFunctionDeclaration(overridee) ?: return false
         val subDescriptor = ResolverImpl.instance.resolveJavaDeclaration(psi) as? FunctionDescriptor ?: return false
-        OverridingUtil.DEFAULT.isOverridableBy(
+        return OverridingUtil.DEFAULT.isOverridableBy(
             superDescriptor, subDescriptor, null
         ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-        return true
     }
 
     override val declarations: List<KSDeclaration> = emptyList()

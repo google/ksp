@@ -7,10 +7,15 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiJavaFile
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.ksp.isOpen
+import org.jetbrains.kotlin.ksp.isVisibleFrom
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.resolve.OverridingUtil
 
 class KSPropertyDeclarationJavaImpl(val psi: PsiField) : KSPropertyDeclaration {
     companion object {
@@ -57,11 +62,16 @@ class KSPropertyDeclarationJavaImpl(val psi: PsiField) : KSPropertyDeclaration {
         KSTypeReferenceJavaImpl.getCached(psi.type)
     }
 
-    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitPropertyDeclaration(this, data)
+    override fun overrides(overridee: KSPropertyDeclaration): Boolean {
+        return false
     }
 
     override fun isDelegated(): Boolean {
         return false
     }
+
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+        return visitor.visitPropertyDeclaration(this, data)
+    }
+
 }

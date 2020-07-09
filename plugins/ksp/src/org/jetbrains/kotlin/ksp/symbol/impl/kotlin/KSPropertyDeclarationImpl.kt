@@ -7,11 +7,14 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
+import org.jetbrains.kotlin.ksp.isOpen
+import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
+import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 
 class KSPropertyDeclarationImpl(val ktProperty: KtProperty) : KSPropertyDeclaration {
@@ -95,6 +98,21 @@ class KSPropertyDeclarationImpl(val ktProperty: KtProperty) : KSPropertyDeclarat
 
     override fun isDelegated(): Boolean = ktProperty.hasDelegate()
 
+    override fun overrides(overridee: KSPropertyDeclaration): Boolean {
+        if (!this.modifiers.contains(Modifier.OVERRIDE))
+            return false
+        if (!overridee.isOpen())
+            return false
+        if (!overridee.isVisibleFrom(this))
+            return false
+        if (overridee.origin == Origin.JAVA)
+            return false
+        val superDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(overridee) ?: return false
+        val subDescriptor = ResolverImpl.instance.resolveDeclaration(ktProperty) as PropertyDescriptor
+        return OverridingUtil.DEFAULT.isOverridableBy(
+                superDescriptor, subDescriptor, null
+        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
+    }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)

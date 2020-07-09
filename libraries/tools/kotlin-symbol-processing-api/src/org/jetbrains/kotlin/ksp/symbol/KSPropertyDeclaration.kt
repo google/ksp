@@ -37,4 +37,12 @@ interface KSPropertyDeclaration : KSDeclaration {
      * Indicates whether this is a delegated property.
      */
     fun isDelegated(): Boolean
+
+    /**
+     * Checks if this property overrides another property.
+     * @param overridee the candidate overridden property being checked.
+     * @return boolean value indicating whether this function overrides [overridee]
+     * Calling [overrides] is expensive and should be avoided if possible.
+     */
+    fun overrides(overridee: KSPropertyDeclaration): Boolean
 }

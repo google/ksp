@@ -16,12 +16,10 @@ import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.processing.KSBuiltIns
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeParameterDescriptorImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.*
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSTypeReferenceJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
 import org.jetbrains.kotlin.load.java.components.TypeUsage
@@ -199,6 +197,15 @@ class ResolverImpl(
             is KSFunctionDeclarationJavaImpl -> resolveJavaDeclaration(function.psi)
             else -> throw IllegalStateException("unexpected class: ${function.javaClass}")
         } as FunctionDescriptor?
+    }
+
+    fun resolvePropertyDeclaration(property: KSPropertyDeclaration): PropertyDescriptor? {
+        return when (property) {
+            is KSPropertyDeclarationImpl -> resolveDeclaration(property.ktProperty)
+            is KSPropertyDeclarationDescriptorImpl -> property.descriptor
+            is KSPropertyDeclarationJavaImpl -> TODO()
+            else -> throw IllegalStateException("unexpected class: ${property.javaClass}")
+        } as PropertyDescriptor?
     }
 
     fun resolveJavaType(psi: PsiType): KotlinType {
