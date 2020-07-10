@@ -51,7 +51,7 @@ class KSTypeReferenceJavaImpl(val psi: PsiType) : KSTypeReference {
         when (type) {
             is PsiClassType -> KSClassifierReferenceJavaImpl.getCached(type)
             is PsiWildcardType -> KSClassifierReferenceJavaImpl.getCached(type.extendsBound as PsiClassType)
-            is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl(type.toKotlinType())
+            is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType())
             is PsiArrayType -> {
                 val componentType = ResolverImpl.instance.resolveJavaType(type.componentType)
                 if (type.componentType !is PsiPrimitiveType) {

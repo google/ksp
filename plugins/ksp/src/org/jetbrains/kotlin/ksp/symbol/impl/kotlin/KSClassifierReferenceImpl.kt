@@ -34,4 +34,6 @@ class KSClassifierReferenceImpl(val ktUserType: KtUserType) : KSClassifierRefere
             KSClassifierReferenceImpl.getCached(ktUserType.qualifier!!)
         }
     }
+
+    override fun toString() = referencedName()
 }

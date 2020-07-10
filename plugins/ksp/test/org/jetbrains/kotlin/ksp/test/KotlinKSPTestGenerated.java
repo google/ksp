@@ -98,6 +98,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/typeComposure.kt");
     }
 
+    @TestMetadata("referenceElement.kt")
+    public void testReferenceElement() throws Exception {
+        runTest("plugins/ksp/testData/api/referenceElement.kt");
+    }
+
     @TestMetadata("varianceTypeCheck.kt")
     public void testVarianceTypeCheck() throws Exception {
         runTest("plugins/ksp/testData/api/varianceTypeCheck.kt");
