@@ -6,6 +6,8 @@
 package org.jetbrains.kotlin.ksp
 
 import com.intellij.mock.MockProject
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
@@ -48,7 +50,10 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        val options = configuration[KSP_OPTIONS]?.build() ?: return
+        val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
+        val options = configuration[KSP_OPTIONS]?.apply {
+            javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
+        }?.build() ?: return
         if (options.processingClasspath.isNotEmpty()) {
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)

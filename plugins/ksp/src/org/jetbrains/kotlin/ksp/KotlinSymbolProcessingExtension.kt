@@ -6,6 +6,10 @@
 package org.jetbrains.kotlin.ksp
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiManager
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -19,8 +23,8 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
-import java.io.File
 import java.net.URLClassLoader
+import java.nio.file.Files
 
 class KotlinSymbolProcessingExtension(
     options: KspOptions,
@@ -51,7 +55,15 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (completed)
             return null
 
-        val resolver = ResolverImpl(module, files, bindingTrace, componentProvider)
+        val psiManager = PsiManager.getInstance(project)
+        val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+        val javaFiles = options.javaSourceRoots
+            .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
+            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
+            .sortedBy { Files.isSymbolicLink(it.toPath()) } // This time is for .java files
+            .distinctBy { it.canonicalPath }
+            .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
+        val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, componentProvider)
         val targetDir = options.sourcesOutputDir
         val codeGen = CodeGeneratorImpl(targetDir)
 

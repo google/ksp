@@ -33,6 +33,7 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
         val testProcessor = Class.forName("org.jetbrains.kotlin.ksp.processor.$testProcessorName").newInstance() as AbstractTestProcessor
         val analysisExtension =
             KotlinSymbolProcessingExtension(KspOptions.Builder().apply {
+                javaSourceRoots.addAll(javaFiles.map { File(it.parent) }.distinct())
                 sourcesOutputDir = File("/tmp/kspTest")
                 classesOutputDir = File("/tmp/kspTest")
             }.build(), testProcessor)

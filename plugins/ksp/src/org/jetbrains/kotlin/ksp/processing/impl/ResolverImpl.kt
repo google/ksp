@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.*
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFileJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSTypeReferenceJavaImpl
@@ -48,6 +49,7 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 class ResolverImpl(
     val module: ModuleDescriptor,
     files: Collection<KtFile>,
+    javaFiles: Collection<PsiJavaFile>,
     val bindingTrace: BindingTrace,
     componentProvider: ComponentProvider
 ) : Resolver {
@@ -74,7 +76,7 @@ class ResolverImpl(
         topDownAnalyzer = componentProvider.get()
         constantExpressionEvaluator = componentProvider.get()
 
-        ksFiles = files.map { KSFileImpl.getCached(it) }
+        ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
