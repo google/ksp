@@ -5,13 +5,21 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiAnnotationMethod
+import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.constants.*
 
 class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnotation {
@@ -65,10 +73,37 @@ private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     else -> value
 }
 
-fun AnnotationDescriptor.createKSValueArguments(): List<KSValueArgument> =
-    allValueArguments.map { (name, constantValue) ->
+fun AnnotationDescriptor.createKSValueArguments(): List<KSValueArgument> {
+    val presentValueArguments = allValueArguments.map { (name, constantValue) ->
         KSValueArgumentLiteImpl.getCached(
             KSNameImpl.getCached(name.asString()),
             constantValue.toValue()
         )
     }
+    val presentValueArgumentNames = presentValueArguments.map { it.name.asString() }
+    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()?.let {
+        it.getAbsentDefaultArguments(presentValueArgumentNames)
+    } ?: emptyList()
+    return presentValueArguments.plus(argumentsFromDefault)
+}
+
+fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: Collection<String>): Collection<KSValueArgument> {
+    return this.valueParameters.filterNot { param -> excludeNames.contains(param.name.asString()) || !param.hasDefaultValue() }
+        .map { param ->
+            KSValueArgumentLiteImpl.getCached(
+                KSNameImpl.getCached(param.name.asString()),
+                param.getDefaultValue()
+            )
+        }
+}
+
+fun ValueParameterDescriptor.getDefaultValue(): Any? {
+    val psi = this.findPsi()
+    return when (psi) {
+        // TODO: Get default value for binaries.
+        null -> null
+        is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.value
+        is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper.computeConstantExpression((psi).defaultValue)
+        else -> throw IllegalStateException()
+    }
+}

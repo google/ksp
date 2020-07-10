@@ -38,6 +38,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/annotationValue.kt");
     }
 
+    @TestMetadata("annotationWithDefault.kt")
+    public void testAnnotationWithDefault() throws Exception {
+        runTest("plugins/ksp/testData/api/annotationWithDefault.kt");
+    }
+
     @TestMetadata("builtInTypes.kt")
     public void testBuiltInTypes() throws Exception {
         runTest("plugins/ksp/testData/api/builtInTypes.kt");

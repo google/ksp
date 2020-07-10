@@ -5,10 +5,15 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.java
 
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiClass
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.getAbsentDefaultArguments
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 
 class KSAnnotationJavaImpl(val psi: PsiAnnotation) : KSAnnotation {
     companion object {
@@ -20,15 +25,31 @@ class KSAnnotationJavaImpl(val psi: PsiAnnotation) : KSAnnotation {
     override val origin = Origin.JAVA
 
     override val annotationType: KSTypeReference by lazy {
-        KSTypeReferenceLiteJavaImpl.getCached(KSClassDeclarationJavaImpl.getCached(psi.nameReferenceElement!!.resolve() as PsiClass).asType(emptyList()))
+        KSTypeReferenceLiteJavaImpl.getCached(
+            KSClassDeclarationJavaImpl.getCached(psi.nameReferenceElement!!.resolve() as PsiClass).asType(emptyList())
+        )
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        psi.parameterList.attributes
-            .map {
-                if (it.name != null) KSValueArgumentJavaImpl.getCached(KSNameImpl.getCached(it.name!!), it.attributeValue)
-                else KSValueArgumentJavaImpl.getCached(null, it.attributeValue)
+        val annotationConstructor =
+            ((annotationType.resolve() as KSTypeImpl).kotlinType.constructor.declarationDescriptor as? ClassDescriptor)
+                ?.constructors?.single()
+        val presentValueArguments = psi.parameterList.attributes
+            .mapIndexed { index, it ->
+                KSValueArgumentJavaImpl.getCached(
+                    annotationConstructor?.valueParameters?.get(index)?.name?.let { KSNameImpl.getCached(it.asString()) },
+                    calcValue(it.value)
+                )
             }
+        val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
+        val argumentsFromDefault = annotationConstructor?.let {
+            it.getAbsentDefaultArguments(presentValueArgumentNames)
+        } ?: emptyList()
+        presentValueArguments.plus(argumentsFromDefault)
+    }
+
+    private fun calcValue(value: PsiAnnotationMemberValue?): Any? {
+        return value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
     }
 
     override val shortName: KSName by lazy {
