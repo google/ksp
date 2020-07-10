@@ -132,7 +132,7 @@ class ResolverImpl(
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
                 if (annotated.annotations.any {
                         val annotationType = it.annotationType
-                        (annotationType.element as KSClassifierReference).referencedName() == ksName.getShortName()
+                        (annotationType.element as? KSClassifierReference)?.referencedName().let { it == null || it == ksName.getShortName() }
                                 && annotationType.resolve()?.declaration?.qualifiedName == ksName
                     }) {
                     symbols.add(annotated)
