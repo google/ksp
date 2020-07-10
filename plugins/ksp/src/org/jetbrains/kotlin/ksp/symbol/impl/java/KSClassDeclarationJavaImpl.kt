@@ -52,7 +52,7 @@ class KSClassDeclarationJavaImpl(val psi: PsiClass) : KSClassDeclaration {
 
     // Could the resolution ever fail?
     private val descriptor: ClassDescriptor? by lazy {
-        ResolverImpl.javaDescriptorResolver.resolveClass(JavaClassImpl(psi))
+        ResolverImpl.moduleClassResolver.resolveClass(JavaClassImpl(psi))
     }
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {

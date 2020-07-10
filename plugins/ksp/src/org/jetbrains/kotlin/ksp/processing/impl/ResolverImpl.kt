@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
+import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
@@ -36,7 +37,6 @@ import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
-import org.jetbrains.kotlin.resolve.jvm.JavaDescriptorResolver
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
@@ -62,7 +62,7 @@ class ResolverImpl(
         lateinit var topDownAnalyzer: LazyTopDownAnalyzer
         lateinit var instance: ResolverImpl
         lateinit var annotationResolver: AnnotationResolver
-        lateinit var javaDescriptorResolver: JavaDescriptorResolver
+        lateinit var moduleClassResolver: ModuleClassResolver
         lateinit var javaTypeResolver: JavaTypeResolver
         lateinit var lazyJavaResolverContext: LazyJavaResolverContext
     }
@@ -72,13 +72,13 @@ class ResolverImpl(
         bodyResolver = componentProvider.get()
         declarationScopeProvider = componentProvider.get()
         topDownAnalyzer = componentProvider.get()
-        javaDescriptorResolver = componentProvider.get()
         constantExpressionEvaluator = componentProvider.get()
 
         ksFiles = files.map { KSFileImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
+        moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
         nameToKSMap = mutableMapOf()
 
         val visitor = object : KSVisitorVoid() {
@@ -191,8 +191,8 @@ class ResolverImpl(
 
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
-            is PsiClass -> javaDescriptorResolver.resolveClass(JavaClassImpl(psi))
-            is PsiMethod -> javaDescriptorResolver.resolveClass(JavaMethodImpl(psi).containingClass)
+            is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
+            is PsiMethod -> moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
                 ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as FunctionDescriptor
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
@@ -272,9 +272,9 @@ class ResolverImpl(
                 val psi = (type.psi as? PsiClassReferenceType)?.resolve()
                 if (psi is PsiTypeParameter) {
                     val containingDeclaration = if (psi.owner is PsiClass) {
-                        javaDescriptorResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
+                        moduleClassResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
                     } else {
-                        javaDescriptorResolver.resolveClass(
+                        moduleClassResolver.resolveClass(
                             JavaMethodImpl(psi.owner as PsiMethod).containingClass
                         )?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi.owner } as FunctionDescriptor
                     } as DeclarationDescriptor
