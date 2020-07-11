@@ -20,7 +20,7 @@ class ArrayTest {
 }
 
 // FILE: K.kt
-@file:kotlin.Suppress("C", "D", "Suppress")
+@file:kotlin.Suppress("C", "D", "Suppress", "Any")
 
 open class C
 open class D : C()

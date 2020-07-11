@@ -4,20 +4,27 @@
 // class: Foo
 // bar(): kotlin.Boolean
 // baz(kotlin.String,kotlin.String(hasDefault),kotlin.String(hasDefault)): kotlin.Boolean
+// class: C
 // contains(kotlin.Number): kotlin.Boolean
 // containsAll(kotlin.collections.Collection): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
+// equals(kotlin.Any): kotlin.Boolean
 // get(kotlin.Int): kotlin.Number
+// hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
 // indexOf(kotlin.Number): kotlin.Int
 // isEmpty(): kotlin.Boolean
 // iterator(): kotlin.collections.Iterator
+// javaListFun(): Collection
 // javaListFun(): kotlin.collections.List
+// javaPrivateFun(): kotlin.Unit
+// javaStrFun(): kotlin.String
 // javaStrFun(): kotlin.String
 // lastIndexOf(kotlin.Number): kotlin.Int
 // listIterator(): kotlin.collections.ListIterator
 // listIterator(kotlin.Int): kotlin.collections.ListIterator
 // subList(kotlin.Int,kotlin.Int): kotlin.collections.List
+// toString(): kotlin.String
 // toString(): kotlin.String
 // END
 // FILE: a.kt
