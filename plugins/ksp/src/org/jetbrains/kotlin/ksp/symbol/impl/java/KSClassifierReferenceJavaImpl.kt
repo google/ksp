@@ -6,8 +6,10 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.PsiClassType
-import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
+import com.intellij.psi.PsiJavaCodeReferenceElement
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
+import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.Origin
 
 class KSClassifierReferenceJavaImpl(val psi: PsiClassType) : KSClassifierReference {
@@ -19,8 +21,11 @@ class KSClassifierReferenceJavaImpl(val psi: PsiClassType) : KSClassifierReferen
 
     override val origin = Origin.JAVA
 
-    override val qualifier: KSClassifierReference?
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val qualifier: KSClassifierReference? by lazy {
+        val qualifierReference = (psi as? PsiClassReferenceType)?.reference?.qualifier as? PsiJavaCodeReferenceElement ?: return@lazy null
+        val qualifierType = PsiClassReferenceType(qualifierReference, psi.languageLevel)
+        getCached(qualifierType)
+    }
 
     // PsiClassType.parameters is semantically argument
     override val typeArguments: List<KSTypeArgument> by lazy {
@@ -28,6 +33,8 @@ class KSClassifierReferenceJavaImpl(val psi: PsiClassType) : KSClassifierReferen
     }
 
     override fun referencedName(): String {
-        return psi.className
+        return psi.className + if (psi.parameterCount > 0) "<${psi.parameters.map { it.presentableText }.joinToString(", ")}>" else ""
     }
+
+    override fun toString() = referencedName()
 }

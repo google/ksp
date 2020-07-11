@@ -1,18 +1,39 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: ReferenceElementProcessor
 // EXPECTED:
-// Qualifier of B is A
-// Qualifier of C is A
-// Qualifier of Int is null
-// Qualifier of B is A
-// Qualifier of C is A<Int>
-// Qualifier of Int is null
+// KSClassifierReferenceImpl: Qualifier of B is A
+// KSClassifierReferenceImpl: Qualifier of C is A
+// KSClassifierReferenceImpl: Qualifier of Int is null
+// KSClassifierReferenceImpl: Qualifier of String is null
+// KSClassifierReferenceDescriptorImpl: Qualifier of B is A
+// KSClassifierReferenceDescriptorImpl: Qualifier of C<Int> is A<String>
+// KSClassifierReferenceDescriptorImpl: Qualifier of Int is null
+// KSClassifierReferenceDescriptorImpl: Qualifier of String is null
+// KSClassifierReferenceJavaImpl: Qualifier of H is J<String>
+// KSClassifierReferenceJavaImpl: Qualifier of I is J
+// KSClassifierReferenceJavaImpl: Qualifier of Object is null
+// KSClassifierReferenceJavaImpl: Qualifier of String is null
 // END
 
-class A<T> {
+// FILE: reference.kt
+class A<T1> {
     class B
-    inner class C
+    inner class C<T2>
 }
 
 val x: A.B = A.B()
-val y: A<Int>.C = A<Int>().C()
+val y: A<String>.C<Int> = A<String>().C<Int>()
+
+// FILE: J.java
+class J<T> {
+    class H {
+    }
+
+    static class I {
+    }
+}
+
+class K {
+    J<String>.H x = null;
+    J.I z = null;
+}
