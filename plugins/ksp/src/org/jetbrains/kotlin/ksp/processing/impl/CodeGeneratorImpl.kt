@@ -14,7 +14,9 @@ class CodeGeneratorImpl(private val outputDir: File) : CodeGenerator {
 
     // TODO: investigate if it works for Windows
     override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
-        val path = "${outputDir.path}/${packageName.split(".").joinToString("/")}/$fileName.${extensionName}"
+        val packageDirs = if (packageName != "") "${packageName.split(".").joinToString("/")}/" else ""
+        val extension = if (extensionName != "") ".${extensionName}" else ""
+        val path = "${outputDir.path}/$packageDirs$fileName${extension}"
         if (fileMap[path] != null) return fileMap[path]!!.outputStream()
         val file = File(path)
         val parentFile = file.parentFile
