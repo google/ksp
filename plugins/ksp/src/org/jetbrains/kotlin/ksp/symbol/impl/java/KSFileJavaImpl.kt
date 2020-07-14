@@ -7,12 +7,11 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 
-class KSFileJavaImpl(val psi: PsiJavaFile) : KSFile {
-    companion object {
-        private val cache = mutableMapOf<PsiJavaFile, KSFileJavaImpl>()
-
+class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
+    companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }
 

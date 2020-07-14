@@ -7,14 +7,13 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.psi.*
 import java.lang.IllegalStateException
 
-class KSTypeReferenceImpl(val ktTypeReference: KtTypeReference) : KSTypeReference {
-    companion object {
-        private val cache = mutableMapOf<KtTypeReference, KSTypeReferenceImpl>()
-
+class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReference) : KSTypeReference {
+    companion object : KSObjectCache<KtTypeReference, KSTypeReferenceImpl>() {
         fun getCached(ktTypeReference: KtTypeReference) = cache.getOrPut(ktTypeReference) { KSTypeReferenceImpl(ktTypeReference) }
     }
 
@@ -35,7 +34,7 @@ class KSTypeReferenceImpl(val ktTypeReference: KtTypeReference) : KSTypeReferenc
         when (typeElement) {
             is KtFunctionType -> KSCallableReferenceImpl.getCached(typeElement)
             is KtUserType -> KSClassifierReferenceImpl.getCached(typeElement)
-            is KtDynamicType -> KSDynamicReferenceImpl.getCached()
+            is KtDynamicType -> KSDynamicReferenceImpl.getCached(Unit)
             else -> throw IllegalStateException()
         }
     }

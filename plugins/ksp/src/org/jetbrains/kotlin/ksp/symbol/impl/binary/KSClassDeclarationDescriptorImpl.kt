@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSEnumEntryDeclarationImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
@@ -22,10 +23,8 @@ import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.descriptors.ClassKind as KtClassKind
 
-class KSClassDeclarationDescriptorImpl(val descriptor: ClassDescriptor) : KSClassDeclaration {
-    companion object {
-        private val cache = mutableMapOf<ClassDescriptor, KSClassDeclarationDescriptorImpl>()
-
+class KSClassDeclarationDescriptorImpl private constructor(val descriptor: ClassDescriptor) : KSClassDeclaration {
+    companion object : KSObjectCache<ClassDescriptor, KSClassDeclarationDescriptorImpl>() {
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSClassDeclarationDescriptorImpl(descriptor) }
     }
 

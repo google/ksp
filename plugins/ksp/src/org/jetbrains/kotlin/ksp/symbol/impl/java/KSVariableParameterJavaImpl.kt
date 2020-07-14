@@ -7,12 +7,11 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.PsiParameter
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 
-class KSVariableParameterJavaImpl(val psi: PsiParameter) : KSVariableParameter {
-    companion object {
-        private val cache = mutableMapOf<PsiParameter, KSVariableParameterJavaImpl>()
-
+class KSVariableParameterJavaImpl private constructor(val psi: PsiParameter) : KSVariableParameter {
+    companion object : KSObjectCache<PsiParameter, KSVariableParameterJavaImpl>() {
         fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSVariableParameterJavaImpl(psi) }
     }
 

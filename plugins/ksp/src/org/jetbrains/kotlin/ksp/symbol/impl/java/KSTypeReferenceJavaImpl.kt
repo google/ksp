@@ -8,14 +8,13 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 import com.intellij.psi.*
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
 
-class KSTypeReferenceJavaImpl(val psi: PsiType) : KSTypeReference {
-    companion object {
-        private val cache = mutableMapOf<PsiType, KSTypeReferenceJavaImpl>()
-
+class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeReference {
+    companion object : KSObjectCache<PsiType, KSTypeReferenceJavaImpl>() {
         fun getCached(psi: PsiType) = cache.getOrPut(psi) { KSTypeReferenceJavaImpl(psi) }
     }
 

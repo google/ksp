@@ -8,13 +8,12 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.createKSValueArguments
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
-class KSAnnotationImpl(val ktAnnotationEntry: KtAnnotationEntry) : KSAnnotation {
-    companion object {
-        private val cache = mutableMapOf<KtAnnotationEntry, KSAnnotationImpl>()
-
+class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEntry) : KSAnnotation {
+    companion object : KSObjectCache<KtAnnotationEntry, KSAnnotationImpl>() {
         fun getCached(ktAnnotationEntry: KtAnnotationEntry) = cache.getOrPut(ktAnnotationEntry) { KSAnnotationImpl(ktAnnotationEntry) }
     }
 

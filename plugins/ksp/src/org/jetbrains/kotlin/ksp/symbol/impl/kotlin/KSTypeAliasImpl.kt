@@ -6,14 +6,13 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.psi.*
 
-class KSTypeAliasImpl(val ktTypeAlias: KtTypeAlias) : KSTypeAlias {
-    companion object {
-        private val cache = mutableMapOf<KtTypeAlias, KSTypeAliasImpl>()
-
+class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSTypeAlias {
+    companion object : KSObjectCache<KtTypeAlias, KSTypeAliasImpl>() {
         fun getCached(ktTypeAlias: KtTypeAlias) = cache.getOrPut(ktTypeAlias) { KSTypeAliasImpl(ktTypeAlias) }
     }
 

@@ -6,11 +6,10 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.KSName
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 
-class KSNameImpl(val name: String) : KSName {
-    companion object {
-        private val cache = mutableMapOf<String, KSNameImpl>()
-
+class KSNameImpl private constructor(val name: String) : KSName {
+    companion object : KSObjectCache<String, KSNameImpl>() {
         fun getCached(name: String) = cache.getOrPut(name) { KSNameImpl(name) }
     }
 

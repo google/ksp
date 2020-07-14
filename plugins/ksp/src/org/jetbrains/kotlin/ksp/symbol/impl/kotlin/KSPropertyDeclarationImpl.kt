@@ -17,10 +17,8 @@ import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 
-class KSPropertyDeclarationImpl(val ktProperty: KtProperty) : KSPropertyDeclaration {
-    companion object {
-        private val cache = mutableMapOf<KtProperty, KSPropertyDeclarationImpl>()
-
+class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration {
+    companion object : KSObjectCache<KtProperty, KSPropertyDeclarationImpl>() {
         fun getCached(ktProperty: KtProperty) = cache.getOrPut(ktProperty) { KSPropertyDeclarationImpl(ktProperty) }
     }
 
@@ -84,7 +82,7 @@ class KSPropertyDeclarationImpl(val ktProperty: KtProperty) : KSPropertyDeclarat
         if (ktProperty.typeReference != null) {
             KSTypeReferenceImpl.getCached(ktProperty.typeReference!!)
         } else {
-            KSTypeReferenceDeferredImpl {
+            KSTypeReferenceDeferredImpl.getCached {
                 val desc = ResolverImpl.instance.resolveDeclaration(ktProperty) as? VariableDescriptorWithAccessors
                 if (desc == null) {
                     // TODO: Add error type to allow forward reference being taken care of.

@@ -6,11 +6,10 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 
-class KSTypeReferenceLiteJavaImpl(val type: KSType) : KSTypeReference {
-    companion object {
-        private val cache = mutableMapOf<KSType, KSTypeReferenceLiteJavaImpl>()
-
+class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType) : KSTypeReference {
+    companion object : KSObjectCache<KSType, KSTypeReferenceLiteJavaImpl>() {
         fun getCached(type: KSType) = cache.getOrPut(type) { KSTypeReferenceLiteJavaImpl(type) }
     }
 

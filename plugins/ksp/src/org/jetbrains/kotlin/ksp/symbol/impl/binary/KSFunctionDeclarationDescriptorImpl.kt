@@ -19,10 +19,8 @@ import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parents
 
-class KSFunctionDeclarationDescriptorImpl(val descriptor: FunctionDescriptor) : KSFunctionDeclaration {
-    companion object {
-        private val cache = mutableMapOf<FunctionDescriptor, KSFunctionDeclarationDescriptorImpl>()
-
+class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: FunctionDescriptor) : KSFunctionDeclaration {
+    companion object : KSObjectCache<FunctionDescriptor, KSFunctionDeclarationDescriptorImpl>() {
         fun getCached(descriptor: FunctionDescriptor) = cache.getOrPut(descriptor) { KSFunctionDeclarationDescriptorImpl(descriptor) }
     }
 

@@ -7,19 +7,18 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.*
 
-class KSTypeImpl(
+class KSTypeImpl private constructor(
     val kotlinType: KotlinType,
     private val ksTypeArguments: List<KSTypeArgument>? = null,
     override val annotations: List<KSAnnotation> = listOf()
 ) : KSType {
-    companion object {
-        private val cache = mutableMapOf<KotlinType, KSTypeImpl>()
-
+    companion object : KSObjectCache<KotlinType, KSTypeImpl>() {
         fun getCached(
             kotlinType: KotlinType,
             ksTypeArguments: List<KSTypeArgument>? = null,

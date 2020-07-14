@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.ksp.isOpen
 import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.psi.KtClassOrObject
@@ -17,10 +18,8 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
-class KSPropertyDeclarationParameterImpl(val ktParameter: KtParameter) : KSPropertyDeclaration {
-    companion object {
-        private val cache = mutableMapOf<KtParameter, KSPropertyDeclarationParameterImpl>()
-
+class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration {
+    companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
     }
 

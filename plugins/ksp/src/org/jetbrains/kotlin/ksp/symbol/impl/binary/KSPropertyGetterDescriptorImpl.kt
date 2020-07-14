@@ -7,13 +7,12 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toFunctionKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 
-class KSPropertyGetterDescriptorImpl(val descriptor: PropertyGetterDescriptor) : KSPropertyGetter {
-    companion object {
-        private val cache = mutableMapOf<PropertyGetterDescriptor, KSPropertyGetterDescriptorImpl>()
-
+class KSPropertyGetterDescriptorImpl private constructor(val descriptor: PropertyGetterDescriptor) : KSPropertyGetter {
+    companion object : KSObjectCache<PropertyGetterDescriptor, KSPropertyGetterDescriptorImpl>() {
         fun getCached(descriptor: PropertyGetterDescriptor) = cache.getOrPut(descriptor) { KSPropertyGetterDescriptorImpl(descriptor) }
     }
 

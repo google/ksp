@@ -6,13 +6,12 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
-class KSPropertySetterImpl(val ktPropertySetter: KtPropertyAccessor) : KSPropertySetter {
-    companion object {
-        private val cache = mutableMapOf<KtPropertyAccessor, KSPropertySetterImpl>()
-
+class KSPropertySetterImpl private constructor(val ktPropertySetter: KtPropertyAccessor) : KSPropertySetter {
+    companion object : KSObjectCache<KtPropertyAccessor, KSPropertySetterImpl>() {
         fun getCached(ktPropertySetter: KtPropertyAccessor) = cache.getOrPut(ktPropertySetter) { KSPropertySetterImpl(ktPropertySetter) }
     }
 

@@ -6,13 +6,12 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSTypeArgumentDescriptorImpl(val descriptor: TypeProjection) : KSTypeArgumentImpl() {
-    companion object {
-        private val cache = mutableMapOf<TypeProjection, KSTypeArgumentDescriptorImpl>()
-
+class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProjection) : KSTypeArgumentImpl() {
+    companion object : KSObjectCache<TypeProjection, KSTypeArgumentDescriptorImpl>() {
         fun getCached(descriptor: TypeProjection) = cache.getOrPut(descriptor) { KSTypeArgumentDescriptorImpl(descriptor) }
     }
 

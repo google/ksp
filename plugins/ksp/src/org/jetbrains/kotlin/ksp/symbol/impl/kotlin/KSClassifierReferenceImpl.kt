@@ -8,12 +8,11 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.*
 
-class KSClassifierReferenceImpl(val ktUserType: KtUserType) : KSClassifierReference {
-    companion object {
-        private val cache = mutableMapOf<KtUserType, KSClassifierReferenceImpl>()
-
+class KSClassifierReferenceImpl private constructor(val ktUserType: KtUserType) : KSClassifierReference {
+    companion object : KSObjectCache<KtUserType, KSClassifierReferenceImpl>() {
         fun getCached(ktUserType: KtUserType) = cache.getOrPut(ktUserType) { KSClassifierReferenceImpl(ktUserType) }
     }
 

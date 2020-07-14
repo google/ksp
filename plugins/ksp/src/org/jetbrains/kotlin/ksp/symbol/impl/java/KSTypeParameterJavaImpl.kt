@@ -8,13 +8,12 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 
-class KSTypeParameterJavaImpl(val psi: PsiTypeParameter) : KSTypeParameter {
-    companion object {
-        private val cache = mutableMapOf<PsiTypeParameter, KSTypeParameterJavaImpl>()
-
+class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter {
+    companion object : KSObjectCache<PsiTypeParameter, KSTypeParameterJavaImpl>() {
         fun getCached(psi: PsiTypeParameter) = cache.getOrPut(psi) { KSTypeParameterJavaImpl(psi) }
     }
 

@@ -6,12 +6,11 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtTypeReference
 
-class KSTypeArgumentLiteImpl(override val type: KSTypeReference, override val variance: Variance) : KSTypeArgumentImpl() {
-    companion object {
-        private val cache = mutableMapOf<Pair<KSTypeReference, Variance>, KSTypeArgumentLiteImpl>()
-
+class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeReference, override val variance: Variance) : KSTypeArgumentImpl() {
+    companion object : KSObjectCache<Pair<KSTypeReference, Variance>, KSTypeArgumentLiteImpl>() {
         fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) {
             KSTypeArgumentLiteImpl(type, variance)
         }

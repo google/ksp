@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
 import org.jetbrains.kotlin.ksp.processing.impl.CodeGeneratorImpl
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.processor.AbstractTestProcessor
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCacheManager
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -77,6 +78,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         processors.forEach {
             it.finish()
         }
+
+        KSObjectCacheManager.clear()
 
         return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
     }

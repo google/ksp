@@ -6,11 +6,10 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 
-class KSTypeReferenceDeferredImpl(private val resolver: () -> KSType?) : KSTypeReference {
-    companion object {
-        private val cache = mutableMapOf<() -> KSType?, KSTypeReferenceDeferredImpl>()
-
+class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -> KSType?) : KSTypeReference {
+    companion object : KSObjectCache<() -> KSType?, KSTypeReferenceDeferredImpl>() {
         fun getCached(resolver: () -> KSType?) = cache.getOrPut(resolver) { KSTypeReferenceDeferredImpl(resolver) }
     }
 

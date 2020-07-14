@@ -10,14 +10,13 @@ import org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSClassifierReferenceDescriptorImpl(val descriptor: ClassifierDescriptor, val arguments: List<TypeProjection>) :
+class KSClassifierReferenceDescriptorImpl private constructor(val descriptor: ClassifierDescriptor, val arguments: List<TypeProjection>) :
     KSClassifierReference {
-    companion object {
-        private val cache = mutableMapOf<Pair<ClassifierDescriptor, List<TypeProjection>>, KSClassifierReferenceDescriptorImpl>()
-
+    companion object : KSObjectCache<Pair<ClassifierDescriptor, List<TypeProjection>>, KSClassifierReferenceDescriptorImpl>() {
         fun getCached(kotlinType: KotlinType) = cache.getOrPut(
             Pair(
                 kotlinType.constructor.declarationDescriptor!!,

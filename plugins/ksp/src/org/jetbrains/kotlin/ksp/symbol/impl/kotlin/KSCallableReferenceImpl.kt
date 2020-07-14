@@ -6,12 +6,11 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtFunctionType
 
-class KSCallableReferenceImpl(val ktFunctionType: KtFunctionType) : KSCallableReference {
-    companion object {
-        private val cache = mutableMapOf<KtFunctionType, KSCallableReferenceImpl>()
-
+class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunctionType) : KSCallableReference {
+    companion object : KSObjectCache<KtFunctionType, KSCallableReferenceImpl>() {
         fun getCached(ktFunctionType: KtFunctionType) = cache.getOrPut(ktFunctionType) { KSCallableReferenceImpl(ktFunctionType) }
     }
 

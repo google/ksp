@@ -9,11 +9,12 @@ import org.jetbrains.kotlin.ksp.symbol.KSDynamicReference
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.KSVisitor
 import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.psi.KtUserType
 
-class KSDynamicReferenceImpl : KSDynamicReference {
-    companion object {
-        private val cache = KSDynamicReferenceImpl()
-        fun getCached() = cache
+class KSDynamicReferenceImpl private constructor() : KSDynamicReference {
+    companion object : KSObjectCache<Unit, KSDynamicReferenceImpl>() {
+        fun getCached(unused: Unit) = cache.getOrPut(unused) { KSDynamicReferenceImpl() }
     }
 
     override val origin = Origin.KOTLIN

@@ -7,14 +7,13 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
 
-class KSVariableParameterDescriptorImpl(val descriptor: ValueParameterDescriptor) : KSVariableParameter {
-    companion object {
-        private val cache = mutableMapOf<ValueParameterDescriptor, KSVariableParameterDescriptorImpl>()
-
+class KSVariableParameterDescriptorImpl private constructor(val descriptor: ValueParameterDescriptor) : KSVariableParameter {
+    companion object : KSObjectCache<ValueParameterDescriptor, KSVariableParameterDescriptorImpl>() {
         fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) { KSVariableParameterDescriptorImpl(descriptor) }
     }
 

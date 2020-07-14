@@ -12,21 +12,18 @@ import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
-import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
+import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSFunctionDeclaration
-import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationJavaImpl(val psi: PsiClass) : KSClassDeclaration {
-    companion object {
-        private val cache = mutableMapOf<PsiClass, KSClassDeclarationJavaImpl>()
-
+class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClassDeclaration {
+    companion object : KSObjectCache<PsiClass, KSClassDeclarationJavaImpl>() {
         fun getCached(psi: PsiClass) = cache.getOrPut(psi) { KSClassDeclarationJavaImpl(psi) }
     }
 

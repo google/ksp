@@ -18,10 +18,8 @@ import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 import java.lang.IllegalStateException
 
-class KSFunctionDeclarationImpl(val ktFunction: KtFunction) : KSFunctionDeclaration {
-    companion object {
-        private val cache = mutableMapOf<KtFunction, KSFunctionDeclarationImpl>()
-
+class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) : KSFunctionDeclaration {
+    companion object : KSObjectCache<KtFunction, KSFunctionDeclarationImpl>() {
         fun getCached(ktFunction: KtFunction) = cache.getOrPut(ktFunction) { KSFunctionDeclarationImpl(ktFunction) }
     }
 
@@ -103,7 +101,7 @@ class KSFunctionDeclarationImpl(val ktFunction: KtFunction) : KSFunctionDeclarat
         if (ktFunction.typeReference != null) {
             KSTypeReferenceImpl.getCached(ktFunction.typeReference!!)
         } else {
-            KSTypeReferenceDeferredImpl {
+            KSTypeReferenceDeferredImpl.getCached {
                 val desc = ResolverImpl.instance.resolveDeclaration(ktFunction) as FunctionDescriptor
                 KSTypeImpl.getCached(desc.returnTypeOrNothing)
             }

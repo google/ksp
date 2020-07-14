@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
@@ -22,10 +23,8 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.constants.*
 
-class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnotation {
-    companion object {
-        private val cache = mutableMapOf<AnnotationDescriptor, KSAnnotationDescriptorImpl>()
-
+class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationDescriptor) : KSAnnotation {
+    companion object : KSObjectCache<AnnotationDescriptor, KSAnnotationDescriptorImpl>() {
         fun getCached(descriptor: AnnotationDescriptor) = cache.getOrPut(descriptor) { KSAnnotationDescriptorImpl(descriptor) }
     }
 
@@ -53,7 +52,7 @@ class KSAnnotationDescriptorImpl(val descriptor: AnnotationDescriptor) : KSAnnot
 }
 
 private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
-    val ksName = KSNameImpl(this.asSingleFqName().asString())
+    val ksName = KSNameImpl.getCached(this.asSingleFqName().asString())
     return ResolverImpl.instance.getClassDeclarationByName(ksName)
 }
 

@@ -6,14 +6,13 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
 import org.jetbrains.kotlin.psi.KtParameter
 
-class KSVariableParameterImpl(val ktParameter: KtParameter) : KSVariableParameter {
-    companion object {
-        private val cache = mutableMapOf<KtParameter, KSVariableParameterImpl>()
-
+class KSVariableParameterImpl private constructor(val ktParameter: KtParameter) : KSVariableParameter {
+    companion object : KSObjectCache<KtParameter, KSVariableParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSVariableParameterImpl(ktParameter) }
     }
 

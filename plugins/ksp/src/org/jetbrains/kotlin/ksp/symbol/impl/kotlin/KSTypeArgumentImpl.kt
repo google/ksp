@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
 
@@ -26,10 +27,8 @@ abstract class KSTypeArgumentImpl : KSTypeArgument {
     }
 }
 
-class KSTypeArgumentKtImpl(val ktTypeArgument: KtTypeProjection) : KSTypeArgumentImpl() {
-    companion object {
-        private val cache = mutableMapOf<KtTypeProjection, KSTypeArgumentKtImpl>()
-
+class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProjection) : KSTypeArgumentImpl() {
+    companion object : KSObjectCache<KtTypeProjection, KSTypeArgumentKtImpl>() {
         fun getCached(ktTypeArgument: KtTypeProjection) = cache.getOrPut(ktTypeArgument) { KSTypeArgumentKtImpl(ktTypeArgument) }
     }
 

@@ -7,12 +7,12 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtClassOrObject
 
-class KSEnumEntryDeclarationDescriptorImpl(val descriptor: ClassDescriptor) : KSEnumEntryDeclaration,
+class KSEnumEntryDeclarationDescriptorImpl private constructor(val descriptor: ClassDescriptor) : KSEnumEntryDeclaration,
     KSClassDeclaration by KSClassDeclarationDescriptorImpl.getCached(descriptor) {
-    companion object {
-        val cache = mutableMapOf<ClassDescriptor, KSEnumEntryDeclarationDescriptorImpl>()
+    companion object : KSObjectCache<ClassDescriptor, KSEnumEntryDeclarationDescriptorImpl>() {
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSEnumEntryDeclarationDescriptorImpl(descriptor) }
     }
 }

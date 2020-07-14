@@ -8,12 +8,11 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWildcardType
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
 
-class KSTypeArgumentJavaImpl(val psi: PsiType) : KSTypeArgumentImpl() {
-    companion object {
-        private val cache = mutableMapOf<PsiType, KSTypeArgumentJavaImpl>()
-
+class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgumentImpl() {
+    companion object : KSObjectCache<PsiType, KSTypeArgumentJavaImpl>() {
         fun getCached(psi: PsiType) = cache.getOrPut(psi) { KSTypeArgumentJavaImpl(psi) }
     }
 

@@ -11,11 +11,10 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
 import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 
-class KSClassifierReferenceJavaImpl(val psi: PsiClassType) : KSClassifierReference {
-    companion object {
-        private val cache = mutableMapOf<PsiClassType, KSClassifierReferenceJavaImpl>()
-
+class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) : KSClassifierReference {
+    companion object : KSObjectCache<PsiClassType, KSClassifierReferenceJavaImpl>() {
         fun getCached(psi: PsiClassType) = cache.getOrPut(psi) { KSClassifierReferenceJavaImpl(psi) }
     }
 

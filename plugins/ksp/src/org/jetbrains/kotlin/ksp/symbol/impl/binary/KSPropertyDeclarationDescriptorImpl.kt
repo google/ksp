@@ -16,10 +16,8 @@ import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parents
 
-class KSPropertyDeclarationDescriptorImpl(val descriptor: VariableDescriptorWithAccessors) : KSPropertyDeclaration {
-    companion object {
-        private val cache = mutableMapOf<VariableDescriptorWithAccessors, KSPropertyDeclarationDescriptorImpl>()
-
+class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: VariableDescriptorWithAccessors) : KSPropertyDeclaration {
+    companion object : KSObjectCache<VariableDescriptorWithAccessors, KSPropertyDeclarationDescriptorImpl>() {
         fun getCached(descriptor: VariableDescriptorWithAccessors) = cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
     }
 

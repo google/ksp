@@ -11,12 +11,11 @@ import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.Modifier
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.types.*
 
-class KSTypeReferenceDescriptorImpl(val kotlinType: KotlinType) : KSTypeReference {
-    companion object {
-        private val cache = mutableMapOf<KotlinType, KSTypeReferenceDescriptorImpl>()
-
+class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType) : KSTypeReference {
+    companion object : KSObjectCache<KotlinType, KSTypeReferenceDescriptorImpl>() {
         fun getCached(kotlinType: KotlinType) = cache.getOrPut(kotlinType) { KSTypeReferenceDescriptorImpl(kotlinType) }
     }
 

@@ -18,10 +18,8 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationImpl(val ktClassOrObject: KtClassOrObject) : KSClassDeclaration {
-    companion object {
-        private val cache = mutableMapOf<KtClassOrObject, KSClassDeclarationImpl>()
-
+class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrObject) : KSClassDeclaration {
+    companion object : KSObjectCache<KtClassOrObject, KSClassDeclarationImpl>() {
         fun getCached(ktClassOrObject: KtClassOrObject) = cache.getOrPut(ktClassOrObject) { KSClassDeclarationImpl(ktClassOrObject) }
     }
 

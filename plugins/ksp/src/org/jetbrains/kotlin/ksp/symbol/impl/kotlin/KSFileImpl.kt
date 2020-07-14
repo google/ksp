@@ -6,13 +6,12 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.getKSDeclarations
 import org.jetbrains.kotlin.psi.KtFile
 
-class KSFileImpl(val file: KtFile) : KSFile {
-    companion object {
-        private val cache = mutableMapOf<KtFile, KSFileImpl>()
-
+class KSFileImpl private constructor(val file: KtFile) : KSFile {
+    companion object : KSObjectCache<KtFile, KSFileImpl>() {
         fun getCached(file: KtFile) = cache.getOrPut(file) { KSFileImpl(file) }
     }
 

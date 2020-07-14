@@ -12,15 +12,14 @@ import org.jetbrains.kotlin.ksp.isOpen
 import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
-class KSPropertyDeclarationJavaImpl(val psi: PsiField) : KSPropertyDeclaration {
-    companion object {
-        private val cache = mutableMapOf<PsiField, KSPropertyDeclarationJavaImpl>()
-
+class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration {
+    companion object : KSObjectCache<PsiField, KSPropertyDeclarationJavaImpl>() {
         fun getCached(psi: PsiField) = cache.getOrPut(psi) { KSPropertyDeclarationJavaImpl(psi) }
     }
 

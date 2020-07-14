@@ -6,11 +6,10 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 
-class KSValueArgumentLiteImpl(override val name: KSName, override val value: Any?) : KSValueArgumentImpl() {
-    companion object {
-        private val cache = mutableMapOf<Pair<KSName, Any?>, KSValueArgumentLiteImpl>()
-
+class KSValueArgumentLiteImpl private constructor(override val name: KSName, override val value: Any?) : KSValueArgumentImpl() {
+    companion object : KSObjectCache<Pair<KSName, Any?>, KSValueArgumentLiteImpl>() {
         fun getCached(name: KSName, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentLiteImpl(name, value) }
     }
 

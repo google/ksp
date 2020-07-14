@@ -11,14 +11,13 @@ import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.getAbsentDefaultArguments
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 
-class KSAnnotationJavaImpl(val psi: PsiAnnotation) : KSAnnotation {
-    companion object {
-        private val cache = mutableMapOf<PsiAnnotation, KSAnnotationJavaImpl>()
-
+class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
+    companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
         fun getCached(psi: PsiAnnotation) = cache.getOrPut(psi) { KSAnnotationJavaImpl(psi) }
     }
 
