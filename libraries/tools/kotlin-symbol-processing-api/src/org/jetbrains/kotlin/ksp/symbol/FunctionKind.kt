@@ -9,5 +9,5 @@ package org.jetbrains.kotlin.ksp.symbol
  * Kind of a function declaration.
  */
 enum class FunctionKind {
-    MEMBER, STATIC, ANONYMOUS, LAMBDA;
+    TOP_LEVEL, MEMBER, STATIC, ANONYMOUS, LAMBDA;
 }

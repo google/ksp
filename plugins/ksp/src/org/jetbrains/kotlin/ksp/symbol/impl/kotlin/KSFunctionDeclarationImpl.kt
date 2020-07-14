@@ -65,7 +65,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
 
     override val functionKind: FunctionKind by lazy {
         if (parentDeclaration == null) {
-            FunctionKind.STATIC
+            FunctionKind.TOP_LEVEL
         } else {
             when (ktFunction) {
                 is KtNamedFunction, is KtPrimaryConstructor, is KtSecondaryConstructor -> FunctionKind.MEMBER
