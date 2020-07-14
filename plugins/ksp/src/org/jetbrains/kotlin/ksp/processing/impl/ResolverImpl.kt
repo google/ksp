@@ -191,6 +191,7 @@ class ResolverImpl(
         }
     }
 
+    // TODO: Resolve Java fields/variables is not supported by this function. Not needed currently.
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
@@ -213,7 +214,7 @@ class ResolverImpl(
         return when (property) {
             is KSPropertyDeclarationImpl -> resolveDeclaration(property.ktProperty)
             is KSPropertyDeclarationDescriptorImpl -> property.descriptor
-            is KSPropertyDeclarationJavaImpl -> TODO()
+            is KSPropertyDeclarationJavaImpl -> throw IllegalStateException("should not invoke resolve on Java fields")
             else -> throw IllegalStateException("unexpected class: ${property.javaClass}")
         } as PropertyDescriptor?
     }
