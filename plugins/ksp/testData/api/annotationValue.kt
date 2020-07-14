@@ -9,6 +9,7 @@
 // @Foo
 // @Suppress
 // G
+// 31
 // END
 
 enum class RGB {
