@@ -1,12 +1,15 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: HelloProcessor
 // EXPECTED:
-// 5
+// 8
 // test.Foo
 // test.ITF
 // Bar.list
 // Bar.BBB
 // AClass
+// C
+// C.f
+// C.javaFun
 // END
 //FILE: a.kt
 package test
@@ -77,14 +80,19 @@ fun <D> foo(c: C, dd: () -> D) = 1
 class CC: C() {}
 
 // FILE: C.java
-import java.util.List
-import java.util.ArrayList
-import test.Foo
-import test.ITF
+import java.util.List;
+import java.util.ArrayList;
+import test.Foo;
+import test.ITF;
+import test.Anno;
 
+@Anno
 class C {
-    Foo f = new Foo();
+    @Anno
+    public Foo f = new Foo();
     List<? extends ITF> list = new ArrayList<>();
+
+    @Anno
     public String javaFun() {
         return f.k;
     }
