@@ -48,7 +48,7 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
     }
 
     override val qualifiedName: KSName by lazy {
-        KSNameImpl.getCached(psi.name)
+        KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
     }
 
     override val simpleName: KSName by lazy {
