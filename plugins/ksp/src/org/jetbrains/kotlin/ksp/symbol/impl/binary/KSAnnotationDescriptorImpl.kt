@@ -99,8 +99,10 @@ fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: Collectio
 fun ValueParameterDescriptor.getDefaultValue(): Any? {
     val psi = this.findPsi()
     return when (psi) {
-        // TODO: Get default value for binaries.
-        null -> null
+        null -> {
+            // TODO: This will only work for symbols from Java class.
+            ResolverImpl.instance.javaActualAnnotationArgumentExtractor.extractDefaultValue(this, this.type)?.toValue()
+        }
         is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.value
         is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper.computeConstantExpression((psi).defaultValue)
         else -> throw IllegalStateException()
