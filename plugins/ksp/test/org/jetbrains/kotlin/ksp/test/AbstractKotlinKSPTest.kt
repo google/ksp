@@ -34,8 +34,10 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
         val analysisExtension =
             KotlinSymbolProcessingExtension(KspOptions.Builder().apply {
                 javaSourceRoots.addAll(javaFiles.map { File(it.parent) }.distinct())
-                sourcesOutputDir = File("/tmp/kspTest")
-                classesOutputDir = File("/tmp/kspTest")
+                classOutputDir = File("/tmp/kspTest/classes/main")
+                javaOutputDir = File("/tmp/kspTest/src/main/java")
+                kotlinOutputDir = File("/tmp/kspTest/src/main/kotlin")
+                resourceOutputDir = File("/tmp/kspTest/src/main/resources")
             }.build(), testProcessor)
         val project = myEnvironment.project
         AnalysisHandlerExtension.registerExtension(project, analysisExtension)

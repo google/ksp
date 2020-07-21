@@ -43,8 +43,10 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
     private fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when (option) {
         KspCliOption.CONFIGURATION -> throw CliOptionProcessingException("${KspCliOption.CONFIGURATION.optionName} should be handled earlier")
         KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(':').map{ File(it) }
-        KspCliOption.GENERATED_SOURCES_DIR_OPTION -> sourcesOutputDir = File(value)
-        KspCliOption.GENERATED_CLASSES_DIR_OPTION -> classesOutputDir = File(value)
+        KspCliOption.CLASS_OUTPUT_DIR_OPTION -> classOutputDir = File(value)
+        KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
+        KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
+        KspCliOption.RESOURCE_OUTPUT_DIR_OPTION -> resourceOutputDir = File(value)
     }
 }
 
@@ -71,17 +73,31 @@ enum class KspCliOption(
     @Deprecated("Do not use in CLI")
     CONFIGURATION("configuration", "<encoded>", "Encoded configuration"),
 
-    GENERATED_SOURCES_DIR_OPTION(
-        "sources",
-        "<sources>",
-        "Dir of generated sources",
+    CLASS_OUTPUT_DIR_OPTION(
+        "classOutputDir",
+        "<classOutputDir>",
+        "Dir of generated classes",
         false
     ),
 
-    GENERATED_CLASSES_DIR_OPTION(
-        "classes",
-        "<classes>",
-        "Dir of generated classes",
+    JAVA_OUTPUT_DIR_OPTION(
+        "javaOutputDir",
+        "<javaOutputDir>",
+        "Dir of generated Java sources",
+        false
+    ),
+
+    KOTLIN_OUTPUT_DIR_OPTION(
+        "kotlinOutputDir",
+        "<kotlinOutputDir>",
+        "Dir of generated Kotlin sources",
+        false
+    ),
+
+    RESOURCE_OUTPUT_DIR_OPTION(
+        "resourceOutputDir",
+        "<resourceOutputDir>",
+        "Dir of generated resources",
         false
     ),
 
@@ -98,8 +114,10 @@ class KspOptions(
     val compileClasspath: List<File>,
     val javaSourceRoots: List<File>,
 
-    val sourcesOutputDir: File,
-    val classesOutputDir: File,
+    val classOutputDir: File,
+    val javaOutputDir: File,
+    val kotlinOutputDir: File,
+    val resourceOutputDir: File,
 
     val processingClasspath: List<File>,
     val processors: List<String>,
@@ -111,8 +129,10 @@ class KspOptions(
         val compileClasspath: MutableList<File> = mutableListOf()
         val javaSourceRoots: MutableList<File> = mutableListOf()
 
-        var sourcesOutputDir: File? = null
-        var classesOutputDir: File? = null
+        var classOutputDir: File? = null
+        var javaOutputDir: File? = null
+        var kotlinOutputDir: File? = null
+        var resourceOutputDir: File? = null
 
         val processingClasspath: MutableList<File> = mutableListOf()
         val processors: MutableList<String> = mutableListOf()
@@ -122,7 +142,10 @@ class KspOptions(
         fun build(): KspOptions {
             return KspOptions(
                 projectBaseDir, compileClasspath, javaSourceRoots,
-                sourcesOutputDir!!, classesOutputDir!!,
+                classOutputDir!!,
+                javaOutputDir!!,
+                kotlinOutputDir!!,
+                resourceOutputDir!!,
                 processingClasspath, processors, processingOptions
             )
         }

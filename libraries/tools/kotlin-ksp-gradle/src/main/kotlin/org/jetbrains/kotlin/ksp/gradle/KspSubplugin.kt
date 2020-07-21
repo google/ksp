@@ -25,8 +25,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.ksp.gradle.model.builder.KspModelBuilder
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.KSP_CONFIGURATION_NAME
-import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.getKspGeneratedClassesDir
-import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.getKspGeneratedSourcesDir
+import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.getKspClassOutputDir
+import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.getKspJavaOutputDir
+import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.getKspKotlinOutputDir
+import org.jetbrains.kotlin.ksp.gradle.KspGradleSubplugin.Companion.getKspResourceOutputDir
 import java.io.File
 import javax.inject.Inject
 
@@ -37,12 +39,20 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val KSP_CONFIGURATION_NAME = "ksp"
 
         @JvmStatic
-        fun getKspGeneratedClassesDir(project: Project, sourceSetName: String) =
+        fun getKspClassOutputDir(project: Project, sourceSetName: String) =
             File(project.project.buildDir, "generated/ksp/classes/$sourceSetName")
 
         @JvmStatic
-        fun getKspGeneratedSourcesDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "generated/ksp/src/$sourceSetName")
+        fun getKspJavaOutputDir(project: Project, sourceSetName: String) =
+            File(project.project.buildDir, "generated/ksp/src/$sourceSetName/java")
+
+        @JvmStatic
+        fun getKspKotlinOutputDir(project: Project, sourceSetName: String) =
+            File(project.project.buildDir, "generated/ksp/src/$sourceSetName/kotlin")
+
+        @JvmStatic
+        fun getKspResourceOutputDir(project: Project, sourceSetName: String) =
+            File(project.project.buildDir, "generated/ksp/src/$sourceSetName/resources")
     }
 
     override fun apply(project: Project) {
@@ -82,13 +92,17 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
         options += FilesSubpluginOption("apclasspath", kspConfiguration)
 
         val sourceSetName = kotlinCompilation?.compilationName ?: "default"
-        val generatedClassesDir = getKspGeneratedClassesDir(project, sourceSetName)
-        val generatedSourcesDir = getKspGeneratedSourcesDir(project, sourceSetName)
-        options += SubpluginOption("classes", generatedClassesDir.path)
-        options += SubpluginOption("sources", generatedSourcesDir.path)
+        val classOutputDir = getKspClassOutputDir(project, sourceSetName)
+        val javaOutputDir = getKspJavaOutputDir(project, sourceSetName)
+        val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName)
+        val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName)
+        options += SubpluginOption("classOutputDir", classOutputDir.path)
+        options += SubpluginOption("javaOutputDir", javaOutputDir.path)
+        options += SubpluginOption("kotlinOutputDir", kotlinOutputDir.path)
+        options += SubpluginOption("resourceOutputDir", resourceOutputDir.path)
 
         if (javaCompile != null) {
-            val generatedJavaSources = javaCompile.project.fileTree(generatedSourcesDir)
+            val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
             javaCompile.source(generatedJavaSources)
         }

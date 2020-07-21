@@ -9,14 +9,25 @@ import org.jetbrains.kotlin.ksp.processing.CodeGenerator
 import java.io.File
 import java.io.OutputStream
 
-class CodeGeneratorImpl(private val outputDir: File) : CodeGenerator {
+class CodeGeneratorImpl(
+    private val classDir: File,
+    private val javaDir: File,
+    private val kotlinDir: File,
+    private val resourcesDir: File
+) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
 
     // TODO: investigate if it works for Windows
     override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
         val packageDirs = if (packageName != "") "${packageName.split(".").joinToString("/")}/" else ""
         val extension = if (extensionName != "") ".${extensionName}" else ""
-        val path = "${outputDir.path}/$packageDirs$fileName${extension}"
+        val typeRoot = when (extensionName) {
+            "class" -> classDir
+            "java" -> javaDir
+            "kt" -> kotlinDir
+            else -> resourcesDir
+        }.path
+        val path = "$typeRoot/$packageDirs$fileName${extension}"
         if (fileMap[path] != null) return fileMap[path]!!.outputStream()
         val file = File(path)
         val parentFile = file.parentFile

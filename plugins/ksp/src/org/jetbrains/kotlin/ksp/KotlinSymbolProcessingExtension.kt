@@ -65,8 +65,12 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             .distinctBy { it.canonicalPath }
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
         val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, componentProvider)
-        val targetDir = options.sourcesOutputDir
-        val codeGen = CodeGeneratorImpl(targetDir)
+        val codeGen = CodeGeneratorImpl(
+            options.classOutputDir,
+            options.javaOutputDir,
+            options.kotlinOutputDir,
+            options.resourceOutputDir
+        )
 
         val processors = loadProcessors()
         processors.forEach {
@@ -103,8 +107,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         return AnalysisResult.RetryWithAdditionalRoots(
             BindingContext.EMPTY,
             module,
-            listOf(options.sourcesOutputDir),
-            listOf(options.sourcesOutputDir),
+            listOf(options.javaOutputDir),
+            listOf(options.kotlinOutputDir),
             addToEnvironment = true
         )
     }
