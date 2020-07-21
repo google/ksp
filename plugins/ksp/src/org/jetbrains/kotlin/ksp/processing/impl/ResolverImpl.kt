@@ -307,6 +307,7 @@ class ResolverImpl(
             when (psi) {
                 is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
                 is PsiClass -> KSClassDeclarationJavaImpl.getCached(psi)
+                is KtTypeAlias -> KSTypeAliasImpl.getCached(psi)
                 else -> throw IllegalStateException()
             }
         } else {

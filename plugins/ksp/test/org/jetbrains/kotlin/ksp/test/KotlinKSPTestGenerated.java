@@ -93,6 +93,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/resolveJavaType.kt");
     }
 
+    @TestMetadata("typeAlias.kt")
+    public void testTypeAlias() throws Exception {
+        runTest("plugins/ksp/testData/api/typeAlias.kt");
+    }
+
     @TestMetadata("typeComposure.kt")
     public void testTypeComposure() throws Exception {
         runTest("plugins/ksp/testData/api/typeComposure.kt");

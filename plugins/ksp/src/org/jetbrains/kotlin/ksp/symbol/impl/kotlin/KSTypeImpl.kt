@@ -11,23 +11,29 @@ import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.typeUtil.*
 
 class KSTypeImpl private constructor(
     val kotlinType: KotlinType,
+    val abbreviation: KotlinType?,
     private val ksTypeArguments: List<KSTypeArgument>? = null,
     override val annotations: List<KSAnnotation> = listOf()
 ) : KSType {
-    companion object : KSObjectCache<KotlinType, KSTypeImpl>() {
+    companion object : KSObjectCache<Pair<KotlinType, KotlinType?>, KSTypeImpl>() {
         fun getCached(
             kotlinType: KotlinType,
             ksTypeArguments: List<KSTypeArgument>? = null,
             annotations: List<KSAnnotation> = listOf()
-        ) =
-            cache.getOrPut(kotlinType) { KSTypeImpl(kotlinType, ksTypeArguments, annotations) }
+        ): KSTypeImpl {
+            val abbrev = kotlinType.getAbbreviation()
+            return cache.getOrPut(Pair(kotlinType, abbrev)) { KSTypeImpl(kotlinType, abbrev, ksTypeArguments, annotations) }
+        }
     }
 
-    override val declaration: KSDeclaration = ResolverImpl.instance.findDeclaration(kotlinType)
+    override val declaration: KSDeclaration by lazy {
+        ResolverImpl.instance.findDeclaration(abbreviation ?: kotlinType)
+    }
 
     override val nullability: Nullability by lazy {
         when (kotlinType.nullability()) {
@@ -78,5 +84,5 @@ class KSTypeImpl private constructor(
 
     override fun hashCode(): Int = kotlinType.hashCode()
 
-    override fun toString(): String = kotlinType.toString()
+    override fun toString(): String = (abbreviation ?: kotlinType).toString()
 }

@@ -46,10 +46,10 @@ open class TypeComparisonProcessor : AbstractTestProcessor() {
 
 }
 
-class TypeCollector : KSTopDownVisitor<MutableSet<KSType>, Unit>() {
-    override fun defaultHandler(node: KSNode, data: MutableSet<KSType>) = Unit
+class TypeCollector : KSTopDownVisitor<MutableCollection<KSType>, Unit>() {
+    override fun defaultHandler(node: KSNode, data: MutableCollection<KSType>) = Unit
 
-    override fun visitTypeReference(typeReference: KSTypeReference, data: MutableSet<KSType>) {
+    override fun visitTypeReference(typeReference: KSTypeReference, data: MutableCollection<KSType>) {
         super.visitTypeReference(typeReference, data)
         typeReference.resolve()?.let { data.add(it) }
     }
