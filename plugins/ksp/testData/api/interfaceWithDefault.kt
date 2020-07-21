@@ -7,6 +7,11 @@
 // bar: true
 // iterator: true
 // equals: false
+// interfaceProperty: true
+// B: true
+// parameterVal: false
+// abstractProperty: true
+// a: false
 // END
 // FILE: a.kt
 interface KTInterface: Sequence<String> {
@@ -18,6 +23,13 @@ interface KTInterface: Sequence<String> {
 
     fun emptyFun()
 
+    val interfaceProperty: String
+
+}
+
+abstract class B(val parameterVal: String) {
+    abstract val abstractProperty: String
+    val a: String = "str"
 }
 
 // FILE: C.java

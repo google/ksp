@@ -15,7 +15,6 @@ import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.OverridingUtil
-import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 
 class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration {
     companion object : KSObjectCache<KtProperty, KSPropertyDeclarationImpl>() {
