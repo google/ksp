@@ -5,11 +5,8 @@
 
 package org.jetbrains.kotlin.ksp.symbol
 
-/**
- * Base class of every visitable program elements.
- */
-interface KSNode {
-    val origin: Origin
-    val location: Location
-    fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R
-}
+sealed class Location
+
+data class FileLocation(val filePath: String, val lineNumber: Int) : Location()
+
+object NonExistLocation : Location()

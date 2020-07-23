@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
@@ -24,6 +23,10 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktClassOrObject.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         ktClassOrObject.annotationEntries.map { KSAnnotationImpl.getCached(it) }

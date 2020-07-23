@@ -22,6 +22,8 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
 
     override val origin = Origin.CLASS
 
+    override val location: Location = NonExistLocation
+
     override val bounds: List<KSTypeReference> by lazy {
         descriptor.upperBounds.map { KSTypeReferenceDescriptorImpl.getCached(it) }
     }

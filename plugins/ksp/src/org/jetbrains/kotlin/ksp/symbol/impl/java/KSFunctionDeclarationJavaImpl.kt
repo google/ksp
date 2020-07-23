@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
 class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KSFunctionDeclaration {
@@ -27,6 +28,10 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }

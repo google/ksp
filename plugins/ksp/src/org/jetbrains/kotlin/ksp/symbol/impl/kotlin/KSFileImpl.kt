@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.getKSDeclarations
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtFile
 
 class KSFileImpl private constructor(val file: KtFile) : KSFile {
@@ -16,6 +17,10 @@ class KSFileImpl private constructor(val file: KtFile) : KSFile {
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        file.toLocation()
+    }
 
     override val packageName: KSName by lazy {
         KSNameImpl.getCached(file.packageFqName.toString())

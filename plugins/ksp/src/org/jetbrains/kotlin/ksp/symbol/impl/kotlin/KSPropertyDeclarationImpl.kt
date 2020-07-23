@@ -23,6 +23,10 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
 
     override val origin = Origin.KOTLIN
 
+    override val location: Location by lazy {
+        ktProperty.toLocation()
+    }
+
     override val annotations: List<KSAnnotation> by lazy {
         ktProperty.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

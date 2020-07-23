@@ -21,6 +21,8 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
 
     override val origin = Origin.CLASS
 
+    override val location: Location = NonExistLocation
+
     override val element: KSReferenceElement by lazy {
         when {
             kotlinType.constructor.declarationDescriptor is ClassDescriptor -> KSClassifierReferenceDescriptorImpl.getCached(kotlinType)

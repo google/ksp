@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.ksp.processing.impl
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -52,9 +53,11 @@ class ResolverImpl(
     files: Collection<KtFile>,
     javaFiles: Collection<PsiJavaFile>,
     val bindingTrace: BindingTrace,
+    val project: Project,
     componentProvider: ComponentProvider
 ) : Resolver {
     val ksFiles: List<KSFile>
+    val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
 

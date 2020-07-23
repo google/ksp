@@ -18,6 +18,10 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
 
     override val origin = Origin.JAVA
 
+    override val location: Location by lazy {
+        TODO()
+    }
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

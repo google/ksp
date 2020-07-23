@@ -10,8 +10,10 @@ import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
 import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
+import org.jetbrains.kotlin.ksp.symbol.Location
 import org.jetbrains.kotlin.ksp.symbol.Origin
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) : KSClassifierReference {
     companion object : KSObjectCache<PsiClassType, KSClassifierReferenceJavaImpl>() {
@@ -19,6 +21,10 @@ class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) :
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        TODO()
+    }
 
     override val qualifier: KSClassifierReference? by lazy {
         val qualifierReference = (psi as? PsiClassReferenceType)?.reference?.qualifier as? PsiJavaCodeReferenceElement ?: return@lazy null

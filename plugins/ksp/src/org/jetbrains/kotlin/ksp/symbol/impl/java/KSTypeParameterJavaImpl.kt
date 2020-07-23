@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter {
     companion object : KSObjectCache<PsiTypeParameter, KSTypeParameterJavaImpl>() {
@@ -18,6 +19,10 @@ class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : K
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }

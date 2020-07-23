@@ -15,6 +15,8 @@ class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType) : KSType
 
     override val origin = Origin.JAVA
 
+    override val location: Location = NonExistLocation
+
     override val element: KSReferenceElement? = null
 
     override val annotations: List<KSAnnotation> = emptyList()

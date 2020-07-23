@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
 class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration {
@@ -24,6 +25,10 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }

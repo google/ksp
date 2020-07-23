@@ -5,9 +5,7 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.java
 
-import org.jetbrains.kotlin.ksp.symbol.KSAnnotation
-import org.jetbrains.kotlin.ksp.symbol.KSName
-import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentImpl
 
@@ -17,6 +15,8 @@ class KSValueArgumentJavaImpl private constructor(override val name: KSName?, ov
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location = NonExistLocation
 
     override val isSpread: Boolean = false
 

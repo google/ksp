@@ -15,6 +15,8 @@ class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -
 
     override val origin = Origin.KOTLIN
 
+    override val location: Location = NonExistLocation
+
     override val annotations: List<KSAnnotation> = emptyList()
 
     override val element: KSReferenceElement? = null

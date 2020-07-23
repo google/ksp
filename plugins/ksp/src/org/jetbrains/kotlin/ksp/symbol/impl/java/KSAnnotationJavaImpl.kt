@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.getAbsentDefaultArguments
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -22,6 +23,10 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val annotationType: KSTypeReference by lazy {
         KSTypeReferenceLiteJavaImpl.getCached(

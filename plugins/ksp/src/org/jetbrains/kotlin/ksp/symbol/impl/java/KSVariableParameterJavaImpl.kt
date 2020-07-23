@@ -9,6 +9,7 @@ import com.intellij.psi.PsiParameter
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSVariableParameterJavaImpl private constructor(val psi: PsiParameter) : KSVariableParameter {
     companion object : KSObjectCache<PsiParameter, KSVariableParameterJavaImpl>() {
@@ -16,6 +17,10 @@ class KSVariableParameterJavaImpl private constructor(val psi: PsiParameter) : K
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }

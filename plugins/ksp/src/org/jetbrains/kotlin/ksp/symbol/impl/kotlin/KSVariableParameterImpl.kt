@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
 import org.jetbrains.kotlin.psi.KtParameter
@@ -17,6 +18,10 @@ class KSVariableParameterImpl private constructor(val ktParameter: KtParameter) 
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktParameter.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         ktParameter.annotationEntries.map { KSAnnotationImpl.getCached(it) }

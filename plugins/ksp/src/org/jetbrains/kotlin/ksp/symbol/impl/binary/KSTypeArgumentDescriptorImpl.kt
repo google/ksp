@@ -17,6 +17,8 @@ class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProje
 
     override val origin = Origin.CLASS
 
+    override val location: Location = NonExistLocation
+
     override val type: KSTypeReference by lazy {
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }

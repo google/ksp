@@ -7,9 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
 import org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters
-import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
-import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
-import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeProjection
@@ -33,6 +31,8 @@ class KSClassifierReferenceDescriptorImpl private constructor(val descriptor: Cl
     }
 
     override val origin = Origin.CLASS
+
+    override val location: Location = NonExistLocation
 
     override val qualifier: KSClassifierReference? by lazy {
         val outerDescriptor = descriptor.containingDeclaration as? ClassifierDescriptor ?: return@lazy null

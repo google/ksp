@@ -15,6 +15,8 @@ class KSValueArgumentLiteImpl private constructor(override val name: KSName, ove
 
     override val origin = Origin.KOTLIN
 
+    override val location: Location = NonExistLocation
+
     override val annotations: List<KSAnnotation> = emptyList()
 
     override val isSpread: Boolean = false

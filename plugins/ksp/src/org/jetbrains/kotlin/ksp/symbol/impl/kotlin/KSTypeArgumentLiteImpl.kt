@@ -22,5 +22,7 @@ class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeRefere
 
     override val origin = Origin.KOTLIN
 
+    override val location: Location = NonExistLocation
+
     override val annotations: List<KSAnnotation> = type.annotations
 }

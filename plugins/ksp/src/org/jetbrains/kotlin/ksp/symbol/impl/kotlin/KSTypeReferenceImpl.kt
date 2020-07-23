@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 import java.lang.IllegalStateException
 
@@ -18,6 +19,10 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktTypeReference.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> by lazy {
         ktTypeReference.annotationEntries.map { KSAnnotationImpl.getCached(it) }

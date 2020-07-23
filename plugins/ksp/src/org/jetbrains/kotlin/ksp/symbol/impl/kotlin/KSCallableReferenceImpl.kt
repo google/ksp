@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtFunctionType
 
 class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunctionType) : KSCallableReference {
@@ -15,6 +16,10 @@ class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunction
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktFunctionType.toLocation()
+    }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
         ktFunctionType.typeArgumentsAsTypes.map { KSTypeArgumentLiteImpl.getCached(it) }

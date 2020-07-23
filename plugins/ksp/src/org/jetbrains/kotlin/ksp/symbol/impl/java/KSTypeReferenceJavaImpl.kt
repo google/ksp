@@ -20,6 +20,10 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
 
     override val origin = Origin.JAVA
 
+    override val location: Location by lazy {
+        TODO()
+    }
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

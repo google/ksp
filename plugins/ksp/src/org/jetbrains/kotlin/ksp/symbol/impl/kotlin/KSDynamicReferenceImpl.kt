@@ -5,10 +5,7 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.ksp.symbol.KSDynamicReference
-import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
-import org.jetbrains.kotlin.ksp.symbol.KSVisitor
-import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtUserType
 
@@ -18,6 +15,10 @@ class KSDynamicReferenceImpl private constructor() : KSDynamicReference {
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        NonExistLocation
+    }
 
     override val typeArguments: List<KSTypeArgument> = listOf<KSTypeArgument>()
 

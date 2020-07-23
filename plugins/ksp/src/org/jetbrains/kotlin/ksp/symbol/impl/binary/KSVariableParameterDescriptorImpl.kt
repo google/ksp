@@ -19,6 +19,8 @@ class KSVariableParameterDescriptorImpl private constructor(val descriptor: Valu
 
     override val origin = Origin.CLASS
 
+    override val location: Location = NonExistLocation
+
     override val annotations: List<KSAnnotation> by lazy {
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
     }

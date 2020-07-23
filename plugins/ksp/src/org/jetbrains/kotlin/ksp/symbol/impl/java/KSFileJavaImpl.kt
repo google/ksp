@@ -9,6 +9,7 @@ import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
     companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
@@ -16,6 +17,10 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
     }
 
     override val origin = Origin.JAVA
+
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val annotations: List<KSAnnotation> = emptyList()
 

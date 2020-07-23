@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
@@ -24,6 +25,10 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktParameter.toLocation()
+    }
 
     override val extensionReceiver: KSTypeReference? = null
 

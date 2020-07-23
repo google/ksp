@@ -27,6 +27,8 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
 
     override val origin = Origin.CLASS
 
+    override val location: Location = NonExistLocation
+
     override val containingFile: KSFile? = null
 
     override val parentDeclaration: KSDeclaration? by lazy {

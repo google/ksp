@@ -9,6 +9,7 @@ import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.*
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.ClassKind
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
@@ -163,6 +164,12 @@ fun PsiElement.findParentDeclaration(): KSDeclaration? {
         is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(parent)
         else -> null
     }
+}
+
+fun PsiElement.toLocation(): Location {
+    val file = this.containingFile
+    val document = ResolverImpl.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
+    return FileLocation(file.virtualFile.path, document.getLineNumber(document.getLineStartOffset(this.textOffset)))
 }
 
 // TODO: handle local functions/classes correctly

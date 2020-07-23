@@ -29,6 +29,10 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
 
     override val origin = Origin.JAVA
 
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

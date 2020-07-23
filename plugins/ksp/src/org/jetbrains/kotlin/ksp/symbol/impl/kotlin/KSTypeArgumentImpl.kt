@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
 
@@ -33,6 +34,10 @@ class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProject
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktTypeArgument.toLocation()
+    }
 
     override val variance: Variance by lazy {
         when (ktTypeArgument.projectionKind) {

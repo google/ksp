@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 class KSPropertySetterImpl private constructor(val ktPropertySetter: KtPropertyAccessor) : KSPropertySetter {
@@ -16,6 +17,10 @@ class KSPropertySetterImpl private constructor(val ktPropertySetter: KtPropertyA
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktPropertySetter.toLocation()
+    }
 
     override val parameter: KSVariableParameter by lazy {
         ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSVariableParameterImpl.getCached(it) } ?: throw IllegalStateException()

@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
@@ -18,6 +19,10 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktTypeParameter.toLocation()
+    }
 
     override val name: KSName by lazy {
         KSNameImpl.getCached(ktTypeParameter.name!!)

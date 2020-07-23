@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 
 class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSTypeAlias {
@@ -17,6 +18,10 @@ class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSType
     }
 
     override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktTypeAlias.toLocation()
+    }
 
     override val containingFile: KSFile by lazy {
         KSFileImpl.getCached(ktTypeAlias.containingKtFile)
