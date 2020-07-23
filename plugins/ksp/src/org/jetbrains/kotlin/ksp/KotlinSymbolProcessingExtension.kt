@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.ksp.processing.KSPLogger
 import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
 import org.jetbrains.kotlin.ksp.processing.impl.CodeGeneratorImpl
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
@@ -29,8 +30,9 @@ import java.nio.file.Files
 
 class KotlinSymbolProcessingExtension(
     options: KspOptions,
+    logger: KSPLogger,
     val testProcessor: AbstractTestProcessor? = null
-) : AbstractKotlinSymbolProcessingExtension(options, testProcessor != null) {
+) : AbstractKotlinSymbolProcessingExtension(options, logger, testProcessor != null) {
     override fun loadProcessors(): List<SymbolProcessor> {
         return if (testProcessor != null) {
             listOf(testProcessor)
@@ -42,7 +44,8 @@ class KotlinSymbolProcessingExtension(
     }
 }
 
-abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, val testMode: Boolean) : AnalysisHandlerExtension {
+abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, val logger: KSPLogger, val testMode: Boolean) :
+    AnalysisHandlerExtension {
     private var completed = false
 
     override fun doAnalysis(
@@ -64,7 +67,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // This time is for .java files
             .distinctBy { it.canonicalPath }
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
-        val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, componentProvider)
+        val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, project, componentProvider)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
@@ -74,7 +77,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         val processors = loadProcessors()
         processors.forEach {
-            it.init(mapOf(), KotlinVersion.CURRENT, codeGen)
+            it.init(mapOf(), KotlinVersion.CURRENT, codeGen, logger)
         }
         processors.forEach {
             it.process(resolver)

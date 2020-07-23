@@ -6,10 +6,13 @@
 package org.jetbrains.kotlin.ksp.test
 
 import junit.framework.TestCase
+import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
+import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.codegen.CodegenTestCase
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.ksp.KotlinSymbolProcessingExtension
 import org.jetbrains.kotlin.ksp.KspOptions
+import org.jetbrains.kotlin.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import org.jetbrains.kotlin.ksp.processor.AbstractTestProcessor
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.test.ConfigurationKind
@@ -31,6 +34,7 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
             .substringAfter(TEST_PROCESSOR)
             .trim()
         val testProcessor = Class.forName("org.jetbrains.kotlin.ksp.processor.$testProcessorName").newInstance() as AbstractTestProcessor
+        val logger = MessageCollectorBasedKSPLogger(PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false))
         val analysisExtension =
             KotlinSymbolProcessingExtension(KspOptions.Builder().apply {
                 javaSourceRoots.addAll(javaFiles.map { File(it.parent) }.distinct())
@@ -38,7 +42,7 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
                 javaOutputDir = File("/tmp/kspTest/src/main/java")
                 kotlinOutputDir = File("/tmp/kspTest/src/main/kotlin")
                 resourceOutputDir = File("/tmp/kspTest/src/main/resources")
-            }.build(), testProcessor)
+            }.build(), logger, testProcessor)
         val project = myEnvironment.project
         AnalysisHandlerExtension.registerExtension(project, analysisExtension)
         loadMultiFiles(files)

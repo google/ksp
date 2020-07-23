@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
+import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
@@ -169,7 +170,7 @@ fun PsiElement.findParentDeclaration(): KSDeclaration? {
 fun PsiElement.toLocation(): Location {
     val file = this.containingFile
     val document = ResolverImpl.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
-    return FileLocation(file.virtualFile.path, document.getLineNumber(document.getLineStartOffset(this.textOffset)))
+    return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
 }
 
 // TODO: handle local functions/classes correctly

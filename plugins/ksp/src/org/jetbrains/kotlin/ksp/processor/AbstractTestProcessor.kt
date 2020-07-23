@@ -6,11 +6,12 @@
 package org.jetbrains.kotlin.ksp.processor
 
 import org.jetbrains.kotlin.ksp.processing.CodeGenerator
+import org.jetbrains.kotlin.ksp.processing.KSPLogger
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
 
 abstract class AbstractTestProcessor : SymbolProcessor {
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator) {
+    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
     }
 
     override fun finish() {

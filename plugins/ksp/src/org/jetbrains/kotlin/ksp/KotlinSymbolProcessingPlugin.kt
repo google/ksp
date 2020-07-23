@@ -7,6 +7,8 @@ package org.jetbrains.kotlin.ksp
 
 import com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
+import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
@@ -14,6 +16,7 @@ import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
+import org.jetbrains.kotlin.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.utils.decodePluginOptions
 import java.io.File
@@ -56,8 +59,11 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         val options = configuration[KSP_OPTIONS]?.apply {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
         }?.build() ?: return
+        val messageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
+            ?: throw IllegalStateException("message collector not found!")
+        val logger = MessageCollectorBasedKSPLogger(messageCollector)
         if (options.processingClasspath.isNotEmpty()) {
-            val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options)
+            val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
         }
     }

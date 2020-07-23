@@ -8,10 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.impl.source.PsiClassReferenceType
-import org.jetbrains.kotlin.ksp.symbol.KSClassifierReference
-import org.jetbrains.kotlin.ksp.symbol.KSTypeArgument
-import org.jetbrains.kotlin.ksp.symbol.Location
-import org.jetbrains.kotlin.ksp.symbol.Origin
+import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
@@ -23,7 +20,7 @@ class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) :
     override val origin = Origin.JAVA
 
     override val location: Location by lazy {
-        TODO()
+        (psi as? PsiJavaCodeReferenceElement)?.toLocation() ?: NonExistLocation
     }
 
     override val qualifier: KSClassifierReference? by lazy {

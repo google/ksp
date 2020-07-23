@@ -6,10 +6,12 @@
 package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
 
@@ -21,7 +23,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
     override val origin = Origin.JAVA
 
     override val location: Location by lazy {
-        TODO()
+        (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
     }
 
     override val annotations: List<KSAnnotation> by lazy {

@@ -16,7 +16,7 @@ interface SymbolProcessor {
      * @param kotlinVersion language version of compilation environment.
      * @param codeGenerator creates managed files.
      */
-    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator)
+    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger)
 
     /**
      * Called by Kotlin Symbol Processing to run the processing task.

@@ -7,9 +7,11 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWildcardType
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgumentImpl() {
     companion object : KSObjectCache<PsiType, KSTypeArgumentJavaImpl>() {
@@ -19,7 +21,7 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
     override val origin = Origin.JAVA
 
     override val location: Location by lazy {
-        TODO()
+        (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
     }
 
     override val annotations: List<KSAnnotation> by lazy {
@@ -28,15 +30,7 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
 
     // Could be unbounded, need to model unbdouned type argument.
     override val type: KSTypeReference? by lazy {
-        if (psi is PsiWildcardType) {
-            if (psi.bound != null) {
-                KSTypeReferenceJavaImpl.getCached(psi.bound!!)
-            } else {
-                null
-            }
-        } else {
-            KSTypeReferenceJavaImpl.getCached(psi)
-        }
+        KSTypeReferenceJavaImpl.getCached(psi)
     }
 
     override val variance: Variance by lazy {
