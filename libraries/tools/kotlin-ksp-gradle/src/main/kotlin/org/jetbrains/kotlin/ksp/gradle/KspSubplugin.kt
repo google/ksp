@@ -87,6 +87,8 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
 
         kotlinCompile.dependsOn(kspConfiguration.buildDependencies)
 
+        kotlinCompile.setProperty("incremental", false)
+
         val options = mutableListOf<SubpluginOption>()
 
         options += FilesSubpluginOption("apclasspath", kspConfiguration)
