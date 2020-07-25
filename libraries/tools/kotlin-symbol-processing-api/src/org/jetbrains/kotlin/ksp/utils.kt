@@ -5,7 +5,22 @@
 
 package org.jetbrains.kotlin.ksp
 
+import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
+
+/**
+ * Try to resolve the [KSClassDeclaration] for a class using its fully qualified name.
+ *
+ * @param T The class to resolve a [KSClassDeclaration] for.
+ * @return Resolved [KSClassDeclaration] if found, `null` otherwise.
+ *
+ * @see [Resolver.getClassDeclarationByName]
+ */
+inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration? {
+    return T::class.qualifiedName?.let { fqcn ->
+        getClassDeclarationByName(getKSNameFromString(fqcn))
+    }
+}
 
 /**
  * Get functions directly declared inside the class declaration.
