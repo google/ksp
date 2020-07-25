@@ -7,12 +7,10 @@ package org.jetbrains.kotlin.ksp.symbol.impl
 
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.*
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.MemberDescriptor
-import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.ClassKind
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
@@ -232,6 +230,7 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
     })
 
 internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration {
+    if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSFunctionDeclarationDescriptorImpl.getCached(this)
     val psi = this.findPsi() ?: return KSFunctionDeclarationDescriptorImpl.getCached(this)
     return when (psi) {
         is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)

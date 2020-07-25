@@ -5,11 +5,16 @@
 // bar(): kotlin.Boolean
 // baz(kotlin.String,kotlin.String(hasDefault),kotlin.String(hasDefault)): kotlin.Boolean
 // class: C
+// class: Data
+// component1(): kotlin.String
 // contains(kotlin.Number): kotlin.Boolean
 // containsAll(kotlin.collections.Collection): kotlin.Boolean
+// copy(kotlin.String(hasDefault)): Data
+// equals(kotlin.Any): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
 // get(kotlin.Int): kotlin.Number
+// hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
 // indexOf(kotlin.Number): kotlin.Int
@@ -26,6 +31,7 @@
 // subList(kotlin.Int,kotlin.Int): kotlin.collections.List
 // toString(): kotlin.String
 // toString(): kotlin.String
+// toString(): kotlin.String
 // END
 // FILE: a.kt
 abstract class Foo : C(), List<out Number> {
@@ -38,6 +44,12 @@ abstract class Foo : C(), List<out Number> {
     }
 
     fun baz(input: String, input2: String? = null, input3: String = ""): Boolean {
+        return false
+    }
+}
+
+data class Data(val a: String) {
+    override fun equals(other: Any?): Boolean {
         return false
     }
 }
