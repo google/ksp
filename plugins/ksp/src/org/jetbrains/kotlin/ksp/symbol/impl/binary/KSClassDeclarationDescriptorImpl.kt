@@ -19,7 +19,8 @@ import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.descriptors.ClassKind as KtClassKind
 
-class KSClassDeclarationDescriptorImpl private constructor(val descriptor: ClassDescriptor) : KSClassDeclaration {
+class KSClassDeclarationDescriptorImpl private constructor(val descriptor: ClassDescriptor) : KSClassDeclaration,
+    KSExpectActual by KSExpectActualDescriptorImpl(descriptor) {
     companion object : KSObjectCache<ClassDescriptor, KSClassDeclarationDescriptorImpl>() {
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSClassDeclarationDescriptorImpl(descriptor) }
     }

@@ -16,9 +16,10 @@ import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parents
 
-class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: VariableDescriptorWithAccessors) : KSPropertyDeclaration {
-    companion object : KSObjectCache<VariableDescriptorWithAccessors, KSPropertyDeclarationDescriptorImpl>() {
-        fun getCached(descriptor: VariableDescriptorWithAccessors) = cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
+class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) : KSPropertyDeclaration,
+    KSExpectActual by KSExpectActualDescriptorImpl(descriptor) {
+    companion object : KSObjectCache<PropertyDescriptor, KSPropertyDeclarationDescriptorImpl>() {
+        fun getCached(descriptor: PropertyDescriptor) = cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
     }
 
     override val origin = Origin.CLASS

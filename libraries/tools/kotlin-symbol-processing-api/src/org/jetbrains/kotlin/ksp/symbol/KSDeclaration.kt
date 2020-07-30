@@ -8,7 +8,7 @@ package org.jetbrains.kotlin.ksp.symbol
 /**
  * A declaration, can be function declaration, clsss declaration and property declaration, or a type alias.
  */
-interface KSDeclaration : KSModifierListOwner, KSAnnotated {
+interface KSDeclaration : KSModifierListOwner, KSAnnotated, KSExpectActual {
     /**
      * Simple name of this declaration, usually the name identifier at the declaration site.
      */

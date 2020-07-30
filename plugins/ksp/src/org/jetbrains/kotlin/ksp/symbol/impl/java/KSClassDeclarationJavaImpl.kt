@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
@@ -22,7 +23,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClassDeclaration {
+class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClassDeclaration, KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiClass, KSClassDeclarationJavaImpl>() {
         fun getCached(psi: PsiClass) = cache.getOrPut(psi) { KSClassDeclarationJavaImpl(psi) }
     }

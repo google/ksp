@@ -2,8 +2,11 @@
 // TEST PROCESSOR: TypeAliasProcessor
 // EXPECTED:
 // A = String
+// A = String
 // B = String
 // C = A = String
+// String
+// String
 // String
 // END
 

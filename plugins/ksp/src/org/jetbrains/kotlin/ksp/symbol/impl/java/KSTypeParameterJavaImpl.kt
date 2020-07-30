@@ -10,10 +10,11 @@ import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
-class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter {
+class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter, KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiTypeParameter, KSTypeParameterJavaImpl>() {
         fun getCached(psi: PsiTypeParameter) = cache.getOrPut(psi) { KSTypeParameterJavaImpl(psi) }
     }

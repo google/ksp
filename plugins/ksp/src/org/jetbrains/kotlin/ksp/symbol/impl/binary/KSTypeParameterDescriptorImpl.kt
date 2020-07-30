@@ -11,11 +11,13 @@ import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSVariance
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
-class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypeParameterDescriptor) : KSTypeParameter {
+class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypeParameterDescriptor) : KSTypeParameter,
+    KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<TypeParameterDescriptor, KSTypeParameterDescriptorImpl>() {
         fun getCached(descriptor: TypeParameterDescriptor) = cache.getOrPut(descriptor) { KSTypeParameterDescriptorImpl(descriptor) }
     }

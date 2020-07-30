@@ -42,6 +42,8 @@ import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluat
 import org.jetbrains.kotlin.resolve.jvm.multiplatform.JavaActualAnnotationArgumentExtractor
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
+import org.jetbrains.kotlin.resolve.multiplatform.findActuals
+import org.jetbrains.kotlin.resolve.multiplatform.findExpects
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.memberScopeAsImportingScope
@@ -403,3 +405,29 @@ open class BaseVisitor : KSVisitorVoid() {
         }
     }
 }
+
+// TODO: cross module resolution
+fun DeclarationDescriptor.findExpectsInKSDeclaration(): List<KSDeclaration> =
+    findExpects().map {
+        it.toKSDeclaration()
+    }
+
+// TODO: cross module resolution
+fun DeclarationDescriptor.findActualsInKSDeclaration(): List<KSDeclaration> =
+    findActuals().map {
+        it.toKSDeclaration()
+    }
+
+fun MemberDescriptor.toKSDeclaration(): KSDeclaration =
+    when (val psi = findPsi()) {
+        is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
+        is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
+        is KtProperty -> KSPropertyDeclarationImpl.getCached((psi))
+        is KtTypeAlias -> KSTypeAliasImpl.getCached(psi)
+        else -> when (this) {
+            is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(this)
+            is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(this)
+            is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(this)
+            else -> throw IllegalStateException("Unknown expect/actual implementation")
+        }
+    }

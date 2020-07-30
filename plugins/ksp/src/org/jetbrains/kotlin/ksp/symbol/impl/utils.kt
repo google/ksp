@@ -182,6 +182,7 @@ fun List<KtElement>.getKSDeclarations() =
             is KtClassOrObject ->
                 if (it.containingClassOrObject?.hasModifier(KtTokens.ENUM_KEYWORD) == true) KSEnumEntryDeclarationImpl.getCached(it)
                 else KSClassDeclarationImpl.getCached(it)
+            is KtTypeAlias -> KSTypeAliasImpl.getCached(it)
             else -> null
         }
     }

@@ -103,6 +103,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/typeComposure.kt");
     }
 
+    @TestMetadata("platformDeclaration.kt")
+    public void testPlatformDeclaration() throws Exception {
+        runTest("plugins/ksp/testData/api/platformDeclaration.kt");
+    }
+
     @TestMetadata("referenceElement.kt")
     public void testReferenceElement() throws Exception {
         runTest("plugins/ksp/testData/api/referenceElement.kt");
