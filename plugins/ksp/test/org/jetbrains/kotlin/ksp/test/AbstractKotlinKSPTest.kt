@@ -24,7 +24,7 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
         val EXPECTED_RESULTS = "// EXPECTED:"
     }
 
-    override fun doMultiFileTest(wholeFile: File, files: MutableList<TestFile>) {
+    override fun doMultiFileTest(wholeFile: File, files: List<TestFile>) {
         val javaFiles = listOfNotNull(writeJavaFiles(files))
         createEnvironmentWithMockJdkAndIdeaAnnotations(ConfigurationKind.ALL, *(javaFiles.toTypedArray()))
         val testProcessorName = wholeFile
