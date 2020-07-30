@@ -129,7 +129,8 @@ Every processor in KSP implements `SymbolProcessor`:
 interface SymbolProcessor {
     fun init(options: Map<String, String>,
              kotlinVersion: KotlinVersion,
-             codeGenerator: CodeGenerator)
+             codeGenerator: CodeGenerator,
+             logger: KSPLogger)
     fun process(resolver: Resolver) // Let's focus on this
     fun finish()
 }
@@ -393,21 +394,21 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4-M1-dev-experimental-20200716/playground-1.4-M1-dev-experimental-20200716.zip
+Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4.0-rc-dev-experimental-20200731/playground-ksp-1.4.0-rc-dev-experimental-20200731.zip
 
 ### Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.4-M1` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.4.0-rc` of the Kotlin plugin in the root project for use in other project modules.
 
   ```
   plugins {
-      kotlin("jvm") version "1.4-M1" apply false
+      kotlin("jvm") version "1.4.0-rc" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.4-M1"))
+          classpath(kotlin("gradle-plugin", version = "1.4.0-rc"))
       }
 
       repositories {
@@ -434,7 +435,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   }
 
   dependencies {
-      implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4-M1-dev-experimental-20200716")
+      implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200731")
   }
   ```
 
@@ -468,7 +469,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
     }
 
     dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4-M1-dev-experimental-20200716")
+        implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200731")
     }
     ```
 
@@ -508,7 +509,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
 
   ```
   plugins {
-      id("kotlin-ksp") version "1.4-M1-dev-experimental-20200716"
+      id("kotlin-ksp") version "1.4.0-rc-dev-experimental-20200731"
       kotlin("jvm") 
   }
 
