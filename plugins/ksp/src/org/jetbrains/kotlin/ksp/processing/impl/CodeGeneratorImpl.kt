@@ -17,9 +17,10 @@ class CodeGeneratorImpl(
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
 
-    // TODO: investigate if it works for Windows
+    private val separator = File.separator
+
     override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
-        val packageDirs = if (packageName != "") "${packageName.split(".").joinToString("/")}/" else ""
+        val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
         val extension = if (extensionName != "") ".${extensionName}" else ""
         val typeRoot = when (extensionName) {
             "class" -> classDir
@@ -27,7 +28,7 @@ class CodeGeneratorImpl(
             "kt" -> kotlinDir
             else -> resourcesDir
         }.path
-        val path = "$typeRoot/$packageDirs$fileName${extension}"
+        val path = "$typeRoot$separator$packageDirs$fileName${extension}"
         if (fileMap[path] != null) return fileMap[path]!!.outputStream()
         val file = File(path)
         val parentFile = file.parentFile

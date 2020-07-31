@@ -45,7 +45,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 
     private fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when (option) {
         KspCliOption.CONFIGURATION -> throw CliOptionProcessingException("${KspCliOption.CONFIGURATION.optionName} should be handled earlier")
-        KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(':').map{ File(it) }
+        KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(File.pathSeparator).map{ File(it) }
         KspCliOption.CLASS_OUTPUT_DIR_OPTION -> classOutputDir = File(value)
         KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
         KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
