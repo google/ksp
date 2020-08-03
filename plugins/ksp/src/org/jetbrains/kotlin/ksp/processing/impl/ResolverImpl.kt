@@ -18,11 +18,7 @@ import org.jetbrains.kotlin.ksp.processing.KSBuiltIns
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.*
-import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFileJavaImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.java.KSTypeReferenceJavaImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.java.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
@@ -32,7 +28,10 @@ import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
-import org.jetbrains.kotlin.load.java.structure.impl.*
+import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
@@ -46,9 +45,9 @@ import org.jetbrains.kotlin.resolve.multiplatform.findActuals
 import org.jetbrains.kotlin.resolve.multiplatform.findExpects
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
-import org.jetbrains.kotlin.resolve.scopes.utils.memberScopeAsImportingScope
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
+import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -231,47 +230,18 @@ class ResolverImpl(
         return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
 
-    private val DeclarationDescriptor.containingScope: LexicalScope
-        get() {
-            findPsi()?.let { return resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it) }
-            val containingDescriptor = this.containingDeclaration
-            return when (containingDescriptor) {
-                is ClassDescriptorWithResolutionScopes -> containingDescriptor.scopeForInitializerResolution
-                is PackageFragmentDescriptor -> LexicalScope.Base(containingDescriptor.getMemberScope().memberScopeAsImportingScope(), this)
-                else -> containingDeclaration?.containingScope ?: throw IllegalStateException()
-            }
-        }
-
     fun resolveUserType(type: KSTypeReference): KSType? {
         when (type) {
             is KSTypeReferenceImpl -> {
                 val typeReference = type.ktTypeReference
-                if (KtStubbedPsiUtil.getContainingDeclaration(typeReference)?.let { KtPsiUtil.isLocal(it) } == true) {
-                    resolveContainingFunctionBody(typeReference)
-                    bindingTrace.bindingContext.get(BindingContext.TYPE, typeReference)
-                        ?.let { return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations) } ?: return null
-                }
-                val scope: LexicalScope?
-                var lowerDeclaration = KtStubbedPsiUtil.getPsiOrStubParent(
-                    typeReference,
-                    KtDeclaration::class.java, false
-                )
-                var parentDeclaration =
-                    lowerDeclaration?.let { KtStubbedPsiUtil.getContainingDeclaration(lowerDeclaration as KtDeclaration) }
-                while (parentDeclaration != null && parentDeclaration !is KtClassOrObject) {
-                    lowerDeclaration = parentDeclaration
-                    parentDeclaration = KtStubbedPsiUtil.getContainingDeclaration(parentDeclaration)
-                }
-                if (lowerDeclaration == null) {
-                    scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
-                } else {
-                    if (parentDeclaration == null || parentDeclaration is KtFile) {
-                        scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(lowerDeclaration)
-                    } else {
-                        scope = resolveDeclaration(lowerDeclaration)?.containingScope
+                KtStubbedPsiUtil.getContainingDeclaration(typeReference)?.let {
+                    resolveDeclaration(it)
+                    bindingTrace.bindingContext.get(BindingContext.TYPE, typeReference)?.let {
+                        return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
                     }
                 }
-                return resolveSession.typeResolver.resolveType(scope!!, typeReference, bindingTrace, false).let {
+                val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
+                return resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
                     KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
                 }
             }
@@ -324,12 +294,11 @@ class ResolverImpl(
         }
     }
 
-    // TODO: local scope
-    fun KtElement.findLexicalScope(): LexicalScope? {
-        val containingDeclaration = KtStubbedPsiUtil.getContainingDeclaration(this)
-            ?: return resolveSession.fileScopeProvider.getFileResolutionScope(this.containingKtFile)
-
-        return containingDeclaration.let { resolveDeclaration(it)?.containingScope }
+    // Finds closest non-local scope.
+    fun KtElement.findLexicalScope(): LexicalScope {
+        return containingNonLocalDeclaration()?.let {
+            resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it)
+        } ?: resolveSession.fileScopeProvider.getFileResolutionScope(this.containingKtFile)
     }
 
     fun resolveAnnotationEntry(ktAnnotationEntry: KtAnnotationEntry): AnnotationDescriptor? {
@@ -339,7 +308,7 @@ class ResolverImpl(
             resolveContainingFunctionBody(containingDeclaration)
             bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)
         } else {
-            ktAnnotationEntry.findLexicalScope()?.let { scope ->
+            ktAnnotationEntry.findLexicalScope().let { scope ->
                 annotationResolver.resolveAnnotationsWithArguments(scope, listOf(ktAnnotationEntry), bindingTrace)
                 bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)
             }

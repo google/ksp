@@ -113,6 +113,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/referenceElement.kt");
     }
 
+    @TestMetadata("typeParameterReference.kt")
+    public void testTypeParameterReference() throws Exception {
+        runTest("plugins/ksp/testData/api/typeParameterReference.kt");
+    }
+
     @TestMetadata("varianceTypeCheck.kt")
     public void testVarianceTypeCheck() throws Exception {
         runTest("plugins/ksp/testData/api/varianceTypeCheck.kt");
