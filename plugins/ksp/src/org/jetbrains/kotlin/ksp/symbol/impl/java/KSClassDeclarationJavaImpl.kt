@@ -89,13 +89,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         psi.findParentDeclaration()
     }
 
-    override val primaryConstructor: KSFunctionDeclaration? by lazy {
-        if (psi.constructors.isNotEmpty()) {
-            KSFunctionDeclarationJavaImpl.getCached(psi.constructors.first())
-        } else {
-            null
-        }
-    }
+    override val primaryConstructor: KSFunctionDeclaration? = null
 
     override val qualifiedName: KSName by lazy {
         KSNameImpl.getCached(psi.qualifiedName!!)

@@ -81,12 +81,16 @@ class ResolverImpl(
         declarationScopeProvider = componentProvider.get()
         topDownAnalyzer = componentProvider.get()
         constantExpressionEvaluator = componentProvider.get()
+        annotationResolver = resolveSession.annotationResolver
 
         ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
         moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
+
+        instance = this
+
         nameToKSMap = mutableMapOf()
 
         val visitor = object : KSVisitorVoid() {
@@ -104,9 +108,7 @@ class ResolverImpl(
         }
         ksFiles.map { it.accept(visitor, Unit) }
 
-        instance = this
 
-        annotationResolver = resolveSession.annotationResolver
     }
 
     override fun getAllFiles(): List<KSFile> {

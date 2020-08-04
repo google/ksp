@@ -63,6 +63,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/hello.kt");
     }
 
+    @TestMetadata("implicitElements.kt")
+    public void testImplicitElements() throws Exception {
+        runTest("plugins/ksp/testData/api/implicitElements.kt");
+    }
+
     @TestMetadata("interfaceWithDefault.kt")
     public void testInterfaceWithDefault() throws Exception {
         runTest("plugins/ksp/testData/api/interfaceWithDefault.kt");
@@ -88,6 +93,16 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/makeNullable.kt");
     }
 
+    @TestMetadata("platformDeclaration.kt")
+    public void testPlatformDeclaration() throws Exception {
+        runTest("plugins/ksp/testData/api/platformDeclaration.kt");
+    }
+
+    @TestMetadata("referenceElement.kt")
+    public void testReferenceElement() throws Exception {
+        runTest("plugins/ksp/testData/api/referenceElement.kt");
+    }
+
     @TestMetadata("resolveJavaType.kt")
     public void testResolveJavaType() throws Exception {
         runTest("plugins/ksp/testData/api/resolveJavaType.kt");
@@ -101,16 +116,6 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
     @TestMetadata("typeComposure.kt")
     public void testTypeComposure() throws Exception {
         runTest("plugins/ksp/testData/api/typeComposure.kt");
-    }
-
-    @TestMetadata("platformDeclaration.kt")
-    public void testPlatformDeclaration() throws Exception {
-        runTest("plugins/ksp/testData/api/platformDeclaration.kt");
-    }
-
-    @TestMetadata("referenceElement.kt")
-    public void testReferenceElement() throws Exception {
-        runTest("plugins/ksp/testData/api/referenceElement.kt");
     }
 
     @TestMetadata("typeParameterReference.kt")
