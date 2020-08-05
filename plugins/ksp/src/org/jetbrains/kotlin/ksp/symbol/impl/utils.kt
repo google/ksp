@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.ksp.symbol.impl
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.*
 import org.jetbrains.kotlin.descriptors.*
-import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.ClassKind
@@ -23,7 +22,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
-import org.jetbrains.kotlin.psi.psiUtil.startOffset
+import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
@@ -246,4 +245,10 @@ internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration
         is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
         else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
     }
+}
+
+internal fun DeclarationDescriptor.findPsi(): PsiElement? {
+    // For synthetic members.
+    if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
+    return (this as? DeclarationDescriptorWithSource)?.source?.getPsi()
 }

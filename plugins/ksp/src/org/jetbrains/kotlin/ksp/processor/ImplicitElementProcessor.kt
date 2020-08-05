@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ksp.processor
 
 import org.jetbrains.kotlin.ksp.processing.Resolver
+import org.jetbrains.kotlin.ksp.symbol.KSPropertyDeclaration
 
 class ImplicitElementProcessor : AbstractTestProcessor() {
     val result: MutableList<String> = mutableListOf()

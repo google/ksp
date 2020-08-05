@@ -13,11 +13,11 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
-import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.processing.KSBuiltIns
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.*
+import org.jetbrains.kotlin.ksp.symbol.impl.findPsi
 import org.jetbrains.kotlin.ksp.symbol.impl.java.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.*
 import org.jetbrains.kotlin.load.java.components.TypeUsage

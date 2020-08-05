@@ -11,10 +11,10 @@ import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
-import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.findPsi
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
