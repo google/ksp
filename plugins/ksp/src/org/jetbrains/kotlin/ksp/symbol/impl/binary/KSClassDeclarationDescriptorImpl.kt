@@ -25,7 +25,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSClassDeclarationDescriptorImpl(descriptor) }
     }
 
-    override val origin = Origin.CLASS
+    override val origin by lazy {
+        if (this.parentDeclaration?.origin != Origin.CLASS) Origin.SYNTHETIC else Origin.CLASS
+    }
 
     override val location: Location = NonExistLocation
 
@@ -63,7 +65,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(
                 containingDescriptor
             )
-            else -> throw IllegalStateException()
+            else -> null
         } as KSDeclaration?
     }
 

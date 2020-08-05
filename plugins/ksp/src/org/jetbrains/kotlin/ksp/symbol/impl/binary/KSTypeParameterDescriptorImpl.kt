@@ -22,7 +22,9 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
         fun getCached(descriptor: TypeParameterDescriptor) = cache.getOrPut(descriptor) { KSTypeParameterDescriptorImpl(descriptor) }
     }
 
-    override val origin = Origin.CLASS
+    override val origin by lazy {
+        if (this.parentDeclaration?.origin != Origin.CLASS) Origin.SYNTHETIC else Origin.CLASS
+    }
 
     override val location: Location = NonExistLocation
 

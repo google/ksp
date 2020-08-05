@@ -15,8 +15,10 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
-        result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
-        result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("ITF"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
+        val ClsClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!
+        result.add("${ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"}; origin: ${ClsClass.primaryConstructor?.origin}")
+        val ITF = resolver.getClassDeclarationByName(resolver.getKSNameFromString("ITF"))!!
+        result.add(ITF.primaryConstructor?.simpleName?.asString() ?: "<null>")
         result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaClass"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
     }
 }

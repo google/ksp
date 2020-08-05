@@ -1,6 +1,6 @@
 // TEST PROCESSOR: ImplicitElementProcessor
 // EXPECTED:
-// <init>
+// <init>; origin: SYNTHETIC
 // <null>
 // <null>
 // END

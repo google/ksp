@@ -8,5 +8,6 @@ package org.jetbrains.kotlin.ksp.symbol
 enum class Origin {
     KOTLIN,
     CLASS,
-    JAVA
+    JAVA,
+    SYNTHETIC
 }
