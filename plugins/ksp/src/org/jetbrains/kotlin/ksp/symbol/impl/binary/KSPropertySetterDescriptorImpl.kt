@@ -8,20 +8,38 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 import org.jetbrains.kotlin.descriptors.PropertySetterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.findPsi
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toFunctionKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertySetterDescriptorImpl private constructor(val descriptor: PropertySetterDescriptor) : KSPropertySetter {
     companion object : KSObjectCache<PropertySetterDescriptor, KSPropertySetterDescriptorImpl>() {
         fun getCached(descriptor: PropertySetterDescriptor) = cache.getOrPut(descriptor) { KSPropertySetterDescriptorImpl(descriptor) }
     }
 
-    override val origin = Origin.CLASS
+    override val origin by lazy {
+        if (descriptor.correspondingProperty.findPsi() != null) Origin.SYNTHETIC else Origin.CLASS
+    }
 
     override val location: Location = NonExistLocation
 
     override val annotations: List<KSAnnotation> by lazy {
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
+    }
+
+    override val owner: KSPropertyDeclaration by lazy {
+        val correspondingPropertyDescriptor = descriptor.correspondingProperty
+        correspondingPropertyDescriptor.findPsi()?.let {
+            when (it) {
+                is KtProperty -> KSPropertyDeclarationImpl.getCached(it)
+                is KtParameter -> KSPropertyDeclarationParameterImpl.getCached(it)
+                else -> throw IllegalStateException("Unexpected psi for property declaration: ${it.javaClass}")
+            }
+        } ?: KSPropertyDeclarationDescriptorImpl.getCached(descriptor.correspondingProperty)
     }
 
     override val modifiers: Set<Modifier> by lazy {

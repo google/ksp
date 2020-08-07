@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 class KSPropertyGetterImpl private constructor(val ktPropertyGetter: KtPropertyAccessor) : KSPropertyGetter {
@@ -23,6 +24,10 @@ class KSPropertyGetterImpl private constructor(val ktPropertyGetter: KtPropertyA
 
     override val location: Location by lazy {
         ktPropertyGetter.toLocation()
+    }
+
+    override val owner: KSPropertyDeclaration by lazy {
+        KSPropertyDeclarationImpl.getCached(ktPropertyGetter.parent as KtProperty)
     }
 
     override val returnType: KSTypeReference? by lazy {

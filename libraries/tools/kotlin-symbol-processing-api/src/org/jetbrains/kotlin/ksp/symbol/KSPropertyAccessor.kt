@@ -5,14 +5,16 @@
 
 package org.jetbrains.kotlin.ksp.symbol
 
-// TODO: add owner property.
 /**
  * The common base of property getter and setter.
  */
 interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner {
+    /**
+     * The owner of the property accessor.
+     */
+    val owner: KSPropertyDeclaration
 }
 
-// TODO: Should these extend KSFunctionDeclaration?
 /**
  * A property setter
  */

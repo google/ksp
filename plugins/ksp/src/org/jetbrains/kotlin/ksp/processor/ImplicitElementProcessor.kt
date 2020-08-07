@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ksp.processor
 
 import org.jetbrains.kotlin.ksp.processing.Resolver
+import org.jetbrains.kotlin.ksp.symbol.KSDeclaration
 import org.jetbrains.kotlin.ksp.symbol.KSPropertyDeclaration
 
 class ImplicitElementProcessor : AbstractTestProcessor() {
@@ -15,11 +16,21 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         return result
     }
 
+    private fun nameAndOrigin(declaration: KSDeclaration) = "${declaration.simpleName.asString()}: ${declaration.origin}"
+
     override fun process(resolver: Resolver) {
         val ClsClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!
         result.add("${ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"}; origin: ${ClsClass.primaryConstructor?.origin}")
         val ITF = resolver.getClassDeclarationByName(resolver.getKSNameFromString("ITF"))!!
         result.add(ITF.primaryConstructor?.simpleName?.asString() ?: "<null>")
         result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaClass"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
+        val readOnly = ClsClass.declarations.single { it.simpleName.asString() == "readOnly" } as KSPropertyDeclaration
+        readOnly.getter?.let { result.add("readOnly.get(): ${it.origin}") }
+        readOnly.getter?.owner?.let { result.add("readOnly.getter.owner: " + nameAndOrigin(it)) }
+        readOnly.setter?.let { result.add("readOnly.set(): ${it.origin}") }
+        readOnly.setter?.owner?.let { result.add("readOnly.setter.owner: " + nameAndOrigin(it)) }
+        val readWrite = ClsClass.declarations.single { it.simpleName.asString() == "readWrite" } as KSPropertyDeclaration
+        readWrite.getter?.let { result.add("readWrite.get(): ${it.origin}") }
+        readWrite.setter?.let { result.add("readWrite.set(): ${it.origin}") }
     }
 }

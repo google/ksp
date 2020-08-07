@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 class KSPropertySetterImpl private constructor(val ktPropertySetter: KtPropertyAccessor) : KSPropertySetter {
@@ -17,6 +18,10 @@ class KSPropertySetterImpl private constructor(val ktPropertySetter: KtPropertyA
     }
 
     override val origin = Origin.KOTLIN
+
+    override val owner: KSPropertyDeclaration by lazy {
+        KSPropertyDeclarationImpl.getCached(ktPropertySetter.parent as KtProperty)
+    }
 
     override val location: Location by lazy {
         ktPropertySetter.toLocation()

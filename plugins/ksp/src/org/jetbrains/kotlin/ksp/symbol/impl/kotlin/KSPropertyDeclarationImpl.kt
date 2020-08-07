@@ -12,6 +12,8 @@ import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.OverridingUtil
@@ -49,7 +51,9 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         if (getter != null) {
             KSPropertyGetterImpl.getCached(getter)
         } else {
-            null
+            (ResolverImpl.instance.resolveDeclaration(ktProperty) as? PropertyDescriptor)?.getter?.let {
+                KSPropertyGetterDescriptorImpl.getCached(it)
+            }
         }
     }
 
@@ -58,7 +62,9 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         if (setter != null) {
             KSPropertySetterImpl.getCached(setter)
         } else {
-            null
+            (ResolverImpl.instance.resolveDeclaration(ktProperty) as? PropertyDescriptor)?.setter?.let {
+                KSPropertySetterDescriptorImpl.getCached(it)
+            }
         }
     }
 
