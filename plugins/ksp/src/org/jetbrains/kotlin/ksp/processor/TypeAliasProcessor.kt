@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 
 open class TypeAliasProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollector()
+    val typeCollector = TypeCollectorNoAccessor()
     val types = mutableListOf<KSType>()
 
     override fun process(resolver: Resolver) {

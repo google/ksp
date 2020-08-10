@@ -8,9 +8,9 @@ package org.jetbrains.kotlin.ksp.processor
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
 
-open class BuiltInTypesProcessor: AbstractTestProcessor() {
+open class BuiltInTypesProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollector()
+    val typeCollector = TypeCollectorNoAccessor()
     val types = mutableSetOf<KSType>()
 
     override fun process(resolver: Resolver) {
