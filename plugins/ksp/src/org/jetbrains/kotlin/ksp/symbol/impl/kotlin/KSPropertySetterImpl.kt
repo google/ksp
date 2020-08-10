@@ -12,31 +12,15 @@ import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
-class KSPropertySetterImpl private constructor(val ktPropertySetter: KtPropertyAccessor) : KSPropertySetter {
+class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAccessor) : KSPropertyAccessorImpl(ktPropertySetter),
+    KSPropertySetter {
     companion object : KSObjectCache<KtPropertyAccessor, KSPropertySetterImpl>() {
         fun getCached(ktPropertySetter: KtPropertyAccessor) = cache.getOrPut(ktPropertySetter) { KSPropertySetterImpl(ktPropertySetter) }
     }
 
-    override val origin = Origin.KOTLIN
-
-    override val owner: KSPropertyDeclaration by lazy {
-        KSPropertyDeclarationImpl.getCached(ktPropertySetter.parent as KtProperty)
-    }
-
-    override val location: Location by lazy {
-        ktPropertySetter.toLocation()
-    }
-
     override val parameter: KSVariableParameter by lazy {
-        ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSVariableParameterImpl.getCached(it) } ?: throw IllegalStateException()
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        ktPropertySetter.annotationEntries.map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktPropertySetter.toKSModifiers()
+        ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSVariableParameterImpl.getCached(it) }
+            ?: throw IllegalStateException()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

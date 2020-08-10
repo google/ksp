@@ -12,7 +12,7 @@ interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner {
     /**
      * The owner of the property accessor.
      */
-    val owner: KSPropertyDeclaration
+    val receiver: KSPropertyDeclaration
 }
 
 /**
