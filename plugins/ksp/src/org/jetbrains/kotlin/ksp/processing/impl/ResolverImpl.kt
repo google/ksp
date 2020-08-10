@@ -222,6 +222,7 @@ class ResolverImpl(
     fun resolvePropertyDeclaration(property: KSPropertyDeclaration): PropertyDescriptor? {
         return when (property) {
             is KSPropertyDeclarationImpl -> resolveDeclaration(property.ktProperty)
+            is KSPropertyDeclarationParameterImpl -> resolveDeclaration(property.ktParameter)
             is KSPropertyDeclarationDescriptorImpl -> property.descriptor
             is KSPropertyDeclarationJavaImpl -> throw IllegalStateException("should not invoke resolve on Java fields")
             else -> throw IllegalStateException("unexpected class: ${property.javaClass}")

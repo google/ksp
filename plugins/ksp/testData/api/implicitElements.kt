@@ -7,6 +7,9 @@
 // readOnly.getter.owner: readOnly: KOTLIN
 // readWrite.get(): KOTLIN
 // readWrite.set(): SYNTHETIC
+// comp1.get(): SYNTHETIC
+// comp2.get(): SYNTHETIC
+// comp2.set(): SYNTHETIC
 // END
 // FILE: a.kt
 class Cls {
@@ -14,6 +17,8 @@ class Cls {
     var readWrite: Int = 2
     get() = 1
 }
+
+data class Data(val comp1: Int, var comp2: Int)
 
 interface ITF
 
