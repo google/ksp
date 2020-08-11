@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.bindingContextUtil.getAbbreviatedTypeOrType
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
@@ -236,9 +237,12 @@ class ResolverImpl(
         when (type) {
             is KSTypeReferenceImpl -> {
                 val typeReference = type.ktTypeReference
+                typeReference.getAbbreviatedTypeOrType(bindingTrace.bindingContext)?.let {
+                    return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                }
                 KtStubbedPsiUtil.getContainingDeclaration(typeReference)?.let {
                     resolveDeclaration(it)
-                    bindingTrace.bindingContext.get(BindingContext.TYPE, typeReference)?.let {
+                    typeReference.getAbbreviatedTypeOrType(bindingTrace.bindingContext)?.let {
                         return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
                     }
                 }
