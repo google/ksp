@@ -14,6 +14,8 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.OverridingUtil
@@ -51,19 +53,19 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         if (getter != null) {
             KSPropertyGetterImpl.getCached(getter)
         } else {
-            (ResolverImpl.instance.resolveDeclaration(ktProperty) as? PropertyDescriptor)?.getter?.let {
-                KSPropertyGetterDescriptorImpl.getCached(it)
-            }
+            KSPropertyGetterSyntheticImpl.getCached(this)
         }
     }
 
     override val setter: KSPropertySetter? by lazy {
-        val setter = ktProperty.accessors.filter { it.isSetter }.singleOrNull()
-        if (setter != null) {
-            KSPropertySetterImpl.getCached(setter)
+        if (!ktProperty.isVar) {
+            null
         } else {
-            (ResolverImpl.instance.resolveDeclaration(ktProperty) as? PropertyDescriptor)?.setter?.let {
-                KSPropertySetterDescriptorImpl.getCached(it)
+            val setter = ktProperty.accessors.filter { it.isSetter }.singleOrNull()
+            if (setter != null) {
+                KSPropertySetterImpl.getCached(setter)
+            } else {
+                KSPropertySetterSyntheticImpl.getCached(this)
             }
         }
     }

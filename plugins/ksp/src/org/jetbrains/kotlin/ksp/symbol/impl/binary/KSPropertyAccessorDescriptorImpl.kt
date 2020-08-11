@@ -16,20 +16,10 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 
 abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) : KSPropertyAccessor {
-    override val origin: Origin by lazy {
-        if (descriptor.correspondingProperty.findPsi() != null) Origin.SYNTHETIC else Origin.CLASS
-    }
+    override val origin: Origin = Origin.CLASS
 
     override val receiver: KSPropertyDeclaration by lazy {
-
-        val correspondingPropertyDescriptor = descriptor.correspondingProperty
-        correspondingPropertyDescriptor.findPsi()?.let {
-            when (it) {
-                is KtProperty -> KSPropertyDeclarationImpl.getCached(it)
-                is KtParameter -> KSPropertyDeclarationParameterImpl.getCached(it)
-                else -> throw IllegalStateException("Unexpected psi for property declaration: ${it.javaClass}")
-            }
-        } ?: KSPropertyDeclarationDescriptorImpl.getCached(descriptor.correspondingProperty)
+        KSPropertyDeclarationDescriptorImpl.getCached(descriptor.correspondingProperty)
     }
 
     override val location: Location = NonExistLocation

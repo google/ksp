@@ -14,6 +14,8 @@ import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
+import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtClassOrObject
@@ -36,18 +38,14 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     override val extensionReceiver: KSTypeReference? = null
 
     override val getter: KSPropertyGetter? by lazy {
-        if (this.modifiers.contains(Modifier.PRIVATE)) {
-            null
-        } else {
-            ResolverImpl.instance.resolvePropertyDeclaration(this)?.getter?.let { KSPropertyGetterDescriptorImpl.getCached(it) }
-        }
+        KSPropertyGetterSyntheticImpl.getCached(this)
     }
 
     override val setter: KSPropertySetter? by lazy {
-        if (this.modifiers.contains(Modifier.PRIVATE)) {
-            null
+        if (ktParameter.isMutable) {
+            KSPropertySetterSyntheticImpl.getCached(this)
         } else {
-            ResolverImpl.instance.resolvePropertyDeclaration(this)?.setter?.let { KSPropertySetterDescriptorImpl.getCached(it) }
+            null
         }
     }
 
