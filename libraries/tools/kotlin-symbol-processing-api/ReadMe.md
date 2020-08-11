@@ -528,7 +528,23 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   }
   ```
 
-## How to contribution
+### Make IDE Aware Of Generated Code
+By default, IntelliJ or other IDEs don't know about the generated code and therefore
+references to those generated symbols will be marked unresolvable.
+To make, for example, IntelliJ be able to reason about the generated symbols,
+the following paths need to be marked as generated source root:
+
+```
+build/generated/ksp/src/main/kotlin/
+build/generated/ksp/src/main/java/
+```
+
+and perhaps also resource directory if your IDE supports them:
+```
+build/generated/ksp/src/main/resources
+```
+
+## How to contribute
 Pull requests are welcome!
 
 For incoming PRs, we would like to request changes covered by tests for good practice.
