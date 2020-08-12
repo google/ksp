@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
-class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration,
+class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiField, KSPropertyDeclarationJavaImpl>() {
         fun getCached(psi: PsiField) = cache.getOrPut(psi) { KSPropertyDeclarationJavaImpl(psi) }

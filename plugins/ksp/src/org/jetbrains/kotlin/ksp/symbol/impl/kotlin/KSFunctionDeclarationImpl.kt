@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 import java.lang.IllegalStateException
 
-class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) : KSFunctionDeclaration,
+class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) : KSFunctionDeclaration, KSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktFunction) {
     companion object : KSObjectCache<KtFunction, KSFunctionDeclarationImpl>() {
         fun getCached(ktFunction: KtFunction) = cache.getOrPut(ktFunction) { KSFunctionDeclarationImpl(ktFunction) }

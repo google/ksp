@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
-class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration,
+class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration, KSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktParameter) {
     companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }

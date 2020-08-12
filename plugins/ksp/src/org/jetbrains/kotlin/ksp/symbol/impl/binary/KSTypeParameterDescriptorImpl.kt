@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.toKSVariance
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
 class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypeParameterDescriptor) : KSTypeParameter,
+    KSDeclarationDescriptorImpl(descriptor),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<TypeParameterDescriptor, KSTypeParameterDescriptorImpl>() {
         fun getCached(descriptor: TypeParameterDescriptor) = cache.getOrPut(descriptor) { KSTypeParameterDescriptorImpl(descriptor) }

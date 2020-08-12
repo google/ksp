@@ -141,6 +141,7 @@ fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
     }
 }
 
+
 // TODO: cross module visibility is not handled
 fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean = this.containingFile?.packageName == other.containingFile?.packageName

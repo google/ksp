@@ -24,7 +24,11 @@ interface KSDeclaration : KSModifierListOwner, KSAnnotated, KSExpectActual {
      */
     val typeParameters: List<KSTypeParameter>
 
-    // TODO: support package
+    /**
+     * The name of the package at which this declaration is declared.
+     */
+    val packageName: KSName
+
     /**
      * Parent declaration of this declaration, i.e. the declaration that directly contains this declaration.
      * File is not a declaration, so this property will be null for top level declarations.

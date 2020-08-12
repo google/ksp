@@ -23,7 +23,8 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClassDeclaration, KSExpectActual by KSExpectActualNoImpl() {
+class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClassDeclaration, KSDeclarationJavaImpl(),
+    KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiClass, KSClassDeclarationJavaImpl>() {
         fun getCached(psi: PsiClass) = cache.getOrPut(psi) { KSClassDeclarationJavaImpl(psi) }
     }

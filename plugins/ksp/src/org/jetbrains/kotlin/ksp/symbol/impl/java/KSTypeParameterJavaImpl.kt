@@ -14,7 +14,8 @@ import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
-class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter, KSExpectActual by KSExpectActualNoImpl() {
+class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter, KSDeclarationJavaImpl(),
+    KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiTypeParameter, KSTypeParameterJavaImpl>() {
         fun getCached(psi: PsiTypeParameter) = cache.getOrPut(psi) { KSTypeParameterJavaImpl(psi) }
     }
