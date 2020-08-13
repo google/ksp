@@ -9,10 +9,10 @@ import org.jetbrains.kotlin.ksp.symbol.KSNode
 
 interface KSPLogger {
 
-    fun logging(message: String, symbol: KSNode)
-    fun info(message: String, symbol: KSNode)
-    fun warn(message: String, symbol: KSNode)
-    fun error(message: String, symbol: KSNode)
+    fun logging(message: String, symbol: KSNode? = null)
+    fun info(message: String, symbol: KSNode? = null)
+    fun warn(message: String, symbol: KSNode? = null)
+    fun error(message: String, symbol: KSNode? = null)
 
     fun exception(e: Throwable)
 }

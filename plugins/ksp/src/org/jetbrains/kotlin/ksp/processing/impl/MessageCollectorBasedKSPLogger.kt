@@ -20,25 +20,25 @@ class MessageCollectorBasedKSPLogger(private val messageCollector: MessageCollec
         const val PREFIX = "[ksp] "
     }
 
-    private fun convertMessage(message: String, symbol: KSNode): String =
-        when (val location = symbol.location) {
+    private fun convertMessage(message: String, symbol: KSNode?): String =
+        when (val location = symbol?.location) {
             is FileLocation -> "$PREFIX${location.filePath}:${location.lineNumber}: $message"
-            is NonExistLocation -> "$PREFIX$message"
+            is NonExistLocation, null -> "$PREFIX$message"
         }
 
-    override fun logging(message: String, symbol: KSNode) {
+    override fun logging(message: String, symbol: KSNode?) {
         messageCollector.report(CompilerMessageSeverity.LOGGING, convertMessage(message, symbol))
     }
 
-    override fun info(message: String, symbol: KSNode) {
+    override fun info(message: String, symbol: KSNode?) {
         messageCollector.report(CompilerMessageSeverity.INFO, convertMessage(message, symbol))
     }
 
-    override fun warn(message: String, symbol: KSNode) {
+    override fun warn(message: String, symbol: KSNode?) {
         messageCollector.report(CompilerMessageSeverity.WARNING, convertMessage(message, symbol))
     }
 
-    override fun error(message: String, symbol: KSNode) {
+    override fun error(message: String, symbol: KSNode?) {
         messageCollector.report(CompilerMessageSeverity.ERROR, convertMessage(message, symbol))
     }
 
