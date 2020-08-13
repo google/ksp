@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
+import org.jetbrains.kotlin.ksp.isLocal
 import org.jetbrains.kotlin.ksp.isOpen
 import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
@@ -49,16 +50,20 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     override val getter: KSPropertyGetter? by lazy {
-        val getter = ktProperty.accessors.filter { it.isGetter }.singleOrNull()
-        if (getter != null) {
-            KSPropertyGetterImpl.getCached(getter)
+        if (this.isLocal()) {
+            null
         } else {
-            KSPropertyGetterSyntheticImpl.getCached(this)
+            val getter = ktProperty.accessors.filter { it.isGetter }.singleOrNull()
+            if (getter != null) {
+                KSPropertyGetterImpl.getCached(getter)
+            } else {
+                KSPropertyGetterSyntheticImpl.getCached(this)
+            }
         }
     }
 
     override val setter: KSPropertySetter? by lazy {
-        if (!ktProperty.isVar) {
+        if (this.isLocal() || !ktProperty.isVar) {
             null
         } else {
             val setter = ktProperty.accessors.filter { it.isSetter }.singleOrNull()
