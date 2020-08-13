@@ -72,4 +72,9 @@ interface KSType {
      * Make the type not nullable
      */
     fun makeNotNullable(): KSType
+
+    /**
+     * True if the type is an error type, which means the type can't be resolved by compiler.
+     */
+    val isError: Boolean
 }

@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.getAbbreviation
+import org.jetbrains.kotlin.types.isError
 import org.jetbrains.kotlin.types.typeUtil.*
 
 class KSTypeImpl private constructor(
@@ -75,6 +76,10 @@ class KSTypeImpl private constructor(
 
     private val meNotNullable: KSType by lazy { KSTypeImpl.getCached(kotlinType.makeNotNullable()) }
     override fun makeNotNullable(): KSType = meNotNullable
+
+    override val isError: Boolean by lazy {
+        kotlinType.isError
+    }
 
     override fun equals(other: Any?): Boolean {
         if (other !is KSTypeImpl)
