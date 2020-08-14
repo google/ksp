@@ -77,7 +77,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         val processors = loadProcessors()
         processors.forEach {
-            it.init(mapOf(), KotlinVersion.CURRENT, codeGen, logger)
+            it.init(options.processingOptions, KotlinVersion.CURRENT, codeGen, logger)
         }
         processors.forEach {
             it.process(resolver)

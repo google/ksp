@@ -42,6 +42,10 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
         KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
         KspCliOption.RESOURCE_OUTPUT_DIR_OPTION -> resourceOutputDir = File(value)
+        KspCliOption.PROCESSING_OPTIONS_OPTION -> {
+            val (k, v) = value.split('=', ignoreCase = false, limit = 2)
+            processingOptions.put(k, v)
+        }
     }
 }
 
@@ -94,6 +98,14 @@ enum class KspCliOption(
         "<resourceOutputDir>",
         "Dir of generated resources",
         false
+    ),
+
+    PROCESSING_OPTIONS_OPTION(
+        "apoption",
+        "<apOption>",
+        "processor defined option",
+        false,
+        true
     ),
 
     PROCESSOR_CLASSPATH_OPTION(

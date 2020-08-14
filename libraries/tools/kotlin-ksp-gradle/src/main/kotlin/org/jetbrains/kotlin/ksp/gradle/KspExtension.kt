@@ -16,8 +16,15 @@
 
 package org.jetbrains.kotlin.ksp.gradle
 
+import org.gradle.api.GradleException
+
 open class KspExtension {
-    /*
-    TODO: pass options here.
-     */
+    internal val apOptions = mutableMapOf<String, String>()
+
+    open fun arg(k: String, v: String) {
+        if ('=' in k) {
+            throw GradleException("'=' is not allowed in custom option's name.")
+        }
+        apOptions.put(k, v)
+    }
 }

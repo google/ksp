@@ -103,6 +103,10 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
         options += SubpluginOption("kotlinOutputDir", kotlinOutputDir.path)
         options += SubpluginOption("resourceOutputDir", resourceOutputDir.path)
 
+        kspExtension.apOptions.forEach {
+            options += SubpluginOption("apoption", "${it.key}=${it.value}")
+        }
+
         if (javaCompile != null) {
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
