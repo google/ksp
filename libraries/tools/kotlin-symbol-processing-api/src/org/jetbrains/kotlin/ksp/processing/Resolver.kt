@@ -29,7 +29,7 @@ interface Resolver {
     /**
      * Find a class in the compilation classpath for the given name.
      *
-     * @param name full qualified name of the class to be loaded; using '.' as separator.
+     * @param name fully qualified name of the class to be loaded; using '.' as separator.
      * @return a KSClassDeclaration, or null if not found.
      */
     fun getClassDeclarationByName(name: KSName): KSClassDeclaration?

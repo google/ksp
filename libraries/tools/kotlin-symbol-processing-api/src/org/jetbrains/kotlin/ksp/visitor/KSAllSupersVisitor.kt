@@ -16,11 +16,6 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitDynamicReference(reference, data)
     }
 
-    override fun visitEnumEntryDeclaration(enumEntryDeclaration: KSEnumEntryDeclaration, data: D): R {
-        this.visitClassDeclaration(enumEntryDeclaration, data)
-        return super.visitEnumEntryDeclaration(enumEntryDeclaration, data)
-    }
-
     override fun visitFile(file: KSFile, data: D): R {
         this.visitAnnotated(file, data)
         this.visitDeclarationContainer(file, data)

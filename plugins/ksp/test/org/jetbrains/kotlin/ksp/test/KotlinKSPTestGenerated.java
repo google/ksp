@@ -53,6 +53,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/checkOverride.kt");
     }
 
+    @TestMetadata("classKinds.kt")
+    public void testClassKinds() throws Exception {
+        runTest("plugins/ksp/testData/api/classKinds.kt");
+    }
+
     @TestMetadata("companion.kt")
     public void testCompanion() throws Exception {
         runTest("plugins/ksp/testData/api/companion.kt");

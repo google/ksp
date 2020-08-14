@@ -23,8 +23,6 @@ interface KSVisitor<D, R> {
 
     fun visitDynamicReference(reference: KSDynamicReference, data: D): R
 
-    fun visitEnumEntryDeclaration(enumEntryDeclaration: KSEnumEntryDeclaration, data: D): R
-
     fun visitFile(file: KSFile, data: D): R
 
     fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: D): R

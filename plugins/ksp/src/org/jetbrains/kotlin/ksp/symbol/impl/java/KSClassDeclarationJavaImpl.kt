@@ -41,8 +41,9 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
 
     override val classKind: ClassKind by lazy {
         when {
-            psi.isAnnotationType || psi.isInterface -> ClassKind.INTERFACE
-            psi.isEnum -> ClassKind.ENUM
+            psi.isAnnotationType -> ClassKind.ANNOTATION_CLASS
+            psi.isInterface -> ClassKind.INTERFACE
+            psi.isEnum -> ClassKind.ENUM_CLASS
             else -> ClassKind.CLASS
         }
     }

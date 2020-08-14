@@ -23,6 +23,14 @@ inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration?
 }
 
 /**
+ * Find a class in the compilation classpath for the given name.
+ *
+ * @param name fully qualified name of the class to be loaded; using '.' as separator.
+ * @return a KSClassDeclaration, or null if not found.
+ */
+fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getClassDeclarationByName(getKSNameFromString(name))
+
+/**
  * Get functions directly declared inside the class declaration.
  *
  * What are included: member functions, extension functions declared inside it, etc.

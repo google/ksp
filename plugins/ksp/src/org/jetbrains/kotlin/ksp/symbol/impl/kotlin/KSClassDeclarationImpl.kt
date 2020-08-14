@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
@@ -72,7 +71,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         ktClassOrObject.primaryConstructor?.let { KSFunctionDeclarationImpl.getCached(it) }
-            ?: if (classKind == ClassKind.CLASS || classKind == ClassKind.ENUM) KSConstructorSyntheticImpl.getCached(this) else null
+            ?: if (classKind == ClassKind.CLASS || classKind == ClassKind.ENUM_CLASS) KSConstructorSyntheticImpl.getCached(this) else null
     }
 
     override val qualifiedName: KSName by lazy {

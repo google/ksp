@@ -30,9 +30,6 @@ open class KSVisitorVoid : KSVisitor<Unit, Unit> {
     override fun visitDynamicReference(reference: KSDynamicReference, data: Unit) {
     }
 
-    override fun visitEnumEntryDeclaration(enumEntryDeclaration: KSEnumEntryDeclaration, data: Unit) {
-    }
-
     override fun visitFile(file: KSFile, data: Unit) {
     }
 

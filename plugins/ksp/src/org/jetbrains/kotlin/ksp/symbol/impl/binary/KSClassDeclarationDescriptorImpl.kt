@@ -38,10 +38,12 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
 
     override val classKind: ClassKind by lazy {
         when (descriptor.kind) {
-            KtClassKind.INTERFACE, KtClassKind.ANNOTATION_CLASS -> ClassKind.INTERFACE
+            KtClassKind.INTERFACE -> ClassKind.INTERFACE
             KtClassKind.CLASS -> ClassKind.CLASS
             KtClassKind.OBJECT -> ClassKind.OBJECT
-            KtClassKind.ENUM_CLASS, KtClassKind.ENUM_ENTRY -> ClassKind.ENUM
+            KtClassKind.ENUM_CLASS -> ClassKind.ENUM_CLASS
+            KtClassKind.ENUM_ENTRY -> ClassKind.ENUM_ENTRY
+            KtClassKind.ANNOTATION_CLASS -> ClassKind.ANNOTATION_CLASS
         }
     }
 
@@ -107,16 +109,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             }
             .map {
                 when (it) {
-                    is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(
-                        it
-                    )
-                    is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(
-                        it
-                    )
-                    is ClassDescriptor -> when (it.kind) {
-                        org.jetbrains.kotlin.descriptors.ClassKind.ENUM_ENTRY -> KSEnumEntryDeclarationDescriptorImpl.getCached(it)
-                        else -> KSClassDeclarationDescriptorImpl.getCached(it)
-                    }
+                    is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(it)
+                    is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(it)
+                    is ClassDescriptor -> getCached(it)
                     else -> throw IllegalStateException()
                 }
             }

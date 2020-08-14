@@ -178,9 +178,7 @@ fun List<KtElement>.getKSDeclarations() =
         when (it) {
             is KtFunction -> KSFunctionDeclarationImpl.getCached(it)
             is KtProperty -> KSPropertyDeclarationImpl.getCached(it)
-            is KtClassOrObject ->
-                if (it.containingClassOrObject?.hasModifier(KtTokens.ENUM_KEYWORD) == true) KSEnumEntryDeclarationImpl.getCached(it)
-                else KSClassDeclarationImpl.getCached(it)
+            is KtClassOrObject -> KSClassDeclarationImpl.getCached(it)
             is KtTypeAlias -> KSTypeAliasImpl.getCached(it)
             else -> null
         }
@@ -189,9 +187,11 @@ fun List<KtElement>.getKSDeclarations() =
 fun KtClassOrObject.getClassType(): ClassKind {
     return when (this) {
         is KtObjectDeclaration -> ClassKind.OBJECT
+        is KtEnumEntry -> ClassKind.ENUM_ENTRY
         is KtClass -> when {
-            this.isEnum() -> ClassKind.ENUM
+            this.isEnum() -> ClassKind.ENUM_CLASS
             this.isInterface() -> ClassKind.INTERFACE
+            this.isAnnotation() -> ClassKind.ANNOTATION_CLASS
             else -> ClassKind.CLASS
         }
         else -> throw IllegalStateException()

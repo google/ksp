@@ -64,7 +64,7 @@ private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     is AnnotationValue -> KSAnnotationDescriptorImpl.getCached(value)
     is ArrayValue -> value.map { it.toValue() }
     is EnumValue -> value.first.findKSClassDeclaration()?.declarations?.find {
-        it is KSEnumEntryDeclaration && it.simpleName.asString() == value.second.asString()
+        it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY && it.simpleName.asString() == value.second.asString()
     }?.let { (it as KSClassDeclaration).asStarProjectedType() }
     is KClassValue -> when (val classValue = value) {
         is KClassValue.Value.NormalClass -> classValue.classId.findKSType()

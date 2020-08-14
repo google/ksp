@@ -12,6 +12,8 @@ package org.jetbrains.kotlin.ksp.symbol
 enum class ClassKind(val type: String) {
     INTERFACE("interface"),
     CLASS("class"),
-    ENUM("enum"),
-    OBJECT("object");
+    ENUM_CLASS("enum_class"),
+    ENUM_ENTRY("enum_entry"),
+    OBJECT("object"),
+    ANNOTATION_CLASS("annotation_class")
 }

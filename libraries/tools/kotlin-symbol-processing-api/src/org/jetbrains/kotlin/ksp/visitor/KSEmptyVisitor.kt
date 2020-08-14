@@ -41,10 +41,6 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(reference, data)
     }
 
-    override fun visitEnumEntryDeclaration(enumEntryDeclaration: KSEnumEntryDeclaration, data: D): R {
-        return defaultHandler(enumEntryDeclaration, data)
-    }
-
     override fun visitFile(file: KSFile, data: D): R {
         return defaultHandler(file, data)
     }
