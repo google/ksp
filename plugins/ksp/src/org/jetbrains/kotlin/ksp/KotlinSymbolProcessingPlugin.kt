@@ -7,8 +7,6 @@ package org.jetbrains.kotlin.ksp
 
 import com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
-import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
-import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
@@ -18,7 +16,6 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
-import org.jetbrains.kotlin.utils.decodePluginOptions
 import java.io.File
 
 private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("Ksp options")
@@ -36,15 +33,10 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         val kspOptions = configuration[KSP_OPTIONS]
             ?: KspOptions.Builder().also { configuration.put(KSP_OPTIONS, it) }
 
-        if (option == @Suppress("DEPRECATION") KspCliOption.CONFIGURATION) {
-            configuration.applyOptionsFrom(decodePluginOptions(value), pluginOptions)
-        } else {
-            kspOptions.processOption(option, value)
-        }
+        kspOptions.processOption(option, value)
     }
 
     private fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when (option) {
-        KspCliOption.CONFIGURATION -> throw CliOptionProcessingException("${KspCliOption.CONFIGURATION.optionName} should be handled earlier")
         KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(File.pathSeparator).map{ File(it) }
         KspCliOption.CLASS_OUTPUT_DIR_OPTION -> classOutputDir = File(value)
         KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
@@ -76,9 +68,6 @@ enum class KspCliOption(
     override val required: Boolean = false,
     override val allowMultipleOccurrences: Boolean = false
 ) : AbstractCliOption {
-    @Deprecated("Do not use in CLI")
-    CONFIGURATION("configuration", "<encoded>", "Encoded configuration"),
-
     CLASS_OUTPUT_DIR_OPTION(
         "classOutputDir",
         "<classOutputDir>",
