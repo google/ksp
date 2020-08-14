@@ -455,7 +455,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
     * `src/main/kotlin/TestProcessor.kt`
   * After writing your own processor, register your processor to the package by including
     the fully-qualified name of that processor in
-    `resources/META-INF.services/org.jetbrains.kotlin.ksp.processing.SymbolProcessor`.
+    `resources/META-INF/services/org.jetbrains.kotlin.ksp.processing.SymbolProcessor`.
   * Here's a sample `build.gradle.kts` file for writing a processor.
 
     ```
