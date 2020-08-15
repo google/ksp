@@ -394,7 +394,7 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4.0-rc-dev-experimental-20200731/playground-ksp-1.4.0-rc-dev-experimental-20200731.zip
+Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4.0-rc-dev-experimental-20200814/playground-ksp-1.4.0-rc-dev-experimental-20200814.zip
 
 ### Create a processor of your own
 
@@ -435,7 +435,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   }
 
   dependencies {
-      implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200731")
+      implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200814")
   }
   ```
 
@@ -469,7 +469,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
     }
 
     dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200731")
+        implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200814")
     }
     ```
 
@@ -509,7 +509,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
 
   ```
   plugins {
-      id("kotlin-ksp") version "1.4.0-rc-dev-experimental-20200731"
+      id("kotlin-ksp") version "1.4.0-rc-dev-experimental-20200814"
       kotlin("jvm") 
   }
 
@@ -527,6 +527,16 @@ Here's a sample processor that you can check out: https://github.com/android/kot
       ksp(project(":test-processor"))
   }
   ```
+
+### Pass Options to Processors
+Processor options in `SymbolProcessor.init(options: Map<String, String>, ...)` are specified in gradle build scripts:
+```
+  ksp {
+    arg("option1", "value1")
+    arg("option2", "value2")
+    ...
+  }
+```
 
 ### Make IDE Aware Of Generated Code
 By default, IntelliJ or other IDEs don't know about the generated code and therefore
