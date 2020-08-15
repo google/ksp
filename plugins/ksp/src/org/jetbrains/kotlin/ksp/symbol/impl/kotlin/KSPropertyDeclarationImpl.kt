@@ -21,24 +21,10 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
-class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration, KSDeclarationImpl(),
+class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration, KSDeclarationImpl(ktProperty),
     KSExpectActual by KSExpectActualImpl(ktProperty) {
     companion object : KSObjectCache<KtProperty, KSPropertyDeclarationImpl>() {
         fun getCached(ktProperty: KtProperty) = cache.getOrPut(ktProperty) { KSPropertyDeclarationImpl(ktProperty) }
-    }
-
-    override val origin = Origin.KOTLIN
-
-    override val location: Location by lazy {
-        ktProperty.toLocation()
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        ktProperty.annotationEntries.map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val containingFile: KSFile by lazy {
-        KSFileImpl.getCached(ktProperty.containingKtFile)
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
@@ -73,26 +59,6 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
                 KSPropertySetterSyntheticImpl.getCached(this)
             }
         }
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktProperty.toKSModifiers()
-    }
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        ktProperty.findParentDeclaration()
-    }
-
-    override val qualifiedName: KSName? by lazy {
-        ktProperty.fqName?.asString()?.let { KSNameImpl.getCached(it) }
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktProperty.name!!)
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktProperty.typeParameters.map { KSTypeParameterImpl.getCached(it, ktProperty) }
     }
 
     override val type: KSTypeReference? by lazy {

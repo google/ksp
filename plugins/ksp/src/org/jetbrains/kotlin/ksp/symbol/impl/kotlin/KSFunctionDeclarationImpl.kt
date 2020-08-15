@@ -17,24 +17,10 @@ import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 import java.lang.IllegalStateException
 
-class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) : KSFunctionDeclaration, KSDeclarationImpl(),
+class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) : KSFunctionDeclaration, KSDeclarationImpl(ktFunction),
     KSExpectActual by KSExpectActualImpl(ktFunction) {
     companion object : KSObjectCache<KtFunction, KSFunctionDeclarationImpl>() {
         fun getCached(ktFunction: KtFunction) = cache.getOrPut(ktFunction) { KSFunctionDeclarationImpl(ktFunction) }
-    }
-
-    override val origin = Origin.KOTLIN
-
-    override val location: Location by lazy {
-        ktFunction.toLocation()
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        ktFunction.annotationEntries.map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val containingFile: KSFile by lazy {
-        KSFileImpl.getCached(ktFunction.containingKtFile)
     }
 
     override fun overrides(overridee: KSFunctionDeclaration): Boolean {
@@ -85,20 +71,8 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
                         && !this.ktFunction.hasBody())
     }
 
-    override val modifiers: Set<Modifier> by lazy {
-        ktFunction.toKSModifiers()
-    }
-
     override val parameters: List<KSVariableParameter> by lazy {
         ktFunction.valueParameters.map { KSVariableParameterImpl.getCached(it) }
-    }
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        ktFunction.findParentDeclaration()
-    }
-
-    override val qualifiedName: KSName? by lazy {
-        ktFunction.fqName?.asString()?.let { KSNameImpl.getCached(it) }
     }
 
     override val returnType: KSTypeReference by lazy {
@@ -110,14 +84,6 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
                 KSTypeImpl.getCached(desc.returnTypeOrNothing)
             }
         }
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktFunction.name!!)
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktFunction.typeParameters.map { KSTypeParameterImpl.getCached(it, ktFunction) }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

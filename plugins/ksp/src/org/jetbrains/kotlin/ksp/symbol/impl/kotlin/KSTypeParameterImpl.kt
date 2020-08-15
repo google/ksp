@@ -13,24 +13,16 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
-class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParameter, val owner: KtTypeParameterListOwner) : KSTypeParameter, KSDeclarationImpl(),
+class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParameter, val owner: KtTypeParameterListOwner) : KSTypeParameter,
+    KSDeclarationImpl(ktTypeParameter),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<Pair<KtTypeParameter, KtTypeParameterListOwner>, KSTypeParameterImpl>() {
-        fun getCached(ktTypeParameter: KtTypeParameter, owner: KtTypeParameterListOwner) = cache.getOrPut(Pair(ktTypeParameter, owner)) { KSTypeParameterImpl(ktTypeParameter, owner) }
-    }
-
-    override val origin = Origin.KOTLIN
-
-    override val location: Location by lazy {
-        ktTypeParameter.toLocation()
+        fun getCached(ktTypeParameter: KtTypeParameter, owner: KtTypeParameterListOwner) =
+            cache.getOrPut(Pair(ktTypeParameter, owner)) { KSTypeParameterImpl(ktTypeParameter, owner) }
     }
 
     override val name: KSName by lazy {
         KSNameImpl.getCached(ktTypeParameter.name!!)
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        ktTypeParameter.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }
 
     override val isReified: Boolean by lazy {
@@ -59,9 +51,6 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
         KSNameImpl.getCached(ktTypeParameter.name ?: "_")
     }
 
-    override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached(ktTypeParameter.containingClassOrObject?.fqName?.asString() ?: "" + "." + simpleName.asString())
-    }
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
     override val parentDeclaration: KSDeclaration? by lazy {
@@ -71,14 +60,6 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
             is KtProperty -> KSPropertyDeclarationImpl.getCached(owner)
             else -> throw IllegalStateException()
         }
-    }
-
-    override val containingFile: KSFile? by lazy {
-        KSFileImpl.getCached(ktTypeParameter.containingKtFile)
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktTypeParameter.toKSModifiers()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

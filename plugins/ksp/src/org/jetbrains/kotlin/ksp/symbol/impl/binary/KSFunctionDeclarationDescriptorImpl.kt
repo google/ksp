@@ -28,25 +28,6 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         fun getCached(descriptor: FunctionDescriptor) = cache.getOrPut(descriptor) { KSFunctionDeclarationDescriptorImpl(descriptor) }
     }
 
-    override val origin = Origin.CLASS
-
-    override val location: Location = NonExistLocation
-
-    override val containingFile: KSFile? = null
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        val containingDescriptor = descriptor.parents.first()
-        when (containingDescriptor) {
-            is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(
-                containingDescriptor
-            )
-            is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(
-                containingDescriptor
-            )
-            else -> null
-        } as KSDeclaration?
-    }
-
     override fun overrides(overridee: KSFunctionDeclaration): Boolean {
         if (!overridee.isOpen())
             return false
@@ -58,20 +39,8 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
     }
 
-    override val qualifiedName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.fqNameSafe.asString())
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.name.asString())
-    }
-
     override val typeParameters: List<KSTypeParameter> by lazy {
         descriptor.typeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
     }
 
     override val declarations: List<KSDeclaration> = emptyList()

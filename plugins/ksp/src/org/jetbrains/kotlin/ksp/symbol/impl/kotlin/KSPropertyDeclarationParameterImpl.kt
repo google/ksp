@@ -23,18 +23,12 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
 import org.jetbrains.kotlin.resolve.OverridingUtil
 
-class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration, KSDeclarationImpl(),
+class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration,
+    KSDeclarationImpl(ktParameter),
     KSExpectActual by KSExpectActualImpl(ktParameter) {
     companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
     }
-
-    override val origin = Origin.KOTLIN
-
-    override val location: Location by lazy {
-        ktParameter.toLocation()
-    }
-
     override val extensionReceiver: KSTypeReference? = null
 
     override val getter: KSPropertyGetter? by lazy {
@@ -57,36 +51,6 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         }
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        ktParameter.annotationEntries.map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val containingFile: KSFile? by lazy {
-        KSFileImpl.getCached(ktParameter.containingKtFile)
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktParameter.toKSModifiers()
-    }
-
-    override val parentDeclaration: KSDeclaration by lazy {
-        KtStubbedPsiUtil.getContainingDeclaration(ktParameter)!!.findParentDeclaration()!!
-    }
-
-    override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached("${parentDeclaration.qualifiedName!!.asString()}.${simpleName.asString()}")
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktParameter.name ?: "_")
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktParameter.typeParameters.map {
-            KSTypeParameterImpl.getCached(it, KtStubbedPsiUtil.getContainingDeclaration(ktParameter, KtClassOrObject::class.java)!!)
-        }
-    }
-
     override fun isDelegated(): Boolean = false
 
     override fun overrides(overridee: KSPropertyDeclaration): Boolean {
@@ -101,7 +65,7 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         val superDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(overridee) ?: return false
         val subDescriptor = ResolverImpl.instance.resolveDeclaration(ktParameter) as PropertyDescriptor
         return OverridingUtil.DEFAULT.isOverridableBy(
-                superDescriptor, subDescriptor, null
+            superDescriptor, subDescriptor, null
         ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
     }
 

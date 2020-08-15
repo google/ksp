@@ -26,16 +26,6 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSClassDeclarationDescriptorImpl(descriptor) }
     }
 
-    override val origin by lazy {
-        if (this.parentDeclaration?.origin != Origin.CLASS) Origin.SYNTHETIC else Origin.CLASS
-    }
-
-    override val location: Location = NonExistLocation
-
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
-    }
-
     override val classKind: ClassKind by lazy {
         when (descriptor.kind) {
             KtClassKind.INTERFACE -> ClassKind.INTERFACE
@@ -47,8 +37,6 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         }
     }
 
-    override val containingFile: KSFile? = null
-
     override val isCompanionObject by lazy {
         descriptor.isCompanionObject
     }
@@ -59,29 +47,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             .map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
     }
 
-    override val parentDeclaration: KSDeclaration? by lazy {
-        val containingDescriptor = descriptor.parents.first()
-        when (containingDescriptor) {
-            is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(
-                containingDescriptor
-            )
-            is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(
-                containingDescriptor
-            )
-            else -> null
-        } as KSDeclaration?
-    }
-
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         descriptor.unsubstitutedPrimaryConstructor?.let { KSFunctionDeclarationDescriptorImpl.getCached(it) }
-    }
-
-    override val qualifiedName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.fqNameSafe.asString())
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.name.asString())
     }
 
     override val superTypes: List<KSTypeReference> by lazy {
@@ -93,11 +60,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
-        descriptor.declaredTypeParameters.map {
-            KSTypeParameterDescriptorImpl.getCached(
-                it
-            )
-        }
+        descriptor.declaredTypeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
 
     override val declarations: List<KSDeclaration> by lazy {

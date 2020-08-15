@@ -12,57 +12,18 @@ import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 
-class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSTypeAlias, KSDeclarationImpl(),
+class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSTypeAlias, KSDeclarationImpl(ktTypeAlias),
     KSExpectActual by KSExpectActualImpl(ktTypeAlias) {
     companion object : KSObjectCache<KtTypeAlias, KSTypeAliasImpl>() {
         fun getCached(ktTypeAlias: KtTypeAlias) = cache.getOrPut(ktTypeAlias) { KSTypeAliasImpl(ktTypeAlias) }
-    }
-
-    override val origin = Origin.KOTLIN
-
-    override val location: Location by lazy {
-        ktTypeAlias.toLocation()
-    }
-
-    override val containingFile: KSFile by lazy {
-        KSFileImpl.getCached(ktTypeAlias.containingKtFile)
     }
 
     override val name: KSName by lazy {
         KSNameImpl.getCached(ktTypeAlias.name!!)
     }
 
-    override val parentDeclaration: KSDeclaration? by lazy {
-        ktTypeAlias.findParentDeclaration()
-    }
-
-    override val qualifiedName: KSName by lazy {
-        KSNameImpl.getCached(ktTypeAlias.fqName!!.asString())
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktTypeAlias.name!!)
-    }
-
     override val type: KSTypeReference by lazy {
         KSTypeReferenceImpl.getCached(ktTypeAlias.getTypeReference()!!)
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktTypeAlias.typeParameters.map {
-            KSTypeParameterImpl.getCached(
-                it,
-                ktTypeAlias
-            )
-        }
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        ktTypeAlias.annotationEntries.map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktTypeAlias.toKSModifiers()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

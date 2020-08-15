@@ -23,21 +23,8 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
         fun getCached(descriptor: TypeParameterDescriptor) = cache.getOrPut(descriptor) { KSTypeParameterDescriptorImpl(descriptor) }
     }
 
-    override val origin by lazy {
-        if (this.parentDeclaration?.origin != Origin.CLASS) Origin.SYNTHETIC else Origin.CLASS
-    }
-
-    override val location: Location = NonExistLocation
-
     override val bounds: List<KSTypeReference> by lazy {
         descriptor.upperBounds.map { KSTypeReferenceDescriptorImpl.getCached(it) }
-    }
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.name.asString())
-    }
-
-    override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached(descriptor.fqNameSafe.asString())
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
@@ -51,8 +38,6 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
         }
     }
 
-    override val containingFile: KSFile? = null
-
     override val modifiers: Set<Modifier> = emptySet()
 
     override val isReified: Boolean by lazy {
@@ -64,10 +49,6 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
     }
 
     override val variance: Variance = descriptor.variance.toKSVariance()
-
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map{ KSAnnotationDescriptorImpl.getCached(it) }
-    }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeParameter(this, data)

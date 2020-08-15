@@ -18,28 +18,15 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrObject) : KSClassDeclaration, KSDeclarationImpl(),
+class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrObject) : KSClassDeclaration,
+    KSDeclarationImpl(ktClassOrObject),
     KSExpectActual by KSExpectActualImpl(ktClassOrObject) {
     companion object : KSObjectCache<KtClassOrObject, KSClassDeclarationImpl>() {
         fun getCached(ktClassOrObject: KtClassOrObject) = cache.getOrPut(ktClassOrObject) { KSClassDeclarationImpl(ktClassOrObject) }
     }
 
-    override val origin = Origin.KOTLIN
-
-    override val location: Location by lazy {
-        ktClassOrObject.toLocation()
-    }
-
-    override val annotations: List<KSAnnotation> by lazy {
-        ktClassOrObject.annotationEntries.map { KSAnnotationImpl.getCached(it) }
-    }
-
     override val classKind: ClassKind by lazy {
         ktClassOrObject.getClassType()
-    }
-
-    override val containingFile: KSFile by lazy {
-        KSFileImpl.getCached(ktClassOrObject.containingKtFile)
     }
 
     override val isCompanionObject by lazy {
@@ -61,46 +48,13 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         result
     }
 
-    override val modifiers: Set<Modifier> by lazy {
-        ktClassOrObject.toKSModifiers()
-    }
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        ktClassOrObject.findParentDeclaration()
-    }
-
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         ktClassOrObject.primaryConstructor?.let { KSFunctionDeclarationImpl.getCached(it) }
             ?: if (classKind == ClassKind.CLASS || classKind == ClassKind.ENUM_CLASS) KSConstructorSyntheticImpl.getCached(this) else null
     }
 
-    override val qualifiedName: KSName by lazy {
-        if (ktClassOrObject.fqName == null) {
-            KSNameImpl.getCached("")
-        } else {
-            KSNameImpl.getCached(ktClassOrObject.fqName!!.asString())
-        }
-    }
-
-    override val simpleName: KSName by lazy {
-        if (ktClassOrObject.name == null) {
-            KSNameImpl.getCached("")
-        } else {
-            KSNameImpl.getCached(ktClassOrObject.name!!)
-        }
-    }
-
     override val superTypes: List<KSTypeReference> by lazy {
         ktClassOrObject.superTypeListEntries.map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktClassOrObject.typeParameters.map {
-            KSTypeParameterImpl.getCached(
-                it,
-                ktClassOrObject
-            )
-        }
     }
 
     private val descriptor: ClassDescriptor by lazy {

@@ -23,18 +23,6 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         fun getCached(descriptor: PropertyDescriptor) = cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
     }
 
-    override val origin by lazy {
-        if (this.parentDeclaration?.origin != Origin.CLASS) Origin.SYNTHETIC else Origin.CLASS
-    }
-
-    override val location: Location = NonExistLocation
-
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
-    }
-
-    override val containingFile: KSFile? = null
-
     override val extensionReceiver: KSTypeReference? by lazy {
         if (descriptor.extensionReceiverParameter != null) {
             KSTypeReferenceDescriptorImpl.getCached(descriptor.extensionReceiverParameter!!.type)
@@ -53,23 +41,6 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         }
     }
 
-    override val parentDeclaration: KSDeclaration? by lazy {
-        val containingDescriptor = descriptor.parents.first()
-        when (containingDescriptor) {
-            is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(
-                containingDescriptor
-            )
-            is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(
-                containingDescriptor
-            )
-            else -> null
-        } as KSDeclaration?
-    }
-
-    override val qualifiedName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.fqNameSafe.asString())
-    }
-
     override val setter: KSPropertySetter? by lazy {
         if (descriptor.setter != null) {
             KSPropertySetterDescriptorImpl.getCached(descriptor.setter as PropertySetterDescriptor)
@@ -84,10 +55,6 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         } else {
             null
         }
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(descriptor.name.asString())
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
