@@ -26,6 +26,8 @@ class DefaultFunctionProcessor : AbstractTestProcessor() {
         result.add("${equalsFun.simpleName.asString()}: ${equalsFun.isAbstract}")
         val interfaceProperty = ktInterface.declarations.single { it.simpleName.asString() == "interfaceProperty" } as KSPropertyDeclaration
         result.add("${interfaceProperty.simpleName.asString()}: ${interfaceProperty.isAbstract()}")
+        val nonAbstractInterfaceProp = ktInterface.declarations.single { it.simpleName.asString() == "nonAbstractInterfaceProp" } as KSPropertyDeclaration
+        result.add("${nonAbstractInterfaceProp.simpleName.asString()}: ${nonAbstractInterfaceProp.isAbstract()}")
         val abstractClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("B")) as KSClassDeclaration
         result.add("${abstractClass.simpleName.asString()}: ${abstractClass.isAbstract()}")
         val parameterVal = abstractClass.declarations.single { it.simpleName.asString() == "parameterVal" } as KSPropertyDeclaration

@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
 import org.jetbrains.kotlin.ksp.isLocal
 import org.jetbrains.kotlin.ksp.isOpen
+import org.jetbrains.kotlin.ksp.isPrivate
 import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
@@ -35,8 +36,17 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         }
     }
 
+    private fun shouldCreateSyntheticAccessor(): Boolean {
+        return !this.isPrivate()
+                && (
+                !this.isLocal() && !this.modifiers.contains(Modifier.ABSTRACT)
+                        && (this.parentDeclaration as? KSClassDeclaration)?.classKind != ClassKind.INTERFACE
+                        || ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE && ktProperty.accessors.isNotEmpty())
+                )
+    }
+
     override val getter: KSPropertyGetter? by lazy {
-        if (this.isLocal()) {
+        if (!shouldCreateSyntheticAccessor()) {
             null
         } else {
             val getter = ktProperty.accessors.filter { it.isGetter }.singleOrNull()
@@ -49,7 +59,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     override val setter: KSPropertySetter? by lazy {
-        if (this.isLocal() || !ktProperty.isVar) {
+        if (!shouldCreateSyntheticAccessor() || !ktProperty.isVar) {
             null
         } else {
             val setter = ktProperty.accessors.filter { it.isSetter }.singleOrNull()

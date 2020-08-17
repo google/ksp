@@ -121,7 +121,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
 fun KSClassDeclaration.isAbstract() = this.classKind == ClassKind.INTERFACE || this.modifiers.contains(Modifier.ABSTRACT)
 
 fun KSPropertyDeclaration.isAbstract() = this.modifiers.contains(Modifier.ABSTRACT)
-        || (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+        || ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE && this.getter == null && this.setter == null)
 
 fun KSDeclaration.isOpen() = !this.isLocal()
         && (this.modifiers.contains(Modifier.OVERRIDE)

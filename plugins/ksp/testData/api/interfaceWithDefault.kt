@@ -8,6 +8,7 @@
 // iterator: true
 // equals: false
 // interfaceProperty: true
+// nonAbstractInterfaceProp: false
 // B: true
 // parameterVal: false
 // abstractProperty: true
@@ -25,6 +26,8 @@ interface KTInterface: Sequence<String> {
 
     val interfaceProperty: String
 
+    val nonAbstractInterfaceProp: Int
+    get() = 1
 }
 
 abstract class B(val parameterVal: String) {

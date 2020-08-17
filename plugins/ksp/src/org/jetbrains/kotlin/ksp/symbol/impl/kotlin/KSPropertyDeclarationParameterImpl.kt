@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.ksp.isOpen
+import org.jetbrains.kotlin.ksp.isPrivate
 import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
@@ -32,11 +33,15 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     override val extensionReceiver: KSTypeReference? = null
 
     override val getter: KSPropertyGetter? by lazy {
-        KSPropertyGetterSyntheticImpl.getCached(this)
+        if (this.isPrivate()) {
+            null
+        } else {
+            KSPropertyGetterSyntheticImpl.getCached(this)
+        }
     }
 
     override val setter: KSPropertySetter? by lazy {
-        if (ktParameter.isMutable) {
+        if (ktParameter.isMutable && !this.isPrivate()) {
             KSPropertySetterSyntheticImpl.getCached(this)
         } else {
             null
