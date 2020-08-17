@@ -17,23 +17,21 @@ import org.jetbrains.kotlin.types.typeUtil.*
 
 class KSTypeImpl private constructor(
     val kotlinType: KotlinType,
-    val abbreviation: KotlinType?,
     private val ksTypeArguments: List<KSTypeArgument>? = null,
     override val annotations: List<KSAnnotation> = listOf()
 ) : KSType {
-    companion object : KSObjectCache<Pair<KotlinType, KotlinType?>, KSTypeImpl>() {
+    companion object : KSObjectCache<IdKey<KotlinType>, KSTypeImpl>() {
         fun getCached(
             kotlinType: KotlinType,
             ksTypeArguments: List<KSTypeArgument>? = null,
             annotations: List<KSAnnotation> = listOf()
         ): KSTypeImpl {
-            val abbrev = kotlinType.getAbbreviation()
-            return cache.getOrPut(Pair(kotlinType, abbrev)) { KSTypeImpl(kotlinType, abbrev, ksTypeArguments, annotations) }
+            return cache.getOrPut(IdKey(kotlinType)) { KSTypeImpl(kotlinType, ksTypeArguments, annotations) }
         }
     }
 
     override val declaration: KSDeclaration by lazy {
-        ResolverImpl.instance.findDeclaration(abbreviation ?: kotlinType)
+        ResolverImpl.instance.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
     }
 
     override val nullability: Nullability by lazy {
@@ -89,5 +87,10 @@ class KSTypeImpl private constructor(
 
     override fun hashCode(): Int = kotlinType.hashCode()
 
-    override fun toString(): String = (abbreviation ?: kotlinType).toString()
+    override fun toString(): String = (kotlinType.getAbbreviation() ?: kotlinType).toString()
+}
+
+class IdKey<T>(private val k: T) {
+    override fun equals(other: Any?): Boolean = if (other is IdKey<*>) k === other.k else false
+    override fun hashCode(): Int = k.hashCode()
 }
