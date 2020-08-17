@@ -36,6 +36,10 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         }
     }
 
+    override val isMutable: Boolean by lazy {
+        ktProperty.isVar
+    }
+
     private fun shouldCreateSyntheticAccessor(): Boolean {
         return !this.isPrivate()
                 && (

@@ -12,13 +12,14 @@ interface KSPropertyDeclaration : KSDeclaration {
 
     /**
      * Getter of the property.
-     * Can be null if not declared. Note that when KSPropertyDeclaration is used to model a variable, getter is always null, as a variable can't have a getter.
+     * Note that when KSPropertyDeclaration is used to model a variable, getter is always null, as a variable can't have a getter.
      */
     val getter: KSPropertyGetter?
 
     /**
      * Setter of the property.
-     * Can be null if not declared. Note that when KSPropertyDeclaration is used to model a variable, setter is always null, as a variable can't have a setter.
+     * Note that when KSPropertyDeclaration is used to model a variable, setter is always null, as a variable can't have a setter.
+     * If a property is immutable, setter is always null as well, as an immutable property can't have a setter.
      */
     val setter: KSPropertySetter?
 
@@ -32,6 +33,11 @@ interface KSPropertyDeclaration : KSDeclaration {
      * The type of this declaration.
      */
     val type: KSTypeReference?
+
+    /**
+     * True if this property is mutable.
+     */
+    val isMutable: Boolean
 
     /**
      * Indicates whether this is a delegated property.

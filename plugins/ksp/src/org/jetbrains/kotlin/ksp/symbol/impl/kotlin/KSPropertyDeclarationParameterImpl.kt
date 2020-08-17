@@ -30,7 +30,12 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
     }
+
     override val extensionReceiver: KSTypeReference? = null
+
+    override val isMutable: Boolean by lazy {
+        ktParameter.isMutable
+    }
 
     override val getter: KSPropertyGetter? by lazy {
         if (this.isPrivate()) {

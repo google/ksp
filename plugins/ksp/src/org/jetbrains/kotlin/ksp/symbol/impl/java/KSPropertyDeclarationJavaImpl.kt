@@ -27,6 +27,8 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
         psi.toLocation()
     }
 
+    override val isMutable: Boolean = true
+
     override val annotations: List<KSAnnotation> by lazy {
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }

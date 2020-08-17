@@ -31,6 +31,10 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         }
     }
 
+    override val isMutable: Boolean by lazy {
+        descriptor.isVar
+    }
+
     override val modifiers: Set<Modifier> by lazy {
         if (descriptor is PropertyDescriptor) {
             val modifiers = mutableSetOf<Modifier>()
