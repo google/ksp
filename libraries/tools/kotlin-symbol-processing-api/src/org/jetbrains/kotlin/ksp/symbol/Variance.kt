@@ -12,6 +12,6 @@ package org.jetbrains.kotlin.ksp.symbol
 enum class Variance(val label: String) {
     STAR("*"),
     INVARIANT(""),
-    COVARIANT("in"),
-    CONTRAVARIANT("out");
+    COVARIANT("out"),
+    CONTRAVARIANT("in");
 }
