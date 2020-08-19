@@ -28,8 +28,8 @@ class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProje
             Variance.STAR
         else {
             when (descriptor.projectionKind) {
-                org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.COVARIANT
-                org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.CONTRAVARIANT
+                org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
+                org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
                 else -> Variance.INVARIANT
             }
         }

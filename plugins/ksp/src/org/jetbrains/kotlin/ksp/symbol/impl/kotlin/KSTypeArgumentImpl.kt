@@ -42,9 +42,9 @@ class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProject
     override val variance: Variance by lazy {
         when (ktTypeArgument.projectionKind) {
             KtProjectionKind.STAR -> Variance.STAR
-            KtProjectionKind.IN -> Variance.COVARIANT
+            KtProjectionKind.IN -> Variance.CONTRAVARIANT
             KtProjectionKind.NONE -> Variance.INVARIANT
-            KtProjectionKind.OUT -> Variance.CONTRAVARIANT
+            KtProjectionKind.OUT -> Variance.COVARIANT
         }
     }
 

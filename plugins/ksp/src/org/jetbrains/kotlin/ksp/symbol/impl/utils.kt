@@ -210,8 +210,8 @@ fun List<PsiElement>.getKSJavaDeclarations() =
 
 fun org.jetbrains.kotlin.types.Variance.toKSVariance(): Variance {
     return when (this) {
-        org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.COVARIANT
-        org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.CONTRAVARIANT
+        org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
+        org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
         org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
         else -> throw IllegalStateException()
     }
