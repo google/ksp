@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.ksp.processor
 
+import org.jetbrains.kotlin.ksp.findAnnotationFromUseSiteTarget
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.KSDeclaration
 import org.jetbrains.kotlin.ksp.symbol.KSPropertyDeclaration
@@ -25,13 +26,13 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         result.add(ITF.primaryConstructor?.simpleName?.asString() ?: "<null>")
         result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaClass"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
         val readOnly = ClsClass.declarations.single { it.simpleName.asString() == "readOnly" } as KSPropertyDeclaration
-        readOnly.getter?.let { result.add("readOnly.get(): ${it.origin}") }
+        readOnly.getter?.let { result.add("readOnly.get(): ${it.origin} annotations from property: ${it.findAnnotationFromUseSiteTarget().map { it.shortName.asString() }.joinToString(",")}") }
         readOnly.getter?.receiver?.let { result.add("readOnly.getter.owner: " + nameAndOrigin(it)) }
         readOnly.setter?.let { result.add("readOnly.set(): ${it.origin}") }
         readOnly.setter?.receiver?.let { result.add("readOnly.setter.owner: " + nameAndOrigin(it)) }
         val readWrite = ClsClass.declarations.single { it.simpleName.asString() == "readWrite" } as KSPropertyDeclaration
         readWrite.getter?.let { result.add("readWrite.get(): ${it.origin}") }
-        readWrite.setter?.let { result.add("readWrite.set(): ${it.origin}") }
+        readWrite.setter?.let { result.add("readWrite.set(): ${it.origin} annotations from property: ${it.findAnnotationFromUseSiteTarget().map { it.shortName.asString() }.joinToString(",")}") }
         val dataClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Data"))!!
         val comp1 = dataClass.declarations.single { it.simpleName.asString() == "comp1" } as KSPropertyDeclaration
         comp1.getter?.let { result.add("comp1.get(): ${it.origin}") }

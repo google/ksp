@@ -36,6 +36,21 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
         KSNameImpl.getCached(ktAnnotationEntry.shortName!!.asString())
     }
 
+    override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
+        when (ktAnnotationEntry.useSiteTarget?.getAnnotationUseSiteTarget()) {
+            null -> null
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FILE -> AnnotationUseSiteTarget.FILE
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FIELD -> AnnotationUseSiteTarget.FIELD
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+        }
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
     }

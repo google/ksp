@@ -60,6 +60,8 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         KSNameImpl.getCached(psi.qualifiedName!!.split(".").last())
     }
 
+    override val useSiteTarget: AnnotationUseSiteTarget? = null
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
     }

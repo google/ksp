@@ -44,6 +44,8 @@ class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationD
         KSNameImpl.getCached(descriptor.fqName!!.shortName().asString())
     }
 
+    override val useSiteTarget: AnnotationUseSiteTarget? = null
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
     }

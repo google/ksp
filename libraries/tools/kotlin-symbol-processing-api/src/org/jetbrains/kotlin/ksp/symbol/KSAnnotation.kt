@@ -25,4 +25,9 @@ interface KSAnnotation : KSNode {
      * Short name for this annotation, equivalent to the simple name of the declaration of the annotation class.
      */
     val shortName: KSName
+
+    /**
+     * Use site target of the annotation. Could be null if no annotation use site target is specified.
+     */
+    val useSiteTarget: AnnotationUseSiteTarget?
 }
