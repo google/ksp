@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.ksp.processing.KSBuiltIns
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.symbol.*
+import org.jetbrains.kotlin.ksp.symbol.Variance
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.*
 import org.jetbrains.kotlin.ksp.symbol.impl.findPsi
 import org.jetbrains.kotlin.ksp.symbol.impl.java.*
@@ -35,19 +36,20 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
-import org.jetbrains.kotlin.resolve.bindingContextUtil.getAbbreviatedTypeOrType
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.jvm.multiplatform.JavaActualAnnotationArgumentExtractor
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
+import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
 import org.jetbrains.kotlin.resolve.multiplatform.findActuals
 import org.jetbrains.kotlin.resolve.multiplatform.findExpects
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
-import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
+import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 
 class ResolverImpl(
@@ -193,7 +195,7 @@ class ResolverImpl(
 
     fun resolveDeclaration(declaration: KtDeclaration): DeclarationDescriptor? {
         return if (KtPsiUtil.isLocal(declaration)) {
-            resolveContainingFunctionBody(declaration)
+            resolveDeclarationForLocal(declaration)
             bindingTrace.bindingContext.get(BindingContext.DECLARATION_TO_DESCRIPTOR, declaration)
         } else {
             resolveSession.resolveToDescriptor(declaration)
@@ -234,22 +236,42 @@ class ResolverImpl(
         return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
 
+    fun KotlinType.expandNonRecursively(): KotlinType =
+        (constructor.declarationDescriptor as? TypeAliasDescriptor)?.expandedType?.withAbbreviation(this as SimpleType) ?: this
+
+    fun TypeProjection.expand(): TypeProjection {
+        val expandedType = type.expand()
+        return if (expandedType == type) this else substitute { expandedType }
+    }
+
+    // TODO: Is this the most efficient way?
+    fun KotlinType.expand(): KotlinType =
+        replace(arguments.map { it.expand() }).expandNonRecursively()
+
+    fun KtTypeReference.lookup(): KotlinType? =
+        bindingTrace.get(BindingContext.ABBREVIATED_TYPE, this)?.expand() ?: bindingTrace.get(BindingContext.TYPE, this)
+
     fun resolveUserType(type: KSTypeReference): KSType? {
         when (type) {
             is KSTypeReferenceImpl -> {
                 val typeReference = type.ktTypeReference
-                typeReference.getAbbreviatedTypeOrType(bindingTrace.bindingContext)?.let {
+                typeReference.lookup()?.let {
                     return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
                 }
-                KtStubbedPsiUtil.getContainingDeclaration(typeReference)?.let {
-                    resolveDeclaration(it)
-                    typeReference.getAbbreviatedTypeOrType(bindingTrace.bindingContext)?.let {
-                        return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                val containingDeclaration = KtStubbedPsiUtil.getContainingDeclaration(typeReference)
+                return if (containingDeclaration != null) {
+                    resolveDeclaration(containingDeclaration)?.let {
+                        // TODO: only resolve relevant branch.
+                        ForceResolveUtil.forceResolveAllContents(it)
                     }
-                }
-                val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
-                return resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
-                    KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                    typeReference.lookup()?.let {
+                        KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                    }
+                } else {
+                    val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
+                    resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
+                        KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                    }
                 }
             }
             is KSTypeReferenceDescriptorImpl -> {
@@ -312,7 +334,7 @@ class ResolverImpl(
         bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)?.let { return it }
         val containingDeclaration = KtStubbedPsiUtil.getContainingDeclaration(ktAnnotationEntry)
         return if (containingDeclaration?.let { KtPsiUtil.isLocal(containingDeclaration) } == true) {
-            resolveContainingFunctionBody(containingDeclaration)
+            resolveDeclarationForLocal(containingDeclaration)
             bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)
         } else {
             ktAnnotationEntry.findLexicalScope().let { scope ->
@@ -322,17 +344,20 @@ class ResolverImpl(
         }
     }
 
-    fun resolveContainingFunctionBody(element: KtElement) {
-        var containingFunction = KtStubbedPsiUtil.getContainingDeclaration(element) ?: return
-        while (KtPsiUtil.isLocal(containingFunction))
-            containingFunction = KtStubbedPsiUtil.getContainingDeclaration(containingFunction)!!
-        if (containingFunction !is KtNamedFunction)
-            return
+    fun resolveDeclarationForLocal(localDeclaration: KtDeclaration) {
+        var declaration = KtStubbedPsiUtil.getContainingDeclaration(localDeclaration) ?: return
+        while (KtPsiUtil.isLocal(declaration))
+            declaration = KtStubbedPsiUtil.getContainingDeclaration(declaration)!!
 
-        val containingFD = resolveSession.resolveToDescriptor(containingFunction) as FunctionDescriptor
-        val dataFlowInfo = DataFlowInfo.EMPTY
-        val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(containingFunction)
-        bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, containingFunction, containingFD, scope)
+        val containingFD = resolveSession.resolveToDescriptor(declaration).also {
+            ForceResolveUtil.forceResolveAllContents(it)
+        }
+
+        if (declaration is KtNamedFunction) {
+            val dataFlowInfo = DataFlowInfo.EMPTY
+            val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(declaration)
+            bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope)
+        }
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
