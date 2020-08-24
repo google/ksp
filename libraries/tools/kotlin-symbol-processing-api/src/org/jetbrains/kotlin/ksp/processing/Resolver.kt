@@ -52,4 +52,9 @@ interface Resolver {
      * Provides built in types for convenience. For example, [KSBuiltins.anyType] is the KSType instance for class 'kotlin.Any'.
      */
     val builtIns: KSBuiltIns
+
+    /**
+     * map a declaration to jvm signature.
+     */
+    fun mapToJvmSignature(declaration: KSDeclaration): String
 }

@@ -128,6 +128,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("plugins/ksp/testData/api/resolveJavaType.kt");
     }
 
+    @TestMetadata("signatureMapper.kt")
+    public void testSignatureMapper() throws Exception {
+        runTest("plugins/ksp/testData/api/signatureMapper.kt");
+    }
+
     @TestMetadata("typeAlias.kt")
     public void testTypeAlias() throws Exception {
         runTest("plugins/ksp/testData/api/typeAlias.kt");

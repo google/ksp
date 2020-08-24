@@ -8,6 +8,8 @@ package org.jetbrains.kotlin.ksp.processing.impl
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.jetbrains.kotlin.codegen.ClassBuilderMode
+import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
@@ -33,6 +35,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
+import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
@@ -64,6 +67,12 @@ class ResolverImpl(
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
+
+    private val typeMapper = KotlinTypeMapper(
+        BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
+        JvmProtoBufUtil.DEFAULT_MODULE_NAME,
+        KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT// TODO use proper LanguageVersionSettings
+    )
 
     companion object {
         lateinit var resolveSession: ResolveSession
@@ -145,7 +154,8 @@ class ResolverImpl(
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
                 if (annotated.annotations.any {
                         val annotationType = it.annotationType
-                        (annotationType.element as? KSClassifierReference)?.referencedName().let { it == null || it == ksName.getShortName() }
+                        (annotationType.element as? KSClassifierReference)?.referencedName()
+                            .let { it == null || it == ksName.getShortName() }
                                 && annotationType.resolve()?.declaration?.qualifiedName == ksName
                     }) {
                     symbols.add(annotated)
@@ -189,6 +199,17 @@ class ResolverImpl(
         return KSNameImpl.getCached(name)
     }
 
+    override fun mapToJvmSignature(declaration: KSDeclaration): String {
+        return when (declaration) {
+            is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor } ?: ""
+            is KSFunctionDeclaration -> resolveFunctionDeclaration(declaration)?.let { typeMapper.mapAsmMethod(it).descriptor } ?: ""
+            is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)?.let {
+                typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
+            } ?: ""
+            else -> ""
+        }
+    }
+
     fun evaluateConstant(expression: KtExpression?, expectedType: KotlinType): ConstantValue<*>? {
         return expression?.let { constantExpressionEvaluator.evaluateToConstantValue(it, bindingTrace, expectedType) }
     }
@@ -210,6 +231,15 @@ class ResolverImpl(
                 ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as FunctionDescriptor
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
+    }
+
+    fun resolveClassDeclaration(classDeclaration: KSClassDeclaration): ClassDescriptor? {
+        return when (classDeclaration) {
+            is KSClassDeclarationImpl -> resolveDeclaration(classDeclaration.ktClassOrObject)
+            is KSClassDeclarationDescriptorImpl -> classDeclaration.descriptor
+            is KSClassDeclarationJavaImpl -> resolveJavaDeclaration(classDeclaration.psi)
+            else -> throw IllegalStateException("unexpected class: ${classDeclaration.javaClass}")
+        } as ClassDescriptor?
     }
 
     fun resolveFunctionDeclaration(function: KSFunctionDeclaration): FunctionDescriptor? {

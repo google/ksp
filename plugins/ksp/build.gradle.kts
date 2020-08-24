@@ -16,7 +16,7 @@ dependencies {
         testRuntime(intellijPluginDep("java"))
     }
 
-    compileOnly(intellijCoreDep()) { includeJars("intellij-core") }
+    compileOnly(intellijCoreDep()) { includeJars("intellij-core", "asm-all", "guava", rootProject = rootProject) }
 
     if (hasProperty("kspBaseVersion")) {
         val kspBaseVersion = properties["kspBaseVersion"] as String
