@@ -26,6 +26,8 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
     }
 
     private fun KSType.print(): String {
-        return if (this.isError) "ERROR TYPE" else this.declaration.qualifiedName!!.asString()
+        return if (this.isError) {
+            if (this.declaration.qualifiedName == null) "ERROR TYPE" else throw IllegalStateException("Error type should resolve to KSErrorTypeClassDeclaration")
+        } else this.declaration.qualifiedName!!.asString()
     }
 }

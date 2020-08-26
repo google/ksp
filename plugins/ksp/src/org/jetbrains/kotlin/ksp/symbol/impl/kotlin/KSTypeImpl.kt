@@ -5,11 +5,14 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
+import org.jetbrains.kotlin.ksp.getClassDeclarationByName
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
+import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSErrorTypeClassDeclaration
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.isError
@@ -31,7 +34,11 @@ class KSTypeImpl private constructor(
     }
 
     override val declaration: KSDeclaration by lazy {
-        ResolverImpl.instance.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
+        if (this.isError) {
+            KSErrorTypeClassDeclaration
+        } else {
+            ResolverImpl.instance.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
+        }
     }
 
     override val nullability: Nullability by lazy {
