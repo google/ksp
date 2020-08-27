@@ -286,7 +286,7 @@ class ResolverImpl(
             is KSTypeReferenceImpl -> {
                 val typeReference = type.ktTypeReference
                 typeReference.lookup()?.let {
-                    return KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                    return getKSTypeCached(it, type.element.typeArguments, type.annotations)
                 }
                 val containingDeclaration = KtStubbedPsiUtil.getContainingDeclaration(typeReference)
                 return if (containingDeclaration != null) {
@@ -295,17 +295,17 @@ class ResolverImpl(
                         ForceResolveUtil.forceResolveAllContents(it)
                     }
                     typeReference.lookup()?.let {
-                        KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                        getKSTypeCached(it, type.element.typeArguments, type.annotations)
                     }
                 } else {
                     val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
                     resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
-                        KSTypeImpl.getCached(it, type.element.typeArguments, type.annotations)
+                        getKSTypeCached(it, type.element.typeArguments, type.annotations)
                     }
                 }
             }
             is KSTypeReferenceDescriptorImpl -> {
-                return KSTypeImpl.getCached(type.kotlinType)
+                return getKSTypeCached(type.kotlinType)
             }
             is KSTypeReferenceJavaImpl -> {
                 val psi = (type.psi as? PsiClassReferenceType)?.resolve()
@@ -317,7 +317,7 @@ class ResolverImpl(
                             JavaMethodImpl(psi.owner as PsiMethod).containingClass
                         )?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi.owner } as FunctionDescriptor
                     } as DeclarationDescriptor
-                    return KSTypeImpl.getCached(
+                    return getKSTypeCached(
                         LazyJavaTypeParameterDescriptor(
                             lazyJavaResolverContext,
                             JavaTypeParameterImpl(psi),
@@ -327,7 +327,7 @@ class ResolverImpl(
                     )
 
                 } else {
-                    return KSTypeImpl.getCached(resolveJavaType(type.psi), type.element.typeArguments, type.annotations)
+                    return getKSTypeCached(resolveJavaType(type.psi), type.element.typeArguments, type.annotations)
                 }
             }
             else -> throw IllegalStateException()
@@ -397,22 +397,22 @@ class ResolverImpl(
     override val builtIns: KSBuiltIns by lazy {
         val builtIns = module.builtIns
         object : KSBuiltIns {
-            override val anyType: KSType by lazy { KSTypeImpl.getCached(builtIns.anyType) }
-            override val nothingType by lazy { KSTypeImpl.getCached(builtIns.nothingType) }
-            override val unitType: KSType by lazy { KSTypeImpl.getCached(builtIns.unitType) }
-            override val numberType: KSType by lazy { KSTypeImpl.getCached(builtIns.numberType) }
-            override val byteType: KSType by lazy { KSTypeImpl.getCached(builtIns.byteType) }
-            override val shortType: KSType by lazy { KSTypeImpl.getCached(builtIns.shortType) }
-            override val intType: KSType by lazy { KSTypeImpl.getCached(builtIns.intType) }
-            override val longType: KSType by lazy { KSTypeImpl.getCached(builtIns.longType) }
-            override val floatType: KSType by lazy { KSTypeImpl.getCached(builtIns.floatType) }
-            override val doubleType: KSType by lazy { KSTypeImpl.getCached(builtIns.doubleType) }
-            override val charType: KSType by lazy { KSTypeImpl.getCached(builtIns.charType) }
-            override val booleanType: KSType by lazy { KSTypeImpl.getCached(builtIns.booleanType) }
-            override val stringType: KSType by lazy { KSTypeImpl.getCached(builtIns.stringType) }
-            override val iterableType: KSType by lazy { KSTypeImpl.getCached(builtIns.iterableType.replaceArgumentsWithStarProjections()) }
-            override val annotationType: KSType by lazy { KSTypeImpl.getCached(builtIns.annotationType) }
-            override val arrayType: KSType by lazy { KSTypeImpl.getCached(builtIns.array.defaultType.replaceArgumentsWithStarProjections()) }
+            override val anyType: KSType by lazy { getKSTypeCached(builtIns.anyType) }
+            override val nothingType by lazy { getKSTypeCached(builtIns.nothingType) }
+            override val unitType: KSType by lazy { getKSTypeCached(builtIns.unitType) }
+            override val numberType: KSType by lazy { getKSTypeCached(builtIns.numberType) }
+            override val byteType: KSType by lazy { getKSTypeCached(builtIns.byteType) }
+            override val shortType: KSType by lazy { getKSTypeCached(builtIns.shortType) }
+            override val intType: KSType by lazy { getKSTypeCached(builtIns.intType) }
+            override val longType: KSType by lazy { getKSTypeCached(builtIns.longType) }
+            override val floatType: KSType by lazy { getKSTypeCached(builtIns.floatType) }
+            override val doubleType: KSType by lazy { getKSTypeCached(builtIns.doubleType) }
+            override val charType: KSType by lazy { getKSTypeCached(builtIns.charType) }
+            override val booleanType: KSType by lazy { getKSTypeCached(builtIns.booleanType) }
+            override val stringType: KSType by lazy { getKSTypeCached(builtIns.stringType) }
+            override val iterableType: KSType by lazy { getKSTypeCached(builtIns.iterableType.replaceArgumentsWithStarProjections()) }
+            override val annotationType: KSType by lazy { getKSTypeCached(builtIns.annotationType) }
+            override val arrayType: KSType by lazy { getKSTypeCached(builtIns.array.defaultType.replaceArgumentsWithStarProjections()) }
         }
     }
 }

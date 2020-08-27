@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSFunctionDeclaration
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
@@ -110,11 +110,11 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return KSTypeImpl.getCached(descriptor!!.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        return getKSTypeCached(descriptor!!.defaultType.replaceTypeArguments(typeArguments), typeArguments)
     }
 
     override fun asStarProjectedType(): KSType {
-        return KSTypeImpl.getCached(descriptor!!.defaultType.replaceArgumentsWithStarProjections())
+        return getKSTypeCached(descriptor!!.defaultType.replaceArgumentsWithStarProjections())
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

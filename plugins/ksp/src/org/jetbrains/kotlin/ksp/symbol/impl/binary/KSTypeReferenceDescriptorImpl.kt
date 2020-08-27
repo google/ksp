@@ -9,9 +9,9 @@ import org.jetbrains.kotlin.builtins.isSuspendFunctionTypeOrSubtype
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import org.jetbrains.kotlin.ksp.symbol.*
-import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.Modifier
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.types.*
 
 class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType) : KSTypeReference {
@@ -51,7 +51,7 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
     }
 
     override fun resolve(): KSType {
-        return KSTypeImpl.getCached(kotlinType)
+        return getKSTypeCached(kotlinType)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

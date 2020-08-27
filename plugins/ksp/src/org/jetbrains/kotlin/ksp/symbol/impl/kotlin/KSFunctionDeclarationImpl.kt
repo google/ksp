@@ -81,7 +81,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         } else {
             KSTypeReferenceDeferredImpl.getCached {
                 val desc = ResolverImpl.instance.resolveDeclaration(ktFunction) as FunctionDescriptor
-                KSTypeImpl.getCached(desc.returnTypeOrNothing)
+                getKSTypeCached(desc.returnTypeOrNothing)
             }
         }
     }

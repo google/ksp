@@ -8,12 +8,9 @@ package org.jetbrains.kotlin.ksp.symbol.impl.binary
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
-import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
-import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
-import org.jetbrains.kotlin.resolve.descriptorUtil.parents
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -96,10 +93,10 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType =
-        KSTypeImpl.getCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        getKSTypeCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)
 
     override fun asStarProjectedType(): KSType {
-        return KSTypeImpl.getCached(descriptor.defaultType.replaceArgumentsWithStarProjections())
+        return getKSTypeCached(descriptor.defaultType.replaceArgumentsWithStarProjections())
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

@@ -85,7 +85,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
                     // TODO: Add error type to allow forward reference being taken care of.
                     null
                 } else {
-                    KSTypeImpl.getCached(desc.type)
+                    getKSTypeCached(desc.type)
                 }
             }
         }

@@ -16,8 +16,8 @@ import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.ksp.symbol.impl.findPsi
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSTypeImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
@@ -70,7 +70,7 @@ private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     }?.let { (it as KSClassDeclaration).asStarProjectedType() }
     is KClassValue -> when (val classValue = value) {
         is KClassValue.Value.NormalClass -> classValue.classId.findKSType()
-        is KClassValue.Value.LocalClass -> KSTypeImpl.getCached(classValue.type)
+        is KClassValue.Value.LocalClass -> getKSTypeCached(classValue.type)
     }
     is ErrorValue, is NullValue -> null
     else -> value

@@ -62,11 +62,11 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return KSTypeImpl.getCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        return getKSTypeCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)
     }
 
     override fun asStarProjectedType(): KSType {
-        return KSTypeImpl.getCached(descriptor.defaultType.replaceArgumentsWithStarProjections())
+        return getKSTypeCached(descriptor.defaultType.replaceArgumentsWithStarProjections())
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

@@ -5,14 +5,11 @@
 
 package org.jetbrains.kotlin.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.ksp.getClassDeclarationByName
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.replaceTypeArguments
-import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSErrorTypeClassDeclaration
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.isError
@@ -34,11 +31,7 @@ class KSTypeImpl private constructor(
     }
 
     override val declaration: KSDeclaration by lazy {
-        if (this.isError) {
-            KSErrorTypeClassDeclaration
-        } else {
-            ResolverImpl.instance.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
-        }
+        ResolverImpl.instance.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
     }
 
     override val nullability: Nullability by lazy {
@@ -82,9 +75,7 @@ class KSTypeImpl private constructor(
     private val meNotNullable: KSType by lazy { KSTypeImpl.getCached(kotlinType.makeNotNullable()) }
     override fun makeNotNullable(): KSType = meNotNullable
 
-    override val isError: Boolean by lazy {
-        kotlinType.isError
-    }
+    override val isError: Boolean = false
 
     override fun equals(other: Any?): Boolean {
         if (other !is KSTypeImpl)
@@ -100,4 +91,16 @@ class KSTypeImpl private constructor(
 class IdKey<T>(private val k: T) {
     override fun equals(other: Any?): Boolean = if (other is IdKey<*>) k === other.k else false
     override fun hashCode(): Int = k.hashCode()
+}
+
+fun getKSTypeCached(
+    kotlinType: KotlinType,
+    ksTypeArguments: List<KSTypeArgument>? = null,
+    annotations: List<KSAnnotation> = listOf()
+): KSType {
+    return if (kotlinType.isError) {
+        KSErrorType
+    } else {
+        KSTypeImpl.getCached(kotlinType, ksTypeArguments, annotations)
+    }
 }
