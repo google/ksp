@@ -394,21 +394,21 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4.0-rc-dev-experimental-20200814/playground-ksp-1.4.0-rc-dev-experimental-20200814.zip
+Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4.0-dev-experimental-20200828/playground-ksp-1.4.0-dev-experimental-20200828.zip
 
 ### Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.4.0-rc` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.4.0` of the Kotlin plugin in the root project for use in other project modules.
 
   ```
   plugins {
-      kotlin("jvm") version "1.4.0-rc" apply false
+      kotlin("jvm") version "1.4.0" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.4.0-rc"))
+          classpath(kotlin("gradle-plugin", version = "1.4.0"))
       }
 
       repositories {
@@ -435,7 +435,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   }
 
   dependencies {
-      implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200814")
+      implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-dev-experimental-20200828")
   }
   ```
 
@@ -469,7 +469,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
     }
 
     dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-rc-dev-experimental-20200814")
+        implementation("org.jetbrains.kotlin:kotlin-symbol-processing-api:1.4.0-dev-experimental-20200828")
     }
     ```
 
@@ -509,7 +509,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
 
   ```
   plugins {
-      id("kotlin-ksp") version "1.4.0-rc-dev-experimental-20200814"
+      id("kotlin-ksp") version "1.4.0-dev-experimental-20200828"
       kotlin("jvm") 
   }
 
