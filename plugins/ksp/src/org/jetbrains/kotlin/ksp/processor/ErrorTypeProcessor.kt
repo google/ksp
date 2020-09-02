@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ksp.processor
 
 import org.jetbrains.kotlin.ksp.processing.Resolver
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.KSPropertyDeclaration
 import org.jetbrains.kotlin.ksp.symbol.KSType
 
@@ -23,6 +24,31 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         result.add(errorAtTop.type?.resolve()?.print() ?: "")
         result.add(errorInComponent.type?.resolve()?.print() ?: "")
         errorInComponent.type!!.resolve()!!.arguments.map { result.add(it.type!!.resolve()!!.print()) }
+        result.add(
+            "errorInComponent is assignable from errorAtTop: ${
+                errorAtTop.type!!.resolve()!!.isAssignableFrom(errorAtTop.type!!.resolve()!!)
+            }"
+        )
+        result.add(
+            "errorInComponent is assignable from class C: ${
+                errorAtTop.type!!.resolve()!!.isAssignableFrom(classC.asStarProjectedType())
+            }"
+        )
+        result.add(
+            "Any is assignable from errorInComponent: ${
+                ResolverImpl.instance.builtIns.anyType.isAssignableFrom(errorAtTop.type!!.resolve()!!)
+            }"
+        )
+        result.add(
+            "class C is assignable from errorInComponent: ${
+                classC.asStarProjectedType().isAssignableFrom(errorAtTop.type!!.resolve()!!)
+            }"
+        )
+        result.add(
+            "Any is assignable from class C: ${
+                ResolverImpl.instance.builtIns.anyType.isAssignableFrom(classC.asStarProjectedType())
+            }"
+        )
     }
 
     private fun KSType.print(): String {
