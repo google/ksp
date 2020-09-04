@@ -58,4 +58,8 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
     private val resolved: AnnotationDescriptor? by lazy {
         ResolverImpl.instance.resolveAnnotationEntry(ktAnnotationEntry)
     }
+
+    override fun toString(): String {
+        return "@${shortName.asString()}"
+    }
 }

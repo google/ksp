@@ -65,4 +65,8 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
     }
+
+    override fun toString(): String {
+        return "@${shortName.asString()}"
+    }
 }

@@ -49,4 +49,8 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
     }
 
     override fun resolve(): KSType? = ResolverImpl.instance.resolveUserType(this)
+
+    override fun toString(): String {
+        return element.toString()
+    }
 }

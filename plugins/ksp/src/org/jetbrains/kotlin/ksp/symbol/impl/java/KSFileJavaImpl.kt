@@ -37,4 +37,8 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFile(this, data)
     }
+
+    override fun toString(): String {
+        return "File: ${this.fileName}"
+    }
 }

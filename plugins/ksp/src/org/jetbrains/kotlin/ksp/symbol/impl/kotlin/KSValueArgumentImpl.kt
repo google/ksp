@@ -37,4 +37,8 @@ abstract class KSValueArgumentImpl : KSValueArgument {
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitValueArgument(this, data)
     }
+
+    override fun toString(): String {
+        return "${name?.asString() ?: ""}:${value.toString()}"
+    }
 }

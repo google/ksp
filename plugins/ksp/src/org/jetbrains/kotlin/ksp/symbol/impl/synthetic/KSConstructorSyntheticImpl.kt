@@ -72,4 +72,8 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFunctionDeclaration(this, data)
     }
+
+    override fun toString(): String {
+        return "synthetic constructor for ${this.parentDeclaration}"
+    }
 }

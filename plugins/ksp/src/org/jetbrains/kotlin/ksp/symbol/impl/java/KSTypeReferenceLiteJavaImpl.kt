@@ -30,4 +30,8 @@ class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType) : KSType
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeReference(this, data)
     }
+
+    override fun toString(): String {
+        return type.toString()
+    }
 }

@@ -54,4 +54,8 @@ class KSVariableParameterImpl private constructor(val ktParameter: KtParameter) 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitVariableParameter(this, data)
     }
+
+    override fun toString(): String {
+        return name?.asString() ?: "_"
+    }
 }

@@ -47,5 +47,8 @@ abstract class KSDeclarationDescriptorImpl(descriptor: DeclarationDescriptor) : 
         KSNameImpl.getCached(descriptor.name.asString())
     }
 
+    override fun toString(): String {
+        return this.simpleName.asString()
+    }
 
 }

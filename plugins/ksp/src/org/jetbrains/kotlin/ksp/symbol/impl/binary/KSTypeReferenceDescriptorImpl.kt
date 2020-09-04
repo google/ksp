@@ -57,4 +57,8 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeReference(this, data)
     }
+
+    override fun toString(): String {
+        return element.toString()
+    }
 }

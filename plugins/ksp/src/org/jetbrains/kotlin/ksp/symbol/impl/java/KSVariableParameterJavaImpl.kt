@@ -53,4 +53,8 @@ class KSVariableParameterJavaImpl private constructor(val psi: PsiParameter) : K
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitVariableParameter(this, data)
     }
+
+    override fun toString(): String {
+        return name?.asString() ?: "_"
+    }
 }

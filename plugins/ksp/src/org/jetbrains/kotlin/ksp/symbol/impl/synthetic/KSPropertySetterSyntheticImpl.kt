@@ -32,4 +32,8 @@ class KSPropertySetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertySetter(this, data)
     }
+
+    override fun toString(): String {
+        return "$receiver.getter()"
+    }
 }

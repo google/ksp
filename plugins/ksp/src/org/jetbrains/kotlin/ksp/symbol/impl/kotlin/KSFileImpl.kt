@@ -41,4 +41,8 @@ class KSFileImpl private constructor(val file: KtFile) : KSFile {
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFile(this, data)
     }
+
+    override fun toString(): String {
+        return "File: ${this.fileName}"
+    }
 }

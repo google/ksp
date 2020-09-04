@@ -40,4 +40,8 @@ class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunction
     override val returnType: KSTypeReference by lazy {
         KSTypeReferenceImpl.getCached(ktFunctionType.returnTypeReference!!)
     }
+
+    override fun toString(): String {
+        return "${receiverType?.let { "$it." } ?: ""}(${functionParameters.map { it.type.toString() }.joinToString(", ")}) -> $returnType"
+    }
 }

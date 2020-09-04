@@ -52,4 +52,8 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
     override val parentDeclaration: KSDeclaration? by lazy {
         ktDeclaration.findParentDeclaration()
     }
+
+    override fun toString(): String {
+        return this.simpleName.asString()
+    }
 }

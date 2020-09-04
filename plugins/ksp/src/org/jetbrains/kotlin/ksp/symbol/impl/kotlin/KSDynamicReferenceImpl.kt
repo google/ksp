@@ -25,4 +25,8 @@ class KSDynamicReferenceImpl private constructor() : KSDynamicReference {
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitDynamicReference(this, data)
     }
+
+    override fun toString(): String {
+        return "<dynamic type>"
+    }
 }

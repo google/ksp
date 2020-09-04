@@ -26,6 +26,10 @@ abstract class KSTypeArgumentImpl : KSTypeArgument {
 
         return variance == other.variance && type == other.type
     }
+
+    override fun toString(): String {
+        return "$variance $type"
+    }
 }
 
 class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProjection) : KSTypeArgumentImpl() {

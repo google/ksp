@@ -21,4 +21,8 @@ class KSValueArgumentJavaImpl private constructor(override val name: KSName?, ov
     override val isSpread: Boolean = false
 
     override val annotations: List<KSAnnotation> = emptyList()
+
+    override fun toString(): String {
+        return "${name?.asString() ?: ""}:${value.toString()}"
+    }
 }

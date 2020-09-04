@@ -12,4 +12,8 @@ abstract class KSDeclarationJavaImpl : KSDeclaration {
     override val packageName: KSName by lazy {
         this.containingFile!!.packageName
     }
+
+    override fun toString(): String {
+        return this.simpleName.asString()
+    }
 }
