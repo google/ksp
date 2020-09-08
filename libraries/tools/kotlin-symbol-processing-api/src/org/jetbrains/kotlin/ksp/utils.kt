@@ -74,6 +74,13 @@ fun KSTypeAlias.findActualType(): KSClassDeclaration {
  */
 fun KSDeclaration.getVisibility(): Visibility {
     return when {
+        this.modifiers.contains(Modifier.OVERRIDE) -> {
+            when (this) {
+                is KSFunctionDeclaration -> this.findOverridee()?.getVisibility()
+                is KSPropertyDeclaration -> this.findOverridee()?.getVisibility()
+                else -> null
+            } ?: Visibility.PUBLIC
+        }
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
@@ -124,7 +131,8 @@ fun KSPropertyDeclaration.isAbstract() = this.modifiers.contains(Modifier.ABSTRA
         || ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE && this.getter == null && this.setter == null)
 
 fun KSDeclaration.isOpen() = !this.isLocal()
-        && (this.modifiers.contains(Modifier.OVERRIDE)
+        && ((this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+        || this.modifiers.contains(Modifier.OVERRIDE)
         || this.modifiers.contains(Modifier.ABSTRACT)
         || this.modifiers.contains(Modifier.OPEN)
         || (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE

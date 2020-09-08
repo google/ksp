@@ -23,6 +23,11 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         fun getCached(ktFunction: KtFunction) = cache.getOrPut(ktFunction) { KSFunctionDeclarationImpl(ktFunction) }
     }
 
+    override fun findOverridee(): KSFunctionDeclaration? {
+        return ResolverImpl.instance.resolveFunctionDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
+            ?.toKSFunctionDeclaration()
+    }
+
     override fun overrides(overridee: KSFunctionDeclaration): Boolean {
         if (!this.modifiers.contains(Modifier.OVERRIDE))
             return false

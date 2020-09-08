@@ -14,8 +14,6 @@ import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.impl.*
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import org.jetbrains.kotlin.psi.KtProperty
@@ -107,6 +105,11 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         return OverridingUtil.DEFAULT.isOverridableBy(
                 superDescriptor, subDescriptor, null
         ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
+    }
+
+    override fun findOverridee(): KSPropertyDeclaration? {
+        return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
+            ?.toKSPropertyDeclaration()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

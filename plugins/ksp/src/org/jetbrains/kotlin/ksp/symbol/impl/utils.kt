@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
 import org.jetbrains.kotlin.ksp.symbol.ClassKind
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
+import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertyDeclarationDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
@@ -243,6 +244,17 @@ internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration
     return when (psi) {
         is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
         is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
+        else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
+    }
+}
+
+internal fun PropertyDescriptor.toKSPropertyDeclaration(): KSPropertyDeclaration {
+    if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSPropertyDeclarationDescriptorImpl.getCached(this)
+    val psi = this.findPsi() ?: return KSPropertyDeclarationDescriptorImpl.getCached(this)
+    return when (psi) {
+        is KtProperty -> KSPropertyDeclarationImpl.getCached(psi)
+        is KtParameter -> KSPropertyDeclarationParameterImpl.getCached(psi)
+        // This function should not be invoked against a Java symbol based descriptor.
         else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
     }
 }

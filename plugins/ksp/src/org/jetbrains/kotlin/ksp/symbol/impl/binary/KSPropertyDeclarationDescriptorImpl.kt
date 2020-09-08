@@ -82,6 +82,11 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
     }
 
+    override fun findOverridee(): KSPropertyDeclaration? {
+        return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
+            ?.toKSPropertyDeclaration()
+    }
+
     override fun isDelegated(): Boolean {
         return (descriptor as? PropertyDescriptor)?.delegateField != null
     }

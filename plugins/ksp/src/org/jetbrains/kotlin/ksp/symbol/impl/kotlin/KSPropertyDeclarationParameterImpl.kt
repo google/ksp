@@ -11,14 +11,11 @@ import org.jetbrains.kotlin.ksp.isPrivate
 import org.jetbrains.kotlin.ksp.isVisibleFrom
 import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
-import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
 import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
-import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
@@ -29,6 +26,10 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     KSExpectActual by KSExpectActualImpl(ktParameter) {
     companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
+    }
+
+    override val parentDeclaration: KSDeclaration? by lazy {
+        ktParameter.findParentDeclaration()!!.parentDeclaration
     }
 
     override val extensionReceiver: KSTypeReference? = null
@@ -62,6 +63,11 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     }
 
     override fun isDelegated(): Boolean = false
+
+    override fun findOverridee(): KSPropertyDeclaration? {
+        return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
+            ?.toKSPropertyDeclaration()
+    }
 
     override fun overrides(overridee: KSPropertyDeclaration): Boolean {
         if (!this.modifiers.contains(Modifier.OVERRIDE))

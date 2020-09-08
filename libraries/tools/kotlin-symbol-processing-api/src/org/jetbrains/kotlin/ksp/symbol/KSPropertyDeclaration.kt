@@ -51,4 +51,11 @@ interface KSPropertyDeclaration : KSDeclaration {
      * Calling [overrides] is expensive and should be avoided if possible.
      */
     fun overrides(overridee: KSPropertyDeclaration): Boolean
+
+    /**
+     * Find the original overridee of this property, if overriding.
+     * @return [KSPropertyDeclaration] for the original property, if overriding, otherwise null.
+     * Calling [findOverridee] is expensive and should be avoided if possible.
+     */
+    fun findOverridee(): KSPropertyDeclaration?
 }

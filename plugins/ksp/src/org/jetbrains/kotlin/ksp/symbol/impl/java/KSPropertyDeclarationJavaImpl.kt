@@ -7,13 +7,11 @@ package org.jetbrains.kotlin.ksp.symbol.impl.java
 
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiJavaFile
+import org.jetbrains.kotlin.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.ksp.symbol.*
-import org.jetbrains.kotlin.ksp.symbol.impl.KSObjectCache
-import org.jetbrains.kotlin.ksp.symbol.impl.findParentDeclaration
+import org.jetbrains.kotlin.ksp.symbol.impl.*
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import org.jetbrains.kotlin.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.ksp.symbol.impl.toKSModifiers
-import org.jetbrains.kotlin.ksp.symbol.impl.toLocation
 
 class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {
@@ -67,6 +65,10 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
 
     override fun overrides(overridee: KSPropertyDeclaration): Boolean {
         return false
+    }
+
+    override fun findOverridee(): KSPropertyDeclaration? {
+        return null
     }
 
     override fun isDelegated(): Boolean {

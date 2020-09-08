@@ -45,4 +45,11 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
      * Calling [overrides] is expensive and should be avoided if possible.
      */
     fun overrides(overridee: KSFunctionDeclaration): Boolean
+
+    /**
+     * Find the original overridee of this function, if overriding.
+     * @return [KSFunctionDeclaration] for the original function, if overriding, otherwise null.
+     * Calling [findOverridee] is expensive and should be avoided if possible.
+     */
+    fun findOverridee(): KSFunctionDeclaration?
 }
