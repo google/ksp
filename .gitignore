@@ -1,0 +1,12 @@
+.idea
+/dist
+/local
+/tmp
+workspace.xml
+.gradle/
+build/
+!**/src/**/build
+!**/test/**/build
+*.iml
+!**/testData/**/*.iml
+local.properties
