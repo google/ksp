@@ -10,6 +10,7 @@
 // comp1.get(): SYNTHETIC
 // comp2.get(): SYNTHETIC
 // comp2.set(): SYNTHETIC
+// GetAnno
 // END
 // FILE: a.kt
 annotation class GetAnno
@@ -24,7 +25,7 @@ class Cls {
     get() = 1
 }
 
-data class Data(val comp1: Int, var comp2: Int)
+data class Data(@get:GetAnno val comp1: Int, var comp2: Int)
 
 interface ITF
 
