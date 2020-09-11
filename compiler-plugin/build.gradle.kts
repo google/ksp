@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 description = "Kotlin Symbol Processor"
 
 val kotlinProjectPath: String? by project
-val intellijVersion: String? by project
-val kotlinBaseVersion: String? by project
-val junitVersion: String? by project
+val intellijVersion: String by project
+val kotlinBaseVersion: String by project
+val junitVersion: String by project
 
 group = "org.jetbrains.kotlin"
 version = kotlinBaseVersion
@@ -18,7 +18,6 @@ tasks.withType<KotlinCompile> {
 plugins {
     kotlin("jvm")
     id("org.jetbrains.intellij") version "0.4.22"
-    `maven-publish`
 }
 
 intellij {
@@ -110,16 +109,4 @@ repositories {
         dirs("dependencies/kotlin-compiler-tests")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("default") {
-            artifactId = "ksp-kotlin-extension"
-            from(components["java"])
-        }
-        repositories {
-            mavenLocal()
-        }
-    }
 }
