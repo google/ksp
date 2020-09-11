@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.ksp.processor.AbstractTestProcessor
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.test.ConfigurationKind
 import java.io.File
+import org.jetbrains.kotlin.test.TestJdkKind
 
 abstract class AbstractKotlinKSPTest : CodegenTestCase() {
     companion object {
@@ -26,7 +27,7 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
 
     override fun doMultiFileTest(wholeFile: File, files: List<TestFile>) {
         val javaFiles = listOfNotNull(writeJavaFiles(files))
-        createEnvironmentWithMockJdkAndIdeaAnnotations(ConfigurationKind.ALL, *(javaFiles.toTypedArray()))
+        createEnvironmentWithMockJdkAndIdeaAnnotations(ConfigurationKind.NO_KOTLIN_REFLECT, *(javaFiles.toTypedArray()))
         val testProcessorName = wholeFile
             .readLines()
             .filter { it.startsWith(TEST_PROCESSOR) }

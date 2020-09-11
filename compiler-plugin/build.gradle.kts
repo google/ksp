@@ -2,8 +2,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processor"
 
+val kotlinProjectPath: String? by project
+val intellijVersion: String? by project
+val kotlinBaseVersion: String? by project
+val junitVersion: String? by project
+
 group = "org.jetbrains.kotlin"
-version = "1.4.0"
+version = kotlinBaseVersion
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
@@ -12,7 +17,12 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     kotlin("jvm")
+    id("org.jetbrains.intellij") version "0.4.22"
     `maven-publish`
+}
+
+intellij {
+    version = intellijVersion
 }
 
 fun ModuleDependency.includeJars(vararg names: String) {
@@ -25,36 +35,26 @@ fun ModuleDependency.includeJars(vararg names: String) {
     }
 }
 
-//val kotlinProjectPath: String? by settings
-val kotlinProjectPath = "/usr/local/google/home/laszio/working/kotlin"
-val intellijVersion = "193.6494.35"
-val kotlinBaseVersion = "1.4.0"
-val ideModuleName = "ideaIC"
-
-
 dependencies {
     implementation(kotlin("stdlib", kotlinBaseVersion))
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     implementation(project(":api"))
 
+    // workaround: IntelliJ doesn't resolve packed classes from included builds.
     if (kotlinProjectPath != null) {
-        testImplementation(kotlin("stdlib", kotlinBaseVersion))
-        // workaround: IntelliJ doesn't resolve packed classes from included builds.
-        implementation("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
+        compileOnly("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
         sourceArtifacts("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
-
-        testImplementation("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
-        testRuntimeOnly("kotlin.build:$ideModuleName:$intellijVersion")
-        testImplementation("kotlin.build:$ideModuleName:$intellijVersion") { includeJars("openapi", "idea", "idea_rt", "platform-api", "platform-impl", "bootstrap") }
-        testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-        testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
-        testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
-
-        testImplementation("junit:junit:4.12")
-
-        testImplementation(project(":api"))
     }
+
+    testImplementation(kotlin("stdlib", kotlinBaseVersion))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
+
+    testImplementation("junit:junit:$junitVersion")
+
+    testImplementation(project(":api"))
 }
 
 fun Project.javaPluginConvention(): JavaPluginConvention = the()
@@ -67,7 +67,7 @@ tasks.test {
     maxHeapSize = "2g"
 
     systemProperty("idea.is.unit.test", "true")
-    systemProperty("idea.home.path", "$kotlinProjectPath/dependencies/repo/kotlin.build/intellij-core/$intellijVersion/artifacts")
+    systemProperty("idea.home.path", "dependencies/repo/kotlin.build/intellij-core/$intellijVersion/artifacts")
     systemProperty("java.awt.headless", "true")
     environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
     environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
@@ -94,11 +94,9 @@ repositories {
             patternLayout {
                 ivy("[organisation]/[module]/[revision]/[module].ivy.xml")
                 ivy("[organisation]/[module]/[revision]/ivy/[module].ivy.xml")
-                ivy("[organisation]/$ideModuleName/[revision]/ivy/[module].ivy.xml") // bundled plugins
 
                 artifact("[organisation]/[module]/[revision]/artifacts/lib/[artifact](-[classifier]).[ext]")
                 artifact("[organisation]/[module]/[revision]/artifacts/[artifact](-[classifier]).[ext]")
-                artifact("[organisation]/$ideModuleName/[revision]/artifacts/plugins/[module]/lib/[artifact](-[classifier]).[ext]") // bundled plugins
                 artifact("[organisation]/sources/[artifact]-[revision](-[classifier]).[ext]")
                 artifact("[organisation]/[module]/[revision]/[artifact](-[classifier]).[ext]")
             }
@@ -107,6 +105,9 @@ repositories {
                 ivyDescriptor()
             }
         }
+    }
+    flatDir {
+        dirs("dependencies/kotlin-compiler-tests")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }

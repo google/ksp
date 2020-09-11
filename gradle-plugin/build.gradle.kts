@@ -2,8 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processor"
 
+val kotlinBaseVersion: String? by project
+val junitVersion: String? by project
+
 group = "org.jetbrains.kotlin"
-version = "1.4.0"
+version = kotlinBaseVersion
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
@@ -16,12 +19,12 @@ plugins {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.4.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinBaseVersion")
 
     compileOnly(gradleApi())
 
     testImplementation(gradleApi())
-    testImplementation("junit:junit:4.12")
+    testImplementation("junit:junit:$junitVersion")
 }
 
 repositories {
