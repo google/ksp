@@ -20,7 +20,7 @@ plugins {
 publishing {
     publications {
         create<MavenPublication>("default") {
-            artifactId = "ksp-api"
+            artifactId = "symbol-processing-api"
             from(components["java"])
         }
         repositories {

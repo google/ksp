@@ -65,7 +65,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
 class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
     companion object {
-        const val KSP_ARTIFACT_NAME = "kotlin-ksp"
+        const val KSP_ARTIFACT_NAME = "symbol-processing"
     }
 
     override fun isApplicable(project: Project, task: AbstractCompile) = KspGradleSubplugin.isEnabled(project)
@@ -116,7 +116,7 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
         return options
     }
 
-    override fun getCompilerPluginId() = "org.jetbrains.kotlin.ksp"
+    override fun getCompilerPluginId() = "org.jetbrains.kotlin.symbol-processing"
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(groupId = "org.jetbrains.kotlin", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
 }

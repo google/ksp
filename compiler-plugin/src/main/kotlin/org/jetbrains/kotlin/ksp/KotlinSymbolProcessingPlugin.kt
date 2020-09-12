@@ -21,7 +21,7 @@ import java.io.File
 private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("Ksp options")
 
 class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
-    override val pluginId = "org.jetbrains.kotlin.ksp"
+    override val pluginId = "org.jetbrains.kotlin.symbol-processing"
 
     override val pluginOptions: Collection<AbstractCliOption> = KspCliOption.values().asList()
 

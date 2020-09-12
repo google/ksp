@@ -8,7 +8,7 @@ pluginManagement {
 include("api")
 include("gradle-plugin")
 include("compiler-plugin")
-include("kotlin-ksp")
+include("symbol-processing")
 
 val kotlinProjectPath: String? by settings
 if (kotlinProjectPath != null) {

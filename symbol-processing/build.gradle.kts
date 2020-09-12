@@ -36,7 +36,7 @@ tasks {
 publishing {
     publications {
         val publication = create<MavenPublication>("shadow") {
-            artifactId = "kotlin-ksp"
+            artifactId = "symbol-processing"
         }
         project.shadow.component(publication)
         repositories {
