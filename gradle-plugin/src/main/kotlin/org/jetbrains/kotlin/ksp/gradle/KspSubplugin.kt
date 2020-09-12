@@ -116,7 +116,7 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
         return options
     }
 
-    override fun getCompilerPluginId() = "org.jetbrains.kotlin.symbol-processing"
+    override fun getCompilerPluginId() = "com.google.devtools.kotlin.symbol-processing"
     override fun getPluginArtifact(): SubpluginArtifact =
-        SubpluginArtifact(groupId = "org.jetbrains.kotlin", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
+        SubpluginArtifact(groupId = "com.google.devtools.kotlin", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
 }
