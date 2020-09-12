@@ -24,6 +24,13 @@ dependencies {
 tasks.withType<ShadowJar>() {
     classifier = ""
     from(packedJars)
+    exclude(
+        "kotlin/**",
+        "org/intellij/**",
+        "org/jetbrains/annotations/**",
+        "META-INF/maven/org.jetbrains/annotations/*",
+        "META-INF/kotlin-stdlib*"
+    )
     relocate("com.intellij", "org.jetbrains.kotlin.com.intellij")
 }
 
