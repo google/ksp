@@ -3,9 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 description = "Kotlin Symbol Processing API"
 
 val kotlinBaseVersion: String by project
+val kspVersion: String? by project
 
 group = "org.jetbrains.kotlin"
-version = kotlinBaseVersion
+version = kspVersion ?: kotlinBaseVersion
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"

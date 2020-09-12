@@ -3,9 +3,10 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 description = "Ksp - Symbol processing for Kotlin"
 
 val kotlinBaseVersion: String by project
+val kspVersion: String? by project
 
 group = "org.jetbrains.kotlin"
-version = kotlinBaseVersion
+version = kspVersion ?: kotlinBaseVersion
 
 plugins {
     kotlin("jvm")
@@ -31,6 +32,12 @@ tasks.withType<ShadowJar>() {
         "META-INF/maven/org.jetbrains/annotations/*",
         "META-INF/kotlin-stdlib*"
     )
+    manifest.attributes.apply {
+        put("Implementation-Vendor", "Google")
+        put("Implementation-Title", baseName)
+        put("Implementation-Version", project.version)
+    }
+
     relocate("com.intellij", "org.jetbrains.kotlin.com.intellij")
 }
 
