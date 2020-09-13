@@ -439,7 +439,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   }
   ```
 
-* The processor you're writing needs to implement `org.jetbrains.kotlin.ksp.processing.SymbolProcessor`.
+* The processor you're writing needs to implement `com.google.devtools.kotlin.symbol.processing.processing.SymbolProcessor`.
   Note the following:
   * Your main logic should be in the `process()` method.
   * Use `CodeGenerator` in the `init()` method for code generation. You can also save
@@ -447,15 +447,15 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   * Use `resolver.getSymbolsWithAnnotation()` to get the symbols you want to process, given
     the fully-qualified name of an annotation.
   * A common use case for KSP is to implement a customized visitor (interface
-    `org.jetbrains.kotlin.ksp.symbol.KSVisitor`) for operating on symbols. A simple template
-    visitor is `org.jetbrains.kotlin.ksp.symbol.KSDefaultVisitor`.
+    `com.google.devtools.kotlin.symbol.processing.symbol.KSVisitor`) for operating on symbols. A simple template
+    visitor is `com.google.devtools.kotlin.symbol.processing.symbol.KSDefaultVisitor`.
   * For sample implementations of the `SymbolProcessor` interface, see the following files
     in the sample project.
     * `src/main/kotlin/BuilderProcessor.kt`
     * `src/main/kotlin/TestProcessor.kt`
   * After writing your own processor, register your processor to the package by including
     the fully-qualified name of that processor in
-    `resources/META-INF/services/org.jetbrains.kotlin.ksp.processing.SymbolProcessor`.
+    `resources/META-INF.services/com.google.devtools.kotlin.symbol.processing.processing.SymbolProcessor`.
   * Here's a sample `build.gradle.kts` file for writing a processor.
 
     ```
@@ -486,7 +486,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
               when (requested.id.id) {
                   "kotlin-ksp",
                   "org.jetbrains.kotlin.kotlin-ksp",
-                  "org.jetbrains.kotlin.ksp" ->
+                  "com.google.devtools.kotlin.symbol.processing" ->
                       useModule("org.jetbrains.kotlin:kotlin-ksp:${requested.version}")
               }
           }
@@ -594,5 +594,5 @@ it should be extending [AbstractTestProcessor](../../../plugins/ksp/src/org/jetb
     [KotlinKSPTestGenerated](../../../plugins/ksp/test/org/jetbrains/kotlin/ksp/test/KotlinKSPTestGenerated.java) in your PR.
 * Run generated tests with ```:kotlin-symbol-processing:test``` gradle task.
     * This will execute all tests in KSP test suite. To run your test only, specify the test name with 
-    ```--tests "org.jetbrains.kotlin.ksp.test.KotlinKSPTestGenerated.<name of your generated test>"```
+    ```--tests "com.google.devtools.kotlin.symbol.processing.test.KotlinKSPTestGenerated.<name of your generated test>"```
     * Make sure your change is not breaking any existing test as well :).

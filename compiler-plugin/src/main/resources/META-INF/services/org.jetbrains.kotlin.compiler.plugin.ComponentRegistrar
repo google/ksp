@@ -1,1 +1,1 @@
-org.jetbrains.kotlin.ksp.KotlinSymbolProcessingComponentRegistrar
+com.google.devtools.kotlin.symbol.processing.KotlinSymbolProcessingComponentRegistrar

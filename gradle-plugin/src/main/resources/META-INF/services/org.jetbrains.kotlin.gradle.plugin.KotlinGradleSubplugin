@@ -1,1 +1,1 @@
-org.jetbrains.kotlin.ksp.gradle.KspKotlinGradleSubplugin
+com.google.devtools.kotlin.symbol.processing.gradle.KspKotlinGradleSubplugin

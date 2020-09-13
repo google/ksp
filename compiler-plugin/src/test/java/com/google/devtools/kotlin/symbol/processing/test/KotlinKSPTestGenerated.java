@@ -1,0 +1,165 @@
+/*
+ * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+package com.google.devtools.kotlin.symbol.processing.test;
+
+import com.intellij.testFramework.TestDataPath;
+import org.jetbrains.kotlin.test.JUnit3RunnerWithInners;
+import org.jetbrains.kotlin.test.KotlinTestUtils;
+import org.jetbrains.kotlin.test.TestMetadata;
+import org.junit.runner.RunWith;
+
+import java.io.File;
+import java.util.regex.Pattern;
+
+@SuppressWarnings("all")
+@TestMetadata("testData/api")
+@TestDataPath("$PROJECT_ROOT/compiler-plugin")
+@RunWith(JUnit3RunnerWithInners.class)
+public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
+    private void runTest(String testDataFilePath) throws Exception {
+        KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+    }
+
+    @TestMetadata("allFunctions.kt")
+    public void testAllFunctions() throws Exception {
+        runTest("testData/api/allFunctions.kt");
+    }
+
+    @TestMetadata("annotationValue.kt")
+    public void testAnnotationValue() throws Exception {
+        runTest("testData/api/annotationValue.kt");
+    }
+
+    @TestMetadata("annotationWithDefault.kt")
+    public void testAnnotationWithDefault() throws Exception {
+        runTest("testData/api/annotationWithDefault.kt");
+    }
+
+    @TestMetadata("builtInTypes.kt")
+    public void testBuiltInTypes() throws Exception {
+        runTest("testData/api/builtInTypes.kt");
+    }
+
+    @TestMetadata("checkOverride.kt")
+    public void testCheckOverride() throws Exception {
+        runTest("testData/api/checkOverride.kt");
+    }
+
+    @TestMetadata("classKinds.kt")
+    public void testClassKinds() throws Exception {
+        runTest("testData/api/classKinds.kt");
+    }
+
+    @TestMetadata("companion.kt")
+    public void testCompanion() throws Exception {
+        runTest("testData/api/companion.kt");
+    }
+
+    @TestMetadata("declarationPackageName.kt")
+    public void testDeclarationPackageName() throws Exception {
+        runTest("testData/api/declarationPackageName.kt");
+    }
+
+    @TestMetadata("declarationUtil.kt")
+    public void testDeclarationUtil() throws Exception {
+        runTest("testData/api/declarationUtil.kt");
+    }
+
+    @TestMetadata("errorTypes.kt")
+    public void testErrorTypes() throws Exception {
+        runTest("testData/api/errorTypes.kt");
+    }
+
+    @TestMetadata("functionTypeAlias.kt")
+    public void testFunctionTypeAlias() throws Exception {
+        runTest("testData/api/functionTypeAlias.kt");
+    }
+
+    @TestMetadata("hello.kt")
+    public void testHello() throws Exception {
+        runTest("testData/api/hello.kt");
+    }
+
+    @TestMetadata("implicitElements.kt")
+    public void testImplicitElements() throws Exception {
+        runTest("testData/api/implicitElements.kt");
+    }
+
+    @TestMetadata("interfaceWithDefault.kt")
+    public void testInterfaceWithDefault() throws Exception {
+        runTest("testData/api/interfaceWithDefault.kt");
+    }
+
+    @TestMetadata("javaModifiers.kt")
+    public void testJavaModifiers() throws Exception {
+        runTest("testData/api/javaModifiers.kt");
+    }
+
+    @TestMetadata("javaTypes.kt")
+    public void testJavaTypes() throws Exception {
+        runTest("testData/api/javaTypes.kt");
+    }
+
+    @TestMetadata("javaTypes2.kt")
+    public void testJavaTypes2() throws Exception {
+        runTest("testData/api/javaTypes2.kt");
+    }
+
+    @TestMetadata("makeNullable.kt")
+    public void testMakeNullable() throws Exception {
+        runTest("testData/api/makeNullable.kt");
+    }
+
+    @TestMetadata("platformDeclaration.kt")
+    public void testPlatformDeclaration() throws Exception {
+        runTest("testData/api/platformDeclaration.kt");
+    }
+
+    @TestMetadata("referenceElement.kt")
+    public void testReferenceElement() throws Exception {
+        runTest("testData/api/referenceElement.kt");
+    }
+
+    @TestMetadata("resolveJavaType.kt")
+    public void testResolveJavaType() throws Exception {
+        runTest("testData/api/resolveJavaType.kt");
+    }
+
+    @TestMetadata("signatureMapper.kt")
+    public void testSignatureMapper() throws Exception {
+        runTest("testData/api/signatureMapper.kt");
+    }
+
+    @TestMetadata("typeAlias.kt")
+    public void testTypeAlias() throws Exception {
+        runTest("testData/api/typeAlias.kt");
+    }
+
+    @TestMetadata("typeAliasComparison.kt")
+    public void testTypeAliasComparison() throws Exception {
+        runTest("testData/api/typeAliasComparison.kt");
+    }
+
+    @TestMetadata("typeComposure.kt")
+    public void testTypeComposure() throws Exception {
+        runTest("testData/api/typeComposure.kt");
+    }
+
+    @TestMetadata("typeParameterReference.kt")
+    public void testTypeParameterReference() throws Exception {
+        runTest("testData/api/typeParameterReference.kt");
+    }
+
+    @TestMetadata("varianceTypeCheck.kt")
+    public void testVarianceTypeCheck() throws Exception {
+        runTest("testData/api/varianceTypeCheck.kt");
+    }
+
+    @TestMetadata("visibilities.kt")
+    public void testVisibilities() throws Exception {
+        runTest("testData/api/visibilities.kt");
+    }
+}
