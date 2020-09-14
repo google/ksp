@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.bindingContextUtil.getAbbreviatedTypeOrType
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
@@ -288,20 +289,19 @@ class ResolverImpl(
                 typeReference.lookup()?.let {
                     return getKSTypeCached(it, type.element.typeArguments, type.annotations)
                 }
-                val containingDeclaration = KtStubbedPsiUtil.getContainingDeclaration(typeReference)
-                return if (containingDeclaration != null) {
+                KtStubbedPsiUtil.getContainingDeclaration(typeReference)?.let { containingDeclaration ->
                     resolveDeclaration(containingDeclaration)?.let {
                         // TODO: only resolve relevant branch.
                         ForceResolveUtil.forceResolveAllContents(it)
                     }
+                    // TODO: Fix resolution look up to avoid fallback to file scope.
                     typeReference.lookup()?.let {
-                        getKSTypeCached(it, type.element.typeArguments, type.annotations)
+                        return getKSTypeCached(it, type.element.typeArguments, type.annotations)
                     }
-                } else {
-                    val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
-                    resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
-                        getKSTypeCached(it, type.element.typeArguments, type.annotations)
-                    }
+                }
+                val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
+                return resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
+                    getKSTypeCached(it, type.element.typeArguments, type.annotations)
                 }
             }
             is KSTypeReferenceDescriptorImpl -> {
