@@ -6,6 +6,7 @@ val kotlinProjectPath: String? by project
 val intellijVersion: String by project
 val kotlinBaseVersion: String by project
 val junitVersion: String by project
+val compilerTestEnabled: String by project
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
@@ -43,14 +44,22 @@ dependencies {
         sourceArtifacts("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
     }
 
-    testImplementation(kotlin("stdlib", kotlinBaseVersion))
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
+    if (compilerTestEnabled.toBoolean()) {
+        testImplementation(kotlin("stdlib", kotlinBaseVersion))
+        testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+        testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
+        testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
-    testImplementation("junit:junit:$junitVersion")
+        testImplementation("junit:junit:$junitVersion")
 
-    testImplementation(project(":api"))
+        testImplementation(project(":api"))
+    }
+}
+
+sourceSets.test {
+    if (!compilerTestEnabled.toBoolean()) {
+        java.setSrcDirs(emptyList<String>())
+    }
 }
 
 fun Project.javaPluginConvention(): JavaPluginConvention = the()
@@ -84,24 +93,6 @@ tasks.test {
 }
 
 repositories {
-    if (kotlinProjectPath != null) {
-        ivy {
-            url = uri("file:$kotlinProjectPath/dependencies/repo")
-            patternLayout {
-                ivy("[organisation]/[module]/[revision]/[module].ivy.xml")
-                ivy("[organisation]/[module]/[revision]/ivy/[module].ivy.xml")
-
-                artifact("[organisation]/[module]/[revision]/artifacts/lib/[artifact](-[classifier]).[ext]")
-                artifact("[organisation]/[module]/[revision]/artifacts/[artifact](-[classifier]).[ext]")
-                artifact("[organisation]/sources/[artifact]-[revision](-[classifier]).[ext]")
-                artifact("[organisation]/[module]/[revision]/[artifact](-[classifier]).[ext]")
-            }
-
-            metadataSources {
-                ivyDescriptor()
-            }
-        }
-    }
     flatDir {
         dirs("${project.rootDir}/prebuilt/tests-common/")
     }
