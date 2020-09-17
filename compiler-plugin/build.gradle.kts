@@ -46,26 +46,18 @@ dependencies {
         sourceArtifacts("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
     }
 
-    if (compilerTestEnabled.toBoolean()) {
-        testImplementation(kotlin("stdlib", kotlinBaseVersion))
-        testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-        testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
-        testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
+    testImplementation(kotlin("stdlib", kotlinBaseVersion))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
-        testImplementation("junit:junit:$junitVersion")
+    testImplementation("junit:junit:$junitVersion")
 
-        testImplementation(project(":api"))
+    testImplementation(project(":api"))
 
-        libsForTesting(kotlin("stdlib", kotlinBaseVersion))
-        libsForTesting(kotlin("test", kotlinBaseVersion))
-        libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
-    }
-}
-
-sourceSets.test {
-    if (!compilerTestEnabled.toBoolean()) {
-        java.setSrcDirs(emptyList<String>())
-    }
+    libsForTesting(kotlin("stdlib", kotlinBaseVersion))
+    libsForTesting(kotlin("test", kotlinBaseVersion))
+    libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
@@ -84,6 +76,9 @@ val Project.testSourceSet: SourceSet
     get() = javaPluginConvention().testSourceSet
 
 tasks.test {
+    onlyIf {
+        compilerTestEnabled.toBoolean()
+    }
     dependsOn("CopyLibsForTesting")
     maxHeapSize = "2g"
 
