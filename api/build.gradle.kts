@@ -5,7 +5,7 @@ description = "Kotlin Symbol Processing API"
 val kotlinBaseVersion: String by project
 val kspVersion: String? by project
 
-group = "com.google.devtools.kotlin"
+group = "com.google.devtools.ksp"
 version = kspVersion ?: kotlinBaseVersion
 
 tasks.withType<KotlinCompile> {

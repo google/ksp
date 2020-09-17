@@ -5,7 +5,7 @@ description = "Ksp - Symbol processing for Kotlin"
 val kotlinBaseVersion: String by project
 val kspVersion: String? by project
 
-group = "com.google.devtools.kotlin"
+group = "com.google.devtools.ksp"
 version = kspVersion ?: kotlinBaseVersion
 
 plugins {
