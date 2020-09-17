@@ -103,7 +103,7 @@ repositories {
         }
     }
     flatDir {
-        dirs("dependencies/kotlin-compiler-tests")
+        dirs("${project.rootDir}/prebuilt/tests-common/")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
