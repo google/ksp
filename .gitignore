@@ -1,5 +1,4 @@
 .idea
-/dist
 /local
 /tmp
 workspace.xml
@@ -10,3 +9,4 @@ build/
 *.iml
 !**/testData/**/*.iml
 local.properties
+compiler-plugin/dist

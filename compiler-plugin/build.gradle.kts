@@ -8,6 +8,8 @@ val kotlinBaseVersion: String by project
 val junitVersion: String by project
 val compilerTestEnabled: String by project
 
+val libsForTesting by configurations.creating
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
@@ -53,6 +55,10 @@ dependencies {
         testImplementation("junit:junit:$junitVersion")
 
         testImplementation(project(":api"))
+
+        libsForTesting(kotlin("stdlib", kotlinBaseVersion))
+        libsForTesting(kotlin("test", kotlinBaseVersion))
+        libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
     }
 }
 
@@ -62,6 +68,15 @@ sourceSets.test {
     }
 }
 
+tasks.register<Copy>("CopyLibsForTesting") {
+    onlyIf {
+        compilerTestEnabled.toBoolean()
+    }
+    from(configurations.get("libsForTesting"))
+    into("dist/kotlinc/lib")
+    rename("(.+)-[0-9].+\\.jar", "$1.jar")
+}
+
 fun Project.javaPluginConvention(): JavaPluginConvention = the()
 val JavaPluginConvention.testSourceSet: SourceSet
     get() = sourceSets.getByName("test")
@@ -69,6 +84,7 @@ val Project.testSourceSet: SourceSet
     get() = javaPluginConvention().testSourceSet
 
 tasks.test {
+    dependsOn("CopyLibsForTesting")
     maxHeapSize = "2g"
 
     systemProperty("idea.is.unit.test", "true")
