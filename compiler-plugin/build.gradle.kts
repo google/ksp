@@ -105,7 +105,7 @@ tasks.test {
 
 repositories {
     flatDir {
-        dirs("${project.rootDir}/prebuilt/tests-common/")
+        dirs("${project.rootDir}/third_party/prebuilt/tests-common/")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
