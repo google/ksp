@@ -104,6 +104,24 @@ tasks.test {
 }
 
 repositories {
+    if (kotlinProjectPath != null) {
+        ivy {
+            url = uri("file:$kotlinProjectPath/dependencies/repo")
+            patternLayout {
+                ivy("[organisation]/[module]/[revision]/[module].ivy.xml")
+                ivy("[organisation]/[module]/[revision]/ivy/[module].ivy.xml")
+
+                artifact("[organisation]/[module]/[revision]/artifacts/lib/[artifact](-[classifier]).[ext]")
+                artifact("[organisation]/[module]/[revision]/artifacts/[artifact](-[classifier]).[ext]")
+                artifact("[organisation]/sources/[artifact]-[revision](-[classifier]).[ext]")
+                artifact("[organisation]/[module]/[revision]/[artifact](-[classifier]).[ext]")
+            }
+
+            metadataSources {
+                ivyDescriptor()
+            }
+        }
+    }
     flatDir {
         dirs("${project.rootDir}/third_party/prebuilt/tests-common/")
     }
