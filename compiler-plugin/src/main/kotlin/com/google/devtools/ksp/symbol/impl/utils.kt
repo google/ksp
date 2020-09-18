@@ -267,7 +267,7 @@ internal fun PropertyDescriptor.toKSPropertyDeclaration(): KSPropertyDeclaration
     return when (psi) {
         is KtProperty -> KSPropertyDeclarationImpl.getCached(psi)
         is KtParameter -> KSPropertyDeclarationParameterImpl.getCached(psi)
-        // This function should not be invoked against a Java symbol based descriptor.
+        is PsiField -> KSPropertyDeclarationJavaImpl.getCached(psi)
         else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
     }
 }

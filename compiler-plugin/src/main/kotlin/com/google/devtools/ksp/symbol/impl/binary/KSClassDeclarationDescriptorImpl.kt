@@ -57,6 +57,12 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             .map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
     }
 
+    override fun getAllProperties(): List<KSPropertyDeclaration> {
+        return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
+                .filter { (it as PropertyDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                .map { KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor) }
+    }
+
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         descriptor.unsubstitutedPrimaryConstructor?.let { KSFunctionDeclarationDescriptorImpl.getCached(it) }
     }

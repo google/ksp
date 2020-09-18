@@ -19,10 +19,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.symbol.*
 
 class AllFunctionsProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -55,10 +52,15 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             results.add("class: ${classDeclaration.simpleName.asString()}")
             classDeclaration.getAllFunctions().map { it.accept(this, Unit) }
+            classDeclaration.getAllProperties().map { it.accept(this, Unit) }
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
             results.add(function.toSignature())
+        }
+
+        override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+            results.add(property.toString())
         }
 
         override fun visitFile(file: KSFile, data: Unit) {

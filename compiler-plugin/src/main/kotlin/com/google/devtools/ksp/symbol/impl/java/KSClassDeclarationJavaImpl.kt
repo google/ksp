@@ -31,6 +31,7 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
+import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
@@ -78,6 +79,15 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
                 .toList()
                 .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
                 .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
+        } ?: emptyList()
+    }
+
+    override fun getAllProperties(): List<KSPropertyDeclaration> {
+        return descriptor?.let {
+            it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES)
+                    .toList()
+                    .filter { (it as PropertyDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                    .map{ (it as PropertyDescriptor).toKSPropertyDeclaration() }
         } ?: emptyList()
     }
 

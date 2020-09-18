@@ -19,8 +19,14 @@
 // TEST PROCESSOR: AllFunctionsProcessor
 // EXPECTED:
 // class: Foo
+// a
+// aFromC
+// aFromC
+// bFromC
 // bar(): kotlin.Boolean
 // baz(kotlin.String,kotlin.String(hasDefault),kotlin.String(hasDefault)): kotlin.Boolean
+// cFromC
+// cFromC
 // class: C
 // class: Data
 // component1(): kotlin.String
@@ -47,6 +53,7 @@
 // listIterator(): kotlin.collections.ListIterator
 // listIterator(kotlin.Int): kotlin.collections.ListIterator
 // parallelStream(): java.util.stream.Stream
+// size
 // spliterator(): java.util.Spliterator
 // stream(): java.util.stream.Stream
 // subList(kotlin.Int,kotlin.Int): kotlin.collections.List
@@ -77,6 +84,9 @@ data class Data(val a: String) {
 
 // FILE: C.java
 class C {
+    public int aFromC = 1;
+    private int bFromC = 2;
+    protected int cFromC = 3;
     private void javaPrivateFun() {
 
     }

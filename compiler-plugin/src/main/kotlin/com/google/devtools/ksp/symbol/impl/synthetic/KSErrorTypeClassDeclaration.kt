@@ -77,6 +77,10 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
         return emptyList()
     }
 
+    override fun getAllProperties(): List<KSPropertyDeclaration> {
+        return emptyList()
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }

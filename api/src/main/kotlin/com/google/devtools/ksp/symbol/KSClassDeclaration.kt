@@ -53,6 +53,13 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
     fun getAllFunctions(): List<KSFunctionDeclaration>
 
     /**
+     * Get all member properties of a class declaration, including declared and inherited.
+     * @return List of properties declarations from the class members.
+     * Calling [getAllProperties] requires type resolution therefore is expensive and should be avoided if possible.
+     */
+    fun getAllProperties(): List<KSPropertyDeclaration>
+
+    /**
      * Create a type by applying a list of type arguments to this class' type parameters.
      * @param typeArguments List of Type arguments to be applied.
      * @return A type constructed from this class declaration with type parameters substituted with the type arguments.
