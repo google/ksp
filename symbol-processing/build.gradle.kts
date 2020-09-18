@@ -23,7 +23,7 @@ dependencies {
 }
 
 tasks.withType<ShadowJar>() {
-    classifier = ""
+    archiveClassifier.set("")
     from(packedJars)
     exclude(
         "kotlin/**",
@@ -42,8 +42,20 @@ tasks.withType<ShadowJar>() {
 }
 
 tasks {
-    build {
+    publish {
         dependsOn(shadowJar)
+    }
+
+    val sourcesJar by creating(Jar::class) {
+        archiveClassifier.set("sources")
+        from(project(":api").sourceSets.main.get().allSource)
+        from(project(":compiler-plugin").sourceSets.main.get().allSource)
+        from(project(":gradle-plugin").sourceSets.main.get().allSource)
+    }
+
+    artifacts {
+        archives(sourcesJar)
+        archives(jar)
     }
 }
 
@@ -51,6 +63,7 @@ publishing {
     publications {
         val publication = create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
+            artifact(tasks["sourcesJar"])
         }
         project.shadow.component(publication)
         repositories {

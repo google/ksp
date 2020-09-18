@@ -18,15 +18,27 @@ plugins {
     `maven-publish`
 }
 
+tasks {
+    val sourcesJar by creating(Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+
+    artifacts {
+        archives(sourcesJar)
+        archives(jar)
+    }
+}
+
 publishing {
     publications {
         create<MavenPublication>("default") {
             artifactId = "symbol-processing-api"
             from(components["java"])
+            artifact(tasks["sourcesJar"])
         }
         repositories {
             mavenLocal()
         }
     }
 }
-
