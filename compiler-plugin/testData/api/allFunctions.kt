@@ -30,6 +30,7 @@
 // equals(kotlin.Any): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
+// forEach(java.util.function.Consumer): kotlin.Unit
 // get(kotlin.Int): kotlin.Number
 // hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
@@ -45,6 +46,9 @@
 // lastIndexOf(kotlin.Number): kotlin.Int
 // listIterator(): kotlin.collections.ListIterator
 // listIterator(kotlin.Int): kotlin.collections.ListIterator
+// parallelStream(): java.util.stream.Stream
+// spliterator(): java.util.Spliterator
+// stream(): java.util.stream.Stream
 // subList(kotlin.Int,kotlin.Int): kotlin.collections.List
 // toString(): kotlin.String
 // toString(): kotlin.String
