@@ -63,6 +63,13 @@ fun KSClassDeclaration.getDeclaredProperties(): List<KSPropertyDeclaration> {
     return this.declarations.filterIsInstance<KSPropertyDeclaration>()
 }
 
+fun KSClassDeclaration.getConstructors(): List<KSFunctionDeclaration> {
+    return this.getDeclaredFunctions().filter { it.simpleName.asString() == this.simpleName.asString() }
+            .let { constructors ->
+                this.primaryConstructor?.let { constructors.plus(it) } ?: constructors
+            }
+}
+
 /**
  * Check whether this is a local declaration, or namely, declared in a function.
  */

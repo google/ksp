@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.getDeclaredFunctions
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.Visibilities
@@ -28,6 +29,7 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
+import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -70,7 +72,9 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         ktClassOrObject.primaryConstructor?.let { KSFunctionDeclarationImpl.getCached(it) }
-            ?: if (classKind == ClassKind.CLASS || classKind == ClassKind.ENUM_CLASS) KSConstructorSyntheticImpl.getCached(this) else null
+            ?: if ((classKind == ClassKind.CLASS || classKind == ClassKind.ENUM_CLASS)
+                    && ktClassOrObject.declarations.none { it is KtSecondaryConstructor })
+                KSConstructorSyntheticImpl.getCached(this) else null
     }
 
     override val superTypes: List<KSTypeReference> by lazy {

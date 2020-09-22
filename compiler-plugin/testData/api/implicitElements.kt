@@ -18,16 +18,19 @@
 // TEST PROCESSOR: ImplicitElementProcessor
 // EXPECTED:
 // <init>; origin: SYNTHETIC
+// synthetic constructor for Cls
 // <null>
 // <null>
 // readOnly.get(): SYNTHETIC annotations from property: GetAnno
 // readOnly.getter.owner: readOnly: KOTLIN
 // readWrite.get(): KOTLIN
 // readWrite.set(): SYNTHETIC annotations from property: SetAnno
+// Data
 // comp1.get(): SYNTHETIC
 // comp2.get(): SYNTHETIC
 // comp2.set(): SYNTHETIC
 // GetAnno
+// ClassWithoutImplicitPrimaryConstructor
 // END
 // FILE: a.kt
 annotation class GetAnno
@@ -43,6 +46,10 @@ class Cls {
 }
 
 data class Data(@get:GetAnno val comp1: Int, var comp2: Int)
+
+class ClassWithoutImplicitPrimaryConstructor : ITF {
+    constructor(x: Int)
+}
 
 interface ITF
 
