@@ -33,7 +33,7 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     private fun KSNode.accept(data: D) = accept(this@KSTopDownVisitor, data)
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: D): R {
-        property.type?.accept(data)
+        property.type.accept(data)
         property.extensionReceiver?.accept(data)
         property.getter?.accept(data)
         property.setter?.accept(data)

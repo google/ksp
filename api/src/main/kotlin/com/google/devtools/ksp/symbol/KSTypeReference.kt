@@ -33,5 +33,5 @@ interface KSTypeReference : KSAnnotated, KSModifierListOwner {
      * @return A type resolved from this type reference.
      * Calling [resolve] is expensive and should be avoided if possible.
      */
-    fun resolve(): KSType?
+    fun resolve(): KSType
 }

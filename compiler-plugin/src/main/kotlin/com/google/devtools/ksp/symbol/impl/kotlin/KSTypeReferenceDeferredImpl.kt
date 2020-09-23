@@ -21,9 +21,9 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 
-class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -> KSType?) : KSTypeReference {
-    companion object : KSObjectCache<() -> KSType?, KSTypeReferenceDeferredImpl>() {
-        fun getCached(resolver: () -> KSType?) = cache.getOrPut(resolver) { KSTypeReferenceDeferredImpl(resolver) }
+class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -> KSType) : KSTypeReference {
+    companion object : KSObjectCache<() -> KSType, KSTypeReferenceDeferredImpl>() {
+        fun getCached(resolver: () -> KSType) = cache.getOrPut(resolver) { KSTypeReferenceDeferredImpl(resolver) }
     }
 
     override val origin = Origin.KOTLIN
@@ -36,11 +36,11 @@ class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -
 
     override val modifiers: Set<Modifier> = emptySet()
 
-    private val resolved: KSType? by lazy {
+    private val resolved: KSType by lazy {
         resolver()
     }
 
-    override fun resolve(): KSType? = resolved
+    override fun resolve(): KSType = resolved
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeReference(this, data)

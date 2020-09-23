@@ -71,7 +71,7 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
-    override val type: KSTypeReference? by lazy {
+    override val type: KSTypeReference by lazy {
         KSTypeReferenceJavaImpl.getCached(psi.type)
     }
 

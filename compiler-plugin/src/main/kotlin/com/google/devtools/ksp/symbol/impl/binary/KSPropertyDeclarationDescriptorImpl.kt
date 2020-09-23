@@ -78,7 +78,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         descriptor.typeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
 
-    override val type: KSTypeReference? by lazy {
+    override val type: KSTypeReference by lazy {
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
 

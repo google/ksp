@@ -36,7 +36,7 @@ class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType) : KSType
 
     override val modifiers: Set<Modifier> = emptySet()
 
-    override fun resolve(): KSType? {
+    override fun resolve(): KSType {
         return type
     }
 

@@ -86,15 +86,14 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         }
     }
 
-    override val type: KSTypeReference? by lazy {
+    override val type: KSTypeReference by lazy {
         if (ktProperty.typeReference != null) {
             KSTypeReferenceImpl.getCached(ktProperty.typeReference!!)
         } else {
             KSTypeReferenceDeferredImpl.getCached {
                 val desc = ResolverImpl.instance.resolveDeclaration(ktProperty) as? VariableDescriptorWithAccessors
                 if (desc == null) {
-                    // TODO: Add error type to allow forward reference being taken care of.
-                    null
+                    KSErrorType
                 } else {
                     getKSTypeCached(desc.type)
                 }

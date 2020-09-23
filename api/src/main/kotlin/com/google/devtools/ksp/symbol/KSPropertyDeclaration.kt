@@ -45,7 +45,7 @@ interface KSPropertyDeclaration : KSDeclaration {
     /**
      * The type of this declaration.
      */
-    val type: KSTypeReference?
+    val type: KSTypeReference
 
     /**
      * True if this property is mutable.

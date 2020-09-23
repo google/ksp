@@ -170,7 +170,7 @@ class ResolverImpl(
                         val annotationType = it.annotationType
                         (annotationType.element as? KSClassifierReference)?.referencedName()
                             .let { it == null || it == ksName.getShortName() }
-                                && annotationType.resolve()?.declaration?.qualifiedName == ksName
+                                && annotationType.resolve().declaration.qualifiedName == ksName
                     }) {
                     symbols.add(annotated)
                 }
@@ -295,7 +295,7 @@ class ResolverImpl(
     fun KtTypeReference.lookup(): KotlinType? =
         bindingTrace.get(BindingContext.ABBREVIATED_TYPE, this)?.expand() ?: bindingTrace.get(BindingContext.TYPE, this)
 
-    fun resolveUserType(type: KSTypeReference): KSType? {
+    fun resolveUserType(type: KSTypeReference): KSType {
         when (type) {
             is KSTypeReferenceImpl -> {
                 val typeReference = type.ktTypeReference

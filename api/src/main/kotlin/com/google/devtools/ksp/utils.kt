@@ -74,7 +74,7 @@ fun KSDeclaration.isLocal(): Boolean {
  * Find the KSClassDeclaration that the alias points to recursively.
  */
 fun KSTypeAlias.findActualType(): KSClassDeclaration {
-    val resolvedType = this.type.resolve()?.declaration
+    val resolvedType = this.type.resolve().declaration
     return if (resolvedType is KSTypeAlias) {
         resolvedType.findActualType()
     } else {
@@ -111,7 +111,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
 
     fun KSTypeParameter.getTypesUpperBound(): Sequence<KSClassDeclaration> =
         this.bounds.asSequence().flatMap {
-            when (val resolvedDeclaration = it.resolve()?.declaration) {
+            when (val resolvedDeclaration = it.resolve().declaration) {
                 is KSClassDeclaration -> sequenceOf(resolvedDeclaration)
                 is KSTypeAlias -> sequenceOf(resolvedDeclaration.findActualType())
                 is KSTypeParameter -> resolvedDeclaration.getTypesUpperBound()
@@ -121,11 +121,11 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
 
     return this.superTypes
         .asSequence()
-        .mapNotNull { it.resolve() }
+        .map { it.resolve() }
         .plus(
             this.superTypes
                 .asSequence()
-                .mapNotNull { it.resolve()?.declaration }
+                .mapNotNull { it.resolve().declaration }
                 .flatMap {
                     when (it) {
                         is KSClassDeclaration -> it.getAllSuperTypes()

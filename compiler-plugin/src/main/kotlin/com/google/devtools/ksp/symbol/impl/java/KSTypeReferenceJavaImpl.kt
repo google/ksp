@@ -86,7 +86,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
         }
     }
 
-    override fun resolve(): KSType? {
+    override fun resolve(): KSType {
         return ResolverImpl.instance.resolveUserType(this)
     }
 

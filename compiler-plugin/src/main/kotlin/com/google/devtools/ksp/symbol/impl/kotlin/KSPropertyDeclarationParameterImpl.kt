@@ -67,11 +67,11 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         }
     }
 
-    override val type: KSTypeReference? by lazy {
+    override val type: KSTypeReference by lazy {
         if (ktParameter.typeReference != null) {
             KSTypeReferenceImpl.getCached(ktParameter.typeReference!!)
         } else {
-            null
+            throw IllegalStateException("properties in parameter must have explicit type")
         }
     }
 
