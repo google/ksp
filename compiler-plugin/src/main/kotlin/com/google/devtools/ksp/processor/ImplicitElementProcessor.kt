@@ -19,8 +19,8 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.findAnnotationFromUseSiteTarget
-import com.google.devtools.ksp.getAllConstructors
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -37,7 +37,7 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver) {
         val ClsClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!
         result.add("${ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"}; origin: ${ClsClass.primaryConstructor?.origin}")
-        result.add(ClsClass.getAllConstructors().map { it.toString() }.joinToString(","))
+        result.add(ClsClass.getConstructors().map { it.toString() }.joinToString(","))
         val ITF = resolver.getClassDeclarationByName(resolver.getKSNameFromString("ITF"))!!
         result.add(ITF.primaryConstructor?.simpleName?.asString() ?: "<null>")
         result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaClass"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
@@ -50,16 +50,16 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         readWrite.getter?.let { result.add("readWrite.get(): ${it.origin}") }
         readWrite.setter?.let { result.add("readWrite.set(): ${it.origin} annotations from property: ${it.findAnnotationFromUseSiteTarget().map { it.shortName.asString() }.joinToString(",")}") }
         val dataClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Data"))!!
-        result.add(dataClass.getAllConstructors().map { it.toString() }.joinToString(","))
+        result.add(dataClass.getConstructors().map { it.toString() }.joinToString(","))
         val comp1 = dataClass.declarations.single { it.simpleName.asString() == "comp1" } as KSPropertyDeclaration
         comp1.getter?.let { result.add("comp1.get(): ${it.origin}") }
         comp1.setter?.let { result.add("comp1.set(): ${it.origin}") }
         val comp2 = dataClass.declarations.single { it.simpleName.asString() == "comp2" } as KSPropertyDeclaration
         comp2.getter?.let { result.add("comp2.get(): ${it.origin}") }
         comp2.setter?.let { result.add("comp2.set(): ${it.origin}") }
-        val annotationType = comp1.annotations[0].annotationType.resolve()!!.declaration.qualifiedName!!.asString()
+        val annotationType = comp1.annotations[0].annotationType.resolve().declaration.qualifiedName!!.asString()
         result.add(annotationType)
         val ClassWithoutImplicitPrimaryConstructor = resolver.getClassDeclarationByName("ClassWithoutImplicitPrimaryConstructor")!!
-        result.add(ClassWithoutImplicitPrimaryConstructor.getAllConstructors().map { it.toString() }.joinToString(","))
+        result.add(ClassWithoutImplicitPrimaryConstructor.getConstructors().map { it.toString() }.joinToString(","))
     }
 }
