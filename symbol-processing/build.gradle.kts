@@ -63,6 +63,27 @@ publishing {
         val publication = create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
             artifact(tasks["sourcesJar"])
+            pom {
+                name.set("com.google.devtools.ksp:symbol-processing")
+                description.set("Symbol processing for Kotlin")
+                url.set("https://goo.gle/ksp")
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        name.set("KSP Team")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/google/ksp.git")
+                    developerConnection.set("scm:git:https://github.com/google/ksp.git")
+                    url.set("https://github.com/google/ksp")
+                }
+            }
         }
         project.shadow.component(publication)
         repositories {
