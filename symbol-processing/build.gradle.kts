@@ -2,11 +2,10 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 description = "Ksp - Symbol processing for Kotlin"
 
-val kotlinBaseVersion: String by project
-val kspVersion: String? by project
+val kspVersion: String by project
 
 group = "com.google.devtools.ksp"
-version = kspVersion ?: kotlinBaseVersion
+version = kspVersion
 
 plugins {
     kotlin("jvm")

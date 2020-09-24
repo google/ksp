@@ -2,11 +2,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processing API"
 
-val kotlinBaseVersion: String by project
-val kspVersion: String? by project
+val kspVersion: String by project
 
 group = "com.google.devtools.ksp"
-version = kspVersion ?: kotlinBaseVersion
+version = kspVersion
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
