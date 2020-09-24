@@ -40,7 +40,7 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
 
     override fun doMultiFileTest(wholeFile: File, files: List<TestFile>) {
         val javaFiles = listOfNotNull(writeJavaFiles(files))
-        createEnvironmentWithMockJdkAndIdeaAnnotations(ConfigurationKind.NO_KOTLIN_REFLECT, emptyList(), TestJdkKind.FULL_JDK_6, *(javaFiles.toTypedArray()))
+        createEnvironmentWithMockJdkAndIdeaAnnotations(ConfigurationKind.NO_KOTLIN_REFLECT, emptyList(), TestJdkKind.FULL_JDK_9, *(javaFiles.toTypedArray()))
         val testProcessorName = wholeFile
             .readLines()
             .filter { it.startsWith(TEST_PROCESSOR) }
