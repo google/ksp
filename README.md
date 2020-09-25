@@ -338,7 +338,7 @@ generation phase. Switching to KSP would immediately reduce the time
 spent in the compiler by 25%.
 
 For performance evaluation, we implemented a
-[simplified version](https://github.com/google/ksp/releases/download/sample/miniGlide.zip)
+[simplified version](https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20200924/miniGlide.zip)
 of [Glide](https://github.com/bumptech/glide) in KSP to make it generate code
 for the [Tachiyomi](https://github.com/inorichi/tachiyomi) project. While
 the total Kotlin compilation time of the project is 21.55 seconds on our
@@ -492,7 +492,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   ```
 
 * In the new module's `build.gradle.kts`, do the following:
-  * Apply the `kotlin-ksp` plugin with the specified version.
+  * Apply the `symbol-processing` plugin with the specified version.
   * Add `ksp(<your processor>)` to the list of dependencies.
 * Run `./gradlew build`. You can find the generated code under
   `build/generated/source/ksp`.
@@ -500,7 +500,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
 
   ```
   plugins {
-      id("kotlin-ksp") version "1.4.10-dev-experimental-20200924"
+      id("symbol-processing") version "1.4.10-dev-experimental-20200924"
       kotlin("jvm") 
   }
 
