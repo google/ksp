@@ -29,8 +29,7 @@ KSP is also designed to minimize build times. For some processors, such as
 [Glide](https://github.com/bumptech/glide), KSP reduces full compilation
 times by up to 25% when compared to KAPT.
 
-KSP is itself implemented as a compiler plugin, and the experimental KSP
-repository is a fork of JetBrains/kotlin. There are also prebuilt packages
+KSP is itself implemented as a compiler plugin. There are prebuilt packages
 on Google's Maven repository that you can download and use without having
 to build the project yourself. For more information, see
 [Try it out](#try)!
@@ -339,7 +338,7 @@ generation phase. Switching to KSP would immediately reduce the time
 spent in the compiler by 25%.
 
 For performance evaluation, we implemented a
-[simplified version](https://github.com/android/kotlin/releases/download/sample/miniGlide.zip)
+[simplified version](https://github.com/google/ksp/releases/download/sample/miniGlide.zip)
 of [Glide](https://github.com/bumptech/glide) in KSP to make it generate code
 for the [Tachiyomi](https://github.com/inorichi/tachiyomi) project. While
 the total Kotlin compilation time of the project is 21.55 seconds on our
@@ -380,7 +379,7 @@ API.
 The API is still under development and is likely to change in the future.
 Please do not use it in production yet. The purpose of this preview is
 to get your feedback.
-[Please let us know what you think about KSP by filing a Github issue](https://github.com/android/kotlin/issues)
+[Please let us know what you think about KSP by filing a Github issue](https://github.com/google/ksp/issues)
 or connecting with our team in the `#ksp` channel in the
 [Kotlin Slack workspace](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up?_ga=2.185732459.358956950.1590619123-888878822.1567025441)!
 
@@ -394,25 +393,21 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/android/kotlin/releases/download/1.4.0-dev-experimental-20200914/playground-ksp-1.4.0-dev-experimental-20200914.zip
+Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20200924/playground-ksp-1.4.10-dev-experimental-20200924.zip
 
 ### Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.4.0` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.4.10` of the Kotlin plugin in the root project for use in other project modules.
 
   ```
   plugins {
-      kotlin("jvm") version "1.4.0" apply false
+      kotlin("jvm") version "1.4.10" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.4.0"))
-      }
-
-      repositories {
-          maven("https://dl.bintray.com/kotlin/kotlin-eap")
+          classpath(kotlin("gradle-plugin", version = "1.4.10"))
       }
   }
   ```
@@ -426,7 +421,6 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   ```
   repositories {
       google()
-      maven("https://dl.bintray.com/kotlin/kotlin-eap")
       mavenCentral()
   }
 
@@ -435,7 +429,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.0-dev-experimental-20200914")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20200924")
   }
   ```
 
@@ -469,7 +463,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
     }
 
     dependencies {
-        implementation("com.google.devtools.ksp:symbol-processing-api:1.4.0-dev-experimental-20200914")
+        implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20200924")
     }
     ```
 
@@ -492,7 +486,6 @@ Here's a sample processor that you can check out: https://github.com/android/kot
 
       repositories {
               gradlePluginPortal()
-              maven("https://dl.bintray.com/kotlin/kotlin-eap")
               google()
       }
   }
@@ -507,7 +500,7 @@ Here's a sample processor that you can check out: https://github.com/android/kot
 
   ```
   plugins {
-      id("kotlin-ksp") version "1.4.0-dev-experimental-20200914"
+      id("kotlin-ksp") version "1.4.10-dev-experimental-20200924"
       kotlin("jvm") 
   }
 
@@ -515,7 +508,6 @@ Here's a sample processor that you can check out: https://github.com/android/kot
 
   repositories {
       mavenCentral()
-      maven("https://dl.bintray.com/kotlin/kotlin-eap")
       google()
   }
 
@@ -551,6 +543,9 @@ and perhaps also resource directory if your IDE supports them:
 ```
 build/generated/ksp/src/main/resources
 ```
+
+## Migration from old KSP releases
+See [Migration from old KSP releases](old-ksp-release.md)
 
 ## How to contribute
 See [CONTRIBUTING.md](CONTRIBUTING.md)
