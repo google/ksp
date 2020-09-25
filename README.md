@@ -419,13 +419,13 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
     * Add the KSP API to the `dependencies` block.
 
   ```
+  plugins {
+      kotlin("jvm")
+  }
+
   repositories {
       google()
       mavenCentral()
-  }
-
-  plugins {
-      kotlin("jvm")
   }
 
   dependencies {
@@ -450,22 +450,6 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   * After writing your own processor, register your processor to the package by including
     the fully-qualified name of that processor in
     `resources/META-INF/services/com.google.devtools.ksp.processing.SymbolProcessor`.
-  * Here's a sample `build.gradle.kts` file for writing a processor.
-
-    ```
-    plugins {
-        kotlin("jvm") 
-    }
-
-    repositories {
-        mavenCentral()
-        google()
-    }
-
-    dependencies {
-        implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20200924")
-    }
-    ```
 
 ### Use your own processor in a project
 
