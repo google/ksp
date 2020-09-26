@@ -28,7 +28,12 @@ interface KSFile : KSDeclarationContainer, KSAnnotated {
     val packageName: KSName
 
     /**
-     * Absolute path of this source file.
+     * File name of this source file.
      */
     val fileName: String
+
+    /**
+     * Absolute path of this source file.
+     */
+    val filePath: String
 }

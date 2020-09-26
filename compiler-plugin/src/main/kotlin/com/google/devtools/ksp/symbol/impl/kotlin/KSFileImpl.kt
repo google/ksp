@@ -51,6 +51,10 @@ class KSFileImpl private constructor(val file: KtFile) : KSFile {
         file.name
     }
 
+    override val filePath: String by lazy {
+        file.virtualFilePath
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFile(this, data)
     }
