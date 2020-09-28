@@ -30,7 +30,7 @@ interface KSCallableReference : KSReferenceElement {
     /**
      * Parameters to this callable.
      */
-    val functionParameters: List<KSVariableParameter>
+    val functionParameters: List<KSValueParameter>
 
     /**
      * A reference to its return type.

@@ -18,7 +18,6 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.getDeclaredFunctions
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.Visibilities
@@ -64,7 +63,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     override val declarations: List<KSDeclaration> by lazy {
         val propertiesFromConstructor = primaryConstructor?.parameters
             ?.filter { it.isVar || it.isVal }
-            ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSVariableParameterImpl).ktParameter) } ?: emptyList()
+            ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptyList()
         val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList()
         result.addAll(propertiesFromConstructor)
         result

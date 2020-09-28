@@ -20,9 +20,6 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAccessor) : KSPropertyAccessorImpl(ktPropertySetter),
@@ -31,8 +28,8 @@ class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAcces
         fun getCached(ktPropertySetter: KtPropertyAccessor) = cache.getOrPut(ktPropertySetter) { KSPropertySetterImpl(ktPropertySetter) }
     }
 
-    override val parameter: KSVariableParameter by lazy {
-        ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSVariableParameterImpl.getCached(it) }
+    override val parameter: KSValueParameter by lazy {
+        ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSValueParameterImpl.getCached(it) }
             ?: throw IllegalStateException()
     }
 

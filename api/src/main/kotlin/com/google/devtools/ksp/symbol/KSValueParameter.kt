@@ -19,9 +19,9 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * A variable parameter
+ * A value parameter
  */
-interface KSVariableParameter : KSAnnotated {
+interface KSValueParameter : KSAnnotated {
     /**
      * Name of the parameter
      */

@@ -25,9 +25,9 @@ import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
 import org.jetbrains.kotlin.psi.KtParameter
 
-class KSVariableParameterImpl private constructor(val ktParameter: KtParameter) : KSVariableParameter {
-    companion object : KSObjectCache<KtParameter, KSVariableParameterImpl>() {
-        fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSVariableParameterImpl(ktParameter) }
+class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : KSValueParameter {
+    companion object : KSObjectCache<KtParameter, KSValueParameterImpl>() {
+        fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSValueParameterImpl(ktParameter) }
     }
 
     override val origin = Origin.KOTLIN
@@ -65,7 +65,7 @@ class KSVariableParameterImpl private constructor(val ktParameter: KtParameter) 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitVariableParameter(this, data)
+        return visitor.visitValueParameter(this, data)
     }
 
     override fun toString(): String {

@@ -125,8 +125,8 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         return super.visitClassifierReference(reference, data)
     }
 
-    override fun visitVariableParameter(variableParameter: KSVariableParameter, data: D): R {
-        variableParameter.type?.accept(data)
-        return super.visitVariableParameter(variableParameter, data)
+    override fun visitValueParameter(valueParameter: KSValueParameter, data: D): R {
+        valueParameter.type?.accept(data)
+        return super.visitValueParameter(valueParameter, data)
     }
 }

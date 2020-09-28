@@ -88,7 +88,7 @@ open class KSVisitorVoid : KSVisitor<Unit, Unit> {
     override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {
     }
 
-    override fun visitVariableParameter(variableParameter: KSVariableParameter, data: Unit) {
+    override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
     }
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: Unit) {

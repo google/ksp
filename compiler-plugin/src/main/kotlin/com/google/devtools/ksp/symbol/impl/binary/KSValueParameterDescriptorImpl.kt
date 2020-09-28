@@ -25,9 +25,9 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
 
-class KSVariableParameterDescriptorImpl private constructor(val descriptor: ValueParameterDescriptor) : KSVariableParameter {
-    companion object : KSObjectCache<ValueParameterDescriptor, KSVariableParameterDescriptorImpl>() {
-        fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) { KSVariableParameterDescriptorImpl(descriptor) }
+class KSValueParameterDescriptorImpl private constructor(val descriptor: ValueParameterDescriptor) : KSValueParameter {
+    companion object : KSObjectCache<ValueParameterDescriptor, KSValueParameterDescriptorImpl>() {
+        fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) { KSValueParameterDescriptorImpl(descriptor) }
     }
 
     override val origin = Origin.CLASS
@@ -59,7 +59,7 @@ class KSVariableParameterDescriptorImpl private constructor(val descriptor: Valu
     override val hasDefault: Boolean = descriptor.hasDefaultValue()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitVariableParameter(this, data)
+        return visitor.visitValueParameter(this, data)
     }
 
     override fun toString(): String {

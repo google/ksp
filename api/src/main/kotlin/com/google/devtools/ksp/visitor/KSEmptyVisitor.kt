@@ -114,8 +114,8 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(typeReference, data)
     }
 
-    override fun visitVariableParameter(variableParameter: KSVariableParameter, data: D): R {
-        return defaultHandler(variableParameter, data)
+    override fun visitValueParameter(valueParameter: KSValueParameter, data: D): R {
+        return defaultHandler(valueParameter, data)
     }
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: D): R {
