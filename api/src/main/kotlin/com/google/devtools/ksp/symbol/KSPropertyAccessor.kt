@@ -32,7 +32,7 @@ interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner {
  * A property setter
  */
 interface KSPropertySetter : KSPropertyAccessor {
-    val parameter: KSVariableParameter
+    val parameter: KSValueParameter
 }
 
 /**

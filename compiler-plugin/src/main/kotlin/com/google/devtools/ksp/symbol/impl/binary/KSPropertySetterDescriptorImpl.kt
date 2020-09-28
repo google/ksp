@@ -28,8 +28,8 @@ class KSPropertySetterDescriptorImpl private constructor(descriptor: PropertySet
         fun getCached(descriptor: PropertySetterDescriptor) = cache.getOrPut(descriptor) { KSPropertySetterDescriptorImpl(descriptor) }
     }
 
-    override val parameter: KSVariableParameter by lazy {
-        descriptor.valueParameters.singleOrNull()?.let { KSVariableParameterDescriptorImpl.getCached(it) } ?: throw IllegalStateException()
+    override val parameter: KSValueParameter by lazy {
+        descriptor.valueParameters.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) } ?: throw IllegalStateException()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

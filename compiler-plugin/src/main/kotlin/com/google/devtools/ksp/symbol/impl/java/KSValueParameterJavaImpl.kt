@@ -24,9 +24,9 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 
-class KSVariableParameterJavaImpl private constructor(val psi: PsiParameter) : KSVariableParameter {
-    companion object : KSObjectCache<PsiParameter, KSVariableParameterJavaImpl>() {
-        fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSVariableParameterJavaImpl(psi) }
+class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
+    companion object : KSObjectCache<PsiParameter, KSValueParameterJavaImpl>() {
+        fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSValueParameterJavaImpl(psi) }
     }
 
     override val origin = Origin.JAVA
@@ -64,7 +64,7 @@ class KSVariableParameterJavaImpl private constructor(val psi: PsiParameter) : K
     override val hasDefault: Boolean = false
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitVariableParameter(this, data)
+        return visitor.visitValueParameter(this, data)
     }
 
     override fun toString(): String {

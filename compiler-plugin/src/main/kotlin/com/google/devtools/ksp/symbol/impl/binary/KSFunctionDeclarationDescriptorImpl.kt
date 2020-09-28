@@ -89,8 +89,8 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         modifiers
     }
 
-    override val parameters: List<KSVariableParameter> by lazy {
-        descriptor.valueParameters.map { KSVariableParameterDescriptorImpl.getCached(it) }
+    override val parameters: List<KSValueParameter> by lazy {
+        descriptor.valueParameters.map { KSValueParameterDescriptorImpl.getCached(it) }
     }
 
     override val returnType: KSTypeReference? by lazy {

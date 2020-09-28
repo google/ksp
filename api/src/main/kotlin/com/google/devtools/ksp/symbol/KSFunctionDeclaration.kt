@@ -47,9 +47,9 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     val returnType: KSTypeReference?
 
     /**
-     * [variable parameters][KSVariableParameter] of this function.
+     * [value parameters][KSValueParameter] of this function.
      */
-    val parameters: List<KSVariableParameter>
+    val parameters: List<KSValueParameter>
 
     /**
      * Checks if this function overrides another function.

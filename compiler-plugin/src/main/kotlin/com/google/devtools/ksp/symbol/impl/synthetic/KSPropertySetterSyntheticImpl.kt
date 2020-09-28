@@ -22,10 +22,10 @@ import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSPropertySetter
-import com.google.devtools.ksp.symbol.KSVariableParameter
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.binary.KSVariableParameterDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.binary.KSValueParameterDescriptorImpl
 
 class KSPropertySetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclaration) :
     KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration), KSPropertySetter {
@@ -38,8 +38,8 @@ class KSPropertySetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
         ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)!!.setter!!
     }
 
-    override val parameter: KSVariableParameter by lazy {
-        descriptor.valueParameters.singleOrNull()?.let { KSVariableParameterDescriptorImpl.getCached(it) } ?: throw IllegalStateException()
+    override val parameter: KSValueParameter by lazy {
+        descriptor.valueParameters.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) } ?: throw IllegalStateException()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

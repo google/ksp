@@ -94,9 +94,9 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitTypeReference(typeReference, data)
     }
 
-    override fun visitVariableParameter(variableParameter: KSVariableParameter, data: D): R {
-        this.visitAnnotated(variableParameter, data)
-        return super.visitVariableParameter(variableParameter, data)
+    override fun visitValueParameter(valueParameter: KSValueParameter, data: D): R {
+        this.visitAnnotated(valueParameter, data)
+        return super.visitValueParameter(valueParameter, data)
     }
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: D): R {

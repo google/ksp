@@ -89,8 +89,8 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
                         && !this.ktFunction.hasBody())
     }
 
-    override val parameters: List<KSVariableParameter> by lazy {
-        ktFunction.valueParameters.map { KSVariableParameterImpl.getCached(it) }
+    override val parameters: List<KSValueParameter> by lazy {
+        ktFunction.valueParameters.map { KSValueParameterImpl.getCached(it) }
     }
 
     override val returnType: KSTypeReference by lazy {

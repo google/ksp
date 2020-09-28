@@ -32,7 +32,7 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
 
     override val extensionReceiver: KSTypeReference? = null
 
-    override val parameters: List<KSVariableParameter> = emptyList()
+    override val parameters: List<KSValueParameter> = emptyList()
 
     override val functionKind: FunctionKind = FunctionKind.MEMBER
 

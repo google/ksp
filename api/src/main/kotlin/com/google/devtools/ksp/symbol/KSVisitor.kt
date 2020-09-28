@@ -64,7 +64,7 @@ interface KSVisitor<D, R> {
 
     fun visitTypeReference(typeReference: KSTypeReference, data: D): R
 
-    fun visitVariableParameter(variableParameter: KSVariableParameter, data: D): R
+    fun visitValueParameter(valueParameter: KSValueParameter, data: D): R
 
     fun visitValueArgument(valueArgument: KSValueArgument, data: D): R
 

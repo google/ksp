@@ -38,8 +38,8 @@ class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunction
         ktFunctionType.typeArgumentsAsTypes.map { KSTypeArgumentLiteImpl.getCached(it) }
     }
 
-    override val functionParameters: List<KSVariableParameter> by lazy {
-        ktFunctionType.parameters.map { KSVariableParameterImpl.getCached(it) }
+    override val functionParameters: List<KSValueParameter> by lazy {
+        ktFunctionType.parameters.map { KSValueParameterImpl.getCached(it) }
     }
 
     override val receiverType: KSTypeReference? by lazy {
