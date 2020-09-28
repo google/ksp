@@ -19,7 +19,7 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * A [KSTypeReference] is a [KSReferenceElement] with annotations and modifiers.
+ * A [KSTypeReference] combines a [KSReferenceElement] with annotations and modifiers.
  */
 interface KSTypeReference : KSAnnotated, KSModifierListOwner {
 

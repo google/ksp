@@ -68,7 +68,7 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
 
     /**
      * If this is a generic class, return the type where the type argument is applied with star projection at use-site.
-     * @return A type with all type parameters applied with star projection, or same as asUserTypeElement if not generic.
+     * @return A type with all type parameters applied with star projection.
      */
     fun asStarProjectedType(): KSType
 }
