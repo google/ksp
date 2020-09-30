@@ -40,7 +40,7 @@ open class TypeParameterReferenceProcessor: AbstractTestProcessor() {
 
         for (i in sortedReferences) {
             val r = i.resolve()
-            results.add("${r?.declaration?.qualifiedName?.asString()}")
+            results.add("${r.declaration.qualifiedName?.asString()}: ${r.isMarkedNullable}")
         }
     }
 

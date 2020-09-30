@@ -52,6 +52,8 @@ object KSErrorType : KSType {
         return this
     }
 
+    override val isMarkedNullable: Boolean = false
+
     override fun replace(arguments: List<KSTypeArgument>): KSType {
         return this
     }

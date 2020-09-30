@@ -87,6 +87,11 @@ interface KSType {
     fun makeNotNullable(): KSType
 
     /**
+     * True if the type is explicitly marked as nullable type, i.e. has question mark in type declaration.
+     */
+    val isMarkedNullable: Boolean
+
+    /**
      * True if the type is an error type, which means the type can't be resolved by compiler.
      */
     val isError: Boolean
