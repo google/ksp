@@ -37,6 +37,7 @@ import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
@@ -266,6 +267,7 @@ class ResolverImpl(
             is KSFunctionDeclarationImpl -> resolveDeclaration(function.ktFunction)
             is KSFunctionDeclarationDescriptorImpl -> function.descriptor
             is KSFunctionDeclarationJavaImpl -> resolveJavaDeclaration(function.psi)
+            is KSConstructorSyntheticImpl -> resolveClassDeclaration(function.ksClassDeclaration)?.unsubstitutedPrimaryConstructor
             else -> throw IllegalStateException("unexpected class: ${function.javaClass}")
         } as FunctionDescriptor?
     }
