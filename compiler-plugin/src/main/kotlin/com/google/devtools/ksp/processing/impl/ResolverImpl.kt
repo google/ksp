@@ -36,6 +36,7 @@ import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
+import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
@@ -211,6 +212,10 @@ class ResolverImpl(
 
     override fun getKSNameFromString(name: String): KSName {
         return KSNameImpl.getCached(name)
+    }
+
+    override fun createKSTypeReferenceFromKSType(type: KSType): KSTypeReference {
+        return KSTypeReferenceSyntheticImpl.getCached(type)
     }
 
     override fun mapToJvmSignature(declaration: KSDeclaration): String {

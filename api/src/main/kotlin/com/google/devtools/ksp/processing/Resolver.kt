@@ -62,6 +62,11 @@ interface Resolver {
     fun getKSNameFromString(name: String): KSName
 
     /**
+     * Create a [KSTypeReference] from a [KSType]
+     */
+    fun createKSTypeReferenceFromKSType(type: KSType): KSTypeReference
+
+    /**
      * Provides built in types for convenience. For example, [KSBuiltins.anyType] is the KSType instance for class 'kotlin.Any'.
      */
     val builtIns: KSBuiltIns
