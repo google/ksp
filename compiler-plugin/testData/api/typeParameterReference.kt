@@ -18,14 +18,14 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: TypeParameterReferenceProcessor
 // EXPECTED:
-// Foo.T1
-// Foo.bar.T2
-// foo.T3
+// Foo.T1: true
+// Foo.bar.T2: false
+// foo.T3: false
 // END
 
 class Foo<T1> {
     inner class Bar {
-        val v: T1
+        val v: T1?
     }
 
     fun <T2> bar(p: T2) = 1

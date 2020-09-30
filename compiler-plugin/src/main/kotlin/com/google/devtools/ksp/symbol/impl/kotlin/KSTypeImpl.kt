@@ -88,6 +88,8 @@ class KSTypeImpl private constructor(
     private val meNotNullable: KSType by lazy { KSTypeImpl.getCached(kotlinType.makeNotNullable()) }
     override fun makeNotNullable(): KSType = meNotNullable
 
+    override val isMarkedNullable: Boolean = kotlinType.isMarkedNullable
+
     override val isError: Boolean = false
 
     override fun equals(other: Any?): Boolean {
