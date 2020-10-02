@@ -78,6 +78,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
             it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
                 .toList()
                 .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                .plus(it.constructors)
                 .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
         } ?: emptyList()
     }
@@ -92,10 +93,11 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     }
 
     override val declarations: List<KSDeclaration> by lazy {
-        psi.fields.map { KSPropertyDeclarationJavaImpl.getCached(it) } +
+        (psi.fields.map { KSPropertyDeclarationJavaImpl.getCached(it) } +
                 psi.innerClasses.map { KSClassDeclarationJavaImpl.getCached(it) } +
                 psi.constructors.map { KSFunctionDeclarationJavaImpl.getCached(it) } +
-                psi.methods.map { KSFunctionDeclarationJavaImpl.getCached(it) }
+                psi.methods.map { KSFunctionDeclarationJavaImpl.getCached(it) })
+                .distinct()
     }
 
     override val modifiers: Set<Modifier> by lazy {
