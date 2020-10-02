@@ -32,8 +32,10 @@ import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSTypeArgumentJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.*
+import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaVisibilities
+import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.resolve.source.getPsi
@@ -254,6 +256,10 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
 internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration {
     if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSFunctionDeclarationDescriptorImpl.getCached(this)
     val psi = this.findPsi() ?: return KSFunctionDeclarationDescriptorImpl.getCached(this)
+    // Java default constructor has a kind DECLARATION of while still being synthetic.
+    if (psi is PsiClassImpl && this is JavaClassConstructorDescriptor) {
+        return KSFunctionDeclarationDescriptorImpl.getCached(this)
+    }
     return when (psi) {
         is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
         is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)

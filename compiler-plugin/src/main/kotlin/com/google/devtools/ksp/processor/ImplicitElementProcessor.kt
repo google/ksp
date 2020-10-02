@@ -21,6 +21,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
+import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -40,7 +41,9 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         result.add(ClsClass.getConstructors().map { it.toString() }.joinToString(","))
         val ITF = resolver.getClassDeclarationByName(resolver.getKSNameFromString("ITF"))!!
         result.add(ITF.primaryConstructor?.simpleName?.asString() ?: "<null>")
-        result.add(resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaClass"))!!.primaryConstructor?.simpleName?.asString() ?: "<null>")
+        val JavaClass = resolver.getClassDeclarationByName("JavaClass")!!
+        result.add(JavaClass.primaryConstructor?.simpleName?.asString() ?: "<null>")
+        result.add(JavaClass.getDeclaredFunctions().map { it.simpleName.asString() }.joinToString(","))
         val readOnly = ClsClass.declarations.single { it.simpleName.asString() == "readOnly" } as KSPropertyDeclaration
         readOnly.getter?.let { result.add("readOnly.get(): ${it.origin} annotations from property: ${it.findAnnotationFromUseSiteTarget().map { it.shortName.asString() }.joinToString(",")}") }
         readOnly.getter?.receiver?.let { result.add("readOnly.getter.owner: " + nameAndOrigin(it)) }
@@ -61,5 +64,7 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         result.add(annotationType)
         val ClassWithoutImplicitPrimaryConstructor = resolver.getClassDeclarationByName("ClassWithoutImplicitPrimaryConstructor")!!
         result.add(ClassWithoutImplicitPrimaryConstructor.getConstructors().map { it.toString() }.joinToString(","))
+        val ImplictConstructorJava = resolver.getClassDeclarationByName("ImplictConstructorJava")!!
+        result.add(ImplictConstructorJava.getConstructors().map { it.toString() }.joinToString(","))
     }
 }

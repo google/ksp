@@ -21,6 +21,7 @@
 // synthetic constructor for Cls
 // <null>
 // <null>
+// JavaClass,JavaClass,JavaClass
 // readOnly.get(): SYNTHETIC annotations from property: GetAnno
 // readOnly.getter.owner: readOnly: KOTLIN
 // readWrite.get(): KOTLIN
@@ -31,6 +32,7 @@
 // comp2.set(): SYNTHETIC
 // GetAnno
 // ClassWithoutImplicitPrimaryConstructor
+// <init>
 // END
 // FILE: a.kt
 annotation class GetAnno
@@ -58,4 +60,10 @@ public class JavaClass {
     public JavaClass() { this(1); }
     public JavaClass(int a) { this(a, "ok"); }
     public JavaClass(int a, String s) { }
+}
+
+// FILE:ImplictConstructorJava.java
+
+public class ImplictConstructorJava {
+
 }
