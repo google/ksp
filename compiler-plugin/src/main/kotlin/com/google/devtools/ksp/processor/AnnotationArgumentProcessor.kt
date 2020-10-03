@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueArgument
@@ -31,6 +32,8 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
         val symbol = resolver.getSymbolsWithAnnotation("Bar").single()
         val annotation = (symbol as KSClassDeclaration).annotations.single()
         annotation.arguments.map { it.accept(visitor, Unit) }
+        val C = resolver.getClassDeclarationByName("C")!!
+        C.annotations.first().arguments.map { results.add(it.value.toString()) }
     }
 
     override fun toResult(): List<String> {

@@ -27,7 +27,10 @@
 // @Suppress
 // G
 // 31
+// warning1
+// warning 2
 // END
+// FILE: a.kt
 
 enum class RGB {
     R, G, B
@@ -51,3 +54,11 @@ fun Fun() {
     @Bar("Str", 42, Foo::class, java.io.File::class, Local::class, Foo(17), Suppress("name1", "name2"), RGB.G)
     class Local
 }
+
+// FILE: C.java
+
+@SuppressWarnings({"warning1", "warning 2"})
+class C {
+
+}
+

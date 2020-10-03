@@ -18,10 +18,6 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiAnnotation
-import com.intellij.psi.PsiAnnotationMemberValue
-import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
@@ -29,6 +25,9 @@ import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.*
+import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
+import java.lang.IllegalStateException
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -52,17 +51,27 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             ((annotationType.resolve() as KSTypeImpl).kotlinType.constructor.declarationDescriptor as? ClassDescriptor)
                 ?.constructors?.single()
         val presentValueArguments = psi.parameterList.attributes
-            .mapIndexed { index, it ->
-                KSValueArgumentJavaImpl.getCached(
-                    annotationConstructor?.valueParameters?.get(index)?.name?.let { KSNameImpl.getCached(it.asString()) },
-                    calcValue(it.value)
-                )
+            .flatMapIndexed { index, it ->
+                if (it.value is PsiArrayInitializerMemberValue) {
+                    (it.value as PsiArrayInitializerMemberValue).initializers.map {
+                        nameValuePairToKSAnnotation(annotationConstructor, index, it)
+                    }
+                } else {
+                    listOf(nameValuePairToKSAnnotation(annotationConstructor, index, it.value))
+                }
             }
         val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
         val argumentsFromDefault = annotationConstructor?.let {
             it.getAbsentDefaultArguments(presentValueArgumentNames)
         } ?: emptyList()
         presentValueArguments.plus(argumentsFromDefault)
+    }
+
+    private fun nameValuePairToKSAnnotation(annotationConstructor: ClassConstructorDescriptor?, nameIndex: Int, value: PsiAnnotationMemberValue?): KSValueArgument {
+        return KSValueArgumentJavaImpl.getCached(
+                annotationConstructor?.valueParameters?.get(nameIndex)?.name?.let { KSNameImpl.getCached(it.asString()) },
+                calcValue(value)
+        )
     }
 
     private fun calcValue(value: PsiAnnotationMemberValue?): Any? {
