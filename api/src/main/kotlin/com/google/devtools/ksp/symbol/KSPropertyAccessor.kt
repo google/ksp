@@ -20,6 +20,8 @@ package com.google.devtools.ksp.symbol
 
 /**
  * The common base of property getter and setter.
+ * Note that annotation use-site targets such as @get: @set: is not copied to accessor's annotations attribute.
+ * Use KSAnnotated.findAnnotationFromUseSiteTarget() to ensure annotations from parent is obtained.
  */
 interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner {
     /**
