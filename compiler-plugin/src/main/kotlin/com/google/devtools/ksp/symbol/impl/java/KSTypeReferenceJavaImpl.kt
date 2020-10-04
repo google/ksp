@@ -23,8 +23,11 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.toLocation
+import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
 
@@ -87,7 +90,10 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
     }
 
     override fun resolve(): KSType {
-        return ResolverImpl.instance.resolveUserType(this)
+        val resolvedType = ResolverImpl.instance.resolveUserType(this)
+        return if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)?.descriptor is NotFoundClasses.MockClassDescriptor) {
+            KSErrorType
+        } else resolvedType
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
