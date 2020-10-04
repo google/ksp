@@ -45,8 +45,8 @@
 // indexOf(kotlin.Number): kotlin.Int
 // isEmpty(): kotlin.Boolean
 // iterator(): kotlin.collections.Iterator
-// javaListFun(): Collection
 // javaListFun(): kotlin.collections.List
+// javaListFun(): kotlin.collections.MutableCollection
 // javaPrivateFun(): kotlin.Unit
 // javaStrFun(): kotlin.String
 // javaStrFun(): kotlin.String
@@ -84,6 +84,8 @@ data class Data(val a: String) {
 }
 
 // FILE: C.java
+import java.util.Collection;
+
 class C {
     public int aFromC = 1;
     private int bFromC = 2;
@@ -92,7 +94,7 @@ class C {
 
     }
 
-    protected Collection<Int> javaListFun() {
+    protected Collection<Integer> javaListFun() {
         return Arrays.asList(1,2,3)
     }
 

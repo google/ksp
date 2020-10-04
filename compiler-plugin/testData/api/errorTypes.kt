@@ -27,9 +27,16 @@
 // Any is assignable from errorInComponent: false
 // class C is assignable from errorInComponent: false
 // Any is assignable from class C: true
+// Cls's super type is Error type: true
 // END
 // FILE: a.kt
 class C {
     val errorAtTop = mutableMapOf<String, NonExistType>()
     val errorInComponent: Map<String, NonExistType>
+}
+
+// FILE: Cls.java
+
+public class Cls extends NonExistType {
+
 }
