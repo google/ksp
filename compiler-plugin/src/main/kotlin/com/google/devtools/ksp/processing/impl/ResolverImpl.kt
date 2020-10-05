@@ -35,7 +35,6 @@ import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
-import com.google.devtools.ksp.symbol.impl.asMemberOf
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
@@ -119,7 +118,6 @@ class ResolverImpl(
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
         moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
-
         instance = this
 
         nameToKSMap = mutableMapOf()
@@ -459,12 +457,14 @@ class ResolverImpl(
         property: KSPropertyDeclaration,
         containing: KSType
     ) : KSType {
-        val declaration = property.closestClassDeclaration() ?: return property.type.resolve()
-        return property.type.resolve().asMemberOf(
-            resolver = this,
-            declaration = declaration,
-            containing = containing
-        )
+        val declaration = resolvePropertyDeclaration(property)
+        return if(declaration != null && containing is KSTypeImpl) {
+            val typeSubstitutor = SubstitutionUtils.buildDeepSubstitutor(containing.kotlinType)
+            val substituted = declaration.substitute(typeSubstitutor)
+            KSTypeImpl.getCached(substituted.type)
+        } else {
+            property.type.resolve()
+        }
     }
 
 
