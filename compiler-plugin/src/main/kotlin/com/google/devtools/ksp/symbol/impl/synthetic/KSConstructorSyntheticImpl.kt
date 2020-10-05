@@ -72,8 +72,6 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
 
     override val origin: Origin = Origin.SYNTHETIC
 
-    override fun overrides(overridee: KSFunctionDeclaration): Boolean = false
-
     override fun findOverridee(): KSFunctionDeclaration? = null
 
     override fun findActuals(): List<KSDeclaration> {

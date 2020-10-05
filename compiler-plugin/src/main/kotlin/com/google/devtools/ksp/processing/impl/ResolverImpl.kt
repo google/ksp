@@ -18,6 +18,8 @@
 
 package com.google.devtools.ksp.processing.impl
 
+import com.google.devtools.ksp.isOpen
+import com.google.devtools.ksp.isVisibleFrom
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -227,6 +229,38 @@ class ResolverImpl(
                 typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
             } ?: ""
             else -> ""
+        }
+    }
+
+    override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
+        if (!overridee.isOpen())
+            return false
+        if (!overridee.isVisibleFrom(overrider))
+            return false
+
+        if (!((overridee is KSFunctionDeclaration && overrider is KSFunctionDeclaration) || (overridee is KSPropertyDeclaration && overrider is KSPropertyDeclaration)))
+            return false
+
+        return when (overridee) {
+            is KSFunctionDeclaration -> {
+                val superDescriptor = resolveFunctionDeclaration(overridee) ?: return false
+                val subDescriptor = resolveFunctionDeclaration(overrider as KSFunctionDeclaration) ?: return false
+                OverridingUtil.DEFAULT.isOverridableBy(
+                        superDescriptor, subDescriptor, null
+                ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
+            }
+            is KSPropertyDeclaration -> {
+                if (overrider.origin == Origin.JAVA || overridee.origin == Origin.JAVA) {
+                    false
+                } else {
+                    val superDescriptor = resolvePropertyDeclaration(overridee) ?: return false
+                    val subDescriptor = resolvePropertyDeclaration(overrider as KSPropertyDeclaration) ?: return false
+                    OverridingUtil.DEFAULT.isOverridableBy(
+                        superDescriptor, subDescriptor, null
+                    ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
+                }
+            }
+            else -> false
         }
     }
 

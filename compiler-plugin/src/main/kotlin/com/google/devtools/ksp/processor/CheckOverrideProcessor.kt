@@ -45,13 +45,13 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val baz2PropKt = resolver.getSymbolsWithAnnotation("Baz2Anno").single() as KSPropertyDeclaration
         val bazzPropKt = resolver.getSymbolsWithAnnotation("BazzAnno").single() as KSPropertyDeclaration
         val bazz2PropKt = resolver.getSymbolsWithAnnotation("Bazz2Anno").single() as KSPropertyDeclaration
-        results.add("${getFunKt.qualifiedName?.asString()} overrides ${getFunJava.qualifiedName?.asString()}: ${getFunKt.overrides(getFunJava)}")
-        results.add("${fooFunKt.qualifiedName?.asString()} overrides ${fooFunJava.qualifiedName?.asString()}: ${fooFunKt.overrides(fooFunJava)}")
-        results.add("${foooFunKt.qualifiedName?.asString()} overrides ${fooFunJava.qualifiedName?.asString()}: ${foooFunKt.overrides(fooFunJava)}")
-        results.add("${equalFunKt.qualifiedName?.asString()} overrides ${equalFunJava.qualifiedName?.asString()}: ${equalFunKt.overrides(equalFunJava)}")
-        results.add("${bazPropKt.qualifiedName?.asString()} overrides ${baz2PropKt.qualifiedName?.asString()}: ${bazPropKt.overrides(baz2PropKt)}")
-        results.add("${bazPropKt.qualifiedName?.asString()} overrides ${bazz2PropKt.qualifiedName?.asString()}: ${bazPropKt.overrides(bazz2PropKt)}")
-        results.add("${bazzPropKt.qualifiedName?.asString()} overrides ${bazz2PropKt.qualifiedName?.asString()}: ${bazzPropKt.overrides(bazz2PropKt)}")
-        results.add("${bazzPropKt.qualifiedName?.asString()} overrides ${baz2PropKt.qualifiedName?.asString()}: ${bazzPropKt.overrides(baz2PropKt)}")
+        results.add("${getFunKt.qualifiedName?.asString()} overrides ${getFunJava.qualifiedName?.asString()}: ${resolver.overrides(getFunKt,getFunJava)}")
+        results.add("${fooFunKt.qualifiedName?.asString()} overrides ${fooFunJava.qualifiedName?.asString()}: ${resolver.overrides(fooFunKt,fooFunJava)}")
+        results.add("${foooFunKt.qualifiedName?.asString()} overrides ${fooFunJava.qualifiedName?.asString()}: ${resolver.overrides(foooFunKt,fooFunJava)}")
+        results.add("${equalFunKt.qualifiedName?.asString()} overrides ${equalFunJava.qualifiedName?.asString()}: ${resolver.overrides(equalFunKt,equalFunJava)}")
+        results.add("${bazPropKt.qualifiedName?.asString()} overrides ${baz2PropKt.qualifiedName?.asString()}: ${resolver.overrides(bazPropKt,baz2PropKt)}")
+        results.add("${bazPropKt.qualifiedName?.asString()} overrides ${bazz2PropKt.qualifiedName?.asString()}: ${resolver.overrides(bazPropKt,bazz2PropKt)}")
+        results.add("${bazzPropKt.qualifiedName?.asString()} overrides ${bazz2PropKt.qualifiedName?.asString()}: ${resolver.overrides(bazzPropKt,bazz2PropKt)}")
+        results.add("${bazzPropKt.qualifiedName?.asString()} overrides ${baz2PropKt.qualifiedName?.asString()}: ${resolver.overrides(bazzPropKt,baz2PropKt)}")
     }
 }

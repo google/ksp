@@ -75,4 +75,12 @@ interface Resolver {
      * map a declaration to jvm signature.
      */
     fun mapToJvmSignature(declaration: KSDeclaration): String
+
+    /**
+     * @param overrider the candidate overriding declaration being checked.
+     * @param overridee the candidate overridden declaration being checked.
+     * @return boolean value indicating whether [overrider] overrides [overridee]
+     * Calling [overrides] is expensive and should be avoided if possible.
+     */
+    fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean
 }

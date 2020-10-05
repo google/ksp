@@ -41,20 +41,6 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
             ?.toKSFunctionDeclaration()
     }
 
-    override fun overrides(overridee: KSFunctionDeclaration): Boolean {
-        if (!this.modifiers.contains(Modifier.OVERRIDE))
-            return false
-        if (!overridee.isOpen())
-            return false
-        if (!overridee.isVisibleFrom(this))
-            return false
-        val superDescriptor = ResolverImpl.instance.resolveFunctionDeclaration(overridee) ?: return false
-        val subDescriptor = ResolverImpl.instance.resolveDeclaration(ktFunction) as FunctionDescriptor
-        return OverridingUtil.DEFAULT.isOverridableBy(
-            superDescriptor, subDescriptor, null
-        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-    }
-
     override val declarations: List<KSDeclaration> by lazy {
         if (!ktFunction.hasBlockBody()) {
             emptyList()

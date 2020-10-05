@@ -52,14 +52,6 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     val parameters: List<KSValueParameter>
 
     /**
-     * Checks if this function overrides another function.
-     * @param overridee the candidate overridden function being checked.
-     * @return boolean value indicating whether this function overrides [overridee]
-     * Calling [overrides] is expensive and should be avoided if possible.
-     */
-    fun overrides(overridee: KSFunctionDeclaration): Boolean
-
-    /**
      * Find the original overridee of this function, if overriding.
      * @return [KSFunctionDeclaration] for the original function, if overriding, otherwise null.
      * Calling [findOverridee] is expensive and should be avoided if possible.
