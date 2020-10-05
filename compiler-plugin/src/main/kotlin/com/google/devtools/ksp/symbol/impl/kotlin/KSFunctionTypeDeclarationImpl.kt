@@ -19,4 +19,7 @@ class KSFunctionTypeDeclarationImpl(
     }
     override val typeParameters: List<KSTypeParameter>
         get() = declaration.typeParameters
+
+    override val extensionReceiverType: KSType?
+        get() = declaration.extensionReceiver?.resolve()
 }

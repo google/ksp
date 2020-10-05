@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDesc
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
@@ -277,7 +278,7 @@ class ResolverImpl(
         }
     }
 
-    // TODO: Resolve Java fields/variables is not supported by this function. Not needed currently.
+    // TODO: Resolve Java variables is not supported by this function. Not needed currently.
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
@@ -293,6 +294,8 @@ class ResolverImpl(
                             ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi }
                 }
             }
+            is PsiField -> moduleClassResolver.resolveClass(JavaFieldImpl(psi).containingClass)
+                ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as CallableMemberDescriptor
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
     }
@@ -321,7 +324,7 @@ class ResolverImpl(
             is KSPropertyDeclarationImpl -> resolveDeclaration(property.ktProperty)
             is KSPropertyDeclarationParameterImpl -> resolveDeclaration(property.ktParameter)
             is KSPropertyDeclarationDescriptorImpl -> property.descriptor
-            is KSPropertyDeclarationJavaImpl -> throw IllegalStateException("should not invoke resolve on Java fields")
+            is KSPropertyDeclarationJavaImpl -> resolveJavaDeclaration(property.psi)
             else -> throw IllegalStateException("unexpected class: ${property.javaClass}")
         } as PropertyDescriptor?
     }

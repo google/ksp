@@ -22,4 +22,8 @@ class KSFunctionTypeImpl(val descriptor: CallableDescriptor) : KSFunctionType {
             KSTypeParameterDescriptorImpl.getCached(it)
         }
     }
+
+    override val extensionReceiverType: KSType? by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        descriptor.extensionReceiverParameter?.type?.let(::getKSTypeCached)
+    }
 }

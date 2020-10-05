@@ -17,11 +17,16 @@
 
 
 package com.google.devtools.ksp.symbol
-
+import com.google.devtools.ksp.processing.Resolver
 /**
  * A function definition
  *
  * Dispatch receiver can be obtained through [parentDeclaration].
+ *
+ * You can obtain the actual types in this function as member of a given [KSType] via
+ * [Resolver.asMemberOf].
+ *
+ * @see KSFunctionType
  */
 interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     /**

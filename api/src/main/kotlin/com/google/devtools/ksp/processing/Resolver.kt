@@ -85,20 +85,20 @@ interface Resolver {
     fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean
 
     /**
-     * Returns the type of [property] when it is viewed as member of [containing].
+     * Returns the type of the [property] when it is viewed as member of [containing].
      *
      * For instance, for the following input:
      * ```
-     * class Base<T>(val x:T) {
-     * }
+     * class Base<T>(val x:T)
      * val foo: Base<Int>
      * val bar: Base<String>
      * ```
-     * When `x` is viewed as member of `foo`, this method will return the [KSType] for `kotlin.Int` whereas when `x` is
-     * viewed as member of `bar`, this method will return the KSType representing `kotlin.String`.
+     * When `x` is viewed as member of `foo`, this method will return the [KSType] for `Int`
+     * whereas when `x` is viewed as member of `bar`, this method will return the [KSType]
+     * representing `String`.
      *
-     * If the given type does not contain [property], the [KSPropertyDeclaration.type type] of the [property] will be
-     * returned.
+     * If the given type does not contain the [property], the [KSPropertyDeclaration.type] of the
+     * [property] will be returned.
      *
      * @param property The property whose type will be returned
      * @param containing The type that contains [property]
@@ -108,6 +108,28 @@ interface Resolver {
         containing: KSType
     ): KSType
 
+    /**
+     * Returns the type of the [function] when it is viewed as member of [containing].
+     *
+     * For instance, for the following input:
+     * ```
+     * interface Base<T> {
+     *   fun f(t:T?):T
+     * }
+     * val foo: Base<Int>
+     * val bar: Base<String>
+     * ```
+     * When `f()` is viewed as member of `foo`, this method will return a [KSFunctionType] where
+     * the [KSFunctionType.returnType] is `Int` and the parameter `t` is of type `Int?`
+     * whereas when `f()` is viewed as member of `bar`, this method will return a [KSFunctionType]
+     * where the [KSFunctionType.returnType] is `String` and the parameter `t` is of type `String?`.
+     *
+     * If the function has type parameters, they'll not be resolved and can be read from
+     * [KSFunctionType.typeParameters].
+     *
+     * If the given type does not contain the [function] or an error happens when substituting
+     * types, a [KSFunctionType] that matches the description of the [function] will be returned.
+     */
     fun asMemberOf(
         function: KSFunctionDeclaration,
         containing: KSType
