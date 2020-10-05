@@ -43,17 +43,6 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
             ?.toKSFunctionDeclaration()
     }
 
-    override fun overrides(overridee: KSFunctionDeclaration): Boolean {
-        if (!overridee.isOpen())
-            return false
-        if (!overridee.isVisibleFrom(this))
-            return false
-        val superDescriptor = ResolverImpl.instance.resolveFunctionDeclaration(overridee) ?: return false
-        return OverridingUtil.DEFAULT.isOverridableBy(
-            superDescriptor, descriptor, null
-        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-    }
-
     override val typeParameters: List<KSTypeParameter> by lazy {
         descriptor.typeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }

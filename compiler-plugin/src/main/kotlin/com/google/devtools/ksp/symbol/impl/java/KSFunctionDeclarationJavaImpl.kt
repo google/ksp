@@ -56,18 +56,6 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
             ?.toKSFunctionDeclaration()
     }
 
-    override fun overrides(overridee: KSFunctionDeclaration): Boolean {
-        if (!overridee.isOpen())
-            return false
-        if (!overridee.isVisibleFrom(this))
-            return false
-        val superDescriptor = ResolverImpl.instance.resolveFunctionDeclaration(overridee) ?: return false
-        val subDescriptor = ResolverImpl.instance.resolveJavaDeclaration(psi) as? FunctionDescriptor ?: return false
-        return OverridingUtil.DEFAULT.isOverridableBy(
-            superDescriptor, subDescriptor, null
-        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-    }
-
     override val declarations: List<KSDeclaration> = emptyList()
 
     override val extensionReceiver: KSTypeReference? = null

@@ -82,19 +82,6 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
 
-    override fun overrides(overridee: KSPropertyDeclaration): Boolean {
-        if (!overridee.isOpen())
-            return false
-        if (!overridee.isVisibleFrom(this))
-            return false
-        if (overridee.origin == Origin.JAVA)
-            return false
-        val superDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(overridee) ?: return false
-        return OverridingUtil.DEFAULT.isOverridableBy(
-                superDescriptor, descriptor, null
-        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-    }
-
     override fun findOverridee(): KSPropertyDeclaration? {
         return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
             ?.toKSPropertyDeclaration()

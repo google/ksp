@@ -103,22 +103,6 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
 
     override fun isDelegated(): Boolean = ktProperty.hasDelegate()
 
-    override fun overrides(overridee: KSPropertyDeclaration): Boolean {
-        if (!this.modifiers.contains(Modifier.OVERRIDE))
-            return false
-        if (!overridee.isOpen())
-            return false
-        if (!overridee.isVisibleFrom(this))
-            return false
-        if (overridee.origin == Origin.JAVA)
-            return false
-        val superDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(overridee) ?: return false
-        val subDescriptor = ResolverImpl.instance.resolveDeclaration(ktProperty) as PropertyDescriptor
-        return OverridingUtil.DEFAULT.isOverridableBy(
-                superDescriptor, subDescriptor, null
-        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-    }
-
     override fun findOverridee(): KSPropertyDeclaration? {
         return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
             ?.toKSPropertyDeclaration()

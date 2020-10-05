@@ -75,10 +75,6 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
         KSTypeReferenceJavaImpl.getCached(psi.type)
     }
 
-    override fun overrides(overridee: KSPropertyDeclaration): Boolean {
-        return false
-    }
-
     override fun findOverridee(): KSPropertyDeclaration? {
         return null
     }
