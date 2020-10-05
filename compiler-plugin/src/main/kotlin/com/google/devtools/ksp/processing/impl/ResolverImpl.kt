@@ -467,6 +467,19 @@ class ResolverImpl(
         }
     }
 
+    override fun asMemberOf(
+        function: KSFunctionDeclaration,
+        containing: KSType
+    ) : KSFunctionType {
+        val declaration = resolveFunctionDeclaration(function)
+        return if(declaration != null && containing is KSTypeImpl) {
+            val typeSubstitutor = SubstitutionUtils.buildDeepSubstitutor(containing.kotlinType)
+            val substituted = declaration.substitute(typeSubstitutor)
+            KSFunctionTypeImpl(substituted!!)
+        } else {
+            TODO()
+        }
+    }
 
     override val builtIns: KSBuiltIns by lazy {
         val builtIns = module.builtIns
