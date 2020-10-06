@@ -85,7 +85,7 @@ interface Resolver {
     fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean
 
     /**
-     * Returns the type of the [property] when it is viewed as member of [containing].
+     * Returns the type of the [property] when it is viewed as member of the [containing] type.
      *
      * For instance, for the following input:
      * ```
@@ -109,7 +109,7 @@ interface Resolver {
     ): KSType
 
     /**
-     * Returns the type of the [function] when it is viewed as member of [containing].
+     * Returns the type of the [function] when it is viewed as member of the [containing] type.
      *
      * For instance, for the following input:
      * ```
@@ -120,8 +120,8 @@ interface Resolver {
      * val bar: Base<String>
      * ```
      * When `f()` is viewed as member of `foo`, this method will return a [KSFunctionType] where
-     * the [KSFunctionType.returnType] is `Int` and the parameter `t` is of type `Int?`
-     * whereas when `f()` is viewed as member of `bar`, this method will return a [KSFunctionType]
+     * the [KSFunctionType.returnType] is `Int` and the parameter `t` is of type `Int?`.
+     * When `f()` is viewed as member of `bar`, this method will return a [KSFunctionType]
      * where the [KSFunctionType.returnType] is `String` and the parameter `t` is of type `String?`.
      *
      * If the function has type parameters, they'll not be resolved and can be read from

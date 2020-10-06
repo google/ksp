@@ -487,7 +487,7 @@ class ResolverImpl(
             val substituted = declaration.substitute(typeSubstitutor)
             return KSFunctionTypeImpl(substituted)
         }
-        // if substitution fails, fallback to a type inferred from the function declaration
+        // if substitution fails, fallback to types inferred from the function declaration
         return KSFunctionTypeDeclarationImpl(function)
     }
 
@@ -561,8 +561,8 @@ fun MemberDescriptor.toKSDeclaration(): KSDeclaration =
     }
 
 /**
- * [NewTypeSubstitutor] handles variance better than the old one so we use it when subtituting types
- * in [ResolverImpl.asMemberOf] implementations.
+ * [NewTypeSubstitutor] handles variance better than [TypeSubstitutor] so we use it when subtituting
+ * types in [ResolverImpl.asMemberOf] implementations.
  */
 private fun TypeSubstitutor.toNewSubstitutor() = composeWith(
     org.jetbrains.kotlin.resolve.calls.inference.components.EmptySubstitutor

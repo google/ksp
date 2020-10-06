@@ -115,5 +115,4 @@ class JavaBase<BaseTypeArg1, BaseTypeArg2> {
 }
 
 class JavaChild1 extends JavaBase<String, Integer> {
-
 }

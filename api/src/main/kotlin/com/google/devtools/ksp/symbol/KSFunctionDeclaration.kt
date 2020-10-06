@@ -23,8 +23,8 @@ import com.google.devtools.ksp.processing.Resolver
  *
  * Dispatch receiver can be obtained through [parentDeclaration].
  *
- * You can obtain the actual types in this function as member of a given [KSType] via
- * [Resolver.asMemberOf].
+ * To obtain the function signature where type arguments are resolved as member of a given [KSType],
+ * use [Resolver.asMemberOf].
  *
  * @see KSFunctionType
  */

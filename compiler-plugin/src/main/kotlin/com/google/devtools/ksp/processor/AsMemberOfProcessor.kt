@@ -4,16 +4,11 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionType
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Nullability
-import com.google.devtools.ksp.symbol.Variance
-import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeArgumentLiteImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeReferenceImpl
-import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 
 class AsMemberOfProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -48,7 +43,6 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         results.add("Set#contains")
         results.add("listOfStrings " + resolver.asMemberOf(setContains, listOfStrings).toSignature())
         results.add("setOfStrings " + resolver.asMemberOf(setContains, setOfStrings).toSignature())
-        // TODO("add java tests")
 
         val javaBase = resolver.getClassDeclarationByName("JavaBase")!!
         val javaChild1 = resolver.getClassDeclarationByName("JavaChild1")!!
@@ -121,7 +115,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
 
     private fun KSFunctionType.toSignature(): String {
         val returnType = this.returnType?.toSignature() ?: "no-return-type"
-        val params = parametersTypes.joinToString(", ") {
+        val params = parameterTypes.joinToString(", ") {
             it?.toSignature() ?: "no-type-param"
         }
         val paramTypeArgs = this.typeParameters.joinToString(", ") {
@@ -145,6 +139,4 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         Nullability.NOT_NULL -> "!!"
         Nullability.PLATFORM -> ""
     }
-
-    fun <T> List<T>.listExtensionMethod(): T = TODO()
 }
