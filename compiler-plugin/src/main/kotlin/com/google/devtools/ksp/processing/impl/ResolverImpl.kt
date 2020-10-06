@@ -56,7 +56,6 @@ import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
-import org.jetbrains.kotlin.resolve.bindingContextUtil.getAbbreviatedTypeOrType
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
@@ -233,35 +232,31 @@ class ResolverImpl(
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
+        fun resolveForOverride(declaration: KSDeclaration): DeclarationDescriptor? {
+            return when(declaration) {
+                is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)
+                is KSFunctionDeclarationJavaImpl -> resolveJavaDeclaration(declaration.psi)
+                is KSFunctionDeclaration -> resolveFunctionDeclaration(declaration)
+                else -> null
+            }
+        }
+
         if (!overridee.isOpen())
             return false
         if (!overridee.isVisibleFrom(overrider))
             return false
 
-        if (!((overridee is KSFunctionDeclaration && overrider is KSFunctionDeclaration) || (overridee is KSPropertyDeclaration && overrider is KSPropertyDeclaration)))
+        if (!(overridee is KSFunctionDeclaration || overrider is KSFunctionDeclaration || (overridee is KSPropertyDeclaration && overrider is KSPropertyDeclaration)))
             return false
 
-        return when (overridee) {
-            is KSFunctionDeclaration -> {
-                val superDescriptor = resolveFunctionDeclaration(overridee) ?: return false
-                val subDescriptor = resolveFunctionDeclaration(overrider as KSFunctionDeclaration) ?: return false
-                OverridingUtil.DEFAULT.isOverridableBy(
-                        superDescriptor, subDescriptor, null
-                ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-            }
-            is KSPropertyDeclaration -> {
-                if (overrider.origin == Origin.JAVA || overridee.origin == Origin.JAVA) {
-                    false
-                } else {
-                    val superDescriptor = resolvePropertyDeclaration(overridee) ?: return false
-                    val subDescriptor = resolvePropertyDeclaration(overrider as KSPropertyDeclaration) ?: return false
-                    OverridingUtil.DEFAULT.isOverridableBy(
-                        superDescriptor, subDescriptor, null
-                    ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
-                }
-            }
-            else -> false
-        }
+        if (overrider is KSPropertyDeclarationJavaImpl)
+            return false
+
+        val superDescriptor = resolveForOverride(overridee) as? CallableMemberDescriptor ?: return false
+        val subDescriptor = resolveForOverride(overrider) as? CallableMemberDescriptor ?: return false
+        return OverridingUtil.DEFAULT.isOverridableBy(
+                superDescriptor, subDescriptor, null
+        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
     }
 
     fun evaluateConstant(expression: KtExpression?, expectedType: KotlinType): ConstantValue<*>? {
@@ -281,8 +276,18 @@ class ResolverImpl(
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
-            is PsiMethod -> moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
-                ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as FunctionDescriptor
+            is PsiMethod -> {
+                // TODO: get rid of hardcoded check if possible.
+                if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
+                    moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
+                            ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().singleOrNull{
+                                (it as? PropertyDescriptor)?.getter?.findPsi() == psi || (it as? PropertyDescriptor)?.setter?.findPsi() == psi
+                            }
+                } else {
+                    moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
+                            ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi }
+                }
+            }
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
     }
