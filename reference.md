@@ -222,7 +222,7 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | **Java** | **KSP equivalent** |
 | -------- | ------------------ |
 | asElement | ksType.declaration |
-| asMemberOf | ksClassDeclaration.typeArguments + ksClassDeclaration.asType |
+| asMemberOf | resolver.asMemberOf |
 | boxedClass | // Not needed |
 | capture | // To be decided. |
 | contains | KSType.isAssignableFrom |
