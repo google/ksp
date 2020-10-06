@@ -25,6 +25,10 @@
 // KotlinList2.baz overrides KotlinList.bazz: false
 // KotlinList2.bazz overrides KotlinList.bazz: true
 // KotlinList2.bazz overrides KotlinList.baz: false
+// JavaImpl.getY overrides JavaImpl.getX: false
+// JavaImpl.getY overrides MyInterface.x: false
+// JavaImpl.getX overrides MyInterface.x: true
+// JavaImpl.setY overrides MyInterface.y: true
 // END
 // FILE: a.kt
 
@@ -74,6 +78,11 @@ class KotlinList2(@BazzAnno override val bazz: Int = 2): KotlinList() {
     }
 }
 
+interface MyInterface {
+    val x: Int
+    var y: Int
+}
+
 // FILE: JavaList.java
 
 import java.util.*;
@@ -86,5 +95,21 @@ public class JavaList extends List<String> {
 
     protected int foo() {
         return 1;
+    }
+}
+
+// FILE: JavaImpl.java
+
+public class JavaImpl implements MyInterface {
+    public int getX() {
+        return 1;
+    }
+
+    public int getY() {
+        return 1;
+    }
+
+    public void setY(int value) {
+
     }
 }
