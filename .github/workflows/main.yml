@@ -22,7 +22,7 @@ jobs:
 
     steps:
     - name: Setup Java 8
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v1.4.3
       with:
         java-version: '8'
         java-package: jdk
@@ -30,13 +30,17 @@ jobs:
     - name: Set java 8 env var
       run: export JDK_16=$JAVA_HOME && export JDK_17=$JAVA_HOME && export JDK_18=$JAVA_HOME
     - name: Setup Java 9
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v1.4.3
       with:
         java-version: '9'
         java-package: jdk
         architecture: x64
     - name: Set java 8 env var
       run: export JDK_9=$JAVA_HOME
+    - name: Log environment variables
+      run: echo $JDK_9
+    - name: Log environment variables 2
+      run: echo $JDK_8
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
