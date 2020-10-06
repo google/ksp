@@ -37,6 +37,8 @@ jobs:
         architecture: x64
     - name: Set java 8 env var
       run: export JDK_9=$JAVA_HOME
+    - name: Log java home
+      run: echo $JAVA_HOME
     - name: Log environment variables
       run: echo $JDK_9
     - name: Log environment variables 2
