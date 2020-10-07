@@ -19,6 +19,8 @@
 // EXPECTED:
 // kotlin.Int
 // kotlin.String?
+// kotlin.collections.MutableSet<out kotlin.Any?>?
+// kotlin.Unit
 // kotlin.IntArray?
 // C.T?
 // C.PFun.P?
@@ -44,6 +46,8 @@ public class C<T> {
     public int intFun() {}
 
     public String strFun() {}
+
+    public void wildcardParam(Set<?> param1) {}
 
     public int[] intArrayFun() {}
 
