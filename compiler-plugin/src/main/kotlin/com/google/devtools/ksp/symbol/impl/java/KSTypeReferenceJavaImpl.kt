@@ -26,10 +26,12 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
+import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
+import org.jetbrains.kotlin.types.typeUtil.makeNullable
 
 class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeReference {
     companion object : KSObjectCache<PsiType, KSTypeReferenceJavaImpl>() {
@@ -85,6 +87,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
                     )
                 }
             }
+            null -> KSClassifierReferenceDescriptorImpl.getCached((ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable())
             else -> throw IllegalStateException()
         }
     }
