@@ -13,7 +13,7 @@
 | QualifiedNameable | KSDeclaration | |
 | TypeElement | KSClassDeclaration | |
 | TypeParameterElement | KSTypeParameter | |
-| VariableElement | KSVariableParameter / KSPropertyDeclaration | |
+| VariableElement | KSValueParameter / KSPropertyDeclaration | |
 
 ## Types
 
@@ -141,8 +141,8 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | **Java** | **KSP equivalent** |
 | -------- | ------------------ |
 | getConstantValue | // To be implemented. |
-| getEnclosingElement | ksVariableParameter.parentDeclaration |
-| getSimpleName | ksVariableParameter.simpleName |
+| getEnclosingElement | ksValueParameter.parentDeclaration |
+| getSimpleName | ksValueParameter.simpleName |
 
 ## ArrayType
 
