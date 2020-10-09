@@ -98,7 +98,7 @@ KSFile
       functionKind: FunctionKind
       extensionReceiver: KSTypeReference?
       returnType: KSTypeReference
-      parameters: List<KSVariableParameter>
+      parameters: List<KSValueParameter>
       // contains local classes, local functions, local variables, etc.
       declarations: List<KSDeclaration>
     KSPropertyDeclaration // global variable
@@ -112,7 +112,7 @@ KSFile
       getter: KSPropertyGetter
         returnType: KSTypeReference
       setter: KSPropertySetter
-        parameter: KSVariableParameter
+        parameter: KSValueParameter
     KSEnumEntryDeclaration
       // same as KSClassDeclaration
 ```
@@ -393,7 +393,7 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20200924/playground-ksp-1.4.10-dev-experimental-20200924.zip
+Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20201009/playground-ksp-1.4.10-dev-experimental-20201009.zip
 
 ### Create a processor of your own
 
@@ -429,7 +429,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20200924")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201009")
   }
   ```
 
@@ -484,7 +484,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
 
   ```
   plugins {
-      id("symbol-processing") version "1.4.10-dev-experimental-20200924"
+      id("symbol-processing") version "1.4.10-dev-experimental-20201009"
       kotlin("jvm") 
   }
 

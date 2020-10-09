@@ -1973,7 +1973,7 @@
     </g>
     <g font-family="'DejaVu Sans Mono'" transform="matrix(1,0,0,1,20,20) translate(2060.8915,359)">
       <image x="2" y="5" clip-path="url(#clipPath115)" width="16" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABLklEQVR4XmNgoDbI&#10;2u/Ak7Td0S95q1NN0janSSAMZgPFQHLo6lFA4mYno6StzhOTtjnPxIqBciA16PrA&#10;ACSRvN15BoYmNAxSg2FI0kZrXrw2o2OQWqAehAFA/6ErMrBXf4CM0eVBeuAGQAIM&#10;0yaHFP0jIIwuDsIgPQgX4HA+PgNAeogyAK4IH8DnBZA837r//0FYbdWzl587BR7+&#10;6OT8D8I/OznqwQbgC0SYAYqr3n142aRz52ubCFAzN0Iz2AA80QiSl1799dud6uAb&#10;b2tN/39sVPn/tV0EoRkGcCUkkNypwtqrD4ui/z+v8Pi/vz1uAZpWBMCWlEHiV1M7&#10;/t/OKfw/u33Sfmh4tKDrhQP0zAQSOx8////k2g0wzRC8/n8Tul6coLv0PKpmGF77&#10;vwEAm9FUYYnjgNAAAAAASUVORK5CYII=" height="16" preserveAspectRatio="none"/>
-      <text x="24" xml:space="preserve" y="17" clip-path="url(#clipPath115)" stroke="none">KSVariableParameter</text>
+      <text x="24" xml:space="preserve" y="17" clip-path="url(#clipPath115)" stroke="none">KSValueParameter</text>
     </g>
     <g fill="silver" transform="matrix(1,0,0,1,20,20) translate(742,412.5)" stroke="silver">
       <path d="M0 0 L210 0 L210 98 L0 98 L0 0 ZM1 1 L209 1 L209 97 L1 97 L1 1 Z" fill-rule="evenodd" clip-path="url(#clipPath116)" stroke="none"/>
@@ -2403,7 +2403,7 @@
       <rect x="0" width="223" height="24" y="0" clip-path="url(#clipPath296)" stroke="none"/>
     </g>
     <g font-family="'Cantarell'" font-size="13px" transform="matrix(1,0,0,1,20,20) translate(1173.25,722.5)">
-      <text x="3" xml:space="preserve" y="15" clip-path="url(#clipPath129)" stroke="none">KSVariableParameter</text>
+      <text x="3" xml:space="preserve" y="15" clip-path="url(#clipPath129)" stroke="none">KSValueParameter</text>
     </g>
     <g font-family="'Cantarell'" font-size="13px" transform="matrix(1,0,0,1,20,20) translate(1087.25,722.5)">
       <image x="2" y="2" clip-path="url(#clipPath299)" width="16" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABTElEQVR4XmNgoDbY&#10;P/U/z65ZP/x2zvpZs3P2j0kgvGv2z1qQGEgOXT0K2DHzqxFQw0QgnokDTwSpQdcH&#10;BiCJXXN+zMCiCQWD1GAYsnHua14CNqPjiSA9cAPAfkZT5GTp8yAzovlwuHf2+SC3&#10;5MvT6o+vQJYH6YEbAA0wdAMeTqzavxrE7i7dti7ELfUSihqgHoQBWJwPMmDbjM+z&#10;QOztMz/Pdrb0u4+mZiKSAb9A0YVhwNqJz+eB2Kv6H833to+4idsAHF7IjGw5PLv5&#10;zLKU0Pqj2dHtB1HUIHsBRyA+7CvbsTYzsu1QTfrc7SBvIMujBOK2SW/5gN7oRzdg&#10;+8zvKIYiYdRoBIG9C34o75j1owPZACwaMRNS0hbnViD+DKJ3zPmhgu4SdJsxUmHS&#10;VudPQPwfRIP4YO/M+eELCqRds39M2UkoMyG7AF2OGAAACgTh+GXbU1YAAAAASUVO&#10;RK5CYII=" height="16" preserveAspectRatio="none"/>
@@ -2510,7 +2510,7 @@
       <rect x="0" width="275" height="1" y="0" clip-path="url(#clipPath330)" stroke="none"/>
     </g>
     <g font-family="'Cantarell'" font-size="13px" transform="matrix(1,0,0,1,20,20) translate(2642.5,701)">
-      <text x="3" xml:space="preserve" y="15" clip-path="url(#clipPath332)" stroke="none">List&lt;KSVariableParameter&gt;</text>
+      <text x="3" xml:space="preserve" y="15" clip-path="url(#clipPath332)" stroke="none">List&lt;KSValueParameter&gt;</text>
     </g>
     <g font-family="'Cantarell'" font-size="13px" transform="matrix(1,0,0,1,20,20) translate(2541.5,701)">
       <image x="2" y="2" clip-path="url(#clipPath88)" width="16" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABTElEQVR4XmNgoDbY&#10;P/U/z65ZP/x2zvpZs3P2j0kgvGv2z1qQGEgOXT0K2DHzqxFQw0QgnokDTwSpQdcH&#10;BiCJXXN+zMCiCQWD1GAYsnHua14CNqPjiSA9cAPAfkZT5GTp8yAzovlwuHf2+SC3&#10;5MvT6o+vQJYH6YEbAA0wdAMeTqzavxrE7i7dti7ELfUSihqgHoQBWJwPMmDbjM+z&#10;QOztMz/Pdrb0u4+mZiKSAb9A0YVhwNqJz+eB2Kv6H833to+4idsAHF7IjGw5PLv5&#10;zLKU0Pqj2dHtB1HUIHsBRyA+7CvbsTYzsu1QTfrc7SBvIMujBOK2SW/5gN7oRzdg&#10;+8zvKIYiYdRoBIG9C34o75j1owPZACwaMRNS0hbnViD+DKJ3zPmhgu4SdJsxUmHS&#10;VudPQPwfRIP4YO/M+eELCqRds39M2UkoMyG7AF2OGAAACgTh+GXbU1YAAAAASUVO&#10;RK5CYII=" height="16" preserveAspectRatio="none"/>
@@ -3018,7 +3018,7 @@
       <rect x="0" width="313" height="1" y="0" clip-path="url(#clipPath475)" stroke="none"/>
     </g>
     <g font-family="'Cantarell'" font-size="13px" transform="matrix(1,0,0,1,20,20) translate(142,454.5)">
-      <text x="3" xml:space="preserve" y="15" clip-path="url(#clipPath332)" stroke="none">List&lt;KSVariableParameter&gt;</text>
+      <text x="3" xml:space="preserve" y="15" clip-path="url(#clipPath332)" stroke="none">List&lt;KSValueParameter&gt;</text>
     </g>
     <g font-family="'Cantarell'" font-size="13px" transform="matrix(1,0,0,1,20,20) translate(3,454.5)">
       <image x="2" y="2" clip-path="url(#clipPath477)" width="16" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABTElEQVR4XmNgoDbY&#10;P/U/z65ZP/x2zvpZs3P2j0kgvGv2z1qQGEgOXT0K2DHzqxFQw0QgnokDTwSpQdcH&#10;BiCJXXN+zMCiCQWD1GAYsnHua14CNqPjiSA9cAPAfkZT5GTp8yAzovlwuHf2+SC3&#10;5MvT6o+vQJYH6YEbAA0wdAMeTqzavxrE7i7dti7ELfUSihqgHoQBWJwPMmDbjM+z&#10;QOztMz/Pdrb0u4+mZiKSAb9A0YVhwNqJz+eB2Kv6H833to+4idsAHF7IjGw5PLv5&#10;zLKU0Pqj2dHtB1HUIHsBRyA+7CvbsTYzsu1QTfrc7SBvIMujBOK2SW/5gN7oRzdg&#10;+8zvKIYiYdRoBIG9C34o75j1owPZACwaMRNS0hbnViD+DKJ3zPmhgu4SdJsxUmHS&#10;VudPQPwfRIP4YO/M+eELCqRds39M2UkoMyG7AF2OGAAACgTh+GXbU1YAAAAASUVO&#10;RK5CYII=" height="16" preserveAspectRatio="none"/>
