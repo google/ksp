@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
+import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
@@ -60,11 +61,11 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
-import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
+import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.resolve.jvm.multiplatform.JavaActualAnnotationArgumentExtractor
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
@@ -77,7 +78,6 @@ import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
-import org.jetbrains.kotlin.utils.sure
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -464,9 +464,17 @@ class ResolverImpl(
     override fun asMemberOf(
         property: KSPropertyDeclaration,
         containing: KSType
-    ) : KSType {
+    ): KSType {
+        val propertyDeclaredIn = property.closestClassDeclaration()
+            ?: throw IllegalArgumentException("Cannot call asMemberOf with a property that is " +
+                "not declared in a class or an interface")
         val declaration = resolvePropertyDeclaration(property)
-        if(declaration != null && containing is KSTypeImpl) {
+        if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            if (!containing.kotlinType.isSubtypeOf(propertyDeclaredIn)) {
+                throw IllegalArgumentException(
+                    "$containing is not a sub type of the class/interface that contains `$property` ($propertyDeclaredIn)"
+                )
+            }
             val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
             val substituted = declaration.substitute(typeSubstitutor) as? ValueDescriptor
             substituted?.let {
@@ -474,21 +482,43 @@ class ResolverImpl(
             }
         }
         // if substitution fails, fallback to the type from the property
-        return property.type.resolve()
+        return KSErrorType
     }
 
     override fun asMemberOf(
         function: KSFunctionDeclaration,
         containing: KSType
-    ) : KSFunctionType {
+    ): KSFunction {
+        val functionDeclaredIn = function.closestClassDeclaration()
+            ?: throw IllegalArgumentException("Cannot call asMemberOf with a function that is " +
+                "not declared in a class or an interface")
         val declaration = resolveFunctionDeclaration(function)
-        if(declaration != null && containing is KSTypeImpl) {
+        if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            if (!containing.kotlinType.isSubtypeOf(functionDeclaredIn)) {
+                throw IllegalArgumentException(
+                    "$containing is not a sub type of the class/interface that contains " +
+                        "`$function` ($functionDeclaredIn)"
+                )
+            }
             val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
             val substituted = declaration.substitute(typeSubstitutor)
-            return KSFunctionTypeImpl(substituted)
+            return KSFunctionImpl(substituted)
         }
-        // if substitution fails, fallback to types inferred from the function declaration
-        return KSFunctionTypeDeclarationImpl(function)
+        // if substitution fails, return an error function that resembles the original declaration
+        return KSFunctionErrorImpl(function)
+    }
+
+    private fun KotlinType.isSubtypeOf(declaration: KSClassDeclaration): Boolean {
+        val classDeclaration = resolveClassDeclaration(declaration)
+        if (classDeclaration == null) {
+            throw IllegalArgumentException(
+                "Cannot find the declaration for class $classDeclaration"
+            )
+        }
+        return constructor
+            .declarationDescriptor
+            ?.getAllSuperClassifiers()
+            ?.any { it == classDeclaration } == true
     }
 
     override val builtIns: KSBuiltIns by lazy {

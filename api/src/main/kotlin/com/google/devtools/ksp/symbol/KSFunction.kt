@@ -22,7 +22,7 @@ import com.google.devtools.ksp.processing.Resolver
  *
  * @see Resolver.asMemberOf
  */
-interface KSFunctionType {
+interface KSFunction {
     /**
      * The return type of the function. Note that this might be `null` if an error happened when
      * the type is resolved.
@@ -52,4 +52,9 @@ interface KSFunctionType {
      * @see KSFunctionDeclaration.extensionReceiver
      */
     val extensionReceiverType: KSType?
+
+    /**
+     * True if the compiler couldn't resolve the function.
+     */
+    val isError: Boolean
 }

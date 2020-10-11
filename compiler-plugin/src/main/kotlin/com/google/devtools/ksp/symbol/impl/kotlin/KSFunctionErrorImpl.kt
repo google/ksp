@@ -17,25 +17,29 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionType
+import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 
-class KSFunctionTypeDeclarationImpl(
+/**
+ * Used when `ResolverImpl.asMemberOf` is called with an error type or function declaration cannot be found.
+ */
+class KSFunctionErrorImpl(
     private val declaration: KSFunctionDeclaration
-) : KSFunctionType {
-    override val returnType: KSType? by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        declaration.returnType?.resolve()
-    }
+) : KSFunction {
+    override val isError: Boolean = true
 
-    override val parameterTypes: List<KSType?> by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        declaration.parameters.map {
-            it.type?.resolve()
+    override val returnType: KSType = KSErrorType
+
+    override val parameterTypes: List<KSType?>
+        get() = declaration.parameters.map {
+            KSErrorType
         }
-    }
     override val typeParameters: List<KSTypeParameter>
-        get() = declaration.typeParameters
+        get() = emptyList()
 
     override val extensionReceiverType: KSType?
-        get() = declaration.extensionReceiver?.resolve()
+        get() = declaration.extensionReceiver?.let {
+            KSErrorType
+        }
 }

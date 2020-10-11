@@ -16,15 +16,16 @@
  */
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.symbol.KSFunctionType
+import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeParameterDescriptorImpl
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 
-class KSFunctionTypeImpl(val descriptor: CallableDescriptor) : KSFunctionType {
+class KSFunctionImpl(val descriptor: CallableDescriptor) : KSFunction {
+
+    override val isError: Boolean = false
+
     override val returnType by lazy(LazyThreadSafetyMode.PUBLICATION) {
         descriptor.returnType?.let(::getKSTypeCached)
     }

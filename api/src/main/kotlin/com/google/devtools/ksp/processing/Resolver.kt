@@ -97,11 +97,13 @@ interface Resolver {
      * whereas when `x` is viewed as member of `bar`, this method will return the [KSType]
      * representing `String`.
      *
-     * If the given type does not contain the [property], the [KSPropertyDeclaration.type] of the
-     * [property] will be returned.
+     * If the substitution fails (e.g. if [containing] is an error type, a [KSType] with [KSType.isError] `true` is
+     * returned.
      *
      * @param property The property whose type will be returned
      * @param containing The type that contains [property]
+     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not contain
+     * [property] or if the [property] is not declared in a class, object or interface.
      */
     fun asMemberOf(
         property: KSPropertyDeclaration,
@@ -119,19 +121,24 @@ interface Resolver {
      * val foo: Base<Int>
      * val bar: Base<String>
      * ```
-     * When `f()` is viewed as member of `foo`, this method will return a [KSFunctionType] where
-     * the [KSFunctionType.returnType] is `Int` and the parameter `t` is of type `Int?`.
-     * When `f()` is viewed as member of `bar`, this method will return a [KSFunctionType]
-     * where the [KSFunctionType.returnType] is `String` and the parameter `t` is of type `String?`.
+     * When `f()` is viewed as member of `foo`, this method will return a [KSFunction] where
+     * the [KSFunction.returnType] is `Int` and the parameter `t` is of type `Int?`.
+     * When `f()` is viewed as member of `bar`, this method will return a [KSFunction]
+     * where the [KSFunction.returnType] is `String` and the parameter `t` is of type `String?`.
      *
      * If the function has type parameters, they'll not be resolved and can be read from
-     * [KSFunctionType.typeParameters].
+     * [KSFunction.typeParameters].
      *
-     * If the given type does not contain the [function] or an error happens when substituting
-     * types, a [KSFunctionType] that matches the description of the [function] will be returned.
+     * If the substitution fails (e.g. if [containing] is an error type, a [KSFunction] with [KSFunction.isError] `true`
+     * is returned.
+     *
+     * @param function The function whose types will be resolved
+     * @param containing The type that contains [function].
+     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not contain [function]
+     * or if the [function] is not declared in a class, object or interface.
      */
     fun asMemberOf(
         function: KSFunctionDeclaration,
         containing: KSType
-    ): KSFunctionType
+    ): KSFunction
 }
