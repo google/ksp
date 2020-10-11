@@ -2,7 +2,6 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
-import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -12,8 +11,6 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Nullability
-import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
-import org.jetbrains.kotlin.backend.common.descriptors.isFunctionOrKFunctionType
 
 @Suppress("unused") // used by generated tests
 class AsMemberOfProcessor : AbstractTestProcessor() {
