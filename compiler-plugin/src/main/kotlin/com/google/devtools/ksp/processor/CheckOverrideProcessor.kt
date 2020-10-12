@@ -53,21 +53,36 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         checkOverride(getFunKt,getFunJava)
         checkOverride(fooFunKt,fooFunJava)
         checkOverride(foooFunKt,fooFunJava)
+        checkOverride(fooFunKt,fooFunKt)
         checkOverride(equalFunKt,equalFunJava)
         checkOverride(bazPropKt,baz2PropKt)
         checkOverride(bazPropKt,bazz2PropKt)
         checkOverride(bazzPropKt,bazz2PropKt)
         checkOverride(bazzPropKt,baz2PropKt)
+        checkOverride(bazPropKt,bazPropKt)
         val JavaImpl = resolver.getClassDeclarationByName("JavaImpl")!!
         val MyInterface = resolver.getClassDeclarationByName("MyInterface")!!
         val getX = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getX" }
         val getY = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getY" }
         val setY = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "setY" }
+        val setX = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "setX" }
         val myInterfaceX = MyInterface.declarations.first{ it.simpleName.asString() == "x" }
         val myInterfaceY = MyInterface.declarations.first{ it.simpleName.asString() == "y" }
         checkOverride(getY, getX)
         checkOverride(getY, myInterfaceX)
         checkOverride(getX, myInterfaceX)
         checkOverride(setY, myInterfaceY)
+        checkOverride(setX, myInterfaceX)
+        checkOverride(getY, getY)
+        checkOverride(myInterfaceX, getY)
+        checkOverride(myInterfaceX, getX)
+        checkOverride(myInterfaceY, setY)
+        checkOverride(myInterfaceY, myInterfaceY)
+
+        val JavaDifferentReturnTypes =
+            resolver.getClassDeclarationByName("JavaDifferentReturnType")!!
+        val diffGetX = JavaDifferentReturnTypes.getDeclaredFunctions()
+            .first { it.simpleName.asString() == "foo" }
+        checkOverride(diffGetX, fooFunJava)
     }
 }
