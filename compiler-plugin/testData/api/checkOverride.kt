@@ -20,15 +20,24 @@
 // KotlinList.get overrides JavaList.get: false
 // KotlinList.foo overrides JavaList.foo: true
 // KotlinList.fooo overrides JavaList.foo: false
+// KotlinList.foo overrides KotlinList.foo: false
 // KotlinList.equals overrides JavaList.equals: true
 // KotlinList2.baz overrides KotlinList.baz: true
 // KotlinList2.baz overrides KotlinList.bazz: false
 // KotlinList2.bazz overrides KotlinList.bazz: true
 // KotlinList2.bazz overrides KotlinList.baz: false
+// KotlinList2.baz overrides KotlinList2.baz: false
 // JavaImpl.getY overrides JavaImpl.getX: false
 // JavaImpl.getY overrides MyInterface.x: false
 // JavaImpl.getX overrides MyInterface.x: true
 // JavaImpl.setY overrides MyInterface.y: true
+// JavaImpl.setX overrides MyInterface.x: false
+// JavaImpl.getY overrides JavaImpl.getY: false
+// MyInterface.x overrides JavaImpl.getY: false
+// MyInterface.x overrides JavaImpl.getX: false
+// MyInterface.y overrides JavaImpl.setY: false
+// MyInterface.y overrides MyInterface.y: false
+// JavaDifferentReturnType.foo overrides JavaList.foo: true
 // END
 // FILE: a.kt
 
@@ -111,5 +120,18 @@ public class JavaImpl implements MyInterface {
 
     public void setY(int value) {
 
+    }
+
+    // intentional override check for a val property
+    public void setX(int value) {
+        return value;
+    }
+}
+
+// FILE: JavaDifferentReturnType.java
+public abstract class JavaDifferentReturnType extends JavaList {
+    // intentional different return type
+    protected String foo() {
+        return "";
     }
 }

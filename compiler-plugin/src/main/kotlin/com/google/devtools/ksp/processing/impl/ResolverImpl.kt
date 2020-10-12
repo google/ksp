@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processing.impl
 
+import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isVisibleFrom
 import com.intellij.openapi.project.Project
@@ -59,6 +60,7 @@ import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
+import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.resolve.jvm.multiplatform.JavaActualAnnotationArgumentExtractor
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
@@ -245,7 +247,6 @@ class ResolverImpl(
             return false
         if (!overridee.isVisibleFrom(overrider))
             return false
-
         if (!(overridee is KSFunctionDeclaration || overrider is KSFunctionDeclaration || (overridee is KSPropertyDeclaration && overrider is KSPropertyDeclaration)))
             return false
 
@@ -254,8 +255,21 @@ class ResolverImpl(
 
         val superDescriptor = resolveForOverride(overridee) as? CallableMemberDescriptor ?: return false
         val subDescriptor = resolveForOverride(overrider) as? CallableMemberDescriptor ?: return false
+        val subClassDescriptor = overrider.closestClassDeclaration()?.let {
+            resolveClassDeclaration(it)
+        } ?: return false
+        val superClassDescriptor = overridee.closestClassDeclaration()?.let {
+            resolveClassDeclaration(it)
+        } ?: return false
+        val typeOverride = subClassDescriptor.getAllSuperClassifiers()
+            .filter { it != subClassDescriptor } // exclude subclass itself as it cannot override its own methods
+            .any {
+                it == superClassDescriptor
+            }
+        if (!typeOverride) return false
+
         return OverridingUtil.DEFAULT.isOverridableBy(
-                superDescriptor, subDescriptor, null
+                superDescriptor, subDescriptor, subClassDescriptor, true
         ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
     }
 
