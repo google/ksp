@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
+import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
@@ -50,6 +51,7 @@ import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDesc
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
@@ -57,6 +59,9 @@ import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
+import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
+import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
@@ -86,6 +91,11 @@ class ResolverImpl(
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
+
+    /**
+     * Checking as member of is an expensive operation, hence we cache result values in this map.
+     */
+    private val functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
 
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
@@ -119,10 +129,10 @@ class ResolverImpl(
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
         moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
-
         instance = this
 
         nameToKSMap = mutableMapOf()
+        functionAsMemberOfCache = mutableMapOf()
 
         val visitor = object : KSVisitorVoid() {
             override fun visitFile(file: KSFile, data: Unit) {
@@ -286,7 +296,7 @@ class ResolverImpl(
         }
     }
 
-    // TODO: Resolve Java fields/variables is not supported by this function. Not needed currently.
+    // TODO: Resolve Java variables is not supported by this function. Not needed currently.
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
@@ -302,6 +312,8 @@ class ResolverImpl(
                             ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi }
                 }
             }
+            is PsiField -> moduleClassResolver.resolveClass(JavaFieldImpl(psi).containingClass)
+                ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as CallableMemberDescriptor
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
     }
@@ -330,7 +342,7 @@ class ResolverImpl(
             is KSPropertyDeclarationImpl -> resolveDeclaration(property.ktProperty)
             is KSPropertyDeclarationParameterImpl -> resolveDeclaration(property.ktParameter)
             is KSPropertyDeclarationDescriptorImpl -> property.descriptor
-            is KSPropertyDeclarationJavaImpl -> throw IllegalStateException("should not invoke resolve on Java fields")
+            is KSPropertyDeclarationJavaImpl -> resolveJavaDeclaration(property.psi)
             else -> throw IllegalStateException("unexpected class: ${property.javaClass}")
         } as PropertyDescriptor?
     }
@@ -467,6 +479,76 @@ class ResolverImpl(
         return KSTypeArgumentLiteImpl.getCached(typeRef, variance)
     }
 
+    override fun asMemberOf(
+        property: KSPropertyDeclaration,
+        containing: KSType
+    ): KSType {
+        val propertyDeclaredIn = property.closestClassDeclaration()
+            ?: throw IllegalArgumentException("Cannot call asMemberOf with a property that is " +
+                "not declared in a class or an interface")
+        val declaration = resolvePropertyDeclaration(property)
+        if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            if (!containing.kotlinType.isSubtypeOf(propertyDeclaredIn)) {
+                throw IllegalArgumentException(
+                    "$containing is not a sub type of the class/interface that contains `$property` ($propertyDeclaredIn)"
+                )
+            }
+            val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
+            val substituted = declaration.substitute(typeSubstitutor) as? ValueDescriptor
+            substituted?.let {
+                return KSTypeImpl.getCached(substituted.type)
+            }
+        }
+        // if substitution fails, fallback to the type from the property
+        return KSErrorType
+    }
+
+    override fun asMemberOf(
+        function: KSFunctionDeclaration,
+        containing: KSType
+    ): KSFunction {
+        val key = function to containing
+        return functionAsMemberOfCache.getOrPut(key) {
+            computeAsMemberOf(function, containing)
+        }
+    }
+
+    private fun computeAsMemberOf(
+        function: KSFunctionDeclaration,
+        containing: KSType
+    ) : KSFunction {
+        val functionDeclaredIn = function.closestClassDeclaration()
+            ?: throw IllegalArgumentException("Cannot call asMemberOf with a function that is " +
+                "not declared in a class or an interface")
+        val declaration = resolveFunctionDeclaration(function)
+        if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            if (!containing.kotlinType.isSubtypeOf(functionDeclaredIn)) {
+                throw IllegalArgumentException(
+                    "$containing is not a sub type of the class/interface that contains " +
+                        "`$function` ($functionDeclaredIn)"
+                )
+            }
+            val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
+            val substituted = declaration.substitute(typeSubstitutor)
+            return KSFunctionImpl(substituted)
+        }
+        // if substitution fails, return an error function that resembles the original declaration
+        return KSFunctionErrorImpl(function)
+    }
+
+    private fun KotlinType.isSubtypeOf(declaration: KSClassDeclaration): Boolean {
+        val classDeclaration = resolveClassDeclaration(declaration)
+        if (classDeclaration == null) {
+            throw IllegalArgumentException(
+                "Cannot find the declaration for class $classDeclaration"
+            )
+        }
+        return constructor
+            .declarationDescriptor
+            ?.getAllSuperClassifiers()
+            ?.any { it == classDeclaration } == true
+    }
+
     override val builtIns: KSBuiltIns by lazy {
         val builtIns = module.builtIns
         object : KSBuiltIns {
@@ -535,3 +617,15 @@ fun MemberDescriptor.toKSDeclaration(): KSDeclaration =
             else -> throw IllegalStateException("Unknown expect/actual implementation")
         }
     }
+
+/**
+ * [NewTypeSubstitutor] handles variance better than [TypeSubstitutor] so we use it when subtituting
+ * types in [ResolverImpl.asMemberOf] implementations.
+ */
+private fun TypeSubstitutor.toNewSubstitutor() = composeWith(
+    org.jetbrains.kotlin.resolve.calls.inference.components.EmptySubstitutor
+)
+
+private fun KotlinType.createTypeSubstitutor(): NewTypeSubstitutor {
+    return SubstitutionUtils.buildDeepSubstitutor(this).toNewSubstitutor()
+}
