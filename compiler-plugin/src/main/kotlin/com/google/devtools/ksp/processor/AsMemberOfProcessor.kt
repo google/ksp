@@ -15,6 +15,8 @@ import com.google.devtools.ksp.symbol.Nullability
 @Suppress("unused") // used by generated tests
 class AsMemberOfProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
+    // keep a list of all signatures we generate and ensure equals work as expected
+    private val functionsBySignature = mutableMapOf<String, MutableSet<KSFunction>>()
     override fun toResult(): List<String> {
         return results
     }
@@ -72,6 +74,26 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         if (first !== second) {
             results.add("cache error, repeated computation")
         }
+
+        // validate equals implementation
+        // all functions with the same signature should be equal to each-other unless there is an error / incomplete
+        // type in them
+        val notEqualToItself = functionsBySignature.filter { (_, functions) ->
+            functions.size != 1
+        }.keys
+        results.add("expected comparison failures")
+        results.addAll(notEqualToItself)
+        // make sure we don't have any false positive equals
+        functionsBySignature.forEach { (signature, functions) ->
+            functionsBySignature.forEach { (otherSignature, otherFunctions) ->
+                if (signature != otherSignature && otherFunctions.contains(functions)) {
+                    results.add("Unexpected equals between $otherSignature and $signature")
+                }
+            }
+        }
+
+
+
     }
 
     private inline fun <reified T : KSDeclaration> Resolver.getDeclaration(name: String): T {
@@ -114,7 +136,13 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
             asMemberOf(function, containing)
         }
         return if (result.isSuccess) {
-            result.getOrThrow().toSignature()
+            val ksFunction = result.getOrThrow()
+            val signature = ksFunction.toSignature()
+            // record it to validate equality against other signatures
+            functionsBySignature.getOrPut(signature) {
+                mutableSetOf()
+            }.add(ksFunction)
+            signature
         } else {
             result.exceptionOrNull()!!.toSignature()
         }

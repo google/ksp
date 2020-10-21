@@ -83,6 +83,8 @@
 // fileLevelExtensionFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelProperty: java.lang.IllegalArgumentException: Cannot call asMemberOf with a property that is not declared in a class or an interface
 // errorType: (<Error>?) -> <Error>?
+// expected comparison failures
+// <BaseTypeArg1: kotlin.Any?>(Base.functionArgType.BaseTypeArg1?) -> kotlin.String?
 // END
 // FILE: Input.kt
 open class Base<BaseTypeArg1, BaseTypeArg2> {
