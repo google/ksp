@@ -92,6 +92,11 @@ class ResolverImpl(
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
 
+    /**
+     * Checking as member of is an expensive operation, hence we cache result values in this map.
+     */
+    private val functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
+
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
         JvmProtoBufUtil.DEFAULT_MODULE_NAME,
@@ -127,6 +132,7 @@ class ResolverImpl(
         instance = this
 
         nameToKSMap = mutableMapOf()
+        functionAsMemberOfCache = mutableMapOf()
 
         val visitor = object : KSVisitorVoid() {
             override fun visitFile(file: KSFile, data: Unit) {
@@ -489,6 +495,16 @@ class ResolverImpl(
         function: KSFunctionDeclaration,
         containing: KSType
     ): KSFunction {
+        val key = function to containing
+        return functionAsMemberOfCache.getOrPut(key) {
+            computeAsMemberOf(function, containing)
+        }
+    }
+
+    private fun computeAsMemberOf(
+        function: KSFunctionDeclaration,
+        containing: KSType
+    ) : KSFunction {
         val functionDeclaredIn = function.closestClassDeclaration()
             ?: throw IllegalArgumentException("Cannot call asMemberOf with a function that is " +
                 "not declared in a class or an interface")

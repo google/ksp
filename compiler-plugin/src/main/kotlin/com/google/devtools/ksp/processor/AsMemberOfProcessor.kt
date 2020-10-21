@@ -65,6 +65,13 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
 
         val errorType = resolver.getDeclaration<KSPropertyDeclaration>("errorType").type.resolve()
         results.add("errorType: " + resolver.asMemberOfSignature(listGet, errorType))
+
+        // make sure values are cached
+        val first = resolver.asMemberOf(listGet, listOfStrings)
+        val second = resolver.asMemberOf(listGet, listOfStrings)
+        if (first !== second) {
+            results.add("cache error, repeated computation")
+        }
     }
 
     private inline fun <reified T : KSDeclaration> Resolver.getDeclaration(name: String): T {
