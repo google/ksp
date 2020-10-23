@@ -20,6 +20,7 @@ package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.visitor.KSValidateVisitor
 
 /**
  * Try to resolve the [KSClassDeclaration] for a class using its fully qualified name.
@@ -76,6 +77,14 @@ fun KSClassDeclaration.getConstructors(): List<KSFunctionDeclaration> {
  */
 fun KSDeclaration.isLocal(): Boolean {
     return this.parentDeclaration != null && this.parentDeclaration !is KSClassDeclaration
+}
+
+/**
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope are valid, i.e. resolvable.
+ * @param predicate: A lambda for filtering interested symbols for performance purpose. Default checks all.
+ */
+fun KSNode.validate(predicate: (KSNode, KSNode) -> Boolean = { _, _-> true } ): Boolean {
+    return this.accept(KSValidateVisitor(predicate), Unit)
 }
 
 /**
