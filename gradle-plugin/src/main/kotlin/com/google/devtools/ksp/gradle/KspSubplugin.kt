@@ -32,6 +32,7 @@ import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspKotlinO
 import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspResourceOutputDir
 import java.io.File
 import javax.inject.Inject
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) : Plugin<Project> {
     companion object {
@@ -67,6 +68,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
     companion object {
         const val KSP_ARTIFACT_NAME = "symbol-processing"
+        const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
+
     }
 
     override fun isApplicable(project: Project, task: AbstractCompile) = KspGradleSubplugin.isEnabled(project)
@@ -87,8 +90,6 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
         val kspClasspath: FileCollection = project.files(kspConfiguration)
 
         kotlinCompile.dependsOn(kspConfiguration.buildDependencies)
-
-        kotlinCompile.setProperty("incremental", false)
 
         val options = mutableListOf<SubpluginOption>()
 
@@ -114,10 +115,47 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
             javaCompile.source(generatedJavaSources)
         }
 
-        return options
+        val kspTaskName = kotlinCompile.name.replaceFirst("compile", "ksp")
+        InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation)
+
+        val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
+            kspTask.setDestinationDir(File(project.buildDir, "generated/ksp"))
+            kspTask.mapClasspath { kotlinCompile.classpath }
+            kspTask.options = options
+        }.apply {
+            configure {
+                kotlinCompilation?.allKotlinSourceSets?.forEach { sourceSet -> it.source(sourceSet.kotlin) }
+            }
+        }
+
+        kotlinCompile.dependsOn(kspTaskProvider)
+        kotlinCompile.source(kotlinOutputDir, javaOutputDir)
+
+        return emptyList()
     }
 
-    override fun getCompilerPluginId() = "com.google.devtools.ksp.symbol-processing"
+    override fun getCompilerPluginId() = KSP_PLUGIN_ID
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(groupId = "com.google.devtools.ksp", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
+}
+
+open class KspTask : KotlinCompile() {
+    lateinit var options: List<SubpluginOption>
+
+    init {
+        // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
+        // * It doesn't consider private / internal changes when computing dirty sets.
+        // * It compiles iteratively; Sources can be compiled in different rounds.
+        incremental = false
+    }
+
+    override fun setupCompilerArgs(
+        args: org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments,
+        defaultsOnly: Boolean,
+        ignoreClasspathResolutionErrors: Boolean
+    ) {
+        fun SubpluginOption.toArg() = "plugin:${KspKotlinGradleSubplugin.KSP_PLUGIN_ID}:${key}=${value}"
+        super.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
+        args.pluginOptions = (options.map { it.toArg() } + args.pluginOptions!!).toTypedArray()
+    }
 }

@@ -65,17 +65,6 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        // Don't bother with KAPT tasks.
-        // There is no way to pass KSP options to compileKotlin only. Have to workaround here.
-        val outputDir = configuration[JVMConfigurationKeys.OUTPUT_DIRECTORY]
-        val kaptOutputDirs = listOf(
-            listOf("tmp", "kapt3", "stubs"),
-            listOf("tmp", "kapt3", "incrementalData"),
-            listOf("tmp", "kapt3", "incApCache")
-        ).map { File(it.joinToString(File.separator)) }
-        if (kaptOutputDirs.any { outputDir?.parentFile?.endsWith(it) == true })
-            return
-
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
         val options = configuration[KSP_OPTIONS]?.apply {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
