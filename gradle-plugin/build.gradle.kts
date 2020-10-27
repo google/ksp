@@ -16,6 +16,8 @@ plugins {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinBaseVersion")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
+    compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     compileOnly(gradleApi())
 

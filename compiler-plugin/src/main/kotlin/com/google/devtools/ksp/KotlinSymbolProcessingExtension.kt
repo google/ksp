@@ -59,8 +59,6 @@ class KotlinSymbolProcessingExtension(
 
 abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, val logger: KSPLogger, val testMode: Boolean) :
     AnalysisHandlerExtension {
-    private var completed = false
-
     override fun doAnalysis(
         project: Project,
         module: ModuleDescriptor,
@@ -69,9 +67,6 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         bindingTrace: BindingTrace,
         componentProvider: ComponentProvider
     ): AnalysisResult? {
-        if (completed)
-            return null
-
         val psiManager = PsiManager.getInstance(project)
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
         val javaFiles = options.javaSourceRoots
@@ -101,7 +96,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         KSObjectCacheManager.clear()
 
-        return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+        return AnalysisResult.EMPTY
     }
 
     abstract fun loadProcessors(): List<SymbolProcessor>
@@ -112,21 +107,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         bindingTrace: BindingTrace,
         files: Collection<KtFile>
     ): AnalysisResult? {
-        if (completed)
-            return null
-
-        completed = true
-
-        if (testMode)
-            return null
-
-        return AnalysisResult.RetryWithAdditionalRoots(
-            BindingContext.EMPTY,
-            module,
-            listOf(options.javaOutputDir),
-            listOf(options.kotlinOutputDir),
-            addToEnvironment = true
-        )
+        return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
     }
 
     private var annotationProcessingComplete = false
