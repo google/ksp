@@ -53,7 +53,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         // group each test file with its module
         val filesByModule = groupFilesByModule(mainModule, files)
 
-        // now compile each sub module, while keeping its output folder in moduleOutputs
+        // now compile each sub module, we'll compile the main module last.
         filesByModule.forEach { (module, files) ->
             if (module !== mainModule) {
                 compileModule(
