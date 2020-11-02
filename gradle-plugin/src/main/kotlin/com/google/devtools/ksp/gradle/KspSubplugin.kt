@@ -113,6 +113,7 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
             javaCompile.source(generatedJavaSources)
+            javaCompile.classpath += project.files(classOutputDir)
         }
 
         val kspTaskName = kotlinCompile.name.replaceFirst("compile", "ksp")
@@ -122,14 +123,17 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
             kspTask.setDestinationDir(File(project.buildDir, "generated/ksp"))
             kspTask.mapClasspath { kotlinCompile.classpath }
             kspTask.options = options
+            kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir)
         }.apply {
             configure {
                 kotlinCompilation?.allKotlinSourceSets?.forEach { sourceSet -> it.source(sourceSet.kotlin) }
+                kotlinCompilation?.output?.classesDirs?.from(classOutputDir)
             }
         }
 
         kotlinCompile.dependsOn(kspTaskProvider)
         kotlinCompile.source(kotlinOutputDir, javaOutputDir)
+        kotlinCompile.classpath += project.files(classOutputDir)
 
         return emptyList()
     }
