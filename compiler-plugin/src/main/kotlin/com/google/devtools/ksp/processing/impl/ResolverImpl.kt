@@ -31,7 +31,6 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
-import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
@@ -42,6 +41,9 @@ import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
@@ -55,7 +57,6 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
-import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
@@ -149,8 +150,6 @@ class ResolverImpl(
             }
         }
         ksFiles.map { it.accept(visitor, Unit) }
-
-
     }
 
     override fun getAllFiles(): List<KSFile> {
@@ -348,6 +347,16 @@ class ResolverImpl(
         } as PropertyDescriptor?
     }
 
+    fun resolvePropertyAccessorDeclaration(accessor: KSPropertyAccessor): PropertyAccessorDescriptor? {
+        return when (accessor) {
+            is KSPropertyAccessorDescriptorImpl -> accessor.descriptor
+            is KSPropertyAccessorImpl -> resolveDeclaration(accessor.ktPropertyAccessor)
+            is KSPropertySetterSyntheticImpl -> resolvePropertyDeclaration(accessor.receiver)?.setter
+            is KSPropertyGetterSyntheticImpl -> resolvePropertyDeclaration(accessor.receiver)?.getter
+            else -> throw IllegalStateException("unexpected class: ${accessor.javaClass}")
+        } as PropertyAccessorDescriptor?
+    }
+
     fun resolveJavaType(psi: PsiType): KotlinType {
         val javaType = JavaTypeImpl.create(psi)
         return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
@@ -474,6 +483,22 @@ class ResolverImpl(
             val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(declaration)
             bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope)
         }
+    }
+
+    override fun getJvmName(accessor: KSPropertyAccessor) :String {
+        val descriptor = resolvePropertyAccessorDeclaration(accessor)
+
+        return descriptor?.let {
+            typeMapper.mapFunctionName(descriptor, accessor.receiver.findOwnerKind())
+        } ?: TODO("?")
+    }
+
+    override fun getJvmName(declaration: KSFunctionDeclaration) :String {
+        // function names might be mangled if they receive inline class parameters
+        val descriptor = resolveFunctionDeclaration(declaration)
+        return descriptor?.let {
+            typeMapper.mapFunctionName(descriptor, declaration.findOwnerKind())
+        } ?: declaration.simpleName.asString()
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -631,6 +656,14 @@ private fun KotlinType.createTypeSubstitutor(): NewTypeSubstitutor {
     return SubstitutionUtils.buildDeepSubstitutor(this).toNewSubstitutor()
 }
 
+private fun KSDeclaration.findOwnerKind() : OwnerKind {
+    val containingClass = closestClassDeclaration()
+    return if (containingClass == null) {
+        OwnerKind.PACKAGE
+    } else {
+        OwnerKind.IMPLEMENTATION
+    }
+}
 /**
  * Extracts the identifier from a module Name.
  *

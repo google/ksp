@@ -141,4 +141,12 @@ interface Resolver {
         function: KSFunctionDeclaration,
         containing: KSType
     ): KSFunction
+
+    /**
+     * Returns the mangled name for the given name.
+     * Returns the declared name if no mangling is necessary.
+     */
+    fun getJvmName(declaration: KSFunctionDeclaration): String
+
+    fun getJvmName(accessor: KSPropertyAccessor): String
 }
