@@ -44,8 +44,9 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
     }
 
     override fun doMultiFileTest(wholeFile: File, files: List<KspTestFile>) {
-        // get the main module where KSP tests will be run. If there is no module declared in the test input, we'll
-        // create one that will contain all test files
+        // get the main module where KSP tests will be run. If there are modules declared in the test file, it will be
+        // the module of the last file (modules are required to be declared in the compilation order).
+        // If there is no module declared in the test input, we'll create one that will contain all test files
         val mainModule: TestModule = files.findLast {
             it.testModule != null
         }?.testModule ?: TestModule("main", emptyList(), emptyList())
