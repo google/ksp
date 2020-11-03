@@ -17,44 +17,50 @@
 
 package com.google.devtools.ksp.gradle
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
-import org.jetbrains.kotlin.gradle.plugin.*
-import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.KSP_CONFIGURATION_NAME
-import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspClassOutputDir
-import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspJavaOutputDir
-import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspKotlinOutputDir
-import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspResourceOutputDir
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
+import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.mapClasspath
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import javax.inject.Inject
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) : Plugin<Project> {
+class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) :
+        KotlinCompilerPluginSupportPlugin {
     companion object {
-        fun isEnabled(project: Project) = project.plugins.findPlugin(KspGradleSubplugin::class.java) != null
-
-        val KSP_CONFIGURATION_NAME = "ksp"
+        const val KSP_CONFIGURATION_NAME = "ksp"
+        const val KSP_ARTIFACT_NAME = "symbol-processing"
+        const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
 
         @JvmStatic
         fun getKspClassOutputDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "generated/ksp/classes/$sourceSetName")
+                File(project.project.buildDir, "generated/ksp/classes/$sourceSetName")
 
         @JvmStatic
         fun getKspJavaOutputDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "generated/ksp/src/$sourceSetName/java")
+                File(project.project.buildDir, "generated/ksp/src/$sourceSetName/java")
 
         @JvmStatic
         fun getKspKotlinOutputDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "generated/ksp/src/$sourceSetName/kotlin")
+                File(project.project.buildDir, "generated/ksp/src/$sourceSetName/kotlin")
 
         @JvmStatic
         fun getKspResourceOutputDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "generated/ksp/src/$sourceSetName/resources")
+                File(project.project.buildDir, "generated/ksp/src/$sourceSetName/resources")
     }
 
     override fun apply(project: Project) {
@@ -63,39 +69,23 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         registry.register(KspModelBuilder())
     }
-}
 
-class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
-    companion object {
-        const val KSP_ARTIFACT_NAME = "symbol-processing"
-        const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
 
-    }
+    override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
+        val project = kotlinCompilation.target.project
+        val kotlinCompileProvider: TaskProvider<KotlinCompile> = project.locateTask(kotlinCompilation.compileKotlinTaskName)!!
+        val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
+        val kspExtension = project.extensions.getByType(KspExtension::class.java)
 
-    override fun isApplicable(project: Project, task: AbstractCompile) = KspGradleSubplugin.isEnabled(project)
-
-    override fun apply(
-        project: Project,
-        kotlinCompile: AbstractCompile,
-        javaCompile: AbstractCompile?,
-        variantData: Any?,
-        androidProjectHandler: Any?,
-        kotlinCompilation: KotlinCompilation<*>?
-    ): List<SubpluginOption> {
-        if (!KspGradleSubplugin.isEnabled(project)) return emptyList()
-
-        val kspExtension = project.extensions.findByType(KspExtension::class.java) ?: return emptyList()
-
-        val kspConfiguration: Configuration = project.configurations.findByName(KSP_CONFIGURATION_NAME) ?: return emptyList()
-        val kspClasspath: FileCollection = project.files(kspConfiguration)
-
-        kotlinCompile.dependsOn(kspConfiguration.buildDependencies)
+        val kspConfiguration: Configuration = project.configurations.findByName(KSP_CONFIGURATION_NAME)
+                ?: return project.provider { emptyList() }
 
         val options = mutableListOf<SubpluginOption>()
 
         options += FilesSubpluginOption("apclasspath", kspConfiguration)
 
-        val sourceSetName = kotlinCompilation?.compilationName ?: "default"
+        val sourceSetName = kotlinCompilation.compilationName ?: "default"
         val classOutputDir = getKspClassOutputDir(project, sourceSetName)
         val javaOutputDir = getKspJavaOutputDir(project, sourceSetName)
         val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName)
@@ -116,32 +106,52 @@ class KspKotlinGradleSubplugin : KotlinGradleSubplugin<AbstractCompile> {
             javaCompile.classpath += project.files(classOutputDir)
         }
 
-        val kspTaskName = kotlinCompile.name.replaceFirst("compile", "ksp")
+        assert(kotlinCompileProvider.name.startsWith("compile"))
+        val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
         InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation)
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
             kspTask.setDestinationDir(File(project.buildDir, "generated/ksp"))
-            kspTask.mapClasspath { kotlinCompile.classpath }
+            kspTask.mapClasspath { kotlinCompileProvider.get().classpath }
             kspTask.options = options
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir)
         }.apply {
             configure {
-                kotlinCompilation?.allKotlinSourceSets?.forEach { sourceSet -> it.source(sourceSet.kotlin) }
-                kotlinCompilation?.output?.classesDirs?.from(classOutputDir)
+                kotlinCompilation.allKotlinSourceSets.forEach { sourceSet -> it.source(sourceSet.kotlin) }
+                kotlinCompilation.output.classesDirs.from(classOutputDir)
             }
         }
 
-        kotlinCompile.dependsOn(kspTaskProvider)
-        kotlinCompile.source(kotlinOutputDir, javaOutputDir)
-        kotlinCompile.classpath += project.files(classOutputDir)
+        kotlinCompileProvider.configure { kotlinCompile ->
+            kotlinCompile.dependsOn(kspTaskProvider)
+            kotlinCompile.source(kotlinOutputDir, javaOutputDir)
+            kotlinCompile.classpath += project.files(classOutputDir)
+        }
 
-        return emptyList()
+        return project.provider { emptyList() }
     }
 
     override fun getCompilerPluginId() = KSP_PLUGIN_ID
     override fun getPluginArtifact(): SubpluginArtifact =
-        SubpluginArtifact(groupId = "com.google.devtools.ksp", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
+            SubpluginArtifact(groupId = "com.google.devtools.ksp", artifactId = KSP_ARTIFACT_NAME, version = javaClass.`package`.implementationVersion)
 }
+
+// Copied from kotlin-gradle-plugin, because they are internal.
+internal inline fun <reified T : Task> Project.locateTask(name: String): TaskProvider<T>? =
+        try {
+            tasks.withType(T::class.java).named(name)
+        } catch (e: UnknownTaskException) {
+            null
+        }
+
+// Copied from kotlin-gradle-plugin, because they are internal.
+internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>): TaskProvider<out JavaCompile>? =
+        when (compilation) {
+          is KotlinJvmAndroidCompilation -> compilation.compileJavaTaskProvider
+          is KotlinWithJavaCompilation -> compilation.compileJavaTaskProvider
+          is KotlinJvmCompilation -> compilation.compileJavaTaskProvider // may be null for Kotlin-only JVM target in MPP
+            else -> null
+        }
 
 open class KspTask : KotlinCompile() {
     lateinit var options: List<SubpluginOption>
@@ -154,11 +164,11 @@ open class KspTask : KotlinCompile() {
     }
 
     override fun setupCompilerArgs(
-        args: org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments,
-        defaultsOnly: Boolean,
-        ignoreClasspathResolutionErrors: Boolean
+            args: org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments,
+            defaultsOnly: Boolean,
+            ignoreClasspathResolutionErrors: Boolean
     ) {
-        fun SubpluginOption.toArg() = "plugin:${KspKotlinGradleSubplugin.KSP_PLUGIN_ID}:${key}=${value}"
+        fun SubpluginOption.toArg() = "plugin:${KspGradleSubplugin.KSP_PLUGIN_ID}:${key}=${value}"
         super.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
         args.pluginOptions = (options.map { it.toArg() } + args.pluginOptions!!).toTypedArray()
     }
