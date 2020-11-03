@@ -106,6 +106,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
             listOf(module.javaSrcDir),
             emptyList()
         )
+        configuration.put(CommonConfigurationKeys.MODULE_NAME, module.name)
 
         val environment = KotlinCoreEnvironment.createForTests(
             testRootDisposable, configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES
