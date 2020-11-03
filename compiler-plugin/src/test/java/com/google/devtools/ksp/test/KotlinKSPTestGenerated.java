@@ -19,12 +19,13 @@
 package com.google.devtools.ksp.test;
 
 import com.intellij.testFramework.TestDataPath;
-import org.jetbrains.kotlin.test.JUnit3RunnerWithInners;
-import org.jetbrains.kotlin.test.KotlinTestUtils;
-import org.jetbrains.kotlin.test.TestMetadata;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.kotlin.test.*;
 import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("all")
@@ -131,6 +132,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/makeNullable.kt");
     }
 
+    @TestMetadata(("multipleModules.kt"))
+    public void testMultipleModules() throws Exception {
+        runTest("testData/api/multipleModules.kt");
+    }
+
     @TestMetadata("platformDeclaration.kt")
     public void testPlatformDeclaration() throws Exception {
         runTest("testData/api/platformDeclaration.kt");
@@ -184,5 +190,20 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
     @TestMetadata("visibilities.kt")
     public void testVisibilities() throws Exception {
         runTest("testData/api/visibilities.kt");
+    }
+
+    @Override
+    protected @NotNull List<KspTestFile> createTestFilesFromFile(@NotNull File file, @NotNull String expectedText) {
+        return TestFiles.createTestFiles(file.getName(), expectedText, new TestFiles.TestFileFactory<TestModule, KspTestFile>() {
+            @Override
+            public KspTestFile createFile(@Nullable TestModule module, @NotNull String fileName, @NotNull String text, @NotNull Directives directives) {
+                return new KspTestFile(fileName, text, directives, module);
+            }
+
+            @Override
+            public TestModule createModule(@NotNull String name, @NotNull List<String> dependencies, @NotNull List<String> friends) {
+                return new TestModule(name, dependencies, friends);
+            }
+        });
     }
 }

@@ -57,6 +57,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
@@ -99,7 +100,7 @@ class ResolverImpl(
 
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
-        JvmProtoBufUtil.DEFAULT_MODULE_NAME,
+        module.name.getNonSpecialIdentifier(),
         KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT// TODO use proper LanguageVersionSettings
     )
 
@@ -628,4 +629,27 @@ private fun TypeSubstitutor.toNewSubstitutor() = composeWith(
 
 private fun KotlinType.createTypeSubstitutor(): NewTypeSubstitutor {
     return SubstitutionUtils.buildDeepSubstitutor(this).toNewSubstitutor()
+}
+
+/**
+ * Extracts the identifier from a module Name.
+ *
+ * One caveat here is that kotlin passes a special name into the plugin which cannot be used as an identifier.
+ * On the other hand, to construct the correct TypeMapper, we need a non-special name.
+ * This function extracts the non-special name from a given name if it is special.
+ *
+ * @see: https://github.com/JetBrains/kotlin/blob/master/compiler/cli/src/org/jetbrains/kotlin/cli/jvm/compiler/TopDownAnalyzerFacadeForJVM.kt#L305
+ */
+private fun Name.getNonSpecialIdentifier() :String {
+    // the analyzer might pass down a special name which will break type mapper name computations.
+    // If it is a special name, we turn it back to an id
+    if (!isSpecial || asString().isBlank()) {
+        return asString()
+    }
+    // special names starts with a `<` and usually end with `>`
+    return if (asString().last() == '>') {
+        asString().substring(1, asString().length - 1)
+    } else {
+        asString().substring(1)
+    }
 }

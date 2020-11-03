@@ -18,29 +18,56 @@
 
 package com.google.devtools.ksp.test
 
-import junit.framework.TestCase
-import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
-import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
-import org.jetbrains.kotlin.codegen.CodegenTestCase
-import org.jetbrains.kotlin.codegen.GenerationUtils
 import com.google.devtools.ksp.KotlinSymbolProcessingExtension
 import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processor.AbstractTestProcessor
+import junit.framework.TestCase
+import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
+import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
+import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.codegen.ClassBuilderFactories
+import org.jetbrains.kotlin.codegen.CodegenTestCase
+import org.jetbrains.kotlin.codegen.GenerationUtils
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
-import org.jetbrains.kotlin.test.ConfigurationKind
+import org.jetbrains.kotlin.test.*
 import java.io.File
-import org.jetbrains.kotlin.test.TestJdkKind
 
-abstract class AbstractKotlinKSPTest : CodegenTestCase() {
+abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspTestFile>() {
     companion object {
         const val TEST_PROCESSOR = "// TEST PROCESSOR:"
         val EXPECTED_RESULTS = "// EXPECTED:"
     }
+    private val testTmpDir by lazy {
+        KotlinTestUtils.tmpDir("test")
+    }
 
-    override fun doMultiFileTest(wholeFile: File, files: List<TestFile>) {
-        val javaFiles = listOfNotNull(writeJavaFiles(files))
-        createEnvironmentWithMockJdkAndIdeaAnnotations(ConfigurationKind.NO_KOTLIN_REFLECT, emptyList(), TestJdkKind.FULL_JDK_9, *(javaFiles.toTypedArray()))
+    override fun doMultiFileTest(wholeFile: File, files: List<KspTestFile>) {
+        // get the main module where KSP tests will be run. If there are modules declared in the test file, it will be
+        // the module of the last file (modules are required to be declared in the compilation order).
+        // If there is no module declared in the test input, we'll create one that will contain all test files
+        val mainModule: TestModule = files.findLast {
+            it.testModule != null
+        }?.testModule ?: TestModule("main", emptyList(), emptyList())
+
+        // group each test file with its module
+        val filesByModule = groupFilesByModule(mainModule, files)
+
+        // now compile each sub module, we'll compile the main module last.
+        filesByModule.forEach { (module, files) ->
+            if (module !== mainModule) {
+                compileModule(
+                    module = module,
+                    testFiles = files,
+                    dependencies = module.dependencies.map {
+                        it.outDir
+                    },
+                    testProcessor = null)
+            }
+        }
+        // modules are compiled, now compile the test project with KSP
         val testProcessorName = wholeFile
             .readLines()
             .filter { it.startsWith(TEST_PROCESSOR) }
@@ -48,19 +75,14 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
             .substringAfter(TEST_PROCESSOR)
             .trim()
         val testProcessor = Class.forName("com.google.devtools.ksp.processor.$testProcessorName").newInstance() as AbstractTestProcessor
-        val logger = MessageCollectorBasedKSPLogger(PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false))
-        val analysisExtension =
-            KotlinSymbolProcessingExtension(KspOptions.Builder().apply {
-                javaSourceRoots.addAll(javaFiles.map { File(it.parent) }.distinct())
-                classOutputDir = File("/tmp/kspTest/classes/main")
-                javaOutputDir = File("/tmp/kspTest/src/main/java")
-                kotlinOutputDir = File("/tmp/kspTest/src/main/kotlin")
-                resourceOutputDir = File("/tmp/kspTest/src/main/resources")
-            }.build(), logger, testProcessor)
-        val project = myEnvironment.project
-        AnalysisHandlerExtension.registerExtension(project, analysisExtension)
-        loadMultiFiles(files)
-        GenerationUtils.compileFiles(myFiles.psiFiles, myEnvironment, classBuilderFactory)
+
+        compileModule(
+            module = mainModule,
+            testFiles = filesByModule[mainModule]!!,
+            dependencies = mainModule.dependencies.map { it.outDir },
+            testProcessor = testProcessor
+        )
+
         val result = testProcessor.toResult()
         val expectedResults = wholeFile
             .readLines()
@@ -70,4 +92,101 @@ abstract class AbstractKotlinKSPTest : CodegenTestCase() {
             .map { it.substring(3).trim() }
         TestCase.assertEquals(expectedResults.joinToString("\n"), result.joinToString("\n"))
     }
+
+    private fun compileModule(
+        module: TestModule,
+        testFiles: List<KspTestFile>,
+        dependencies: List<File>,
+        testProcessor: AbstractTestProcessor?) {
+        val moduleRoot = module.rootDir
+        module.writeJavaFiles(testFiles)
+        val configuration = createConfiguration(
+            ConfigurationKind.NO_KOTLIN_REFLECT,
+            TestJdkKind.FULL_JDK_9,
+            listOf(KotlinTestUtils.getAnnotationsJar()) + dependencies,
+            listOf(module.javaSrcDir),
+            emptyList()
+        )
+        configuration.put(CommonConfigurationKeys.MODULE_NAME, module.name)
+
+        val environment = KotlinCoreEnvironment.createForTests(
+            testRootDisposable, configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES
+        )
+        val moduleFiles = CodegenTestCase.loadMultiFiles(testFiles, environment.project)
+        val outDir = module.outDir.also {
+            it.mkdirs()
+        }
+        if (testProcessor != null) {
+            val logger = MessageCollectorBasedKSPLogger(
+                PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false)
+            )
+            val analysisExtension =
+                KotlinSymbolProcessingExtension(KspOptions.Builder().apply {
+                    javaSourceRoots.add(module.javaSrcDir)
+                    classOutputDir = File(moduleRoot,"kspTest/classes/main")
+                    javaOutputDir = File(moduleRoot,"kspTest/src/main/java")
+                    kotlinOutputDir = File(moduleRoot,"kspTest/src/main/kotlin")
+                    resourceOutputDir = File(moduleRoot,"kspTest/src/main/resources")
+                }.build(), logger, testProcessor)
+            val project = environment.project
+            AnalysisHandlerExtension.registerExtension(project, analysisExtension)
+            GenerationUtils.compileFiles(moduleFiles.psiFiles, environment, ClassBuilderFactories.TEST)
+        } else {
+            GenerationUtils.compileFilesTo(moduleFiles.psiFiles, environment, outDir)
+        }
+    }
+
+    /**
+     * Groups each file by module. For files that do not have an associated module, they get added to the [mainModule].
+     */
+    private fun groupFilesByModule(
+        mainModule: TestModule,
+        testFiles: List<KspTestFile>
+    ) : LinkedHashMap<TestModule, MutableList<KspTestFile>> {
+        val result = LinkedHashMap<TestModule, MutableList<KspTestFile>>()
+        testFiles.forEach { testFile ->
+            result.getOrPut(testFile.testModule ?: mainModule) {
+                mutableListOf()
+            }.add(testFile)
+        }
+        return result
+    }
+
+    /**
+     * Write the java files in the given list into the java source directory of the TestModule.
+     */
+    private fun TestModule.writeJavaFiles(testFiles : List<KspTestFile>) {
+        val targetDir = javaSrcDir
+        targetDir.mkdirs()
+        testFiles.filter {
+            it.name.endsWith(".java")
+        }.map { testFile ->
+            File(targetDir, testFile.name).also {
+                it.parentFile.mkdirs()
+            }.also {
+                it.writeText(
+                    testFile.content, Charsets.UTF_8
+                )
+            }
+        }
+    }
+
+    private val TestModule.rootDir:File
+        get() = File(testTmpDir, name)
+
+    private val TestModule.javaSrcDir:File
+        get() = File(rootDir, "javaSrc")
+
+    private val TestModule.outDir:File
+        get() = File(rootDir, "out")
+
+    /**
+     * TestFile class for KSP where we can also keep a reference to the [TestModule]
+     */
+    class KspTestFile(
+        name: String,
+        content: String,
+        directives: Directives,
+        var testModule: TestModule?
+    ) : KotlinBaseTest.TestFile(name, content, directives)
 }
