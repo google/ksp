@@ -42,6 +42,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/allFunctions.kt");
     }
 
+    @TestMetadata("annotationInDependencies.kt")
+    public void testAnnotationsInDependencies() throws Exception {
+        runTest("testData/api/annotationInDependencies.kt");
+    }
+
     @TestMetadata("annotationValue.kt")
     public void testAnnotationValue() throws Exception {
         runTest("testData/api/annotationValue.kt");

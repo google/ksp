@@ -19,15 +19,9 @@
 package com.google.devtools.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.*
-import com.google.devtools.ksp.isOpen
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
-import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.resolve.OverridingUtil
-import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
-import org.jetbrains.kotlin.resolve.descriptorUtil.parents
 
 class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) : KSPropertyDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
@@ -42,6 +36,15 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         } else {
             null
         }
+    }
+
+    override val annotations: List<KSAnnotation> by lazy {
+        // annotations on backing field will not visible in the property declaration so we query it directly to load
+        // its annotations as well.
+        val backingFieldAnnotations = descriptor.backingField?.annotations?.map {
+            KSAnnotationDescriptorImpl.getCached(it)
+        }.orEmpty()
+        super.annotations + backingFieldAnnotations
     }
 
     override val isMutable: Boolean by lazy {
