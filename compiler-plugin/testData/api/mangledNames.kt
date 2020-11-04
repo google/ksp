@@ -71,11 +71,6 @@ class Foo {
     internal fun internalInlineReturningFun(): Inline1 = TODO()
 }
 
-internal fun fileLevelInternalFun(): Unit = TODO()
-fun fileLevelInlineReceivingFun(inline1: Inline1): Unit = TODO()
-fun fileLevelInlineReturningFun(): Inline1 = TODO()
-fun fileLevelInternalInlineReceivingFun(inline1: Inline1): Unit = TODO()
-fun fileLevelInternalInlineReturningFun(): Inline1 = TODO()
 // MODULE: mainModule(lib)
 // FILE: input.kt
 package mainPackage;
