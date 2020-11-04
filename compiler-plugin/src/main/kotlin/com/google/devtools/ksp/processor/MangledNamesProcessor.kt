@@ -47,6 +47,7 @@ class MangledNamesProcessor : AbstractTestProcessor() {
                 // do not visit inline classes
                 return
             }
+            // put a header for readable output
             data[classDeclaration.qualifiedName!!.asString()] = "declarations"
             super.visitClassDeclaration(classDeclaration, data)
         }
@@ -68,6 +69,7 @@ class MangledNamesProcessor : AbstractTestProcessor() {
         }
 
         companion object {
+            // do not report these functions as they are generated only in byte code and do not affect the test.
             val IGNORED_FUNCTIONS = listOf("equals", "hashCode", "toString")
         }
     }

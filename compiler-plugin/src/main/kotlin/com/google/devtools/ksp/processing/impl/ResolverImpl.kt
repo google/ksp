@@ -489,16 +489,18 @@ class ResolverImpl(
         val descriptor = resolvePropertyAccessorDeclaration(accessor)
 
         return descriptor?.let {
-            typeMapper.mapFunctionName(descriptor, accessor.receiver.findOwnerKind())
-        } ?: TODO("?")
+            // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
+            typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        } ?: error("Cannot find descriptor for $accessor")
     }
 
     override fun getJvmName(declaration: KSFunctionDeclaration) :String {
         // function names might be mangled if they receive inline class parameters or they are internal
         val descriptor = resolveFunctionDeclaration(declaration)
         return descriptor?.let {
-            typeMapper.mapFunctionName(descriptor, declaration.findOwnerKind())
-        } ?: declaration.simpleName.asString()
+            // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
+            typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        } ?: error("Cannot find descriptor for $declaration")
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -656,14 +658,6 @@ private fun KotlinType.createTypeSubstitutor(): NewTypeSubstitutor {
     return SubstitutionUtils.buildDeepSubstitutor(this).toNewSubstitutor()
 }
 
-private fun KSDeclaration.findOwnerKind() : OwnerKind {
-    val containingClass = closestClassDeclaration()
-    return if (containingClass == null) {
-        OwnerKind.PACKAGE
-    } else {
-        OwnerKind.IMPLEMENTATION
-    }
-}
 /**
  * Extracts the identifier from a module Name.
  *

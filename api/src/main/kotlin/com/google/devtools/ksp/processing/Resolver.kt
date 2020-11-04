@@ -147,10 +147,10 @@ interface Resolver {
      *
      * Note that this might be different from the name declared in the Kotlin source code in two cases:
      * a) If the function receives or returns an internal class, its name will be mangled according to
-     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling.
      * b) If the function is declared as internal, it will include a suffix with the module name.
      *
-     * NOTE: As inline classes are an experimental feature, the result of this function might changed based on the
+     * NOTE: As inline classes are an experimental feature, the result of this function might change based on the
      * kotlin version used in the project.
      */
     fun getJvmName(declaration: KSFunctionDeclaration): String
@@ -162,10 +162,10 @@ interface Resolver {
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties.
      * Note that the result of this function might be different from that name in two cases:
      * a) If the property's type is an internal class, accessor's name will be mangled according to
-     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling.
      * b) If the function is declared as internal, it will include a suffix with the module name.
      *
-     * NOTE: As inline classes are an experimental feature, the result of this function might changed based on the
+     * NOTE: As inline classes are an experimental feature, the result of this function might change based on the
      * kotlin version used in the project.
      * see: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties
      */

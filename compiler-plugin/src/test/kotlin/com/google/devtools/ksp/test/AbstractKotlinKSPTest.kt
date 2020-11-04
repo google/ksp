@@ -134,7 +134,6 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         } else {
             GenerationUtils.compileFilesTo(moduleFiles.psiFiles, environment, outDir)
         }
-        println(outDir)
     }
 
     /**
