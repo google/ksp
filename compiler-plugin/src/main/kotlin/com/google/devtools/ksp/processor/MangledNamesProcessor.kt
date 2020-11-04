@@ -1,11 +1,13 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyAccessor
+import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSPropertySetter
+import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class MangledNamesProcessor : AbstractTestProcessor() {
@@ -13,13 +15,23 @@ class MangledNamesProcessor : AbstractTestProcessor() {
     override fun toResult() = results
 
     override fun process(resolver: Resolver) {
-        val mangledNames = mutableMapOf<String, String>()
+        val mangleSourceNames = mutableMapOf<String, String>()
         resolver.getAllFiles().forEach {
-            it.accept(MangledNamesVisitor(resolver), mangledNames)
+            it.accept(MangledNamesVisitor(resolver), mangleSourceNames)
         }
+        val mangledDependencyNames = LinkedHashMap<String, String>()
+        // also collect results from library dependencies to ensure we resolve module name property
+        resolver.getClassDeclarationByName("libPackage.Foo")?.accept(
+            MangledNamesVisitor(resolver), mangledDependencyNames
+        )
         results.addAll(
-            mangledNames.entries.map {(decl, name) ->
-                "${decl} -> $name"
+            mangleSourceNames.entries.map { (decl, name) ->
+                "$decl -> $name"
+            }
+        )
+        results.addAll(
+            mangledDependencyNames.entries.map { (decl, name) ->
+                "$decl -> $name"
             }
         )
     }
@@ -28,22 +40,35 @@ class MangledNamesProcessor : AbstractTestProcessor() {
         val resolver: Resolver
     ) : KSTopDownVisitor<MutableMap<String, String>, Unit>() {
         override fun defaultHandler(node: KSNode, data: MutableMap<String, String>) {
+        }
 
+        override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableMap<String, String>) {
+            if (classDeclaration.modifiers.contains(Modifier.INLINE)) {
+                // do not visit inline classes
+                return
+            }
+            data[classDeclaration.qualifiedName!!.asString()] = "declarations"
+            super.visitClassDeclaration(classDeclaration, data)
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: MutableMap<String, String>) {
+            if (function.simpleName.asString() in IGNORED_FUNCTIONS) return
             super.visitFunctionDeclaration(function, data)
             data[function.simpleName.asString()] = resolver.getJvmName(function)
         }
 
-        override fun visitPropertyAccessor(accessor: KSPropertyAccessor, data: MutableMap<String, String>) {
-            super.visitPropertyAccessor(accessor, data)
-            val key = if (accessor is KSPropertySetter) {
-                "set-${accessor.receiver.simpleName.asString()}"
-            } else {
-                "get-${accessor.receiver.simpleName.asString()}"
-            }
-            data[key] = resolver.getJvmName(accessor)
+        override fun visitPropertyGetter(getter: KSPropertyGetter, data: MutableMap<String, String>) {
+            super.visitPropertyGetter(getter, data)
+            data["get-${getter.receiver.simpleName.asString()}"] = resolver.getJvmName(getter)
+        }
+
+        override fun visitPropertySetter(setter: KSPropertySetter, data: MutableMap<String, String>) {
+            super.visitPropertySetter(setter, data)
+            data["set-${setter.receiver.simpleName.asString()}"] = resolver.getJvmName(setter)
+        }
+
+        companion object {
+            val IGNORED_FUNCTIONS = listOf("equals", "hashCode", "toString")
         }
     }
 }

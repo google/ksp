@@ -494,7 +494,7 @@ class ResolverImpl(
     }
 
     override fun getJvmName(declaration: KSFunctionDeclaration) :String {
-        // function names might be mangled if they receive inline class parameters
+        // function names might be mangled if they receive inline class parameters or they are internal
         val descriptor = resolveFunctionDeclaration(declaration)
         return descriptor?.let {
             typeMapper.mapFunctionName(descriptor, declaration.findOwnerKind())

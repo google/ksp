@@ -143,10 +143,31 @@ interface Resolver {
     ): KSFunction
 
     /**
-     * Returns the mangled name for the given name.
-     * Returns the declared name if no mangling is necessary.
+     * Returns the jvm name of the given function.
+     *
+     * Note that this might be different from the name declared in the Kotlin source code in two cases:
+     * a) If the function receives or returns an internal class, its name will be mangled according to
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling
+     * b) If the function is declared as internal, it will include a suffix with the module name.
+     *
+     * NOTE: As inline classes are an experimental feature, the result of this function might changed based on the
+     * kotlin version used in the project.
      */
     fun getJvmName(declaration: KSFunctionDeclaration): String
 
+    /**
+     * Returns the jvm name of the given property accessor.
+     *
+     * By default, this name will match the name calculated according to
+     * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties.
+     * Note that the result of this function might be different from that name in two cases:
+     * a) If the property's type is an internal class, accessor's name will be mangled according to
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling
+     * b) If the function is declared as internal, it will include a suffix with the module name.
+     *
+     * NOTE: As inline classes are an experimental feature, the result of this function might changed based on the
+     * kotlin version used in the project.
+     * see: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties
+     */
     fun getJvmName(accessor: KSPropertyAccessor): String
 }

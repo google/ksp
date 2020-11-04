@@ -18,41 +18,82 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: MangledNamesProcessor
 // EXPECTED:
-// get-value -> getValue
-// get-name -> getName
-// get-inlineProp -> getInlineProp-uW2R4Lc
-// get-internalProp -> getInternalProp$myModuleName
-// get-internalInlineProp -> getInternalInlineProp-uW2R4Lc$myModuleName
+// mainPackage.Foo -> declarations
+// get-normalProp -> getNormalProp
+// set-normalProp -> setNormalProp
+// get-inlineProp -> getInlineProp-HRn7Rpw
+// set-inlineProp -> setInlineProp-E03SJzc
+// get-internalProp -> getInternalProp$mainModule
+// set-internalProp -> setInternalProp$mainModule
+// get-internalInlineProp -> getInternalInlineProp-HRn7Rpw$mainModule
+// set-internalInlineProp -> setInternalInlineProp-E03SJzc$mainModule
 // normalFun -> normalFun
-// inlineReceivingFun -> inlineReceivingFun-9XlVjhY
-// inlineReturningFun -> inlineReturningFun-uW2R4Lc
+// inlineReceivingFun -> inlineReceivingFun-E03SJzc
+// inlineReturningFun -> inlineReturningFun-HRn7Rpw
+// internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule
+// internalInlineReturningFun -> internalInlineReturningFun-HRn7Rpw$mainModule
+// fileLevelInternalFun -> fileLevelInternalFun
+// fileLevelInlineReceivingFun -> fileLevelInlineReceivingFun-E03SJzc
+// fileLevelInlineReturningFun -> fileLevelInlineReturningFun
+// fileLevelInternalInlineReceivingFun -> fileLevelInternalInlineReceivingFun-E03SJzc
+// fileLevelInternalInlineReturningFun -> fileLevelInternalInlineReturningFun
+// libPackage.Foo -> declarations
+// get-inlineProp -> getInlineProp-b_MPbnQ
+// set-inlineProp -> setInlineProp-mQ73O9w
+// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib
+// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib
+// get-internalProp -> getInternalProp$lib
+// set-internalProp -> setInternalProp$lib
+// get-normalProp -> getNormalProp
+// set-normalProp -> setNormalProp
+// inlineReceivingFun -> inlineReceivingFun-mQ73O9w
+// inlineReturningFun -> inlineReturningFun-b_MPbnQ
+// internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib
+// internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib
+// normalFun -> normalFun
 // END
 // MODULE: lib
 // FILE: input.kt
 /**
  * control group
  */
-package foo.bar;
+package libPackage;
 inline class Inline1(val value:String)
 class Foo {
-    val name:String = TODO()
-    val inlineProp: Inline1 = TODO()
-    internal val internalProp: String = TODO()
-    internal val internalInlineProp: Inline1 = TODO()
+    var normalProp:String = TODO()
+    var inlineProp: Inline1 = TODO()
+    internal var internalProp: String = TODO()
+    internal var internalInlineProp: Inline1 = TODO()
     fun normalFun() {}
     fun inlineReceivingFun(value: Inline1) {}
     fun inlineReturningFun(): Inline1 = TODO()
+    internal fun internalInlineReceivingFun(value: Inline1) {}
+    internal fun internalInlineReturningFun(): Inline1 = TODO()
 }
-// MODULE: myModuleName
+
+internal fun fileLevelInternalFun(): Unit = TODO()
+fun fileLevelInlineReceivingFun(inline1: Inline1): Unit = TODO()
+fun fileLevelInlineReturningFun(): Inline1 = TODO()
+fun fileLevelInternalInlineReceivingFun(inline1: Inline1): Unit = TODO()
+fun fileLevelInternalInlineReturningFun(): Inline1 = TODO()
+// MODULE: mainModule(lib)
 // FILE: input.kt
-package foo.bar;
+package mainPackage;
 inline class Inline1(val value:String)
 class Foo {
-    val name:String = TODO()
-    val inlineProp: Inline1 = TODO()
-    internal val internalProp: String = TODO()
-    internal val internalInlineProp: Inline1 = TODO()
+    var normalProp:String = TODO()
+    var inlineProp: Inline1 = TODO()
+    internal var internalProp: String = TODO()
+    internal var internalInlineProp: Inline1 = TODO()
     fun normalFun() {}
     fun inlineReceivingFun(value: Inline1) {}
     fun inlineReturningFun(): Inline1 = TODO()
+    internal fun internalInlineReceivingFun(value: Inline1) {}
+    internal fun internalInlineReturningFun(): Inline1 = TODO()
 }
+
+internal fun fileLevelInternalFun(): Unit = TODO()
+fun fileLevelInlineReceivingFun(inline1: Inline1): Unit = TODO()
+fun fileLevelInlineReturningFun(): Inline1 = TODO()
+fun fileLevelInternalInlineReceivingFun(inline1: Inline1): Unit = TODO()
+fun fileLevelInternalInlineReturningFun(): Inline1 = TODO()
