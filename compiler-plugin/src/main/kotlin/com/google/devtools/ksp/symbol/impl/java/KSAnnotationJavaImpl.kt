@@ -18,16 +18,18 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
+import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.lang.jvm.JvmClassKind
 import com.intellij.psi.*
-import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
-import java.lang.IllegalStateException
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -51,14 +53,21 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             ((annotationType.resolve() as KSTypeImpl).kotlinType.constructor.declarationDescriptor as? ClassDescriptor)
                 ?.constructors?.single()
         val presentValueArguments = psi.parameterList.attributes
-            .flatMapIndexed { index, it ->
-                if (it.value is PsiArrayInitializerMemberValue) {
-                    (it.value as PsiArrayInitializerMemberValue).initializers.map {
-                        nameValuePairToKSAnnotation(annotationConstructor, index, it)
+            .mapIndexed { index, it ->
+                // use the name in the attribute if it is explicitly specified, otherwise, fall back to index.
+                val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
+                val value = it.value
+                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
+                    value.initializers.map {
+                        calcValue(it)
                     }
                 } else {
-                    listOf(nameValuePairToKSAnnotation(annotationConstructor, index, it.value))
+                    calcValue(it.value)
                 }
+                KSValueArgumentJavaImpl.getCached(
+                    name = name?.let(KSNameImpl::getCached),
+                    value = calculatedValue
+                )
             }
         val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
         val argumentsFromDefault = annotationConstructor?.let {
@@ -67,15 +76,42 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         presentValueArguments.plus(argumentsFromDefault)
     }
 
-    private fun nameValuePairToKSAnnotation(annotationConstructor: ClassConstructorDescriptor?, nameIndex: Int, value: PsiAnnotationMemberValue?): KSValueArgument {
-        return KSValueArgumentJavaImpl.getCached(
-                annotationConstructor?.valueParameters?.get(nameIndex)?.name?.let { KSNameImpl.getCached(it.asString()) },
-                calcValue(value)
-        )
-    }
-
     private fun calcValue(value: PsiAnnotationMemberValue?): Any? {
-        return value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
+        if (value is PsiAnnotation) {
+            return getCached(value)
+        }
+        val result = when(value) {
+            is PsiReference -> value.resolve()?.let { resolved ->
+                JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) ?: resolved
+            }
+            else -> value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
+        }
+        return when(result) {
+            is PsiType -> {
+                ResolverImpl.instance.getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
+            }
+            is PsiLiteralValue -> {
+                result.value
+            }
+            is PsiField -> {
+                // manually handle enums as constant expression evaluator does not seem to be resolving them.
+                val containingClass = result.containingClass
+                if (containingClass?.classKind == JvmClassKind.ENUM) {
+                    // this is an enum entry
+                    containingClass.qualifiedName?.let {
+                        ResolverImpl.instance.getClassDeclarationByName(it)
+                    }?.declarations?.find {
+                        it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY && it.simpleName.asString() == result.name
+                    }?.let { (it as KSClassDeclaration).asStarProjectedType() }
+                        ?.let {
+                            return it
+                        }
+                } else {
+                    null
+                }
+            }
+            else -> result
+        }
     }
 
     override val shortName: KSName by lazy {

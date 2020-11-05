@@ -18,10 +18,11 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
-class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
+class AnnotationArrayValueProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -29,15 +30,25 @@ class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
-        val ktClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("A"))!!
+        val ktClass = resolver.getClassDeclarationByName("KotlinAnnotated")!!
         logAnnotations(ktClass)
-        val javaClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaAnnotated"))!!
+        val javaClass = resolver.getClassDeclarationByName("JavaAnnotated")!!
         logAnnotations(javaClass)
     }
 
     private fun logAnnotations(classDeclaration: KSClassDeclaration) {
+        result.add(classDeclaration.qualifiedName!!.asString())
         classDeclaration.annotations.forEach { annotation ->
-            result.add("${annotation.shortName.asString()} -> ${annotation.arguments.map { "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
+            result.add("${annotation.shortName.asString()} ->")
+            annotation.arguments.forEach {
+                val value = it.value
+                val key = it.name?.asString()
+                if (value is Array<*>) {
+                    result.add("$key = [${value.joinToString(", ")}]")
+                } else {
+                    result.add("$key = ${it.value}")
+                }
+            }
         }
     }
 }
