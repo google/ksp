@@ -19,15 +19,22 @@
 // EXPECTED:
 // KotlinAnnotation -> a:debugKt,b:default
 // JavaAnnotation -> debug:debug,withDefaultValue:OK
+// JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
+// KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
 // KotlinAnnotation -> a:debugJava,b:default
 // JavaAnnotation -> debug:debugJava2,withDefaultValue:OK
+// JavaAnnotation2 -> y:y-java,x:x-java,z:z-default
+// KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default
 // END
 // FILE: a.kt
 
 annotation class KotlinAnnotation(val a: String, val b:String = "default")
+annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", val z:String = "z-default")
 
 @KotlinAnnotation("debugKt")
 @JavaAnnotation("debug")
+@JavaAnnotation2(y="y-kotlin", x="x-kotlin")
+@KotlinAnnotation2(y="y-kotlin", x="x-kotlin")
 class A
 
 // FILE: JavaAnnotation.java
@@ -36,10 +43,19 @@ public @interface JavaAnnotation {
     String withDefaultValue()  default "OK";
 }
 
+// FILE: JavaAnnotation2.java
+public @interface JavaAnnotation2 {
+    String x() default "x-default";
+    String y() default "y-default";
+    String z() default "z-default";
+}
+
 // FILE: JavaAnnotated.java
 
 @KotlinAnnotation("debugJava")
 @JavaAnnotation("debugJava2")
+@JavaAnnotation2(y="y-java", x="x-java")
+@KotlinAnnotation2(y="y-java", x="x-java")
 public class JavaAnnotated {
 
 }
