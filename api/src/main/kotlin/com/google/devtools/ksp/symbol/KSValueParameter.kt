@@ -30,8 +30,7 @@ interface KSValueParameter : KSAnnotated {
     /**
      *  The reference to the type of the parameter.
      */
-    // TODO: a setter doesn't have a type; However, it can be learned from the corresponding property declaration.
-    val type: KSTypeReference?
+    val type: KSTypeReference
 
     /**
      * True if it is a vararg.

@@ -142,6 +142,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/multipleModules.kt");
     }
 
+    @TestMetadata("parameterTypes.kt")
+    public void testParameterTypes() throws Exception {
+        runTest("testData/api/parameterTypes.kt");
+    }
+
     @TestMetadata("platformDeclaration.kt")
     public void testPlatformDeclaration() throws Exception {
         runTest("testData/api/platformDeclaration.kt");

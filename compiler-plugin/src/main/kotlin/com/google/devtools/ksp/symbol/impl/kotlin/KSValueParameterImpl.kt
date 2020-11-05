@@ -20,10 +20,13 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findParentDeclaration
+import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
 
 class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : KSValueParameter {
     companion object : KSObjectCache<KtParameter, KSValueParameterImpl>() {
@@ -58,8 +61,8 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
         }
     }
 
-    override val type: KSTypeReference? by lazy {
-        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) }
+    override val type: KSTypeReference by lazy {
+        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) } ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
     }
 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()
@@ -70,5 +73,9 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
 
     override fun toString(): String {
         return name?.asString() ?: "_"
+    }
+
+    private fun findPropertyForAccessor(): KSPropertyDeclaration? {
+        return (ktParameter.parent?.parent?.parent as? KtProperty)?.let { KSPropertyDeclarationImpl.getCached(it) }
     }
 }
