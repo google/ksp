@@ -176,10 +176,10 @@ class ResolverImpl(
             }
     }
 
-    override fun getSymbolsWithAnnotation(annotationName: String): List<KSAnnotated> {
+    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): List<KSAnnotated> {
         val ksName = KSNameImpl.getCached(annotationName)
 
-        val visitor = object : BaseVisitor() {
+        val visitor = object : KSVisitorVoid() {
             val symbols = mutableSetOf<KSAnnotated>()
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
                 if (annotated.annotations.any {
@@ -192,31 +192,46 @@ class ResolverImpl(
                 }
             }
 
-            override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
-                visitAnnotated(type, data)
-                super.visitClassDeclaration(type, data)
+            override fun visitFile(file: KSFile, data: Unit) {
+                visitAnnotated(file, data)
+                file.declarations.map { it.accept(this, data) }
+            }
+
+            override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+                visitAnnotated(classDeclaration, data)
+                classDeclaration.typeParameters.map { it.accept(this, data) }
+                classDeclaration.declarations.map { it.accept(this, data) }
+                classDeclaration.primaryConstructor?.let { it.accept(this, data) }
+            }
+
+            override fun visitPropertyGetter(getter: KSPropertyGetter, data: Unit) {
+                visitAnnotated(getter, data)
+            }
+
+            override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {
+                visitAnnotated(setter, data)
             }
 
             override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
                 visitAnnotated(function, data)
-                super.visitFunctionDeclaration(function, data)
+                function.typeParameters.map { it.accept(this, data) }
+                function.parameters.map { it.accept(this, data) }
+                if (inDepth) {
+                    function.declarations.map { it.accept(this, data) }
+                }
             }
 
             override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
                 visitAnnotated(property, data)
-                super.visitPropertyDeclaration(property, data)
+                property.typeParameters.map { it.accept(this, data) }
+                property.getter?.let { it.accept(this, data) }
+                property.setter?.let { it.accept(this, data) }
             }
 
             override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {
                 visitAnnotated(typeParameter, data)
                 super.visitTypeParameter(typeParameter, data)
             }
-
-            override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {
-                visitAnnotated(typeReference, data)
-                super.visitTypeReference(typeReference, data)
-            }
-
         }
 
         for (file in ksFiles) {
