@@ -27,7 +27,10 @@
 // set-internalProp -> setInternalProp$mainModule
 // get-internalInlineProp -> getInternalInlineProp-HRn7Rpw$mainModule
 // set-internalInlineProp -> setInternalInlineProp-E03SJzc$mainModule
+// get-jvmNameProp -> explicitGetterName
+// set-jvmNameProp -> explicitSetterName
 // normalFun -> normalFun
+// hasJvmName -> explicitJvmName
 // inlineReceivingFun -> inlineReceivingFun-E03SJzc
 // inlineReturningFun -> inlineReturningFun-HRn7Rpw
 // internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule
@@ -44,8 +47,11 @@
 // set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib
 // get-internalProp -> getInternalProp$lib
 // set-internalProp -> setInternalProp$lib
+// get-jvmNameProp -> explicitGetterName
+// set-jvmNameProp -> explicitSetterName
 // get-normalProp -> getNormalProp
 // set-normalProp -> setNormalProp
+// hasJvmName -> explicitJvmName
 // inlineReceivingFun -> inlineReceivingFun-mQ73O9w
 // inlineReturningFun -> inlineReturningFun-b_MPbnQ
 // internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib
@@ -64,7 +70,12 @@ class Foo {
     var inlineProp: Inline1 = TODO()
     internal var internalProp: String = TODO()
     internal var internalInlineProp: Inline1 = TODO()
+    @get:JvmName("explicitGetterName")
+    @set:JvmName("explicitSetterName")
+    var jvmNameProp:String
     fun normalFun() {}
+    @JvmName("explicitJvmName")
+    fun hasJvmName() {}
     fun inlineReceivingFun(value: Inline1) {}
     fun inlineReturningFun(): Inline1 = TODO()
     internal fun internalInlineReceivingFun(value: Inline1) {}
@@ -80,7 +91,12 @@ class Foo {
     var inlineProp: Inline1 = TODO()
     internal var internalProp: String = TODO()
     internal var internalInlineProp: Inline1 = TODO()
+    @get:JvmName("explicitGetterName")
+    @set:JvmName("explicitSetterName")
+    var jvmNameProp:String
     fun normalFun() {}
+    @JvmName("explicitJvmName")
+    fun hasJvmName() {}
     fun inlineReceivingFun(value: Inline1) {}
     fun inlineReturningFun(): Inline1 = TODO()
     internal fun internalInlineReceivingFun(value: Inline1) {}

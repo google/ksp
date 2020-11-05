@@ -149,6 +149,8 @@ interface Resolver {
      * compatible between different compiler versions except for the rules outlined in the Java interoperability
      * documentation: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
      *
+     * If the [declaration] is annotated with [JvmName], that name will be returned from this function.
+     *
      * Note that this might be different from the name declared in the Kotlin source code in two cases:
      * a) If the function receives or returns an inline class, its name will be mangled according to
      * https://kotlinlang.org/docs/reference/inline-classes.html#mangling.
@@ -165,6 +167,8 @@ interface Resolver {
      * The jvm name of an accessor might depend on the Kotlin Compiler version hence it is not guaranteed to be
      * compatible between different compiler versions except for the rules outlined in the Java interoperability
      * documentation: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
+     *
+     * If the [accessor] is annotated with [JvmName], that name will be returned from this function.
      *
      * By default, this name will match the name calculated according to
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties.
