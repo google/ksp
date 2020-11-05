@@ -26,8 +26,6 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import com.intellij.psi.*
-import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
-import java.lang.IllegalStateException
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -52,12 +50,14 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
                 ?.constructors?.single()
         val presentValueArguments = psi.parameterList.attributes
             .flatMapIndexed { index, it ->
+                // use the name in the attribute if it is explicitly specified, otherwise, fall back to index.
+                val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
                 if (it.value is PsiArrayInitializerMemberValue) {
                     (it.value as PsiArrayInitializerMemberValue).initializers.map {
-                        nameValuePairToKSAnnotation(annotationConstructor, index, it)
+                        nameValuePairToKSAnnotation(name, it)
                     }
                 } else {
-                    listOf(nameValuePairToKSAnnotation(annotationConstructor, index, it.value))
+                    listOf(nameValuePairToKSAnnotation(name, it.value))
                 }
             }
         val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
@@ -67,9 +67,9 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         presentValueArguments.plus(argumentsFromDefault)
     }
 
-    private fun nameValuePairToKSAnnotation(annotationConstructor: ClassConstructorDescriptor?, nameIndex: Int, value: PsiAnnotationMemberValue?): KSValueArgument {
+    private fun nameValuePairToKSAnnotation(name: String?, value: PsiAnnotationMemberValue?): KSValueArgument {
         return KSValueArgumentJavaImpl.getCached(
-                annotationConstructor?.valueParameters?.get(nameIndex)?.name?.let { KSNameImpl.getCached(it.asString()) },
+                name?.let(KSNameImpl::getCached),
                 calcValue(value)
         )
     }

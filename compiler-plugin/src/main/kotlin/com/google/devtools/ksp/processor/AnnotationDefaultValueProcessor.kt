@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
@@ -29,14 +30,14 @@ class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver) {
         val ktClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("A"))!!
-        var ktAnno = ktClass.annotations[0]
-        var javaAnno = ktClass.annotations[1]
-        result.add("${ktAnno.shortName.asString()} -> ${ktAnno.arguments.map { "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
-        result.add("${javaAnno.shortName.asString()} -> ${javaAnno.arguments.map { "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
+        logAnnotations(ktClass)
         val javaClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaAnnotated"))!!
-        ktAnno = javaClass.annotations[0]
-        javaAnno = javaClass.annotations[1]
-        result.add("${ktAnno.shortName.asString()} -> ${ktAnno.arguments.map { "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
-        result.add("${javaAnno.shortName.asString()} -> ${javaAnno.arguments.map { "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
+        logAnnotations(javaClass)
+    }
+
+    private fun logAnnotations(classDeclaration: KSClassDeclaration) {
+        classDeclaration.annotations.forEach { annotation ->
+            result.add("${annotation.shortName.asString()} -> ${annotation.arguments.map { "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
+        }
     }
 }
