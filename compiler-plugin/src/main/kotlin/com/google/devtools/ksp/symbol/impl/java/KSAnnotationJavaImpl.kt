@@ -18,10 +18,13 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
+import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.processing.impl.ResolverImpl
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
@@ -49,16 +52,23 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             ((annotationType.resolve() as KSTypeImpl).kotlinType.constructor.declarationDescriptor as? ClassDescriptor)
                 ?.constructors?.single()
         val presentValueArguments = psi.parameterList.attributes
-            .flatMapIndexed { index, it ->
+            .mapIndexed { index, it ->
                 // use the name in the attribute if it is explicitly specified, otherwise, fall back to index.
                 val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
-                if (it.value is PsiArrayInitializerMemberValue) {
-                    (it.value as PsiArrayInitializerMemberValue).initializers.map {
-                        nameValuePairToKSAnnotation(name, it)
-                    }
+                val value = it.value
+                val calculatedValue = if (value is PsiArrayInitializerMemberValue) {
+                    // Kotlin compiler do not report nulls in values hence we are dropping there as well
+                    // see ConstantExpressionEvaluator.resolveAnnotationValueArguments
+                    value.initializers.map {
+                        calcValue(it)
+                    }.toTypedArray()
                 } else {
-                    listOf(nameValuePairToKSAnnotation(name, it.value))
+                    it.value
                 }
+                KSValueArgumentJavaImpl.getCached(
+                    name = name?.let(KSNameImpl::getCached),
+                    value = calculatedValue
+                )
             }
         val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
         val argumentsFromDefault = annotationConstructor?.let {
@@ -67,15 +77,14 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         presentValueArguments.plus(argumentsFromDefault)
     }
 
-    private fun nameValuePairToKSAnnotation(name: String?, value: PsiAnnotationMemberValue?): KSValueArgument {
-        return KSValueArgumentJavaImpl.getCached(
-                name?.let(KSNameImpl::getCached),
-                calcValue(value)
-        )
-    }
-
     private fun calcValue(value: PsiAnnotationMemberValue?): Any? {
-        return value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
+        val result = value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
+        return if (result is PsiType) {
+            // return null instead of KSError to resemble the kotlin implementation
+            ResolverImpl.instance.getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
+        } else {
+            result
+        }
     }
 
     override val shortName: KSName by lazy {

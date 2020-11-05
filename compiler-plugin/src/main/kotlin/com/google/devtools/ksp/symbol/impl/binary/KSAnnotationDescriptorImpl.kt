@@ -77,7 +77,7 @@ private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProj
 
 private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     is AnnotationValue -> KSAnnotationDescriptorImpl.getCached(value)
-    is ArrayValue -> value.map { it.toValue() }
+    is ArrayValue -> value.map { it.toValue() }.toTypedArray()
     is EnumValue -> value.first.findKSClassDeclaration()?.declarations?.find {
         it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY && it.simpleName.asString() == value.second.asString()
     }?.let { (it as KSClassDeclaration).asStarProjectedType() }
