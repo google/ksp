@@ -34,10 +34,11 @@ interface Resolver {
     /**
      * Get all symbols with specified annotation.
      *
-     * @param annotationName is the full qualified name of the annotation; using '.' as separator.
+     * @param annotationName is the fully qualified name of the annotation; using '.' as separator.
+     * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.
      * @return Elements annotated with the specified annotation.
      */
-    fun getSymbolsWithAnnotation(annotationName: String): List<KSAnnotated>
+    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean = false): List<KSAnnotated>
 
     /**
      * Find a class in the compilation classpath for the given name.
