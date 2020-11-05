@@ -145,8 +145,12 @@ interface Resolver {
     /**
      * Returns the jvm name of the given function.
      *
+     * The jvm name of a function might depend on the Kotlin Compiler version hence it is not guaranteed to be
+     * compatible between different compiler versions except for the rules outlined in the Java interoperability
+     * documentation: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
+     *
      * Note that this might be different from the name declared in the Kotlin source code in two cases:
-     * a) If the function receives or returns an internal class, its name will be mangled according to
+     * a) If the function receives or returns an inline class, its name will be mangled according to
      * https://kotlinlang.org/docs/reference/inline-classes.html#mangling.
      * b) If the function is declared as internal, it will include a suffix with the module name.
      *
@@ -157,6 +161,10 @@ interface Resolver {
 
     /**
      * Returns the jvm name of the given property accessor.
+     *
+     * The jvm name of an accessor might depend on the Kotlin Compiler version hence it is not guaranteed to be
+     * compatible between different compiler versions except for the rules outlined in the Java interoperability
+     * documentation: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
      *
      * By default, this name will match the name calculated according to
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties.
