@@ -28,6 +28,7 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.lang.jvm.JvmClassKind
 import com.intellij.psi.*
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
@@ -56,14 +57,14 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
                 // use the name in the attribute if it is explicitly specified, otherwise, fall back to index.
                 val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
                 val value = it.value
-                val calculatedValue = if (value is PsiArrayInitializerMemberValue) {
+                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
                     // Kotlin compiler do not report nulls in values hence we are dropping there as well
                     // see ConstantExpressionEvaluator.resolveAnnotationValueArguments
                     value.initializers.map {
                         calcValue(it)
-                    }.toTypedArray()
+                    }
                 } else {
-                    it.value
+                    calcValue(it.value)
                 }
                 KSValueArgumentJavaImpl.getCached(
                     name = name?.let(KSNameImpl::getCached),
@@ -78,12 +79,39 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
     }
 
     private fun calcValue(value: PsiAnnotationMemberValue?): Any? {
-        val result = value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
-        return if (result is PsiType) {
-            // return null instead of KSError to resemble the kotlin implementation
-            ResolverImpl.instance.getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
-        } else {
-            result
+        if (value is PsiAnnotation) {
+            return getCached(value)
+        }
+        val result = when(value) {
+            is PsiReference -> value.resolve()?.let { resolved ->
+                JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) ?: resolved
+            }
+            else -> value?.let { JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value) }
+        }
+        return when(result) {
+            is PsiType -> {
+                ResolverImpl.instance.getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
+            }
+            is PsiLiteralValue -> {
+                result.value
+            }
+            is PsiField -> {
+                val containingClass = result.containingClass
+                if (containingClass?.classKind == JvmClassKind.ENUM) {
+                    // this is an enum entry
+                    containingClass.qualifiedName?.let {
+                        ResolverImpl.instance.getClassDeclarationByName(it)
+                    }?.declarations?.find {
+                        it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY && it.simpleName.asString() == result.name
+                    }?.let { (it as KSClassDeclaration).asStarProjectedType() }
+                        ?.let {
+                            return it
+                        }
+                } else {
+                    null
+                }
+            }
+            else -> result
         }
     }
 

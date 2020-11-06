@@ -47,7 +47,8 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/annotationValue.kt");
     }
 
-    @TestMetadata("annotationWithArrayValue.kt")
+    @TestMetadata("annotationWithArrayValue" +
+            ".kt")
     public void testAnnotationWithArrayValue() throws Exception {
         runTest("testData/api/annotationWithArrayValue.kt");
     }

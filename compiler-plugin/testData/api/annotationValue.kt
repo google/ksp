@@ -27,8 +27,16 @@
 // @Suppress
 // G
 // 31
-// warning1
-// warning 2
+// Str
+// 42
+// Foo
+// File
+// <ERROR TYPE>
+// @Foo
+// @Suppress
+// G
+// 31
+// [warning1, warning 2]
 // END
 // FILE: a.kt
 
@@ -51,7 +59,7 @@ annotation class Bar(
 )
 
 fun Fun() {
-    @Bar("Str", 42, Foo::class, java.io.File::class, Local::class, Foo(17), Suppress("name1", "name2"), RGB.G)
+    @Bar("Str", 40 + 2, Foo::class, java.io.File::class, Local::class, Foo(17), Suppress("name1", "name2"), RGB.G)
     class Local
 }
 
@@ -61,4 +69,13 @@ fun Fun() {
 class C {
 
 }
-
+// FILE: JavaAnnotated.java
+@Bar(argStr = "Str",
+    argInt = 40 + 2,
+    argClsUser = Foo.class,
+    argClsLib = java.io.File.class,
+    argClsLocal = Local.class, // intentional error type
+    argAnnoUser = @Foo(s = 17),
+    argAnnoLib = @Suppress(names = {"name1", "name2"}),
+    argEnum = RGB.G)
+public class JavaAnnotated {}

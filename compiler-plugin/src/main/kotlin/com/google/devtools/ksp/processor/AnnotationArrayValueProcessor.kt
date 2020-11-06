@@ -42,8 +42,7 @@ class AnnotationArrayValueProcessor : AbstractTestProcessor() {
             result.add("${annotation.shortName.asString()} ->")
             annotation.arguments.forEach {
                 val value = it.value
-                // log type of value as well. see issue:#135
-                val key = "${it.name?.asString()}: ${value!!::class.simpleName}"
+                val key = it.name?.asString()
                 if (value is Array<*>) {
                     result.add("$key = [${value.joinToString(", ")}]")
                 } else {

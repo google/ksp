@@ -1,5 +1,3 @@
-import kotlin.reflect.KClass
-
 /*
  * Copyright 2020 Google LLC
  * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
@@ -16,23 +14,22 @@ import kotlin.reflect.KClass
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 // TEST PROCESSOR: AnnotationArrayValueProcessor
 // EXPECTED:
 // KotlinAnnotated
 // KotlinAnnotation ->
-// stringArray: Array = [a, b, null, c]
-// classArray: Array = [Any, List<*>]
+// stringArray = [a, b, null, c]
+// classArray = [Any, List<*>]
 // JavaAnnotation ->
-// stringArray: Array = [x, y, null, z]
-// classArray: Array = [String, Long]
+// stringArray = [x, y, null, z]
+// classArray = [String, Long]
 // JavaAnnotated
 // KotlinAnnotation ->
-// stringArray: Array = [j-a, j-b, null, j-c]
-// classArray: Array = [Object, List<*>]
+// stringArray = [j-a, j-b, null, j-c]
+// classArray = [Object, List<*>]
 // JavaAnnotation ->
-// stringArray: Array = [j-x, j-y, null, j-z]
-// classArray: Array = [Integer, Character]
+// stringArray = [j-x, j-y, null, j-z]
+// classArray = [Integer, Character]
 // END
 // FILE: a.kt
 

@@ -31,10 +31,13 @@ import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
+import com.intellij.openapi.module.ModuleUtil
+import com.intellij.util.containers.toArray
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.resolve.source.getPsi
 
 class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationDescriptor) : KSAnnotation {
     companion object : KSObjectCache<AnnotationDescriptor, KSAnnotationDescriptorImpl>() {
@@ -77,7 +80,9 @@ private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProj
 
 private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     is AnnotationValue -> KSAnnotationDescriptorImpl.getCached(value)
-    is ArrayValue -> value.map { it.toValue() }.toTypedArray()
+    is ArrayValue -> {
+        value.map { it.toValue() }
+    }
     is EnumValue -> value.first.findKSClassDeclaration()?.declarations?.find {
         it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY && it.simpleName.asString() == value.second.asString()
     }?.let { (it as KSClassDeclaration).asStarProjectedType() }
