@@ -116,6 +116,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.mapClasspath { kotlinCompileProvider.get().classpath }
             kspTask.options = options
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir)
+            kspTask.dependsOn(kspConfiguration.buildDependencies)
         }.apply {
             configure {
                 kotlinCompilation.allKotlinSourceSets.forEach { sourceSet -> it.source(sourceSet.kotlin) }
