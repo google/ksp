@@ -37,7 +37,6 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
@@ -282,4 +281,29 @@ internal fun DeclarationDescriptor.findPsi(): PsiElement? {
     // For synthetic members.
     if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
     return (this as? DeclarationDescriptorWithSource)?.source?.getPsi()
+}
+
+/**
+ * @see KSFunctionDeclaration.findOverridee for docs.
+ */
+internal fun FunctionDescriptor.findClosestOverridee(): FunctionDescriptor? {
+    val overriddenDescriptors = this.original.overriddenDescriptors
+    // When there is an intermediate class between the overridden and our function, we might receive
+    // a FAKE_OVERRIDE function which is not desired as we are trying to find the actual
+    // declared method.
+    // First we try to find a non-fake function and if we cannot find, then we check the overridee
+    // of the fake override.
+    overriddenDescriptors.singleOrNull {
+        it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
+    }?.let {
+        // always return the original. otherwise, returned function might have type arguments
+        // substituted when the function is resolved from a `.class` file (does not happen for
+        // functions resolved from kotlin or java source code)
+        return it.original
+    }
+    // if there is no declared function, there might be a fake override and we need to find its
+    // overridee.
+    return overriddenDescriptors.singleOrNull {
+        it.kind == CallableMemberDescriptor.Kind.FAKE_OVERRIDE
+    }?.findClosestOverridee()
 }
