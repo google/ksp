@@ -393,7 +393,7 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20201106/playground-ksp-1.4.10-dev-experimental-20201106.zip
+Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20201110/playground-ksp-1.4.10-dev-experimental-20201110.zip
 
 ### Create a processor of your own
 
@@ -429,7 +429,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201106")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201110")
   }
   ```
 
@@ -484,7 +484,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
 
   ```
   plugins {
-      id("symbol-processing") version "1.4.10-dev-experimental-20201106"
+      id("symbol-processing") version "1.4.10-dev-experimental-20201110"
       kotlin("jvm") 
   }
 
