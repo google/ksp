@@ -21,6 +21,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 
@@ -31,7 +32,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         return result
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val classC = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))!!
         val errorAtTop = classC.declarations.single { it.simpleName.asString() == "errorAtTop" } as KSPropertyDeclaration
         val errorInComponent = classC.declarations.single { it.simpleName.asString() == "errorInComponent" } as KSPropertyDeclaration
@@ -66,6 +67,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         val Cls = resolver.getClassDeclarationByName("Cls")!!
         val type = Cls.superTypes[0].resolve()
         result.add("Cls's super type is Error type: ${type.isError}")
+        return emptyList()
     }
 
     private fun KSType.print(): String {

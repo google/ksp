@@ -29,7 +29,7 @@ open class ReferenceElementProcessor: AbstractTestProcessor() {
     val collector = ReferenceCollector()
     val references = mutableSetOf<KSTypeReference>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
 
         files.forEach {
@@ -49,7 +49,7 @@ open class ReferenceElementProcessor: AbstractTestProcessor() {
         for (i in javaReferences) {
             results.add("KSClassifierReferenceJavaImpl: Qualifier of ${i.element} is ${(i.element as KSClassifierReference).qualifier}")
         }
-
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

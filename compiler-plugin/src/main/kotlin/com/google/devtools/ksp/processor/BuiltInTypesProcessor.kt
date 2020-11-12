@@ -26,7 +26,7 @@ open class BuiltInTypesProcessor : AbstractTestProcessor() {
     val typeCollector = TypeCollectorNoAccessor()
     val types = mutableSetOf<KSType>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
         val ignoredNames = mutableSetOf<String>()
 
@@ -56,6 +56,7 @@ open class BuiltInTypesProcessor : AbstractTestProcessor() {
         val collectedTypes = types.sortedBy { it.toString() }
 
         results.addAll(builtInTypes.zip(collectedTypes).map { (b, c) -> "$b: " + if (b == c) "OK" else "FAIL" })
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

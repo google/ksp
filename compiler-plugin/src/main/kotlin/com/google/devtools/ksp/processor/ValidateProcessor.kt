@@ -2,6 +2,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.validate
 
@@ -17,7 +18,7 @@ class ValidateProcessor : AbstractTestProcessor() {
     }
     override fun toResult(): List<String> = results
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val ErrorInMember = resolver.getClassDeclarationByName("ErrorInMember")!!
         val GoodClass = resolver.getClassDeclarationByName("GoodClass")!!
         val C = resolver.getClassDeclarationByName("C")!!
@@ -27,5 +28,6 @@ class ValidateProcessor : AbstractTestProcessor() {
         validate(GoodClass)
         validate(C)
         validate(BadJavaClass)
+        return emptyList()
     }
 }

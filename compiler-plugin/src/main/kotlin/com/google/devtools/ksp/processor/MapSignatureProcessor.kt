@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 
 class MapSignatureProcessor : AbstractTestProcessor() {
     private val result = mutableListOf<String>()
@@ -28,10 +29,11 @@ class MapSignatureProcessor : AbstractTestProcessor() {
         return result
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val cls = resolver.getClassDeclarationByName("Cls")!!
         result.add(resolver.mapToJvmSignature(cls))
         cls.primaryConstructor?.let { result.add(resolver.mapToJvmSignature(it)) }
         cls.declarations.map { result.add(resolver.mapToJvmSignature(it)) }
+        return emptyList()
     }
 }

@@ -31,8 +31,9 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
         return finalResult
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().map { it.accept(visitor, Unit) }
+        return emptyList()
     }
 
     inner class AllFunctionsVisitor : KSVisitorVoid() {
