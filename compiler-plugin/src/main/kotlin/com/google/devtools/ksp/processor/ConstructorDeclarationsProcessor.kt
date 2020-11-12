@@ -30,7 +30,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         return visitor.toResult()
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().map { it.accept(visitor, Unit) }
         val classNames = visitor.classNames().toList() // copy
         // each class has a cousin in the lib package, visit them as well, make sure
@@ -40,6 +40,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
                 .getClassDeclarationByName("lib.${it.simpleName.asString()}")
                 ?.accept(visitor, Unit)
         }
+        return emptyList()
     }
 
     class ConstructorsVisitor : KSVisitorVoid() {

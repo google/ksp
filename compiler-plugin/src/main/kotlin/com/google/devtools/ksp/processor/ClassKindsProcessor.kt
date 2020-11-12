@@ -26,7 +26,7 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 open class ClassKindsProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         fun KSClassDeclaration.pretty(): String = "${qualifiedName!!.asString()}: $classKind"
         val files = resolver.getAllFiles()
         files.forEach {
@@ -48,6 +48,7 @@ open class ClassKindsProcessor : AbstractTestProcessor() {
         results.add(resolver.getClassDeclarationByName("kotlin.DeprecationLevel.WARNING")!!.pretty())
 
         results.sort()
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

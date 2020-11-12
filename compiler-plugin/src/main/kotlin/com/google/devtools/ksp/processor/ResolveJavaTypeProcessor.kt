@@ -30,10 +30,11 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
         return results
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbol = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))
         assert(symbol?.origin == Origin.JAVA)
         symbol!!.accept(visitor, Unit)
+        return emptyList()
     }
 
     inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>() {

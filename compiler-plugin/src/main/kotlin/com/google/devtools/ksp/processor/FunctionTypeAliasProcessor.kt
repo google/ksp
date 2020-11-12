@@ -29,7 +29,7 @@ open class FunctionTypeAliasProcessor: AbstractTestProcessor() {
     val typeRefCollector = RefCollector()
     val refs = mutableSetOf<KSTypeReference>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
 
         files.forEach {
@@ -43,6 +43,7 @@ open class FunctionTypeAliasProcessor: AbstractTestProcessor() {
                 results.add("$i ?= $j : ${i.isAssignableFrom(j)} / ${i == j}")
             }
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

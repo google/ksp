@@ -31,7 +31,7 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
         return finalResult
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         var function: KSFunctionDeclaration? = null
         var type: KSType? = null
         resolver.getAllFiles().forEach {
@@ -58,5 +58,6 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
                 }
             }
         }
+        return emptyList()
     }
 }

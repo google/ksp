@@ -2,6 +2,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
 class ImplicitPropertyAccessorProcessor : AbstractTestProcessor() {
@@ -11,7 +12,7 @@ class ImplicitPropertyAccessorProcessor : AbstractTestProcessor() {
         return result
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val foo = resolver.getClassDeclarationByName("Foo")!!
         foo.declarations.filterIsInstance<KSPropertyDeclaration>().forEach { prop ->
             result.add(prop.getter?.returnType.toString())
@@ -20,5 +21,6 @@ class ImplicitPropertyAccessorProcessor : AbstractTestProcessor() {
                 result.add(it.type.toString())
             }
         }
+        return emptyList()
     }
 }

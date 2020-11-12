@@ -26,7 +26,7 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
     val typeCollector = TypeCollectorNoAccessor()
     val types = mutableListOf<KSType>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
 
         files.forEach {
@@ -50,6 +50,7 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
                 assert(i == j)
             }
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

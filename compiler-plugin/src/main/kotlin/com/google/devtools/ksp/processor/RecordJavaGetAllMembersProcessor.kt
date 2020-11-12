@@ -31,7 +31,7 @@ class RecordJavaGetAllMembersProcessor : AbstractTestProcessor() {
         return finalResult
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().forEach {
             if (it.fileName == "A.kt") {
                 val c = it.declarations.single {
@@ -50,5 +50,6 @@ class RecordJavaGetAllMembersProcessor : AbstractTestProcessor() {
                 }
             }
         }
+        return emptyList()
     }
 }
