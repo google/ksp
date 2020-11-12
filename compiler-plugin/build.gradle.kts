@@ -48,7 +48,7 @@ dependencies {
 
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:1.4.10")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
     testImplementation("junit:junit:$junitVersion")
@@ -126,4 +126,5 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/tests-common/")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
+    mavenLocal()
 }

@@ -14,6 +14,7 @@ if (!extra.has("kspVersion")) {
 subprojects {
     repositories {
         mavenCentral()
+        mavenLocal()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
