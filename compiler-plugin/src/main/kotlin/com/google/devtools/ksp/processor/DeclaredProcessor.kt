@@ -2,6 +2,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 
 class DeclaredProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
@@ -9,7 +10,7 @@ class DeclaredProcessor : AbstractTestProcessor() {
         return result
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val sub = resolver.getClassDeclarationByName("Sub")!!
         val base = resolver.getClassDeclarationByName("Base")!!
         val javasource = resolver.getClassDeclarationByName("JavaSource")!!
@@ -19,5 +20,6 @@ class DeclaredProcessor : AbstractTestProcessor() {
         base.declarations.forEach { result.add(it.toString()) }
         result.add("JavaSource class declared functions:")
         javasource.declarations.forEach { result.add(it.toString()) }
+        return emptyList()
     }
 }

@@ -26,7 +26,7 @@ open class MakeNullableProcessor: AbstractTestProcessor() {
     val typeCollector = TypeCollector()
     val types = mutableSetOf<KSType>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
         val ignoredNames = mutableSetOf<String>()
 
@@ -41,6 +41,7 @@ open class MakeNullableProcessor: AbstractTestProcessor() {
                 results.add("$i ?= $j : ${i.isAssignableFrom(j)}")
             }
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

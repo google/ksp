@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSVisitorVoid
@@ -27,8 +28,9 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = CompanionVisitor()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().map { it.accept(CompanionVisitor(), Unit) }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

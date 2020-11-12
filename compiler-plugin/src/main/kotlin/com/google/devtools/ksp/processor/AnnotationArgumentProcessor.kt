@@ -21,6 +21,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSValueArgument
@@ -30,7 +31,7 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = ArgumentVisitor()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getSymbolsWithAnnotation("Bar", true).forEach {
             val annotation = it.annotations.single()
             annotation.arguments.map { it.accept(visitor, Unit) }
@@ -46,6 +47,7 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
                 results.add(it.toString())
             }
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

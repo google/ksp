@@ -19,10 +19,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class DeclarationPackageNameProcessor : AbstractTestProcessor() {
@@ -32,9 +29,10 @@ class DeclarationPackageNameProcessor : AbstractTestProcessor() {
         return result
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val visitor = NameCollector()
         resolver.getAllFiles().map { it.accept(visitor, result) }
+        return emptyList()
     }
 }
 

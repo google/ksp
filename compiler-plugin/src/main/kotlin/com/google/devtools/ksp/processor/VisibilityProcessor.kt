@@ -21,6 +21,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 
@@ -31,7 +32,7 @@ class VisibilityProcessor : AbstractTestProcessor() {
         return results
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbolA = resolver.getSymbolsWithAnnotation("TestA").single() as KSClassDeclaration
         val symbolB = resolver.getSymbolsWithAnnotation("TestB").single() as KSClassDeclaration
         val symbolD = resolver.getSymbolsWithAnnotation("TestD").single() as KSClassDeclaration
@@ -41,5 +42,6 @@ class VisibilityProcessor : AbstractTestProcessor() {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                     "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
         }.map { results.add(it) }
+        return emptyList()
     }
 }

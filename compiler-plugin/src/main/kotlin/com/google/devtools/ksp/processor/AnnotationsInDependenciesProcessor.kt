@@ -9,7 +9,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult() = results
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         // NOTE: There are two cases this test ignores.
         // a) For property annotations with target, they get added to the property getter/setter whereas it would show
         //    on the property if it was in kotlin source. This test ignores it by using the property name as key for
@@ -21,6 +21,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
         addToResults(resolver, "lib.KotlinClass")
         addToResults(resolver, "main.DataClass")
         addToResults(resolver, "lib.DataClass")
+        return emptyList()
     }
 
     private fun addToResults(resolver: Resolver, qName: String) {
