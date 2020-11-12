@@ -77,7 +77,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         return descriptor?.let {
             it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
                 .toList()
-                .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                .filter { (it as FunctionDescriptor).visibility.delegate != Visibilities.InvisibleFake }
                 .plus(it.constructors)
                 .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
         } ?: emptyList()
@@ -87,7 +87,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         return descriptor?.let {
             it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES)
                     .toList()
-                    .filter { (it as PropertyDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                    .filter { (it as PropertyDescriptor).visibility.delegate != Visibilities.InvisibleFake }
                     .map{ (it as PropertyDescriptor).toKSPropertyDeclaration() }
         } ?: emptyList()
     }

@@ -53,13 +53,13 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
-            .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+            .filter { (it as FunctionDescriptor).visibility.delegate != Visibilities.InvisibleFake}
             .map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
     }
 
     override fun getAllProperties(): List<KSPropertyDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
-                .filter { (it as PropertyDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                .filter { (it as PropertyDescriptor).visibility.delegate != Visibilities.InvisibleFake}
                 .map { KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor) }
     }
 
@@ -83,8 +83,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         listOf(descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(), descriptor.staticScope.getDescriptorsFiltered()).flatten()
             .filter {
                 it is MemberDescriptor
-                        && it.visibility != Visibilities.INHERITED
-                        && it.visibility != Visibilities.INVISIBLE_FAKE
+                        && it.visibility.delegate != Visibilities.Inherited
+                        && it.visibility.delegate != Visibilities.InvisibleFake
             }
             .map {
                 when (it) {

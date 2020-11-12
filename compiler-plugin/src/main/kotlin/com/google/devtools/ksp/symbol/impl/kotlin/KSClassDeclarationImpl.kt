@@ -50,13 +50,13 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
-            .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+            .filter { (it as FunctionDescriptor).visibility.delegate != Visibilities.InvisibleFake }
             .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
     }
 
     override fun getAllProperties(): List<KSPropertyDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
-                .filter { (it as PropertyDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                .filter { (it as PropertyDescriptor).visibility.delegate != Visibilities.InvisibleFake }
                 .map { (it as PropertyDescriptor).toKSPropertyDeclaration() }
     }
 
