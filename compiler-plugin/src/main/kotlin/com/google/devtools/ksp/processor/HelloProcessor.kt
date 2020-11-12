@@ -19,19 +19,17 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.symbol.*
 
 class HelloProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = HelloVisitor()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation("test.Anno")
         results.add(symbols.size.toString())
         symbols.map { it.accept(visitor, Unit) }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

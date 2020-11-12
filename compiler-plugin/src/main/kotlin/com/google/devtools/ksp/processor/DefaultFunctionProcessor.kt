@@ -21,6 +21,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
@@ -28,7 +29,7 @@ class DefaultFunctionProcessor : AbstractTestProcessor() {
 
     private val result = mutableListOf<String>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val ktInterface = resolver.getClassDeclarationByName(resolver.getKSNameFromString("KTInterface")) as KSClassDeclaration
         val javaInterface = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C")) as KSClassDeclaration
         result.addAll(checkFunctions(ktInterface, listOf("funLiteral", "funWithBody", "emptyFun")))
@@ -55,6 +56,7 @@ class DefaultFunctionProcessor : AbstractTestProcessor() {
         result.add("${abstractProperty.simpleName.asString()}: isAbstract: ${abstractProperty.isAbstract()}: isMutable: ${abstractProperty.isMutable}")
         val aProperty = abstractClass.declarations.single { it.simpleName.asString() == "a" } as KSPropertyDeclaration
         result.add("${aProperty.simpleName.asString()}: ${aProperty.isAbstract()}")
+        return emptyList()
     }
 
     private fun checkFunctions(classDec: KSClassDeclaration, funList: List<String>): List<String> {

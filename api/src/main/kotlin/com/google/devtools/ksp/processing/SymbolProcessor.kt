@@ -18,6 +18,8 @@
 
 package com.google.devtools.ksp.processing
 
+import com.google.devtools.ksp.symbol.KSAnnotated
+
 /**
  * [SymbolProcessor] is the interface used by plugins to integrate into Kotlin Symbol Processing.
  */
@@ -36,7 +38,7 @@ interface SymbolProcessor {
      *
      * @param resolver provides [SymbolProcessor] with access to compiler details such as Symbols.
      */
-    fun process(resolver: Resolver)
+    fun process(resolver: Resolver): List<KSAnnotated>
 
     /**
      * Called by Kotlin Symbol Processing to finalize the processing of a compilation.

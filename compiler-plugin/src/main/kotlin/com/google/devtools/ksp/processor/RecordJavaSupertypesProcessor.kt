@@ -31,7 +31,7 @@ class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
         return finalResult
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val types = mutableSetOf<KSType>()
         resolver.getAllFiles().forEach {
             it.accept(TypeCollectorNoAccessor(), types)
@@ -47,5 +47,6 @@ class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
                 }
             }
         }
+        return emptyList()
     }
 }

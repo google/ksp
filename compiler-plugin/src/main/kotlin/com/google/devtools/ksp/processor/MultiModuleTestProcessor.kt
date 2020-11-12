@@ -28,7 +28,7 @@ class MultiModuleTestProcessor : AbstractTestProcessor() {
         return results
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
         val classCollector = object : BaseVisitor() {
@@ -44,6 +44,7 @@ class MultiModuleTestProcessor : AbstractTestProcessor() {
         }
         target?.accept(classCollector, Unit)
         results.addAll(classes.map { it.toSignature() }.sorted())
+        return emptyList()
     }
 
     private fun KSClassDeclaration.toSignature(): String {

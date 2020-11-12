@@ -29,7 +29,7 @@ open class TypeParameterReferenceProcessor: AbstractTestProcessor() {
     val collector = ReferenceCollector()
     val references = mutableSetOf<KSTypeReference>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
 
         files.forEach {
@@ -42,6 +42,7 @@ open class TypeParameterReferenceProcessor: AbstractTestProcessor() {
             val r = i.resolve()
             results.add("${r.declaration.qualifiedName?.asString()}: ${r.isMarkedNullable}")
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

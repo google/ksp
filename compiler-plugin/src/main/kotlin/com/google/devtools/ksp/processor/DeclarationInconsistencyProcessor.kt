@@ -20,12 +20,13 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 class DeclarationInconsistencyProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val numberClass = resolver.getClassDeclarationByName("kotlin.Number")!!
         val serializable = numberClass.superTypes.first {
             it.resolve().declaration.qualifiedName?.asString() == "java.io.Serializable"
@@ -39,6 +40,7 @@ class DeclarationInconsistencyProcessor : AbstractTestProcessor() {
         serizableDirect.getAllFunctions().forEach {
             results.add(it.simpleName.asString())
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

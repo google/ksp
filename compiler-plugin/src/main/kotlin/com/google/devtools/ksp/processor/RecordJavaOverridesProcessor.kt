@@ -31,7 +31,7 @@ class RecordJavaOverridesProcessor : AbstractTestProcessor() {
         return finalResult
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         var A_f1: KSFunctionDeclaration? = null
         var A_f2: KSFunctionDeclaration? = null
         var C_f1: KSFunctionDeclaration? = null
@@ -67,5 +67,6 @@ class RecordJavaOverridesProcessor : AbstractTestProcessor() {
                 }
             }
         }
+        return emptyList()
     }
 }

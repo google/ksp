@@ -25,7 +25,7 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 open class TypeComposureProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
         val classes = mutableSetOf<KSClassDeclaration>()
         val references = mutableSetOf<KSTypeReference>()
@@ -74,6 +74,7 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
                 results.add("$i ?= $j : ${i.isAssignableFrom(j)}")
             }
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

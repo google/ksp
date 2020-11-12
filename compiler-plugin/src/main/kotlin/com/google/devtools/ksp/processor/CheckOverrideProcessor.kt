@@ -21,10 +21,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.*
 
 class CheckOverrideProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -33,7 +30,7 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         return results
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         fun checkOverride(overrider: KSDeclaration, overridee: KSDeclaration) {
             results.add("${overrider.qualifiedName?.asString()} overrides ${overridee.qualifiedName?.asString()}: ${resolver.overrides(overrider, overridee)}")
         }
@@ -84,5 +81,6 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val diffGetX = JavaDifferentReturnTypes.getDeclaredFunctions()
             .first { it.simpleName.asString() == "foo" }
         checkOverride(diffGetX, fooFunJava)
+        return emptyList()
     }
 }
