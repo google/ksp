@@ -23,6 +23,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
@@ -35,7 +36,7 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
 
     private fun nameAndOrigin(declaration: KSDeclaration) = "${declaration.simpleName.asString()}: ${declaration.origin}"
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val ClsClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!
         result.add("${ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"}; origin: ${ClsClass.primaryConstructor?.origin}")
         result.add(ClsClass.getConstructors().map { it.toString() }.joinToString(","))
@@ -66,5 +67,6 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         result.add(ClassWithoutImplicitPrimaryConstructor.getConstructors().map { it.toString() }.joinToString(","))
         val ImplictConstructorJava = resolver.getClassDeclarationByName("ImplictConstructorJava")!!
         result.add(ImplictConstructorJava.getConstructors().map { it.toString() }.joinToString(","))
+        return emptyList()
     }
 }

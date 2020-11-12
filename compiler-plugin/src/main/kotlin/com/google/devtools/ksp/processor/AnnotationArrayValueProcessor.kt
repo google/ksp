@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 class AnnotationArrayValueProcessor : AbstractTestProcessor() {
@@ -29,11 +30,12 @@ class AnnotationArrayValueProcessor : AbstractTestProcessor() {
         return result
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val ktClass = resolver.getClassDeclarationByName("KotlinAnnotated")!!
         logAnnotations(ktClass)
         val javaClass = resolver.getClassDeclarationByName("JavaAnnotated")!!
         logAnnotations(javaClass)
+        return emptyList()
     }
 
     private fun logAnnotations(classDeclaration: KSClassDeclaration) {

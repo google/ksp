@@ -32,7 +32,7 @@ class RecordJavaProcessor : AbstractTestProcessor() {
         return finalResult
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().forEach {
             it.declarations.forEach {
                 it.validate()
@@ -46,5 +46,6 @@ class RecordJavaProcessor : AbstractTestProcessor() {
                 }
             }
         }
+        return emptyList()
     }
 }

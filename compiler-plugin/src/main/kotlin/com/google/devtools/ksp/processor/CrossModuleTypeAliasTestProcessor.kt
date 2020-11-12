@@ -28,7 +28,7 @@ class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
         return results
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
         val classCollector = object : BaseVisitor() {
@@ -43,5 +43,6 @@ class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
             }
         }
         target?.accept(classCollector, Unit)
+        return emptyList()
     }
 }

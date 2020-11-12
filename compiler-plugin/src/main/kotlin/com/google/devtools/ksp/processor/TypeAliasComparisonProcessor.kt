@@ -27,7 +27,7 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
     val typeRefCollector = TypeRefCollector()
     val refs = mutableSetOf<KSTypeReference>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
 
         files.forEach {
@@ -46,6 +46,7 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
                 results.add("$i = $j : ${i.isAssignableFrom(j)}")
             }
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

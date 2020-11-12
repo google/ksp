@@ -29,7 +29,7 @@ open class PlatformDeclarationProcessor: AbstractTestProcessor() {
     val collector = EverythingVisitor()
     val declarations = mutableListOf<KSDeclaration>()
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getAllFiles()
 
         files.forEach {
@@ -46,6 +46,7 @@ open class PlatformDeclarationProcessor: AbstractTestProcessor() {
             r.add(it.findExpects().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
             results.add(r.map { it.toString() }.joinToString(" : "))
         }
+        return emptyList()
     }
 
     override fun toResult(): List<String> {

@@ -3,12 +3,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSPropertySetter
-import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 @KspExperimental
@@ -17,7 +12,7 @@ class MangledNamesProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult() = results
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val mangleSourceNames = mutableMapOf<String, String>()
         resolver.getAllFiles().forEach {
             it.accept(MangledNamesVisitor(resolver), mangleSourceNames)
@@ -37,6 +32,7 @@ class MangledNamesProcessor : AbstractTestProcessor() {
                 "$decl -> $name"
             }
         )
+        return emptyList()
     }
 
     private class MangledNamesVisitor(
