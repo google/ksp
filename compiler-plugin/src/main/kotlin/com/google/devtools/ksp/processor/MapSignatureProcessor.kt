@@ -18,9 +18,11 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 
+@KspExperimental
 class MapSignatureProcessor : AbstractTestProcessor() {
     private val result = mutableListOf<String>()
 

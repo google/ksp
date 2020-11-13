@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processing.impl
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isVisibleFrom
@@ -232,6 +233,7 @@ class ResolverImpl(
         return KSTypeReferenceSyntheticImpl.getCached(type)
     }
 
+    @KspExperimental
     override fun mapToJvmSignature(declaration: KSDeclaration): String {
         return when (declaration) {
             is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor } ?: ""
@@ -485,6 +487,7 @@ class ResolverImpl(
         }
     }
 
+    @KspExperimental
     override fun getJvmName(accessor: KSPropertyAccessor) :String {
         val descriptor = resolvePropertyAccessorDeclaration(accessor)
 
@@ -494,6 +497,7 @@ class ResolverImpl(
         } ?: error("Cannot find descriptor for $accessor")
     }
 
+    @KspExperimental
     override fun getJvmName(declaration: KSFunctionDeclaration) :String {
         // function names might be mangled if they receive inline class parameters or they are internal
         val descriptor = resolveFunctionDeclaration(declaration)

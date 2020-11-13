@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processing
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.symbol.*
 
 /**
@@ -74,6 +75,7 @@ interface Resolver {
     /**
      * map a declaration to jvm signature.
      */
+    @KspExperimental
     fun mapToJvmSignature(declaration: KSDeclaration): String
 
     /**
@@ -159,6 +161,7 @@ interface Resolver {
      * NOTE: As inline classes are an experimental feature, the result of this function might change based on the
      * kotlin version used in the project.
      */
+    @KspExperimental
     fun getJvmName(declaration: KSFunctionDeclaration): String
 
     /**
@@ -181,5 +184,6 @@ interface Resolver {
      * kotlin version used in the project.
      * see: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties
      */
+    @KspExperimental
     fun getJvmName(accessor: KSPropertyAccessor): String
 }
