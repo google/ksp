@@ -147,6 +147,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/makeNullable.kt");
     }
 
+    @TestMetadata("mangledNames.kt")
+    public void testMangledNames() throws Exception {
+        runTest("testData/api/mangledNames.kt");
+    }
+
     @TestMetadata(("multipleModules.kt"))
     public void testMultipleModules() throws Exception {
         runTest("testData/api/multipleModules.kt");

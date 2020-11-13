@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processing.impl
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isVisibleFrom
@@ -31,7 +32,6 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
-import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -43,6 +43,9 @@ import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
@@ -56,7 +59,6 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
-import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
@@ -156,8 +158,6 @@ class ResolverImpl(
             }
         }
         ksFiles.map { it.accept(visitor, Unit) }
-
-
     }
 
     override fun getNewFiles(): List<KSFile> {
@@ -263,6 +263,7 @@ class ResolverImpl(
         return KSTypeReferenceSyntheticImpl.getCached(type)
     }
 
+    @KspExperimental
     override fun mapToJvmSignature(declaration: KSDeclaration): String {
         return when (declaration) {
             is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor } ?: ""
@@ -376,6 +377,16 @@ class ResolverImpl(
             is KSPropertyDeclarationJavaImpl -> resolveJavaDeclaration(property.psi)
             else -> throw IllegalStateException("unexpected class: ${property.javaClass}")
         } as PropertyDescriptor?
+    }
+
+    fun resolvePropertyAccessorDeclaration(accessor: KSPropertyAccessor): PropertyAccessorDescriptor? {
+        return when (accessor) {
+            is KSPropertyAccessorDescriptorImpl -> accessor.descriptor
+            is KSPropertyAccessorImpl -> resolveDeclaration(accessor.ktPropertyAccessor)
+            is KSPropertySetterSyntheticImpl -> resolvePropertyDeclaration(accessor.receiver)?.setter
+            is KSPropertyGetterSyntheticImpl -> resolvePropertyDeclaration(accessor.receiver)?.getter
+            else -> throw IllegalStateException("unexpected class: ${accessor.javaClass}")
+        } as PropertyAccessorDescriptor?
     }
 
     fun resolveJavaType(psi: PsiType): KotlinType {
@@ -504,6 +515,26 @@ class ResolverImpl(
             val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(declaration)
             bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope)
         }
+    }
+
+    @KspExperimental
+    override fun getJvmName(accessor: KSPropertyAccessor) :String {
+        val descriptor = resolvePropertyAccessorDeclaration(accessor)
+
+        return descriptor?.let {
+            // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
+            typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        } ?: error("Cannot find descriptor for $accessor")
+    }
+
+    @KspExperimental
+    override fun getJvmName(declaration: KSFunctionDeclaration) :String {
+        // function names might be mangled if they receive inline class parameters or they are internal
+        val descriptor = resolveFunctionDeclaration(declaration)
+        return descriptor?.let {
+            // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
+            typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        } ?: error("Cannot find descriptor for $declaration")
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
