@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processing
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.symbol.*
 
 /**
@@ -75,6 +76,7 @@ interface Resolver {
     /**
      * map a declaration to jvm signature.
      */
+    @KspExperimental
     fun mapToJvmSignature(declaration: KSDeclaration): String
 
     /**
@@ -142,4 +144,47 @@ interface Resolver {
         function: KSFunctionDeclaration,
         containing: KSType
     ): KSFunction
+
+    /**
+     * Returns the jvm name of the given function.
+     *
+     * The jvm name of a function might depend on the Kotlin Compiler version hence it is not guaranteed to be
+     * compatible between different compiler versions except for the rules outlined in the Java interoperability
+     * documentation: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
+     *
+     * If the [declaration] is annotated with [JvmName], that name will be returned from this function.
+     *
+     * Note that this might be different from the name declared in the Kotlin source code in two cases:
+     * a) If the function receives or returns an inline class, its name will be mangled according to
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling.
+     * b) If the function is declared as internal, it will include a suffix with the module name.
+     *
+     * NOTE: As inline classes are an experimental feature, the result of this function might change based on the
+     * kotlin version used in the project.
+     */
+    @KspExperimental
+    fun getJvmName(declaration: KSFunctionDeclaration): String
+
+    /**
+     * Returns the jvm name of the given property accessor.
+     *
+     * The jvm name of an accessor might depend on the Kotlin Compiler version hence it is not guaranteed to be
+     * compatible between different compiler versions except for the rules outlined in the Java interoperability
+     * documentation: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
+     *
+     * If the [accessor] is annotated with [JvmName], that name will be returned from this function.
+     *
+     * By default, this name will match the name calculated according to
+     * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties.
+     * Note that the result of this function might be different from that name in two cases:
+     * a) If the property's type is an internal class, accessor's name will be mangled according to
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling.
+     * b) If the function is declared as internal, it will include a suffix with the module name.
+     *
+     * NOTE: As inline classes are an experimental feature, the result of this function might change based on the
+     * kotlin version used in the project.
+     * see: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties
+     */
+    @KspExperimental
+    fun getJvmName(accessor: KSPropertyAccessor): String
 }
