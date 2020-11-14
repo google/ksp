@@ -37,8 +37,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
-import org.jetbrains.kotlin.incremental.isJavaFile
-import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -53,18 +51,26 @@ class KotlinSymbolProcessingExtension(
     val testProcessor: AbstractTestProcessor? = null
 ) : AbstractKotlinSymbolProcessingExtension(options, logger, testProcessor != null) {
     override fun loadProcessors(): List<SymbolProcessor> {
-        return if (testProcessor != null) {
-            listOf(testProcessor)
-        } else {
-            val processingClasspath = options.processingClasspath
-            val classLoader = URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
-            ServiceLoaderLite.loadImplementations(SymbolProcessor::class.java, classLoader)
+        if (!initialized) {
+            processors = if (testProcessor != null) {
+                listOf(testProcessor)
+            } else {
+                val processingClasspath = options.processingClasspath
+                val classLoader = URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
+                ServiceLoaderLite.loadImplementations(SymbolProcessor::class.java, classLoader)
+            }
         }
+        return processors
     }
 }
 
 abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, val logger: KSPLogger, val testMode: Boolean) :
     AnalysisHandlerExtension {
+    var initialized = false
+    var finished = false
+    val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
+    lateinit var processors: List<SymbolProcessor>
+
     override fun doAnalysis(
         project: Project,
         module: ModuleDescriptor,
@@ -102,14 +108,29 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         )
 
         val processors = loadProcessors()
-        processors.forEach {
-            it.init(options.processingOptions, KotlinVersion.CURRENT, codeGen, logger)
+        if (!initialized) {
+            processors.forEach {
+                it.init(options.processingOptions, KotlinVersion.CURRENT, codeGen, logger)
+                deferredSymbols[it] = mutableListOf()
+            }
+            initialized = true
         }
         processors.forEach {
-            it.process(resolver)
+            deferredSymbols[it] = it.process(resolver)
+            if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
+                deferredSymbols.remove(it)
+            }
         }
-        processors.forEach {
-            it.finish()
+        if (deferredSymbols.isEmpty()) {
+            finished = true
+        }
+        if (finished) {
+            processors.forEach {
+                it.finish()
+            }
+            if (deferredSymbols.isNotEmpty()) {
+                deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
+            }
         }
 
         KSObjectCacheManager.clear()
@@ -127,7 +148,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         bindingTrace: BindingTrace,
         files: Collection<KtFile>
     ): AnalysisResult? {
-        return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+        return if (finished) {
+            AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+        } else {
+            AnalysisResult.RetryWithAdditionalRoots(BindingContext.EMPTY, module, listOf(options.javaOutputDir), listOf(options.kotlinOutputDir))
+        }
     }
 
     private var annotationProcessingComplete = false
