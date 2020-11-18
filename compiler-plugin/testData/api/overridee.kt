@@ -51,6 +51,18 @@
 // Subject.openGrandBaseFun() -> GrandBase.openGrandBaseFun()
 // Subject.overriddenAbstractGrandBaseFun() -> Base.overriddenAbstractGrandBaseFun()
 // Subject.overriddenGrandBaseFun() -> Base.overriddenGrandBaseFun()
+// ConflictingSubject1:
+// ConflictingSubject1.absFoo() -> MyInterface.absFoo()
+// ConflictingSubject2:
+// ConflictingSubject2.absFoo() -> MyAbstract.absFoo()
+// ConflictingSubject3:
+// ConflictingSubject3.absFoo() -> MyInterface.absFoo()
+// ConflictingSubject4:
+// ConflictingSubject4.absFoo() -> MyInterface2.absFoo()
+// OverrideOrder1:
+// OverrideOrder1.foo() -> GrandBaseInterface2.foo()
+// OverrideOrder2:
+// OverrideOrder2.foo() -> GrandBaseInterface1.foo()
 // END
 // MODULE: lib
 // FILE: lib.kt
@@ -115,6 +127,58 @@ abstract class Subject: Base<String>() {
         fun companionMethod(): String =TODO()
     }
 }
+
+// FILE: conflictingOverrides.kt
+interface MyInterface {
+    fun absFoo(): Unit
+}
+
+interface MyInterface2 {
+    fun absFoo(): Unit
+}
+
+abstract class MyAbstract: MyInterface {
+    override fun absFoo(): Unit {val a = 1}
+}
+
+class ConflictingSubject1: MyInterface, MyAbstract() {
+    override fun absFoo(): Unit = TODO()
+}
+
+class ConflictingSubject2: MyAbstract(), MyInterface {
+    override fun absFoo(): Unit = TODO()
+}
+
+class ConflictingSubject3: MyInterface, MyInterface2 {
+    override fun absFoo(): Unit = TODO()
+}
+
+class ConflictingSubject4: MyInterface2, MyInterface {
+    override fun absFoo(): Unit = TODO()
+}
+
+// FILE: overrideOrder.kt
+interface GrandBaseInterface1 {
+    fun foo(): Unit
+}
+
+interface GrandBaseInterface2 {
+    fun foo(): Unit
+}
+
+interface BaseInterface1 : GrandBaseInterface1 {
+}
+
+interface BaseInterface2 : GrandBaseInterface2 {
+}
+
+class OverrideOrder1 : BaseInterface1, GrandBaseInterface2 {
+    override fun foo() = TODO()
+}
+class OverrideOrder2 : BaseInterface2, GrandBaseInterface1 {
+    override fun foo() = TODO()
+}
+
 // FILE: JavaSubject.java
 public class JavaSubject {
     static abstract class GrandBase {

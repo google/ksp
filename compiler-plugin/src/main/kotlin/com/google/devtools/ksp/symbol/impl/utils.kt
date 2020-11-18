@@ -287,23 +287,27 @@ internal fun DeclarationDescriptor.findPsi(): PsiElement? {
  * @see KSFunctionDeclaration.findOverridee for docs.
  */
 internal fun FunctionDescriptor.findClosestOverridee(): FunctionDescriptor? {
-    val overriddenDescriptors = this.original.overriddenDescriptors
     // When there is an intermediate class between the overridden and our function, we might receive
     // a FAKE_OVERRIDE function which is not desired as we are trying to find the actual
     // declared method.
-    // First we try to find a non-fake function and if we cannot find, then we check the overridee
-    // of the fake override.
-    overriddenDescriptors.singleOrNull {
-        it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
-    }?.let {
-        // always return the original. otherwise, returned function might have type arguments
-        // substituted when the function is resolved from a `.class` file (does not happen for
-        // functions resolved from kotlin or java source code)
-        return it.original
+
+    // we also want to return the closes function declaration. That is either the closest
+    // class / interface method OR in case of equal distance (e.g. diamon dinheritance), pick the
+    // one declared first in the code.
+
+    val queue = ArrayDeque<FunctionDescriptor>()
+    queue.add(this)
+
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+        val overriddenDescriptors = current.original.overriddenDescriptors
+        overriddenDescriptors.firstOrNull {
+            it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
+        }?.let {
+            return it.original
+        }
+        // if all methods are fake, add them to the queue
+        queue.addAll(overriddenDescriptors)
     }
-    // if there is no declared function, there might be a fake override and we need to find its
-    // overridee.
-    return overriddenDescriptors.singleOrNull {
-        it.kind == CallableMemberDescriptor.Kind.FAKE_OVERRIDE
-    }?.findClosestOverridee()
+    return null
 }

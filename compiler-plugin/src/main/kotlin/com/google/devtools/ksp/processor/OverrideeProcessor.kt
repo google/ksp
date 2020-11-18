@@ -30,9 +30,15 @@ class OverrideeProcessor: AbstractTestProcessor() {
     override fun toResult() = results
 
     override fun process(resolver: Resolver) {
-        logSubject(resolver, "Subject");
-        logSubject(resolver, "JavaSubject.Subject");
-        logSubject(resolver, "lib.Subject");
+        logSubject(resolver, "Subject")
+        logSubject(resolver, "JavaSubject.Subject")
+        logSubject(resolver, "lib.Subject")
+        logSubject(resolver, "ConflictingSubject1")
+        logSubject(resolver, "ConflictingSubject2")
+        logSubject(resolver, "ConflictingSubject3")
+        logSubject(resolver, "ConflictingSubject4")
+        logSubject(resolver, "OverrideOrder1")
+        logSubject(resolver, "OverrideOrder2")
     }
 
     private fun logSubject(resolver: Resolver, qName:String) {
@@ -72,4 +78,22 @@ class OverrideeProcessor: AbstractTestProcessor() {
         // ignore these methods as we receive syntetics of it from compiled code
         private val IGNORED_METHOD_NAMES = listOf("equals", "hashCode", "toString")
     }
+}
+
+interface MyInterface {
+    fun openFoo(): Int { return 1}
+    fun absFoo(): Unit
+}
+
+interface MyInterface2 {
+    fun absFoo(): Unit
+}
+
+abstract class MyAbstract: MyInterface {
+    override fun absFoo(): Unit {val a = 1}
+    override fun openFoo(): Int { return 2 }
+}
+
+class Subject2: MyInterface, MyAbstract() {
+    override fun absFoo(): Unit = TODO()
 }
