@@ -23,11 +23,13 @@ class ValidateProcessor : AbstractTestProcessor() {
         val GoodClass = resolver.getClassDeclarationByName("GoodClass")!!
         val C = resolver.getClassDeclarationByName("C")!!
         val BadJavaClass = resolver.getClassDeclarationByName("BadJavaClass")!!
+        val ErrorAnnotationType = resolver.getClassDeclarationByName("ErrorAnnotationType")!!
         validate(ErrorInMember)
         ErrorInMember.declarations.map { validate(it) }
         validate(GoodClass)
         validate(C)
         validate(BadJavaClass)
+        validate(ErrorAnnotationType)
         return emptyList()
     }
 }

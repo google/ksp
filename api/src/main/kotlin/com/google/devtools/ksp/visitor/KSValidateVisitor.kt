@@ -3,77 +3,88 @@ package com.google.devtools.ksp.visitor
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 
-class KSValidateVisitor(private val predicate: (KSNode, KSNode) -> Boolean) : KSDefaultVisitor<Unit, Boolean>() {
-    private fun validateDeclarations(declarationContainer: KSDeclarationContainer): Boolean {
-        return !declarationContainer.declarations.any { predicate(declarationContainer, it) && !it.accept(this, Unit) }
-    }
-
-    private fun validateTypeParameters(declaration: KSDeclaration): Boolean {
-        return !declaration.typeParameters.any { predicate(declaration, it) && !it.accept(this, Unit) }
-    }
-
+class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : KSDefaultVisitor<KSNode?, Boolean>() {
     private fun validateType(type: KSType): Boolean {
-        return !type.isError && !type.arguments.any { it.type?.accept(this, Unit) == false }
+        return !type.isError && !type.arguments.any { it.type?.accept(this, null) == false }
     }
 
-    override fun defaultHandler(node: KSNode, data: Unit): Boolean {
-        throw IllegalStateException("unhandled validation condition, $ExceptionMessage")
+    override fun defaultHandler(node: KSNode, data: KSNode?): Boolean {
+        return true
     }
 
-    override fun visitTypeReference(typeReference: KSTypeReference, data: Unit): Boolean {
+    override fun visitDeclaration(declaration: KSDeclaration, data: KSNode?): Boolean {
+        if (!predicate(data, declaration)) {
+            return true
+        }
+        if (declaration.typeParameters.any { !it.accept(this, declaration) }) {
+            return false
+        }
+        return this.visitAnnotated(declaration, data)
+    }
+
+    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: KSNode?): Boolean {
+        return !predicate(data, declarationContainer) || declarationContainer.declarations.all { it.accept(this, declarationContainer) }
+    }
+
+    override fun visitTypeParameter(typeParameter: KSTypeParameter, data: KSNode?): Boolean {
+        return !predicate(data, typeParameter) || typeParameter.bounds.all{ it.accept(this, typeParameter) }
+    }
+
+    override fun visitAnnotated(annotated: KSAnnotated, data: KSNode?): Boolean {
+        return !predicate(data, annotated) || annotated.annotations.all{ it.accept(this, annotated) }
+    }
+
+    override fun visitAnnotation(annotation: KSAnnotation, data: KSNode?): Boolean {
+        return !predicate(data, annotation) || annotation.annotationType.accept(this, annotation)
+    }
+
+    override fun visitTypeReference(typeReference: KSTypeReference, data: KSNode?): Boolean {
         return validateType(typeReference.resolve())
     }
 
-    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit): Boolean {
-        if (!validateTypeParameters(classDeclaration)) {
-            return false
-        }
+    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: KSNode?): Boolean {
         if (classDeclaration.asStarProjectedType().isError) {
             return false
         }
-        if (classDeclaration.superTypes.any { predicate(classDeclaration, it) && !it.accept(this, Unit) }) {
+        if (!classDeclaration.superTypes.all{ it.accept(this, classDeclaration) }) {
             return false
         }
-        if (!validateDeclarations(classDeclaration)) {
+        if (!this.visitDeclaration(classDeclaration, data)) {
+            return false
+        }
+        if (!this.visitDeclarationContainer(classDeclaration, data)) {
             return false
         }
         return true
     }
 
-    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit): Boolean {
+    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: KSNode?): Boolean {
         if (function.returnType != null && !(predicate(function, function.returnType!!) && function.returnType!!.accept(this, data))) {
             return false
         }
-        if (function.parameters.any { predicate(function, it) && !it.accept(this, Unit)}) {
+        if (!function.parameters.all{ it.accept(this, function) }) {
             return false
         }
-        if (!validateTypeParameters(function)) {
+        if (!this.visitDeclaration(function, data)) {
             return false
         }
-        if (!validateDeclarations(function)) {
+        if (!this.visitDeclarationContainer(function, data)) {
             return false
         }
         return true
     }
 
-    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit): Boolean {
+    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: KSNode?): Boolean {
         if (predicate(property, property.type) && property.type.resolve().isError) {
             return false
         }
-        if (!validateTypeParameters(property)) {
+        if (!this.visitDeclaration(property, data)) {
             return false
         }
         return true
     }
 
-    override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit): Boolean {
-        if (typeParameter.bounds.any { predicate(typeParameter, it) && !it.accept(this, Unit) }) {
-            return false
-        }
-        return true
-    }
-
-    override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit): Boolean {
-        return valueParameter.type?.accept(this, Unit) != false
+    override fun visitValueParameter(valueParameter: KSValueParameter, data: KSNode?): Boolean {
+        return valueParameter.type.accept(this, valueParameter)
     }
 }
