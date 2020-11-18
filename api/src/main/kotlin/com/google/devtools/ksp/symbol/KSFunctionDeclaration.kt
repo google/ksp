@@ -57,7 +57,29 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     val parameters: List<KSValueParameter>
 
     /**
-     * Find the original overridee of this function, if overriding.
+     * Find the closest overridee of this function, if overriding.
+     *
+     * For the following input:
+     * ```
+     * abstract class A {
+     *   open fun x() {}
+     *   open fun y() {}
+     * }
+     * abstract class B : A() {
+     *   override open fun x() {}
+     * }
+     * abstract class C : B() {
+     *   override open fun x() {}
+     *   override open fun y() {}
+     * }
+     * ```
+     * Calling `findOverridee` on `C.x` will return `B.x`.
+     * Calling `findOverridee` on `C.y` will return `A.y`.
+     *
+     * When there are multiple super interfaces implementing the function, the closest declaration
+     * to the current containing declaration is selected. If they are in the same level, the
+     * function of the first specified interface (in source) will be returned.
+     *
      * @return [KSFunctionDeclaration] for the original function, if overriding, otherwise null.
      * Calling [findOverridee] is expensive and should be avoided if possible.
      */

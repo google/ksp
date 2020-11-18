@@ -52,8 +52,8 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
     }
 
     override fun findOverridee(): KSFunctionDeclaration? {
-        return ResolverImpl.instance.resolveFunctionDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
-            ?.toKSFunctionDeclaration()
+        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
+        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
     override val declarations: List<KSDeclaration> = emptyList()

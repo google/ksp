@@ -24,6 +24,7 @@ import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.OverridingUtil
@@ -37,8 +38,8 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
     }
 
     override fun findOverridee(): KSFunctionDeclaration? {
-        return ResolverImpl.instance.resolveFunctionDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
-            ?.toKSFunctionDeclaration()
+        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
+        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
     override val declarations: List<KSDeclaration> by lazy {

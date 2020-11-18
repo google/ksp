@@ -341,7 +341,7 @@ class ResolverImpl(
                             }
                 } else {
                     moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
-                            ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi }
+                            ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().singleOrNull { it.findPsi() == psi }
                 }
             }
             is PsiField -> moduleClassResolver.resolveClass(JavaFieldImpl(psi).containingClass)
