@@ -25,6 +25,7 @@ import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findClosestOverridee
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
@@ -39,8 +40,8 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     }
 
     override fun findOverridee(): KSFunctionDeclaration? {
-        return ResolverImpl.instance.resolveFunctionDeclaration(this)?.original?.overriddenDescriptors?.singleOrNull { it.overriddenDescriptors.isEmpty() }
-            ?.toKSFunctionDeclaration()
+        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
+        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {

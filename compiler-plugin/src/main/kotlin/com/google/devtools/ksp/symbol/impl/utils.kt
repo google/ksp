@@ -37,7 +37,6 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
@@ -282,4 +281,33 @@ internal fun DeclarationDescriptor.findPsi(): PsiElement? {
     // For synthetic members.
     if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
     return (this as? DeclarationDescriptorWithSource)?.source?.getPsi()
+}
+
+/**
+ * @see KSFunctionDeclaration.findOverridee for docs.
+ */
+internal fun FunctionDescriptor.findClosestOverridee(): FunctionDescriptor? {
+    // When there is an intermediate class between the overridden and our function, we might receive
+    // a FAKE_OVERRIDE function which is not desired as we are trying to find the actual
+    // declared method.
+
+    // we also want to return the closes function declaration. That is either the closest
+    // class / interface method OR in case of equal distance (e.g. diamon dinheritance), pick the
+    // one declared first in the code.
+
+    val queue = ArrayDeque<FunctionDescriptor>()
+    queue.add(this)
+
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+        val overriddenDescriptors = current.original.overriddenDescriptors
+        overriddenDescriptors.firstOrNull {
+            it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
+        }?.let {
+            return it.original
+        }
+        // if all methods are fake, add them to the queue
+        queue.addAll(overriddenDescriptors)
+    }
+    return null
 }
