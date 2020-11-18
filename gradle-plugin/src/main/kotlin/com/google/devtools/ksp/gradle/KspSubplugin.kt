@@ -109,10 +109,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
         val destinationDir = File(project.buildDir, "generated/ksp")
-        InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation, project.provider { destinationDir })
+        InternalTrampoline.KotlinCompileTaskData_register(
+            kspTaskName,
+            kotlinCompilation,
+            project.provider { kotlinOutputDir })
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
-            kspTask.setDestinationDir(destinationDir)
+            kspTask.setDestinationDir(kotlinOutputDir)
             kspTask.mapClasspath { kotlinCompileProvider.get().classpath }
             kspTask.options = options
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir)
