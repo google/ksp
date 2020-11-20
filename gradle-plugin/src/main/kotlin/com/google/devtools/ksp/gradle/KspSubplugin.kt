@@ -47,20 +47,24 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
 
         @JvmStatic
+        fun getKspOutputDir(project: Project, sourceSetName: String) =
+                File(project.project.buildDir, "generated/ksp/$sourceSetName")
+
+        @JvmStatic
         fun getKspClassOutputDir(project: Project, sourceSetName: String) =
-                File(project.project.buildDir, "generated/ksp/classes/$sourceSetName")
+                File(getKspOutputDir(project, sourceSetName), "classes")
 
         @JvmStatic
         fun getKspJavaOutputDir(project: Project, sourceSetName: String) =
-                File(project.project.buildDir, "generated/ksp/src/$sourceSetName/java")
+                File(getKspOutputDir(project, sourceSetName), "java")
 
         @JvmStatic
         fun getKspKotlinOutputDir(project: Project, sourceSetName: String) =
-                File(project.project.buildDir, "generated/ksp/src/$sourceSetName/kotlin")
+                File(getKspOutputDir(project, sourceSetName), "kotlin")
 
         @JvmStatic
         fun getKspResourceOutputDir(project: Project, sourceSetName: String) =
-                File(project.project.buildDir, "generated/ksp/src/$sourceSetName/resources")
+                File(getKspOutputDir(project, sourceSetName), "resources")
     }
 
     override fun apply(project: Project) {
@@ -108,14 +112,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
-        val destinationDir = File(project.buildDir, "generated/ksp")
+        val destinationDir = getKspOutputDir(project, sourceSetName)
         InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation, project.provider { destinationDir })
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
             kspTask.setDestinationDir(destinationDir)
             kspTask.mapClasspath { kotlinCompileProvider.get().classpath }
             kspTask.options = options
-            kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir)
+            kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.dependsOn(kspConfiguration.buildDependencies)
         }.apply {
             configure {
