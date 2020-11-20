@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.processing.impl.ResolverImpl
@@ -62,7 +63,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
                 "char" -> ResolverImpl.instance.module.builtIns.charType
                 "boolean" -> ResolverImpl.instance.module.builtIns.booleanType
                 "void" -> ResolverImpl.instance.module.builtIns.unitType
-                else -> throw IllegalStateException()
+                else -> throw IllegalStateException("Unexpected primitive type ${this.name}, $ExceptionMessage")
             }
         }
 
@@ -88,7 +89,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
                 }
             }
             null -> KSClassifierReferenceDescriptorImpl.getCached((ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable())
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unexpected psi type for ${type.javaClass}, $ExceptionMessage")
         }
     }
 

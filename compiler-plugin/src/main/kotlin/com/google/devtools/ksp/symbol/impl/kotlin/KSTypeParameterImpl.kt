@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
@@ -71,7 +72,7 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
             is KtClassOrObject -> KSClassDeclarationImpl.getCached(owner)
             is KtFunction -> KSFunctionDeclarationImpl.getCached(owner)
             is KtProperty -> KSPropertyDeclarationImpl.getCached(owner)
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unexpected containing declaration type ${owner.javaClass}, $ExceptionMessage")
         }
     }
 

@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.ExceptionMessage
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isVisibleFrom
@@ -65,7 +66,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
             when (ktFunction) {
                 is KtNamedFunction, is KtPrimaryConstructor, is KtSecondaryConstructor -> FunctionKind.MEMBER
                 is KtFunctionLiteral -> if (ktFunction.node.findChildByType(KtTokens.FUN_KEYWORD) != null) FunctionKind.ANONYMOUS else FunctionKind.LAMBDA
-                else -> throw IllegalStateException()
+                else -> throw IllegalStateException("Unexpected psi type ${ktFunction.javaClass}, $ExceptionMessage")
             }
         }
     }

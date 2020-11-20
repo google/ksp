@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
+import com.google.devtools.ksp.ExceptionMessage
 import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
@@ -91,7 +92,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
                     is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(it)
                     is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(it)
                     is ClassDescriptor -> getCached(it)
-                    else -> throw IllegalStateException()
+                    else -> throw IllegalStateException("Unexpected descriptor type ${it.javaClass}, $ExceptionMessage")
                 }
             }
     }

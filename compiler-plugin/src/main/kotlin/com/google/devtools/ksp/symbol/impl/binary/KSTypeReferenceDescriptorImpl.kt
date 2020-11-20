@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
+import com.google.devtools.ksp.ExceptionMessage
 import org.jetbrains.kotlin.builtins.isSuspendFunctionTypeOrSubtype
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
@@ -44,10 +45,10 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
                 when (upperBound) {
                     is FlexibleType -> KSClassifierReferenceDescriptorImpl.getCached(upperBound.upperBound)
                     is SimpleType -> KSClassifierReferenceDescriptorImpl.getCached(upperBound)
-                    else -> throw IllegalStateException()
+                    else -> throw IllegalStateException("Unexpected upperbound type ${upperBound.javaClass}, $ExceptionMessage")
                 }
             }
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unexpected type: ${kotlinType.constructor.declarationDescriptor?.javaClass}, $ExceptionMessage")
         }
     }
 

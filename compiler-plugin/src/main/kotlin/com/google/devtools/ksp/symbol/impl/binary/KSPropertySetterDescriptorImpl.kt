@@ -29,7 +29,8 @@ class KSPropertySetterDescriptorImpl private constructor(descriptor: PropertySet
     }
 
     override val parameter: KSValueParameter by lazy {
-        descriptor.valueParameters.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) } ?: throw IllegalStateException()
+        descriptor.valueParameters.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) }
+                ?: throw IllegalStateException("Failed to resolve property type")
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

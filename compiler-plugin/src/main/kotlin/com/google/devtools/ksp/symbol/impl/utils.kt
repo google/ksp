@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.*
 import org.jetbrains.kotlin.descriptors.*
@@ -209,7 +210,7 @@ fun KtClassOrObject.getClassType(): ClassKind {
             this.isAnnotation() -> ClassKind.ANNOTATION_CLASS
             else -> ClassKind.CLASS
         }
-        else -> throw IllegalStateException()
+        else -> throw IllegalStateException("Unexpected psi type ${this.javaClass}, $ExceptionMessage")
     }
 }
 
@@ -228,7 +229,7 @@ fun org.jetbrains.kotlin.types.Variance.toKSVariance(): Variance {
         org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
         org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
         org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
-        else -> throw IllegalStateException()
+        else -> throw IllegalStateException("Unexpected variance value $this, $ExceptionMessage")
     }
 }
 
@@ -246,7 +247,7 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
         val type = when (ksTypeArgument) {
             is KSTypeArgumentKtImpl, is KSTypeArgumentJavaImpl, is KSTypeArgumentLiteImpl -> ksTypeArgument.type!!
             is KSTypeArgumentDescriptorImpl -> return@mapIndexed ksTypeArgument.descriptor
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unexpected psi for type argument: ${ksTypeArgument.javaClass}, $ExceptionMessage")
         }.toKotlinType()
 
         TypeProjectionImpl(variance, type)

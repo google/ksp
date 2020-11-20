@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
@@ -53,7 +54,7 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
             is KtFunctionType -> KSCallableReferenceImpl.getCached(typeElement)
             is KtUserType -> KSClassifierReferenceImpl.getCached(typeElement)
             is KtDynamicType -> KSDynamicReferenceImpl.getCached(Unit)
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unexpected type element ${typeElement?.javaClass}, $ExceptionMessage")
         }
     }
 

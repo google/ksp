@@ -18,10 +18,7 @@
 
 package com.google.devtools.ksp.processing.impl
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.closestClassDeclaration
-import com.google.devtools.ksp.isOpen
-import com.google.devtools.ksp.isVisibleFrom
+import com.google.devtools.ksp.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -457,7 +454,7 @@ class ResolverImpl(
                     return getKSTypeCached(resolveJavaType(type.psi), type.element.typeArguments, type.annotations)
                 }
             }
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unable to resolve type for $type, $ExceptionMessage")
         }
     }
 
@@ -469,13 +466,14 @@ class ResolverImpl(
                 is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
                 is PsiClass -> KSClassDeclarationJavaImpl.getCached(psi)
                 is KtTypeAlias -> KSTypeAliasImpl.getCached(psi)
-                else -> throw IllegalStateException()
+                else -> throw IllegalStateException("Unexpected psi type: ${psi.javaClass}, $ExceptionMessage")
             }
         } else {
             when (descriptor) {
                 is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(descriptor)
                 is TypeParameterDescriptor -> KSTypeParameterDescriptorImpl.getCached(descriptor)
-                else -> throw IllegalStateException()
+                null -> throw IllegalStateException("Failed to resolve descriptor for $kotlinType")
+                else -> throw IllegalStateException("Unexpected descriptor type: ${descriptor.javaClass}, $ExceptionMessage")
             }
         }
     }

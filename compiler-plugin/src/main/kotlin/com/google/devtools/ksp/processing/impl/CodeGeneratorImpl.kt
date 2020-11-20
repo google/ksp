@@ -46,7 +46,7 @@ class CodeGeneratorImpl(
         val file = File(path)
         val parentFile = file.parentFile
         if (!parentFile.exists() && !parentFile.mkdirs()) {
-            throw IllegalStateException()
+            throw IllegalStateException("failed to make parent directories.")
         }
         file.writeText("")
         fileMap[path] = file
