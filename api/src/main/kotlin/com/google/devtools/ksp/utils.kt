@@ -132,7 +132,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                 is KSClassDeclaration -> sequenceOf(resolvedDeclaration)
                 is KSTypeAlias -> sequenceOf(resolvedDeclaration.findActualType())
                 is KSTypeParameter -> resolvedDeclaration.getTypesUpperBound()
-                else -> throw IllegalStateException()
+                else -> throw IllegalStateException("unhandled type parameter bound, $ExceptionMessage")
             }
         }
 
@@ -148,7 +148,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                         is KSClassDeclaration -> it.getAllSuperTypes()
                         is KSTypeAlias -> it.findActualType().getAllSuperTypes()
                         is KSTypeParameter -> it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
-                        else -> throw IllegalStateException()
+                        else -> throw IllegalStateException("unhandled super type kind, $ExceptionMessage")
                     }
                 }
         )
@@ -243,3 +243,5 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     }
 
 }
+
+const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"

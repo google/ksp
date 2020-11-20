@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 
 class KSValidateVisitor(private val predicate: (KSNode, KSNode) -> Boolean) : KSDefaultVisitor<Unit, Boolean>() {
@@ -16,7 +17,7 @@ class KSValidateVisitor(private val predicate: (KSNode, KSNode) -> Boolean) : KS
     }
 
     override fun defaultHandler(node: KSNode, data: Unit): Boolean {
-        throw IllegalStateException("unhandled validation condition, please file a bug at https://github.com/google/ksp/issues/new")
+        throw IllegalStateException("unhandled validation condition, $ExceptionMessage")
     }
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: Unit): Boolean {

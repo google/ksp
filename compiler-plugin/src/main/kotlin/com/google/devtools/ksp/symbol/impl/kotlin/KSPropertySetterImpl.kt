@@ -30,7 +30,7 @@ class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAcces
 
     override val parameter: KSValueParameter by lazy {
         ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSValueParameterImpl.getCached(it) }
-            ?: throw IllegalStateException()
+            ?: throw IllegalStateException("Failed to resolve property type")
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

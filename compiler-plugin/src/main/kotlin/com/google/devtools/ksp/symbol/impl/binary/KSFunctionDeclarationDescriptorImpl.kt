@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
+import com.google.devtools.ksp.ExceptionMessage
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.impl.AnonymousFunctionDescriptor
 import com.google.devtools.ksp.isOpen
@@ -31,6 +32,7 @@ import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.load.java.isFromJava
 import org.jetbrains.kotlin.resolve.OverridingUtil
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
 class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: FunctionDescriptor) : KSFunctionDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
@@ -64,7 +66,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
             descriptor.dispatchReceiverParameter == null -> if (descriptor.isFromJava) FunctionKind.STATIC else FunctionKind.TOP_LEVEL
             !descriptor.name.isSpecial && !descriptor.name.asString().isEmpty() -> FunctionKind.MEMBER
             descriptor is AnonymousFunctionDescriptor -> FunctionKind.ANONYMOUS
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unable to resolve FunctionKind for ${descriptor.fqNameSafe}, $ExceptionMessage")
         }
     }
 
