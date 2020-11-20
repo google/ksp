@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotationMethod
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
@@ -122,6 +123,6 @@ fun ValueParameterDescriptor.getDefaultValue(): Any? {
         }
         is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.value
         is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper.computeConstantExpression((psi).defaultValue)
-        else -> throw IllegalStateException()
+        else -> throw IllegalStateException("Unexpected psi ${psi.javaClass}, $ExceptionMessage")
     }
 }

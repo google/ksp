@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
+import com.google.devtools.ksp.ExceptionMessage
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
@@ -47,7 +48,7 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
             is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(parent)
             is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(parent)
             is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(parent)
-            else -> throw IllegalStateException()
+            else -> throw IllegalStateException("Unexpected containing declaration for ${descriptor.fqNameSafe}, $ExceptionMessage")
         }
     }
 
