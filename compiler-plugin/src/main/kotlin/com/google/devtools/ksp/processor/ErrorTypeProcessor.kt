@@ -32,6 +32,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
+
         val classC = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))!!
         val errorAtTop = classC.declarations.single { it.simpleName.asString() == "errorAtTop" } as KSPropertyDeclaration
         val errorInComponent = classC.declarations.single { it.simpleName.asString() == "errorInComponent" } as KSPropertyDeclaration
