@@ -134,7 +134,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         return if (finished) {
             AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
         } else {
-            AnalysisResult.RetryWithAdditionalRoots(BindingContext.EMPTY, module, listOf(options.javaOutputDir), listOf(options.kotlinOutputDir))
+            AnalysisResult.RetryWithAdditionalRoots(BindingContext.EMPTY, module, listOf(options.javaOutputDir), listOf(options.kotlinOutputDir), listOf(options.classOutputDir))
         }
     }
 
