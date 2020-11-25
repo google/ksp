@@ -320,7 +320,7 @@ class ResolverImpl(
                 if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
                     moduleClassResolver
                         .resolveClass(JavaMethodImpl(psi).containingClass)
-                        ?.findSingleEnclosedDescriptor(
+                        ?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.CALLABLES
                         ) {
                             (it as? PropertyDescriptor)?.getter?.findPsi() == psi || (it as? PropertyDescriptor)?.setter?.findPsi() == psi
@@ -328,7 +328,7 @@ class ResolverImpl(
                 } else {
                     moduleClassResolver
                         .resolveClass(JavaMethodImpl(psi).containingClass)
-                        ?.findSingleEnclosedDescriptor(
+                        ?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
                             psi = psi
                         )
@@ -337,7 +337,7 @@ class ResolverImpl(
             is PsiField -> {
                 moduleClassResolver
                     .resolveClass(JavaFieldImpl(psi).containingClass)
-                    ?.findSingleEnclosedDescriptor(
+                    ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
                         psi = psi
                     )
@@ -442,7 +442,7 @@ class ResolverImpl(
                         }
                         moduleClassResolver.resolveClass(
                             JavaMethodImpl(owner).containingClass
-                        )?.findSingleEnclosedDescriptor(
+                        )?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
                             psi = owner
                         ) as FunctionDescriptor
@@ -719,36 +719,36 @@ private fun Name.getNonSpecialIdentifier() :String {
     }
 }
 
-private inline fun MemberScope.findSingleEnclosedDescriptor(
+private inline fun MemberScope.findEnclosedDescriptor(
     kindFilter: DescriptorKindFilter,
     crossinline filter: (DeclarationDescriptor) -> Boolean
 ) : DeclarationDescriptor? {
     return getContributedDescriptors(
         kindFilter = kindFilter
-    ).singleOrNull(filter)
+    ).firstOrNull(filter)
 }
 
-private inline fun ClassDescriptor.findSingleEnclosedDescriptor(
+private inline fun ClassDescriptor.findEnclosedDescriptor(
     kindFilter: DescriptorKindFilter,
     crossinline filter: (DeclarationDescriptor) -> Boolean
 ) : DeclarationDescriptor? {
-    return this.unsubstitutedMemberScope.findSingleEnclosedDescriptor(
+    return this.unsubstitutedMemberScope.findEnclosedDescriptor(
         kindFilter = kindFilter,
         filter = filter
-    ) ?: this.staticScope.findSingleEnclosedDescriptor(
+    ) ?: this.staticScope.findEnclosedDescriptor(
         kindFilter = kindFilter,
         filter = filter
     )
 }
 
-private fun ClassDescriptor.findSingleEnclosedDescriptor(
+private fun ClassDescriptor.findEnclosedDescriptor(
     kindFilter: DescriptorKindFilter,
     psi: PsiElement
 ): DeclarationDescriptor? {
-    return this.unsubstitutedMemberScope.findSingleEnclosedDescriptor(
+    return this.unsubstitutedMemberScope.findEnclosedDescriptor(
         kindFilter = kindFilter,
         filter = { it.findPsi() == psi }
-    ) ?: this.staticScope.findSingleEnclosedDescriptor(
+    ) ?: this.staticScope.findEnclosedDescriptor(
         kindFilter = kindFilter,
         filter = { it.findPsi() == psi }
     )
