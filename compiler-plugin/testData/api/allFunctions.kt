@@ -58,7 +58,6 @@
 // spliterator(): java.util.Spliterator
 // stream(): java.util.stream.Stream
 // subList(kotlin.Int,kotlin.Int): kotlin.collections.List
-// toArray(java.util.function.IntFunction): kotlin.Array
 // toString(): kotlin.String
 // toString(): kotlin.String
 // toString(): kotlin.String
