@@ -40,6 +40,9 @@
 // fileLevelInlineReturningFun -> fileLevelInlineReturningFun
 // fileLevelInternalInlineReceivingFun -> fileLevelInternalInlineReceivingFun-E03SJzc
 // fileLevelInternalInlineReturningFun -> fileLevelInternalInlineReturningFun
+// JavaInput -> declarations
+// javaFunction -> javaFunction
+// staticJavaFunction -> staticJavaFunction
 // libPackage.Foo -> declarations
 // get-inlineProp -> getInlineProp-b_MPbnQ
 // set-inlineProp -> setInlineProp-mQ73O9w
@@ -108,3 +111,11 @@ fun fileLevelInlineReceivingFun(inline1: Inline1): Unit = TODO()
 fun fileLevelInlineReturningFun(): Inline1 = TODO()
 fun fileLevelInternalInlineReceivingFun(inline1: Inline1): Unit = TODO()
 fun fileLevelInternalInlineReturningFun(): Inline1 = TODO()
+
+// FILE: JavaInput.java
+class JavaInput {
+    String javaField;
+    String javaFunction() {}
+    static String staticJavaField;
+    static void staticJavaFunction() {}
+}

@@ -73,8 +73,9 @@ import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
 import org.jetbrains.kotlin.resolve.multiplatform.findActuals
 import org.jetbrains.kotlin.resolve.multiplatform.findExpects
+import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
+import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
@@ -332,17 +333,30 @@ class ResolverImpl(
             is PsiMethod -> {
                 // TODO: get rid of hardcoded check if possible.
                 if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
-                    moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
-                            ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().singleOrNull{
-                                (it as? PropertyDescriptor)?.getter?.findPsi() == psi || (it as? PropertyDescriptor)?.setter?.findPsi() == psi
-                            }
+                    moduleClassResolver
+                        .resolveClass(JavaMethodImpl(psi).containingClass)
+                        ?.findEnclosedDescriptor(
+                            kindFilter = DescriptorKindFilter.CALLABLES
+                        ) {
+                            (it as? PropertyDescriptor)?.getter?.findPsi() == psi || (it as? PropertyDescriptor)?.setter?.findPsi() == psi
+                        }
                 } else {
-                    moduleClassResolver.resolveClass(JavaMethodImpl(psi).containingClass)
-                            ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().singleOrNull { it.findPsi() == psi }
+                    moduleClassResolver
+                        .resolveClass(JavaMethodImpl(psi).containingClass)
+                        ?.findEnclosedDescriptor(
+                            kindFilter = DescriptorKindFilter.FUNCTIONS,
+                            filter = { it.findPsi() == psi }
+                        )
                 }
             }
-            is PsiField -> moduleClassResolver.resolveClass(JavaFieldImpl(psi).containingClass)
-                ?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi } as CallableMemberDescriptor
+            is PsiField -> {
+                moduleClassResolver
+                    .resolveClass(JavaFieldImpl(psi).containingClass)
+                    ?.findEnclosedDescriptor(
+                        kindFilter = DescriptorKindFilter.VARIABLES,
+                        filter = { it.findPsi() == psi }
+                    )
+            }
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
     }
@@ -437,9 +451,16 @@ class ResolverImpl(
                     val containingDeclaration = if (psi.owner is PsiClass) {
                         moduleClassResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
                     } else {
+                        val owner = psi.owner
+                        check(owner is PsiMethod) {
+                            "unexpected owner type: $owner / ${owner?.javaClass}"
+                        }
                         moduleClassResolver.resolveClass(
-                            JavaMethodImpl(psi.owner as PsiMethod).containingClass
-                        )?.unsubstitutedMemberScope!!.getDescriptorsFiltered().single { it.findPsi() == psi.owner } as FunctionDescriptor
+                            JavaMethodImpl(owner).containingClass
+                        )?.findEnclosedDescriptor(
+                            kindFilter = DescriptorKindFilter.FUNCTIONS,
+                            filter = { it.findPsi() == owner }
+                        ) as FunctionDescriptor
                     } as DeclarationDescriptor
                     return getKSTypeCached(
                         LazyJavaTypeParameterDescriptor(
@@ -711,4 +732,26 @@ private fun Name.getNonSpecialIdentifier() :String {
     } else {
         asString().substring(1)
     }
+}
+
+private inline fun MemberScope.findEnclosedDescriptor(
+    kindFilter: DescriptorKindFilter,
+    crossinline filter: (DeclarationDescriptor) -> Boolean
+) : DeclarationDescriptor? {
+    return getContributedDescriptors(
+        kindFilter = kindFilter
+    ).firstOrNull(filter)
+}
+
+private inline fun ClassDescriptor.findEnclosedDescriptor(
+    kindFilter: DescriptorKindFilter,
+    crossinline filter: (DeclarationDescriptor) -> Boolean
+) : DeclarationDescriptor? {
+    return this.unsubstitutedMemberScope.findEnclosedDescriptor(
+        kindFilter = kindFilter,
+        filter = filter
+    ) ?: this.staticScope.findEnclosedDescriptor(
+        kindFilter = kindFilter,
+        filter = filter
+    )
 }
