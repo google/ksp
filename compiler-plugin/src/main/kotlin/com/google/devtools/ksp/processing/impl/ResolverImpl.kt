@@ -330,7 +330,7 @@ class ResolverImpl(
                         .resolveClass(JavaMethodImpl(psi).containingClass)
                         ?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
-                            psi = psi
+                            filter = { it.findPsi() == psi }
                         )
                 }
             }
@@ -339,7 +339,7 @@ class ResolverImpl(
                     .resolveClass(JavaFieldImpl(psi).containingClass)
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
-                        psi = psi
+                        filter = { it.findPsi() == psi }
                     )
             }
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
@@ -444,7 +444,7 @@ class ResolverImpl(
                             JavaMethodImpl(owner).containingClass
                         )?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
-                            psi = owner
+                            filter = { it.findPsi() == owner }
                         ) as FunctionDescriptor
                     } as DeclarationDescriptor
                     return getKSTypeCached(
@@ -738,18 +738,5 @@ private inline fun ClassDescriptor.findEnclosedDescriptor(
     ) ?: this.staticScope.findEnclosedDescriptor(
         kindFilter = kindFilter,
         filter = filter
-    )
-}
-
-private fun ClassDescriptor.findEnclosedDescriptor(
-    kindFilter: DescriptorKindFilter,
-    psi: PsiElement
-): DeclarationDescriptor? {
-    return this.unsubstitutedMemberScope.findEnclosedDescriptor(
-        kindFilter = kindFilter,
-        filter = { it.findPsi() == psi }
-    ) ?: this.staticScope.findEnclosedDescriptor(
-        kindFilter = kindFilter,
-        filter = { it.findPsi() == psi }
     )
 }
