@@ -86,8 +86,8 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override fun findOverridee(): KSPropertyDeclaration? {
-        return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
-            ?.toKSPropertyDeclaration()
+        val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
+        return propertyDescriptor?.findClosestOverridee()?.toKSPropertyDeclaration()
     }
 
     override fun isDelegated(): Boolean {

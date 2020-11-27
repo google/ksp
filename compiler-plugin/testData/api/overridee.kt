@@ -20,6 +20,13 @@
 // EXPECTED:
 // Subject:
 // Companion.companionMethod() -> null
+// Subject.notOverridingProp -> null
+// Subject.overriddenBaseProp -> Base.overriddenBaseProp
+// Subject.overriddenAbstractBaseProp -> Base.overriddenAbstractBaseProp
+// Subject.openGrandBaseProp -> GrandBase.openGrandBaseProp
+// Subject.abstractGrandBaseProp -> GrandBase.abstractGrandBaseProp
+// Subject.overriddenGrandBaseProp -> Base.overriddenGrandBaseProp
+// Subject.overriddenAbstractGrandBaseProp -> Base.overriddenAbstractGrandBaseProp
 // Subject.openFun() -> Base.openFun()
 // Subject.abstractFun() -> Base.abstractFun()
 // Subject.openFunWithGenericArg(t:String) -> Base.openFunWithGenericArg(t:T)
@@ -42,6 +49,13 @@
 // Subject.staticMethod() -> null
 // lib.Subject:
 // Companion.companionMethod() -> null
+// Subject.abstractGrandBaseProp -> GrandBase.abstractGrandBaseProp
+// Subject.notOverridingProp -> null
+// Subject.openGrandBaseProp -> GrandBase.openGrandBaseProp
+// Subject.overriddenAbstractBaseProp -> Base.overriddenAbstractBaseProp
+// Subject.overriddenAbstractGrandBaseProp -> Base.overriddenAbstractGrandBaseProp
+// Subject.overriddenBaseProp -> Base.overriddenBaseProp
+// Subject.overriddenGrandBaseProp -> Base.overriddenGrandBaseProp
 // Subject.abstractFun() -> Base.abstractFun()
 // Subject.abstractFunWithGenericArg(t:String) -> Base.abstractFunWithGenericArg(t:T)
 // Subject.abstractGrandBaseFun() -> GrandBase.abstractGrandBaseFun()
@@ -68,12 +82,20 @@
 // FILE: lib.kt
 package lib;
 abstract class GrandBase {
+    open var openGrandBaseProp: Int = 0
+    abstract var abstractGrandBaseProp: Int
+    open var overriddenGrandBaseProp: Int = 0
+    abstract var overriddenAbstractGrandBaseProp: Int
     open fun openGrandBaseFun() {}
     abstract fun abstractGrandBaseFun()
     open fun overriddenGrandBaseFun() {}
     abstract fun overriddenAbstractGrandBaseFun()
 }
 abstract class Base<T> : GrandBase() {
+    open var overriddenBaseProp: Int = 0
+    abstract var overriddenAbstractBaseProp: Int
+    override var overriddenGrandBaseProp:Int = 0
+    override var overriddenAbstractGrandBaseProp: Int = 0
     open fun openFun() {}
     abstract fun abstractFun():Unit
     open fun openFunWithGenericArg(t:T):T = TODO()
@@ -83,6 +105,13 @@ abstract class Base<T> : GrandBase() {
 }
 
 abstract class Subject: Base<String>() {
+    var notOverridingProp: Int = 0
+    override open var overriddenBaseProp: Int = 0
+    override var overriddenAbstractBaseProp: Int = 0
+    override open var openGrandBaseProp: Int = 0
+    override var abstractGrandBaseProp: Int = 0
+    override var overriddenGrandBaseProp:Int = 0
+    override var overriddenAbstractGrandBaseProp: Int = 0
     override fun openFun() {}
     override fun abstractFun() {}
     override fun openFunWithGenericArg(t:String):String = TODO()
@@ -99,12 +128,20 @@ abstract class Subject: Base<String>() {
 // MODULE: main(lib)
 // FILE: a.kt
 abstract class GrandBase {
+    open var openGrandBaseProp: Int = 0
+    abstract var abstractGrandBaseProp: Int = 0
+    open var overriddenGrandBaseProp: Int = 0
+    abstract var overriddenAbstractGrandBaseProp: Int = 0
     open fun openGrandBaseFun() {}
     abstract fun abstractGrandBaseFun()
     open fun overriddenGrandBaseFun() {}
     abstract fun overriddenAbstractGrandBaseFun()
 }
 abstract class Base<T> : GrandBase() {
+    open var overriddenBaseProp: Int = 0
+    var overriddenAbstractBaseProp: Int = 0
+    override var overriddenGrandBaseProp:Int = 0
+    override var overriddenAbstractGrandBaseProp: Int = 0
     open fun openFun() {}
     abstract fun abstractFun():Unit
     open fun openFunWithGenericArg(t:T):T = TODO()
@@ -114,6 +151,13 @@ abstract class Base<T> : GrandBase() {
 }
 
 abstract class Subject: Base<String>() {
+    var notOverridingProp: Int = 0
+    override open var overriddenBaseProp: Int = 0
+    override var overriddenAbstractBaseProp: Int = 0
+    override open var openGrandBaseProp: Int = 0
+    override var abstractGrandBaseProp: Int = 0
+    override var overriddenGrandBaseProp:Int = 0
+    override var overriddenAbstractGrandBaseProp: Int = 0
     override fun openFun() {}
     override fun abstractFun() {}
     override fun openFunWithGenericArg(t:String):String = TODO()

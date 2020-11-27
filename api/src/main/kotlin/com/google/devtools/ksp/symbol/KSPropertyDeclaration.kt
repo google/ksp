@@ -58,8 +58,30 @@ interface KSPropertyDeclaration : KSDeclaration {
     fun isDelegated(): Boolean
 
     /**
-     * Find the original overridee of this property, if overriding.
-     * @return [KSPropertyDeclaration] for the original property, if overriding, otherwise null.
+     * Find the closest overridee of this property, if overriding.
+     *
+     * For the following input:
+     * ```
+     * abstract class A {
+     *   open val x:Int
+     *   open val y:Int
+     * }
+     * abstract class B : A() {
+     *   override val x:Int
+     * }
+     * abstract class C : B() {
+     *   override val x:Int
+     *   override val y:Int
+     * }
+     * ```
+     * Calling `findOverridee` on `C.x` will return `B.x`.
+     * Calling `findOverridee` on `C.y` will return `A.y`.
+     *
+     * When there are multiple super classes / interfaces with the property, the closest declaration
+     * to the current containing declaration is selected. If they are in the same level, the
+     * property of the first specified interface (in source) will be returned.
+     *
+     * @return [KSPropertyDeclaration] for the overridden property, if overriding, otherwise null.
      * Calling [findOverridee] is expensive and should be avoided if possible.
      */
     fun findOverridee(): KSPropertyDeclaration?
