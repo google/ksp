@@ -22,6 +22,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
 @Suppress("unused") // used by tests
 class OverrideeProcessor: AbstractTestProcessor() {
@@ -51,6 +52,12 @@ class OverrideeProcessor: AbstractTestProcessor() {
     }
 
     private fun logClass(subject: KSClassDeclaration) {
+        subject.declarations.filterIsInstance<KSPropertyDeclaration>()
+            .forEach {
+                val signature = it.toSignature()
+                val overrideeSignature = it.findOverridee()?.toSignature()
+                results.add("$signature -> $overrideeSignature")
+            }
         subject.declarations.filterIsInstance<KSFunctionDeclaration>()
             .filterNot { it.simpleName.asString() in IGNORED_METHOD_NAMES }
             .forEach {
@@ -71,6 +78,15 @@ class OverrideeProcessor: AbstractTestProcessor() {
                     "${it.name?.asString()}:${it.type.resolve().declaration.simpleName.asString()}"
                 }
             )
+        }
+    }
+
+    private fun KSPropertyDeclaration.toSignature(): String {
+        val self = this
+        return buildString {
+            append(self.closestClassDeclaration()?.simpleName?.asString())
+            append(".")
+            append(self.simpleName.asString())
         }
     }
 
