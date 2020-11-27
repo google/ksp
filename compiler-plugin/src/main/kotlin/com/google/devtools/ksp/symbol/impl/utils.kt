@@ -285,9 +285,9 @@ internal fun DeclarationDescriptor.findPsi(): PsiElement? {
 }
 
 /**
- * @see KSFunctionDeclaration.findOverridee for docs.
+ * @see KSFunctionDeclaration.findOverridee / [KSPropertyDeclaration.findOverridee] for docs.
  */
-internal fun FunctionDescriptor.findClosestOverridee(): FunctionDescriptor? {
+internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverridee(): T? {
     // When there is an intermediate class between the overridden and our function, we might receive
     // a FAKE_OVERRIDE function which is not desired as we are trying to find the actual
     // declared method.
@@ -296,16 +296,16 @@ internal fun FunctionDescriptor.findClosestOverridee(): FunctionDescriptor? {
     // class / interface method OR in case of equal distance (e.g. diamon dinheritance), pick the
     // one declared first in the code.
 
-    val queue = ArrayDeque<FunctionDescriptor>()
+    val queue = ArrayDeque<T>()
     queue.add(this)
 
     while (queue.isNotEmpty()) {
         val current = queue.removeFirst()
-        val overriddenDescriptors = current.original.overriddenDescriptors
+        val overriddenDescriptors: Collection<T> = current.original.overriddenDescriptors.filterIsInstance<T>()
         overriddenDescriptors.firstOrNull {
             it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
         }?.let {
-            return it.original
+            return it.original as T?
         }
         // if all methods are fake, add them to the queue
         queue.addAll(overriddenDescriptors)
