@@ -2,7 +2,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("jvm") version "1.4.0" apply false
+    kotlin("jvm") version "1.4.30-M2-104" apply false
 }
 
 if (!extra.has("kspVersion")) {
@@ -15,6 +15,6 @@ subprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
+        maven("https://dl.bintray.com/kotlin/kotlin-dev")
     }
 }

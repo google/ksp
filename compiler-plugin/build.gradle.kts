@@ -17,7 +17,7 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.intellij") version "0.4.22"
+    id("org.jetbrains.intellij") version "0.6.4"
 }
 
 intellij {
@@ -48,8 +48,8 @@ dependencies {
 
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:1.4.10")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:1.4.20")
+//    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:tests-mutes:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
@@ -128,6 +128,6 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/tests-common/")
         dirs("${project.rootDir}/third_party/prebuilt/tests-mutes/")
     }
-    maven("https://dl.bintray.com/kotlin/kotlin-eap")
+    maven("https://dl.bintray.com/kotlin/kotlin-dev")
     mavenLocal()
 }
