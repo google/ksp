@@ -103,6 +103,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         val configuration = createConfiguration(
             ConfigurationKind.NO_KOTLIN_REFLECT,
             TestJdkKind.FULL_JDK_9,
+            TargetBackend.ANY,
             listOf(KotlinTestUtils.getAnnotationsJar()) + dependencies,
             listOf(module.javaSrcDir),
             emptyList()

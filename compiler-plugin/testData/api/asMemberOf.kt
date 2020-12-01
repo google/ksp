@@ -77,8 +77,8 @@
 // typeArg2: kotlin.Int
 // returnArg1: () -> kotlin.Int
 // receiveArgs: (kotlin.String, kotlin.Int, kotlin.Int!!) -> kotlin.Unit!!
-// methodArgType: <BaseTypeArg1: kotlin.Any>(JavaBase.methodArgType.BaseTypeArg1?, kotlin.Int) -> kotlin.Unit!!
-// methodArgTypeWithBounds: <T: kotlin.String>(JavaBase.methodArgTypeWithBounds.T?) -> kotlin.Unit!!
+// methodArgType: <BaseTypeArg1: kotlin.Any>(JavaBase.methodArgType.BaseTypeArg1, kotlin.Int) -> kotlin.Unit!!
+// methodArgTypeWithBounds: <T: kotlin.String>(JavaBase.methodArgTypeWithBounds.T) -> kotlin.Unit!!
 // fileLevelFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelExtensionFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelProperty: java.lang.IllegalArgumentException: Cannot call asMemberOf with a property that is not declared in a class or an interface
