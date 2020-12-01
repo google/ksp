@@ -25,6 +25,7 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
@@ -50,13 +51,13 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
-            .filter { (it as FunctionDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+            .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
             .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
     }
 
     override fun getAllProperties(): List<KSPropertyDeclaration> {
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
-                .filter { (it as PropertyDescriptor).visibility != Visibilities.INVISIBLE_FAKE }
+                .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
                 .map { (it as PropertyDescriptor).toKSPropertyDeclaration() }
     }
 

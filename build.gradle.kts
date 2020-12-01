@@ -2,7 +2,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("jvm") version "1.4.0" apply false
+    kotlin("jvm") version "1.4.20" apply false
 }
 
 if (!extra.has("kspVersion")) {

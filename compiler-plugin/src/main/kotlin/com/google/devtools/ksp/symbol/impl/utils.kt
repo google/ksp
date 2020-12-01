@@ -35,7 +35,7 @@ import com.google.devtools.ksp.symbol.impl.java.KSTypeArgumentJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.load.java.JavaVisibilities
+import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.source.getPsi
@@ -130,12 +130,12 @@ fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
         Modality.ABSTRACT -> modifiers.add(Modifier.ABSTRACT)
     }
     when (this.visibility) {
-        Visibilities.PUBLIC -> modifiers.add(Modifier.PUBLIC)
-        Visibilities.PROTECTED, JavaVisibilities.PROTECTED_AND_PACKAGE -> modifiers.add(Modifier.PROTECTED)
-        Visibilities.PRIVATE -> modifiers.add(Modifier.PRIVATE)
-        Visibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
+        DescriptorVisibilities.PUBLIC -> modifiers.add(Modifier.PUBLIC)
+        DescriptorVisibilities.PROTECTED, JavaDescriptorVisibilities.PROTECTED_AND_PACKAGE -> modifiers.add(Modifier.PROTECTED)
+        DescriptorVisibilities.PRIVATE -> modifiers.add(Modifier.PRIVATE)
+        DescriptorVisibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
         // Since there is no modifier for package-private, use No modifier to tell if a symbol from binary is package private.
-        JavaVisibilities.PACKAGE_VISIBILITY, JavaVisibilities.PROTECTED_STATIC_VISIBILITY -> Unit
+        JavaDescriptorVisibilities.PACKAGE_VISIBILITY, JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY -> Unit
         else -> throw IllegalStateException("unhandled visibility: ${this.visibility}")
     }
     return modifiers

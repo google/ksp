@@ -10,4 +10,6 @@ $ cd path_to_kotlin_compiler_src
 $ patch -p1 < 0001-Package-test-classes.patch
 $ ./gradlew :include:kotlin-compiler-tests:build
 $ cp include/kotlin-compiler-tests/build/libs/*.jar path_to_below
+$ ./gradlew :compiler:tests-mutes:build
+$ cp compiler/tests-mutes/build/libs/*.jar path_to_below
 ```
