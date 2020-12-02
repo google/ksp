@@ -40,4 +40,6 @@ interface CodeGenerator {
      * @see [CodeGenerator] for more details.
      */
     fun createNewFile(packageName: String, fileName: String, extensionName: String = "kt"): OutputStream
+
+    val generatedFile: Collection<File>
 }

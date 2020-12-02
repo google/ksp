@@ -52,4 +52,6 @@ class CodeGeneratorImpl(
         fileMap[path] = file
         return file.outputStream()
     }
+
+    override val generatedFile: Collection<File> = fileMap.values
 }

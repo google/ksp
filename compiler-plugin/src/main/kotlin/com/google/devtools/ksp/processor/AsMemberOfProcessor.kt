@@ -88,7 +88,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
     }
 
     private inline fun <reified T : KSDeclaration> Resolver.getDeclaration(name: String): T {
-        return getAllFiles().first {
+        return getNewFiles().first {
             it.fileName == "Input.kt"
         }.declarations.filterIsInstance<T>().first {
             it.simpleName.asString() == name

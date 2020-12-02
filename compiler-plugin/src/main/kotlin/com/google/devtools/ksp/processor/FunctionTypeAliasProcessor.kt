@@ -20,9 +20,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
-import org.jetbrains.kotlin.types.getAbbreviation
 
 open class FunctionTypeAliasProcessor: AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -30,7 +28,7 @@ open class FunctionTypeAliasProcessor: AbstractTestProcessor() {
     val refs = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getAllFiles()
+        val files = resolver.getNewFiles()
 
         files.forEach {
             it.accept(typeRefCollector, refs)

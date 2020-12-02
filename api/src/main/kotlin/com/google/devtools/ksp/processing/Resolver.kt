@@ -25,9 +25,16 @@ import com.google.devtools.ksp.symbol.*
  */
 interface Resolver {
     /**
+     * Get all new files in the module / compilation unit.
+     *
+     * @return new files generated from last last round of processing in the module.
+     */
+    fun getNewFiles(): List<KSFile>
+
+    /**
      * Get all files in the module / compilation unit.
      *
-     * @return files in the module.
+     * @return all files generated from last last round of processing in the module.
      */
     fun getAllFiles(): List<KSFile>
 

@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
+import java.io.File
 import java.net.URLClassLoader
 import java.nio.file.Files
 
@@ -67,6 +68,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     var finished = false
     val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
     lateinit var processors: List<SymbolProcessor>
+    lateinit var newFiles: Collection<KtFile>
+    lateinit var newJavaFiles: Collection<PsiJavaFile>
 
     override fun doAnalysis(
         project: Project,
@@ -84,7 +87,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // This time is for .java files
             .distinctBy { it.canonicalPath }
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
-        val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, project, componentProvider)
+        if (!initialized) {
+            newFiles = files
+            newJavaFiles = javaFiles
+        }
+        val resolver = ResolverImpl(module, files, javaFiles, newFiles, newJavaFiles, deferredSymbols, bindingTrace, project, componentProvider)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
@@ -106,7 +113,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                 deferredSymbols.remove(it)
             }
         }
-        if (deferredSymbols.isEmpty()) {
+        newFiles = codeGen.generatedFile.filter { it.extension == "kt" }
+                .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? KtFile }
+        newJavaFiles = codeGen.generatedFile.filter { it.extension == "java" }
+                .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? PsiJavaFile}
+        if (deferredSymbols.isEmpty() || codeGen.generatedFile.isEmpty()) {
             finished = true
         }
         if (finished) {

@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
@@ -79,16 +80,21 @@ import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
+import java.io.File
 
 class ResolverImpl(
     val module: ModuleDescriptor,
     files: Collection<KtFile>,
     javaFiles: Collection<PsiJavaFile>,
+    newFiles: Collection<KtFile>,
+    newJavaFiles: Collection<PsiJavaFile>,
+    private val deferredSymbols: Map<SymbolProcessor, List<KSAnnotated>>,
     val bindingTrace: BindingTrace,
     val project: Project,
     componentProvider: ComponentProvider
 ) : Resolver {
     val ksFiles: List<KSFile>
+    val newKSFiles: List<KSFile>
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
@@ -125,6 +131,7 @@ class ResolverImpl(
         constantExpressionEvaluator = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
+        newKSFiles = newFiles.map { KSFileImpl.getCached(it) } + newJavaFiles.map { KSFileJavaImpl.getCached(it) }
         ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
@@ -153,6 +160,10 @@ class ResolverImpl(
 
     }
 
+    override fun getNewFiles(): List<KSFile> {
+        return newKSFiles
+    }
+
     override fun getAllFiles(): List<KSFile> {
         return ksFiles
     }
@@ -177,17 +188,21 @@ class ResolverImpl(
     }
 
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): List<KSAnnotated> {
-        val ksName = KSNameImpl.getCached(annotationName)
+        fun checkAnnotation(annotated: KSAnnotated): Boolean {
+            val ksName = KSNameImpl.getCached(annotationName)
+
+            return (annotated.annotations.any {
+                        val annotationType = it.annotationType
+                        (annotationType.element as? KSClassifierReference)?.referencedName()
+                                .let { it == null || it == ksName.getShortName() }
+                                && annotationType.resolve().declaration.qualifiedName == ksName
+                    })
+        }
 
         val visitor = object : KSVisitorVoid() {
             val symbols = mutableSetOf<KSAnnotated>()
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
-                if (annotated.annotations.any {
-                        val annotationType = it.annotationType
-                        (annotationType.element as? KSClassifierReference)?.referencedName()
-                            .let { it == null || it == ksName.getShortName() }
-                                && annotationType.resolve().declaration.qualifiedName == ksName
-                    }) {
+                if (checkAnnotation(annotated)) {
                     symbols.add(annotated)
                 }
             }
@@ -234,10 +249,10 @@ class ResolverImpl(
             }
         }
 
-        for (file in ksFiles) {
+        for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
-        return visitor.symbols.toList()
+        return visitor.symbols.toList() + deferredSymbols.values.flatten().filter{ it -> checkAnnotation(it)  }
     }
 
     override fun getKSNameFromString(name: String): KSName {
