@@ -29,7 +29,7 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
     val visitor = CompanionVisitor()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getAllFiles().map { it.accept(CompanionVisitor(), Unit) }
+        resolver.getNewFiles().map { it.accept(CompanionVisitor(), Unit) }
         return emptyList()
     }
 

@@ -29,7 +29,7 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getAllFiles().map { it.accept(visitor, Unit) }
+        resolver.getNewFiles().map { it.accept(visitor, Unit) }
         return emptyList()
     }
 

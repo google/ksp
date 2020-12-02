@@ -30,7 +30,7 @@ open class ReferenceElementProcessor: AbstractTestProcessor() {
     val references = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getAllFiles()
+        val files = resolver.getNewFiles()
 
         files.forEach {
             it.accept(collector, references)

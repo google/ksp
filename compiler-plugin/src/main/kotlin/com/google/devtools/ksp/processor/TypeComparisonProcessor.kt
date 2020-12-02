@@ -28,7 +28,7 @@ open class TypeComparisonProcessor : AbstractTestProcessor() {
     val types = mutableSetOf<KSType>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getAllFiles()
+        val files = resolver.getNewFiles()
         val ignoredNames = mutableSetOf<String>()
 
         files.forEach {
