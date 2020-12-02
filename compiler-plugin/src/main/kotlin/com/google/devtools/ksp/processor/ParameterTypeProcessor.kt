@@ -14,7 +14,7 @@ class ParameterTypeProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getAllFiles().map { it.accept(object : KSTopDownVisitor<Unit, Unit>() {
+        resolver.getNewFiles().map { it.accept(object : KSTopDownVisitor<Unit, Unit>() {
             override fun defaultHandler(node: KSNode, data: Unit) {
             }
 

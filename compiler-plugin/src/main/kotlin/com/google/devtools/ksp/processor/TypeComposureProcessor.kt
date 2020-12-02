@@ -26,7 +26,7 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getAllFiles()
+        val files = resolver.getNewFiles()
         val classes = mutableSetOf<KSClassDeclaration>()
         val references = mutableSetOf<KSTypeReference>()
 

@@ -28,7 +28,7 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
     val refs = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getAllFiles()
+        val files = resolver.getNewFiles()
 
         files.forEach {
             it.accept(typeRefCollector, refs)

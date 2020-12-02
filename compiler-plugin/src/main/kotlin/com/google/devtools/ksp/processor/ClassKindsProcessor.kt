@@ -28,7 +28,7 @@ open class ClassKindsProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         fun KSClassDeclaration.pretty(): String = "${qualifiedName!!.asString()}: $classKind"
-        val files = resolver.getAllFiles()
+        val files = resolver.getNewFiles()
         files.forEach {
             it.accept(object : KSTopDownVisitor<Unit, Unit>() {
                 override fun defaultHandler(node: KSNode, data: Unit) = Unit
