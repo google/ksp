@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.processing
 
 import com.google.devtools.ksp.symbol.*
+import java.io.File
 import java.io.OutputStream
 
 /**
@@ -72,6 +73,8 @@ interface CodeGenerator {
      * @see [CodeGenerator] for more details.
      */
     fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String = "kt")
+
+    val generatedFile: Collection<File>
 }
 
 /**

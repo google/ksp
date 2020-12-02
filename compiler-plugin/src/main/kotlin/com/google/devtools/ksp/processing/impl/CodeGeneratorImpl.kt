@@ -88,4 +88,6 @@ class CodeGeneratorImpl(
 
     val outputs: Set<File>
         get() = fileMap.keys.mapTo(mutableSetOf()) { File(it).relativeTo(projectBase) }
+
+    override val generatedFile: Collection<File> = fileMap.values
 }

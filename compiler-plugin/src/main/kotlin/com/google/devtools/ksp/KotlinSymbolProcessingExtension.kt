@@ -70,6 +70,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     var finished = false
     val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
     lateinit var processors: List<SymbolProcessor>
+    lateinit var newFiles: Collection<KSFile>
+//    lateinit var newJavaFiles: Collection<PsiJavaFile>
+    lateinit var incrementalContext: IncrementalContext
+    lateinit var dirtyFiles: List<KSFile>
 
     override fun doAnalysis(
         project: Project,
@@ -90,13 +94,16 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
-        val incrementalContext = IncrementalContext(
-                options, ksFiles, componentProvider,
-                File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
-        )
-        val dirtyFiles = incrementalContext.calcDirtyFiles()
-
-        val resolver = ResolverImpl(module, dirtyFiles, bindingTrace, project, componentProvider, incrementalContext)
+//        val resolver = ResolverImpl(module, dirtyFiles, newFiles, bindingTrace, project, componentProvider, incrementalContext)
+        if (!initialized) {
+            incrementalContext = IncrementalContext(
+                    options, ksFiles, componentProvider,
+                    File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
+            )
+            dirtyFiles = incrementalContext.calcDirtyFiles().toList()
+            newFiles = dirtyFiles
+        }
+        val resolver = ResolverImpl(module, dirtyFiles, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
@@ -121,7 +128,12 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                 deferredSymbols.remove(it)
             }
         }
-        if (deferredSymbols.isEmpty()) {
+        val newKtFiles = codeGen.generatedFile.filter { it.extension == "kt" }
+                .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? KtFile }
+        val newJavaFiles = codeGen.generatedFile.filter { it.extension == "java" }
+                .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? PsiJavaFile}
+        newFiles = newKtFiles.map { KSFileImpl.getCached(it) } + newJavaFiles.map { KSFileJavaImpl.getCached(it) }
+        if (deferredSymbols.isEmpty() || codeGen.generatedFile.isEmpty()) {
             finished = true
         }
         if (finished) {
@@ -131,11 +143,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             if (deferredSymbols.isNotEmpty()) {
                 deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
             }
+            incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGen.outputs, codeGen.sourceToOutputs)
         }
 
         KSObjectCacheManager.clear()
 
-        incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGen.outputs, codeGen.sourceToOutputs)
 
         return AnalysisResult.EMPTY
     }

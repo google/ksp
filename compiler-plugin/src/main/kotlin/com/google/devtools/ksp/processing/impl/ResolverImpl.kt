@@ -21,6 +21,7 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
@@ -77,10 +78,13 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
+import java.io.File
 
 class ResolverImpl(
     val module: ModuleDescriptor,
     val allKSFiles: Collection<KSFile>,
+    val newKSFiles: Collection<KSFile>,
+    private val deferredSymbols: Map<SymbolProcessor, List<KSAnnotated>>,
     val bindingTrace: BindingTrace,
     val project: Project,
     componentProvider: ComponentProvider,
@@ -148,8 +152,12 @@ class ResolverImpl(
         allKSFiles.map { it.accept(visitor, Unit) }
     }
 
+    override fun getNewFiles(): List<KSFile> {
+        return newKSFiles.toList()
+    }
+
     override fun getAllFiles(): List<KSFile> {
-        return allKSFiles.toList()
+        return (allKSFiles.toList() + newKSFiles.toList()).distinct()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -171,17 +179,21 @@ class ResolverImpl(
     }
 
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): List<KSAnnotated> {
-        val ksName = KSNameImpl.getCached(annotationName)
+        fun checkAnnotation(annotated: KSAnnotated): Boolean {
+            val ksName = KSNameImpl.getCached(annotationName)
+
+            return (annotated.annotations.any {
+                        val annotationType = it.annotationType
+                        (annotationType.element as? KSClassifierReference)?.referencedName()
+                                .let { it == null || it == ksName.getShortName() }
+                                && annotationType.resolve().declaration.qualifiedName == ksName
+                    })
+        }
 
         val visitor = object : KSVisitorVoid() {
             val symbols = mutableSetOf<KSAnnotated>()
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
-                if (annotated.annotations.any {
-                        val annotationType = it.annotationType
-                        (annotationType.element as? KSClassifierReference)?.referencedName()
-                            .let { it == null || it == ksName.getShortName() }
-                                && annotationType.resolve().declaration.qualifiedName == ksName
-                    }) {
+                if (checkAnnotation(annotated)) {
                     symbols.add(annotated)
                 }
             }
@@ -228,10 +240,10 @@ class ResolverImpl(
             }
         }
 
-        for (file in allKSFiles) {
+        for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
-        return visitor.symbols.toList()
+        return visitor.symbols.toList() + deferredSymbols.values.flatten().filter{ checkAnnotation(it)  }
     }
 
     override fun getKSNameFromString(name: String): KSName {
