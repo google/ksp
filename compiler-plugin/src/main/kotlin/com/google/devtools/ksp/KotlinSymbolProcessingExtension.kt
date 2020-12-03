@@ -135,7 +135,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         val newJavaFiles = codeGen.generatedFile.filter { it.extension == "java" }
                 .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? PsiJavaFile}
         newFiles = newKtFiles.map { KSFileImpl.getCached(it) } + newJavaFiles.map { KSFileJavaImpl.getCached(it) }
-        if (deferredSymbols.isEmpty() || codeGen.generatedFile.isEmpty()) {
+        if (codeGen.generatedFile.isEmpty()) {
             finished = true
         }
         if (finished) {
