@@ -74,6 +74,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 //    lateinit var newJavaFiles: Collection<PsiJavaFile>
     lateinit var incrementalContext: IncrementalContext
     lateinit var dirtyFiles: List<KSFile>
+    lateinit var dirtyFileNames: Set<String>
 
     override fun doAnalysis(
         project: Project,
@@ -101,9 +102,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                     File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
             )
             dirtyFiles = incrementalContext.calcDirtyFiles().toList()
+            dirtyFileNames = dirtyFiles.map { it.filePath }.toSet()
             newFiles = dirtyFiles
         }
-        val resolver = ResolverImpl(module, dirtyFiles, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
+        val resolver = ResolverImpl(module, ksFiles.filter { it.filePath in dirtyFileNames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
