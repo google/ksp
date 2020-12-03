@@ -159,7 +159,7 @@ class ResolverImpl(
     }
 
     override fun getAllFiles(): List<KSFile> {
-        return (allKSFiles.toList() + newKSFiles.toList()).distinct()
+        return allKSFiles.toList()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
