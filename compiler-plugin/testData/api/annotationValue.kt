@@ -37,11 +37,18 @@
 // G
 // 31
 // [warning1, warning 2]
+// Throws
 // END
 // FILE: a.kt
 
 enum class RGB {
     R, G, B
+}
+
+class ThrowsClass {
+    @Throws(Exception::class)
+    protected open fun throwsException() {
+    }
 }
 
 annotation class Foo(val s: Int)

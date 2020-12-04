@@ -478,6 +478,7 @@ class ResolverImpl(
             when (descriptor) {
                 is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(descriptor)
                 is TypeParameterDescriptor -> KSTypeParameterDescriptorImpl.getCached(descriptor)
+                is TypeAliasDescriptor -> KSTypeAliasDescriptorImpl.getCached(descriptor)
                 null -> throw IllegalStateException("Failed to resolve descriptor for $kotlinType")
                 else -> throw IllegalStateException("Unexpected descriptor type: ${descriptor.javaClass}, $ExceptionMessage")
             }
