@@ -22,6 +22,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
@@ -37,6 +38,8 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
 
         val C = resolver.getClassDeclarationByName("C")!!
         C.annotations.first().arguments.map { results.add(it.value.toString()) }
+        val ThrowsClass = resolver.getClassDeclarationByName("ThrowsClass")!!
+        ThrowsClass.declarations.map { it.annotations.single().annotationType.resolve().declaration.let { results.add(it.toString()) } }
         return emptyList()
     }
 
