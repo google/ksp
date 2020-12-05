@@ -393,21 +393,21 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.10-dev-experimental-20201120/playground-ksp-1.4.10-dev-experimental-20201120.zip
+Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.20-dev-experimental-20201204/playground-ksp-1.4.20-dev-experimental-20201204.zip
 
 ### Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.4.10` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.4.20` of the Kotlin plugin in the root project for use in other project modules.
 
   ```
   plugins {
-      kotlin("jvm") version "1.4.10" apply false
+      kotlin("jvm") version "1.4.20" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.4.10"))
+          classpath(kotlin("gradle-plugin", version = "1.4.20"))
       }
   }
   ```
@@ -429,7 +429,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201120")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.20-dev-experimental-20201204")
   }
   ```
 
@@ -484,7 +484,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
 
   ```
   plugins {
-      id("symbol-processing") version "1.4.10-dev-experimental-20201120"
+      id("symbol-processing") version "1.4.20-dev-experimental-20201204"
       kotlin("jvm") 
   }
 
