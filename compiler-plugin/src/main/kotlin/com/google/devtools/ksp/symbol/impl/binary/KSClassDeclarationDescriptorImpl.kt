@@ -86,6 +86,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
                 it is MemberDescriptor
                         && it.visibility.delegate != Visibilities.Inherited
                         && it.visibility.delegate != Visibilities.InvisibleFake
+                        && (it !is CallableMemberDescriptor || it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE)
             }
             .map {
                 when (it) {
