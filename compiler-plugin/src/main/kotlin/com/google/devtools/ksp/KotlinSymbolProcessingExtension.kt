@@ -33,11 +33,13 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processor.AbstractTestProcessor
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
+import java.io.File
 import java.net.URLClassLoader
 import java.nio.file.Files
 
@@ -75,12 +77,17 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // This time is for .java files
             .distinctBy { it.canonicalPath }
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
+
+        val anyChangesWildcard = AnyChanges(options.projectBaseDir)
+
         val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, project, componentProvider)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
             options.kotlinOutputDir,
-            options.resourceOutputDir
+            options.resourceOutputDir,
+            options.projectBaseDir,
+            anyChangesWildcard
         )
 
         val processors = loadProcessors()
@@ -117,5 +124,35 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         annotationProcessingComplete = true
         return false
+    }
+}
+
+/**
+ * Used when an output potentially depends on new information.
+ */
+internal class AnyChanges(val baseDir: File) : KSFile {
+    override val annotations: List<KSAnnotation>
+        get() = throw Exception("AnyChanges should not be used.")
+
+    override val declarations: List<KSDeclaration>
+        get() = throw Exception("AnyChanges should not be used.")
+
+    override val fileName: String
+        get() = "<AnyChanges is a virtual file; DO NOT USE.>"
+
+    override val filePath: String
+        get() = File(baseDir, fileName).path
+
+    override val packageName: KSName
+        get() = throw Exception("AnyChanges should not be used.")
+
+    override val origin: Origin
+        get() = throw Exception("AnyChanges should not be used.")
+
+    override val location: Location
+        get() = throw Exception("AnyChanges should not be used.")
+
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+        throw Exception("AnyChanges should not be used.")
     }
 }

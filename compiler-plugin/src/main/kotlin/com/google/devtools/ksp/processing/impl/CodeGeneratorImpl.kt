@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
 import java.io.OutputStream
 
@@ -26,13 +27,17 @@ class CodeGeneratorImpl(
     private val classDir: File,
     private val javaDir: File,
     private val kotlinDir: File,
-    private val resourcesDir: File
+    private val resourcesDir: File,
+    private val projectBase: File,
+    override val anyChangesWildcard: KSFile
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
 
     private val separator = File.separator
 
-    override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
+    val sourceToOutputs: MutableMap<File, MutableSet<File>> = mutableMapOf()
+
+    fun pathOf(packageName: String, fileName: String, extensionName: String): String {
         val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
         val extension = if (extensionName != "") ".${extensionName}" else ""
         val typeRoot = when (extensionName) {
@@ -41,7 +46,11 @@ class CodeGeneratorImpl(
             "kt" -> kotlinDir
             else -> resourcesDir
         }.path
-        val path = "$typeRoot$separator$packageDirs$fileName${extension}"
+        return "$typeRoot$separator$packageDirs$fileName${extension}"
+    }
+
+    override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
+        val path = pathOf(packageName, fileName, extensionName)
         if (fileMap[path] != null) return fileMap[path]!!.outputStream()
         val file = File(path)
         val parentFile = file.parentFile
@@ -52,4 +61,14 @@ class CodeGeneratorImpl(
         fileMap[path] = file
         return file.outputStream()
     }
+
+    override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
+        val output = File(pathOf(packageName, fileName, extensionName)).relativeTo(projectBase)
+        sources.forEach { source ->
+            sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
+        }
+    }
+
+    val outputs: Set<File>
+        get() = fileMap.keys.mapTo(mutableSetOf()) { File(it).relativeTo(projectBase) }
 }

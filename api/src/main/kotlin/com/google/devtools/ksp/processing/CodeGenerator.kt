@@ -18,7 +18,7 @@
 
 package com.google.devtools.ksp.processing
 
-import java.io.File
+import com.google.devtools.ksp.symbol.*
 import java.io.OutputStream
 
 /**
@@ -40,4 +40,32 @@ interface CodeGenerator {
      * @see [CodeGenerator] for more details.
      */
     fun createNewFile(packageName: String, fileName: String, extensionName: String = "kt"): OutputStream
+
+    /**
+     * Associate [sources] to an output file.
+     *
+     * [sources] are used to determine the dirty set in incremental processing. If a processor doesn't specify the correspondence between
+     * sources and outputs, no incremental processing would be possible.
+     *
+     * @param sources are [KSFile]s from which output is built.
+     * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
+     * @param fileName file name
+     * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
+     *                      Otherwise its creation is only considered in incremental processing.
+     * @return OutputStream for writing into files.
+     * @see [CodeGenerator] for more details.
+     */
+    fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String = "kt")
+
+    /**
+     * A place holder / wildcard for any changes in the future.
+     *
+     * Associating an output with [anyChangesWildcard] will invalidate this output whenever there is a new source file or a change in existing files,
+     * i.e., when there are new information.
+     *
+     * Although the removal of a file doesn't introduce new information most of time, there are cases that symbol resolution can be affected.
+     * When that happens, it is considered a change to an existing file in which references are potentially affected, even if that file is not
+     * modified at all.
+     */
+    val anyChangesWildcard: KSFile
 }
