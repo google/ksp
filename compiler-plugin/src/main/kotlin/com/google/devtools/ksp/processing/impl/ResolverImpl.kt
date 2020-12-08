@@ -41,7 +41,11 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImp
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import com.google.devtools.ksp.visitor.KSDefaultVisitor
+import com.google.devtools.ksp.visitor.KSTopDownVisitor
+import com.intellij.util.containers.MultiMap
 import org.jetbrains.kotlin.codegen.OwnerKind
+import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
@@ -82,13 +86,13 @@ import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 
 class ResolverImpl(
     val module: ModuleDescriptor,
-    files: Collection<KtFile>,
+    files: Collection<KSFile>,
     javaFiles: Collection<PsiJavaFile>,
     val bindingTrace: BindingTrace,
     val project: Project,
     componentProvider: ComponentProvider
 ) : Resolver {
-    val ksFiles: List<KSFile>
+    val allKSFiles: List<KSFile>
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
@@ -125,7 +129,7 @@ class ResolverImpl(
         constantExpressionEvaluator = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
-        ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
+        allKSFiles = files + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
@@ -148,11 +152,11 @@ class ResolverImpl(
                 classDeclaration.declarations.map { it.accept(this, data) }
             }
         }
-        ksFiles.map { it.accept(visitor, Unit) }
+        allKSFiles.map { it.accept(visitor, Unit) }
     }
 
     override fun getAllFiles(): List<KSFile> {
-        return ksFiles
+        return allKSFiles
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -232,7 +236,7 @@ class ResolverImpl(
             }
         }
 
-        for (file in ksFiles) {
+        for (file in allKSFiles) {
             file.accept(visitor, Unit)
         }
         return visitor.symbols.toList()
