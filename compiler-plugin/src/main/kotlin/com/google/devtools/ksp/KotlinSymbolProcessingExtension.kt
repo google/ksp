@@ -35,6 +35,7 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
+import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -79,8 +80,16 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
+        val isIncremental = options.incremental && (options.knownModified.isNotEmpty() || options.knownRemoved.isNotEmpty()) &&
+                (options.knownModified + options.knownRemoved).all { it.isKotlinFile(listOf("kt")) }
+        val incrementalContext = IncrementalContext(
+                options, files, componentProvider,
+                File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir),
+                isIncremental
+        )
+        val dirtyFiles = incrementalContext.calcDirtyFiles()
 
-        val resolver = ResolverImpl(module, files, javaFiles, bindingTrace, project, componentProvider)
+        val resolver = ResolverImpl(module, dirtyFiles, javaFiles, bindingTrace, project, componentProvider)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
@@ -102,6 +111,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         }
 
         KSObjectCacheManager.clear()
+
+        incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGen.outputs, codeGen.sourceToOutputs)
 
         return AnalysisResult.EMPTY
     }
