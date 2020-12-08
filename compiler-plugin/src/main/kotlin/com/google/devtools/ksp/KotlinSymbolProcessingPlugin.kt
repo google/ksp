@@ -28,9 +28,12 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.incremental.LookupTrackerImpl
+import org.jetbrains.kotlin.incremental.components.LookupTracker
 
 private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("Ksp options")
 
@@ -56,10 +59,17 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
         KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
         KspCliOption.RESOURCE_OUTPUT_DIR_OPTION -> resourceOutputDir = File(value)
+        KspCliOption.CACHES_DIR_OPTION -> cachesDir = File(value)
+        KspCliOption.KSP_OUTPUT_DIR_OPTION -> kspOutputDir = File(value)
+        KspCliOption.PROJECT_BASE_DIR_OPTION -> projectBaseDir = File(value)
         KspCliOption.PROCESSING_OPTIONS_OPTION -> {
             val (k, v) = value.split('=', ignoreCase = false, limit = 2)
             processingOptions.put(k, v)
         }
+        KspCliOption.KNOWN_MODIFIED_OPTION -> knownModified.addAll(value.split('=').map { File(it) } )
+        KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split('=').map { File(it) } )
+        KspCliOption.INCREMENTAL_OPTION -> incremental = value.toBoolean()
+        KspCliOption.INCREMENTAL_LOG_OPTION -> incrementalLog = value.toBoolean()
     }
 }
 
@@ -75,6 +85,7 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         if (options.processingClasspath.isNotEmpty()) {
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
+            configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, LookupTrackerImpl(LookupTracker.DO_NOTHING))
         }
     }
 }
@@ -114,6 +125,27 @@ enum class KspCliOption(
         false
     ),
 
+    CACHES_DIR_OPTION(
+            "cachesDir",
+            "<cachesDir>",
+            "Dir of caches",
+            false
+    ),
+
+    PROJECT_BASE_DIR_OPTION(
+            "projectBaseDir",
+            "<projectBaseDir>",
+            "path to gradle project",
+            false
+    ),
+
+    KSP_OUTPUT_DIR_OPTION(
+            "kspOutputDir",
+            "<kspOutputDir>",
+            "root of ksp output dirs",
+            false
+    ),
+
     PROCESSING_OPTIONS_OPTION(
         "apoption",
         "<apOption>",
@@ -127,11 +159,43 @@ enum class KspCliOption(
         "<classpath>",
         "processor classpath",
         false
+    ),
+
+    KNOWN_MODIFIED_OPTION(
+            "knownModified",
+            "<knownModified>",
+            "known modified files",
+            false,
+            false
+    ),
+
+    KNOWN_REMOVED_OPTION(
+            "knownRemoved",
+            "<knownRemoved>",
+            "known removed fiels",
+            false,
+            false
+    ),
+
+    INCREMENTAL_OPTION(
+    "incremental",
+    "<incremental>",
+    "processing incrementally",
+    false,
+    false
+    ),
+
+    INCREMENTAL_LOG_OPTION(
+    "incrementalLog",
+    "<incrementalLog>",
+    "log dirty files",
+    false,
+    false
     );
 }
 
 class KspOptions(
-    val projectBaseDir: File?,
+    val projectBaseDir: File,
     val compileClasspath: List<File>,
     val javaSourceRoots: List<File>,
 
@@ -143,7 +207,15 @@ class KspOptions(
     val processingClasspath: List<File>,
     val processors: List<String>,
 
-    val processingOptions: Map<String, String>
+    val processingOptions: Map<String, String>,
+
+    val knownModified: List<File>,
+    val knownRemoved: List<File>,
+
+    val cachesDir: File,
+    val kspOutputDir: File,
+    val incremental: Boolean,
+    val incrementalLog: Boolean,
 ) {
     class Builder {
         var projectBaseDir: File? = null
@@ -160,14 +232,23 @@ class KspOptions(
 
         val processingOptions: MutableMap<String, String> = mutableMapOf()
 
+        val knownModified: MutableList<File> = mutableListOf()
+        val knownRemoved: MutableList<File> = mutableListOf()
+
+        var cachesDir: File? = null
+        var kspOutputDir: File? = null
+        var incremental: Boolean = false
+        var incrementalLog: Boolean = false
+
         fun build(): KspOptions {
             return KspOptions(
-                projectBaseDir, compileClasspath, javaSourceRoots,
+                projectBaseDir!!, compileClasspath, javaSourceRoots,
                 classOutputDir!!,
                 javaOutputDir!!,
                 kotlinOutputDir!!,
                 resourceOutputDir!!,
-                processingClasspath, processors, processingOptions
+                processingClasspath, processors, processingOptions,
+                knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog
             )
         }
     }
