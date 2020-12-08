@@ -26,6 +26,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
@@ -35,7 +36,10 @@ import org.jetbrains.kotlin.gradle.plugin.mapClasspath
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.tasks.KOTLIN_BUILD_DIR_NAME
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.incremental.ChangedFiles
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import javax.inject.Inject
 
@@ -65,6 +69,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         @JvmStatic
         fun getKspResourceOutputDir(project: Project, sourceSetName: String) =
                 File(getKspOutputDir(project, sourceSetName), "resources")
+
+        @JvmStatic
+        fun getKspCachesDir(project: Project, sourceSetName: String) =
+                File(project.project.buildDir, "kspCaches/$sourceSetName")
     }
 
     override fun apply(project: Project) {
@@ -94,10 +102,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val javaOutputDir = getKspJavaOutputDir(project, sourceSetName)
         val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName)
         val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName)
+        val cachesDir = getKspCachesDir(project, sourceSetName)
+        val kspOutputDir = getKspOutputDir(project, sourceSetName)
         options += SubpluginOption("classOutputDir", classOutputDir.path)
         options += SubpluginOption("javaOutputDir", javaOutputDir.path)
         options += SubpluginOption("kotlinOutputDir", kotlinOutputDir.path)
         options += SubpluginOption("resourceOutputDir", resourceOutputDir.path)
+        options += SubpluginOption("cachesDir", cachesDir.path)
+        options += SubpluginOption("incremental", project.findProperty("ksp.incremental")?.toString() ?: "false")
+        options += SubpluginOption("incrementalLog", project.findProperty("ksp.incremental.log")?.toString() ?: "false")
+        options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
+        options += SubpluginOption("kspOutputDir", kspOutputDir.path)
 
         kspExtension.apOptions.forEach {
             options += SubpluginOption("apoption", "${it.key}=${it.value}")
@@ -159,7 +174,7 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
             else -> null
         }
 
-open class KspTask : KotlinCompile() {
+open class KspTask : KspTaskJ() {
     lateinit var options: List<SubpluginOption>
 
     init {
@@ -170,12 +185,25 @@ open class KspTask : KotlinCompile() {
     }
 
     override fun setupCompilerArgs(
-            args: org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments,
+            args: K2JVMCompilerArguments,
             defaultsOnly: Boolean,
             ignoreClasspathResolutionErrors: Boolean
     ) {
-        fun SubpluginOption.toArg() = "plugin:${KspGradleSubplugin.KSP_PLUGIN_ID}:${key}=${value}"
         super.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
-        args.pluginOptions = (options.map { it.toArg() } + args.pluginOptions!!).toTypedArray()
+        args.addPluginOptions(options)
+    }
+}
+
+fun K2JVMCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
+    fun SubpluginOption.toArg() = "plugin:${KspGradleSubplugin.KSP_PLUGIN_ID}:${key}=${value}"
+    pluginOptions = (options.map { it.toArg() } + pluginOptions!!).toTypedArray()
+}
+
+fun K2JVMCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
+    if (changedFiles is ChangedFiles.Known) {
+        val options = mutableListOf<SubpluginOption>()
+        changedFiles.modified.ifNotEmpty { options += SubpluginOption("knownModified", map { it.path }.joinToString(":")) }
+        changedFiles.removed.ifNotEmpty { options += SubpluginOption("knownRemoved", map { it.path }.joinToString(":")) }
+        options.ifNotEmpty { addPluginOptions(this) }
     }
 }

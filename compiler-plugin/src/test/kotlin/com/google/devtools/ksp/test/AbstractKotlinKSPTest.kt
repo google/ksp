@@ -128,6 +128,9 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
                     javaOutputDir = File(moduleRoot,"kspTest/src/main/java")
                     kotlinOutputDir = File(moduleRoot,"kspTest/src/main/kotlin")
                     resourceOutputDir = File(moduleRoot,"kspTest/src/main/resources")
+                    projectBaseDir = moduleRoot
+                    cachesDir = File(moduleRoot, "kspTest/kspCaches")
+                    kspOutputDir = File(moduleRoot, "kspTest")
                 }.build(), logger, testProcessor)
             val project = environment.project
             AnalysisHandlerExtension.registerExtension(project, analysisExtension)
