@@ -87,6 +87,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/companion.kt");
     }
 
+    @TestMetadata("crossModuleTypeAlias.kt")
+    public void testCrossModuleTypeAlias() throws Exception {
+        runTest("testData/api/crossModuleTypeAlias.kt");
+    }
+
     @TestMetadata("declarationPackageName.kt")
     public void testDeclarationPackageName() throws Exception {
         runTest("testData/api/declarationPackageName.kt");
