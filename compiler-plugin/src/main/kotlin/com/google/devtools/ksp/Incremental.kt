@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
-import org.jetbrains.kotlin.incremental.storage.FileToCanonicalPathConverter
+import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.DataInput
 import java.io.DataOutput
@@ -119,6 +119,11 @@ object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
     }
 }
 
+internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConverter {
+    override fun toPath(file: File): String = file.path
+    override fun toFile(path: String): File = File(path).relativeTo(baseDir)
+}
+
 class IncrementalContext(
         private val options: KspOptions,
         private val ktFiles: Collection<KtFile>,
@@ -141,7 +146,7 @@ class IncrementalContext(
 
     private val lookupTracker: LookupTracker = componentProvider.get()
     private val lookupCacheDir = options.cachesDir
-    private val PATH_CONVERTER = FileToCanonicalPathConverter
+    private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
     private val lookupCache = LookupStorage(lookupCacheDir, PATH_CONVERTER)
 
     private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
