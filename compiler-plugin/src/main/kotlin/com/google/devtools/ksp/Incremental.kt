@@ -1,8 +1,27 @@
+/*
+ * Copyright 2020 Google LLC
+ * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil
@@ -11,6 +30,8 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
+import org.jetbrains.kotlin.incremental.components.Position
+import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
@@ -427,6 +448,48 @@ class IncrementalContext(
         updateCaches(dirtyFilePaths, outputs, sourceToOutputs)
         updateOutputs(outputs, cleanOutputs)
 
+    }
+
+    fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
+        val path = psiFile.virtualFile.path
+        val name = fqn.substringAfterLast('.')
+        val scope = fqn.substringBeforeLast('.')
+
+        fun record(scope: String, name: String) =
+            lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.CLASSIFIER, name)
+
+        record(scope, name)
+        val onDemandImports =
+                psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
+        if (scope in onDemandImports) {
+            record(psiFile.packageName, name)
+            onDemandImports.forEach {
+                record(it, name)
+            }
+        }
+    }
+
+    private fun recordLookup(ref: PsiClassReferenceType, def: PsiClass) {
+        val psiFile = ref.reference.containingFile as? PsiJavaFile ?: return
+        // A type parameter doesn't have qualified name.
+        def.qualifiedName?.let { recordLookup(psiFile, it) }
+    }
+
+    fun recordLookup(ref: PsiType) {
+        when (ref) {
+            is PsiArrayType -> recordLookup(ref.componentType)
+            is PsiClassReferenceType -> {
+                val def = ref.resolve() ?: return
+                recordLookup(ref, def)
+                // in case the corresponding KotlinType is passed through ways other than KSTypeReferenceJavaImpl
+                ref.typeArguments().forEach {
+                    if (it is PsiType) {
+                        recordLookup(it)
+                    }
+                }
+            }
+            is PsiWildcardType -> ref.bound?.let { recordLookup(it) }
+        }
     }
 }
 

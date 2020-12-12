@@ -84,7 +84,8 @@ class ResolverImpl(
     javaFiles: Collection<PsiJavaFile>,
     val bindingTrace: BindingTrace,
     val project: Project,
-    componentProvider: ComponentProvider
+    componentProvider: ComponentProvider,
+    val incrementalContext: IncrementalContext
 ) : Resolver {
     val allKSFiles: List<KSFile>
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
@@ -393,6 +394,7 @@ class ResolverImpl(
     }
 
     fun resolveJavaType(psi: PsiType): KotlinType {
+        incrementalContext.recordLookup(psi)
         val javaType = JavaTypeImpl.create(psi)
         return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
@@ -440,6 +442,11 @@ class ResolverImpl(
             is KSTypeReferenceJavaImpl -> {
                 val psi = (type.psi as? PsiClassReferenceType)?.resolve()
                 if (psi is PsiTypeParameter) {
+                    (type.psi as PsiClassReferenceType).typeArguments().forEach {
+                        if (it is PsiType) {
+                            incrementalContext.recordLookup(it)
+                        }
+                    }
                     val containingDeclaration = if (psi.owner is PsiClass) {
                         moduleClassResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
                     } else {

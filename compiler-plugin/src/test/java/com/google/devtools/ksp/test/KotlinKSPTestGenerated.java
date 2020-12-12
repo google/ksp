@@ -187,6 +187,10 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/platformDeclaration.kt");
     }
 
+    @TestMetadata("recordJavaResolutions.kt")
+    public void testRecordJavaResolutions() throws Exception {
+        runTest("testData/api/recordJavaResolutions.kt");
+    }
     @TestMetadata("referenceElement.kt")
     public void testReferenceElement() throws Exception {
         runTest("testData/api/referenceElement.kt");
