@@ -89,7 +89,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         )
         val dirtyFiles = incrementalContext.calcDirtyFiles()
 
-        val resolver = ResolverImpl(module, dirtyFiles, javaFiles, bindingTrace, project, componentProvider)
+        val resolver = ResolverImpl(module, dirtyFiles, javaFiles, bindingTrace, project, componentProvider, incrementalContext)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
