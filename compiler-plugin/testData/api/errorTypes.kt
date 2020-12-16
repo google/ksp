@@ -28,6 +28,7 @@
 // class C is assignable from errorInComponent: false
 // Any is assignable from class C: true
 // Cls's super type is Error type: true
+// Cls's annotation is Error type: true
 // END
 // FILE: a.kt
 class C {
@@ -37,6 +38,7 @@ class C {
 
 // FILE: Cls.java
 
+@NonExistingAnnotation
 public class Cls extends NonExistType {
 
 }
