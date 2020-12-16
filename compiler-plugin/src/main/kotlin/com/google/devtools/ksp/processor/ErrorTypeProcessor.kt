@@ -67,6 +67,10 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         val Cls = resolver.getClassDeclarationByName("Cls")!!
         val type = Cls.superTypes[0].resolve()
         result.add("Cls's super type is Error type: ${type.isError}")
+        Cls.annotations.forEach {
+            val annotation = it.annotationType.resolve()
+            result.add("Cls's annotation is Error type: ${annotation.isError}")
+        }
         return emptyList()
     }
 

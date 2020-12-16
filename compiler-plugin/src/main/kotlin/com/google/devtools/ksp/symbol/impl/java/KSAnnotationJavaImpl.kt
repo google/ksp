@@ -43,8 +43,9 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
     }
 
     override val annotationType: KSTypeReference by lazy {
+        val psiClass = psi.nameReferenceElement!!.resolve() as? PsiClass ?: return@lazy KSTypeReferenceLiteJavaImpl.getCached(KSErrorType)
         KSTypeReferenceLiteJavaImpl.getCached(
-            KSClassDeclarationJavaImpl.getCached(psi.nameReferenceElement!!.resolve() as PsiClass).asType(emptyList())
+            KSClassDeclarationJavaImpl.getCached(psiClass).asType(emptyList())
         )
     }
 
