@@ -40,9 +40,13 @@
 // fileLevelInlineReturningFun -> fileLevelInlineReturningFun
 // fileLevelInternalInlineReceivingFun -> fileLevelInternalInlineReceivingFun-E03SJzc
 // fileLevelInternalInlineReturningFun -> fileLevelInternalInlineReturningFun
+// mainPackage.MyInterface -> declarations
 // JavaInput -> declarations
 // javaFunction -> javaFunction
 // staticJavaFunction -> staticJavaFunction
+// getX -> getX
+// getY -> getY
+// setY -> setY
 // libPackage.Foo -> declarations
 // get-inlineProp -> getInlineProp-b_MPbnQ
 // set-inlineProp -> setInlineProp-mQ73O9w
@@ -112,10 +116,25 @@ fun fileLevelInlineReturningFun(): Inline1 = TODO()
 fun fileLevelInternalInlineReceivingFun(inline1: Inline1): Unit = TODO()
 fun fileLevelInternalInlineReturningFun(): Inline1 = TODO()
 
+interface MyInterface {
+    val x:Int
+    var y:Int
+}
+
 // FILE: JavaInput.java
-class JavaInput {
+import mainPackage.MyInterface;
+
+class JavaInput implements MyInterface {
     String javaField;
     String javaFunction() {}
     static String staticJavaField;
     static void staticJavaFunction() {}
+    public int getX() {
+        return 1;
+    }
+    public int getY() {
+        return 1;
+    }
+    public void setY(int value) {
+    }
 }
