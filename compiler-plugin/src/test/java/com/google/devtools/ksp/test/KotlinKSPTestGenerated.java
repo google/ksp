@@ -192,9 +192,9 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/recordJavaAnnotationTypes.kt");
     }
 
-    @TestMetadata("recordJavaResolutions.kt")
-    public void testRecordJavaResolutions() throws Exception {
-        runTest("testData/api/recordJavaResolutions.kt");
+    @TestMetadata("recordJavaSupertypes.kt")
+    public void testRecordJavaSupertypes() throws Exception {
+        runTest("testData/api/recordJavaSupertypes.kt");
     }
 
     @TestMetadata("referenceElement.kt")
