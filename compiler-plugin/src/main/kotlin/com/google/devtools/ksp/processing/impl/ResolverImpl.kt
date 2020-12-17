@@ -47,6 +47,7 @@ import com.intellij.util.containers.MultiMap
 import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.load.java.components.TypeUsage
+import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
@@ -363,7 +364,18 @@ class ResolverImpl(
         return when (function) {
             is KSFunctionDeclarationImpl -> resolveDeclaration(function.ktFunction)
             is KSFunctionDeclarationDescriptorImpl -> function.descriptor
-            is KSFunctionDeclarationJavaImpl -> resolveJavaDeclaration(function.psi)
+            is KSFunctionDeclarationJavaImpl -> {
+                val descriptor = resolveJavaDeclaration(function.psi)
+                if (descriptor is JavaForKotlinOverridePropertyDescriptor) {
+                    if (function.simpleName.asString().startsWith("set")) {
+                        descriptor.setter
+                    } else {
+                        descriptor.getter
+                    }
+                } else {
+                    descriptor
+                }
+            }
             is KSConstructorSyntheticImpl -> resolveClassDeclaration(function.ksClassDeclaration)?.unsubstitutedPrimaryConstructor
             else -> throw IllegalStateException("unexpected class: ${function.javaClass}")
         } as FunctionDescriptor?
