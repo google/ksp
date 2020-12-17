@@ -62,7 +62,11 @@ class KSTypeImpl private constructor(
         ksTypeArguments ?: kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it) }
     }
 
-    override fun isAssignableFrom(that: KSType): Boolean = (that as? KSTypeImpl)?.kotlinType?.isSubtypeOf(kotlinType) == true
+    override fun isAssignableFrom(that: KSType): Boolean {
+        val subType = (that as? KSTypeImpl)?.kotlinType ?: return false
+        ResolverImpl.instance.incrementalContext.recordLookupWithSupertypes(subType)
+        return subType.isSubtypeOf(kotlinType)
+    }
 
     // TODO: find a better way to reuse the logic in [DescriptorRendererImpl.renderFlexibleType].
     override fun isMutabilityFlexible(): Boolean {

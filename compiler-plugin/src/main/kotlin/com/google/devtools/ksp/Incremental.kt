@@ -18,6 +18,7 @@
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
 import com.intellij.psi.*
@@ -36,6 +37,8 @@ import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.io.DataInput
 import java.io.DataOutput
 import java.io.File
@@ -453,7 +456,7 @@ class IncrementalContext(
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
         val path = psiFile.virtualFile.path
         val name = fqn.substringAfterLast('.')
-        val scope = fqn.substringBeforeLast('.')
+        val scope = fqn.substringBeforeLast('.', "<anonymous>")
 
         fun record(scope: String, name: String) =
             lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.CLASSIFIER, name)
@@ -490,6 +493,27 @@ class IncrementalContext(
             }
             is PsiWildcardType -> ref.bound?.let { recordLookup(it) }
         }
+    }
+
+    fun recordLookupWithSupertypes(kotlinType: KotlinType) {
+        (listOf(kotlinType) + kotlinType.supertypes()).mapNotNull {
+            it.constructor.declarationDescriptor?.findPsi() as? PsiClass
+        }.forEach {
+            it.superTypes.forEach {
+                recordLookup(it)
+            }
+        }
+    }
+
+    fun dumpLookupRecords(): Map<String, List<String>> {
+        val map = mutableMapOf<String, List<String>>()
+        if (lookupTracker is LookupTrackerImpl) {
+            lookupTracker.lookups.entrySet().forEach { e ->
+                val key = "${e.key.scope}.${e.key.name}"
+                map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
+            }
+        }
+        return map
     }
 }
 
