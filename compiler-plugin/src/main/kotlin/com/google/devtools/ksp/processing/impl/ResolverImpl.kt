@@ -570,6 +570,8 @@ class ResolverImpl(
                 "not declared in a class or an interface")
         val declaration = resolvePropertyDeclaration(property)
         if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            incrementalContext.recordLookupWithSupertypes(containing.kotlinType)
+            incrementalContext.recordLookupForDeclaration(property)
             if (!containing.kotlinType.isSubtypeOf(propertyDeclaredIn)) {
                 throw IllegalArgumentException(
                     "$containing is not a sub type of the class/interface that contains `$property` ($propertyDeclaredIn)"
@@ -604,6 +606,8 @@ class ResolverImpl(
                 "not declared in a class or an interface")
         val declaration = resolveFunctionDeclaration(function)
         if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            incrementalContext.recordLookupWithSupertypes(containing.kotlinType)
+            incrementalContext.recordLookupForDeclaration(function)
             if (!containing.kotlinType.isSubtypeOf(functionDeclaredIn)) {
                 throw IllegalArgumentException(
                     "$containing is not a sub type of the class/interface that contains " +

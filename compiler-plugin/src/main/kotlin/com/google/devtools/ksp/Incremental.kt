@@ -19,6 +19,8 @@ package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findPsi
+import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
 import com.intellij.psi.*
@@ -29,6 +31,7 @@ import com.intellij.util.io.IOUtil
 import com.intellij.util.io.KeyDescriptor
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
@@ -503,6 +506,27 @@ class IncrementalContext(
                 recordLookup(it)
             }
         }
+    }
+
+    fun recordLookupForDeclaration(declaration: KSDeclaration) {
+        when (declaration) {
+            is KSPropertyDeclarationJavaImpl -> {
+                recordLookup(declaration.psi.type)
+            }
+            is KSFunctionDeclarationJavaImpl -> {
+                val psi = declaration.psi
+                psi.parameterList.parameters.forEach {
+                    recordLookup(it.type)
+                }
+                psi.returnType?.let { recordLookup(it) }
+                psi.typeParameters.forEach {
+                    it.bounds.mapNotNull { it as? PsiType }.forEach {
+                        recordLookup(it)
+                    }
+                }
+            }
+        }
+
     }
 
     fun dumpLookupRecords(): Map<String, List<String>> {
