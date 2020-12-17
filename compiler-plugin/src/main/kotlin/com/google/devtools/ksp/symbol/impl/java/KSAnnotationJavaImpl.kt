@@ -20,7 +20,6 @@ package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
@@ -30,6 +29,7 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import com.intellij.lang.jvm.JvmClassKind
 import com.intellij.psi.*
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -44,6 +44,9 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
 
     override val annotationType: KSTypeReference by lazy {
         val psiClass = psi.nameReferenceElement!!.resolve() as? PsiClass ?: return@lazy KSTypeReferenceLiteJavaImpl.getCached(KSErrorType)
+        (psi.containingFile as? PsiJavaFile)?.let {
+            ResolverImpl.instance.incrementalContext.recordLookup(it, psiClass.qualifiedName!!)
+        }
         KSTypeReferenceLiteJavaImpl.getCached(
             KSClassDeclarationJavaImpl.getCached(psiClass).asType(emptyList())
         )
