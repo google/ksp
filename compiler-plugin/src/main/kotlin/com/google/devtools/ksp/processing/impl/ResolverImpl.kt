@@ -19,16 +19,6 @@
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.*
-import com.intellij.openapi.project.Project
-import com.intellij.psi.*
-import com.intellij.psi.impl.source.PsiClassReferenceType
-import org.jetbrains.kotlin.codegen.ClassBuilderMode
-import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
-import org.jetbrains.kotlin.container.ComponentProvider
-import org.jetbrains.kotlin.container.get
-import org.jetbrains.kotlin.descriptors.*
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
-import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
@@ -37,15 +27,21 @@ import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
-import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
-import com.google.devtools.ksp.visitor.KSDefaultVisitor
-import com.google.devtools.ksp.visitor.KSTopDownVisitor
-import com.intellij.util.containers.MultiMap
+import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
+import com.intellij.openapi.project.Project
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
-import org.jetbrains.kotlin.incremental.components.LookupTracker
+import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
+import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
 import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
@@ -55,11 +51,7 @@ import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
+import org.jetbrains.kotlin.load.java.structure.impl.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
@@ -83,6 +75,7 @@ import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
+import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 
 class ResolverImpl(
@@ -163,8 +156,7 @@ class ResolverImpl(
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
         nameToKSMap[name]?.let { return it }
 
-        return (module.resolveClassByFqName(FqName(name.asString()), NoLookupLocation.FROM_BUILTINS)
-            ?: module.resolveClassByFqName(FqName(name.asString()), NoLookupLocation.FROM_DESERIALIZATION))
+        return module.resolveClassByFqName(FqName(name.asString()), NoLookupLocation.WHEN_FIND_BY_FQNAME)
             ?.let {
                 val psi = it.findPsi()
                 if (psi != null) {
@@ -653,6 +645,13 @@ class ResolverImpl(
             override val arrayType: KSType by lazy { getKSTypeCached(builtIns.array.defaultType.replaceArgumentsWithStarProjections()) }
         }
     }
+
+    internal val mockSerializableType = module.builtIns.numberType.supertypes().single {
+        it.constructor.declarationDescriptor?.name?.asString() == "Serializable"
+    }
+
+    internal val javaSerializableType = module.resolveClassByFqName(FqName("java.io.Serializable"), NoLookupLocation.WHEN_FIND_BY_FQNAME)!!.defaultType
+
 }
 
 open class BaseVisitor : KSVisitorVoid() {
