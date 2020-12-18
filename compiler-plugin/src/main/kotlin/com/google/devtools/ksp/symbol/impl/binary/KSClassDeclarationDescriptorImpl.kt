@@ -19,12 +19,13 @@
 package com.google.devtools.ksp.symbol.impl.binary
 
 import com.google.devtools.ksp.ExceptionMessage
-import org.jetbrains.kotlin.descriptors.*
+import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -68,10 +69,14 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         descriptor.unsubstitutedPrimaryConstructor?.let { KSFunctionDeclarationDescriptorImpl.getCached(it) }
     }
 
+    // Workaround for https://github.com/google/ksp/issues/195
+    private val mockSerializableType = ResolverImpl.instance.mockSerializableType
+    private val javaSerializableType = ResolverImpl.instance.javaSerializableType
+
     override val superTypes: List<KSTypeReference> by lazy {
         descriptor.defaultType.constructor.supertypes.map {
             KSTypeReferenceDescriptorImpl.getCached(
-                it
+                if (it === mockSerializableType) javaSerializableType else it
             )
         }
     }
