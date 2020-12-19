@@ -80,14 +80,12 @@ import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 
 class ResolverImpl(
     val module: ModuleDescriptor,
-    files: Collection<KSFile>,
-    javaFiles: Collection<PsiJavaFile>,
+    val allKSFiles: Collection<KSFile>,
     val bindingTrace: BindingTrace,
     val project: Project,
     componentProvider: ComponentProvider,
     val incrementalContext: IncrementalContext
 ) : Resolver {
-    val allKSFiles: List<KSFile>
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
@@ -124,7 +122,6 @@ class ResolverImpl(
         constantExpressionEvaluator = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
-        allKSFiles = files + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
@@ -151,7 +148,7 @@ class ResolverImpl(
     }
 
     override fun getAllFiles(): List<KSFile> {
-        return allKSFiles
+        return allKSFiles.toList()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
