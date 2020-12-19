@@ -21,7 +21,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -40,7 +39,6 @@ import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.supertypes
@@ -155,7 +153,7 @@ internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConver
 
 class IncrementalContext(
         private val options: KspOptions,
-        private val ktFiles: Collection<KtFile>,
+        private val ksFiles: List<KSFile>,
         private val componentProvider: ComponentProvider,
         private val anyChangesWildcard: File,
         private val isIncremental: Boolean
@@ -165,8 +163,6 @@ class IncrementalContext(
 
     // Symbols defined in each file. This is
     private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
-
-    private val ksFiles = ktFiles.map { KSFileImpl.getCached(it) }
 
     private val baseDir = options.projectBaseDir
 

@@ -35,6 +35,9 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
+import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
+import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -80,16 +83,17 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
+        val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val isIncremental = options.incremental && (options.knownModified.isNotEmpty() || options.knownRemoved.isNotEmpty()) &&
-                (options.knownModified + options.knownRemoved).all { it.isKotlinFile(listOf("kt")) }
+                (options.knownModified + options.knownRemoved).all { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }
         val incrementalContext = IncrementalContext(
-                options, files, componentProvider,
+                options, ksFiles, componentProvider,
                 File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir),
                 isIncremental
         )
         val dirtyFiles = incrementalContext.calcDirtyFiles()
 
-        val resolver = ResolverImpl(module, dirtyFiles, javaFiles, bindingTrace, project, componentProvider, incrementalContext)
+        val resolver = ResolverImpl(module, dirtyFiles, bindingTrace, project, componentProvider, incrementalContext)
         val codeGen = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
