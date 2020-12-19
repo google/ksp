@@ -50,12 +50,14 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
+        ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(descriptor)
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
             .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
             .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
     }
 
     override fun getAllProperties(): List<KSPropertyDeclaration> {
+        ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(descriptor)
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
                 .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
                 .map { (it as PropertyDescriptor).toKSPropertyDeclaration() }

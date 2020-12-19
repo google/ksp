@@ -197,6 +197,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/recordJavaAsMemberOf.kt");
     }
 
+    @TestMetadata("recordJavaGetAllMembers.kt")
+    public void testRecordJavaGetAllMembers() throws Exception {
+        runTest("testData/api/recordJavaGetAllMembers.kt");
+    }
+
     @TestMetadata("recordJavaOverrides.kt")
     public void testRecordJavaOverrides() throws Exception {
         runTest("testData/api/recordJavaOverrides.kt");
