@@ -18,18 +18,14 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.lang.jvm.JvmModifier
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiMethod
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import com.google.devtools.ksp.isOpen
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.resolve.OverridingUtil
+import com.intellij.lang.jvm.JvmModifier
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiMethod
 
 class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KSFunctionDeclaration, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {

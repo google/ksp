@@ -29,8 +29,10 @@ import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil
 import com.intellij.util.io.KeyDescriptor
+import org.intellij.plugins.relaxNG.compact.psi.util.PsiFunction
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
@@ -508,25 +510,35 @@ class IncrementalContext(
         }
     }
 
-    fun recordLookupForDeclaration(declaration: KSDeclaration) {
-        when (declaration) {
-            is KSPropertyDeclarationJavaImpl -> {
-                recordLookup(declaration.psi.type)
-            }
-            is KSFunctionDeclarationJavaImpl -> {
-                val psi = declaration.psi
-                psi.parameterList.parameters.forEach {
-                    recordLookup(it.type)
-                }
-                psi.returnType?.let { recordLookup(it) }
-                psi.typeParameters.forEach {
-                    it.bounds.mapNotNull { it as? PsiType }.forEach {
-                        recordLookup(it)
-                    }
-                }
+    private fun recordLookup(psi: PsiField) {
+        recordLookup(psi.type)
+    }
+
+    private fun recordLookup(psi: PsiMethod) {
+        psi.parameterList.parameters.forEach {
+            recordLookup(it.type)
+        }
+        psi.returnType?.let { recordLookup(it) }
+        psi.typeParameters.forEach {
+            it.bounds.mapNotNull { it as? PsiType }.forEach {
+                recordLookup(it)
             }
         }
+    }
 
+    fun recordLookupForDeclaration(declaration: KSDeclaration) {
+        when (declaration) {
+            is KSPropertyDeclarationJavaImpl -> recordLookup(declaration.psi)
+            is KSFunctionDeclarationJavaImpl -> recordLookup(declaration.psi)
+        }
+    }
+
+    fun recordLookupForCallableMemberDescriptor(descriptor: CallableMemberDescriptor) {
+        val psi = descriptor.findPsi()
+        when (psi) {
+            is PsiMethod -> recordLookup(psi)
+            is PsiField -> recordLookup(psi)
+        }
     }
 
     fun dumpLookupRecords(): Map<String, List<String>> {

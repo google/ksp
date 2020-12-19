@@ -284,12 +284,18 @@ class ResolverImpl(
         val superClassDescriptor = overridee.closestClassDeclaration()?.let {
             resolveClassDeclaration(it)
         } ?: return false
+
+        incrementalContext.recordLookupWithSupertypes(subClassDescriptor.defaultType)
+
         val typeOverride = subClassDescriptor.getAllSuperClassifiers()
             .filter { it != subClassDescriptor } // exclude subclass itself as it cannot override its own methods
             .any {
                 it == superClassDescriptor
             }
         if (!typeOverride) return false
+
+        incrementalContext.recordLookupForDeclaration(overrider)
+        incrementalContext.recordLookupForDeclaration(overridee)
 
         return OverridingUtil.DEFAULT.isOverridableBy(
                 superDescriptor, subDescriptor, subClassDescriptor, true
