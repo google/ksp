@@ -29,7 +29,6 @@ import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil
 import com.intellij.util.io.KeyDescriptor
-import org.intellij.plugins.relaxNG.compact.psi.util.PsiFunction
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
@@ -42,6 +41,7 @@ import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.io.DataInput
@@ -538,6 +538,35 @@ class IncrementalContext(
         when (psi) {
             is PsiMethod -> recordLookup(psi)
             is PsiField -> recordLookup(psi)
+        }
+    }
+
+    // TODO: optimization: filter out inaccessible members
+    fun recordLookupForGetAllFunctions(descriptor: ClassDescriptor) {
+        recordLookupForGetAll(descriptor) {
+            it.methods.forEach {
+                recordLookup(it)
+            }
+        }
+    }
+
+    // TODO: optimization: filter out inaccessible members
+    fun recordLookupForGetAllProperties(descriptor: ClassDescriptor) {
+        recordLookupForGetAll(descriptor) {
+            it.fields.forEach {
+                recordLookup(it)
+            }
+        }
+    }
+
+    fun recordLookupForGetAll(descriptor: ClassDescriptor, doChild: (PsiClass) -> Unit) {
+        (descriptor.getAllSuperclassesWithoutAny() + descriptor).mapNotNull {
+            it.findPsi() as? PsiClass
+        }.forEach { psiClass ->
+            psiClass.superTypes.forEach {
+                recordLookup(it)
+            }
+            doChild(psiClass)
         }
     }
 
