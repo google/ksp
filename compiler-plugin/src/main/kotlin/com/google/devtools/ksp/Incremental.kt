@@ -454,6 +454,7 @@ class IncrementalContext(
 
     }
 
+    // Insert Java file -> names lookup records.
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
         val path = psiFile.virtualFile.path
         val name = fqn.substringAfterLast('.')
@@ -463,6 +464,11 @@ class IncrementalContext(
             lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.CLASSIFIER, name)
 
         record(scope, name)
+
+        // If a resolved name is from some * import, it is overridable by some out-of-file changes.
+        // Therefore, the potential providers all need to be inserted. They are
+        //   1. definition of the name in the same package
+        //   2. other * imports
         val onDemandImports =
                 psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
         if (scope in onDemandImports) {
@@ -473,12 +479,18 @@ class IncrementalContext(
         }
     }
 
+    // Record a *leaf* type reference. This doesn't address type arguments.
     private fun recordLookup(ref: PsiClassReferenceType, def: PsiClass) {
         val psiFile = ref.reference.containingFile as? PsiJavaFile ?: return
         // A type parameter doesn't have qualified name.
+        //
+        // Note that bounds of type parameters, or other references in classes,
+        // are not addressed recursively here. They are recorded in other places
+        // with more contexts, when necessary.
         def.qualifiedName?.let { recordLookup(psiFile, it) }
     }
 
+    // Record a type reference, including its type arguments.
     fun recordLookup(ref: PsiType) {
         when (ref) {
             is PsiArrayType -> recordLookup(ref.componentType)
@@ -496,6 +508,8 @@ class IncrementalContext(
         }
     }
 
+    // Record all references to super types (if they are written in Java) of a given type,
+    // in its type hierarchy.
     fun recordLookupWithSupertypes(kotlinType: KotlinType) {
         (listOf(kotlinType) + kotlinType.supertypes()).mapNotNull {
             it.constructor.declarationDescriptor?.findPsi() as? PsiClass
@@ -506,11 +520,13 @@ class IncrementalContext(
         }
     }
 
-    private fun recordLookup(psi: PsiField) {
+    // Record all type references in a Java field.
+    private fun recordLookupForJavaField(psi: PsiField) {
         recordLookup(psi.type)
     }
 
-    private fun recordLookup(psi: PsiMethod) {
+    // Record all type references in a Java method.
+    private fun recordLookupForJavaMethod(psi: PsiMethod) {
         psi.parameterList.parameters.forEach {
             recordLookup(it.type)
         }
@@ -522,35 +538,39 @@ class IncrementalContext(
         }
     }
 
+    // Record all type references in a KSDeclaration
     fun recordLookupForDeclaration(declaration: KSDeclaration) {
         when (declaration) {
-            is KSPropertyDeclarationJavaImpl -> recordLookup(declaration.psi)
-            is KSFunctionDeclarationJavaImpl -> recordLookup(declaration.psi)
+            is KSPropertyDeclarationJavaImpl -> recordLookupForJavaField(declaration.psi)
+            is KSFunctionDeclarationJavaImpl -> recordLookupForJavaMethod(declaration.psi)
         }
     }
 
+    // Record all type references in a CallableMemberDescriptor
     fun recordLookupForCallableMemberDescriptor(descriptor: CallableMemberDescriptor) {
         val psi = descriptor.findPsi()
         when (psi) {
-            is PsiMethod -> recordLookup(psi)
-            is PsiField -> recordLookup(psi)
+            is PsiMethod -> recordLookupForJavaMethod(psi)
+            is PsiField -> recordLookupForJavaField(psi)
         }
     }
 
+    // Record references from all declared functions in the type hierarchy of the given class.
     // TODO: optimization: filter out inaccessible members
     fun recordLookupForGetAllFunctions(descriptor: ClassDescriptor) {
         recordLookupForGetAll(descriptor) {
             it.methods.forEach {
-                recordLookup(it)
+                recordLookupForJavaMethod(it)
             }
         }
     }
 
+    // Record references from all declared fields in the type hierarchy of the given class.
     // TODO: optimization: filter out inaccessible members
     fun recordLookupForGetAllProperties(descriptor: ClassDescriptor) {
         recordLookupForGetAll(descriptor) {
             it.fields.forEach {
-                recordLookup(it)
+                recordLookupForJavaField(it)
             }
         }
     }
@@ -566,7 +586,8 @@ class IncrementalContext(
         }
     }
 
-    fun dumpLookupRecords(): Map<String, List<String>> {
+    // Debugging and testing only.
+    internal fun dumpLookupRecords(): Map<String, List<String>> {
         val map = mutableMapOf<String, List<String>>()
         if (lookupTracker is LookupTrackerImpl) {
             lookupTracker.lookups.entrySet().forEach { e ->
