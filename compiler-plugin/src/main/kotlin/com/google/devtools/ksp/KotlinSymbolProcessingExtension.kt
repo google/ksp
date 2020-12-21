@@ -100,7 +100,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             options.kotlinOutputDir,
             options.resourceOutputDir,
             options.projectBaseDir,
-            anyChangesWildcard
+            anyChangesWildcard,
+            ksFiles
         )
 
         val processors = loadProcessors()
