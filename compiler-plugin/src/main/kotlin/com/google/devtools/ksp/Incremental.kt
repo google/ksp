@@ -356,26 +356,9 @@ class IncrementalContext(
             sourceToOutputsMap.remove(it)
         }
 
-        // TODO: Should unspecified outputs be associated to all files by default?
-        //       If so, maybe simply disable incremental processing once detected that.
-
-        val mutableSourceToOutputs = mutableMapOf<File, MutableSet<File>>().apply {
-            sourceToOutputs.forEach {
-                set(it.key, it.value.toMutableSet())
-            }
-        }
-
-        // Associate unassociated outputs to ALL FILES.
-        val associated = sourceToOutputs.values.flatten().toSet()
-        val unassociated = outputs.filterNot { it in associated }
-        mutableSourceToOutputs.getOrPut(anyChangesWildcard) { mutableSetOf() }.addAll(unassociated)
-        ksFiles.forEach { ksFile ->
-            mutableSourceToOutputs.getOrPut( ksFile.relativeFile ) { mutableSetOf() }.addAll(unassociated)
-        }
-
         // Merge source-to-outputs map from those reprocessed.
         dirtyFiles.forEach { source ->
-            mutableSourceToOutputs[source]?.let { sourceToOutputsMap[source] = it} ?: sourceToOutputsMap.remove(source)
+            sourceToOutputs[source]?.let { sourceToOutputsMap[source] = it} ?: sourceToOutputsMap.remove(source)
         }
 
         logSourceToOutputs()
