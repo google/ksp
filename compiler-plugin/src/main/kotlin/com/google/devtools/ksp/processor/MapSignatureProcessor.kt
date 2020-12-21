@@ -31,9 +31,13 @@ class MapSignatureProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
-        val cls = resolver.getClassDeclarationByName("Cls")!!
-        result.add(resolver.mapToJvmSignature(cls))
-        cls.primaryConstructor?.let { result.add(resolver.mapToJvmSignature(it)) }
-        cls.declarations.map { result.add(resolver.mapToJvmSignature(it)) }
+        listOf("Cls", "JavaIntefaceWithVoid")
+            .map { className ->
+                resolver.getClassDeclarationByName(className)!!
+            }.forEach { subject ->
+                result.add(resolver.mapToJvmSignature(subject))
+                subject.primaryConstructor?.let { result.add(resolver.mapToJvmSignature(it)) }
+                subject.declarations.map { result.add(resolver.mapToJvmSignature(it)) }
+            }
     }
 }

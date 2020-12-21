@@ -21,10 +21,18 @@
 // ()V
 // I
 // ()Ljava/lang/String;
+// LJavaIntefaceWithVoid;
+// ()Ljava/lang/Void;
 // END
 
+// FILE: Cls.kt
 class Cls {
     val a: Int = 1
 
     fun foo(): String { return "1" }
+}
+
+// FILE: JavaIntefaceWithVoid.java
+interface JavaIntefaceWithVoid {
+    Void getVoid();
 }
