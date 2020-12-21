@@ -329,7 +329,7 @@ class ResolverImpl(
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
             is PsiMethod -> {
                 // TODO: get rid of hardcoded check if possible.
-                if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
+                val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
                     moduleClassResolver
                         .resolveClass(JavaMethodImpl(psi).containingClass)
                         ?.findEnclosedDescriptor(
@@ -337,14 +337,13 @@ class ResolverImpl(
                         ) {
                             (it as? PropertyDescriptor)?.getter?.findPsi() == psi || (it as? PropertyDescriptor)?.setter?.findPsi() == psi
                         }
-                } else {
-                    moduleClassResolver
-                        .resolveClass(JavaMethodImpl(psi).containingClass)
-                        ?.findEnclosedDescriptor(
-                            kindFilter = DescriptorKindFilter.FUNCTIONS,
-                            filter = { it.findPsi() == psi }
-                        )
-                }
+                } else null
+                property ?: moduleClassResolver
+                    .resolveClass(JavaMethodImpl(psi).containingClass)
+                    ?.findEnclosedDescriptor(
+                        kindFilter = DescriptorKindFilter.FUNCTIONS,
+                        filter = { it.findPsi() == psi }
+                    )
             }
             is PsiField -> {
                 moduleClassResolver
