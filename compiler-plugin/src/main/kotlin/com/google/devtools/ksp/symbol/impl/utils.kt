@@ -312,3 +312,10 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
     }
     return null
 }
+
+
+fun KtExpression?.toKSExpression(): KSExpression? = when (this) {
+    is KtCallExpression -> KSCallExpressionImpl.getCached(this)
+    is KtDotQualifiedExpression -> selectorExpression.toKSExpression()
+    else -> this?.let(KSExpressionImpl::getCached)
+}

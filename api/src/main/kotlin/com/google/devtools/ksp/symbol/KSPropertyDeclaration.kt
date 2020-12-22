@@ -53,6 +53,11 @@ interface KSPropertyDeclaration : KSDeclaration {
     val isMutable: Boolean
 
     /**
+     * Initialization expression for the property.
+     */
+    val initializer: KSExpression?
+
+    /**
      * Indicates whether this is a delegated property.
      */
     fun isDelegated(): Boolean
