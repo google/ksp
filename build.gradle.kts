@@ -12,8 +12,54 @@ if (!extra.has("kspVersion")) {
 }
 
 subprojects {
+    group = "com.google.devtools.ksp"
+    version = rootProject.extra.get("kspVersion") as String
     repositories {
         mavenCentral()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
+    }
+    tasks.withType<Jar>().configureEach {
+        manifest.attributes.apply {
+            put("Implementation-Vendor", "Google")
+            put("Implementation-Version", project.version)
+        }
+    }
+    pluginManager.withPlugin("maven-publish") {
+        val publishExtension = extensions.getByType<PublishingExtension>()
+        publishExtension.repositories {
+            if (extra.has("outRepo")) {
+                val outRepo = extra.get("outRepo") as String
+                maven {
+                    url = File(outRepo).toURI()
+                }
+            } else {
+                mavenLocal()
+            }
+        }
+        publishExtension.publications.whenObjectAdded {
+            check(this is MavenPublication) {
+                "unexpected publication $this"
+            }
+            val publication = this
+            publication.pom {
+                url.set("https://goo.gle/ksp")
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        name.set("KSP Team")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/google/ksp.git")
+                    developerConnection.set("scm:git:https://github.com/google/ksp.git")
+                    url.set("https://github.com/google/ksp")
+                }
+            }
+        }
     }
 }
