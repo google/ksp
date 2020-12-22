@@ -187,6 +187,31 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/platformDeclaration.kt");
     }
 
+    @TestMetadata("recordJavaAnnotationTypes.kt")
+    public void testRecordJavaAnnotationTypes() throws Exception {
+        runTest("testData/api/recordJavaAnnotationTypes.kt");
+    }
+
+    @TestMetadata("recordJavaAsMemberOf.kt")
+    public void testRecordJavaAsMemberOf() throws Exception {
+        runTest("testData/api/recordJavaAsMemberOf.kt");
+    }
+
+    @TestMetadata("recordJavaGetAllMembers.kt")
+    public void testRecordJavaGetAllMembers() throws Exception {
+        runTest("testData/api/recordJavaGetAllMembers.kt");
+    }
+
+    @TestMetadata("recordJavaOverrides.kt")
+    public void testRecordJavaOverrides() throws Exception {
+        runTest("testData/api/recordJavaOverrides.kt");
+    }
+
+    @TestMetadata("recordJavaSupertypes.kt")
+    public void testRecordJavaSupertypes() throws Exception {
+        runTest("testData/api/recordJavaSupertypes.kt");
+    }
+
     @TestMetadata("referenceElement.kt")
     public void testReferenceElement() throws Exception {
         runTest("testData/api/referenceElement.kt");

@@ -80,13 +80,12 @@ import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 
 class ResolverImpl(
     val module: ModuleDescriptor,
-    files: Collection<KSFile>,
-    javaFiles: Collection<PsiJavaFile>,
+    val allKSFiles: Collection<KSFile>,
     val bindingTrace: BindingTrace,
     val project: Project,
-    componentProvider: ComponentProvider
+    componentProvider: ComponentProvider,
+    val incrementalContext: IncrementalContext
 ) : Resolver {
-    val allKSFiles: List<KSFile>
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
@@ -123,7 +122,6 @@ class ResolverImpl(
         constantExpressionEvaluator = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
-        allKSFiles = files + javaFiles.map { KSFileJavaImpl.getCached(it) }
         val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
         lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
         javaTypeResolver = lazyJavaResolverContext.typeResolver
@@ -150,7 +148,7 @@ class ResolverImpl(
     }
 
     override fun getAllFiles(): List<KSFile> {
-        return allKSFiles
+        return allKSFiles.toList()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -283,12 +281,18 @@ class ResolverImpl(
         val superClassDescriptor = overridee.closestClassDeclaration()?.let {
             resolveClassDeclaration(it)
         } ?: return false
+
+        incrementalContext.recordLookupWithSupertypes(subClassDescriptor.defaultType)
+
         val typeOverride = subClassDescriptor.getAllSuperClassifiers()
             .filter { it != subClassDescriptor } // exclude subclass itself as it cannot override its own methods
             .any {
                 it == superClassDescriptor
             }
         if (!typeOverride) return false
+
+        incrementalContext.recordLookupForDeclaration(overrider)
+        incrementalContext.recordLookupForDeclaration(overridee)
 
         return OverridingUtil.DEFAULT.isOverridableBy(
                 superDescriptor, subDescriptor, subClassDescriptor, true
@@ -314,7 +318,7 @@ class ResolverImpl(
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
             is PsiMethod -> {
                 // TODO: get rid of hardcoded check if possible.
-                if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
+                val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
                     moduleClassResolver
                         .resolveClass(JavaMethodImpl(psi).containingClass)
                         ?.findEnclosedDescriptor(
@@ -322,14 +326,13 @@ class ResolverImpl(
                         ) {
                             (it as? PropertyDescriptor)?.getter?.findPsi() == psi || (it as? PropertyDescriptor)?.setter?.findPsi() == psi
                         }
-                } else {
-                    moduleClassResolver
-                        .resolveClass(JavaMethodImpl(psi).containingClass)
-                        ?.findEnclosedDescriptor(
-                            kindFilter = DescriptorKindFilter.FUNCTIONS,
-                            filter = { it.findPsi() == psi }
-                        )
-                }
+                } else null
+                property ?: moduleClassResolver
+                    .resolveClass(JavaMethodImpl(psi).containingClass)
+                    ?.findEnclosedDescriptor(
+                        kindFilter = DescriptorKindFilter.FUNCTIONS,
+                        filter = { it.findPsi() == psi }
+                    )
             }
             is PsiField -> {
                 moduleClassResolver
@@ -394,6 +397,7 @@ class ResolverImpl(
     }
 
     fun resolveJavaType(psi: PsiType): KotlinType {
+        incrementalContext.recordLookup(psi)
         val javaType = JavaTypeImpl.create(psi)
         return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
@@ -441,6 +445,11 @@ class ResolverImpl(
             is KSTypeReferenceJavaImpl -> {
                 val psi = (type.psi as? PsiClassReferenceType)?.resolve()
                 if (psi is PsiTypeParameter) {
+                    (type.psi as PsiClassReferenceType).typeArguments().forEach {
+                        if (it is PsiType) {
+                            incrementalContext.recordLookup(it)
+                        }
+                    }
                     val containingDeclaration = if (psi.owner is PsiClass) {
                         moduleClassResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
                     } else {
@@ -563,6 +572,8 @@ class ResolverImpl(
                 "not declared in a class or an interface")
         val declaration = resolvePropertyDeclaration(property)
         if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            incrementalContext.recordLookupWithSupertypes(containing.kotlinType)
+            incrementalContext.recordLookupForDeclaration(property)
             if (!containing.kotlinType.isSubtypeOf(propertyDeclaredIn)) {
                 throw IllegalArgumentException(
                     "$containing is not a sub type of the class/interface that contains `$property` ($propertyDeclaredIn)"
@@ -597,6 +608,8 @@ class ResolverImpl(
                 "not declared in a class or an interface")
         val declaration = resolveFunctionDeclaration(function)
         if (declaration != null && containing is KSTypeImpl && !containing.isError) {
+            incrementalContext.recordLookupWithSupertypes(containing.kotlinType)
+            incrementalContext.recordLookupForDeclaration(function)
             if (!containing.kotlinType.isSubtypeOf(functionDeclaredIn)) {
                 throw IllegalArgumentException(
                     "$containing is not a sub type of the class/interface that contains " +

@@ -1,20 +1,47 @@
+/*
+ * Copyright 2020 Google LLC
+ * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
+import com.google.devtools.ksp.symbol.impl.findPsi
+import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil
 import com.intellij.util.io.KeyDescriptor
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
+import org.jetbrains.kotlin.incremental.components.Position
+import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
-import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.io.DataInput
 import java.io.DataOutput
 import java.io.File
@@ -126,7 +153,7 @@ internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConver
 
 class IncrementalContext(
         private val options: KspOptions,
-        private val ktFiles: Collection<KtFile>,
+        private val ksFiles: List<KSFile>,
         private val componentProvider: ComponentProvider,
         private val anyChangesWildcard: File,
         private val isIncremental: Boolean
@@ -136,8 +163,6 @@ class IncrementalContext(
 
     // Symbols defined in each file. This is
     private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
-
-    private val ksFiles = ktFiles.map { KSFileImpl.getCached(it) }
 
     private val baseDir = options.projectBaseDir
 
@@ -331,26 +356,9 @@ class IncrementalContext(
             sourceToOutputsMap.remove(it)
         }
 
-        // TODO: Should unspecified outputs be associated to all files by default?
-        //       If so, maybe simply disable incremental processing once detected that.
-
-        val mutableSourceToOutputs = mutableMapOf<File, MutableSet<File>>().apply {
-            sourceToOutputs.forEach {
-                set(it.key, it.value.toMutableSet())
-            }
-        }
-
-        // Associate unassociated outputs to ALL FILES.
-        val associated = sourceToOutputs.values.flatten().toSet()
-        val unassociated = outputs.filterNot { it in associated }
-        mutableSourceToOutputs.getOrPut(anyChangesWildcard) { mutableSetOf() }.addAll(unassociated)
-        ksFiles.forEach { ksFile ->
-            mutableSourceToOutputs.getOrPut( ksFile.relativeFile ) { mutableSetOf() }.addAll(unassociated)
-        }
-
         // Merge source-to-outputs map from those reprocessed.
         dirtyFiles.forEach { source ->
-            mutableSourceToOutputs[source]?.let { sourceToOutputsMap[source] = it} ?: sourceToOutputsMap.remove(source)
+            sourceToOutputs[source]?.let { sourceToOutputsMap[source] = it} ?: sourceToOutputsMap.remove(source)
         }
 
         logSourceToOutputs()
@@ -427,6 +435,150 @@ class IncrementalContext(
         updateCaches(dirtyFilePaths, outputs, sourceToOutputs)
         updateOutputs(outputs, cleanOutputs)
 
+    }
+
+    // Insert Java file -> names lookup records.
+    fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
+        val path = psiFile.virtualFile.path
+        val name = fqn.substringAfterLast('.')
+        val scope = fqn.substringBeforeLast('.', "<anonymous>")
+
+        fun record(scope: String, name: String) =
+            lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.CLASSIFIER, name)
+
+        record(scope, name)
+
+        // If a resolved name is from some * import, it is overridable by some out-of-file changes.
+        // Therefore, the potential providers all need to be inserted. They are
+        //   1. definition of the name in the same package
+        //   2. other * imports
+        val onDemandImports =
+                psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
+        if (scope in onDemandImports) {
+            record(psiFile.packageName, name)
+            onDemandImports.forEach {
+                record(it, name)
+            }
+        }
+    }
+
+    // Record a *leaf* type reference. This doesn't address type arguments.
+    private fun recordLookup(ref: PsiClassReferenceType, def: PsiClass) {
+        val psiFile = ref.reference.containingFile as? PsiJavaFile ?: return
+        // A type parameter doesn't have qualified name.
+        //
+        // Note that bounds of type parameters, or other references in classes,
+        // are not addressed recursively here. They are recorded in other places
+        // with more contexts, when necessary.
+        def.qualifiedName?.let { recordLookup(psiFile, it) }
+    }
+
+    // Record a type reference, including its type arguments.
+    fun recordLookup(ref: PsiType) {
+        when (ref) {
+            is PsiArrayType -> recordLookup(ref.componentType)
+            is PsiClassReferenceType -> {
+                val def = ref.resolve() ?: return
+                recordLookup(ref, def)
+                // in case the corresponding KotlinType is passed through ways other than KSTypeReferenceJavaImpl
+                ref.typeArguments().forEach {
+                    if (it is PsiType) {
+                        recordLookup(it)
+                    }
+                }
+            }
+            is PsiWildcardType -> ref.bound?.let { recordLookup(it) }
+        }
+    }
+
+    // Record all references to super types (if they are written in Java) of a given type,
+    // in its type hierarchy.
+    fun recordLookupWithSupertypes(kotlinType: KotlinType) {
+        (listOf(kotlinType) + kotlinType.supertypes()).mapNotNull {
+            it.constructor.declarationDescriptor?.findPsi() as? PsiClass
+        }.forEach {
+            it.superTypes.forEach {
+                recordLookup(it)
+            }
+        }
+    }
+
+    // Record all type references in a Java field.
+    private fun recordLookupForJavaField(psi: PsiField) {
+        recordLookup(psi.type)
+    }
+
+    // Record all type references in a Java method.
+    private fun recordLookupForJavaMethod(psi: PsiMethod) {
+        psi.parameterList.parameters.forEach {
+            recordLookup(it.type)
+        }
+        psi.returnType?.let { recordLookup(it) }
+        psi.typeParameters.forEach {
+            it.bounds.mapNotNull { it as? PsiType }.forEach {
+                recordLookup(it)
+            }
+        }
+    }
+
+    // Record all type references in a KSDeclaration
+    fun recordLookupForDeclaration(declaration: KSDeclaration) {
+        when (declaration) {
+            is KSPropertyDeclarationJavaImpl -> recordLookupForJavaField(declaration.psi)
+            is KSFunctionDeclarationJavaImpl -> recordLookupForJavaMethod(declaration.psi)
+        }
+    }
+
+    // Record all type references in a CallableMemberDescriptor
+    fun recordLookupForCallableMemberDescriptor(descriptor: CallableMemberDescriptor) {
+        val psi = descriptor.findPsi()
+        when (psi) {
+            is PsiMethod -> recordLookupForJavaMethod(psi)
+            is PsiField -> recordLookupForJavaField(psi)
+        }
+    }
+
+    // Record references from all declared functions in the type hierarchy of the given class.
+    // TODO: optimization: filter out inaccessible members
+    fun recordLookupForGetAllFunctions(descriptor: ClassDescriptor) {
+        recordLookupForGetAll(descriptor) {
+            it.methods.forEach {
+                recordLookupForJavaMethod(it)
+            }
+        }
+    }
+
+    // Record references from all declared fields in the type hierarchy of the given class.
+    // TODO: optimization: filter out inaccessible members
+    fun recordLookupForGetAllProperties(descriptor: ClassDescriptor) {
+        recordLookupForGetAll(descriptor) {
+            it.fields.forEach {
+                recordLookupForJavaField(it)
+            }
+        }
+    }
+
+    fun recordLookupForGetAll(descriptor: ClassDescriptor, doChild: (PsiClass) -> Unit) {
+        (descriptor.getAllSuperclassesWithoutAny() + descriptor).mapNotNull {
+            it.findPsi() as? PsiClass
+        }.forEach { psiClass ->
+            psiClass.superTypes.forEach {
+                recordLookup(it)
+            }
+            doChild(psiClass)
+        }
+    }
+
+    // Debugging and testing only.
+    internal fun dumpLookupRecords(): Map<String, List<String>> {
+        val map = mutableMapOf<String, List<String>>()
+        if (lookupTracker is LookupTrackerImpl) {
+            lookupTracker.lookups.entrySet().forEach { e ->
+                val key = "${e.key.scope}.${e.key.name}"
+                map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
+            }
+        }
+        return map
     }
 }
 

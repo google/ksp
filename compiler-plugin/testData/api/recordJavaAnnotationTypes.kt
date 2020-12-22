@@ -15,24 +15,32 @@
  * limitations under the License.
  */
 
-// TEST PROCESSOR: MapSignatureProcessor
+// WITH_RUNTIME
+// TEST PROCESSOR: RecordJavaProcessor
 // EXPECTED:
-// LCls;
-// ()V
-// I
-// ()Ljava/lang/String;
-// LJavaIntefaceWithVoid;
-// ()Ljava/lang/Void;
+// java.util.List: javaSrc/p1/J.java
+// p1.Anno: javaSrc/p1/J.java
+// p1.Bnno: javaSrc/p1/J.java
+// p1.K: javaSrc/p1/J.java
 // END
 
-// FILE: Cls.kt
-class Cls {
-    val a: Int = 1
+// FILE: p1/J.java
+package p1;
 
-    fun foo(): String { return "1" }
+import java.util.List;
+
+@interface Anno {
 }
 
-// FILE: JavaIntefaceWithVoid.java
-interface JavaIntefaceWithVoid {
-    Void getVoid();
+@Anno
+@Bnno
+public class J {
+    List<K> l = null;
 }
+
+// FILE: p1/K.kt
+package p1;
+
+annotation class Bnno
+
+class K

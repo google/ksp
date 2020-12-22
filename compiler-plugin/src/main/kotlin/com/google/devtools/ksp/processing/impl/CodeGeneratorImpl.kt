@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
 import java.io.OutputStream
@@ -29,7 +30,8 @@ class CodeGeneratorImpl(
     private val kotlinDir: File,
     private val resourcesDir: File,
     private val projectBase: File,
-    override val anyChangesWildcard: KSFile
+    private val anyChangesWildcard: KSFile,
+    private val allSources: List<KSFile>
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
 
@@ -49,7 +51,7 @@ class CodeGeneratorImpl(
         return "$typeRoot$separator$packageDirs$fileName${extension}"
     }
 
-    override fun createNewFile(packageName: String, fileName: String, extensionName: String): OutputStream {
+    override fun createNewFile(dependencies: Dependencies, packageName: String, fileName: String, extensionName: String): OutputStream {
         val path = pathOf(packageName, fileName, extensionName)
         if (fileMap[path] != null) return fileMap[path]!!.outputStream()
         val file = File(path)
@@ -59,11 +61,26 @@ class CodeGeneratorImpl(
         }
         file.writeText("")
         fileMap[path] = file
+        val sources = if (dependencies.isAllSources) {
+            allSources + anyChangesWildcard
+        } else {
+            if (dependencies.dependOnNewChanges) {
+                dependencies.originatingFiles + anyChangesWildcard
+            } else {
+                dependencies.originatingFiles
+            }
+        }
+        associate(sources, path)
         return file.outputStream()
     }
 
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
-        val output = File(pathOf(packageName, fileName, extensionName)).relativeTo(projectBase)
+        val path = pathOf(packageName, fileName, extensionName)
+        associate(sources, path)
+    }
+
+    private fun associate(sources: List<KSFile>, outputPath: String) {
+        val output = File(outputPath).relativeTo(projectBase)
         sources.forEach { source ->
             sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
         }

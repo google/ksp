@@ -32,6 +32,24 @@ interface CodeGenerator {
     /**
      * Creates a file which is managed by [CodeGenerator]
      *
+     * Sources of corresponding [KSNode]s which are obtained directly from [Resolver] need to be specified.
+     * Namely, the containing files of those [KSNode]s who are obtained from:
+     *   * [Resolver.getAllFiles]
+     *   * [Resolver.getSymbolsWithAnnotation]
+     *   * [Resolver.getClassDeclarationByName]
+     *
+     * Instead of requiring processors to specify all source files which are relevant in generating the given output,
+     * KSP traces dependencies automatically and only need to know those sources that only processors know what they
+     * are for. If a [KSFile] is indirectly obtained through other [KSNode]s, it hasn't to be specified for the given
+     * output, even if its contents contribute to the generation of the output.
+     *
+     * For example, a processor generates an output `O` after reading class `A` in `A.kt` and class `B` in `B.kt`,
+     * where `A` extends `B`. The processor got `A` by [Resolver.getSymbolsWithAnnotation] and then got `B` by
+     * [KSClassDeclaration.superTypes] from `A`. Because the inclusion of `B` is due to `A`, `B.kt` needn't to be
+     * specified in [dependencies] for `O`. Note that specifying `B.kt` in this case doesn't hurt, it is only unnecessary.
+     *
+     * @param dependencies are [KSFile]s from which this output is built. Only those that are obtained directly
+     *                     from [Resolver] are required.
      * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
      * @param fileName file name
      * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
@@ -39,15 +57,13 @@ interface CodeGenerator {
      * @return OutputStream for writing into files.
      * @see [CodeGenerator] for more details.
      */
-    fun createNewFile(packageName: String, fileName: String, extensionName: String = "kt"): OutputStream
+    fun createNewFile(dependencies: Dependencies, packageName: String, fileName: String, extensionName: String = "kt"): OutputStream
 
     /**
      * Associate [sources] to an output file.
      *
-     * [sources] are used to determine the dirty set in incremental processing. If a processor doesn't specify the correspondence between
-     * sources and outputs, no incremental processing would be possible.
-     *
-     * @param sources are [KSFile]s from which output is built.
+     * @param sources are [KSFile]s from which this output is built. Only those that are obtained directly
+     *                     from [Resolver] are required.
      * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
      * @param fileName file name
      * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
@@ -56,16 +72,28 @@ interface CodeGenerator {
      * @see [CodeGenerator] for more details.
      */
     fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String = "kt")
+}
+
+/**
+ * Dependencies of an output file.
+ */
+class Dependencies private constructor(val isAllSources: Boolean, val dependOnNewChanges: Boolean, val originatingFiles: List<KSFile>) {
 
     /**
-     * A place holder / wildcard for any changes in the future.
+     * Create a [Dependencies] to associate with an output.
      *
-     * Associating an output with [anyChangesWildcard] will invalidate this output whenever there is a new source file or a change in existing files,
-     * i.e., when there are new information.
-     *
-     * Although the removal of a file doesn't introduce new information most of time, there are cases that symbol resolution can be affected.
-     * When that happens, it is considered a change to an existing file in which references are potentially affected, even if that file is not
-     * modified at all.
+     * @param dependOnNewChanges whether the output should be invalidated on a new source file or a change in any of the existing files.
+     *                           Namely, whenever there are new information.
+     * @param sources Sources for this output to depend on.
      */
-    val anyChangesWildcard: KSFile
+    constructor(dependOnNewChanges: Boolean, vararg sources: KSFile) : this(false, dependOnNewChanges, sources.toList())
+    companion object {
+        /**
+         * A short-hand to all source files.
+         *
+         * Associating an output to [ALL_SOURCES] essentially disables incremental processing, as a tiniest change will clobber all files.
+         * This shouldn not be used in processors which care about processing speed.
+         */
+        val ALL_FILES = Dependencies(true, true, emptyList())
+    }
 }

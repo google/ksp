@@ -18,26 +18,33 @@
 
 package com.google.devtools.ksp.processor
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.validate
 
-@KspExperimental
-class MapSignatureProcessor : AbstractTestProcessor() {
-    private val result = mutableListOf<String>()
+class RecordJavaProcessor : AbstractTestProcessor() {
+    val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
-        return result
+        val finalResult = mutableListOf(results[0])
+        finalResult.addAll(results.subList(1, results.size).sorted())
+        return finalResult
     }
 
     override fun process(resolver: Resolver) {
-        listOf("Cls", "JavaIntefaceWithVoid")
-            .map { className ->
-                resolver.getClassDeclarationByName(className)!!
-            }.forEach { subject ->
-                result.add(resolver.mapToJvmSignature(subject))
-                subject.primaryConstructor?.let { result.add(resolver.mapToJvmSignature(it)) }
-                subject.declarations.map { result.add(resolver.mapToJvmSignature(it)) }
+        resolver.getAllFiles().forEach {
+            it.declarations.forEach {
+                it.validate()
             }
+        }
+        if (resolver is ResolverImpl) {
+            val m = resolver.incrementalContext.dumpLookupRecords().toSortedMap()
+            m.forEach { symbol, files ->
+                files.filter { it.endsWith(".java")}.sorted().forEach {
+                    results.add("$symbol: $it")
+                }
+            }
+        }
     }
 }

@@ -76,6 +76,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
         return descriptor?.let {
+            ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(it)
             it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
                 .toList()
                 .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
@@ -86,6 +87,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
 
     override fun getAllProperties(): List<KSPropertyDeclaration> {
         return descriptor?.let {
+            ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(it)
             it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES)
                     .toList()
                     .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }

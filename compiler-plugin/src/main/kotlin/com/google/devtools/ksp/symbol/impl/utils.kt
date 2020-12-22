@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
 import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
@@ -296,15 +297,21 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
     // class / interface method OR in case of equal distance (e.g. diamon dinheritance), pick the
     // one declared first in the code.
 
+    (getOwnerForEffectiveDispatchReceiverParameter() as? ClassDescriptor)?.defaultType?.let {
+        ResolverImpl.instance.incrementalContext.recordLookupWithSupertypes(it)
+    }
+
     val queue = ArrayDeque<T>()
     queue.add(this)
 
     while (queue.isNotEmpty()) {
         val current = queue.removeFirst()
+        ResolverImpl.instance.incrementalContext.recordLookupForCallableMemberDescriptor(current.original)
         val overriddenDescriptors: Collection<T> = current.original.overriddenDescriptors.filterIsInstance<T>()
         overriddenDescriptors.firstOrNull {
             it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
         }?.let {
+            ResolverImpl.instance.incrementalContext.recordLookupForCallableMemberDescriptor(it.original)
             return it.original as T?
         }
         // if all methods are fake, add them to the queue

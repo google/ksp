@@ -15,24 +15,33 @@
  * limitations under the License.
  */
 
-// TEST PROCESSOR: MapSignatureProcessor
+// WITH_RUNTIME
+// TEST PROCESSOR: RecordJavaAsMemberOfProcessor
 // EXPECTED:
-// LCls;
-// ()V
-// I
-// ()Ljava/lang/String;
-// LJavaIntefaceWithVoid;
-// ()Ljava/lang/Void;
+// p1.A: javaSrc/p1/B.java
+// p1.B: javaSrc/p1/A.java
+// p1.C: javaSrc/p1/B.java
+// p1.D: javaSrc/p1/A.java
+// p1.D: javaSrc/p1/B.java
+// p1.E: javaSrc/p1/B.java
 // END
 
-// FILE: Cls.kt
-class Cls {
-    val a: Int = 1
-
-    fun foo(): String { return "1" }
+// FILE: p1/A.java
+package p1;
+public class A<T> extends B<T, D> {
 }
 
-// FILE: JavaIntefaceWithVoid.java
-interface JavaIntefaceWithVoid {
-    Void getVoid();
+// FILE: p1/B.java
+package p1;
+public class B<T, R> {
+    public <T extends D> R f(A<? super C> p, E p2) {
+        return null;
+    }
 }
+
+// FILE: p1/C.kt
+package p1;
+class C
+class D
+class E
+val a = A<C>()

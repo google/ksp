@@ -31,6 +31,8 @@ import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.CodegenTestCase
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.incremental.LookupTrackerImpl
+import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.test.*
 import java.io.File
@@ -109,6 +111,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
             emptyList()
         )
         configuration.put(CommonConfigurationKeys.MODULE_NAME, module.name)
+        configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, LookupTrackerImpl(LookupTracker.DO_NOTHING))
 
         val environment = KotlinCoreEnvironment.createForTests(
             testRootDisposable, configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES
