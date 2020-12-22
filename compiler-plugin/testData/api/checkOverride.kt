@@ -37,6 +37,10 @@
 // MyInterface.x overrides JavaImpl.getX: false
 // MyInterface.y overrides JavaImpl.setY: false
 // MyInterface.y overrides MyInterface.y: false
+// MyInterface2.receiveList overrides MyInterface2ImplWithoutType.receiveList: false
+// MyInterface2ImplWithoutType.receiveList overrides MyInterface2.receiveList: true
+// MyInterface2ImplWithType.receiveList overrides MyInterface2.receiveList: true
+// MyInterface2ImplWithType.receiveList overrides MyInterface2ImplWithoutType.receiveList: true
 // JavaDifferentReturnType.foo overrides JavaList.foo: true
 // END
 // FILE: a.kt
@@ -90,6 +94,23 @@ class KotlinList2(@BazzAnno override val bazz: Int = 2): KotlinList() {
 interface MyInterface {
     val x: Int
     var y: Int
+}
+
+enum class EnumType {
+    FOO,
+    BAR;
+}
+
+interface MyInterface2<T> {
+    fun receiveList(argsInParent : List<T>):Unit
+}
+
+interface MyInterface2ImplWithoutType<T> : MyInterface2<T> {
+    override fun receiveList(argsInParent : List<T>):Unit
+}
+
+interface MyInterface2ImplWithType : MyInterface2ImplWithoutType<EnumType> {
+    override fun receiveList(argsInParent : List<EnumType>):Unit
 }
 
 // FILE: JavaList.java

@@ -24,6 +24,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
+import com.google.devtools.ksp.symbol.impl.findClosestOverridee
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
@@ -295,9 +296,7 @@ class ResolverImpl(
         incrementalContext.recordLookupForDeclaration(overrider)
         incrementalContext.recordLookupForDeclaration(overridee)
 
-        return OverridingUtil.DEFAULT.isOverridableBy(
-                superDescriptor, subDescriptor, subClassDescriptor, true
-        ).result == OverridingUtil.OverrideCompatibilityInfo.Result.OVERRIDABLE
+        return OverridingUtil.overrides(subDescriptor, superDescriptor, true, true)
     }
 
     fun evaluateConstant(expression: KtExpression?, expectedType: KotlinType): ConstantValue<*>? {

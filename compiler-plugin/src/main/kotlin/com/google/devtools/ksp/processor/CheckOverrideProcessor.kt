@@ -62,12 +62,18 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         checkOverride(bazPropKt,bazPropKt)
         val JavaImpl = resolver.getClassDeclarationByName("JavaImpl")!!
         val MyInterface = resolver.getClassDeclarationByName("MyInterface")!!
+        val MyInterface2 = resolver.getClassDeclarationByName("MyInterface2")!!
+        val MyInterface2ImplWithoutType = resolver.getClassDeclarationByName("MyInterface2ImplWithoutType")!!
+        val MyInterface2ImplWithType = resolver.getClassDeclarationByName("MyInterface2ImplWithType")!!
         val getX = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getX" }
         val getY = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getY" }
         val setY = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "setY" }
         val setX = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "setX" }
         val myInterfaceX = MyInterface.declarations.first{ it.simpleName.asString() == "x" }
         val myInterfaceY = MyInterface.declarations.first{ it.simpleName.asString() == "y" }
+        val myInterface2receiveList = MyInterface2.declarations.single()
+        val myInterface2ImplWithoutTypereceiveList = MyInterface2ImplWithoutType.declarations.single()
+        val myInterface2ImplWithTypereceiveList = MyInterface2ImplWithType.declarations.single()
         checkOverride(getY, getX)
         checkOverride(getY, myInterfaceX)
         checkOverride(getX, myInterfaceX)
@@ -78,6 +84,10 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         checkOverride(myInterfaceX, getX)
         checkOverride(myInterfaceY, setY)
         checkOverride(myInterfaceY, myInterfaceY)
+        checkOverride(myInterface2receiveList, myInterface2ImplWithoutTypereceiveList)
+        checkOverride(myInterface2ImplWithoutTypereceiveList, myInterface2receiveList)
+        checkOverride(myInterface2ImplWithTypereceiveList, myInterface2receiveList)
+        checkOverride(myInterface2ImplWithTypereceiveList, myInterface2ImplWithoutTypereceiveList)
 
         val JavaDifferentReturnTypes =
             resolver.getClassDeclarationByName("JavaDifferentReturnType")!!
