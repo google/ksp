@@ -16,6 +16,7 @@ subprojects {
     version = rootProject.extra.get("kspVersion") as String
     repositories {
         mavenCentral()
+        google()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
     tasks.withType<Jar>().configureEach {
@@ -34,6 +35,10 @@ subprojects {
                 }
             } else {
                 mavenLocal()
+            }
+            maven {
+                name = "test"
+                url = uri("${rootProject.buildDir}/repos/test")
             }
         }
         publishExtension.publications.whenObjectAdded {

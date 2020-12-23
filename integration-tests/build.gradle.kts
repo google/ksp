@@ -10,7 +10,7 @@ dependencies {
     testImplementation(gradleTestKit())
 }
 
-tasks.test {
+tasks.named<Test>("test") {
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
     systemProperty("testRepo", File(rootProject.buildDir, "repos/test").absolutePath)
