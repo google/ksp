@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -30,7 +31,7 @@ class OverrideeProcessor: AbstractTestProcessor() {
 
     override fun toResult() = results
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         logSubject(resolver, "Subject")
         logSubject(resolver, "JavaSubject.Subject")
         logSubject(resolver, "lib.Subject")
@@ -40,6 +41,7 @@ class OverrideeProcessor: AbstractTestProcessor() {
         logSubject(resolver, "ConflictingSubject4")
         logSubject(resolver, "OverrideOrder1")
         logSubject(resolver, "OverrideOrder2")
+        return emptyList()
     }
 
     private fun logSubject(resolver: Resolver, qName:String) {

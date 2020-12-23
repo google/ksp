@@ -105,7 +105,8 @@ class ResolverImpl(
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
         module.name.getNonSpecialIdentifier(),
-        KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT// TODO use proper LanguageVersionSettings
+        KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT,// TODO use proper LanguageVersionSettings
+        true
     )
 
     companion object {

@@ -48,9 +48,9 @@ dependencies {
 
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:1.4.20")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:1.4.255-SNAPSHOT")
 //    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:tests-mutes:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:tests-mutes:1.4.255-SNAPSHOT")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
     testImplementation("junit:junit:$junitVersion")
