@@ -36,10 +36,4 @@ publishing {
             }
         }
     }
-    repositories {
-        maven {
-            name = "test"
-            url = uri("${rootProject.buildDir}/repos/test")
-        }
-    }
 }
