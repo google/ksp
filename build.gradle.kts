@@ -8,7 +8,7 @@ plugins {
 if (!extra.has("kspVersion")) {
     val kotlinBaseVersion: String by project
     val today = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-    extra.set("kspVersion", "$kotlinBaseVersion-dev-experimental-$today")
+    extra.set("kspVersion", "$kotlinBaseVersion-multiple-round-preview-$today")
 }
 
 subprojects {
