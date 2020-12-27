@@ -29,6 +29,7 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticIm
 import com.google.devtools.ksp.symbol.impl.toKSExpression
 import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
 import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
+import org.jetbrains.kotlin.js.translate.declaration.hasCustomGetter
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyDelegate
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
@@ -68,11 +69,13 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
             null
         } else {
             val getter = ktProperty.accessors.singleOrNull { it.isGetter }
-            if (getter != null) {
-                KSPropertyGetterImpl.getCached(getter)
-            } else {
-                KSPropertyGetterSyntheticImpl.getCached(this)
-            }
+            // FIXME: I don't think we should generate a getter without declaring it, because that's unnecessary. We just need to consider the same parsing as the source file.
+//            if (getter != null) {
+//                KSPropertyGetterImpl.getCached(getter)
+//            } else {
+//                KSPropertyGetterSyntheticImpl.getCached(this)
+//            }
+            getter?.let(KSPropertyGetterImpl::getCached)
         }
     }
 
@@ -81,25 +84,31 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
             null
         } else {
             val setter = ktProperty.accessors.singleOrNull { it.isSetter }
-            if (setter != null) {
-                KSPropertySetterImpl.getCached(setter)
-            } else {
-                KSPropertySetterSyntheticImpl.getCached(this)
-            }
+            // FIXME: I don't think we should generate a setter without declaring it, because that's unnecessary. We just need to consider the same parsing as the source file.
+//            if (setter != null) {
+//                KSPropertySetterImpl.getCached(setter)
+//            } else {
+//                KSPropertySetterSyntheticImpl.getCached(this)
+//            }
+            setter?.let(KSPropertySetterImpl::getCached)
         }
     }
 
     override val initializer: KSExpression? by lazy {
-        ktProperty.initializer.toKSExpression()
+        if (isInterfaceProperty() || !isInitialized) {
+            null
+        } else {
+            ktProperty.initializer.toKSExpression()
+        }
     }
 
-//    override val delegate: KSPropertyDelegate? by lazy {
-//        if (isInterfaceProperty() && !isDelegated()) {
-//            null
-//        } else {
-//            ktProperty.delegate?.let(KSPropertyDelegateImpl::getCached)
-//        }
-//    }
+    override val delegate: KSExpression? by lazy {
+        if (isInterfaceProperty() && !isDelegated) {
+            null
+        } else {
+            ktProperty.delegateExpression.toKSExpression()
+        }
+    }
 
     override val type: KSTypeReference by lazy {
         if (ktProperty.typeReference != null) {
@@ -116,7 +125,17 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         }
     }
 
-    override fun isDelegated(): Boolean = ktProperty.hasDelegate()
+    override val isDelegated: Boolean by lazy {
+        ktProperty.hasDelegate()
+    }
+
+    override val isInitialized: Boolean by lazy {
+        ktProperty.hasInitializer()
+    }
+
+    override val text: String by lazy {
+        ktProperty.text
+    }
 
     override fun findOverridee(): KSPropertyDeclaration? {
         val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
@@ -126,4 +145,6 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun toString(): String = text
 }

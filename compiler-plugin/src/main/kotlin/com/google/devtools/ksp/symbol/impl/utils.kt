@@ -25,9 +25,7 @@ import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.binary.KSPropertyDeclarationDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
@@ -38,6 +36,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.resolve.constants.*
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
 import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.types.KotlinType
@@ -183,6 +182,16 @@ fun PsiElement.findParentDeclaration(): KSDeclaration? {
     }
 }
 
+fun PsiElement.findParentKtDeclaration(): KtDeclaration? {
+    var parent = this.parent
+
+    while (parent != null && parent !is KtDeclaration || parent is KtPropertyAccessor) {
+        parent = parent.parent
+    }
+
+    return parent as? KtDeclaration
+}
+
 fun PsiElement.toLocation(): Location {
     val file = this.containingFile
     val document = ResolverImpl.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
@@ -190,16 +199,16 @@ fun PsiElement.toLocation(): Location {
 }
 
 // TODO: handle local functions/classes correctly
-fun List<KtElement>.getKSDeclarations() =
-    this.mapNotNull {
-        when (it) {
-            is KtFunction -> KSFunctionDeclarationImpl.getCached(it)
-            is KtProperty -> KSPropertyDeclarationImpl.getCached(it)
-            is KtClassOrObject -> KSClassDeclarationImpl.getCached(it)
-            is KtTypeAlias -> KSTypeAliasImpl.getCached(it)
-            else -> null
-        }
+fun List<KtElement>.getKSDeclarations() = this.mapNotNull {
+    when (it) {
+        is KtFunction -> KSFunctionDeclarationImpl.getCached(it)
+        is KtProperty -> KSPropertyDeclarationImpl.getCached(it)
+        is KtClassOrObject -> KSClassDeclarationImpl.getCached(it)
+        is KtClassInitializer -> KSAnonymousInitializerImpl.getCached(it)
+        is KtTypeAlias -> KSTypeAliasImpl.getCached(it)
+        else -> null
     }
+}
 
 fun KtClassOrObject.getClassType(): ClassKind {
     return when (this) {
@@ -255,7 +264,9 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
     })
 
 internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration {
-    if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSFunctionDeclarationDescriptorImpl.getCached(this)
+    if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSFunctionDeclarationDescriptorImpl.getCached(
+        this
+    )
     val psi = this.findPsi() ?: return KSFunctionDeclarationDescriptorImpl.getCached(this)
     // Java default constructor has a kind DECLARATION of while still being synthetic.
     if (psi is PsiClassImpl && this is JavaClassConstructorDescriptor) {
@@ -269,7 +280,9 @@ internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration
 }
 
 internal fun PropertyDescriptor.toKSPropertyDeclaration(): KSPropertyDeclaration {
-    if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSPropertyDeclarationDescriptorImpl.getCached(this)
+    if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSPropertyDeclarationDescriptorImpl.getCached(
+        this
+    )
     val psi = this.findPsi() ?: return KSPropertyDeclarationDescriptorImpl.getCached(this)
     return when (psi) {
         is KtProperty -> KSPropertyDeclarationImpl.getCached(psi)
@@ -320,9 +333,73 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
     return null
 }
 
+// TODO: Support for all Kotlin tokens
+fun KtOperationExpression.toKSToken(): KSToken = when (this.operationReference.getReferencedNameElementType()) {
+    KtTokens.AS_KEYWORD -> KSToken.Casts
+    KtTokens.AS_SAFE -> KSToken.SafeCasts
+    KtTokens.SEMICOLON -> KSToken.Semicolon
 
+    KtTokens.ELVIS -> KSToken.Operator.Elvis
+
+    KtTokens.IN_KEYWORD -> KSToken.Operator.In
+    KtTokens.NOT_IN -> KSToken.Operator.NotIn
+    KtTokens.IS_KEYWORD -> KSToken.Operator.Is
+    KtTokens.NOT_IS -> KSToken.Operator.NotIs
+
+    KtTokens.PLUS -> KSToken.Operator.Plus
+    KtTokens.MINUS -> KSToken.Operator.Minus
+    KtTokens.MUL -> KSToken.Operator.Times
+    KtTokens.DIV -> KSToken.Operator.Div
+    KtTokens.PERC -> KSToken.Operator.Rem
+    KtTokens.RANGE -> KSToken.Operator.Range
+
+    KtTokens.PLUSEQ -> KSToken.Operator.PlusAssign
+    KtTokens.MINUSEQ -> KSToken.Operator.MinusAssign
+    KtTokens.MULTEQ -> KSToken.Operator.TimesAssign
+    KtTokens.DIVEQ -> KSToken.Operator.DivAssign
+    KtTokens.PERCEQ -> KSToken.Operator.RemAssign
+
+    KtTokens.EQ -> KSToken.Operator.Equal
+    KtTokens.EQEQ -> KSToken.Operator.Equality
+    KtTokens.EXCLEQ -> KSToken.Operator.NotEquality
+    KtTokens.EQEQEQ -> KSToken.Operator.ReferenceEquality
+    KtTokens.EXCLEQEQEQ -> KSToken.Operator.ReferenceNotEquality
+
+    KtTokens.PLUSPLUS -> KSToken.Operator.Increments
+    KtTokens.MINUSMINUS -> KSToken.Operator.Decrements
+
+    KtTokens.OROR -> KSToken.Operator.Disjunction
+    KtTokens.ANDAND -> KSToken.Operator.Conjunction
+    KtTokens.EXCL -> KSToken.Operator.Negation
+
+    KtTokens.LT -> KSToken.Operator.LessThan
+    KtTokens.GT -> KSToken.Operator.GreaterThan
+    KtTokens.LTEQ -> KSToken.Operator.LessThanOrEqual
+    KtTokens.GTEQ -> KSToken.Operator.GreaterThanOrEqual
+
+    else -> KSToken.Unknown
+}
+
+// Don't easily change the order of `when-branch` here, we may have to.
 fun KtExpression?.toKSExpression(): KSExpression? = when (this) {
-    is KtCallExpression -> KSCallExpressionImpl.getCached(this)
-    is KtDotQualifiedExpression -> selectorExpression.toKSExpression()
+    is KtFunction -> KSFunctionDeclarationImpl.getCached(this)
+    is KtProperty -> KSPropertyDeclarationImpl.getCached(this)
+    is KtClassOrObject -> KSClassDeclarationImpl.getCached(this)
+    // FIXME: At present is not entirely sure all KtNameReferenceExpression is a variable references
+    // All expressions connected by `.` should be treated as a chains, right?
+    is KtDotQualifiedExpression, is KtSafeQualifiedExpression, is KtCallExpression, is KtNameReferenceExpression -> KSChainCallsExpressionImpl.getCachedOrNull(this)
+        ?: KSDslExpressionImpl.getCachedOrNull(this)
+        ?: KSCallExpressionImpl.getCached(this)
+    is KtConstantExpression, is KtStringTemplateExpression -> KSConstantExpressionImpl.getCached(this)
+    is KtIfExpression -> KSIfExpressionImpl.getCached(this)
+    is KtBlockExpression -> KSBlockExpressionImpl.getCached(this)
+    is KtBinaryExpression -> KSBinaryExpressionImpl.getCached(this)
+    is KtBinaryExpressionWithTypeRHS -> KSTypeCastExpressionImpl.getCached(this)
+    is KtWhenExpression -> KSWhenExpressionImpl.getCached(this)
+    is KtLabeledExpression -> KSLabeledExpressionImpl.getCached(this)
+    is KtContinueExpression, is KtBreakExpression, is KtReturnExpression, is KtThrowExpression -> KSJumpExpressionImpl.getCached(this)
+    is KtExpressionWithLabel -> KSLabelReferenceExpressionImpl.getCached(this)
+    is KtUnaryExpression -> KSUnaryExpressionImpl.getCached(this)
+    is KtLambdaExpression -> KSLambdaExpressionImpl.getCached(this)
     else -> this?.let(KSExpressionImpl::getCached)
 }

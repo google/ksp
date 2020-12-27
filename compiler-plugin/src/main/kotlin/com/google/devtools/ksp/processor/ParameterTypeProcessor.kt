@@ -18,7 +18,7 @@ class ParameterTypeProcessor : AbstractTestProcessor() {
             }
 
             override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-                result.add(valueParameter.type.resolve().toString())
+                result.add(valueParameter.type?.resolve().toString())
             }
         }, Unit) }
     }

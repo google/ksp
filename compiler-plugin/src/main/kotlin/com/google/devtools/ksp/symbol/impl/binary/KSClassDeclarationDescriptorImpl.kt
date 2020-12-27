@@ -38,6 +38,10 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         fun getCached(descriptor: ClassDescriptor) = cache.getOrPut(descriptor) { KSClassDeclarationDescriptorImpl(descriptor) }
     }
 
+    override val initializerBlocks: List<KSAnonymousInitializer> by lazy {
+        TODO("Not yet implemented")
+    }
+
     override val classKind: ClassKind by lazy {
         when (descriptor.kind) {
             KtClassKind.INTERFACE -> ClassKind.INTERFACE
@@ -83,6 +87,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         }
     }
 
+    override val superclassDeclarations: List<KSClassDeclaration>
+        get() = superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
         descriptor.declaredTypeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
@@ -118,6 +125,10 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             modifiers.add(Modifier.ANNOTATION)
         }
         modifiers
+    }
+
+    override val text: String by lazy {
+        TODO("Not yet implemented")
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType =

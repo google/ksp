@@ -1,6 +1,5 @@
 package com.google.devtools.ksp.visitor
 
-import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 
 class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : KSDefaultVisitor<KSNode?, Boolean>() {
@@ -84,7 +83,14 @@ class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : K
         return true
     }
 
+    override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: KSNode?): Boolean {
+        if (!this.visitDeclaration(initializer, data)) {
+            return false
+        }
+        return true
+    }
+
     override fun visitValueParameter(valueParameter: KSValueParameter, data: KSNode?): Boolean {
-        return valueParameter.type.accept(this, valueParameter)
+        return valueParameter.type!!.accept(this, valueParameter)
     }
 }

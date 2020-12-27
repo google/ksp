@@ -22,15 +22,21 @@ package com.google.devtools.ksp.symbol
  * A value parameter
  */
 interface KSValueParameter : KSAnnotated {
+
     /**
      * Name of the parameter
      */
     val name: KSName?
 
     /**
-     *  The reference to the type of the parameter.
+     * The reference to the type of the parameter.
+     *
+     * Note that if this parameter is defined in an anonymous function, it should be null:
+     * ```
+     * fun(value) { ... }
+     * ```
      */
-    val type: KSTypeReference
+    val type: KSTypeReference?
 
     /**
      * True if it is a vararg.

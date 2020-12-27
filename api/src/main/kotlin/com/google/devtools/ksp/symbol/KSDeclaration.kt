@@ -19,11 +19,12 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * A declaration, can be function declaration, clsss declaration and property declaration, or a type alias.
+ * A declaration, can be function declaration, class declaration and property declaration, or a type alias.
  */
 interface KSDeclaration : KSModifierListOwner, KSAnnotated, KSExpectActual {
     /**
      * Simple name of this declaration, usually the name identifier at the declaration site.
+     * TODO: Anonymous function declaration have no name, so want to consider making this property nullable
      */
     val simpleName: KSName
 

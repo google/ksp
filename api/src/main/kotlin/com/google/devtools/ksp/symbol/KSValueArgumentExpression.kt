@@ -20,19 +20,10 @@ package com.google.devtools.ksp.symbol
 
 /**
  * A value argument expression to function / constructor calls.
+ *
+ * @author RinOrz
  */
-interface KSValueArgumentExpression : KSNode {
-    /**
-     * The name for the named argument, or null otherwise.
-     *
-     * For example, in `ignore(name=123456)`, the name value is "name"
-     */
-    val name: String?
-
-    /**
-     * The value of the argument.
-     */
-    val value: KSExpression?
+interface KSValueArgumentExpression : KSExpression {
 
     /**
      * The index of the argument in the list.
@@ -40,4 +31,21 @@ interface KSValueArgumentExpression : KSNode {
      * @see KSCallExpression.arguments
      */
     val index: Int
+
+    /**
+     * The name for the named argument, or null otherwise.
+     *
+     * For example, in `ignore(id=123456)`, the name value is "id"
+     */
+    val name: String?
+
+    /**
+     * True if it is a spread argument (i.e., has a "*" in front of the argument).
+     */
+    val isSpread: Boolean
+
+    /**
+     * The value of the argument.
+     */
+    val value: KSExpression?
 }

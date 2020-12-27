@@ -25,14 +25,33 @@ import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.findClosestOverridee
-import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
+import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSBlockExpressionImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.impl.PsiClassImplUtil
+import com.intellij.psi.search.PsiSearchScopeUtil
+import com.intellij.psi.util.PsiUtil
+import com.intellij.util.PsiNavigateUtil
+import org.jetbrains.kotlin.backend.common.serialization.findPackage
+import org.jetbrains.kotlin.backend.common.serialization.findSourceFile
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.load.java.isFromJava
-import org.jetbrains.kotlin.resolve.OverridingUtil
-import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.load.kotlin.computeJvmDescriptor
+import org.jetbrains.kotlin.load.kotlin.toSourceElement
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.stubs.impl.Utils
+import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.descriptorUtil.*
+import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
+import org.jetbrains.kotlin.resolve.source.getPsi
+import kotlin.reflect.jvm.internal.impl.types.checker.UtilsKt
 
 class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: FunctionDescriptor) : KSFunctionDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
@@ -42,8 +61,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     }
 
     override fun findOverridee(): KSFunctionDeclaration? {
-        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
-        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
+        return descriptor.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
@@ -64,7 +82,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     override val functionKind: FunctionKind by lazy {
         when {
             descriptor.dispatchReceiverParameter == null -> if (descriptor.isFromJava) FunctionKind.STATIC else FunctionKind.TOP_LEVEL
-            !descriptor.name.isSpecial && !descriptor.name.asString().isEmpty() -> FunctionKind.MEMBER
+            !descriptor.name.isSpecial && descriptor.name.asString().isNotEmpty() -> FunctionKind.MEMBER
             descriptor is AnonymousFunctionDescriptor -> FunctionKind.ANONYMOUS
             else -> throw IllegalStateException("Unable to resolve FunctionKind for ${descriptor.fqNameSafe}, $ExceptionMessage")
         }
@@ -92,6 +110,15 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         } else {
             KSTypeReferenceDescriptorImpl.getCached(returnType)
         }
+    }
+
+    override val body: KSExpression? by lazy {
+        // FIXME: The expression in the descriptor cannot be resolved at this time. The corresponding resolve API has not been found yet
+        (descriptor.findPsi() as? KtFunction)?.bodyExpression?.toKSExpression()
+    }
+
+    override val text: String by lazy {
+        TODO("Not yet implemented")
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

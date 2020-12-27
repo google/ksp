@@ -20,12 +20,13 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.findPsi
+import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
 
 class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclaration) :
     KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration), KSPropertyGetter {
@@ -36,6 +37,14 @@ class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
 
     private val descriptor: PropertyAccessorDescriptor by lazy {
         ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)!!.getter!!
+    }
+
+    override val body: KSExpression? by lazy {
+        (ksPropertyDeclaration as? KSPropertyDeclarationImpl)?.ktProperty?.getter?.run {
+            bodyBlockExpression
+                ?: initializer
+                ?: bodyExpression
+        }.toKSExpression()
     }
 
     override val returnType: KSTypeReference? by lazy {

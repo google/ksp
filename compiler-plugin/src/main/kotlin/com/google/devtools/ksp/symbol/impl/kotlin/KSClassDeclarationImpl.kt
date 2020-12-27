@@ -20,7 +20,6 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.Visibilities
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
@@ -38,7 +37,14 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     KSDeclarationImpl(ktClassOrObject),
     KSExpectActual by KSExpectActualImpl(ktClassOrObject) {
     companion object : KSObjectCache<KtClassOrObject, KSClassDeclarationImpl>() {
-        fun getCached(ktClassOrObject: KtClassOrObject) = cache.getOrPut(ktClassOrObject) { KSClassDeclarationImpl(ktClassOrObject) }
+        fun getCached(ktClassOrObject: KtClassOrObject) =
+            cache.getOrPut(ktClassOrObject) { KSClassDeclarationImpl(ktClassOrObject) }
+    }
+
+    override val initializerBlocks: List<KSAnonymousInitializer> by lazy {
+        ktClassOrObject.getAnonymousInitializers().map {
+            KSAnonymousInitializerImpl.getCached(it)
+        }
     }
 
     override val classKind: ClassKind by lazy {
@@ -59,14 +65,15 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     override fun getAllProperties(): List<KSPropertyDeclaration> {
         ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(descriptor)
         return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
-                .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-                .map { (it as PropertyDescriptor).toKSPropertyDeclaration() }
+            .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
+            .map { (it as PropertyDescriptor).toKSPropertyDeclaration() }
     }
 
     override val declarations: List<KSDeclaration> by lazy {
         val propertiesFromConstructor = primaryConstructor?.parameters
             ?.filter { it.isVar || it.isVal }
-            ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptyList()
+            ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) }
+            ?: emptyList()
         val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList()
         result.addAll(propertiesFromConstructor)
         result
@@ -75,7 +82,8 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         ktClassOrObject.primaryConstructor?.let { KSFunctionDeclarationImpl.getCached(it) }
             ?: if ((classKind == ClassKind.CLASS || classKind == ClassKind.ENUM_CLASS)
-                    && ktClassOrObject.declarations.none { it is KtSecondaryConstructor })
+                && ktClassOrObject.declarations.none { it is KtSecondaryConstructor }
+            )
                 KSConstructorSyntheticImpl.getCached(this) else null
     }
 
@@ -83,8 +91,15 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         ktClassOrObject.superTypeListEntries.map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
     }
 
+    override val superclassDeclarations: List<KSClassDeclaration>
+        get() = superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+
     private val descriptor: ClassDescriptor by lazy {
         (ResolverImpl.instance.resolveDeclaration(ktClassOrObject) as ClassDescriptor)
+    }
+
+    override val text: String by lazy {
+        ktClassOrObject.text
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
@@ -98,4 +113,6 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }
+
+    override fun toString(): String = text
 }

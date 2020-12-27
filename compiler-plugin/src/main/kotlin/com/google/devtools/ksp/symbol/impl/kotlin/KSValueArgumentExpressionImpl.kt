@@ -18,18 +18,19 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtValueArgument
 
-class KSValueArgumentExpressionImpl private constructor(override val index: Int, val ktValueArgument: KtValueArgument) :
-    KSExpression, KSValueArgumentExpression {
-    companion object : KSObjectCache<KtValueArgument, KSValueArgumentExpressionImpl>() {
-        fun getCached(index: Int, valueArgument: KtValueArgument) = cache.getOrPut(valueArgument) { KSValueArgumentExpressionImpl(index, valueArgument) }
+class KSValueArgumentExpressionImpl private constructor(
+    override val index: Int,
+    private val ktValueArgument: KtValueArgument
+) : KSValueArgumentExpression {
+    companion object : KSObjectCache<Pair<Int, KtValueArgument>, KSValueArgumentExpressionImpl>() {
+        fun getCached(index: Int, valueArgument: KtValueArgument) =
+            cache.getOrPut(Pair(index, valueArgument)) { KSValueArgumentExpressionImpl(index, valueArgument) }
     }
 
     override val origin = Origin.KOTLIN
@@ -46,13 +47,13 @@ class KSValueArgumentExpressionImpl private constructor(override val index: Int,
         ktValueArgument.getArgumentName()?.text
     }
 
+    override val isSpread: Boolean by lazy {
+        ktValueArgument.isSpread
+    }
+
     override val value: KSExpression? by lazy {
         ktValueArgument.getArgumentExpression()?.toKSExpression()
     }
-
-    override fun resolve(): KSType = ktValueArgument.getArgumentExpression()?.let {
-        ResolverImpl.instance.bindingTrace.getType(it)?.let(KSTypeImpl::getCached)
-    } ?: KSErrorType
 
     override fun hashCode(): Int {
         return name.hashCode() * 31 + value.hashCode()
@@ -66,10 +67,10 @@ class KSValueArgumentExpressionImpl private constructor(override val index: Int,
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        TODO()
+        return visitor.visitExpression(this, data)
     }
 
     override fun toString(): String {
-        return "${name ?: ""}:${value.toString()}"
+        return (name?.let { "$it = " } ?: "") + value
     }
 }

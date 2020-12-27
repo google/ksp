@@ -20,8 +20,17 @@ package com.google.devtools.ksp.symbol
 
 /**
  * Models class-like declarations, including class, interface and object.
+ *
+ * This can also be viewed as an expression, such as a local class declaration:
+ * ```
+ * fun a() {
+ *     class Local {
+ *         ...
+ *     } // here
+ * }
+ * ```
  */
-interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
+interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer, KSExpression {
 
     /**
      * The Kind of the class declaration.
@@ -41,9 +50,23 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
 
     /**
      * Determine whether this class declaration is a companion object.
-     * @see [https://kotlinlang.org/docs/tutorials/kotlin-for-py/objects-and-companion-objects.html#companion-objects]
+     *
+     * [see](https://kotlinlang.org/docs/tutorials/kotlin-for-py/objects-and-companion-objects.html#companion-objects)
      */
     val isCompanionObject: Boolean
+
+    /**
+     * The initializer blocks in this class declaration.
+     *
+     * [see](https://khan.github.io/kotlin-for-python-developers/#constructors-and-initializer-blocks)
+     */
+    val initializerBlocks: List<KSAnonymousInitializer>
+
+    /**
+     * Get the all superclass declarations in the class declaration.
+     * Calling [superclassDeclarations] requires type resolution therefore is expensive and should be avoided if possible.
+     */
+    val superclassDeclarations: List<KSClassDeclaration>
 
     /**
      * Get all member functions of a class declaration, including declared and inherited.

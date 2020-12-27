@@ -23,11 +23,13 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 
-class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) : KSPropertyDeclaration,
+class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) :
+    KSPropertyDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
     KSExpectActual by KSExpectActualDescriptorImpl(descriptor) {
     companion object : KSObjectCache<PropertyDescriptor, KSPropertyDeclarationDescriptorImpl>() {
-        fun getCached(descriptor: PropertyDescriptor) = cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
+        fun getCached(descriptor: PropertyDescriptor) =
+            cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
@@ -77,6 +79,18 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         }
     }
 
+    override val delegate: KSExpression? by lazy {
+        TODO("Not yet implemented")
+    }
+
+    override val initializer: KSExpression? by lazy {
+        TODO("Not yet implemented")
+    }
+
+    override val text: String by lazy {
+        TODO("Not yet implemented")
+    }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
         descriptor.typeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
@@ -85,13 +99,17 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
 
+    override val isDelegated: Boolean by lazy {
+        (descriptor as? PropertyDescriptor)?.delegateField != null
+    }
+
+    override val isInitialized: Boolean by lazy {
+        TODO("Not yet implemented")
+    }
+
     override fun findOverridee(): KSPropertyDeclaration? {
         val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
         return propertyDescriptor?.findClosestOverridee()?.toKSPropertyDeclaration()
-    }
-
-    override fun isDelegated(): Boolean {
-        return (descriptor as? PropertyDescriptor)?.delegateField != null
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

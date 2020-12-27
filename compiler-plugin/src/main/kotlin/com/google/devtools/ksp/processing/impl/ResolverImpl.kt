@@ -24,6 +24,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
+import com.google.devtools.ksp.symbol.impl.findParentKtDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
@@ -32,15 +33,20 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticIm
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.jetbrains.kotlin.backend.common.serialization.findPackage
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
+import org.jetbrains.kotlin.codegen.extensions.ClassBuilderInterceptorExtension
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.frontend.java.di.initJvmBuiltInsForTopDownAnalysis
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
@@ -56,13 +62,21 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.calls.callUtil.getCallWithAssert
+import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
+import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCallWithAssert
+import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameOrNull
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
+import org.jetbrains.kotlin.resolve.descriptorUtil.isAnnotationConstructor
+import org.jetbrains.kotlin.resolve.jvm.extensions.PartialAnalysisHandlerExtension
 import org.jetbrains.kotlin.resolve.jvm.multiplatform.JavaActualAnnotationArgumentExtractor
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
@@ -72,6 +86,7 @@ import org.jetbrains.kotlin.resolve.multiplatform.findExpects
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
+import org.jetbrains.kotlin.resolve.scopes.utils.memberScopeAsImportingScope
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
@@ -83,12 +98,15 @@ class ResolverImpl(
     val allKSFiles: Collection<KSFile>,
     val bindingTrace: BindingTrace,
     val project: Project,
-    componentProvider: ComponentProvider,
+    val componentProvider: ComponentProvider,
     val incrementalContext: IncrementalContext
 ) : Resolver {
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
+    private val topDownAnalysisContext by lazy {
+        TopDownAnalysisContext(TopDownAnalysisMode.TopLevelDeclarations, DataFlowInfo.EMPTY, declarationScopeProvider)
+    }
 
     /**
      * Checking as member of is an expensive operation, hence we cache result values in this map.
@@ -481,6 +499,74 @@ class ResolverImpl(
         }
     }
 
+    fun resolveCallDeclaration(expression: KtExpression): KSDeclaration? {
+        expression.forceResolveParentDeclaration()
+        val target = expression.getResolvedCall(bindingTrace.bindingContext)?.resultingDescriptor as? MemberDescriptor
+        val resolved = target?.toKSDeclaration()
+        return if (resolved == null) {
+            val containingFile = expression.containingKtFile
+            ForceResolveUtil.forceResolveAllContents(resolveSession.getFileAnnotations(containingFile))
+            topDownAnalyzer.resolveImportsInFile(containingFile)
+            resolveCallDeclaration(expression)
+        } else {
+            resolved
+        }
+    }
+
+    fun resolveConstant(expression: KtConstantExpression): Any? {
+        expression.forceResolveParentDeclaration()
+        val expectedType = bindingTrace.getType(expression) ?: TypeUtils.NO_EXPECTED_TYPE
+        return constantExpressionEvaluator.evaluateExpression(expression, bindingTrace, expectedType)?.getValue(expectedType)
+    }
+
+    fun KtExpression?.forceResolveParentDeclaration() {
+        val parent = this?.findParentKtDeclaration() ?: return
+        forceResolveDeclaration(parent)
+    }
+
+    /**
+     * FIXME: There should be a faster way to parse the KtDeclaration
+     *
+     * @see PartialAnalysisHandlerExtension.doAnalysis Copied!
+     */
+    fun forceResolveDeclaration(declaration: KtDeclaration, resolvePrimaryParameterValues: Boolean = false) {
+        when (val descriptor = resolveSession.resolveToDescriptor(declaration)) {
+            is ClassDescriptor -> {
+                ForceResolveUtil.forceResolveAllContents(descriptor)
+                ForceResolveUtil.forceResolveAllContents(descriptor.typeConstructor.supertypes)
+
+                if (declaration is KtClassOrObject && descriptor is ClassDescriptorWithResolutionScopes) {
+                    bodyResolver.resolveSuperTypeEntryList(DataFlowInfo.EMPTY,
+                        declaration,
+                        descriptor,
+                        descriptor.unsubstitutedPrimaryConstructor,
+                        descriptor.scopeForConstructorHeaderResolution,
+                        descriptor.scopeForMemberDeclarationResolution)
+                }
+            }
+            is PropertyDescriptor -> {
+                if (declaration is KtProperty) {
+                    /* TODO Now we analyse body with anonymous object initializers. Check if we can't avoid it
+                     * val a: Runnable = object : Runnable { ... } */
+                    bodyResolver.resolveProperty(topDownAnalysisContext, declaration, descriptor)
+                }
+            }
+            is FunctionDescriptor -> {
+                if (declaration is KtPrimaryConstructor && (resolvePrimaryParameterValues || descriptor.isAnnotationConstructor())) {
+                    val containingScope = descriptor.containingScope
+                    if (containingScope != null) {
+                        bodyResolver.resolveConstructorParameterDefaultValues(
+                            topDownAnalysisContext.outerDataFlowInfo, bindingTrace,
+                            declaration, descriptor as ConstructorDescriptor, containingScope
+                        )
+                    }
+                } else if (declaration is KtFunction && !declaration.hasDeclaredReturnType() && !declaration.hasBlockBody()) {
+                    ForceResolveUtil.forceResolveAllContents(descriptor)
+                }
+            }
+        }
+    }
+
     fun findDeclaration(kotlinType: KotlinType): KSDeclaration {
         val descriptor = kotlinType.constructor.declarationDescriptor
         val psi = descriptor?.findPsi()
@@ -525,8 +611,9 @@ class ResolverImpl(
 
     fun resolveDeclarationForLocal(localDeclaration: KtDeclaration) {
         var declaration = KtStubbedPsiUtil.getContainingDeclaration(localDeclaration) ?: return
-        while (KtPsiUtil.isLocal(declaration))
+        while (KtPsiUtil.isLocal(declaration) || declaration is KtAnonymousInitializer || declaration is KtDestructuringDeclaration) {
             declaration = KtStubbedPsiUtil.getContainingDeclaration(declaration)!!
+        }
 
         val containingFD = resolveSession.resolveToDescriptor(declaration).also {
             ForceResolveUtil.forceResolveAllContents(it)
@@ -686,6 +773,16 @@ open class BaseVisitor : KSVisitorVoid() {
         }
     }
 }
+
+private val DeclarationDescriptor.containingScope: LexicalScope?
+    get() {
+        val containingDescriptor = containingDeclaration ?: return null
+        return when (containingDescriptor) {
+            is ClassDescriptorWithResolutionScopes -> containingDescriptor.scopeForInitializerResolution
+            is PackageFragmentDescriptor -> LexicalScope.Base(containingDescriptor.getMemberScope().memberScopeAsImportingScope(), this)
+            else -> null
+        }
+    }
 
 // TODO: cross module resolution
 fun DeclarationDescriptor.findExpectsInKSDeclaration(): List<KSDeclaration> =

@@ -42,7 +42,33 @@ inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration?
  * @param name fully qualified name of the class to be loaded; using '.' as separator.
  * @return a KSClassDeclaration, or null if not found.
  */
-fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getClassDeclarationByName(getKSNameFromString(name))
+fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? =
+    getClassDeclarationByName(getKSNameFromString(name))
+
+/**
+ * Get top-level declarations in all files.
+ */
+fun Resolver.getAllTopLevelDeclarations(): Sequence<KSPropertyDeclaration> {
+    return this.getAllFiles().asSequence().flatMap { it.declarations }.filterIsInstance<KSPropertyDeclaration>()
+}
+
+/**
+ * Get top-level property members in all files.
+ *
+ * @see getAllTopLevelDeclarations
+ */
+fun Resolver.getAllTopLevelProperties(): Sequence<KSPropertyDeclaration> {
+    return this.getAllTopLevelDeclarations().filterIsInstance<KSPropertyDeclaration>()
+}
+
+/**
+ * Get top-level function members in all files.
+ *
+ * @see getAllTopLevelDeclarations
+ */
+fun Resolver.getAllTopLevelFunctions(): Sequence<KSFunctionDeclaration> {
+    return this.getAllTopLevelDeclarations().filterIsInstance<KSFunctionDeclaration>()
+}
 
 /**
  * Get functions directly declared inside the class declaration.
@@ -66,10 +92,10 @@ fun KSClassDeclaration.getDeclaredProperties(): List<KSPropertyDeclaration> {
 
 fun KSClassDeclaration.getConstructors(): List<KSFunctionDeclaration> {
     val functions = if (this.origin == Origin.JAVA) this.getAllFunctions() else this.getDeclaredFunctions()
-    return functions.filter { it.simpleName.asString() == this.simpleName.asString() || it.simpleName.asString() == "<init>"}
-            .let { constructors ->
-                this.primaryConstructor?.let { constructors.plus(it) } ?: constructors
-            }
+    return functions.filter { it.simpleName.asString() == this.simpleName.asString() || it.simpleName.asString() == "<init>" }
+        .let { constructors ->
+            this.primaryConstructor?.let { constructors.plus(it) } ?: constructors
+        }
 }
 
 /**
@@ -83,7 +109,7 @@ fun KSDeclaration.isLocal(): Boolean {
  * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope are valid, i.e. resolvable.
  * @param predicate: A lambda for filtering interested symbols for performance purpose. Default checks all.
  */
-fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _-> true } ): Boolean {
+fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }): Boolean {
     return this.accept(KSValidateVisitor(predicate), null)
 }
 
@@ -155,7 +181,8 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
         .distinct()
 }
 
-fun KSClassDeclaration.isAbstract() = this.classKind == ClassKind.INTERFACE || this.modifiers.contains(Modifier.ABSTRACT)
+fun KSClassDeclaration.isAbstract() =
+    this.classKind == ClassKind.INTERFACE || this.modifiers.contains(Modifier.ABSTRACT)
 
 fun KSPropertyDeclaration.isAbstract() = this.modifiers.contains(Modifier.ABSTRACT)
         || ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE && this.getter == null && this.setter == null)
@@ -180,10 +207,10 @@ fun KSDeclaration.isPrivate() = this.modifiers.contains(Modifier.PRIVATE)
 fun KSDeclaration.isJavaPackagePrivate() = this.getVisibility() == Visibility.JAVA_PACKAGE
 
 fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
-    if (this is KSClassDeclaration) {
-        return this
+    return if (this is KSClassDeclaration) {
+        this
     } else {
-        return this.parentDeclaration?.closestClassDeclaration()
+        this.parentDeclaration?.closestClassDeclaration()
     }
 }
 
@@ -198,7 +225,8 @@ fun KSAnnotated.findAnnotationFromUseSiteTarget(): Collection<KSAnnotation> {
 
 // TODO: cross module visibility is not handled
 fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
-    fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean = this.containingFile?.packageName == other.containingFile?.packageName
+    fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean =
+        this.containingFile?.packageName == other.containingFile?.packageName
 
     // lexical scope for local declaration.
     fun KSDeclaration.parentDeclarationsForLocal(): List<KSDeclaration> {
@@ -243,5 +271,25 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     }
 
 }
+
+/**
+ * Get the else entry in the `when` expression.
+ *
+ * ```
+ * when {
+ *     else -> {}   // here
+ * }
+ * ```
+ */
+val KSWhenExpression.elseBranch: KSWhenExpression.Branch
+    get() = branches.first { it.isElse }
+
+
+/**
+ * Returns if an initializer block exists in the class declaration.
+ */
+val KSClassDeclaration.firstInitializerBlock: KSAnonymousInitializer?
+    get() = initializerBlocks.firstOrNull()
+
 
 const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"

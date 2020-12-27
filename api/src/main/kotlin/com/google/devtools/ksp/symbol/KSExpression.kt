@@ -20,6 +20,8 @@ package com.google.devtools.ksp.symbol
 
 /**
  * An expression that represents any code.
+ *
+ * @author RinOrz
  */
 interface KSExpression : KSNode {
 
@@ -27,11 +29,4 @@ interface KSExpression : KSNode {
      * Treat the expression as text
      */
     val text: String
-
-    /**
-     * Resolves to the original declaration site.
-     * @return A type resolved from this expression.
-     * Calling [resolve] is expensive and should be avoided if possible.
-     */
-    fun resolve(): KSType
 }

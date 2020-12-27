@@ -74,6 +74,12 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         ResolverImpl.moduleClassResolver.resolveClass(JavaClassImpl(psi))
     }
 
+    override val text: String by lazy {
+        psi.text
+    }
+
+    override val initializerBlocks: List<KSAnonymousInitializer> get() = emptyList()
+
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
         return descriptor?.let {
             ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(it)
@@ -133,6 +139,9 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         psi.superTypes.map { KSTypeReferenceJavaImpl.getCached(it) }
     }
 
+    override val superclassDeclarations: List<KSClassDeclaration>
+        get() = superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
         psi.typeParameters.map { KSTypeParameterJavaImpl.getCached(it) }
     }
@@ -148,4 +157,6 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }
+
+    override fun toString(): String = text
 }

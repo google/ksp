@@ -21,9 +21,9 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 
-class KSValueArgumentLiteImpl private constructor(override val name: KSName, override val value: Any?) : KSValueArgumentImpl() {
-    companion object : KSObjectCache<Pair<KSName, Any?>, KSValueArgumentLiteImpl>() {
-        fun getCached(name: KSName, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentLiteImpl(name, value) }
+class KSAnnotationValueArgumentLiteImpl private constructor(override val index: Int, override val name: KSName, override val value: Any?) : KSAnnotationValueArgumentImpl() {
+    companion object : KSObjectCache<Triple<Int, KSName, Any?>, KSAnnotationValueArgumentLiteImpl>() {
+        fun getCached(index: Int, name: KSName, value: Any?) = cache.getOrPut(Triple(index, name, value)) { KSAnnotationValueArgumentLiteImpl(index, name, value) }
     }
 
     override val origin = Origin.KOTLIN
@@ -35,23 +35,23 @@ class KSValueArgumentLiteImpl private constructor(override val name: KSName, ove
     override val isSpread: Boolean = false
 }
 
-abstract class KSValueArgumentImpl : KSValueArgument {
+abstract class KSAnnotationValueArgumentImpl : KSAnnotationValueArgument {
     override fun hashCode(): Int {
         return name.hashCode() * 31 + value.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is KSValueArgument)
+        if (other !is KSAnnotationValueArgument)
             return false
 
         return other.name == this.name && other.value == this.value
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitValueArgument(this, data)
+        return visitor.visitAnnotationValueArgument(this, data)
     }
 
     override fun toString(): String {
-        return "${name?.asString() ?: ""}:${value.toString()}"
+        return "${name?.asString() ?: ""} = ${value.toString()}"
     }
 }

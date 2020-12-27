@@ -92,8 +92,18 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         }
     }
 
+    override val body: KSExpression? by lazy {
+        (ktFunction.bodyBlockExpression ?: ktFunction.bodyExpression)?.toKSExpression()
+    }
+
+    override val text: String by lazy {
+        ktFunction.text
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFunctionDeclaration(this, data)
     }
+
+    override fun toString(): String = text
 }
 

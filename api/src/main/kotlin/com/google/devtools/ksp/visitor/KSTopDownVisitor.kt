@@ -26,18 +26,19 @@ import com.google.devtools.ksp.symbol.*
  * For subclasses overriding a function, remember to call the corresponding super method.
  */
 abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
-    private fun Collection<KSNode>.accept(data: D) {
-        forEach { it.accept(this@KSTopDownVisitor, data) }
-    }
+    private fun Collection<KSNode>.accept(data: D) = forEach { it.accept(this@KSTopDownVisitor, data) }
 
     private fun KSNode.accept(data: D) = accept(this@KSTopDownVisitor, data)
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: D): R {
         property.type.accept(data)
         property.extensionReceiver?.accept(data)
-        property.getter?.accept(data)
-        property.setter?.accept(data)
-        return super.visitPropertyDeclaration(property, data)
+        return super.visitPropertyDeclaration(property, data).also {
+            property.initializer?.accept(data)
+            property.delegate?.accept(data)
+            property.getter?.accept(data)
+            property.setter?.accept(data)
+        }
     }
 
     override fun visitAnnotated(annotated: KSAnnotated, data: D): R {
@@ -70,7 +71,9 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         function.extensionReceiver?.accept(data)
         function.parameters.accept(data)
         function.returnType?.accept(data)
-        return super.visitFunctionDeclaration(function, data)
+        return super.visitFunctionDeclaration(function, data).also {
+            function.body?.accept(data)
+        }
     }
 
     override fun visitCallableReference(reference: KSCallableReference, data: D): R {
@@ -128,5 +131,61 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     override fun visitValueParameter(valueParameter: KSValueParameter, data: D): R {
         valueParameter.type?.accept(data)
         return super.visitValueParameter(valueParameter, data)
+    }
+
+    override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: D): R {
+        return super.visitAnonymousInitializer(initializer, data).also {
+            initializer.statements.accept(data)
+        }
+    }
+
+    override fun visitPropertyAccessor(accessor: KSPropertyAccessor, data: D): R {
+        return super.visitPropertyAccessor(accessor, data).also {
+            accessor.body?.accept(data)
+        }
+    }
+
+    override fun visitChainCallsExpression(expression: KSChainCallsExpression, data: D): R {
+        return super.visitChainCallsExpression(expression, data).also {
+            expression.chains.accept(data)
+        }
+    }
+
+    override fun visitWhenExpression(expression: KSWhenExpression, data: D): R {
+        return super.visitWhenExpression(expression, data).also {
+            expression.subject?.accept(data)
+            expression.branches.accept(data)
+        }
+    }
+
+    override fun visitDslExpression(expression: KSDslExpression, data: D): R {
+        return super.visitDslExpression(expression, data).also {
+            expression.closures.accept(data)
+        }
+    }
+
+    override fun visitBlockExpression(expression: KSBlockExpression, data: D): R {
+        return super.visitBlockExpression(expression, data).also {
+            expression.statements.accept(data)
+        }
+    }
+
+    override fun visitLabeledExpression(expression: KSLabeledExpression, data: D): R {
+        return super.visitLabeledExpression(expression, data).also {
+            expression.body.accept(data)
+        }
+    }
+
+    override fun visitIfExpression(expression: KSIfExpression, data: D): R {
+        return super.visitIfExpression(expression, data).also {
+            expression.then.accept(data)
+            expression.otherwise?.accept(data)
+        }
+    }
+
+    override fun visitWhenExpressionBranch(whenBranch: KSWhenExpression.Branch, data: D): R {
+        return super.visitWhenExpressionBranch(whenBranch, data).also {
+            whenBranch.body.accept(data)
+        }
     }
 }

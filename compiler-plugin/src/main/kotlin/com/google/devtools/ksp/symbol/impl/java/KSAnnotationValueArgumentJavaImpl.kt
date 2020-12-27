@@ -20,11 +20,11 @@ package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSAnnotationValueArgumentImpl
 
-class KSValueArgumentJavaImpl private constructor(override val name: KSName?, override val value: Any?) : KSValueArgumentImpl() {
-    companion object : KSObjectCache<Pair<KSName?, Any?>, KSValueArgumentJavaImpl>() {
-        fun getCached(name: KSName?, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentJavaImpl(name, value) }
+class KSAnnotationValueArgumentJavaImpl private constructor(override val index: Int, override val name: KSName?, override val value: Any?) : KSAnnotationValueArgumentImpl() {
+    companion object : KSObjectCache<Triple<Int, KSName?, Any?>, KSAnnotationValueArgumentJavaImpl>() {
+        fun getCached(index: Int, name: KSName?, value: Any?) = cache.getOrPut(Triple(index, name, value)) { KSAnnotationValueArgumentJavaImpl(index, name, value) }
     }
 
     override val origin = Origin.JAVA

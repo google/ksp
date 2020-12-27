@@ -24,6 +24,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 
 class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {
@@ -53,6 +54,19 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
 
     override val setter: KSPropertySetter? = null
 
+    override val initializer: KSExpression? by lazy {
+        TODO("Not yet implemented")
+    }
+
+    override val delegate: KSExpression? by lazy {
+        TODO("Not yet implemented")
+    }
+
+    override val text: String by lazy {
+        psi.text
+    }
+
+
     override val modifiers: Set<Modifier> by lazy {
         psi.toKSModifiers()
     }
@@ -75,16 +89,19 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
         KSTypeReferenceJavaImpl.getCached(psi.type)
     }
 
-    override fun findOverridee(): KSPropertyDeclaration? {
-        return null
+    override val isDelegated: Boolean = false
+
+    override val isInitialized: Boolean by lazy {
+        psi.hasInitializer()
     }
 
-    override fun isDelegated(): Boolean {
-        return false
+    override fun findOverridee(): KSPropertyDeclaration? {
+        return null
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
 
+    override fun toString(): String = text
 }

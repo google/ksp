@@ -35,6 +35,8 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         KSPropertyDeclarationDescriptorImpl.getCached(descriptor.correspondingProperty)
     }
 
+    override val body: KSExpression? = null
+
     override val location: Location = NonExistLocation
 
     override val annotations: List<KSAnnotation> by lazy {

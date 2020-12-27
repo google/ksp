@@ -18,19 +18,21 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSExpression
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.js.translate.callTranslator.getReturnType
 import org.jetbrains.kotlin.psi.KtExpression
-import org.jetbrains.kotlin.resolve.calls.callUtil.getCall
-import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
-import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCallWithAssert
 
 open class KSExpressionImpl(val ktExpression: KtExpression) : KSExpression {
     companion object : KSObjectCache<KtExpression, KSExpressionImpl>() {
         fun getCached(expression: KtExpression) = cache.getOrPut(expression) { KSExpressionImpl(expression) }
+    }
+
+    override val text: String by lazy {
+        ktExpression.text
     }
 
     override val origin = Origin.KOTLIN
@@ -39,17 +41,9 @@ open class KSExpressionImpl(val ktExpression: KtExpression) : KSExpression {
         ktExpression.toLocation()
     }
 
-    override val text: String by lazy {
-        ktExpression.text
-    }
-
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        TODO()
+        return visitor.visitExpression(this, data)
     }
-
-    override fun resolve(): KSType = KSTypeImpl.getCached(
-        ResolverImpl.instance.bindingTrace.getType(ktExpression)!!
-    )
 
     override fun toString(): String = text
 }

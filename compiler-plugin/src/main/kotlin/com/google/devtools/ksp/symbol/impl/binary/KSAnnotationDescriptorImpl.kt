@@ -30,7 +30,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSAnnotationValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtParameter
@@ -50,8 +50,8 @@ class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationD
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
 
-    override val arguments: List<KSValueArgument> by lazy {
-        descriptor.createKSValueArguments()
+    override val arguments: List<KSAnnotationValueArgument> by lazy {
+        descriptor.createKSAnnotationValueArguments()
     }
 
     override val shortName: KSName by lazy {
@@ -90,24 +90,27 @@ private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     else -> value
 }
 
-fun AnnotationDescriptor.createKSValueArguments(): List<KSValueArgument> {
+fun AnnotationDescriptor.createKSAnnotationValueArguments(): List<KSAnnotationValueArgument> {
+    var index = 0
     val presentValueArguments = allValueArguments.map { (name, constantValue) ->
-        KSValueArgumentLiteImpl.getCached(
+        KSAnnotationValueArgumentLiteImpl.getCached(
+            index,
             KSNameImpl.getCached(name.asString()),
             constantValue.toValue()
-        )
+        ).also { index++ }
     }
     val presentValueArgumentNames = presentValueArguments.map { it.name.asString() }
-    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()?.let {
-        it.getAbsentDefaultArguments(presentValueArgumentNames)
-    } ?: emptyList()
+    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()
+        ?.getAbsentAnnotationDefaultArguments(presentValueArgumentNames)
+        ?: emptyList()
     return presentValueArguments.plus(argumentsFromDefault)
 }
 
-fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: Collection<String>): Collection<KSValueArgument> {
+fun ClassConstructorDescriptor.getAbsentAnnotationDefaultArguments(excludeNames: Collection<String>): Collection<KSAnnotationValueArgument> {
     return this.valueParameters.filterNot { param -> excludeNames.contains(param.name.asString()) || !param.hasDefaultValue() }
-        .map { param ->
-            KSValueArgumentLiteImpl.getCached(
+        .mapIndexed { index, param ->
+            KSAnnotationValueArgumentLiteImpl.getCached(
+                index,
                 KSNameImpl.getCached(param.name.asString()),
                 param.getDefaultValue()
             )
@@ -115,8 +118,7 @@ fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: Collectio
 }
 
 fun ValueParameterDescriptor.getDefaultValue(): Any? {
-    val psi = this.findPsi()
-    return when (psi) {
+    return when (val psi = this.findPsi()) {
         null -> {
             // TODO: This will only work for symbols from Java class.
             ResolverImpl.instance.javaActualAnnotationArgumentExtractor.extractDefaultValue(this, this.type)?.toValue()

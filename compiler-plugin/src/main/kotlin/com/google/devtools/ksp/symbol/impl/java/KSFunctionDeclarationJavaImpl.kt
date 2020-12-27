@@ -96,7 +96,17 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
         psi.typeParameters.map { KSTypeParameterJavaImpl.getCached(it) }
     }
 
+    override val body: KSExpression? by lazy {
+        TODO("Not yet implemented")
+    }
+
+    override val text: String by lazy {
+        psi.text
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFunctionDeclaration(this, data)
     }
+
+    override fun toString(): String = text
 }

@@ -20,20 +20,22 @@ package com.google.devtools.ksp.symbol
 
 /**
  * An expression that represents the calling property or function or constructor.
+ *
+ * @author RinOrz
  */
 interface KSCallExpression : KSExpression {
 
     /**
      * The receiver expression for the call.
      * 
-     * For example, in `"string".replace("s", "a")`, the receiver value is "string"
+     * For example, in `boolean.toString().replace("t", "a")`, the receiver is "boolean.toString()"
      */
     val receiver: KSExpression?
 
     /**
      * The name for the calling target.
      */
-    val name: String?
+    val name: String
 
     /**
      * The actual parameters of the call.
@@ -42,7 +44,13 @@ interface KSCallExpression : KSExpression {
     val arguments: List<KSValueArgumentExpression>?
 
     /**
-     * The return type of the calling target.
+     * Try resolves to the call target declaration site.
+     *
+     * @return A declaration resolved from this expression.
+     * Calling [resolve] is expensive and should be avoided if possible.
+     *
+     * @see KSPropertyDeclaration When the target of the call is a property.
+     * @see KSFunctionDeclaration When the target of the call is a function.
      */
-    val returnType: KSTypeReference
+    fun resolve(): KSDeclaration?
 }

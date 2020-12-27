@@ -19,15 +19,23 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.toKSExpression
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor) : KSPropertyAccessor {
     override val receiver: KSPropertyDeclaration by lazy {
-        KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
+        KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property)
     }
+
+    override val body: KSExpression? by lazy {
+        val expression = ktPropertyAccessor.bodyBlockExpression
+            ?: ktPropertyAccessor.initializer
+            ?: ktPropertyAccessor.bodyExpression
+        expression.toKSExpression()
+    }
+
     override val annotations: List<KSAnnotation> by lazy {
         ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }

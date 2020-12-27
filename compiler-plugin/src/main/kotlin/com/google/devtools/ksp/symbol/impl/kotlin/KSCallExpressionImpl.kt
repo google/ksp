@@ -18,48 +18,43 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import com.google.devtools.ksp.symbol.impl.toLocation
+import com.google.devtools.ksp.symbol.impl.toKSExpression
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCallWithAssert
-import java.lang.IllegalStateException
+import org.jetbrains.kotlin.psi.psiUtil.*
 
-class KSCallExpressionImpl private constructor(ktExpression: KtExpression) :
-    KSExpressionImpl(ktExpression), KSCallExpression {
+open class KSCallExpressionImpl(ktExpression: KtExpression) : KSCallExpression, KSExpressionImpl(ktExpression) {
     companion object : KSObjectCache<KtExpression, KSCallExpressionImpl>() {
-        fun getCached(ktTypeReference: KtExpression) = cache.getOrPut(ktTypeReference) { KSCallExpressionImpl(ktTypeReference) }
+        fun getCached(ktExpression: KtExpression) = cache.getOrPut(ktExpression) { KSCallExpressionImpl(ktExpression) }
     }
 
     override val receiver: KSExpression? by lazy {
-        when (ktExpression) {
-            is KtDotQualifiedExpression -> getCached(ktExpression.receiverExpression)
-            else -> null
+        callNameExpression?.getReceiverExpression()?.let {
+            when(it) {
+                is KtQualifiedExpression -> it.selectorExpression.toKSExpression()
+                else -> it.toKSExpression()
+            }
         }
     }
 
-    override val name: String? by lazy {
-        ktExpression.name
+    override val name: String by lazy {
+        callNameExpression?.getReferencedName()
+            ?: error("This is an incorrect call expression: ${ktExpression.text}")
     }
 
     override val arguments: List<KSValueArgumentExpression>? by lazy {
-        (ktExpression as? KtCallExpression)?.valueArguments?.mapIndexed { index, valueArgument ->
+        callExpression?.valueArguments?.mapIndexed { index, valueArgument ->
             KSValueArgumentExpressionImpl.getCached(index, valueArgument)
         }
     }
 
-    override val returnType: KSTypeReference by lazy {
-//        ktExpression.getResolvedCallWithAssert(ResolverImpl.instance.bindingTrace.bindingContext).resultingDescriptor.containingDeclaration.
-//        KSTypeReferenceImpl.getCached()
-//        ktExpression
-        TODO()
+    private val callExpression get() = ktExpression as? KtCallExpression
+
+    private val callNameExpression by lazy {
+        callExpression?.getCallNameExpression() ?: ktExpression as? KtSimpleNameExpression
     }
 
-
-    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        TODO()
-    }
+    override fun resolve(): KSDeclaration? = ResolverImpl.instance.resolveCallDeclaration(ktExpression)
 }

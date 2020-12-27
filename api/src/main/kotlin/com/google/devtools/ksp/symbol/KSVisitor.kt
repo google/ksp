@@ -38,6 +38,8 @@ interface KSVisitor<D, R> {
 
     fun visitFile(file: KSFile, data: D): R
 
+    fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: D): R
+
     fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: D): R
 
     fun visitCallableReference(reference: KSCallableReference, data: D): R
@@ -66,7 +68,23 @@ interface KSVisitor<D, R> {
 
     fun visitValueParameter(valueParameter: KSValueParameter, data: D): R
 
-    fun visitValueArgument(valueArgument: KSValueArgument, data: D): R
+    fun visitAnnotationValueArgument(valueArgument: KSAnnotationValueArgument, data: D): R
 
     fun visitClassifierReference(reference: KSClassifierReference, data: D): R
+
+    fun visitExpression(expression: KSExpression, data: D): R
+
+    fun visitChainCallsExpression(expression: KSChainCallsExpression, data: D): R
+
+    fun visitIfExpression(expression: KSIfExpression, data: D): R
+
+    fun visitDslExpression(expression: KSDslExpression, data: D): R
+
+    fun visitLabeledExpression(expression: KSLabeledExpression, data: D): R
+
+    fun visitBlockExpression(expression: KSBlockExpression, data: D): R
+
+    fun visitWhenExpression(expression: KSWhenExpression, data: D): R
+
+    fun visitWhenExpressionBranch(whenBranch: KSWhenExpression.Branch, data: D): R
 }

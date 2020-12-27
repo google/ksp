@@ -20,8 +20,15 @@ package com.google.devtools.ksp.symbol
 
 /**
  * A property declaration, can also be used to denote a variable declaration.
+ *
+ * This can also be viewed as an expression, such as a local property declaration:
+ * ```
+ * fun a() {
+ *     val localProperty = ... // here
+ * }
+ * ```
  */
-interface KSPropertyDeclaration : KSDeclaration {
+interface KSPropertyDeclaration : KSDeclaration, KSExpression {
 
     /**
      * Getter of the property.
@@ -58,9 +65,19 @@ interface KSPropertyDeclaration : KSDeclaration {
     val initializer: KSExpression?
 
     /**
+     * Delegation expression for the property.
+     */
+    val delegate: KSExpression?
+
+    /**
+     * Indicates whether this is a initialized property.
+     */
+    val isInitialized: Boolean
+
+    /**
      * Indicates whether this is a delegated property.
      */
-    fun isDelegated(): Boolean
+    val isDelegated: Boolean
 
     /**
      * Find the closest overridee of this property, if overriding.

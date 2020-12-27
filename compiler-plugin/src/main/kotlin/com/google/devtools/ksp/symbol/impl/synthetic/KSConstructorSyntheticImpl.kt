@@ -64,6 +64,8 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
 
     override val declarations: List<KSDeclaration> = emptyList()
 
+    override val body: KSExpression? = null
+
     override val location: Location by lazy {
         ksClassDeclaration.location
     }
@@ -71,6 +73,10 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
     override val modifiers: Set<Modifier> = emptySet()
 
     override val origin: Origin = Origin.SYNTHETIC
+
+    override val text: String by lazy {
+        TODO("Not yet implemented")
+    }
 
     override fun findOverridee(): KSFunctionDeclaration? = null
 
