@@ -61,13 +61,11 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         }
     }
 
-    override val initializer: KSExpression? by lazy {
-        TODO("Not yet implemented")
-    }
+    // TODO
+    override val initializer: KSExpression? = null
 
-    override val delegate: KSExpression? by lazy {
-        TODO("Not yet implemented")
-    }
+    // TODO
+    override val delegate: KSExpression? = null
 
     override val type: KSTypeReference by lazy {
         if (ktParameter.typeReference != null) {
@@ -80,12 +78,10 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     override val isDelegated: Boolean = false
 
     override val isInitialized: Boolean by lazy {
-        TODO("Not yet implemented")
+        initializer != null
     }
 
-    override val text: String by lazy {
-        TODO("Not yet implemented")
-    }
+    override val text: String by lazy { ktParameter.text }
 
     override fun findOverridee(): KSPropertyDeclaration? {
         return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }
