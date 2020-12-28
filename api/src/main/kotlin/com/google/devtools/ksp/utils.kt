@@ -45,6 +45,31 @@ inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration?
 fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getClassDeclarationByName(getKSNameFromString(name))
 
 /**
+ * Get top-level declarations in all files.
+ */
+fun Resolver.getAllTopLevelDeclarations(): Sequence<KSPropertyDeclaration> {
+    return this.getAllFiles().asSequence().flatMap { it.declarations }.filterIsInstance<KSPropertyDeclaration>()
+}
+
+/**
+ * Get top-level property members in all files.
+ *
+ * @see getAllTopLevelDeclarations
+ */
+fun Resolver.getAllTopLevelProperties(): Sequence<KSPropertyDeclaration> {
+    return this.getAllTopLevelDeclarations().filterIsInstance<KSPropertyDeclaration>()
+}
+
+/**
+ * Get top-level function members in all files.
+ *
+ * @see getAllTopLevelDeclarations
+ */
+fun Resolver.getAllTopLevelFunctions(): Sequence<KSFunctionDeclaration> {
+    return this.getAllTopLevelDeclarations().filterIsInstance<KSFunctionDeclaration>()
+}
+
+/**
  * Get functions directly declared inside the class declaration.
  *
  * What are included: member functions, extension functions declared inside it, etc.
@@ -243,5 +268,25 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     }
 
 }
+
+/**
+ * Get the else entry in the `when` expression.
+ *
+ * ```
+ * when {
+ *     else -> {}   // here
+ * }
+ * ```
+ */
+val KSWhenExpression.elseBranch: KSWhenExpression.Branch
+    get() = branches.first { it.isElse }
+
+
+/**
+ * Returns if an initializer block exists in the class declaration.
+ */
+val KSClassDeclaration.firstInitializerBlock: KSAnonymousInitializer?
+    get() = initializerBlocks.firstOrNull()
+
 
 const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"
