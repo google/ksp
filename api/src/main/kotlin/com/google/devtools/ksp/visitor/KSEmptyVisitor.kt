@@ -58,6 +58,11 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(file, data)
     }
 
+    override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: D): R {
+        return defaultHandler(initializer, data)
+    }
+
+
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: D): R {
         return defaultHandler(function, data)
     }
@@ -118,7 +123,38 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(valueParameter, data)
     }
 
-    override fun visitValueArgument(valueArgument: KSValueArgument, data: D): R {
+    override fun visitAnnotationValueArgument(valueArgument: KSAnnotationValueArgument, data: D): R {
         return defaultHandler(valueArgument, data)
+    }
+    override fun visitExpression(expression: KSExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitChainCallsExpression(expression: KSChainCallsExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitDslExpression(expression: KSDslExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitIfExpression(expression: KSIfExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitBlockExpression(expression: KSBlockExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitLabeledExpression(expression: KSLabeledExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitWhenExpression(expression: KSWhenExpression, data: D): R {
+        return defaultHandler(expression, data)
+    }
+
+    override fun visitWhenExpressionBranch(whenBranch: KSWhenExpression.Branch, data: D): R {
+        return defaultHandler(whenBranch, data)
     }
 }

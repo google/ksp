@@ -46,6 +46,9 @@ open class KSVisitorVoid : KSVisitor<Unit, Unit> {
     override fun visitFile(file: KSFile, data: Unit) {
     }
 
+    override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: Unit) {
+    }
+
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
     }
 
@@ -91,6 +94,30 @@ open class KSVisitorVoid : KSVisitor<Unit, Unit> {
     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
     }
 
-    override fun visitValueArgument(valueArgument: KSValueArgument, data: Unit) {
+    override fun visitAnnotationValueArgument(valueArgument: KSAnnotationValueArgument, data: Unit) {
+    }
+
+    override fun visitExpression(expression: KSExpression, data: Unit) {
+    }
+
+    override fun visitChainCallsExpression(expression: KSChainCallsExpression, data: Unit) {
+    }
+
+    override fun visitBlockExpression(expression: KSBlockExpression, data: Unit) {
+    }
+
+    override fun visitLabeledExpression(expression: KSLabeledExpression, data: Unit) {
+    }
+
+    override fun visitDslExpression(expression: KSDslExpression, data: Unit) {
+    }
+
+    override fun visitIfExpression(expression: KSIfExpression, data: Unit) {
+    }
+
+    override fun visitWhenExpression(expression: KSWhenExpression, data: Unit) {
+    }
+
+    override fun visitWhenExpressionBranch(whenBranch: KSWhenExpression.Branch, data: Unit) {
     }
 }

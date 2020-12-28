@@ -35,9 +35,16 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitFile(file, data)
     }
 
+    override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: D): R {
+        this.visitDeclaration(initializer, data)
+        this.visitBlockExpression(initializer, data)
+        return super.visitAnonymousInitializer(initializer, data)
+    }
+
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: D): R {
         this.visitDeclaration(function, data)
         this.visitDeclarationContainer(function, data)
+        this.visitExpression(function, data)
         return super.visitFunctionDeclaration(function, data)
     }
 
@@ -53,6 +60,7 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: D): R {
         this.visitDeclaration(property, data)
+        this.visitExpression(property, data)
         return super.visitPropertyDeclaration(property, data)
     }
 
@@ -80,6 +88,7 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: D): R {
         this.visitDeclaration(classDeclaration, data)
         this.visitDeclarationContainer(classDeclaration, data)
+        this.visitExpression(classDeclaration, data)
         return super.visitClassDeclaration(classDeclaration, data)
     }
 
@@ -99,9 +108,9 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitValueParameter(valueParameter, data)
     }
 
-    override fun visitValueArgument(valueArgument: KSValueArgument, data: D): R {
+    override fun visitAnnotationValueArgument(valueArgument: KSAnnotationValueArgument, data: D): R {
         this.visitAnnotated(valueArgument, data)
-        return super.visitValueArgument(valueArgument, data)
+        return super.visitAnnotationValueArgument(valueArgument, data)
     }
 
     override fun visitClassifierReference(reference: KSClassifierReference, data: D): R {
@@ -143,5 +152,45 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     override fun visitReferenceElement(element: KSReferenceElement, data: D): R {
         this.visitNode(element, data)
         return super.visitReferenceElement(element, data)
+    }
+
+    override fun visitExpression(expression: KSExpression, data: D): R {
+        this.visitNode(expression, data)
+        return super.visitExpression(expression, data)
+    }
+
+    override fun visitChainCallsExpression(expression: KSChainCallsExpression, data: D): R {
+        this.visitExpression(expression, data)
+        return super.visitChainCallsExpression(expression, data)
+    }
+
+    override fun visitBlockExpression(expression: KSBlockExpression, data: D): R {
+        this.visitExpression(expression, data)
+        return super.visitBlockExpression(expression, data)
+    }
+
+    override fun visitLabeledExpression(expression: KSLabeledExpression, data: D): R {
+        this.visitExpression(expression, data)
+        return super.visitLabeledExpression(expression, data)
+    }
+
+    override fun visitDslExpression(expression: KSDslExpression, data: D): R {
+        this.visitExpression(expression, data)
+        return super.visitDslExpression(expression, data)
+    }
+
+    override fun visitIfExpression(expression: KSIfExpression, data: D): R {
+        this.visitExpression(expression, data)
+        return super.visitIfExpression(expression, data)
+    }
+
+    override fun visitWhenExpression(expression: KSWhenExpression, data: D): R {
+        this.visitExpression(expression, data)
+        return super.visitWhenExpression(expression, data)
+    }
+
+    override fun visitWhenExpressionBranch(whenBranch: KSWhenExpression.Branch, data: D): R {
+        this.visitNode(whenBranch, data)
+        return super.visitWhenExpressionBranch(whenBranch, data)
     }
 }
