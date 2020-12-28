@@ -19,18 +19,16 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import com.google.devtools.ksp.isOpen
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.*
-import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
+import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findClosestOverridee
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
-import java.lang.IllegalStateException
 
 class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) : KSFunctionDeclaration, KSDeclarationImpl(ktFunction),
     KSExpectActual by KSExpectActualImpl(ktFunction) {

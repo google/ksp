@@ -19,13 +19,10 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.KSExpression
-import com.google.devtools.ksp.symbol.KSLabelReferenceExpression
 import com.google.devtools.ksp.symbol.KSLabeledExpression
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
-import org.jetbrains.kotlin.psi.KtExpression
-import org.jetbrains.kotlin.psi.KtExpressionWithLabel
 import org.jetbrains.kotlin.psi.KtLabeledExpression
 
 open class KSLabeledExpressionImpl(ktLabeledExpression: KtLabeledExpression) : KSLabeledExpression, KSLabelReferenceExpressionImpl(ktLabeledExpression) {

@@ -18,14 +18,14 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiTypeParameter
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiTypeParameter
 
 class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {

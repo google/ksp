@@ -19,7 +19,6 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.KSLabelReferenceExpression
-import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtExpressionWithLabel

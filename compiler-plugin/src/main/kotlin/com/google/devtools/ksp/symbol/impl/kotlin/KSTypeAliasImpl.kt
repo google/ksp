@@ -20,10 +20,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.findParentDeclaration
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSTypeAlias, KSDeclarationImpl(ktTypeAlias),
     KSExpectActual by KSExpectActualImpl(ktTypeAlias) {

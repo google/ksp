@@ -19,13 +19,13 @@
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyGetter
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.toKSExpression
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
 class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclaration) :
     KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration), KSPropertyGetter {

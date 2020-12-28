@@ -23,7 +23,8 @@ import com.google.devtools.ksp.symbol.KSExpression
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtQualifiedExpression
 
 class KSChainCallsExpressionImpl private constructor(ktExpression: KtExpression, override val chains: List<KSExpression>) :
     KSChainCallsExpression, KSExpressionImpl(ktExpression) {

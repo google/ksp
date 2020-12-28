@@ -21,7 +21,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeParameterDescriptorImpl
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import java.util.Objects
+import java.util.*
 
 class KSFunctionImpl(val descriptor: CallableDescriptor) : KSFunction {
 

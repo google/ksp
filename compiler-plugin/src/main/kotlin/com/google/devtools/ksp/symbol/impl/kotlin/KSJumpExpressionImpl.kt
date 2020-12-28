@@ -18,7 +18,9 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.JumpKind
+import com.google.devtools.ksp.symbol.KSExpression
+import com.google.devtools.ksp.symbol.KSJumpExpression
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
 import org.jetbrains.kotlin.psi.*

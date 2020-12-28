@@ -18,13 +18,13 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiType
-import com.intellij.psi.PsiWildcardType
-import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiType
+import com.intellij.psi.PsiWildcardType
+import com.intellij.psi.impl.source.PsiClassReferenceType
 
 class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgumentImpl() {
     companion object : KSObjectCache<PsiType, KSTypeArgumentJavaImpl>() {

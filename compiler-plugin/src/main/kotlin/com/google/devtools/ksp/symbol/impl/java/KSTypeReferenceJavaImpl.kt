@@ -19,8 +19,6 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.intellij.psi.*
-import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
@@ -29,6 +27,8 @@ import com.google.devtools.ksp.symbol.impl.binary.KSClassifierReferenceDescripto
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance

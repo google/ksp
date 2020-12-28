@@ -23,7 +23,6 @@ import com.google.devtools.ksp.symbol.KSExpression
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
-import com.intellij.psi.PsiCodeBlock
 import org.jetbrains.kotlin.psi.KtBlockExpression
 
 class KSBlockExpressionImpl private constructor(ktBlockExpression: KtBlockExpression) : KSBlockExpression, KSExpressionImpl(ktBlockExpression) {

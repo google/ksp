@@ -19,9 +19,6 @@
 package com.google.devtools.ksp.symbol.impl
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.intellij.lang.jvm.JvmModifier
-import com.intellij.psi.*
-import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.ClassKind
@@ -33,7 +30,10 @@ import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSTypeArgumentJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.*
+import com.intellij.lang.jvm.JvmModifier
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassImpl
+import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor

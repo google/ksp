@@ -20,7 +20,6 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 
 abstract class AbstractTestProcessor : SymbolProcessor {

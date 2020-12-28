@@ -24,7 +24,6 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
-import org.jetbrains.kotlin.psi.KtStatementExpression
 
 class ExpressionsProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()

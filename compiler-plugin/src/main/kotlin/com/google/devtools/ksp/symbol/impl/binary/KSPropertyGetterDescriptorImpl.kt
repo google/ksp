@@ -18,9 +18,11 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSPropertyGetter
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.descriptors.PropertyGetterDescriptor
 
 class KSPropertyGetterDescriptorImpl private constructor(descriptor: PropertyGetterDescriptor) :
     KSPropertyAccessorDescriptorImpl(descriptor), KSPropertyGetter {

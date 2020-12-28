@@ -18,11 +18,11 @@
 
 package com.google.devtools.ksp.gradle.model.builder
 
+import com.google.devtools.ksp.gradle.KspExtension
+import com.google.devtools.ksp.gradle.model.Ksp
+import com.google.devtools.ksp.gradle.model.impl.KspImpl
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilder
-import com.google.devtools.ksp.gradle.KspExtension
-import com.google.devtools.ksp.gradle.model.impl.KspImpl
-import com.google.devtools.ksp.gradle.model.Ksp
 
 /**
  * [ToolingModelBuilder] for [Ksp] models.

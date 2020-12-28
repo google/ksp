@@ -25,7 +25,6 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
-import java.lang.IllegalStateException
 
 class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReference) : KSTypeReference {
     companion object : KSObjectCache<KtTypeReference, KSTypeReferenceImpl>() {

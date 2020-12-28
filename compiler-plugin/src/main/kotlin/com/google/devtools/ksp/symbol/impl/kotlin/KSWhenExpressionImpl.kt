@@ -22,7 +22,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
 import com.google.devtools.ksp.symbol.impl.toLocation
-import com.intellij.util.containers.map2Array
 import org.jetbrains.kotlin.psi.*
 
 class KSWhenExpressionImpl private constructor(ktWhenExpression: KtWhenExpression) : KSWhenExpression,

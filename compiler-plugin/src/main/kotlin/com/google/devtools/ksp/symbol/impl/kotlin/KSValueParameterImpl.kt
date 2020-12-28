@@ -20,8 +20,6 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.findParentDeclaration
-import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD

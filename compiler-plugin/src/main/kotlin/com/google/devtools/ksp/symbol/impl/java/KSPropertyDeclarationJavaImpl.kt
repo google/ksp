@@ -18,13 +18,15 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiJavaFile
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
-import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import com.google.devtools.ksp.symbol.impl.toKSModifiers
+import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiField
+import com.intellij.psi.PsiJavaFile
 
 class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {

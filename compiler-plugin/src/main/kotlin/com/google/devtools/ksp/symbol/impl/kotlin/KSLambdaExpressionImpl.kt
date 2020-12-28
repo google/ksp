@@ -21,8 +21,6 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
-import com.intellij.psi.PsiCodeBlock
-import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 
 class KSLambdaExpressionImpl private constructor(ktLambdaExpression: KtLambdaExpression) : KSLambdaExpression,

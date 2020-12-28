@@ -22,7 +22,9 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtDeclaration
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.psi.KtTypeParameterListOwner
 
 abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
     override val origin: Origin = Origin.KOTLIN

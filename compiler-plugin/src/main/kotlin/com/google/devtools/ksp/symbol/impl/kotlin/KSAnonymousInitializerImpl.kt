@@ -18,12 +18,14 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnonymousInitializer
+import com.google.devtools.ksp.symbol.KSExpectActual
+import com.google.devtools.ksp.symbol.KSExpression
+import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
 import org.jetbrains.kotlin.psi.KtAnonymousInitializer
 import org.jetbrains.kotlin.psi.KtBlockExpression
-import org.jetbrains.kotlin.psi.KtClassInitializer
 
 class KSAnonymousInitializerImpl private constructor(val ktAnonymousInitializer: KtAnonymousInitializer) : KSAnonymousInitializer,
     KSDeclarationImpl(ktAnonymousInitializer), KSExpectActual by KSExpectActualImpl(ktAnonymousInitializer) {

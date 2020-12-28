@@ -19,10 +19,13 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSConstantExpression
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.intellij.openapi.util.text.StringUtil
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtConstantExpression
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtStringTemplateEntryWithExpression
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 
 
 class KSConstantExpressionImpl private constructor(ktExpression: KtExpression) : KSConstantExpression, KSExpressionImpl(ktExpression) {

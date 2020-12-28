@@ -18,14 +18,12 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.symbol.KSExpression
 import com.google.devtools.ksp.symbol.KSBinaryExpression
-import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.KSExpression
 import com.google.devtools.ksp.symbol.KSToken
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toKSExpression
 import com.google.devtools.ksp.symbol.impl.toKSToken
-import org.jetbrains.kotlin.lexer.KtKeywordToken
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 
 class KSBinaryExpressionImpl private constructor(val ktBinaryExpression: KtBinaryExpression) : KSBinaryExpression, KSExpressionImpl(ktBinaryExpression) {

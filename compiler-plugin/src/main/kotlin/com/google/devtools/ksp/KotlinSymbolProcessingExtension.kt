@@ -18,6 +18,15 @@
 
 package com.google.devtools.ksp
 
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.processor.AbstractTestProcessor
+import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
+import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -28,15 +37,6 @@ import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.SymbolProcessor
-import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
-import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.processor.AbstractTestProcessor
-import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
-import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.psi.KtFile

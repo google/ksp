@@ -19,9 +19,8 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 open class PlatformDeclarationProcessor: AbstractTestProcessor() {
