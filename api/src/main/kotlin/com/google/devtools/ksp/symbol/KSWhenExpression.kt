@@ -31,11 +31,6 @@ package com.google.devtools.ksp.symbol
 interface KSWhenExpression : KSExpression {
 
     /**
-     * All branches in the `when` expression.
-     */
-    val branches: List<KSWhenExpression.Branch>
-
-    /**
      * The subject for the when expression.
      *
      * For example, in `when (a)`, the subject is "a"
@@ -44,13 +39,18 @@ interface KSWhenExpression : KSExpression {
      */
     val subject: KSExpression?
 
+    /**
+     * All branches in the `when` expression.
+     */
+    val branches: List<KSWhenExpression.Branch>
+
 
     /**
      * A node that represents a branch in the `when` expression.
      *
      * [Grammar](https://kotlinlang.org/docs/reference/grammar.html#whenEntry)
      */
-    interface Branch : KSNode {
+    interface Branch : KSExpression {
 
         /**
          * The test conditions for this branch.
@@ -67,7 +67,7 @@ interface KSWhenExpression : KSExpression {
          * @see KSWhenExpression.Branch.RangeCondition
          * @see KSWhenExpression.Branch.TypeCondition
          */
-        val conditions: Array<KSExpression>
+        val conditions: List<KSExpression>
 
         /**
          * The body behavior of this branch.

@@ -41,6 +41,12 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         fun getCached(ktClassOrObject: KtClassOrObject) = cache.getOrPut(ktClassOrObject) { KSClassDeclarationImpl(ktClassOrObject) }
     }
 
+    override val initializerBlocks: List<KSAnonymousInitializer> by lazy {
+        ktClassOrObject.getAnonymousInitializers().map {
+            KSAnonymousInitializerImpl.getCached(it)
+        }
+    }
+
     override val classKind: ClassKind by lazy {
         ktClassOrObject.getClassType()
     }
@@ -83,8 +89,15 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         ktClassOrObject.superTypeListEntries.map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
     }
 
+    override val superclassDeclarations: List<KSClassDeclaration>
+        get() = superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+
     private val descriptor: ClassDescriptor by lazy {
         (ResolverImpl.instance.resolveDeclaration(ktClassOrObject) as ClassDescriptor)
+    }
+
+    override val text: String by lazy {
+        ktClassOrObject.text
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {

@@ -20,12 +20,13 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertySetter
-import com.google.devtools.ksp.symbol.KSValueParameter
-import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSValueParameterDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorValueParameter
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
 class KSPropertySetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclaration) :
     KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration), KSPropertySetter {
@@ -34,13 +35,13 @@ class KSPropertySetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
             KSPropertySetterSyntheticImpl.cache.getOrPut(ksPropertyDeclaration) { KSPropertySetterSyntheticImpl(ksPropertyDeclaration) }
     }
 
-    private val descriptor: PropertyAccessorDescriptor by lazy {
-        ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)!!.setter!!
+    private val descriptor: PropertyAccessorDescriptor? by lazy {
+        ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)?.setter
     }
 
     override val parameter: KSValueParameter by lazy {
-        descriptor.valueParameters.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) }
-                ?: throw IllegalStateException("Failed to resolve property type")
+        descriptor?.valueParameters?.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) }
+                ?: KSErrorValueParameter
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

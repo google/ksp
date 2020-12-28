@@ -52,8 +52,6 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
         return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
-    override val declarations: List<KSDeclaration> = emptyList()
-
     override val extensionReceiver: KSTypeReference? = null
 
     override val functionKind: FunctionKind = if (psi.hasModifier(JvmModifier.STATIC)) FunctionKind.STATIC else FunctionKind.MEMBER
@@ -94,6 +92,13 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
 
     override val typeParameters: List<KSTypeParameter> by lazy {
         psi.typeParameters.map { KSTypeParameterJavaImpl.getCached(it) }
+    }
+
+    // TODO: Support for Java expressions
+    override val statements: List<KSExpression> get() = emptyList()
+
+    override val text: String by lazy {
+        psi.text
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

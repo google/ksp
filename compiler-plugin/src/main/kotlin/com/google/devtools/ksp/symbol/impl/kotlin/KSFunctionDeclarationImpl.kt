@@ -43,14 +43,6 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
-    override val declarations: List<KSDeclaration> by lazy {
-        if (!ktFunction.hasBlockBody()) {
-            emptyList()
-        } else {
-            ktFunction.bodyBlockExpression?.statements?.getKSDeclarations() ?: emptyList()
-        }
-    }
-
     override val extensionReceiver: KSTypeReference? by lazy {
         if (ktFunction.receiverTypeReference != null) {
             KSTypeReferenceImpl.getCached(ktFunction.receiverTypeReference!!)
@@ -90,6 +82,18 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
                 getKSTypeCached(desc.returnTypeOrNothing)
             }
         }
+    }
+
+    override val statements: List<KSExpression> by lazy {
+        val expression = ktFunction.bodyBlockExpression
+                ?: ktFunction.bodyExpression
+        expression.toKSExpression()?.let {
+            (it as? KSBlockExpression)?.statements ?: listOf(it)
+        } ?: emptyList()
+    }
+
+    override val text: String by lazy {
+        ktFunction.text
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

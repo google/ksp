@@ -19,19 +19,11 @@
 package com.google.devtools.ksp.symbol.impl.binary
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.*
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.impl.AnonymousFunctionDescriptor
-import com.google.devtools.ksp.isOpen
-import com.google.devtools.ksp.isVisibleFrom
-import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.findClosestOverridee
-import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
-import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.load.java.isFromJava
-import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
 class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: FunctionDescriptor) : KSFunctionDeclaration,
@@ -42,15 +34,14 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     }
 
     override fun findOverridee(): KSFunctionDeclaration? {
-        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
-        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
+        return descriptor.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
         descriptor.typeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val statements: List<KSExpression> get() = emptyList()
 
     override val extensionReceiver: KSTypeReference? by lazy {
         val extensionReceiver = descriptor.extensionReceiverParameter?.type
@@ -64,7 +55,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     override val functionKind: FunctionKind by lazy {
         when {
             descriptor.dispatchReceiverParameter == null -> if (descriptor.isFromJava) FunctionKind.STATIC else FunctionKind.TOP_LEVEL
-            !descriptor.name.isSpecial && !descriptor.name.asString().isEmpty() -> FunctionKind.MEMBER
+            !descriptor.name.isSpecial && descriptor.name.asString().isNotEmpty() -> FunctionKind.MEMBER
             descriptor is AnonymousFunctionDescriptor -> FunctionKind.ANONYMOUS
             else -> throw IllegalStateException("Unable to resolve FunctionKind for ${descriptor.fqNameSafe}, $ExceptionMessage")
         }
@@ -93,6 +84,8 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
             KSTypeReferenceDescriptorImpl.getCached(returnType)
         }
     }
+
+    override val text: String by lazy { toString() }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFunctionDeclaration(this, data)

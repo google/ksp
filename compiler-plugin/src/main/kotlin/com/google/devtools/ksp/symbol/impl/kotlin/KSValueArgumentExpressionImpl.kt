@@ -20,38 +20,57 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import com.google.devtools.ksp.symbol.impl.toLocation
+import org.jetbrains.kotlin.psi.KtValueArgument
 
-class KSValueArgumentLiteImpl private constructor(override val name: KSName, override val value: Any?) : KSValueArgumentImpl() {
-    companion object : KSObjectCache<Pair<KSName, Any?>, KSValueArgumentLiteImpl>() {
-        fun getCached(name: KSName, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentLiteImpl(name, value) }
+class KSValueArgumentExpressionImpl private constructor(
+    override val index: Int,
+    private val ktValueArgument: KtValueArgument
+) : KSValueArgumentExpression {
+    companion object : KSObjectCache<Pair<Int, KtValueArgument>, KSValueArgumentExpressionImpl>() {
+        fun getCached(index: Int, valueArgument: KtValueArgument) =
+            cache.getOrPut(Pair(index, valueArgument)) { KSValueArgumentExpressionImpl(index, valueArgument) }
     }
 
     override val origin = Origin.KOTLIN
 
-    override val location: Location = NonExistLocation
+    override val location: Location by lazy {
+        ktValueArgument.toLocation()
+    }
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val text: String by lazy {
+        ktValueArgument.text
+    }
 
-    override val isSpread: Boolean = false
-}
+    override val name: String? by lazy {
+        ktValueArgument.getArgumentName()?.text
+    }
 
-abstract class KSValueArgumentImpl : KSValueArgument {
+    override val isSpread: Boolean by lazy {
+        ktValueArgument.isSpread
+    }
+
+    override val value: KSExpression? by lazy {
+        ktValueArgument.getArgumentExpression()?.toKSExpression()
+    }
+
     override fun hashCode(): Int {
         return name.hashCode() * 31 + value.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is KSValueArgument)
+        if (other !is KSValueArgumentExpression)
             return false
 
         return other.name == this.name && other.value == this.value
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitValueArgument(this, data)
+        return visitor.visitExpression(this, data)
     }
 
     override fun toString(): String {
-        return "${name?.asString() ?: ""}:${value.toString()}"
+        return (name?.let { "$it = " } ?: "") + value
     }
 }

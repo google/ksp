@@ -22,6 +22,9 @@ import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import org.jetbrains.kotlin.codegen.coroutines.unwrapInitialDescriptorForSuspendFunction
+import org.jetbrains.kotlin.descriptors.impl.referencedProperty
+import org.jetbrains.kotlin.psi2ir.unwrappedGetMethod
 
 class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) : KSPropertyDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
@@ -52,13 +55,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        if (descriptor is PropertyDescriptor) {
-            val modifiers = mutableSetOf<Modifier>()
-            modifiers.addAll(descriptor.toKSModifiers())
-            modifiers
-        } else {
-            emptySet<Modifier>()
-        }
+        descriptor.toKSModifiers()
     }
 
     override val setter: KSPropertySetter? by lazy {
@@ -85,15 +82,21 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
     }
 
+    override val isDelegated: Boolean by lazy {
+        (descriptor as? PropertyDescriptor)?.delegateField != null
+    }
+
+    // FIXME: Under what conditions do we need expression support for descriptor?
+    override val isInitialized: Boolean = false
+    override val delegate: KSExpression? = null
+    override val initializer: KSExpression? = null
+    override val text: String by lazy { toString() }
+
     override fun findOverridee(): KSPropertyDeclaration? {
         val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
         return propertyDescriptor?.findClosestOverridee()?.toKSPropertyDeclaration()
     }
-
-    override fun isDelegated(): Boolean {
-        return (descriptor as? PropertyDescriptor)?.delegateField != null
-    }
-
+    
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }

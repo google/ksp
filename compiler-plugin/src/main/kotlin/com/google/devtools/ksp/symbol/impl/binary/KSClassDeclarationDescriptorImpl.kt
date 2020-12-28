@@ -83,6 +83,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         }
     }
 
+    override val superclassDeclarations: List<KSClassDeclaration>
+        get() = superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
         descriptor.declaredTypeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
@@ -119,6 +122,11 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         }
         modifiers
     }
+
+    // FIXME: Under what conditions do we need expression support for descriptor?
+    override val initializerBlocks: List<KSAnonymousInitializer> = emptyList()
+
+    override val text: String by lazy { toString() }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType =
         getKSTypeCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)

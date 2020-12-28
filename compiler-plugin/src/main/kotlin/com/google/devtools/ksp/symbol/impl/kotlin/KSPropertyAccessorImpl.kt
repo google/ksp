@@ -19,15 +19,25 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.toKSExpression
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor) : KSPropertyAccessor {
     override val receiver: KSPropertyDeclaration by lazy {
-        KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
+        KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property)
     }
+
+    override val statements: List<KSExpression> by lazy {
+        val expression = ktPropertyAccessor.bodyBlockExpression
+                ?: ktPropertyAccessor.initializer
+                ?: ktPropertyAccessor.bodyExpression
+        expression.toKSExpression()?.let {
+            (it as? KSBlockExpression)?.statements ?: listOf(it)
+        } ?: emptyList()
+    }
+
     override val annotations: List<KSAnnotation> by lazy {
         ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }
@@ -41,6 +51,10 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
     }
 
     override val origin: Origin = Origin.KOTLIN
+
+    override val text: String by lazy {
+        ktPropertyAccessor.text
+    }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyAccessor(this, data)

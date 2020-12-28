@@ -33,6 +33,11 @@ abstract class KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration: KSProperty
 
     override val receiver: KSPropertyDeclaration = ksPropertyDeclaration
 
+    // TODO: Should we add expression support to synthetic implementation?
+    override val statements: List<KSExpression> = emptyList()
+
+    override val text: String by lazy { toString() }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyAccessor(this, data)
     }

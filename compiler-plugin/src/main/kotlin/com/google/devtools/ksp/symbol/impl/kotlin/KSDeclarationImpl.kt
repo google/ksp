@@ -32,7 +32,7 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktDeclaration.name!!)
+        KSNameImpl.getCached(ktDeclaration.name ?: "<anonymous>")
     }
 
     override val qualifiedName: KSName? by lazy {

@@ -18,14 +18,14 @@
 
 package com.google.devtools.ksp.symbol.impl.synthetic
 
-import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
 class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclaration) :
     KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration), KSPropertyGetter {
@@ -34,16 +34,12 @@ class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
             KSPropertyGetterSyntheticImpl.cache.getOrPut(ksPropertyDeclaration) { KSPropertyGetterSyntheticImpl(ksPropertyDeclaration) }
     }
 
-    private val descriptor: PropertyAccessorDescriptor by lazy {
-        ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)!!.getter!!
+    private val descriptor: PropertyAccessorDescriptor? by lazy {
+        ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)?.getter
     }
 
     override val returnType: KSTypeReference? by lazy {
-        if (descriptor.returnType != null) {
-            KSTypeReferenceDescriptorImpl.getCached(descriptor.returnType!!)
-        } else {
-            null
-        }
+        descriptor?.returnType?.let(KSTypeReferenceDescriptorImpl::getCached)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

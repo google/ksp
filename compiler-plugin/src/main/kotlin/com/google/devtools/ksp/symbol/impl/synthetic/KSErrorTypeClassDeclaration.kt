@@ -23,13 +23,10 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 
 object KSErrorTypeClassDeclaration : KSClassDeclaration {
-    override val annotations: List<KSAnnotation> = emptyList()
 
     override val classKind: ClassKind = ClassKind.CLASS
 
     override val containingFile: KSFile? = null
-
-    override val declarations: List<KSDeclaration> = emptyList()
 
     override val isActual: Boolean = false
 
@@ -39,11 +36,7 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
 
     override val location: Location = NonExistLocation
 
-    override val modifiers: Set<Modifier> = emptySet()
-
     override val origin: Origin = Origin.SYNTHETIC
-
-    override val packageName: KSName = KSNameImpl.getCached("")
 
     override val parentDeclaration: KSDeclaration? = null
 
@@ -51,11 +44,25 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
 
     override val qualifiedName: KSName? = null
 
+    override val packageName: KSName get() = KSNameImpl.getCached("")
+
     override val simpleName: KSName = KSNameImpl.getCached("<Error>")
 
-    override val superTypes: List<KSTypeReference> = emptyList()
+    override val superTypes: List<KSTypeReference> get() = emptyList()
 
-    override val typeParameters: List<KSTypeParameter> = emptyList()
+    override val superclassDeclarations: List<KSClassDeclaration> get() = emptyList()
+
+    override val modifiers: Set<Modifier> get() = emptySet()
+
+    override val annotations: List<KSAnnotation> get() = emptyList()
+
+    override val declarations: List<KSDeclaration> get() = emptyList()
+
+    override val initializerBlocks: List<KSAnonymousInitializer> get() = emptyList()
+
+    override val typeParameters: List<KSTypeParameter> get() = emptyList()
+
+    override val text: String = ""
 
     override fun asStarProjectedType(): KSType {
         return ResolverImpl.instance.builtIns.nothingType

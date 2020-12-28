@@ -18,15 +18,10 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.findPsi
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import org.jetbrains.kotlin.psi.KtParameter
-import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
 abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) : KSPropertyAccessor {
     override val origin: Origin = Origin.CLASS
@@ -41,10 +36,11 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
     }
 
+    override val statements: List<KSExpression> get() = emptyList()
+
     override val modifiers: Set<Modifier> by lazy {
-        val modifiers = mutableSetOf<Modifier>()
-        modifiers.addAll(descriptor.toKSModifiers())
-        modifiers.addAll(descriptor.toFunctionKSModifiers())
-        modifiers
+        descriptor.toKSModifiers() + descriptor.toFunctionKSModifiers()
     }
+
+    override val text: String by lazy { toString() }
 }

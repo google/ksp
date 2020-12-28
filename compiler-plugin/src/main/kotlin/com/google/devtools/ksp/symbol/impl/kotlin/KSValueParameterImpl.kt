@@ -61,8 +61,11 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
         }
     }
 
-    override val type: KSTypeReference by lazy {
-        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) } ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
+    override val type: KSTypeReference? by lazy {
+        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) }
+            ?: findPropertyForAccessor()?.type
+//            Parameter type in anonymous function can be null
+//            ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
     }
 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()

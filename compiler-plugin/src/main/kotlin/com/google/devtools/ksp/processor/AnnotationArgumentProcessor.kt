@@ -20,9 +20,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.KSAnnotationValueArgument
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
 class AnnotationArgumentProcessor : AbstractTestProcessor() {
@@ -46,7 +44,7 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
     }
 
     inner class ArgumentVisitor : KSVisitorVoid() {
-        override fun visitValueArgument(valueArgument: KSValueArgument, data: Unit) {
+        override fun visitAnnotationValueArgument(valueArgument: KSAnnotationValueArgument, data: Unit) {
             results.add(valueArgument.value.toString())
         }
     }

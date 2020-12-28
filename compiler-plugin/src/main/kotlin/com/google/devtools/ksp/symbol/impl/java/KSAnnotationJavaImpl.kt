@@ -22,7 +22,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
+import com.google.devtools.ksp.symbol.impl.binary.getAbsentAnnotationDefaultArguments
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
@@ -52,7 +52,7 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         )
     }
 
-    override val arguments: List<KSValueArgument> by lazy {
+    override val arguments: List<KSAnnotationValueArgument> by lazy {
         val annotationConstructor =
             ((annotationType.resolve() as KSTypeImpl).kotlinType.constructor.declarationDescriptor as? ClassDescriptor)
                 ?.constructors?.single()
@@ -68,14 +68,15 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
                 } else {
                     calcValue(it.value)
                 }
-                KSValueArgumentJavaImpl.getCached(
+                KSAnnotationValueArgumentJavaImpl.getCached(
+                    index,
                     name = name?.let(KSNameImpl::getCached),
                     value = calculatedValue
                 )
             }
         val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
         val argumentsFromDefault = annotationConstructor?.let {
-            it.getAbsentDefaultArguments(presentValueArgumentNames)
+            it.getAbsentAnnotationDefaultArguments(presentValueArgumentNames)
         } ?: emptyList()
         presentValueArguments.plus(argumentsFromDefault)
     }

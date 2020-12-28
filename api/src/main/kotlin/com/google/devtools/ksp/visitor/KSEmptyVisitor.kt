@@ -126,6 +126,7 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
     override fun visitAnnotationValueArgument(valueArgument: KSAnnotationValueArgument, data: D): R {
         return defaultHandler(valueArgument, data)
     }
+
     override fun visitExpression(expression: KSExpression, data: D): R {
         return defaultHandler(expression, data)
     }

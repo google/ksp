@@ -77,7 +77,6 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
             function.extensionReceiver?.accept(data)
             function.parameters.accept(data)
             function.returnType?.accept(data)
-            function.body?.accept(data)
         }
     }
 
@@ -149,21 +148,35 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         }
     }
 
-    override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: D): R {
-        return super.visitAnonymousInitializer(initializer, data).also {
-            initializer.statements.accept(data)
-        }
-    }
-
-    override fun visitPropertyAccessor(accessor: KSPropertyAccessor, data: D): R {
-        return super.visitPropertyAccessor(accessor, data).also {
-            accessor.body?.accept(data)
+    override fun visitBlockExpression(expression: KSBlockExpression, data: D): R {
+        return super.visitBlockExpression(expression, data).also {
+            expression.statements.accept(data)
         }
     }
 
     override fun visitChainCallsExpression(expression: KSChainCallsExpression, data: D): R {
         return super.visitChainCallsExpression(expression, data).also {
             expression.chains.accept(data)
+        }
+    }
+
+    override fun visitDslExpression(expression: KSDslExpression, data: D): R {
+        return super.visitDslExpression(expression, data).also {
+            expression.closures.accept(data)
+        }
+    }
+
+    override fun visitIfExpression(expression: KSIfExpression, data: D): R {
+        return super.visitIfExpression(expression, data).also {
+            expression.condition.accept(data)
+            expression.then.accept(data)
+            expression.otherwise?.accept(data)
+        }
+    }
+
+    override fun visitLabeledExpression(expression: KSLabeledExpression, data: D): R {
+        return super.visitLabeledExpression(expression, data).also {
+            expression.body.accept(data)
         }
     }
 
@@ -174,33 +187,9 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         }
     }
 
-    override fun visitDslExpression(expression: KSDslExpression, data: D): R {
-        return super.visitDslExpression(expression, data).also {
-            expression.closures.accept(data)
-        }
-    }
-
-    override fun visitBlockExpression(expression: KSBlockExpression, data: D): R {
-        return super.visitBlockExpression(expression, data).also {
-            expression.statements.accept(data)
-        }
-    }
-
-    override fun visitLabeledExpression(expression: KSLabeledExpression, data: D): R {
-        return super.visitLabeledExpression(expression, data).also {
-            expression.body.accept(data)
-        }
-    }
-
-    override fun visitIfExpression(expression: KSIfExpression, data: D): R {
-        return super.visitIfExpression(expression, data).also {
-            expression.then.accept(data)
-            expression.otherwise?.accept(data)
-        }
-    }
-
     override fun visitWhenExpressionBranch(whenBranch: KSWhenExpression.Branch, data: D): R {
         return super.visitWhenExpressionBranch(whenBranch, data).also {
+            whenBranch.conditions.accept(data)
             whenBranch.body.accept(data)
         }
     }

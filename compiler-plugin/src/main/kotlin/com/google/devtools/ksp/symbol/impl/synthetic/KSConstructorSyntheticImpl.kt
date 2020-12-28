@@ -32,7 +32,7 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
 
     override val extensionReceiver: KSTypeReference? = null
 
-    override val parameters: List<KSValueParameter> = emptyList()
+    override val parameters: List<KSValueParameter> get() = emptyList()
 
     override val functionKind: FunctionKind = FunctionKind.MEMBER
 
@@ -44,7 +44,7 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
         KSNameImpl.getCached("<init>")
     }
 
-    override val typeParameters: List<KSTypeParameter> = emptyList()
+    override val typeParameters: List<KSTypeParameter> get() = emptyList()
 
     override val containingFile: KSFile? by lazy {
         ksClassDeclaration.containingFile
@@ -56,21 +56,23 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
 
     override val returnType: KSTypeReference? = null
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: List<KSAnnotation> get() = emptyList()
 
     override val isActual: Boolean = false
 
     override val isExpect: Boolean = false
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val statements: List<KSExpression> get() = emptyList()
 
     override val location: Location by lazy {
         ksClassDeclaration.location
     }
 
-    override val modifiers: Set<Modifier> = emptySet()
+    override val modifiers: Set<Modifier> get() = emptySet()
 
     override val origin: Origin = Origin.SYNTHETIC
+
+    override val text: String by lazy { toString() }
 
     override fun findOverridee(): KSFunctionDeclaration? = null
 

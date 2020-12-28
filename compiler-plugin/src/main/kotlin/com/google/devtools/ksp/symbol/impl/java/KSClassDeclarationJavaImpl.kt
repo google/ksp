@@ -133,8 +133,18 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         psi.superTypes.map { KSTypeReferenceJavaImpl.getCached(it) }
     }
 
+    override val superclassDeclarations: List<KSClassDeclaration> by lazy {
+        superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+    }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
         psi.typeParameters.map { KSTypeParameterJavaImpl.getCached(it) }
+    }
+
+    override val initializerBlocks: List<KSAnonymousInitializer> get() = emptyList()
+
+    override val text: String by lazy {
+        psi.text
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {

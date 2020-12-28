@@ -23,16 +23,11 @@ package com.google.devtools.ksp.symbol
  * Note that annotation use-site targets such as @get: @set: is not copied to accessor's annotations attribute.
  * Use KSAnnotated.findAnnotationFromUseSiteTarget() to ensure annotations from parent is obtained.
  */
-interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner {
+interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner, KSBlockExpression {
     /**
      * The owner of the property accessor.
      */
     val receiver: KSPropertyDeclaration
-
-    /**
-     * The body expression for this property accessor.
-     */
-    val body: KSExpression?
 }
 
 /**

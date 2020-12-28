@@ -18,21 +18,16 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.descriptors.PropertyDescriptor
-import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isPrivate
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.*
-import com.google.devtools.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
-import org.jetbrains.kotlin.psi.KtClassOrObject
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
 import org.jetbrains.kotlin.psi.KtParameter
-import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
-import org.jetbrains.kotlin.resolve.OverridingUtil
 
 class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration,
     KSDeclarationImpl(ktParameter),
@@ -67,6 +62,12 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         }
     }
 
+    override val initializer: KSExpression? by lazy {
+        ktParameter.defaultValue.toKSExpression()
+    }
+
+    override val delegate: KSExpression? = null
+
     override val type: KSTypeReference by lazy {
         if (ktParameter.typeReference != null) {
             KSTypeReferenceImpl.getCached(ktParameter.typeReference!!)
@@ -75,7 +76,13 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         }
     }
 
-    override fun isDelegated(): Boolean = false
+    override val isDelegated: Boolean = false
+
+    override val isInitialized: Boolean by lazy {
+        initializer != null
+    }
+
+    override val text: String by lazy { ktParameter.text }
 
     override fun findOverridee(): KSPropertyDeclaration? {
         return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.single { it.overriddenDescriptors.isEmpty() }

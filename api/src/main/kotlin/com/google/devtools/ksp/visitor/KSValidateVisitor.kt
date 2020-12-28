@@ -67,9 +67,6 @@ class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : K
         if (!this.visitDeclaration(function, data)) {
             return false
         }
-        if (!this.visitDeclarationContainer(function, data)) {
-            return false
-        }
         return true
     }
 

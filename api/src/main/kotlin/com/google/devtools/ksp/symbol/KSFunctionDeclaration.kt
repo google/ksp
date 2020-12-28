@@ -39,7 +39,8 @@ import com.google.devtools.ksp.processing.Resolver
  * }
  * ```
  */
-interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer, KSExpression {
+interface KSFunctionDeclaration : KSDeclaration, KSBlockExpression {
+
     /**
      * Kind of this function.
      */
@@ -66,11 +67,6 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer, KSExpre
      * [value parameters][KSValueParameter] of this function.
      */
     val parameters: List<KSValueParameter>
-
-    /**
-     * The body expression for this function.
-     */
-    val body: KSExpression?
 
     /**
      * Find the closest overridee of this function, if overriding.

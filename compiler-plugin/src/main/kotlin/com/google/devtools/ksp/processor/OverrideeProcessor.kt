@@ -75,7 +75,7 @@ class OverrideeProcessor: AbstractTestProcessor() {
             append(self.simpleName.asString())
             append(
                 self.parameters.joinToString(", ", prefix = "(", postfix = ")") {
-                    "${it.name?.asString()}:${it.type.resolve().declaration.simpleName.asString()}"
+                    "${it.name?.asString()}:${it.type?.resolve()?.declaration?.simpleName?.asString()}"
                 }
             )
         }

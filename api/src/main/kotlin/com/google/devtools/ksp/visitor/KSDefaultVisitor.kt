@@ -43,8 +43,7 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
 
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: D): R {
         this.visitDeclaration(function, data)
-        this.visitDeclarationContainer(function, data)
-        this.visitExpression(function, data)
+        this.visitBlockExpression(function, data)
         return super.visitFunctionDeclaration(function, data)
     }
 
@@ -67,6 +66,7 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     override fun visitPropertyAccessor(accessor: KSPropertyAccessor, data: D): R {
         this.visitModifierListOwner(accessor, data)
         this.visitAnnotated(accessor, data)
+        this.visitBlockExpression(accessor, data)
         return super.visitPropertyAccessor(accessor, data)
     }
 

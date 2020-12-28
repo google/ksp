@@ -16,26 +16,24 @@
  */
 
 
-package com.google.devtools.ksp.symbol.impl.java
+package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentImpl
 
-class KSValueArgumentJavaImpl private constructor(override val name: KSName?, override val value: Any?) : KSValueArgumentImpl() {
-    companion object : KSObjectCache<Pair<KSName?, Any?>, KSValueArgumentJavaImpl>() {
-        fun getCached(name: KSName?, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentJavaImpl(name, value) }
-    }
-
-    override val origin = Origin.JAVA
-
+object KSErrorValueParameter : KSValueParameter {
+    override val name: KSName? = null
+    override val type: KSTypeReference? = null
+    override val isVararg: Boolean = false
+    override val isNoInline: Boolean = false
+    override val isCrossInline: Boolean = false
+    override val isVal: Boolean = false
+    override val isVar: Boolean = false
+    override val hasDefault: Boolean = false
+    override val annotations: List<KSAnnotation> get() = emptyList()
+    override val origin: Origin = Origin.SYNTHETIC
     override val location: Location = NonExistLocation
 
-    override val isSpread: Boolean = false
-
-    override val annotations: List<KSAnnotation> = emptyList()
-
-    override fun toString(): String {
-        return "${name?.asString() ?: ""}:${value.toString()}"
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+        return visitor.visitValueParameter(this, data)
     }
 }

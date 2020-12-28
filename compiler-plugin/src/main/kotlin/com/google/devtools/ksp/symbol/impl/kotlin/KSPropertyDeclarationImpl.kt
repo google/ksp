@@ -18,20 +18,21 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.descriptors.PropertyDescriptor
-import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
 import com.google.devtools.ksp.isLocal
-import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isPrivate
-import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findClosestOverridee
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.toKSExpression
+import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
+import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
+import org.jetbrains.kotlin.js.translate.declaration.hasCustomGetter
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtPropertyDelegate
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
-import org.jetbrains.kotlin.resolve.OverridingUtil
 
 class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration, KSDeclarationImpl(ktProperty),
     KSExpectActual by KSExpectActualImpl(ktProperty) {
@@ -51,20 +52,24 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         ktProperty.isVar
     }
 
+    private fun isInterfaceProperty(): Boolean {
+        return (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+    }
+
+    // TODO: We should cancel the composition implementation, there is no need to get it!
     private fun shouldCreateSyntheticAccessor(): Boolean {
-        return !this.isPrivate()
-                && (
-                !this.isLocal() && !this.modifiers.contains(Modifier.ABSTRACT)
-                        && (this.parentDeclaration as? KSClassDeclaration)?.classKind != ClassKind.INTERFACE
-                        || ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE && ktProperty.accessors.isNotEmpty())
-                )
+        return !this.isPrivate() && (
+          !this.isLocal() && !this.modifiers.contains(Modifier.ABSTRACT)
+            && !isInterfaceProperty()
+            || (isInterfaceProperty() && ktProperty.accessors.isNotEmpty())
+          )
     }
 
     override val getter: KSPropertyGetter? by lazy {
         if (!shouldCreateSyntheticAccessor()) {
             null
         } else {
-            val getter = ktProperty.accessors.filter { it.isGetter }.singleOrNull()
+            val getter = ktProperty.accessors.singleOrNull { it.isGetter }
             if (getter != null) {
                 KSPropertyGetterImpl.getCached(getter)
             } else {
@@ -77,12 +82,28 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         if (!shouldCreateSyntheticAccessor() || !ktProperty.isVar) {
             null
         } else {
-            val setter = ktProperty.accessors.filter { it.isSetter }.singleOrNull()
+            val setter = ktProperty.accessors.singleOrNull { it.isSetter }
             if (setter != null) {
                 KSPropertySetterImpl.getCached(setter)
             } else {
                 KSPropertySetterSyntheticImpl.getCached(this)
             }
+        }
+    }
+
+    override val initializer: KSExpression? by lazy {
+        if (isInterfaceProperty() || !isInitialized) {
+            null
+        } else {
+            ktProperty.initializer.toKSExpression()
+        }
+    }
+
+    override val delegate: KSExpression? by lazy {
+        if (isInterfaceProperty() && !isDelegated) {
+            null
+        } else {
+            ktProperty.delegateExpression.toKSExpression()
         }
     }
 
@@ -101,7 +122,17 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         }
     }
 
-    override fun isDelegated(): Boolean = ktProperty.hasDelegate()
+    override val isDelegated: Boolean by lazy {
+        ktProperty.hasDelegate()
+    }
+
+    override val isInitialized: Boolean by lazy {
+        ktProperty.hasInitializer()
+    }
+
+    override val text: String by lazy {
+        ktProperty.text
+    }
 
     override fun findOverridee(): KSPropertyDeclaration? {
         val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
