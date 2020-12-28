@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol
 import com.google.devtools.ksp.processing.Resolver
+
 /**
  * A function definition
  *
@@ -26,9 +27,19 @@ import com.google.devtools.ksp.processing.Resolver
  * To obtain the function signature where type arguments are resolved as member of a given [KSType],
  * use [Resolver.asMemberOf].
  *
- * @see KSFunctionType
+ * @see KSFunction
+ *
+ *
+ * This can also be viewed as an expression, such as a local inline function declaration:
+ * ```
+ * fun a() {
+ *     fun inline() {
+ *         ...
+ *     } // here
+ * }
+ * ```
  */
-interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
+interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer, KSExpression {
     /**
      * Kind of this function.
      */
@@ -55,6 +66,11 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
      * [value parameters][KSValueParameter] of this function.
      */
     val parameters: List<KSValueParameter>
+
+    /**
+     * The body expression for this function.
+     */
+    val body: KSExpression?
 
     /**
      * Find the closest overridee of this function, if overriding.

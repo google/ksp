@@ -28,6 +28,11 @@ interface KSPropertyAccessor : KSAnnotated, KSModifierListOwner {
      * The owner of the property accessor.
      */
     val receiver: KSPropertyDeclaration
+
+    /**
+     * The body expression for this property accessor.
+     */
+    val body: KSExpression?
 }
 
 /**

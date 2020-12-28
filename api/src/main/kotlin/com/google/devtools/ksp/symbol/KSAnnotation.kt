@@ -30,9 +30,9 @@ interface KSAnnotation : KSNode {
     /**
      * The arguments applied to the constructor call to construct this annotation.
      * Must be compile time constants.
-     * @see [KSValueArgument] for operations on its values.
+     * @see [KSAnnotationValueArgument] for operations on its values.
      */
-    val arguments: List<KSValueArgument>
+    val arguments: List<KSAnnotationValueArgument>
 
     /**
      * Short name for this annotation, equivalent to the simple name of the declaration of the annotation class.
