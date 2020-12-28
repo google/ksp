@@ -36,14 +36,14 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     }
 
     override fun visitAnonymousInitializer(initializer: KSAnonymousInitializer, data: D): R {
-        this.visitDeclaration(initializer, data)
         this.visitBlockExpression(initializer, data)
+        this.visitDeclaration(initializer, data)
         return super.visitAnonymousInitializer(initializer, data)
     }
 
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: D): R {
-        this.visitDeclaration(function, data)
         this.visitBlockExpression(function, data)
+        this.visitDeclaration(function, data)
         return super.visitFunctionDeclaration(function, data)
     }
 
@@ -58,8 +58,8 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     }
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: D): R {
-        this.visitDeclaration(property, data)
         this.visitExpression(property, data)
+        this.visitDeclaration(property, data)
         return super.visitPropertyDeclaration(property, data)
     }
 
@@ -86,9 +86,9 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     }
 
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: D): R {
+        this.visitExpression(classDeclaration, data)
         this.visitDeclaration(classDeclaration, data)
         this.visitDeclarationContainer(classDeclaration, data)
-        this.visitExpression(classDeclaration, data)
         return super.visitClassDeclaration(classDeclaration, data)
     }
 
