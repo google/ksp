@@ -41,10 +41,6 @@
 // run { .. }  =>  KSDslExpression
 // { .. }  =>  KSLambdaExpression
 // break@loop  =>  KSJumpExpression
-// fun inline() {}  =>  KSFunctionDeclaration
-// class Class { val a = "b" }  =>  KSClassDeclaration
-// val a = "b"  =>  KSPropertyDeclaration
-// "b"  =>  KSConstantExpression
 // END
 class Expressions {
     init {
@@ -74,8 +70,6 @@ class Expressions {
         loop@ run {
             break@loop
         }
-        fun inline() {}
-        class Class { val a = "b" }
     }
 
     class Builder(int: Int) {
