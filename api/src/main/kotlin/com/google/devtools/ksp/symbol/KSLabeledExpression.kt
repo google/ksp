@@ -19,25 +19,25 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * A value argument to function / constructor calls.
+ * An expression with a label.
  *
- * Currently, only appears in annotation arguments.
+ * [Grammar](https://kotlinlang.org/docs/reference/grammar.html#label)
+ *
+ * @author RinOrz
  */
-interface KSValueArgument : KSAnnotated {
+interface KSLabeledExpression : KSExpression, KSLabelReferenceExpression {
+
     /**
-     * The name for the named argument, or null otherwise.
+     * The label name of the expression.
      *
-     * For example, in `ignore(name=123456)`, the name value is "name"
+     * For example, in `loop@ for (i in 1..100)`, the name is "loop"
      */
-    val name: KSName?
+    override val name: String
 
     /**
-     * True if it is a spread argument (i.e., has a "*" in front of the argument).
+     * The expression after the label.
+     *
+     * For example, in `loop@ for (i in 1..100)`, the body is "for (i in 1..100)"
      */
-    val isSpread: Boolean
-
-    /**
-     * The value of the argument.
-     */
-    val value: Any?
+    val body: KSExpression
 }
