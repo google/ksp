@@ -370,7 +370,7 @@ currently unavailable:
 ## For Java Annotation Processor Authors
 
 If you are familiar with the Java Annotation Processing API, see the
-[Java annotation processing to KSP reference](reference.md) for how to
+[Java annotation processing to KSP reference](docs/reference.md) for how to
 implement most functions and data structures that are provided by Java's
 API.
 
@@ -528,8 +528,12 @@ and perhaps also resource directory if your IDE supports them:
 build/generated/ksp/src/main/resources
 ```
 
+## Incremental Processing
+
+See [notes](docs/incremental.md) on incremental processing.
+
 ## Migration from old KSP releases
-See [Migration from old KSP releases](old-ksp-release.md)
+See [Migration from old KSP releases](docs/old-ksp-release.md)
 
 ## How to contribute
 See [CONTRIBUTING.md](CONTRIBUTING.md)
