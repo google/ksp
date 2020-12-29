@@ -22,21 +22,17 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
-import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
-import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
-import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
-import org.jetbrains.kotlin.gradle.plugin.mapClasspath
+import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
-import org.jetbrains.kotlin.gradle.tasks.KOTLIN_BUILD_DIR_NAME
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
@@ -122,6 +118,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
             javaCompile.source(generatedJavaSources)
+            javaCompile.source(resourceOutputDir)
             javaCompile.classpath += project.files(classOutputDir)
         }
 
@@ -145,8 +142,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         kotlinCompileProvider.configure { kotlinCompile ->
             kotlinCompile.dependsOn(kspTaskProvider)
-            kotlinCompile.source(kotlinOutputDir, javaOutputDir)
+            kotlinCompile.source(kotlinOutputDir, javaOutputDir, resourceOutputDir)
             kotlinCompile.classpath += project.files(classOutputDir)
+        }
+
+        // KotlinCompilationOutput assumes only one resource provider.
+        // Therefore, it's best not to override it in case of conflicting with other plugins.
+        // FIXME: Need KotlinCompilationOutput.dir() in upstream.
+        when (val outputs = kotlinCompilation.output.allOutputs) {
+            is ConfigurableFileCollection -> outputs.from(resourceOutputDir)
+            is SourceSetOutput -> outputs.dir(resourceOutputDir)
         }
 
         return project.provider { emptyList() }
