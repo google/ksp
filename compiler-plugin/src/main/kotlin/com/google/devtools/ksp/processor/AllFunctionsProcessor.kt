@@ -40,7 +40,7 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
             return "${this.simpleName.asString()}" +
                     "(${this.parameters.map { 
                         buildString {
-                            append(it.type?.resolve()?.declaration?.qualifiedName?.asString())
+                            append(it.type.resolve().declaration.qualifiedName?.asString())
                             if (it.hasDefault) {
                                 append("(hasDefault)")
                             }

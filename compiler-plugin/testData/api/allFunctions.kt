@@ -18,8 +18,9 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AllFunctionsProcessor
 // EXPECTED:
-// class: Foo
+// class: KotlinInterfaceWithProperty
 // <init>(): C
+// <init>(): JavaImplOfKotlinInterface
 // a
 // aFromC
 // aFromC
@@ -30,6 +31,8 @@
 // cFromC
 // class: C
 // class: Data
+// class: Foo
+// class: JavaImplOfKotlinInterface
 // component1(): kotlin.String
 // contains(kotlin.Number): kotlin.Boolean
 // containsAll(kotlin.collections.Collection): kotlin.Boolean
@@ -37,8 +40,12 @@
 // equals(kotlin.Any): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
 // equals(kotlin.Any): kotlin.Boolean
+// equals(kotlin.Any): kotlin.Boolean
+// equals(kotlin.Any): kotlin.Boolean
 // forEach(java.util.function.Consumer): kotlin.Unit
 // get(kotlin.Int): kotlin.Number
+// hashCode(): kotlin.Int
+// hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
 // hashCode(): kotlin.Int
@@ -61,6 +68,10 @@
 // toString(): kotlin.String
 // toString(): kotlin.String
 // toString(): kotlin.String
+// toString(): kotlin.String
+// toString(): kotlin.String
+// x
+// x
 // END
 // FILE: a.kt
 abstract class Foo : C(), List<out Number> {
@@ -100,5 +111,19 @@ class C {
 
     public String javaStrFun() {
         return "str"
+    }
+}
+
+// FILE: KotlinInterfaceWithProperty.kt
+interface KotlinInterfaceWithProperty {
+    var x:Int
+}
+
+// FILE: JavaImplOfKotlinInterface.java
+class JavaImplOfKotlinInterface implements KotlinInterfaceWithProperty {
+    public int getX() {
+        return 1;
+    }
+    public void setX(int value) {
     }
 }

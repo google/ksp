@@ -275,6 +275,10 @@ internal fun PropertyDescriptor.toKSPropertyDeclaration(): KSPropertyDeclaration
         is KtProperty -> KSPropertyDeclarationImpl.getCached(psi)
         is KtParameter -> KSPropertyDeclarationParameterImpl.getCached(psi)
         is PsiField -> KSPropertyDeclarationJavaImpl.getCached(psi)
+        is PsiMethod -> {
+            // happens when a java class implements a kotlin interface that declares properties.
+            KSPropertyDeclarationDescriptorImpl.getCached(this)
+        }
         else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
     }
 }
