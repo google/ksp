@@ -64,7 +64,7 @@ class CodeGeneratorImpl(
         val sources = if (dependencies.isAllSources) {
             allSources + anyChangesWildcard
         } else {
-            if (dependencies.dependOnNewChanges) {
+            if (dependencies.aggregating) {
                 dependencies.originatingFiles + anyChangesWildcard
             } else {
                 dependencies.originatingFiles
