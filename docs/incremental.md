@@ -119,3 +119,15 @@ indirectly. In KSP, propagation of dirtyness is done in 2 steps:
   with that file are *affected*.
 
 Note that both of them are transitive and the second forms equivalence classes.
+
+## Reporting Bugs
+To report a bug, please set Gradle properties `ksp.incremental=true` and `ksp.incremental.log=true`,
+and start with a clean build. There are 4 log files:
+
+* `build/kspDirtySetByDeps.log`
+* `build/kspDirtySetByOutputs.log`
+* `build/kspDirtySet.log`
+* `build/kspSourceToOutputs.log`
+
+They contain file names of sources and outputs, plus the timestamps of the builds.
+The first two are only avaiable in successive incremental builds and not available in clean builds.
