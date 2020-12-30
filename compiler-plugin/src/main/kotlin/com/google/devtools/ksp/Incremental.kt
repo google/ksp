@@ -166,6 +166,9 @@ class IncrementalContext(
 
     private val baseDir = options.projectBaseDir
 
+    private val logsDir = File(baseDir, "build").apply { mkdir() }
+    private val buildTime = Date().time
+
     private val modified = options.knownModified.map{ it.relativeTo(baseDir) }.toSet()
     private val removed = options.knownRemoved.map { it.relativeTo(baseDir) }.toSet()
 
@@ -262,17 +265,15 @@ class IncrementalContext(
         if (!options.incrementalLog)
             return
 
-        val logFile = File(options.projectBaseDir, "build/kspDirtySetByDeps.log")
-        logFile.appendText("All Files\n")
-        ksFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
+        val logFile = File(logsDir, "kspDirtySetByDeps.log")
+        logFile.appendText("=== Build $buildTime ===\n")
         logFile.appendText("Modified\n")
-        options.knownModified.forEach { logFile.appendText("  $it\n") }
+        modified.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("Removed\n")
-        options.knownRemoved.forEach { logFile.appendText("  $it\n") }
+        removed.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("Dirty\n")
         dirtyFiles.forEach { logFile.appendText("  ${it}\n") }
-        val percentage = "%.2f".format(dirtyFiles.size.toDouble() / ksFiles.size.toDouble() * 100)
-        logFile.appendText("\nDirty / All: $percentage%\n\n")
+        logFile.appendText("\n")
     }
 
     fun logDirtyFilesByOutputs(dirtyFiles: Collection<File>) {
@@ -289,7 +290,8 @@ class IncrementalContext(
         }
         val outputsToRemove = allOutputs - validOutputs
 
-        val logFile = File(options.projectBaseDir, "build/kspDirtySetByOutputs.log")
+        val logFile = File(logsDir, "kspDirtySetByOutputs.log")
+        logFile.appendText("=== Build $buildTime ===\n")
         logFile.appendText("Dirty sources\n")
         dirtyFiles.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("Outputs to remove\n")
@@ -301,7 +303,8 @@ class IncrementalContext(
         if (!options.incrementalLog)
             return
 
-        val logFile = File(options.projectBaseDir, "build/kspSourceToOutputs.log")
+        val logFile = File(logsDir, "kspSourceToOutputs.log")
+        logFile.appendText("=== Build $buildTime ===\n")
         logFile.appendText("All outputs\n")
         sourceToOutputsMap.keys.forEach { source ->
             logFile.appendText("  $source:\n")
@@ -316,12 +319,16 @@ class IncrementalContext(
         if (!options.incrementalLog)
             return
 
-        val logFile = File(options.projectBaseDir, "build/kspDirtySet.log")
+        val logFile = File(logsDir, "kspDirtySet.log")
+        logFile.appendText("=== Build $buildTime ===\n")
+        logFile.appendText("All Files\n")
+        ksFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
         logFile.appendText("Dirty:\n")
         files.forEach {
             logFile.appendText("  ${it.relativeFile}\n")
         }
-        logFile.appendText("\n")
+        val percentage = "%.2f".format(files.size.toDouble() / ksFiles.size.toDouble() * 100)
+        logFile.appendText("\nDirty / All: $percentage%\n\n")
     }
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
