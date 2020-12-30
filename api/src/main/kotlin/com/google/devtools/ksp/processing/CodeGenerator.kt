@@ -77,16 +77,16 @@ interface CodeGenerator {
 /**
  * Dependencies of an output file.
  */
-class Dependencies private constructor(val isAllSources: Boolean, val dependOnNewChanges: Boolean, val originatingFiles: List<KSFile>) {
+class Dependencies private constructor(val isAllSources: Boolean, val aggregating: Boolean, val originatingFiles: List<KSFile>) {
 
     /**
      * Create a [Dependencies] to associate with an output.
      *
-     * @param dependOnNewChanges whether the output should be invalidated on a new source file or a change in any of the existing files.
+     * @param aggregating whether the output should be invalidated on a new source file or a change in any of the existing files.
      *                           Namely, whenever there are new information.
      * @param sources Sources for this output to depend on.
      */
-    constructor(dependOnNewChanges: Boolean, vararg sources: KSFile) : this(false, dependOnNewChanges, sources.toList())
+    constructor(aggregating: Boolean, vararg sources: KSFile) : this(false, aggregating, sources.toList())
     companion object {
         /**
          * A short-hand to all source files.
