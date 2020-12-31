@@ -133,6 +133,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.options = options
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.dependsOn(kspConfiguration.buildDependencies)
+            // depends on the processor; if the processor changes, it needs to be reprocessed.
+            kspTask.source(kspConfiguration)
         }.apply {
             configure {
                 kotlinCompilation.allKotlinSourceSets.forEach { sourceSet -> it.source(sourceSet.kotlin) }
