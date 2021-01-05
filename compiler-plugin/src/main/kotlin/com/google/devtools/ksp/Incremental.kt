@@ -124,24 +124,24 @@ class FileToFilesMap(storageFile: File) : BasicMap<File, Collection<File>>(stora
 }
 
 object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
-    override fun defaultHandler(node: KSNode, collect: (LookupSymbol) -> Unit) = Unit
+    override fun defaultHandler(node: KSNode, data: (LookupSymbol) -> Unit) = Unit
 
-    override fun visitDeclaration(declaration: KSDeclaration, collect: (LookupSymbol) -> Unit) {
+    override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbol) -> Unit) {
         if (declaration.isPrivate())
             return
 
         val name = declaration.simpleName.asString()
         val scope = declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0))} ?: return
-        collect(LookupSymbol(name, scope))
+        data(LookupSymbol(name, scope))
     }
 
-    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, collect: (LookupSymbol) -> Unit) {
+    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: (LookupSymbol) -> Unit) {
         // Local declarations aren't visible to other files / classes.
         if (declarationContainer is KSFunctionDeclaration)
             return
 
         declarationContainer.declarations.forEach {
-            it.accept(this, collect)
+            it.accept(this, data)
         }
     }
 }
@@ -155,14 +155,19 @@ class IncrementalContext(
         private val options: KspOptions,
         private val ksFiles: List<KSFile>,
         private val componentProvider: ComponentProvider,
-        private val anyChangesWildcard: File,
-        private val isIncremental: Boolean
+        private val anyChangesWildcard: File
 ) {
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
     private val updatedSymbols = MultiMap.createSet<File, LookupSymbol>()
 
-    // Symbols defined in each file. This is
+    // Symbols defined in each file. This is saved across processing.
     private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
+
+    private val cachesUpToDateFile = File(options.cachesDir, "caches.uptodate")
+    private val isIncremental = options.incremental
+    private var rebuild = !isIncremental || !cachesUpToDateFile.exists()
+            || (options.knownModified.isEmpty() && options.knownRemoved.isEmpty())
+            || (options.knownModified + options.knownRemoved).any { !it.isKotlinFile(listOf("kt")) && !it.isJavaFile() }
 
     private val baseDir = options.projectBaseDir
 
@@ -195,7 +200,7 @@ class IncrementalContext(
         }
     }
 
-    fun updateLookupCache(dirtyFiles: Collection<File>) {
+    private fun updateLookupCache(dirtyFiles: Collection<File>) {
         if (lookupTracker is LookupTrackerImpl) {
             lookupCache.update(lookupTracker, dirtyFiles, options.knownRemoved)
             lookupCache.flush(false)
@@ -261,7 +266,7 @@ class IncrementalContext(
         return visited
     }
 
-    fun logDirtyFilesByDeps(dirtyFiles: Collection<File>) {
+    private fun logDirtyFilesByDeps(dirtyFiles: Collection<File>) {
         if (!options.incrementalLog)
             return
 
@@ -276,7 +281,7 @@ class IncrementalContext(
         logFile.appendText("\n")
     }
 
-    fun logDirtyFilesByOutputs(dirtyFiles: Collection<File>) {
+    private fun logDirtyFilesByOutputs(dirtyFiles: Collection<File>) {
         if (!options.incrementalLog)
             return
 
@@ -299,7 +304,7 @@ class IncrementalContext(
         logFile.appendText("\n")
     }
 
-    fun logSourceToOutputs() {
+    private fun logSourceToOutputs() {
         if (!options.incrementalLog)
             return
 
@@ -315,7 +320,7 @@ class IncrementalContext(
         logFile.appendText("\n")
     }
 
-    fun logDirtyFiles(files: List<KSFile>) {
+    private fun logDirtyFiles(files: List<KSFile>) {
         if (!options.incrementalLog)
             return
 
@@ -333,7 +338,12 @@ class IncrementalContext(
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
     fun calcDirtyFiles(): Collection<KSFile> {
-        if (isIncremental) {
+        if (!isIncremental) {
+            cleanIncrementalCache()
+            return ksFiles
+        }
+
+        if (!rebuild) {
             val dirtyFilesByDeps = calcDirtySetByDeps()
 
             logDirtyFilesByDeps(dirtyFilesByDeps)
@@ -357,7 +367,7 @@ class IncrementalContext(
         }
     }
 
-    fun updateSourceToOutputs(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+    private fun updateSourceToOutputs(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         // Prune deleted sources in source-to-outputs map.
         removed.forEach {
             sourceToOutputsMap.remove(it)
@@ -375,7 +385,7 @@ class IncrementalContext(
     }
 
     // TODO: Recover if processing failed.
-    fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
+    private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
         val outRoot = options.kspOutputDir
         val bakRoot = File(options.cachesDir, "backups")
 
@@ -406,12 +416,12 @@ class IncrementalContext(
     }
 
     // TODO: Don't do anything if processing failed.
-    fun updateCaches(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+    private fun updateCaches(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         updateSourceToOutputs(dirtyFiles, outputs, sourceToOutputs)
         updateLookupCache(dirtyFiles)
 
         // Update symbolsMap
-        if (isIncremental) {
+        if (!rebuild) {
             // Update symbol caches from modified files.
             options.knownModified.forEach {
                 symbolsMap.set(it, updatedSymbols[it].toSet())
@@ -432,6 +442,12 @@ class IncrementalContext(
     }
 
     fun updateCachesAndOutputs(dirtyFiles: Collection<KSFile>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+        if (!isIncremental)
+            return
+
+        cachesUpToDateFile.delete()
+        assert(!cachesUpToDateFile.exists())
+
         val cleanOutputs = mutableSetOf<File>()
         val dirtyFilePaths = dirtyFiles.map { it.relativeFile }
         sourceToOutputsMap.keys.forEach { source ->
@@ -442,6 +458,8 @@ class IncrementalContext(
         updateCaches(dirtyFilePaths, outputs, sourceToOutputs)
         updateOutputs(outputs, cleanOutputs)
 
+        cachesUpToDateFile.createNewFile()
+        assert(cachesUpToDateFile.exists())
     }
 
     // Insert Java file -> names lookup records.
