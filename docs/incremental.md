@@ -29,7 +29,8 @@ in Gradle annotation processing. In KSP,
 * an isolating output can have several sources
 * aggregating means that an output can be affected by any changes
 
-If an output is `aggregating`, any changes except removal of files may affect it potentially.
+If an output is `aggregating`, any changes may affect it potentially, except removal of files that
+don't affect other files.
 In other words, if there's a change, all `aggregating` outputs need to be regenerated and therefore
 all of their sources will be reprocessed. Note that only registered files and changed / new files
 will be re-processed.
@@ -40,7 +41,7 @@ If an output is not `aggregating`, it only depends on the sources specified. Cha
 sources do not affect it. Unlike Gradle's java annotation processing, there can be multiple source
 files for an output.
 
-For example, a generated output, which is dedicated to an interface it implements, is not
+For example, a generated class, which is dedicated to an interface it implements, is not
 `aggregating`.
 
 In short, if an output may depend on new or any changed sources, it is `aggregating`.
