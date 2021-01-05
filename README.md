@@ -393,7 +393,7 @@ Here are some planned features that have not yet been implemented:
 <a name="try"></a>
 ## Try it out!
 
-Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.20-dev-experimental-20201222/playground-ksp-1.4.20-dev-experimental-20201222.zip
+Here's a sample processor that you can check out: https://github.com/google/ksp/releases/download/1.4.20-dev-experimental-20210107/playground-ksp-1.4.20-dev-experimental-20210107.zip
 
 ### Create a processor of your own
 
@@ -429,7 +429,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.20-dev-experimental-20201222")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.20-dev-experimental-20210107")
   }
   ```
 
@@ -454,20 +454,10 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
 ### Use your own processor in a project
 
 * Create another module that contains a workload where you want to try out your processor.
-* In the project's `setting.gradle.kts`, override `resolutionStrategy` for the KSP plugin.
-  This is necessary because KSP is still in preview and there is no plugin marker published yet.
+* In the project's `settings.gradle.kts`, add `google()` to `repositories` for the KSP plugin.
   
   ```
   pluginManagement {
-      resolutionStrategy {
-          eachPlugin {
-              when (requested.id.id) {
-                  "symbol-processing" ->
-                      useModule("com.google.devtools.ksp:symbol-processing:${requested.version}")
-              }
-          }
-      }
-
       repositories {
               gradlePluginPortal()
               google()
@@ -476,7 +466,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
   ```
 
 * In the new module's `build.gradle.kts`, do the following:
-  * Apply the `symbol-processing` plugin with the specified version.
+  * Apply the `com.google.devtools.ksp` plugin with the specified version.
   * Add `ksp(<your processor>)` to the list of dependencies.
 * Run `./gradlew build`. You can find the generated code under
   `build/generated/source/ksp`.
@@ -484,7 +474,7 @@ Here's a sample processor that you can check out: https://github.com/google/ksp/
 
   ```
   plugins {
-      id("symbol-processing") version "1.4.20-dev-experimental-20201222"
+      id("com.google.devtools.ksp") version "1.4.20-dev-experimental-20210107"
       kotlin("jvm") 
   }
 
