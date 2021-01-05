@@ -84,12 +84,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
-        val isIncremental = options.incremental && (options.knownModified.isNotEmpty() || options.knownRemoved.isNotEmpty()) &&
-                (options.knownModified + options.knownRemoved).all { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }
         val incrementalContext = IncrementalContext(
                 options, ksFiles, componentProvider,
-                File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir),
-                isIncremental
+                File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
         )
         val dirtyFiles = incrementalContext.calcDirtyFiles()
 
