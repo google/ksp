@@ -34,6 +34,7 @@ fun ModuleDependency.includeJars(vararg names: String) {
     }
 }
 
+// WARNING: remember to update the dependencies in symbol-processing as well.
 dependencies {
     implementation(kotlin("stdlib", kotlinBaseVersion))
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
