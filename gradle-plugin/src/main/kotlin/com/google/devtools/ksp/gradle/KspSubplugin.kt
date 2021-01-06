@@ -24,6 +24,7 @@ import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
@@ -183,6 +184,11 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
 
 open class KspTask : KspTaskJ() {
     lateinit var options: List<SubpluginOption>
+
+    @Input
+    open fun getApOptions(): Map<String, String> {
+        return project.extensions.getByType(KspExtension::class.java).apOptions
+    }
 
     init {
         // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
