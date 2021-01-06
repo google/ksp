@@ -117,6 +117,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         if (descriptor.kind == KtClassKind.ANNOTATION_CLASS) {
             modifiers.add(Modifier.ANNOTATION)
         }
+        if (descriptor.isInner) {
+            modifiers.add(Modifier.INNER)
+        }
         modifiers
     }
 

@@ -30,8 +30,13 @@ class JavaModifierProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
-        val symbol = resolver.getSymbolsWithAnnotation("Test").single() as KSClassDeclaration
-        symbol.superTypes.single().resolve()!!.declaration.accept(ModifierVisitor(), Unit)
+        resolver.getSymbolsWithAnnotation("Test")
+            .map {
+                it as KSClassDeclaration
+            }
+            .forEach {
+                it.superTypes.single().resolve().declaration.accept(ModifierVisitor(), Unit)
+            }
     }
 
     inner class ModifierVisitor : KSTopDownVisitor<Unit, Unit>() {
