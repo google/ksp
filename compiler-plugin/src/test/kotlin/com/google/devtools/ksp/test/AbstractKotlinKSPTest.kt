@@ -147,7 +147,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
             GenerationUtils.compileFilesTo(moduleFiles.psiFiles, environment, outDir)
             if (hasJavaSources) {
                 // need to compile java sources as well
-                val javaOutDir = module.rootDir.resolve("javaOut")
+                val javaOutDir = module.rootDir.resolve("javaOut").apply { mkdirs() }
                 val classpath = (dependencies + KotlinTestUtils.getAnnotationsJar() + module.outDir)
                     .joinToString(":") { it.absolutePath }
                 val options = listOf(
