@@ -1,5 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
+val kotlinBaseVersion: String by project
+
 plugins {
     kotlin("jvm")
     id("com.github.johnrengelman.shadow") version "6.0.0"
@@ -10,20 +12,11 @@ val packedJars by configurations.creating
 
 dependencies {
     packedJars(project(":compiler-plugin")) { isTransitive = false }
-    packedJars(project(":api")) { isTransitive = false }
 }
 
 tasks.withType<ShadowJar>() {
     archiveClassifier.set("")
     from(packedJars)
-    exclude(
-        "kotlin/**",
-        "org/intellij/**",
-        "org/jetbrains/annotations/**",
-        "META-INF/maven/org.jetbrains/annotations/*",
-        "META-INF/kotlin-stdlib*"
-    )
-
     relocate("com.intellij", "org.jetbrains.kotlin.com.intellij")
 }
 
@@ -34,7 +27,6 @@ tasks {
 
     val sourcesJar by creating(Jar::class) {
         archiveClassifier.set("sources")
-        from(project(":api").sourceSets.main.get().allSource)
         from(project(":compiler-plugin").sourceSets.main.get().allSource)
     }
 
@@ -49,11 +41,30 @@ publishing {
         val publication = create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
             artifact(tasks["sourcesJar"])
+            artifact(tasks["shadowJar"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing")
                 description.set("Symbol processing for Kotlin")
+                // FIXME: figure out how to make ShadowJar generate dependencies in POM,
+                //        or simply depends on kotlin-compiler-embeddable so that relocation
+                //        isn't needed, at the price of giving up composite build.
+                withXml {
+                    fun groovy.util.Node.addDependency(groupId: String, artifactId: String, version: String, scope: String = "runtime") {
+                        appendNode("dependency").apply {
+                            appendNode("groupId", groupId)
+                            appendNode("artifactId", artifactId)
+                            appendNode("version", version)
+                            appendNode("scope", scope)
+                        }
+                    }
+
+                    asNode().appendNode("dependencies").apply {
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlin", "kotlin-compiler-embeddable", kotlinBaseVersion)
+                        addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
+                    }
+                }
             }
         }
-        project.shadow.component(publication)
     }
 }
