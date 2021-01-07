@@ -16,7 +16,6 @@ if (kotlinProjectPath != null) {
     includeBuild(kotlinProjectPath!!) {
         dependencySubstitution {
             substitute(module("org.jetbrains.kotlin:kotlin-compiler")).with(project(":include:kotlin-compiler"))
-//            substitute(module("org.jetbrains.kotlin:kotlin-compiler-tests")).with(project(":include:kotlin-compiler-tests"))
         }
     }
 }
