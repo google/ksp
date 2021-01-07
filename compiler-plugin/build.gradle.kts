@@ -126,6 +126,7 @@ repositories {
     }
     flatDir {
         dirs("${project.rootDir}/third_party/prebuilt/tests-common/")
+        dirs("${project.rootDir}/third_party/prebuilt/tests-mutes/")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
