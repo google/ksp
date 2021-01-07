@@ -27,6 +27,7 @@
 // C
 // C.f
 // C.javaFun
+// FAIL
 // END
 //FILE: a.kt
 package test
