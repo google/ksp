@@ -20,6 +20,7 @@
 // EXPECTED:
 // JA: ANNOTATION_CLASS
 // JC: CLASS
+// JE.ENTRY: ENUM_ENTRY
 // JE: ENUM_CLASS
 // JI: INTERFACE
 // KA: ANNOTATION_CLASS
@@ -49,4 +50,6 @@ enum class KE {
 class JC {}
 interface JI {}
 @interface JA {}
-enum JE {}
+enum JE {
+    ENTRY
+}

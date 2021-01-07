@@ -22,15 +22,17 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.Visibilities
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
+import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiEnumConstant
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
@@ -59,6 +61,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
             psi.isAnnotationType -> ClassKind.ANNOTATION_CLASS
             psi.isInterface -> ClassKind.INTERFACE
             psi.isEnum -> ClassKind.ENUM_CLASS
+            psi is PsiEnumConstant -> ClassKind.ENUM_ENTRY
             else -> ClassKind.CLASS
         }
     }
@@ -96,8 +99,23 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     }
 
     override val declarations: List<KSDeclaration> by lazy {
-        (psi.fields.map { KSPropertyDeclarationJavaImpl.getCached(it) } +
-                psi.innerClasses.map { KSClassDeclarationJavaImpl.getCached(it) } +
+        // field declarations might be enum entries so we need to check their type before wrapping
+        // them as property declarations
+        val fieldDeclarations = psi.fields.map { field ->
+            if (field is PsiEnumConstant) {
+                // PsiEnumConstant does not have a PsiClass that would let us create a
+                // KSClassDeclarationJavaImpl instance. Instead, we'll fallback to the descriptor
+                // implementation.
+                val descriptor = ResolverImpl.instance.resolveJavaDeclaration(field)
+                // if we can resolve it to a class descriptor, use that instead
+                if (descriptor is ClassDescriptor) {
+                    return@map KSClassDeclarationDescriptorImpl.getCached(descriptor)
+                }
+            }
+            KSPropertyDeclarationJavaImpl.getCached(field)
+        }
+        (fieldDeclarations +
+                psi.innerClasses.map { getCached(it) } +
                 psi.constructors.map { KSFunctionDeclarationJavaImpl.getCached(it) } +
                 psi.methods.map { KSFunctionDeclarationJavaImpl.getCached(it) })
                 .distinct()
