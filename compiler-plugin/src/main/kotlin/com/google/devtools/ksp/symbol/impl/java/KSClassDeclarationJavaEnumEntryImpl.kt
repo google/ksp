@@ -18,31 +18,26 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiJavaFile
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.Visibilities
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
-import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
-import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
 import com.intellij.psi.PsiEnumConstant
+import com.intellij.psi.PsiJavaFile
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClassDeclaration, KSDeclarationJavaImpl(),
+class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumConstant) : KSClassDeclaration, KSDeclarationJavaImpl(),
     KSExpectActual by KSExpectActualNoImpl() {
-    companion object : KSObjectCache<PsiClass, KSClassDeclarationJavaImpl>() {
-        fun getCached(psi: PsiClass) = cache.getOrPut(psi) { KSClassDeclarationJavaImpl(psi) }
+    companion object : KSObjectCache<PsiEnumConstant, KSClassDeclarationJavaEnumEntryImpl>() {
+        fun getCached(psi: PsiEnumConstant) = cache.getOrPut(psi) { KSClassDeclarationJavaEnumEntryImpl(psi) }
     }
 
     override val origin = Origin.JAVA
@@ -55,14 +50,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
     }
 
-    override val classKind: ClassKind by lazy {
-        when {
-            psi.isAnnotationType -> ClassKind.ANNOTATION_CLASS
-            psi.isInterface -> ClassKind.INTERFACE
-            psi.isEnum -> ClassKind.ENUM_CLASS
-            else -> ClassKind.CLASS
-        }
-    }
+    override val classKind: ClassKind = ClassKind.ENUM_ENTRY
 
     override val containingFile: KSFile? by lazy {
         KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
@@ -70,9 +58,8 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
 
     override val isCompanionObject = false
 
-    // Could the resolution ever fail?
     private val descriptor: ClassDescriptor? by lazy {
-        ResolverImpl.moduleClassResolver.resolveClass(JavaClassImpl(psi))
+        ResolverImpl.instance.resolveJavaDeclaration(psi) as ClassDescriptor
     }
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> {
@@ -96,27 +83,11 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         } ?: emptyList()
     }
 
-    override val declarations: List<KSDeclaration> by lazy {
-        (psi.fields.map {
-            when (it) {
-                is PsiEnumConstant -> KSClassDeclarationJavaEnumEntryImpl.getCached(it)
-                else -> KSPropertyDeclarationJavaImpl.getCached(it)
-            } } +
-                psi.innerClasses.map { KSClassDeclarationJavaImpl.getCached(it) } +
-                psi.constructors.map { KSFunctionDeclarationJavaImpl.getCached(it) } +
-                psi.methods.map { KSFunctionDeclarationJavaImpl.getCached(it) })
-                .distinct()
-    }
+    override val declarations: List<KSDeclaration> = emptyList()
 
     override val modifiers: Set<Modifier> by lazy {
         val modifiers = mutableSetOf<Modifier>()
         modifiers.addAll(psi.toKSModifiers())
-        if (psi.isAnnotationType) {
-            modifiers.add(Modifier.ANNOTATION)
-        }
-        if (psi.isEnum) {
-            modifiers.add(Modifier.ENUM)
-        }
         modifiers
     }
 
@@ -127,20 +98,16 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     override val primaryConstructor: KSFunctionDeclaration? = null
 
     override val qualifiedName: KSName by lazy {
-        KSNameImpl.getCached(psi.qualifiedName!!)
+        KSNameImpl.getCached("${parentDeclaration!!.qualifiedName!!.asString()}.${psi.name}")
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(psi.name!!)
+        KSNameImpl.getCached(psi.name)
     }
 
-    override val superTypes: List<KSTypeReference> by lazy {
-        psi.superTypes.map { KSTypeReferenceJavaImpl.getCached(it) }
-    }
+    override val superTypes: List<KSTypeReference> = emptyList()
 
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        psi.typeParameters.map { KSTypeParameterJavaImpl.getCached(it) }
-    }
+    override val typeParameters: List<KSTypeParameter> = emptyList()
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
         return getKSTypeCached(descriptor!!.defaultType.replaceTypeArguments(typeArguments), typeArguments)
