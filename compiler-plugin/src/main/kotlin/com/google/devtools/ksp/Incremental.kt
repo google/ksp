@@ -153,7 +153,6 @@ internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConver
 
 class IncrementalContext(
         private val options: KspOptions,
-        private val ksFiles: List<KSFile>,
         private val componentProvider: ComponentProvider,
         private val anyChangesWildcard: File
 ) {
@@ -192,7 +191,7 @@ class IncrementalContext(
         options.cachesDir.deleteRecursively()
     }
 
-    private fun collectDefinedSymbols() {
+    private fun collectDefinedSymbols(ksFiles: List<KSFile>) {
         ksFiles.forEach { file ->
             file.accept(symbolCollector) {
                 updatedSymbols.putValue(file.relativeFile, it)
@@ -208,7 +207,7 @@ class IncrementalContext(
         }
     }
 
-    private fun calcDirtySetByDeps(): Set<File> {
+    private fun calcDirtySetByDeps(ksFiles: List<KSFile>): Set<File> {
         val changedSyms = mutableSetOf<LookupSymbol>()
 
         // Parse and add newly defined symbols in modified files.
@@ -320,31 +319,31 @@ class IncrementalContext(
         logFile.appendText("\n")
     }
 
-    private fun logDirtyFiles(files: List<KSFile>) {
+    private fun logDirtyFiles(files: List<KSFile>, allFiles: List<KSFile>) {
         if (!options.incrementalLog)
             return
 
         val logFile = File(logsDir, "kspDirtySet.log")
         logFile.appendText("=== Build $buildTime ===\n")
         logFile.appendText("All Files\n")
-        ksFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
+        allFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
         logFile.appendText("Dirty:\n")
         files.forEach {
             logFile.appendText("  ${it.relativeFile}\n")
         }
-        val percentage = "%.2f".format(files.size.toDouble() / ksFiles.size.toDouble() * 100)
+        val percentage = "%.2f".format(files.size.toDouble() / allFiles.size.toDouble() * 100)
         logFile.appendText("\nDirty / All: $percentage%\n\n")
     }
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
-    fun calcDirtyFiles(): Collection<KSFile> {
+    fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> {
         if (!isIncremental) {
             cleanIncrementalCache()
             return ksFiles
         }
 
         if (!rebuild) {
-            val dirtyFilesByDeps = calcDirtySetByDeps()
+            val dirtyFilesByDeps = calcDirtySetByDeps(ksFiles)
 
             logDirtyFilesByDeps(dirtyFilesByDeps)
 
@@ -357,12 +356,12 @@ class IncrementalContext(
             }
 
             logDirtyFilesByOutputs(dirtyFilesByOutputs)
-            logDirtyFiles(ksFiles.filter { it.relativeFile in dirtyFilesByOutputs })
+            logDirtyFiles(ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }, ksFiles)
             return ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }
         } else {
             cleanIncrementalCache()
-            collectDefinedSymbols()
-            logDirtyFiles(ksFiles)
+            collectDefinedSymbols(ksFiles)
+            logDirtyFiles(ksFiles, ksFiles)
             return ksFiles
         }
     }

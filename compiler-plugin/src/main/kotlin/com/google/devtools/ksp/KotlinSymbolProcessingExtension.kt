@@ -98,10 +98,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 //        val resolver = ResolverImpl(module, dirtyFiles, newFiles, bindingTrace, project, componentProvider, incrementalContext)
         if (!initialized) {
             incrementalContext = IncrementalContext(
-                    options, ksFiles, componentProvider,
+                    options, componentProvider,
                     File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
             )
-            dirtyFiles = incrementalContext.calcDirtyFiles().toList()
+            dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toList()
             dirtyFileNames = dirtyFiles.map { it.filePath }.toSet()
             newFiles = dirtyFiles
         }
@@ -145,7 +145,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             if (deferredSymbols.isNotEmpty()) {
                 deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
             }
-            incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGen.outputs, codeGen.sourceToOutputs)
+            incrementalContext.updateCachesAndOutputs(ksFiles.filter { it.filePath in dirtyFileNames }, codeGen.outputs, codeGen.sourceToOutputs)
         }
 
         KSObjectCacheManager.clear()
