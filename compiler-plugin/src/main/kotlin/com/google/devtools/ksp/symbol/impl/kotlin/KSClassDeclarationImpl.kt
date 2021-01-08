@@ -24,6 +24,8 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
+import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
@@ -49,19 +51,9 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         (ktClassOrObject is KtObjectDeclaration) && (ktClassOrObject.isCompanion())
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> {
-        ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(descriptor)
-        return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
-            .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-            .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
-    }
+    override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> {
-        ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(descriptor)
-        return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
-                .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-                .map { (it as PropertyDescriptor).toKSPropertyDeclaration() }
-    }
+    override fun getAllProperties(): List<KSPropertyDeclaration> = descriptor.getAllProperties()
 
     override val declarations: List<KSDeclaration> by lazy {
         val propertiesFromConstructor = primaryConstructor?.parameters
