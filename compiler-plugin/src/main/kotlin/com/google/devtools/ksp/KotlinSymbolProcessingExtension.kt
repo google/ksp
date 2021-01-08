@@ -97,10 +97,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         if (!initialized) {
             incrementalContext = IncrementalContext(
-                    options, ksFiles, componentProvider,
+                    options, componentProvider,
                     File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
             )
-            dirtyFiles = incrementalContext.calcDirtyFiles().toList()
+            dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toList()
             dirtyFileNames = dirtyFiles.map { it.filePath }.toSet()
             newFiles = dirtyFiles
         }
