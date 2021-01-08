@@ -21,6 +21,8 @@ package com.google.devtools.ksp.symbol.impl.java
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
+import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
@@ -62,33 +64,16 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
         ResolverImpl.instance.resolveJavaDeclaration(psi) as ClassDescriptor
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> {
-        return descriptor?.let {
-            ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(it)
-            it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
-                .toList()
-                .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-                .plus(it.constructors)
-                .map { (it as FunctionDescriptor).toKSFunctionDeclaration() }
-        } ?: emptyList()
-    }
+    override fun getAllFunctions(): List<KSFunctionDeclaration> =
+            descriptor?.getAllFunctions(true) ?: emptyList()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> {
-        return descriptor?.let {
-            ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(it)
-            it.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES)
-                    .toList()
-                    .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-                    .map{ (it as PropertyDescriptor).toKSPropertyDeclaration() }
-        } ?: emptyList()
-    }
+    override fun getAllProperties(): List<KSPropertyDeclaration> =
+            descriptor?.getAllProperties() ?: emptyList()
 
     override val declarations: List<KSDeclaration> = emptyList()
 
     override val modifiers: Set<Modifier> by lazy {
-        val modifiers = mutableSetOf<Modifier>()
-        modifiers.addAll(psi.toKSModifiers())
-        modifiers
+        psi.toKSModifiers()
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {

@@ -53,19 +53,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         descriptor.isCompanionObject
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> {
-        ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(descriptor)
-        return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
-            .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-            .map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
-    }
+    override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> {
-        ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(descriptor)
-        return descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
-                .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-                .map { KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor) }
-    }
+    override fun getAllProperties(): List<KSPropertyDeclaration> = descriptor.getAllProperties()
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         descriptor.unsubstitutedPrimaryConstructor?.let { KSFunctionDeclarationDescriptorImpl.getCached(it) }
@@ -133,4 +123,20 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }
+}
+
+internal fun ClassDescriptor.getAllFunctions(explicitConstructor: Boolean = false): List<KSFunctionDeclaration> {
+    ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(this)
+    val functionDescriptors = unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
+            .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }.toMutableList()
+    if (explicitConstructor)
+        functionDescriptors += constructors
+    return functionDescriptors.map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
+}
+
+internal fun ClassDescriptor.getAllProperties(): List<KSPropertyDeclaration> {
+    ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(this)
+    return unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
+            .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
+            .map { KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor) }
 }
