@@ -85,7 +85,7 @@ tasks.test {
     maxHeapSize = "2g"
 
     systemProperty("idea.is.unit.test", "true")
-    systemProperty("idea.home.path", "dependencies/repo/kotlin.build/intellij-core/$intellijVersion/artifacts")
+    systemProperty("idea.home.path", buildDir)
     systemProperty("java.awt.headless", "true")
     environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
     environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
