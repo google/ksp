@@ -16,7 +16,9 @@ dependencies {
 
 tasks.withType<ShadowJar>() {
     archiveClassifier.set("")
-    from(packedJars)
+    // ShadowJar picks up the `compile` configuration by default and pulls stdlib in.
+    // Therefore, specifying another configuration instead.
+    configurations = listOf(packedJars)
     relocate("com.intellij", "org.jetbrains.kotlin.com.intellij")
 }
 
