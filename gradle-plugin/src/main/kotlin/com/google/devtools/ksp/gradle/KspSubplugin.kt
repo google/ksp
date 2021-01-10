@@ -83,7 +83,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
-        val kotlinCompileProvider: TaskProvider<KotlinCompile> = project.locateTask(kotlinCompilation.compileKotlinTaskName)!!
+        val kotlinCompileProvider: TaskProvider<KotlinCompile> = project.locateTask(kotlinCompilation.compileKotlinTaskName)
+                ?: return project.provider { emptyList() }
         val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
 
