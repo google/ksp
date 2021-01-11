@@ -119,7 +119,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
             javaCompile.source(generatedJavaSources)
-            javaCompile.source(resourceOutputDir)
             javaCompile.classpath += project.files(classOutputDir)
         }
 
