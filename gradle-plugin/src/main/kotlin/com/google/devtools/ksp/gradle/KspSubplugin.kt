@@ -28,6 +28,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.gradle.plugin.*
@@ -149,12 +150,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kotlinCompile.classpath += project.files(classOutputDir)
         }
 
-        // KotlinCompilationOutput assumes only one resource provider.
-        // Therefore, it's best not to override it in case of conflicting with other plugins.
-        // FIXME: Need KotlinCompilationOutput.dir() in upstream.
-        when (val outputs = kotlinCompilation.output.allOutputs) {
-            is ConfigurableFileCollection -> outputs.from(resourceOutputDir)
-            is SourceSetOutput -> outputs.dir(resourceOutputDir)
+        val processResourcesTaskName = (kotlinCompilation as? KotlinCompilationWithResources)?.processResourcesTaskName ?: "processResources"
+        project.locateTask<ProcessResources>(processResourcesTaskName)?.let { provider ->
+            provider.configure { resourcesTask ->
+                resourcesTask.dependsOn(kspTaskProvider)
+                resourcesTask.from(resourceOutputDir)
+            }
         }
 
         return project.provider { emptyList() }
