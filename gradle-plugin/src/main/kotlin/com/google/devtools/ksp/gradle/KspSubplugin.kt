@@ -145,7 +145,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         kotlinCompileProvider.configure { kotlinCompile ->
             kotlinCompile.dependsOn(kspTaskProvider)
-            kotlinCompile.source(kotlinOutputDir, javaOutputDir, resourceOutputDir)
+            kotlinCompile.source(kotlinOutputDir, javaOutputDir)
             kotlinCompile.classpath += project.files(classOutputDir)
         }
 
