@@ -18,6 +18,10 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: OverrideeProcessor
 // EXPECTED:
+// NoOverride:
+// NoOverride.prop -> null
+// NoOverride.propInParam -> null
+// NoOverride.func(param:Int) -> null
 // Subject:
 // Companion.companionMethod() -> null
 // Subject.notOverridingProp -> null
@@ -127,6 +131,13 @@ abstract class Subject: Base<String>() {
 }
 // MODULE: main(lib)
 // FILE: a.kt
+class NoOverride(val propInParam: Int) {
+    val prop: Int
+    fun func(val param: Int) {
+
+    }
+}
+
 abstract class GrandBase {
     open var openGrandBaseProp: Int = 0
     abstract var abstractGrandBaseProp: Int = 0
