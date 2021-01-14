@@ -137,6 +137,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/implicitElements.kt");
     }
 
+    @TestMetadata("implicitPropertyAccessors.kt")
+    public void testImplicitPropertyAccessors() throws Exception {
+        runTest("testData/api/implicitPropertyAccessors.kt");
+    }
+
     @TestMetadata("interfaceWithDefault.kt")
     public void testInterfaceWithDefault() throws Exception {
         runTest("testData/api/interfaceWithDefault.kt");
