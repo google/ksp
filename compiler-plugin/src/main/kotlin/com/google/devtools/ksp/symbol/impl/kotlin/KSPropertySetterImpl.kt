@@ -22,6 +22,7 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSValueParameterDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAccessor) : KSPropertyAccessorImpl(ktPropertySetter),
@@ -32,9 +33,10 @@ class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAcces
 
     override val parameter: KSValueParameter by lazy {
         ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSValueParameterImpl.getCached(it) }
-                ?: ResolverImpl.instance.resolvePropertyAccessorDeclaration(this)
-                        ?.valueParameters?.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it) }
-                ?: throw IllegalStateException("Failed to resolve property type")
+                ?: KSValueParameterSyntheticImpl.getCached {
+                    ResolverImpl.instance.resolvePropertyAccessorDeclaration(this)
+                            ?.valueParameters?.singleOrNull()
+                }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
