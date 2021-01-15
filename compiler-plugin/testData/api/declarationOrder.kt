@@ -1,41 +1,57 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: DeclarationOrderProcessor
 // EXPECTED:
-// ClassInMainModule[KOTLIN]
-// ClassInModule1[CLASS]
-// ClassInModule2[CLASS]
-// JavaClassInMainModule[JAVA]
-// JavaClassInModule1[CLASS]
-// JavaClassInModule2[CLASS]
-// TestTarget[KOTLIN]
+// lib.KotlinClass
+// name
+// lastName
+// nameFun
+// lastNameFun
+// lib.JavaClass
+// name
+// lastName
+// nameMethod
+// lastNameMethod
+// KotlinClass
+// name
+// lastName
+// nameFun
+// lastNameFun
+// JavaClass
+// name
+// lastName
+// nameMethod
+// lastNameMethod
 // END
 // MODULE: module1
-// FILE: ClassInModule1.kt
-class ClassInModule1 {
-    val prop1: String = TODO()
-    val prop2: String? = TODO()
-    fun fun1(): String = TODO()
-    fun fun2() :String = TODO()
+// FILE: lib/KotlinClass.kt
+package lib;
+class KotlinClass {
+    val name: String = TODO()
+    val lastName: String? = TODO()
+    fun nameFun(): String = TODO()
+    fun lastNameFun() :String = TODO()
 }
-// FILE: JavaClassInModule1.java
-public class JavaClassInModule1 {
-    String field1 = "";
-    String field2 = "";
-    void function1() {}
-    void function2() {}
+// FILE: lib/JavaClass.java
+package lib;
+public class JavaClass {
+    // notice the non alphabetic order, which is triggering the problem
+    String name = "";
+    String lastName = "";
+    void nameMethod() {}
+    void lastNameMethod() {}
 }
 // MODULE: main(module1)
 // FILE: main.kt
-class ClassInMain {
-    val prop1: String = TODO()
-    val prop2: String? = TODO()
-    fun fun1(): String = TODO()
-    fun fun2() :String = TODO()
+class KotlinClass {
+    val name: String = TODO()
+    val lastName: String? = TODO()
+    fun nameFun(): String = TODO()
+    fun lastNameFun() :String = TODO()
 }
-// FILE: JavaClassInModule1.java
-public class JavaClassInMain {
-    String field1 = "";
-    String field2 = "";
-    void function1() {}
-    void function2() {}
+// FILE: JavaClass.java
+public class JavaClass {
+    String name = "";
+    String lastName = "";
+    void nameMethod() {}
+    void lastNameMethod() {}
 }
