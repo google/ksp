@@ -44,9 +44,9 @@ class KSValueParameterDescriptorImpl private constructor(val descriptor: ValuePa
 
     override val isVararg: Boolean = descriptor.isVararg
 
-    override val isVal: Boolean = false
+    override val isVal: Boolean = !descriptor.isVar
 
-    override val isVar: Boolean = false
+    override val isVar: Boolean = descriptor.isVar
 
     override val name: KSName? by lazy {
         KSNameImpl.getCached(descriptor.name.asString())
