@@ -9,6 +9,7 @@ include("api")
 include("gradle-plugin")
 include("compiler-plugin")
 include("symbol-processing")
+include("integration-tests")
 
 val kotlinProjectPath: String? by settings
 if (kotlinProjectPath != null) {
