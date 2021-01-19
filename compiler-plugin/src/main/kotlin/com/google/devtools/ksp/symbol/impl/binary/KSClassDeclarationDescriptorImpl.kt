@@ -25,10 +25,22 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
+import org.jetbrains.kotlin.backend.common.serialization.metadata.extractFileId
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaPackageFragment
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryPackageSourceElement
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
+import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
+import org.jetbrains.kotlin.load.kotlin.toSourceElement
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.resolve.MemberComparator
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
+import java.util.*
 import org.jetbrains.kotlin.descriptors.ClassKind as KtClassKind
 
 class KSClassDeclarationDescriptorImpl private constructor(val descriptor: ClassDescriptor) : KSClassDeclaration,
@@ -78,6 +90,11 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     }
 
     override val declarations: List<KSDeclaration> by lazy {
+        // taken from: https://github.com/JetBrains/kotlin/blob/master/compiler/frontend.java/src/org/jetbrains/kotlin/load/kotlin/kotlinJvmBinaryClassUtil.kt
+        val declarationOrdering = descriptor.safeAs<DeserializedClassDescriptor>()
+            ?.source.safeAs<KotlinJvmBinarySourceElement>()?.binaryClass?.let {
+                DeclarationOrdering(it)
+            }
         listOf(descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(), descriptor.staticScope.getDescriptorsFiltered()).flatten()
             .filter {
                 it is MemberDescriptor
@@ -87,11 +104,22 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             }
             .map {
                 when (it) {
-                    is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(it)
+                    is PropertyDescriptor -> {
+                        KSPropertyDeclarationDescriptorImpl.getCached(it)
+                    }
                     is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(it)
                     is ClassDescriptor -> getCached(it)
                     else -> throw IllegalStateException("Unexpected descriptor type ${it.javaClass}, $ExceptionMessage")
                 }
+            }.let {
+                if (declarationOrdering != null) {
+                    it.sortedBy {
+                        declarationOrdering.getOrder(it)
+                    }
+                } else {
+                    it
+                }
+
             }
     }
 
@@ -139,4 +167,60 @@ internal fun ClassDescriptor.getAllProperties(): List<KSPropertyDeclaration> {
     return unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
             .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
             .map { KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor) }
+}
+
+
+/**
+ * read field/method order from a .class binary
+ */
+private class DeclarationOrdering(
+    binaryClass: KotlinJvmBinaryClass
+) : KotlinJvmBinaryClass.MemberVisitor {
+    private val fieldOrdering = mutableMapOf<String, Int>()
+    private val methodOrdering = mutableMapOf<String, Int>()
+    private val declOrdering = IdentityHashMap<KSDeclaration, Int>()
+    private var nextId = 0
+
+    init {
+        binaryClass.visitMembers(this, null)
+    }
+
+    fun getOrder(decl: KSDeclaration): Int {
+        return declOrdering.getOrPut(decl) {
+            when(decl) {
+                is KSPropertyDeclaration -> {
+                    fieldOrdering.getOrPut(decl.simpleName.asString()) {
+                        nextId ++
+                    }
+                }
+                is KSFunctionDeclaration -> {
+                    methodOrdering.getOrPut(decl.simpleName.asString()) {
+                        nextId ++
+                    }
+                }
+                else -> nextId ++
+            }
+        }
+    }
+    override fun visitField(
+        name: Name,
+        desc: String,
+        initializer: Any?
+    ): KotlinJvmBinaryClass.AnnotationVisitor? {
+        fieldOrdering.getOrPut(name.asString()) {
+            nextId ++
+        }
+        return null
+    }
+
+    override fun visitMethod(
+        name: Name,
+        desc: String
+    ): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
+        methodOrdering.getOrPut(name.asString()) {
+            nextId ++
+        }
+        return null
+    }
+
 }
