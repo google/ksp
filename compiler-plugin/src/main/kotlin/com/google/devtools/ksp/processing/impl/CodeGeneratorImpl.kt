@@ -22,6 +22,7 @@ import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 
 class CodeGeneratorImpl(
@@ -34,10 +35,17 @@ class CodeGeneratorImpl(
     private val allSources: List<KSFile>
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
+    private val fileOutputStreamMap = mutableMapOf<String, FileOutputStream>()
 
     private val separator = File.separator
 
     val sourceToOutputs: MutableMap<File, MutableSet<File>> = mutableMapOf()
+
+    internal fun closeFiles() {
+        fileMap.keys.forEach{
+            fileOutputStreamMap[it]!!.close()
+        }
+    }
 
     fun pathOf(packageName: String, fileName: String, extensionName: String): String {
         val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
@@ -53,25 +61,29 @@ class CodeGeneratorImpl(
 
     override fun createNewFile(dependencies: Dependencies, packageName: String, fileName: String, extensionName: String): OutputStream {
         val path = pathOf(packageName, fileName, extensionName)
-        if (fileMap[path] != null) return fileMap[path]!!.outputStream()
-        val file = File(path)
-        val parentFile = file.parentFile
-        if (!parentFile.exists() && !parentFile.mkdirs()) {
-            throw IllegalStateException("failed to make parent directories.")
-        }
-        file.writeText("")
-        fileMap[path] = file
-        val sources = if (dependencies.isAllSources) {
-            allSources + anyChangesWildcard
-        } else {
-            if (dependencies.aggregating) {
-                dependencies.originatingFiles + anyChangesWildcard
-            } else {
-                dependencies.originatingFiles
+        if (fileOutputStreamMap[path] == null) {
+            if (fileMap[path] == null) {
+                val file = File(path)
+                val parentFile = file.parentFile
+                if (!parentFile.exists() && !parentFile.mkdirs()) {
+                    throw IllegalStateException("failed to make parent directories.")
+                }
+                file.writeText("")
+                fileMap[path] = file
+                val sources = if (dependencies.isAllSources) {
+                    allSources + anyChangesWildcard
+                } else {
+                    if (dependencies.aggregating) {
+                        dependencies.originatingFiles + anyChangesWildcard
+                    } else {
+                        dependencies.originatingFiles
+                    }
+                }
+                associate(sources, path)
             }
+            fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
         }
-        associate(sources, path)
-        return file.outputStream()
+        return fileOutputStreamMap[path]!!
     }
 
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {

@@ -91,7 +91,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         val dirtyFiles = incrementalContext.calcDirtyFiles()
 
         val resolver = ResolverImpl(module, dirtyFiles, bindingTrace, project, componentProvider, incrementalContext)
-        val codeGen = CodeGeneratorImpl(
+        val codeGenerator = CodeGeneratorImpl(
             options.classOutputDir,
             options.javaOutputDir,
             options.kotlinOutputDir,
@@ -103,7 +103,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         val processors = loadProcessors()
         processors.forEach {
-            it.init(options.processingOptions, KotlinVersion.CURRENT, codeGen, logger)
+            it.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
         }
         processors.forEach {
             it.process(resolver)
@@ -114,7 +114,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         KSObjectCacheManager.clear()
 
-        incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGen.outputs, codeGen.sourceToOutputs)
+        codeGenerator.closeFiles()
+
+        incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
 
         return AnalysisResult.EMPTY
     }
