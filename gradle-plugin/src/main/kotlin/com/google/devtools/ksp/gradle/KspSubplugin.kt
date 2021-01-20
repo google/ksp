@@ -108,7 +108,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         options += SubpluginOption("kotlinOutputDir", kotlinOutputDir.path)
         options += SubpluginOption("resourceOutputDir", resourceOutputDir.path)
         options += SubpluginOption("cachesDir", cachesDir.path)
-        options += SubpluginOption("incremental", project.findProperty("ksp.incremental")?.toString() ?: "false")
+        options += SubpluginOption("incremental", project.findProperty("ksp.incremental")?.toString() ?: "true")
         options += SubpluginOption("incrementalLog", project.findProperty("ksp.incremental.log")?.toString() ?: "false")
         options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
         options += SubpluginOption("kspOutputDir", kspOutputDir.path)
