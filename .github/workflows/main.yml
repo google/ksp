@@ -64,3 +64,12 @@ jobs:
       with:
         name: test-reports
         path: compiler-plugin/build/reports
+    # Run ksp integration tests
+    - name: integration tests
+      run: ./gradlew --info :integration-tests:test
+    - name: Upload integration test results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-reports
+        path: integration-tests/build/reports
