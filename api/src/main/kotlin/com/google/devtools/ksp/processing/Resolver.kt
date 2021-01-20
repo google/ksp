@@ -80,6 +80,12 @@ interface Resolver {
     fun mapToJvmSignature(declaration: KSDeclaration): String
 
     /**
+     * map a property accessor to its jvm method signature.
+     */
+    @KspExperimental
+    fun mapToJvmSignature(accessor: KSPropertyAccessor): String
+
+    /**
      * @param overrider the candidate overriding declaration being checked.
      * @param overridee the candidate overridden declaration being checked.
      * @return boolean value indicating whether [overrider] overrides [overridee]

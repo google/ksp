@@ -44,13 +44,3 @@ class Foo @Anno constructor(@Anno val constructorParameterFoo: Int){
         @Anno val local = 1
     }
 }
-
-//FILE: JavaSource.java
-@Anno
-class JavaClass {
-    @Anno
-    int javaProp;
-    @Anno
-    fun javaFun() {
-    }
-}

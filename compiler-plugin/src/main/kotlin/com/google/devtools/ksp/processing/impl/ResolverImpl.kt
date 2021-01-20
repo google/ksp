@@ -253,6 +253,13 @@ class ResolverImpl(
         }
     }
 
+    @KspExperimental
+    override fun mapToJvmSignature(accessor: KSPropertyAccessor): String {
+        return resolvePropertyAccessorDeclaration(accessor)?.let {
+            typeMapper.mapAsmMethod(it).descriptor
+        } ?: ""
+    }
+
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
         fun resolveForOverride(declaration: KSDeclaration): DeclarationDescriptor? {
             return when(declaration) {

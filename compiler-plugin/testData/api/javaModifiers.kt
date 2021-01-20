@@ -35,8 +35,8 @@
 // DependencyNestedJavaClass: OPEN PUBLIC
 // DependencyInnerJavaClass: OPEN PUBLIC INNER
 // DependencyOuterKotlinClass: OPEN PUBLIC
-// DependencyInnerKotlinClass: FINAL PUBLIC INNER
 // DependencyNestedKotlinClass: OPEN PUBLIC
+// DependencyInnerKotlinClass: FINAL PUBLIC INNER
 // END
 // MODULE: module1
 // FILE: DependencyOuterJavaClass.java

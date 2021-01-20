@@ -49,22 +49,22 @@
 // Subject.staticMethod() -> null
 // lib.Subject:
 // Companion.companionMethod() -> null
-// Subject.abstractGrandBaseProp -> GrandBase.abstractGrandBaseProp
 // Subject.notOverridingProp -> null
-// Subject.openGrandBaseProp -> GrandBase.openGrandBaseProp
-// Subject.overriddenAbstractBaseProp -> Base.overriddenAbstractBaseProp
-// Subject.overriddenAbstractGrandBaseProp -> Base.overriddenAbstractGrandBaseProp
 // Subject.overriddenBaseProp -> Base.overriddenBaseProp
+// Subject.overriddenAbstractBaseProp -> Base.overriddenAbstractBaseProp
+// Subject.openGrandBaseProp -> GrandBase.openGrandBaseProp
+// Subject.abstractGrandBaseProp -> GrandBase.abstractGrandBaseProp
 // Subject.overriddenGrandBaseProp -> Base.overriddenGrandBaseProp
-// Subject.abstractFun() -> Base.abstractFun()
-// Subject.abstractFunWithGenericArg(t:String) -> Base.abstractFunWithGenericArg(t:T)
-// Subject.abstractGrandBaseFun() -> GrandBase.abstractGrandBaseFun()
-// Subject.nonOverridingMethod() -> null
+// Subject.overriddenAbstractGrandBaseProp -> Base.overriddenAbstractGrandBaseProp
 // Subject.openFun() -> Base.openFun()
+// Subject.abstractFun() -> Base.abstractFun()
 // Subject.openFunWithGenericArg(t:String) -> Base.openFunWithGenericArg(t:T)
-// Subject.openGrandBaseFun() -> GrandBase.openGrandBaseFun()
-// Subject.overriddenAbstractGrandBaseFun() -> Base.overriddenAbstractGrandBaseFun()
+// Subject.abstractFunWithGenericArg(t:String) -> Base.abstractFunWithGenericArg(t:T)
+// Subject.nonOverridingMethod() -> null
 // Subject.overriddenGrandBaseFun() -> Base.overriddenGrandBaseFun()
+// Subject.overriddenAbstractGrandBaseFun() -> Base.overriddenAbstractGrandBaseFun()
+// Subject.openGrandBaseFun() -> GrandBase.openGrandBaseFun()
+// Subject.abstractGrandBaseFun() -> GrandBase.abstractGrandBaseFun()
 // ConflictingSubject1:
 // ConflictingSubject1.absFoo() -> MyInterface.absFoo()
 // ConflictingSubject2:
