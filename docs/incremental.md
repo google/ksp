@@ -18,8 +18,8 @@ words, a processor needs to associate an output with sources of those `KSNode`, 
 Currently, only changes in Kotlin and Java sources are tracked. If there is a change in the
 classpath, namely in other modules or libraries, a full re-processing will be triggered.
 
-Incremental processing is currently disabled by default. To enable it, set the Gradle property
-`ksp.incremental=true`. To enable logs, which dump the dirty set according to dependencies and
+Incremental processing is currently enabled by default. To disable it, set the Gradle property
+`ksp.incremental=false`. To enable logs, which dump the dirty set according to dependencies and
 outputs, use `ksp.incremental.log=true`. They can be found as `build/*.log`.
 
 ## Aggregating v.s. Isolating
