@@ -17,6 +17,7 @@
 
 // TEST PROCESSOR: ResolveJavaTypeProcessor
 // EXPECTED:
+// C.<init>.X?
 // kotlin.Int
 // kotlin.String?
 // kotlin.collections.MutableSet<out kotlin.Any?>?
@@ -43,6 +44,9 @@ import java.util.List;
 import java.util.Set;
 
 public class C<T> {
+    public C() {}
+    // to reproduce the case where type reference is owned by a constructor
+    public <X> C(X x) {}
     public int intFun() {}
 
     public String strFun() {}

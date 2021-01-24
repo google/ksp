@@ -23,6 +23,8 @@
 // ()Ljava/lang/String;
 // LJavaIntefaceWithVoid;
 // ()Ljava/lang/Void;
+// LJavaClass;
+// ()V
 // END
 
 // FILE: Cls.kt
@@ -35,4 +37,9 @@ class Cls {
 // FILE: JavaIntefaceWithVoid.java
 interface JavaIntefaceWithVoid {
     Void getVoid();
+}
+
+// FILE: JavaClass.java
+class JavaClass {
+    JavaClass() {}
 }

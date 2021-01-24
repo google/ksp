@@ -45,8 +45,8 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
-            if (function.simpleName.asString() == "wildcardParam") {
-                function.parameters[0].type!!.accept(this, Unit)
+            function.parameters.forEach {
+                it.type.accept(this, Unit)
             }
             function.returnType?.accept(this, Unit)
         }

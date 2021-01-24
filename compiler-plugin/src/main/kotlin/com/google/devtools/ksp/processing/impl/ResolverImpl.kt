@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
+import com.google.devtools.ksp.symbol.impl.resolveContainingClass
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
@@ -320,7 +321,7 @@ class ResolverImpl(
                 // TODO: get rid of hardcoded check if possible.
                 val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
                     moduleClassResolver
-                        .resolveClass(JavaMethodImpl(psi).containingClass)
+                        .resolveContainingClass(psi)
                         ?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.CALLABLES
                         ) {
@@ -328,7 +329,7 @@ class ResolverImpl(
                         }
                 } else null
                 property ?: moduleClassResolver
-                    .resolveClass(JavaMethodImpl(psi).containingClass)
+                    .resolveContainingClass(psi)
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.FUNCTIONS,
                         filter = { it.findPsi() == psi }
@@ -457,9 +458,8 @@ class ResolverImpl(
                         check(owner is PsiMethod) {
                             "unexpected owner type: $owner / ${owner?.javaClass}"
                         }
-                        moduleClassResolver.resolveClass(
-                            JavaMethodImpl(owner).containingClass
-                        )?.findEnclosedDescriptor(
+                        moduleClassResolver.resolveContainingClass(owner)
+                        ?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
                             filter = { it.findPsi() == owner }
                         ) as FunctionDescriptor
@@ -767,5 +767,7 @@ private inline fun ClassDescriptor.findEnclosedDescriptor(
     ) ?: this.staticScope.findEnclosedDescriptor(
         kindFilter = kindFilter,
         filter = filter
-    )
+    ) ?: constructors.firstOrNull {
+        kindFilter.accepts(it) && filter(it)
+    }
 }
