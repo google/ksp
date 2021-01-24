@@ -37,6 +37,9 @@ import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
+import org.jetbrains.kotlin.load.java.structure.JavaMember
+import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
 import org.jetbrains.kotlin.resolve.source.getPsi
@@ -44,6 +47,7 @@ import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
+import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 
 val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -322,4 +326,12 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
         queue.addAll(overriddenDescriptors)
     }
     return null
+}
+
+fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): ClassDescriptor? {
+    return if (psiMethod.isConstructor) {
+        resolveClass(JavaConstructorImpl(psiMethod).containingClass)
+    } else {
+        resolveClass(JavaMethodImpl(psiMethod).containingClass)
+    }
 }

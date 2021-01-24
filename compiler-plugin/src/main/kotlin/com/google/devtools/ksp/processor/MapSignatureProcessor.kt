@@ -31,7 +31,7 @@ class MapSignatureProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver) {
-        listOf("Cls", "JavaIntefaceWithVoid")
+        listOf("Cls", "JavaIntefaceWithVoid", "JavaClass")
             .map { className ->
                 resolver.getClassDeclarationByName(className)!!
             }.forEach { subject ->
