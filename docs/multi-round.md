@@ -112,7 +112,12 @@ Processor instance will only be created once, which means you can store informat
 
 All KSP symbols will not be reusable cross rounds, due to the resolution result can potentially change based on what was generated last round. However, since KSP does not allow modifying existing code, information such as the string value for a name of a symbol should still be reusable. To summarize, processors can keep information from previous round on their own, but need to bear in mind that they might be invalid in future rounds.
 
+#### Error Handling
+In case of an error (defined by processor calling `KSPLogger.error()`), the round where error occurs will be the last round of processing. All processors will invoke `onError()` method, there will be no `finish()` method invoked in case of an error.
 
+Note that even though an error has occured, other processors will still continue processing until all processors have finished processing for that round. That means error handling happen after processing is done.
+
+A default implementation for `onError()` will be provided as part of `SymbolProcessor` interface, which is a no-op implementation, you can also override it and therefore write your own error handling logic.
 ## Advanced
 
 
