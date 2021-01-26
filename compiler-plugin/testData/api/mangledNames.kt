@@ -48,22 +48,22 @@
 // getY -> getY
 // setY -> setY
 // libPackage.Foo -> declarations
-// get-inlineProp -> getInlineProp-b_MPbnQ
-// set-inlineProp -> setInlineProp-mQ73O9w
-// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib
-// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib
-// get-internalProp -> getInternalProp$lib
-// set-internalProp -> setInternalProp$lib
-// get-jvmNameProp -> explicitGetterName
-// set-jvmNameProp -> explicitSetterName
 // get-normalProp -> getNormalProp
 // set-normalProp -> setNormalProp
+// get-inlineProp -> getInlineProp-b_MPbnQ
+// set-inlineProp -> setInlineProp-mQ73O9w
+// get-internalProp -> getInternalProp$lib
+// set-internalProp -> setInternalProp$lib
+// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib
+// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib
+// get-jvmNameProp -> explicitGetterName
+// set-jvmNameProp -> explicitSetterName
+// normalFun -> normalFun
 // hasJvmName -> explicitJvmName
 // inlineReceivingFun -> inlineReceivingFun-mQ73O9w
 // inlineReturningFun -> inlineReturningFun-b_MPbnQ
 // internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib
 // internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib
-// normalFun -> normalFun
 // END
 // MODULE: lib
 // FILE: input.kt
