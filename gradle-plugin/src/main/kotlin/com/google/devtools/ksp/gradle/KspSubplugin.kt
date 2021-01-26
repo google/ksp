@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
@@ -142,6 +143,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.kotlinCompile = kotlinCompileProvider.get()
             kspTask.destination = destinationDir
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
+            kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.dependsOn(kspConfiguration.buildDependencies)
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.source(kspConfiguration)
@@ -195,6 +197,7 @@ open class KspTask : KspTaskJ() {
     lateinit var options: List<SubpluginOption>
     lateinit var kotlinCompile: KotlinCompile
     lateinit var destination: File
+    var blockOtherCompilerPlugins: Boolean = false
 
     @Input
     open fun getApOptions(): Map<String, String> {
@@ -215,6 +218,12 @@ open class KspTask : KspTaskJ() {
     ) {
         // Start with / copy from kotlinCompile.
         kotlinCompile.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
+        if (blockOtherCompilerPlugins) {
+            val cfg = project.configurations.getByName(PLUGIN_CLASSPATH_CONFIGURATION_NAME)
+            val dep = cfg.dependencies.single { it.name == KspGradleSubplugin.KSP_ARTIFACT_NAME }
+            args.pluginClasspaths = cfg.files(dep).map { it.canonicalPath }.toTypedArray()
+            args.pluginOptions = arrayOf()
+        }
         args.addPluginOptions(options)
         args.destinationAsFile = destination
     }
