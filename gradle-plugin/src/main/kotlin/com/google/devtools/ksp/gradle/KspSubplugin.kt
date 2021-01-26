@@ -18,28 +18,35 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
+import java.io.File
+import javax.inject.Inject
+import kotlin.reflect.KProperty1
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.jetbrains.kotlin.cli.common.arguments.Argument
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
-import org.jetbrains.kotlin.gradle.plugin.*
+import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
+import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.incremental.ChangedFiles
+import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
-import java.io.File
-import javax.inject.Inject
 
 class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) :
         KotlinCompilerPluginSupportPlugin {
@@ -131,8 +138,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
             kspTask.setDestinationDir(destinationDir)
-            kspTask.mapClasspath { kotlinCompileProvider.get().classpath }
             kspTask.options = options
+            kspTask.kotlinCompile = kotlinCompileProvider.get()
+            kspTask.destination = destinationDir
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.dependsOn(kspConfiguration.buildDependencies)
             // depends on the processor; if the processor changes, it needs to be reprocessed.
@@ -185,6 +193,8 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
 
 open class KspTask : KspTaskJ() {
     lateinit var options: List<SubpluginOption>
+    lateinit var kotlinCompile: KotlinCompile
+    lateinit var destination: File
 
     @Input
     open fun getApOptions(): Map<String, String> {
@@ -203,9 +213,13 @@ open class KspTask : KspTaskJ() {
             defaultsOnly: Boolean,
             ignoreClasspathResolutionErrors: Boolean
     ) {
-        super.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
+        // Start with / copy from kotlinCompile.
+        kotlinCompile.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
         args.addPluginOptions(options)
+        args.destinationAsFile = destination
     }
+
+    override fun getClasspath() = kotlinCompile.classpath
 }
 
 fun K2JVMCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
@@ -220,4 +234,24 @@ fun K2JVMCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
         changedFiles.removed.ifNotEmpty { options += SubpluginOption("knownRemoved", map { it.path }.joinToString(":")) }
         options.ifNotEmpty { addPluginOptions(this) }
     }
+}
+
+@Suppress("unused")
+internal fun dumpArgs(args: K2JVMCompilerArguments): Map<String, String> {
+    @Suppress("UNCHECKED_CAST")
+    val argumentProperties =
+        args::class.members.mapNotNull { member ->
+            (member as? KProperty1<K2JVMCompilerArguments, *>)?.takeIf { it.annotations.any { ann -> ann is Argument } }
+        }
+
+    fun toPair(property: KProperty1<K2JVMCompilerArguments, *>): Pair<String, String> {
+        @Suppress("UNCHECKED_CAST")
+        val value = (property as KProperty1<K2JVMCompilerArguments, *>).get(args)
+        return property.name to if (value is Array<*>)
+            value.asList().toString()
+        else
+            value.toString()
+    }
+
+    return argumentProperties.associate(::toPair).toSortedMap()
 }
