@@ -28,4 +28,6 @@ open class KspExtension {
         }
         apOptions.put(k, v)
     }
+
+    open var blockOtherCompilerPlugins: Boolean = false
 }
