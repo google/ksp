@@ -36,12 +36,8 @@ class AndroidPluginIntegration(
 ) {
 
     fun applyIfAndroidProject(project: Project) {
-        project.pluginManager.withPlugin("com.android.application") {
+        project.pluginManager.withPlugin("com.android.base") {
             // for android apps, we need a configuration per source set
-            decorateAndroidExtension(project)
-        }
-        project.pluginManager.withPlugin("com.android.library") {
-            // for android libraries, we need a configuration per source set
             decorateAndroidExtension(project)
         }
     }

@@ -18,8 +18,6 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
-import java.io.File
-import javax.inject.Inject
 import kotlin.reflect.KProperty1
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -44,14 +42,8 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
-import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
-import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
-import org.jetbrains.kotlin.gradle.plugin.mapClasspath
-import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
@@ -115,7 +107,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun apply(project: Project) {
         project.extensions.create("ksp", KspExtension::class.java)
-        project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        project.plugins.withType(KotlinPluginWrapper::class.java) {
             // kotlin extension has the compilation target that we need to look for to create configurations
             decorateKotlinExtension(project)
         }
