@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.isConstructor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.Visibilities
@@ -61,7 +62,19 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
             ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptyList()
         val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList()
         result.addAll(propertiesFromConstructor)
-        result
+        if (classKind != ClassKind.INTERFACE) {
+            // check if we need to add a synthetic constructor
+            val hasConstructor = result.any {
+                it is KSFunctionDeclaration && it.isConstructor()
+            }
+            if (hasConstructor) {
+                result
+            } else {
+                result + KSConstructorSyntheticImpl(this)
+            }
+        } else {
+            result
+        }
     }
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
