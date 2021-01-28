@@ -54,7 +54,9 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
         ksClassDeclaration
     }
 
-    override val returnType: KSTypeReference? = null
+    override val returnType: KSTypeReference = KSTypeReferenceSyntheticImpl(
+        ksClassDeclaration.asStarProjectedType()
+    )
 
     override val annotations: List<KSAnnotation> = emptyList()
 
