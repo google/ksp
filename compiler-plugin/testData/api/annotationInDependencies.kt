@@ -60,6 +60,7 @@
 // lib.DataClass ->
 // constructorParam : annotations.FieldTarget2{[value = field:]}
 // constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
+// constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // constructorParam : annotations.PropertyGetterTarget{[value = get:]}
 // constructorParam : annotations.PropertySetterTarget{[value = set:]}
 // constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
