@@ -19,7 +19,7 @@
 // FORMAT: <name>: isInternal: isLocal: isPrivate: isProtected: isPublic: isOpen
 // EXPECTED:
 // Cls: true: false: false: false: false: false
-// <simple name: Cls>: false: false: false: false: true: false
+// <simple name: <init>>: false: false: false: false: true: false
 // <simple name: aaa>: false: true: false: false: false: false
 // Cls.prop: false: false: false: false: true: true
 // Cls.protectedProp: false: false: false: true: false: true

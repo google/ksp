@@ -31,6 +31,7 @@
 // toString(): kotlin.String
 // class: Data
 // a
+// <init>(kotlin.String): Data
 // component1(): kotlin.String
 // copy(kotlin.String(hasDefault)): Data
 // equals(kotlin.Any): kotlin.Boolean
@@ -40,6 +41,7 @@
 // aFromC
 // cFromC
 // size
+// <init>(): Foo
 // bar(): kotlin.Boolean
 // baz(kotlin.String,kotlin.String(hasDefault),kotlin.String(hasDefault)): kotlin.Boolean
 // contains(kotlin.Number): kotlin.Boolean
