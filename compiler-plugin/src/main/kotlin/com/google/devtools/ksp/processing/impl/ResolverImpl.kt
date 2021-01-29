@@ -529,16 +529,16 @@ class ResolverImpl(
 
     fun resolveAnnotationEntry(ktAnnotationEntry: KtAnnotationEntry): AnnotationDescriptor? {
         bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)?.let { return it }
-        val containingDeclaration = KtStubbedPsiUtil.getContainingDeclaration(ktAnnotationEntry)
-        return if (containingDeclaration?.let { KtPsiUtil.isLocal(containingDeclaration) } == true) {
-            resolveDeclarationForLocal(containingDeclaration)
-            bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)
-        } else {
-            ktAnnotationEntry.findLexicalScope().let { scope ->
-                annotationResolver.resolveAnnotationsWithArguments(scope, listOf(ktAnnotationEntry), bindingTrace)
-                bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)
+        KtStubbedPsiUtil.getContainingDeclaration(ktAnnotationEntry)?.let { containingDeclaration ->
+            if (KtPsiUtil.isLocal(containingDeclaration)) {
+                resolveDeclarationForLocal(containingDeclaration)
+            } else {
+                resolveSession.resolveToDescriptor(containingDeclaration).annotations.forEach {}
             }
+        } ?: ktAnnotationEntry.containingKtFile.let {
+            resolveSession.getFileAnnotations(it).forEach {}
         }
+        return bindingTrace.get(BindingContext.ANNOTATION, ktAnnotationEntry)
     }
 
     fun resolveDeclarationForLocal(localDeclaration: KtDeclaration) {
