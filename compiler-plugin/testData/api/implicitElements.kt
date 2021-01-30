@@ -26,7 +26,7 @@
 // readOnly.getter.owner: readOnly: KOTLIN
 // readWrite.get(): KOTLIN
 // readWrite.set(): SYNTHETIC annotations from property: SetAnno
-// synthetic constructor for Data
+// <init>
 // comp1.get(): SYNTHETIC
 // comp2.get(): SYNTHETIC
 // comp2.set(): SYNTHETIC
