@@ -60,8 +60,13 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         val propertiesFromConstructor = primaryConstructor?.parameters
             ?.filter { it.isVar || it.isVal }
             ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptyList()
-        val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList()
+        val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList<KSDeclaration>()
         result.addAll(propertiesFromConstructor)
+        primaryConstructor?.let { primaryConstructor: KSDeclaration ->
+            if (!result.contains(primaryConstructor)) {
+                result.add(primaryConstructor)
+            }
+        }
         if (classKind != ClassKind.INTERFACE) {
             // check if we need to add a synthetic constructor
             val hasConstructor = result.any {

@@ -54,10 +54,32 @@
 // <init>(): lib.AbstractKotlinClassWithMultipleConstructors1
 // <init>(kotlin.Int): lib.AbstractKotlinClassWithMultipleConstructors1
 // <init>(kotlin.String): lib.AbstractKotlinClassWithMultipleConstructors1
+// class: AbstractKotlinClassWithMultipleConstructors2
+// <init>(kotlin.Float): AbstractKotlinClassWithMultipleConstructors2
+// <init>(kotlin.Int): AbstractKotlinClassWithMultipleConstructors2
+// <init>(kotlin.String): AbstractKotlinClassWithMultipleConstructors2
+// class: lib.AbstractKotlinClassWithMultipleConstructors2
+// <init>(kotlin.Float): lib.AbstractKotlinClassWithMultipleConstructors2
+// <init>(kotlin.Int): lib.AbstractKotlinClassWithMultipleConstructors2
+// <init>(kotlin.String): lib.AbstractKotlinClassWithMultipleConstructors2
+// class: AbstractKotlinClassWithPrimaryConstructor
+// <init>(kotlin.Int): AbstractKotlinClassWithPrimaryConstructor
+// class: lib.AbstractKotlinClassWithPrimaryConstructor
+// <init>(kotlin.Int): lib.AbstractKotlinClassWithPrimaryConstructor
 // class: AbstractKotlinClassWithoutExplicitConstructor
 // <init>(): AbstractKotlinClassWithoutExplicitConstructor
 // class: lib.AbstractKotlinClassWithoutExplicitConstructor
 // <init>(): lib.AbstractKotlinClassWithoutExplicitConstructor
+// class: DataClass
+// <init>(kotlin.Int,kotlin.String): DataClass
+// class: lib.DataClass
+// <init>(kotlin.Int,kotlin.String): lib.DataClass
+// class: DataClassWithSecondaryConstructor
+// <init>(kotlin.Int): DataClassWithSecondaryConstructor
+// <init>(kotlin.Int,kotlin.String): DataClassWithSecondaryConstructor
+// class: lib.DataClassWithSecondaryConstructor
+// <init>(kotlin.Int): lib.DataClassWithSecondaryConstructor
+// <init>(kotlin.Int,kotlin.String): lib.DataClassWithSecondaryConstructor
 // class: JavaAnnotation
 // <init>(): JavaAnnotation
 // class: lib.JavaAnnotation
@@ -108,10 +130,22 @@
 // <init>(): lib.KotlinClassWithMultipleConstructors1
 // <init>(kotlin.Int): lib.KotlinClassWithMultipleConstructors1
 // <init>(kotlin.String): lib.KotlinClassWithMultipleConstructors1
+// class: KotlinClassWithMultipleConstructors2
+// <init>(kotlin.Float): KotlinClassWithMultipleConstructors2
+// <init>(kotlin.Int): KotlinClassWithMultipleConstructors2
+// <init>(kotlin.String): KotlinClassWithMultipleConstructors2
+// class: lib.KotlinClassWithMultipleConstructors2
+// <init>(kotlin.Float): lib.KotlinClassWithMultipleConstructors2
+// <init>(kotlin.Int): lib.KotlinClassWithMultipleConstructors2
+// <init>(kotlin.String): lib.KotlinClassWithMultipleConstructors2
 // class: KotlinClassWithNamedCompanion
 // <init>(): KotlinClassWithNamedCompanion
 // class: lib.KotlinClassWithNamedCompanion
 // <init>(): lib.KotlinClassWithNamedCompanion
+// class: KotlinClassWithPrimaryConstructor
+// <init>(kotlin.Int): KotlinClassWithPrimaryConstructor
+// class: lib.KotlinClassWithPrimaryConstructor
+// <init>(kotlin.Int): lib.KotlinClassWithPrimaryConstructor
 // class: KotlinClassWithoutExplicitConstructor
 // <init>(): KotlinClassWithoutExplicitConstructor
 // class: lib.KotlinClassWithoutExplicitConstructor
@@ -181,6 +215,8 @@ interface KotlinInterface {}
 class KotlinClassWithoutExplicitConstructor {
 }
 class KotlinClassWithExplicitEmptyConstructor() {}
+class KotlinClassWithPrimaryConstructor(x:Int) {
+}
 class KotlinClassWithExplicitConstructor {
     constructor(x:Int) {}
 }
@@ -189,7 +225,13 @@ class KotlinClassWithMultipleConstructors1 {
     constructor(y:Int): this() {}
     constructor(x: String) : this() {}
 }
+class KotlinClassWithMultipleConstructors2(z:Float) {
+    constructor(y:Int): this(0f) {}
+    constructor(x: String) : this(0f) {}
+}
 abstract class AbstractKotlinClassWithoutExplicitConstructor {
+}
+abstract class AbstractKotlinClassWithPrimaryConstructor(x:Int) {
 }
 abstract class AbstractKotlinClassWithExplicitEmptyConstructor() {}
 abstract class AbstractKotlinClassWithExplicitConstructor {
@@ -200,6 +242,10 @@ abstract class AbstractKotlinClassWithMultipleConstructors1 {
     constructor(y:Int): this() {}
     constructor(x: String) : this() {}
 }
+abstract class AbstractKotlinClassWithMultipleConstructors2(z:Float) {
+    constructor(y:Int): this(0f) {}
+    constructor(x: String) : this(0f) {}
+}
 annotation class KotlinAnnotation
 object KotlinObject {}
 class KotlinClassWithCompanion {
@@ -207,6 +253,10 @@ class KotlinClassWithCompanion {
 }
 class KotlinClassWithNamedCompanion {
     companion object MyCompanion
+}
+data class DataClass(val x:Int, var y:String)
+data class DataClassWithSecondaryConstructor(val x:Int, val y:String) {
+    constructor(x:Int) : this(x, "")
 }
 // MODULE: main(lib)
 // FILE: JavaInterface.java
@@ -254,6 +304,8 @@ interface KotlinInterface {}
 class KotlinClassWithoutExplicitConstructor {
 }
 class KotlinClassWithExplicitEmptyConstructor() {}
+class KotlinClassWithPrimaryConstructor(x:Int) {
+}
 class KotlinClassWithExplicitConstructor {
     constructor(x:Int) {}
 }
@@ -262,7 +314,13 @@ class KotlinClassWithMultipleConstructors1 {
     constructor(y:Int): this() {}
     constructor(x: String) : this() {}
 }
+class KotlinClassWithMultipleConstructors2(z:Float) {
+    constructor(y:Int): this(0f) {}
+    constructor(x: String) : this(0f) {}
+}
 abstract class AbstractKotlinClassWithoutExplicitConstructor {
+}
+abstract class AbstractKotlinClassWithPrimaryConstructor(x:Int) {
 }
 abstract class AbstractKotlinClassWithExplicitEmptyConstructor() {}
 abstract class AbstractKotlinClassWithExplicitConstructor {
@@ -273,6 +331,10 @@ abstract class AbstractKotlinClassWithMultipleConstructors1 {
     constructor(y:Int): this() {}
     constructor(x: String) : this() {}
 }
+abstract class AbstractKotlinClassWithMultipleConstructors2(z:Float) {
+    constructor(y:Int): this(0f) {}
+    constructor(x: String) : this(0f) {}
+}
 annotation class KotlinAnnotation
 object KotlinObject {}
 class KotlinClassWithCompanion {
@@ -280,4 +342,8 @@ class KotlinClassWithCompanion {
 }
 class KotlinClassWithNamedCompanion {
     companion object MyCompanion
+}
+data class DataClass(val x:Int, var y:String)
+data class DataClassWithSecondaryConstructor(val x:Int, val y:String) {
+    constructor(x:Int) : this(x, "")
 }
