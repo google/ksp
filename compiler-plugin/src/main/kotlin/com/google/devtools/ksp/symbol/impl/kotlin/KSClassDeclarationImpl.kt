@@ -62,8 +62,10 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
             ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptyList()
         val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList<KSDeclaration>()
         result.addAll(propertiesFromConstructor)
-        primaryConstructor?.let { primaryConstructor: KSDeclaration ->
-            if (!result.contains(primaryConstructor)) {
+        primaryConstructor?.let { primaryConstructor: KSFunctionDeclaration ->
+            // if primary constructor is from source, it won't show up in declarations
+            // hence add it as well.
+            if (primaryConstructor.origin == Origin.KOTLIN) {
                 result.add(primaryConstructor)
             }
         }
