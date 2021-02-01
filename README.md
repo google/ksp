@@ -5,6 +5,8 @@ lightweight compiler plugins. KSP provides a simplified compiler plugin
 API that leverages the power of Kotlin while keeping the learning curve at
 a minimum. Compared to KAPT, annotation processors that use KSP can run 25% faster.
 
+Here are more details on [why considering KSP](/docs/why-ksp.md) over other alternatives.
+
 ## Overview
 
 The KSP API processes Kotlin programs idiomatically. KSP understands
@@ -146,7 +148,6 @@ Some handy links:
 * [Why use KSP?](/docs/why-ksp.md)
 * [Examples](/docs/examples.md)
 * [How KSP models Kotlin code](/docs/ksp-additional-details.md)
-* [Comparison to alternatives and limitations of KSP](/docs/comparisons.md)
 * [Reference for Java annotation processor authors](/docs/reference.md)
 * [Incremental processing notes](/docs/incremental.md)
 * [Migrating from old KSP releases](/docs/old-ksp-release.md)
