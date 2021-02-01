@@ -108,4 +108,3 @@ We are also exploring several additional features. Note that these features are
 currently unavailable:
 
 * IDE integration: Currently IDEs know nothing about the generated code.
-* We are still investigating how to provide interoperability between processors.

@@ -16,34 +16,22 @@ fun KSDeclaration.isLocal(): Boolean {
 }
 ```
 
-Determine whether a class member is visible to another:
+Find the actual class or interface declaration that the alias points to recursively:
 
-```kotlin
-fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
-    return when {
-        // locals are limited to lexical scope
-        this.isLocal() -> this.parentDeclaration == other
-        // file visibility or member
-        this.isPrivate() -> {
-            this.parentDeclaration == other.parentDeclaration
-                    || this.parentDeclaration == other
-                    || (
-                        this.parentDeclaration == null
-                            && other.parentDeclaration == null
-                            && this.containingFile == other.containingFile
-                    )
-        }
-        this.isPublic() -> true
-        this.isInternal() && other.containingFile != null && this.containingFile != null -> true
-        else -> false
+```
+fun KSTypeAlias.findActualType(): KSClassDeclaration {
+    val resolvedType = this.type.resolve().declaration
+    return if (resolvedType is KSTypeAlias) {
+        resolvedType.findActualType()
+    } else {
+        resolvedType as KSClassDeclaration
     }
 }
 ```
 
-### Example annotations
+Find out suppressed names in a file annotation:
 
 ```kotlin
-// Find out suppressed names in a file annotation:
 // @file:kotlin.Suppress("Example1", "Example2")
 fun KSFile.suppressedNames(): List<String> {
     val ignoredNames = mutableListOf<String>()
