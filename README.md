@@ -88,12 +88,10 @@ KSFile
         returnType: KSTypeReference
       setter: KSPropertySetter
         parameter: KSValueParameter
-    KSEnumEntryDeclaration
-      // same as KSClassDeclaration
 ```
 
 This view lists common things that are declared in the file--classes,
-functions, properties, enums, and so on.
+functions, properties, and so on.
 
 ## SymbolProcessor: The entry point
 
@@ -150,7 +148,6 @@ Some handy links:
 * [How KSP models Kotlin code](/docs/ksp-additional-details.md)
 * [Reference for Java annotation processor authors](/docs/reference.md)
 * [Incremental processing notes](/docs/incremental.md)
-* [Migrating from old KSP releases](/docs/old-ksp-release.md)
 * [Contributor guide](CONTRIBUTING.md)
 
 ## Development status
@@ -164,6 +161,5 @@ or connecting with our team in the `#ksp` channel in the
 
 Here are some planned features that have not yet been implemented:
 
-* Passing options to processors in Gradle.
-* Improved support for reading Java source code.
 * Make the IDE aware of the generated code.
+* Support Kotlin Multiplatform.
