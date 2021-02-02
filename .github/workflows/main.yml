@@ -57,7 +57,7 @@ jobs:
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
     # Run ksp generated tests
     - name: test
-      run: ./gradlew --info :compiler-plugin:test --tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.*" -PcompilerTestEnabled=true
+      run: ./gradlew --stacktrace --info :compiler-plugin:test --tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.*" -PcompilerTestEnabled=true
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v2
@@ -66,7 +66,7 @@ jobs:
         path: compiler-plugin/build/reports
     # Run ksp integration tests
     - name: integration tests
-      run: ./gradlew --info :integration-tests:test
+      run: ./gradlew --stacktrace --info :integration-tests:test
     - name: Upload integration test results
       if: always()
       uses: actions/upload-artifact@v2
@@ -75,7 +75,7 @@ jobs:
         path: integration-tests/build/reports
     # Run gradle plugin tests
     - name: gradle plugin tests
-      run: ./gradlew --info :gradle-plugin:test
+      run: ./gradlew --stacktrace --info :gradle-plugin:test
     - name: Upload gradle plugin test results
       if: always()
       uses: actions/upload-artifact@v2
