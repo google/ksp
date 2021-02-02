@@ -18,6 +18,7 @@ subprojects {
         mavenCentral()
         google()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
+        jcenter()
     }
     tasks.withType<Jar>().configureEach {
         manifest.attributes.apply {

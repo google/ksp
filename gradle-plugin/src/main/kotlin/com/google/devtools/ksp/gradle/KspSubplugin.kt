@@ -156,7 +156,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 ?: return project.provider { emptyList() }
         val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
-
         val kspConfigurations = LinkedHashSet<Configuration>()
         kotlinCompilation.allKotlinSourceSets.forEach {
             it.kspConfiguration(project)?.let {
@@ -234,6 +233,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourcesTask.dependsOn(kspTaskProvider)
                 resourcesTask.from(resourceOutputDir)
             }
+        }
+        if (kotlinCompilation is KotlinJvmAndroidCompilation) {
+            androidIntegration.registerGeneratedJavaSources(
+                project = project,
+                kotlinCompilation = kotlinCompilation,
+                kspTaskProvider = kspTaskProvider,
+                javaOutputDir = javaOutputDir,
+                classOutputDir = classOutputDir,
+            )
         }
 
         return project.provider { emptyList() }

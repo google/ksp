@@ -21,6 +21,9 @@ import com.android.build.api.dsl.CommonExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.KSP_MAIN_CONFIGURATION_NAME
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
+import java.io.File
 import java.util.*
 
 /**
@@ -61,5 +64,20 @@ class AndroidPluginIntegration(
                 }
             }
         }
+    }
+
+    fun registerGeneratedJavaSources(
+        project: Project,
+        kotlinCompilation: KotlinJvmAndroidCompilation,
+        kspTaskProvider: TaskProvider<KspTask>,
+        javaOutputDir: File,
+        classOutputDir: File,
+    ) {
+        val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
+        val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
+        kspJavaOutput.include("**/*.java")
+        kspClassOutput.include("**/*.class")
+        kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
+        kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
     }
 }
