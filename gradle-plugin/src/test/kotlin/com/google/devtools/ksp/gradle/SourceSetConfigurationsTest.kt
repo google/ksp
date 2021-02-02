@@ -17,8 +17,8 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
-import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.module
 import com.google.devtools.ksp.gradle.processor.TestSymbolProcessor
+import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.module
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import com.google.devtools.ksp.gradle.testing.PluginDeclaration
 import com.google.devtools.ksp.processing.Dependencies
@@ -66,6 +66,101 @@ class SourceSetConfigurationsTest {
             "kspTest",
             "kspTestDebug",
             "kspTestRelease"
+        )
+    }
+
+    @Test
+    fun registerJavaSourcesToAndroid() {
+        testRule.setupAppAsAndroidApp()
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                module("ksp", testRule.processorModule),
+                module("kspTest", testRule.processorModule),
+                module("kspAndroidTest", testRule.processorModule)
+            )
+        )
+        testRule.appModule.buildFileAdditions.add(
+            """
+            tasks.register("printSources") {
+                fun logVariantSources(variants: DomainObjectSet<out com.android.build.gradle.api.BaseVariant>) {
+                    variants.all {
+                        println("VARIANT:" + this.name)
+                        val baseVariant = (this as com.android.build.gradle.internal.api.BaseVariantImpl)
+                        val variantData = baseVariant::class.java.getMethod("getVariantData").invoke(baseVariant)
+                            as com.android.build.gradle.internal.variant.BaseVariantData
+                        variantData.extraGeneratedSourceFolders.forEach {
+                            println("SRC:" + it.relativeTo(buildDir).path)
+                        }
+                        variantData.allPreJavacGeneratedBytecode.forEach {
+                            println("BYTE:" + it.relativeTo(buildDir).path)
+                        }
+                    }
+                }
+                doLast {
+                    logVariantSources(android.applicationVariants)
+                    logVariantSources(android.testVariants)
+                    logVariantSources(android.unitTestVariants)
+                }
+            }
+            """.trimIndent()
+        )
+        val result = testRule.runner().withDebug(true).withArguments(":app:printSources").build()
+
+        data class SourceFolder(
+            val variantName: String,
+            val path: String
+        )
+        // parse output to get variant names and sources
+        // variant name -> list of sources
+        val variantSources = mutableListOf<SourceFolder>()
+        lateinit var currentVariantName: String
+        result.output.lines().forEach { line ->
+            when {
+                line.startsWith("VARIANT:") -> {
+                    currentVariantName = line.substring("VARIANT:".length)
+                }
+                line.startsWith("SRC:") -> {
+                    variantSources.add(
+                        SourceFolder(
+                            variantName = currentVariantName,
+                            path = line
+                        )
+                    )
+                }
+
+                line.startsWith("BYTE:") -> {
+                    variantSources.add(
+                        SourceFolder(
+                            variantName = currentVariantName,
+                            path = line
+                        )
+                    )
+                }
+            }
+        }
+        assertThat(
+            variantSources.filter {
+                // there might be more, we are only interested in ksp
+                it.path.contains("ksp")
+            }
+        ).containsExactly(
+            SourceFolder(
+                "debug", "SRC:generated/ksp/debug/java"
+            ),
+            SourceFolder(
+                "release", "SRC:generated/ksp/release/java"
+            ),
+            SourceFolder(
+                "debugAndroidTest", "SRC:generated/ksp/debugAndroidTest/java"
+            ),
+            SourceFolder(
+                "debugUnitTest", "SRC:generated/ksp/debugUnitTest/java"
+            ),
+            SourceFolder(
+                "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/java"
+            ),
+            // TODO byte sources seems to be overridden by tmp/kotlin-classes/debug
+            //  assert them as well once fixed
         )
     }
 

@@ -22,7 +22,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
     compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinBaseVersion")
-    compileOnly("com.android.tools.build:gradle-api:$agpBaseVersion")
+    // replace AGP dependency w/ gradle-api when we have source registering API available.
+    compileOnly("com.android.tools.build:gradle:$agpBaseVersion")
     testImplementation(gradleApi())
     testImplementation(project(":api"))
     testImplementation("junit:junit:$junitVersion")
