@@ -73,8 +73,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     lateinit var processors: List<SymbolProcessor>
     lateinit var newFiles: Collection<KSFile>
     lateinit var incrementalContext: IncrementalContext
-    lateinit var dirtyFiles: List<KSFile>
-    lateinit var dirtyFileNames: Set<String>
+    lateinit var dirtyFiles: Set<KSFile>
+    lateinit var cleanFilenames: Set<String>
     lateinit var codeGenerator: CodeGeneratorImpl
 
     override fun doAnalysis(
@@ -102,11 +102,13 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                     options, componentProvider,
                     File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
             )
-            dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toList()
-            dirtyFileNames = dirtyFiles.map { it.filePath }.toSet()
+            dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
+            cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
             newFiles = dirtyFiles
         }
-        val resolver = ResolverImpl(module, ksFiles.filter { it.filePath in dirtyFileNames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
+
+        // dirtyFiles cannot be reused because they are created in the old container.
+        val resolver = ResolverImpl(module, ksFiles.filterNot { it.filePath in cleanFilenames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
 
         val processors = loadProcessors()
         if (!initialized) {
