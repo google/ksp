@@ -3,9 +3,9 @@
 Kotlin Symbol Processing (KSP) is an API that you can use to develop
 lightweight compiler plugins. KSP provides a simplified compiler plugin
 API that leverages the power of Kotlin while keeping the learning curve at
-a minimum. Compared to KAPT, annotation processors that use KSP can run 25% faster.
+a minimum. Compared to KAPT, annotation processors that use KSP can run up to 2x faster.
 
-Here are more details on [why considering KSP](/docs/why-ksp.md) over other alternatives.
+To learn more about how KSP compares to KAPT, check out [why KSP](/docs/why-ksp.md). To get started writing a KSP processor, take a look at the [KSP quickstart](/docs/quickstart.md).
 
 ## Overview
 
@@ -163,3 +163,16 @@ Here are some planned features that have not yet been implemented:
 
 * Make the IDE aware of the generated code.
 * Support Kotlin Multiplatform.
+
+## Supported libraries
+
+The table below includes a list of popular libraries on Android and their various stages of support for KSP. If your library is missing, please feel free to submit a pull request.
+
+|Library|Status|Tracking issue for KSP|
+|---|---|---|
+|Room|In progress|[Link](https://issuetracker.google.com/160322705)|
+|Moshi|[Experimentally supported](https://github.com/ZacSweers/MoshiX/tree/main/moshi-ksp)|   |
+|Auto Factory|Not yet supported|[Link](https://github.com/google/auto/issues/982)|
+|Dagger|Not yet supported|[Link](https://github.com/google/dagger/issues/2349)|
+|Hilt|Not yet supported|[Link](https://issuetracker.google.com/179057202)|
+|Glide|Not yet supported|[Link](https://github.com/bumptech/glide/issues/4492)|
