@@ -13,6 +13,7 @@ import java.io.OutputStreamWriter
 class TestProcessor : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
     lateinit var logger: KSPLogger
+    var processed = false
 
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
@@ -21,7 +22,10 @@ class TestProcessor : SymbolProcessor {
 
     override fun finish() = Unit
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
+        if(processed) {
+            return emptyList()
+        }
         fun outputForAnno(anno: String) {
             val annoFiles = resolver.getSymbolsWithAnnotation(anno).map { (it as KSDeclaration).containingFile!! }
             codeGenerator.createNewFile(Dependencies(false, *annoFiles.toTypedArray()), "", anno, "log").use { output ->
@@ -34,9 +38,13 @@ class TestProcessor : SymbolProcessor {
         outputForAnno("p1.Anno1")
         outputForAnno("p1.Anno2")
 
-        resolver.getAllFiles().forEach { file ->
+        resolver.getNewFiles().forEach { file ->
+            val test_file = File("/tmp/ksp-test.log")
+            test_file.appendText("${file.packageName.asString()}/${file.fileName}\n")
             logger.warn("${file.packageName.asString()}/${file.fileName}")
         }
+        processed = true
+        return emptyList()
     }
 }
 

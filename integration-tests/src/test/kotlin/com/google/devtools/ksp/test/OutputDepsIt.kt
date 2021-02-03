@@ -38,7 +38,7 @@ class OutputDepsIt {
     fun testOutputDeps() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        gradleRunner.withArguments("assemble").build().let { result ->
+        gradleRunner.withArguments("assemble", "--debug").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
         val cleanArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
