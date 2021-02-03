@@ -74,6 +74,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     lateinit var incrementalContext: IncrementalContext
     lateinit var dirtyFiles: List<KSFile>
     lateinit var dirtyFileNames: Set<String>
+    lateinit var codeGenerator: CodeGeneratorImpl
 
     override fun doAnalysis(
         project: Project,
@@ -105,18 +106,18 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             newFiles = dirtyFiles
         }
         val resolver = ResolverImpl(module, ksFiles.filter { it.filePath in dirtyFileNames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
-        val codeGenerator = CodeGeneratorImpl(
-            options.classOutputDir,
-            options.javaOutputDir,
-            options.kotlinOutputDir,
-            options.resourceOutputDir,
-            options.projectBaseDir,
-            anyChangesWildcard,
-            ksFiles
-        )
 
         val processors = loadProcessors()
         if (!initialized) {
+            codeGenerator = CodeGeneratorImpl(
+                    options.classOutputDir,
+                    options.javaOutputDir,
+                    options.kotlinOutputDir,
+                    options.resourceOutputDir,
+                    options.projectBaseDir,
+                    anyChangesWildcard,
+                    ksFiles
+            )
             processors.forEach {
                 it.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
                 deferredSymbols[it] = mutableListOf()
