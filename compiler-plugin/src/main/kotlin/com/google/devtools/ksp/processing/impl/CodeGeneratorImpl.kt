@@ -42,9 +42,10 @@ class CodeGeneratorImpl(
     val sourceToOutputs: MutableMap<File, MutableSet<File>> = mutableMapOf()
 
     internal fun closeFiles() {
-        fileMap.keys.forEach{
+        fileOutputStreamMap.keys.forEach{
             fileOutputStreamMap[it]!!.close()
         }
+        fileOutputStreamMap.clear()
     }
 
     fun pathOf(packageName: String, fileName: String, extensionName: String): String {
@@ -101,5 +102,6 @@ class CodeGeneratorImpl(
     val outputs: Set<File>
         get() = fileMap.keys.mapTo(mutableSetOf()) { File(it).relativeTo(projectBase) }
 
-    override val generatedFile: Collection<File> = fileMap.values
+    override val generatedFile: Collection<File>
+        get() = fileOutputStreamMap.keys.map { fileMap[it]!! }
 }
