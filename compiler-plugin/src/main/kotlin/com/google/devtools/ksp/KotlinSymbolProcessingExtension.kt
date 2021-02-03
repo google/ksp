@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.symbol.*
@@ -146,6 +147,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                 deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
             }
             incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+            logger.reportAll()
         }
 
         KSObjectCacheManager.clear()
@@ -177,6 +179,12 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
         annotationProcessingComplete = true
         return false
+    }
+
+    private fun KSPLogger.reportAll() {
+        if(this is MessageCollectorBasedKSPLogger) {
+            this.reportAll()
+        }
     }
 }
 
