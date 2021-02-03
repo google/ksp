@@ -14,6 +14,7 @@ import java.io.OutputStreamWriter
 class Validator : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
     lateinit var logger: KSPLogger
+    var processed = false
 
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
@@ -22,7 +23,10 @@ class Validator : SymbolProcessor {
 
     override fun finish() = Unit
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
+        if(processed) {
+            return emptyList()
+        }
         val validator = object : KSDefaultVisitor<OutputStreamWriter, Unit>() {
             override fun defaultHandler(node: KSNode, data: OutputStreamWriter) = Unit
 
@@ -41,6 +45,8 @@ class Validator : SymbolProcessor {
             }
             output.close()
         }
+        processed = true
+        return emptyList()
     }
 }
 
