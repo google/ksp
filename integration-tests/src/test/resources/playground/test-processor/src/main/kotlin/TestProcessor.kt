@@ -1,9 +1,6 @@
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.validate
 import java.io.File
 import java.io.OutputStream
 
@@ -11,14 +8,13 @@ import java.io.OutputStream
 class TestProcessor : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
     lateinit var file: OutputStream
+    var invoked = false
 
     fun emit(s: String, indent: String) {
         file.appendText("$indent$s\n")
     }
 
     override fun finish() {
-        emit("TestProcessor: finish()", "")
-        file.close()
     }
 
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
@@ -30,7 +26,10 @@ class TestProcessor : SymbolProcessor {
         javaFile.appendText("class Generated {}")
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
+        if (invoked) {
+            return emptyList()
+        }
         val fileKt = codeGenerator.createNewFile(Dependencies(false), "", "HELLO", "java")
         fileKt.appendText("public class HELLO{\n")
         fileKt.appendText("public int foo() { return 1234; }\n")
@@ -43,6 +42,8 @@ class TestProcessor : SymbolProcessor {
             emit("TestProcessor: processing ${file.fileName}", "")
             file.accept(visitor, "")
         }
+        invoked = true
+        return emptyList()
     }
 
     inner class TestVisitor : KSVisitor<String, Unit> {

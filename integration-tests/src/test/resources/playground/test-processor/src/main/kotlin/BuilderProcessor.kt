@@ -1,9 +1,6 @@
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.validate
 import java.io.File
 import java.io.OutputStream
 
@@ -12,6 +9,7 @@ fun OutputStream.appendText(str: String) {
 }
 class BuilderProcessor : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
+    lateinit var logger: KSPLogger
 
     override fun finish() {
 
@@ -19,13 +17,16 @@ class BuilderProcessor : SymbolProcessor {
 
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
+        this.logger = logger
     }
 
-    override fun process(resolver: Resolver) {
+    override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation("com.example.annotation.Builder")
+        val ret = symbols.filter { !it.validate() }
         symbols
-            .filter { it is KSClassDeclaration }
+            .filter { it is KSClassDeclaration && it.validate() }
             .map { it.accept(BuilderVisitor(), Unit) }
+        return ret
     }
 
     inner class BuilderVisitor : KSVisitorVoid() {
@@ -39,6 +40,7 @@ class BuilderProcessor : SymbolProcessor {
             val className = "${parent.simpleName.asString()}Builder"
             val file = codeGenerator.createNewFile(Dependencies(true, function.containingFile!!), packageName , className)
             file.appendText("package $packageName\n\n")
+            file.appendText("import HELLO\n\n")
             file.appendText("class $className{\n")
             function.parameters.forEach {
                 val name = it.name!!.asString()
@@ -49,7 +51,7 @@ class BuilderProcessor : SymbolProcessor {
                     typeName.append(
                             typeArgs.map {
                                 val type = it.type?.resolve()
-                                "${it.variance.label} ${type?.declaration?.qualifiedName?.asString()}" +
+                                "${it.variance.label} ${type?.declaration?.qualifiedName?.asString() ?: "ERROR"}" +
                                         if (type?.nullability == Nullability.NULLABLE) "?" else ""
                             }.joinToString(", ")
                     )
