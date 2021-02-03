@@ -22,16 +22,12 @@ import com.google.devtools.ksp.symbol.KSNode
 
 interface KSPLogger {
 
-    val errorCount: Int
-    val warningCount: Int
-    val infoCount: Int
-    val loggingCount: Int
-    val exceptionCount: Int
-
     fun logging(message: String, symbol: KSNode? = null)
     fun info(message: String, symbol: KSNode? = null)
     fun warn(message: String, symbol: KSNode? = null)
     fun error(message: String, symbol: KSNode? = null)
 
     fun exception(e: Throwable)
+
+    fun reportAll()
 }

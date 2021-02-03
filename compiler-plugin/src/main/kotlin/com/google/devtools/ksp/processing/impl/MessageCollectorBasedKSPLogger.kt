@@ -33,20 +33,9 @@ class MessageCollectorBasedKSPLogger(private val messageCollector: MessageCollec
         const val PREFIX = "[ksp] "
     }
 
-    override var errorCount = 0
-        private set
+    data class Event(val severity: CompilerMessageSeverity, val message: String)
 
-    override var warningCount = 0
-        private set
-
-    override var infoCount = 0
-        private set
-
-    override var loggingCount = 0
-        private set
-
-    override var exceptionCount = 0
-        private set
+    private val recordedEvents = mutableListOf<Event>()
 
     private fun convertMessage(message: String, symbol: KSNode?): String =
         when (val location = symbol?.location) {
@@ -55,29 +44,30 @@ class MessageCollectorBasedKSPLogger(private val messageCollector: MessageCollec
         }
 
     override fun logging(message: String, symbol: KSNode?) {
-        loggingCount++
-        messageCollector.report(CompilerMessageSeverity.LOGGING, convertMessage(message, symbol))
+        recordedEvents.add(Event(CompilerMessageSeverity.LOGGING, convertMessage(message, symbol)))
     }
 
     override fun info(message: String, symbol: KSNode?) {
-        infoCount++
-        messageCollector.report(CompilerMessageSeverity.INFO, convertMessage(message, symbol))
+        recordedEvents.add(Event(CompilerMessageSeverity.INFO, convertMessage(message, symbol)))
     }
 
     override fun warn(message: String, symbol: KSNode?) {
-        warningCount++
-        messageCollector.report(CompilerMessageSeverity.WARNING, convertMessage(message, symbol))
+        recordedEvents.add(Event(CompilerMessageSeverity.WARNING, convertMessage(message, symbol)))
     }
 
     override fun error(message: String, symbol: KSNode?) {
-        errorCount++
-        messageCollector.report(CompilerMessageSeverity.ERROR, convertMessage(message, symbol))
+        recordedEvents.add(Event(CompilerMessageSeverity.ERROR, convertMessage(message, symbol)))
     }
 
     override fun exception(e: Throwable) {
-        exceptionCount++
         val writer = StringWriter()
         e.printStackTrace(PrintWriter(writer))
-        messageCollector.report(CompilerMessageSeverity.EXCEPTION, writer.toString())
+        recordedEvents.add(Event(CompilerMessageSeverity.EXCEPTION, writer.toString()))
+    }
+
+    override fun reportAll() {
+        for (event in recordedEvents) {
+            messageCollector.report(event.severity, event.message)
+        }
     }
 }

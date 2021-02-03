@@ -146,6 +146,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                 deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
             }
             incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+            logger.reportAll()
         }
 
         KSObjectCacheManager.clear()
