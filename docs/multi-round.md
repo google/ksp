@@ -1,73 +1,13 @@
 ## Introduction
 
-To achieve multiple round processing in KSP, a change to compiler is needed, given the timeline of compiler release, it will be in stable release of 1.4.30. Therefore, we are providing this guide so you can try out multiple round for your project before stable compiler release. In this guide, we will go through how to apply the multiple round ready compiler and the multiple round version of KSP to your project.
-
-Due to this being a preview version and pending merging into master, incremental processing is not supported in this version.
+KSP multiple round processing allows processing to happen multiple times, with every time including newly generated files from previous rounds.
 
 
-## Quick start guide
-
-
-#### Compiler preparation
+#### Changes to your processor
 
 
 
-*   Add `kotlin-dev` maven repository to your project
-
-```
-repositories {
-        ...
-        maven("https://dl.bintray.com/kotlin/kotlin-dev")
-}
-```
-
-
-*   Apply `1.4.30-M2-104` version of kotlin compiler to your project
-
-```
-plugins {
-    kotlin("jvm") version "1.4.30-M2-104" apply false
-}
-```
-
-
-
-
-#### (Optional) Check out and build KSP 
-
-
-
-*   This is intended for those who prefer to build KSP locally
-*   Check out <code>[multiple-round branch](https://github.com/google/ksp/tree/multi-round)</code> from ksp github repository
-*   Build it to local maven repository with <code>./gradlew publishToMavenLocal</code>
-
-
-#### Apply multiple round version KSP dependency to your project
-
-
-
-*   Change KSP dependencies to be
-    *   `implementation("com.google.devtools.ksp:symbol-processing-api:1.4.30-M2-104-multiple-round-preview-20201223")`
-        *  If you are building KSP locally 
-            *   You can check the locally built KSP version number at `~/.m2/repository/com/google/devtools/ksp/symbol-processing`, it is always sticking to your build date.
-            *   Add `mavenLocal()` to your processors and workload module's repository configuration, as well as `settings.gradle` file
-
-```
-repositories {
-    ...
-    mavenLocal()
-    ...
-}
-```
-
-
-
-
-#### Breaking changes to your processor
-
-
-
-*   Change your processor's `process()` function to return a list of deferred symbols `List&lt;KSAnnotated>`
+*   To provide multiple round processing, `SymbolProcessor.process()` function will return a list of deferred symbols `List<KSAnnotated>`
 *   Use `KSAnnotated.validate()` to filter invalid symbols to be deferred to next round.
 *   Sample code to defer invalid symbols with validation check.
 
