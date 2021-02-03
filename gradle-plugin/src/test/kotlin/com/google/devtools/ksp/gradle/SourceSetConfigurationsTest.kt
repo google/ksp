@@ -23,6 +23,7 @@ import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import com.google.devtools.ksp.gradle.testing.PluginDeclaration
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.junit.Rule
 import org.junit.Test
@@ -152,7 +153,7 @@ class SourceSetConfigurationsTest {
         }
 
         class Processor : TestSymbolProcessor() {
-            override fun process(resolver: Resolver) {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
                 resolver.getSymbolsWithAnnotation(Suppress::class.qualifiedName!!)
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach {
@@ -166,6 +167,7 @@ class SourceSetConfigurationsTest {
                             }
                         }
                     }
+                return emptyList()
             }
         }
         testRule.addProcessor(Processor::class)

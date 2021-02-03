@@ -22,6 +22,7 @@ import com.google.devtools.ksp.gradle.processor.TestSymbolProcessor
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSAnnotated
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -49,8 +50,9 @@ class GradleCompilationTest {
             """.trimIndent()
         )
         class ErrorReporting : TestSymbolProcessor() {
-            override fun process(resolver: Resolver) {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
                 logger.error("my processor failure")
+                return emptyList()
             }
         }
         testRule.addProcessor(ErrorReporting::class)
@@ -83,12 +85,17 @@ class GradleCompilationTest {
             """.trimIndent()
         )
         class MyProcessor : TestSymbolProcessor() {
-            override fun process(resolver: Resolver) {
-                codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
-                    it.writer(Charsets.UTF_8).use {
-                        it.write("class ToBeGenerated")
+            var count = 0
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                if(count == 0) {
+                    codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
+                        it.writer(Charsets.UTF_8).use {
+                            it.write("class ToBeGenerated")
+                        }
                     }
+                    count += 1
                 }
+                return emptyList()
             }
         }
         testRule.addProcessor(MyProcessor::class)
