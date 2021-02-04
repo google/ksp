@@ -148,6 +148,7 @@ Some handy links:
 * [How KSP models Kotlin code](/docs/ksp-additional-details.md)
 * [Reference for Java annotation processor authors](/docs/reference.md)
 * [Incremental processing notes](/docs/incremental.md)
+* [Multiple round processing notes](/docs/multi-round.md)
 * [Contributor guide](CONTRIBUTING.md)
 
 ## Development status
