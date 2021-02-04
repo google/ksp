@@ -44,4 +44,9 @@ interface SymbolProcessor {
      * Called by Kotlin Symbol Processing to finalize the processing of a compilation.
      */
     fun finish()
+
+    /**
+     * Called by Kotlin Symbol Processing to handle errors after a round of processing.
+     */
+    fun onError() {}
 }

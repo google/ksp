@@ -35,7 +35,7 @@ class MessageCollectorBasedKSPLogger(private val messageCollector: MessageCollec
 
     data class Event(val severity: CompilerMessageSeverity, val message: String)
 
-    private val recordedEvents = mutableListOf<Event>()
+    val recordedEvents = mutableListOf<Event>()
 
     private fun convertMessage(message: String, symbol: KSNode?): String =
         when (val location = symbol?.location) {

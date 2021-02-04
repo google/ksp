@@ -38,6 +38,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -133,6 +134,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                 deferredSymbols.remove(it)
             }
         }
+        // Post processing.
         val newKtFiles = codeGenerator.generatedFile.filter { it.extension == "kt" }
                 .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? KtFile }
         val newJavaFiles = codeGenerator.generatedFile.filter { it.extension == "java" }
@@ -141,21 +143,27 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (codeGenerator.generatedFile.isEmpty()) {
             finished = true
         }
-        if (finished) {
+        KSObjectCacheManager.clear()
+        codeGenerator.closeFiles()
+        if (logger.hasError()) {
+            finished = true
             processors.forEach {
-                it.finish()
+                it.onError()
             }
-            if (deferredSymbols.isNotEmpty()) {
-                deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
+        } else {
+            if (finished) {
+                processors.forEach {
+                    it.finish()
+                }
+                if (deferredSymbols.isNotEmpty()) {
+                    deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
+                }
+                incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
             }
-            incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+        }
+        if (finished) {
             logger.reportAll()
         }
-
-        KSObjectCacheManager.clear()
-
-        codeGenerator.closeFiles()
-
         return AnalysisResult.EMPTY
     }
 
@@ -184,9 +192,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     }
 
     private fun KSPLogger.reportAll() {
-        if(this is MessageCollectorBasedKSPLogger) {
-            this.reportAll()
-        }
+        (this as MessageCollectorBasedKSPLogger).reportAll()
+    }
+
+    private fun KSPLogger.hasError(): Boolean {
+        return (this as MessageCollectorBasedKSPLogger).recordedEvents.any { it.severity == CompilerMessageSeverity.ERROR || it.severity == CompilerMessageSeverity.EXCEPTION }
     }
 }
 
