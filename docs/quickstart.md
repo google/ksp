@@ -1,6 +1,6 @@
 # Quickstart
 
-[Here's](https://github.com/google/ksp/releases/download/1.4.20-dev-experimental-20210120/playground.zip) a sample processor that you can check out.
+[Here's](https://github.com/google/ksp/releases/download/1.4.20-dev-experimental-20210203/playground.zip) a sample processor that you can check out.
 
 ## Create a processor of your own
 
@@ -36,7 +36,7 @@
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.20-dev-experimental-20210120")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.20-dev-experimental-20210203")
   }
   ```
 
@@ -81,7 +81,7 @@
 
   ```
   plugins {
-      id("com.google.devtools.ksp") version "1.4.20-dev-experimental-20210120"
+      id("com.google.devtools.ksp") version "1.4.20-dev-experimental-20210203"
       kotlin("jvm") 
   }
 
