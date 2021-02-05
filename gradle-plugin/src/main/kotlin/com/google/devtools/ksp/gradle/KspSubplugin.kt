@@ -18,13 +18,11 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
-import kotlin.reflect.KProperty1
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
@@ -34,16 +32,8 @@ import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.cli.common.arguments.Argument
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
-import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
-import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
-import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
-import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
@@ -52,8 +42,10 @@ import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
+import kotlin.collections.LinkedHashSet
+import kotlin.reflect.KProperty1
 
 class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) :
         KotlinCompilerPluginSupportPlugin {
@@ -147,7 +139,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
     }
 
-    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
+        val project = kotlinCompilation.target.project
+        val kspVersion = javaClass.`package`.implementationVersion
+        val kotlinVersion = project.getKotlinPluginVersion() ?: "N/A"
+
+        if (!kspVersion.startsWith(kotlinVersion))
+            project.logger.warn("ksp-$kspVersion might not work with kotlin-$kotlinVersion properly. Please pick the same version of ksp and kotlin plugins.")
+
+        return true
+    }
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
