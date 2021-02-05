@@ -37,6 +37,7 @@ interface SymbolProcessor {
      * Called by Kotlin Symbol Processing to run the processing task.
      *
      * @param resolver provides [SymbolProcessor] with access to compiler details such as Symbols.
+     * @return A list of deferred symbols that the processor can't process.
      */
     fun process(resolver: Resolver): List<KSAnnotated>
 
