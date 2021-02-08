@@ -1,20 +1,20 @@
 # Quickstart
 
-[Here's](https://github.com/google/ksp/releases/download/1.4.20-dev-experimental-20210203/playground.zip) a sample processor that you can check out.
+[Here's](https://github.com/google/ksp/releases/download/1.4.30-1.0.0-alpha02/playground.zip) a sample processor that you can check out.
 
 ## Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.4.20` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.4.30` of the Kotlin plugin in the root project for use in other project modules.
 
   ```
   plugins {
-      kotlin("jvm") version "1.4.20" apply false
+      kotlin("jvm") version "1.4.30" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.4.20"))
+          classpath(kotlin("gradle-plugin", version = "1.4.30"))
       }
   }
   ```
@@ -36,11 +36,11 @@
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.20-dev-experimental-20210203")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.30-1.0.0-alpha02")
   }
   ```
 
-* The processor you're writing needs to implement `com.google.devtools.ksp.processing.SymbolProcessor`.
+* The processor you're writing needs to implement [`com.google.devtools.ksp.processing.SymbolProcessor`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessor.kt).
   Note the following:
   * Your main logic should be in the `process()` method.
   * Use `CodeGenerator` in the `init()` method for code generation. You can also save
@@ -66,8 +66,8 @@
   ```
   pluginManagement {
       repositories {
-              gradlePluginPortal()
-              google()
+         gradlePluginPortal()
+         google()
       }
   }
   ```
@@ -81,7 +81,7 @@
 
   ```
   plugins {
-      id("com.google.devtools.ksp") version "1.4.20-dev-experimental-20210203"
+      id("com.google.devtools.ksp") version "1.4.30-1.0.0-alpha02"
       kotlin("jvm") 
   }
 
@@ -116,11 +116,11 @@ To make, for example, IntelliJ be able to reason about the generated symbols,
 the following paths need to be marked as generated source root:
 
 ```
-build/generated/ksp/src/main/kotlin/
-build/generated/ksp/src/main/java/
+build/generated/ksp/main/kotlin/
+build/generated/ksp/main/java/
 ```
 
 and perhaps also resource directory if your IDE supports them:
 ```
-build/generated/ksp/src/main/resources
+build/generated/ksp/main/resources
 ```
