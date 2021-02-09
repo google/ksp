@@ -22,14 +22,14 @@ only be carried out by KSType and the corresponding elements before resolution.
 
 | **Java** | **Closest facility in KSP** | **Notes** |
 | -------- | --------------------------- | --------- |
-| ArrayType | KSBuiltIns | |
+| ArrayType | KSBuiltIns.arrayType | |
 | DeclaredType | KSType / KSClassifierReference | |
-| ErrorType | null | |
+| ErrorType | KSType.isError | |
 | ExecutableType | KSType / KSCallableReference | |
 | IntersectionType | KSType / KSTypeParameter | |
-| NoType | KSBuiltIns / null | |
-| NullType | KSBuiltIns | |
-| PrimitiveType | KSBuiltIns | |
+| NoType | KSType.isError | N/A in KSP |
+| NullType | | N/A in KSP |
+| PrimitiveType | KSBuiltIns | Not exactly same as primitive type in Java |
 | ReferenceType | KSTypeReference | |
 | TypeMirror | KSType | |
 | TypeVariable | KSTypeParameter | |
@@ -85,7 +85,7 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | getAnnotationMirrors | ksDeclaration.annotations |
 | getEnclosedElements | ksDeclarationContainer.declarations |
 | getEnclosingElements | ksDeclaration.parentDeclaration |
-| getKind | `is` operator + ClassKind or FunctionKind |
+| getKind | type check & cast following ClassKind or FunctionKind |
 | getModifiers | ksDeclaration.modifiers |
 | getSimpleName | ksDeclaration.simpleName |
 
@@ -181,7 +181,7 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 
 | **Java** | **KSP equivalent** |
 | -------- | ------------------ |
-| getKind | // Compare with types in KSBuiltIns. |
+| getKind | // Compare with types in KSBuiltIns for primitive types, Unit type, otherwise declared types |
 
 ## TypeVariable
 
@@ -214,8 +214,8 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | getTypeElement | Resolver.getClassDeclarationByName |
 | hides | // To be implemented |
 | isDeprecated | KsDeclaration.annotations.any { it.annotationType.resolve()!!.declaration.quailifiedName!!.asString() == Deprecated::class.quailifiedName } |
-| overrides | KSFunctionDeclaration.overrides // extension function defined in util.kt. |
-| printElements | // Users can implement them freely. |
+| overrides | KSFunctionDeclaration/KSPropertyDeclaration.overrides // member function of respective class |
+| printElements | // KSP implemented basic toString() on most classes. |
 
 ## Types
 
@@ -232,7 +232,7 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | getDeclaredType | ksClassDeclaration.asType |
 | getNoType | ksBuiltIns.nothingType / null |
 | getNullType | // depends on the context, KSType.markNullable maybe useful. |
-| getPrimitiveType | // Not needed |
+| getPrimitiveType | // Not needed, check for KSBuiltins |
 | getWildcardType | // Use Variance in places expecting KSTypeArgument |
 | isAssignable | ksType.isAssignableFrom |
 | isSameType | ksType.equals |
