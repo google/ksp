@@ -17,16 +17,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup Java 8
-      uses: actions/setup-java@v1.4.3
-      with:
-        java-version: '8'
-        java-package: jdk
-        architecture: x64
-    - name: set JDK 6,7,8 environment variables for kotlin compiler
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-      run: echo ::set-env name=JDK_16::$(echo $JAVA_HOME) && echo ::set-env name=JDK_17::$(echo $JAVA_HOME) && echo ::set-env name=JDK_18::$(echo $JAVA_HOME)
     - name: Setup Java 9
       uses: actions/setup-java@v1.4.3
       with:
@@ -43,6 +33,17 @@ jobs:
         java-version: '11'
         java-package: jdk
         architecture: x64
+    - name: Setup Java 8
+      uses: actions/setup-java@v1.4.3
+      with:
+        java-version: '8'
+        java-package: jdk
+        architecture: x64
+    - name: set JDK 6,7,8 environment variables for kotlin compiler
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      run: echo ::set-env name=JDK_16::$(echo $JAVA_HOME) && echo ::set-env name=JDK_17::$(echo $JAVA_HOME) && echo ::set-env name=JDK_18::$(echo $JAVA_HOME)
+
     # Checkout
     - uses: actions/checkout@v2
 
