@@ -150,6 +150,7 @@ Some handy links:
 * [Incremental processing notes](/docs/incremental.md)
 * [Multiple round processing notes](/docs/multi-round.md)
 * [Contributor guide](CONTRIBUTING.md)
+* [FAQ](/docs/faq.md)
 
 ## Development status
 
