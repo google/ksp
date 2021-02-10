@@ -77,6 +77,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     lateinit var dirtyFiles: Set<KSFile>
     lateinit var cleanFilenames: Set<String>
     lateinit var codeGenerator: CodeGeneratorImpl
+    var rounds = 0
+    private val multipleRoundThreshold = 100
 
     override fun doAnalysis(
         project: Project,
@@ -86,6 +88,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         bindingTrace: BindingTrace,
         componentProvider: ComponentProvider
     ): AnalysisResult? {
+        rounds++
+        if (rounds > multipleRoundThreshold) {
+            logger.warn("Current processing rounds exceeds 100, check processors for potential infinite rounds")
+        }
         val psiManager = PsiManager.getInstance(project)
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
         val javaFiles = options.javaSourceRoots
