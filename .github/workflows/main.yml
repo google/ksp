@@ -33,6 +33,10 @@ jobs:
         java-version: '11'
         java-package: jdk
         architecture: x64
+    - name: set JDK_11 environment variable
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      run: echo ::set-env name=JDK_11::$(echo $JAVA_HOME)
     - name: Setup Java 8
       uses: actions/setup-java@v1.4.3
       with:
@@ -61,30 +65,34 @@ jobs:
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-    # Run ksp generated tests
-    - name: test
-      run: ./gradlew --stacktrace --info :compiler-plugin:test --tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.*" -PcompilerTestEnabled=true
-    - name: Upload test results
+
+    # Run tests with JDK8
+    - name: test with jdk8
+      run: ./gradlew --stacktrace --info -PcompilerTestEnabled=true test
+    - name: Upload test results for jdk8
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: test-reports
+        name: test-reports-jdk8
         path: compiler-plugin/build/reports
-    # Run ksp integration tests
-    - name: integration tests
-      run: ./gradlew --stacktrace --info :integration-tests:test
-    - name: Upload integration test results
+
+    # Run tests with JDK9
+    # Disabling integration tests for a known jdk bug: https://bugs.openjdk.java.net/browse/JDK-8184940
+    - name: test with jdk9
+      run: JAVA_HOME=$JDK_9 ./gradlew --stacktrace --info -PcompilerTestEnabled=true :compiler-plugin:test
+    - name: Upload test results for jdk9
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: integration-tests-reports
-        path: integration-tests/build/reports
-    # Run gradle plugin tests
-    - name: gradle plugin tests
-      run: ./gradlew --stacktrace --info :gradle-plugin:test
-    - name: Upload gradle plugin test results
+        name: test-reports-jdk9
+        path: compiler-plugin/build/reports
+
+    # Run tests with JDK11
+    - name: test with jdk11
+      run: JAVA_HOME=$JDK_11 ./gradlew --stacktrace --info -PcompilerTestEnabled=true test
+    - name: Upload test results for jdk11
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: gradle-plugin-test-reports
-        path: gradle-plugin/build/reports
+        name: test-reports-jdk11
+        path: compiler-plugin/build/reports
