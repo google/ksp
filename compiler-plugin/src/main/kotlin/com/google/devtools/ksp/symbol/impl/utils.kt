@@ -314,7 +314,7 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
         TypeProjectionImpl(variance, type)
     })
 
-internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration {
+internal fun FunctionDescriptor.toKSDeclaration(): KSDeclaration {
     if (this.kind != CallableMemberDescriptor.Kind.DECLARATION) return KSFunctionDeclarationDescriptorImpl.getCached(this)
     val psi = this.findPsi() ?: return KSFunctionDeclarationDescriptorImpl.getCached(this)
     // Java default constructor has a kind DECLARATION of while still being synthetic.
@@ -324,6 +324,7 @@ internal fun FunctionDescriptor.toKSFunctionDeclaration(): KSFunctionDeclaration
     return when (psi) {
         is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
         is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
+        is KtProperty -> KSPropertyDeclarationImpl.getCached(psi)
         else -> throw IllegalStateException("unexpected psi: ${psi.javaClass}")
     }
 }

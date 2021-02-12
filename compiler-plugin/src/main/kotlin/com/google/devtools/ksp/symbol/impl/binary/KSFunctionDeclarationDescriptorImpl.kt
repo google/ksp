@@ -28,7 +28,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findClosestOverridee
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
-import com.google.devtools.ksp.symbol.impl.toKSFunctionDeclaration
+import com.google.devtools.ksp.symbol.impl.toKSDeclaration
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.load.java.isFromJava
@@ -42,9 +42,8 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         fun getCached(descriptor: FunctionDescriptor) = cache.getOrPut(descriptor) { KSFunctionDeclarationDescriptorImpl(descriptor) }
     }
 
-    override fun findOverridee(): KSFunctionDeclaration? {
-        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
-        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
+    override fun findOverridee(): KSDeclaration? {
+        return descriptor?.findClosestOverridee()?.toKSDeclaration()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
