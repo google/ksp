@@ -26,7 +26,6 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.impl.source.PsiClassReferenceType
 
 class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KSFunctionDeclaration, KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
@@ -48,9 +47,9 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
         KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
     }
 
-    override fun findOverridee(): KSFunctionDeclaration? {
+    override fun findOverridee(): KSDeclaration? {
         val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
-        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
+        return descriptor?.findClosestOverridee()?.toKSDeclaration()
     }
 
     override val declarations: Sequence<KSDeclaration> = emptySequence()

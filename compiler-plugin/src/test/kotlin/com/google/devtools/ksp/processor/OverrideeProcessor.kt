@@ -22,6 +22,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
@@ -42,6 +43,7 @@ class OverrideeProcessor: AbstractTestProcessor() {
         logSubject(resolver, "ConflictingSubject4")
         logSubject(resolver, "OverrideOrder1")
         logSubject(resolver, "OverrideOrder2")
+        logSubject(resolver, "JavaAccessorImpl")
         return emptyList()
     }
 
@@ -57,17 +59,27 @@ class OverrideeProcessor: AbstractTestProcessor() {
     private fun logClass(subject: KSClassDeclaration) {
         subject.declarations.filterIsInstance<KSPropertyDeclaration>()
             .forEach {
-                val signature = it.toSignature()
-                val overrideeSignature = it.findOverridee()?.toSignature()
-                results.add("$signature -> $overrideeSignature")
+                checkOverridee(it)
             }
         subject.declarations.filterIsInstance<KSFunctionDeclaration>()
             .filterNot { it.simpleName.asString() in IGNORED_METHOD_NAMES }
             .forEach {
-                val signature = it.toSignature()
-                val overrideeSignature = it.findOverridee()?.toSignature()
-                results.add("$signature -> $overrideeSignature")
+                checkOverridee(it)
             }
+    }
+
+    private fun checkOverridee(declaration: KSDeclaration) {
+        val signature = if (declaration is KSPropertyDeclaration) declaration.toSignature() else (declaration as KSFunctionDeclaration).toSignature()
+        val overrideeSignature = if (declaration is KSPropertyDeclaration) declaration.findOverridee()?.toSignature() else (declaration as KSFunctionDeclaration).findOverridee()?.toSignature()
+        results.add("$signature -> $overrideeSignature")
+    }
+
+    private fun KSDeclaration.toSignature(): String {
+        return when(this) {
+            is KSFunctionDeclaration -> this.toSignature()
+            is KSPropertyDeclaration -> this.toSignature()
+            else -> throw IllegalStateException()
+        }
     }
 
     private fun KSFunctionDeclaration.toSignature(): String {
@@ -99,20 +111,3 @@ class OverrideeProcessor: AbstractTestProcessor() {
     }
 }
 
-interface MyInterface {
-    fun openFoo(): Int { return 1}
-    fun absFoo(): Unit
-}
-
-interface MyInterface2 {
-    fun absFoo(): Unit
-}
-
-abstract class MyAbstract: MyInterface {
-    override fun absFoo(): Unit {val a = 1}
-    override fun openFoo(): Int { return 2 }
-}
-
-class Subject2: MyInterface, MyAbstract() {
-    override fun absFoo(): Unit = TODO()
-}

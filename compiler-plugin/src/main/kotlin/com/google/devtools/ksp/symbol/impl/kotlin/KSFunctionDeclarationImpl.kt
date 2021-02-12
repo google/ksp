@@ -38,9 +38,9 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         fun getCached(ktFunction: KtFunction) = cache.getOrPut(ktFunction) { KSFunctionDeclarationImpl(ktFunction) }
     }
 
-    override fun findOverridee(): KSFunctionDeclaration? {
+    override fun findOverridee(): KSDeclaration? {
         val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
-        return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
+        return descriptor?.findClosestOverridee()?.toKSDeclaration()
     }
 
     override val simpleName: KSName by lazy {
