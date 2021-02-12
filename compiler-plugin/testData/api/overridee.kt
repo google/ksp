@@ -81,6 +81,10 @@
 // OverrideOrder1.foo() -> GrandBaseInterface2.foo()
 // OverrideOrder2:
 // OverrideOrder2.foo() -> GrandBaseInterface1.foo()
+// JavaAccessorImpl:
+// JavaAccessorImpl.getX() -> KtInterfaceWithProperty.x
+// JavaAccessorImpl.getY() -> KtInterfaceWithProperty.y
+// JavaAccessorImpl.setY(value:Int) -> KtInterfaceWithProperty.y
 // END
 // MODULE: lib
 // FILE: lib.kt
@@ -136,6 +140,11 @@ class NoOverride(val propInParam: Int) {
     fun func(val param: Int) {
 
     }
+}
+
+interface KtInterfaceWithProperty {
+    val x:Int
+    var y:Int
 }
 
 abstract class GrandBase {
@@ -272,5 +281,17 @@ public class JavaSubject {
         static String staticMethod() {
             return null;
         }
+    }
+}
+
+// FILE: JavaImpl.java
+class JavaAccessorImpl implements KtInterfaceWithProperty {
+    public int getX() {
+        return 1;
+    }
+    public int getY() {
+        return 1;
+    }
+    public void setY(int value) {
     }
 }

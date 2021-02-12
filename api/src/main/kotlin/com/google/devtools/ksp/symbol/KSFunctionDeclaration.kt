@@ -80,10 +80,10 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
      * to the current containing declaration is selected. If they are in the same level, the
      * function of the first specified interface (in source) will be returned.
      *
-     * @return [KSFunctionDeclaration] for the original function, if overriding, otherwise null.
+     * @return [KSDeclaration] for the original declaration, if overriding, otherwise null.
      * Calling [findOverridee] is expensive and should be avoided if possible.
      */
-    fun findOverridee(): KSFunctionDeclaration?
+    fun findOverridee(): KSDeclaration?
 
     /**
      * Returns the type of the [function] when it is viewed as member of the [containing] type.
