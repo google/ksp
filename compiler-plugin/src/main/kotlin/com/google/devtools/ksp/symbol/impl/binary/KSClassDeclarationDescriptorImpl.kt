@@ -22,10 +22,21 @@ import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findPsi
+import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
+import com.intellij.psi.PsiField
+import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -134,12 +145,25 @@ internal fun ClassDescriptor.getAllFunctions(): List<KSFunctionDeclaration> {
     val functionDescriptors = unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
             .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }.toMutableList()
     functionDescriptors += constructors
-    return functionDescriptors.map { KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor) }
+    return functionDescriptors.map {
+        when (val psi = it.findPsi()) {
+            is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
+            is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
+            else -> KSFunctionDeclarationDescriptorImpl.getCached(it as FunctionDescriptor)
+        }
+    }
 }
 
 internal fun ClassDescriptor.getAllProperties(): List<KSPropertyDeclaration> {
     ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(this)
     return unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
             .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
-            .map { KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor) }
+            .map {
+                when (val psi = it.findPsi()) {
+                    is KtParameter -> KSPropertyDeclarationParameterImpl.getCached(psi)
+                    is KtProperty -> KSPropertyDeclarationImpl.getCached(psi)
+                    is PsiField -> KSPropertyDeclarationJavaImpl.getCached(psi)
+                    else -> KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor)
+                }
+            }
 }

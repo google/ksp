@@ -147,6 +147,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/implicitPropertyAccessors.kt");
     }
 
+    @TestMetadata("annotationOnConstructorParameter.kt")
+    public void testAnnotationOnConstructorParameter() throws Exception {
+        runTest("testData/api/annotationOnConstructorParameter.kt");
+    }
+
     @TestMetadata("interfaceWithDefault.kt")
     public void testInterfaceWithDefault() throws Exception {
         runTest("testData/api/interfaceWithDefault.kt");
