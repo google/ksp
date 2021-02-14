@@ -8,9 +8,6 @@ class NormalProcessor : SymbolProcessor {
     var rounds = 0
 
 
-    override fun finish() {
-    }
-
     override fun onError() {
         logger.error("NormalProcessor called error on $rounds")
     }

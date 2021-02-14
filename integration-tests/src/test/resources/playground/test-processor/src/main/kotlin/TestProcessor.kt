@@ -14,9 +14,6 @@ class TestProcessor : SymbolProcessor {
         file.appendText("$indent$s\n")
     }
 
-    override fun finish() {
-    }
-
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
         file = codeGenerator.createNewFile(Dependencies(false), "", "TestProcessor", "log")
