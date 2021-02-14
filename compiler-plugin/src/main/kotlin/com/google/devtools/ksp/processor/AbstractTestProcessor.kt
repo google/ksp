@@ -27,8 +27,5 @@ abstract class AbstractTestProcessor : SymbolProcessor {
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
     }
 
-    override fun finish() {
-    }
-
     abstract fun toResult(): List<String>
 }

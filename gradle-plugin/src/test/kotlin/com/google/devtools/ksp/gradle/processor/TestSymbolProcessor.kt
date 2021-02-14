@@ -40,7 +40,4 @@ abstract class TestSymbolProcessor : SymbolProcessor {
         this.codeGenerator = codeGenerator
         this.logger = logger
     }
-
-    override fun finish() {
-    }
 }

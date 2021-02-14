@@ -20,8 +20,6 @@ class TestProcessor : SymbolProcessor {
         this.logger = logger
     }
 
-    override fun finish() = Unit
-
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if(processed) {
             return emptyList()
