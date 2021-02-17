@@ -79,6 +79,9 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         ResolverImpl.moduleClassResolver.resolveClass(JavaClassImpl(psi))
     }
 
+    // TODO in 1.5 + jvmTarget 15, will we return Java permitted types?
+    override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()
+
     override fun getAllFunctions(): List<KSFunctionDeclaration> =
             descriptor?.getAllFunctions() ?: emptyList()
 

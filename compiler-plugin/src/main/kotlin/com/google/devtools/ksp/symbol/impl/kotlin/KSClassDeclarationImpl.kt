@@ -27,9 +27,11 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
 import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
+import com.google.devtools.ksp.symbol.impl.binary.sealedSubclassesSequence
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
@@ -50,6 +52,10 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override val isCompanionObject by lazy {
         (ktClassOrObject is KtObjectDeclaration) && (ktClassOrObject.isCompanion())
+    }
+
+    override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
+        return descriptor.sealedSubclassesSequence()
     }
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
