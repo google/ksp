@@ -46,6 +46,12 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
     val isCompanionObject: Boolean
 
     /**
+     * @return a sequence of sealed subclasses of this class, if any.
+     * Calling [getSealedSubclasses] requires type resolution therefore is expensive and should be avoided if possible.
+     */
+    fun getSealedSubclasses(): Sequence<KSClassDeclaration>
+
+    /**
      * Get all member functions of a class declaration, including declared and inherited.
      * @return List of function declarations from the class members.
      * Calling [getAllFunctions] requires type resolution therefore is expensive and should be avoided if possible.

@@ -57,6 +57,8 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
+    override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()
+
     override fun asStarProjectedType(): KSType {
         return ResolverImpl.instance.builtIns.nothingType
     }

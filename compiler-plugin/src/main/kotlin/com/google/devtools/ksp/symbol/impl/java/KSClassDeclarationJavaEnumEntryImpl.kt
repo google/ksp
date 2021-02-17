@@ -60,6 +60,8 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
 
     override val isCompanionObject = false
 
+    override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()
+
     private val descriptor: ClassDescriptor? by lazy {
         ResolverImpl.instance.resolveJavaDeclaration(psi) as ClassDescriptor
     }

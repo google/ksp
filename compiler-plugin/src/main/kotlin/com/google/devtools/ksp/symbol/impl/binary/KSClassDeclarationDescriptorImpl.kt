@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
@@ -62,6 +63,10 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
 
     override val isCompanionObject by lazy {
         descriptor.isCompanionObject
+    }
+
+    override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
+        return descriptor.sealedSubclassesSequence()
     }
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
@@ -166,4 +171,11 @@ internal fun ClassDescriptor.getAllProperties(): List<KSPropertyDeclaration> {
                     else -> KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor)
                 }
             }
+}
+
+internal fun ClassDescriptor.sealedSubclassesSequence(): Sequence<KSClassDeclaration> {
+    // TODO record incremental subclass lookups in Kotlin 1.5.x?
+    return sealedSubclasses
+        .asSequence()
+        .map { KSClassDeclarationDescriptorImpl.getCached(it) }
 }
