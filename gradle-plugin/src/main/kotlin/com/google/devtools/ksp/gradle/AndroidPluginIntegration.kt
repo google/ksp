@@ -18,13 +18,14 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.gradle.BaseExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.KSP_MAIN_CONFIGURATION_NAME
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 /**
  * This helper class handles communication with the android plugin.
@@ -38,10 +39,14 @@ class AndroidPluginIntegration(
     private val kspGradleSubplugin: KspGradleSubplugin
 ) {
 
+    private val agpPluginIds = listOf("com.android.application", "com.android.library", "com.android.dynamic-feature")
+
     fun applyIfAndroidProject(project: Project) {
-        project.pluginManager.withPlugin("com.android.base") {
-            // for android apps, we need a configuration per source set
-            decorateAndroidExtension(project)
+        agpPluginIds.forEach { agpPluginId ->
+            project.pluginManager.withPlugin(agpPluginId) {
+                // for android apps, we need a configuration per source set
+                decorateAndroidExtension(project)
+            }
         }
     }
 
@@ -56,12 +61,16 @@ class AndroidPluginIntegration(
         }
 
     private fun decorateAndroidExtension(project: Project) {
+        val sourceSets = when (val androidExt = project.extensions.getByName("android")) {
+            is BaseExtension -> androidExt.sourceSets
+            is CommonExtension<*, *, *, *, *, *, *, *> -> androidExt.sourceSets
+            else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
+        }
+
         @Suppress("UnstableApiUsage")
-        project.extensions.configure(CommonExtension::class.java) { commonAndroidExtension ->
-            kspGradleSubplugin.run {
-                commonAndroidExtension.sourceSets.createKspConfigurations(project) { androidSourceSet ->
-                    listOf(androidSourceSet.kspConfigurationName)
-                }
+        kspGradleSubplugin.run {
+            sourceSets.createKspConfigurations(project) { androidSourceSet ->
+                listOf(androidSourceSet.kspConfigurationName)
             }
         }
     }
