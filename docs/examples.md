@@ -18,7 +18,7 @@ fun KSDeclaration.isLocal(): Boolean {
 
 Find the actual class or interface declaration that the alias points to recursively:
 
-```
+```kotlin
 fun KSTypeAlias.findActualType(): KSClassDeclaration {
     val resolvedType = this.type.resolve().declaration
     return if (resolvedType is KSTypeAlias) {

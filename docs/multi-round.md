@@ -9,7 +9,7 @@ To use multiple round processing, the `SymbolProcessor.process()` function needs
 
 The following sample code shows how to defer invalid symbols by using a validation check:
 
-```
+```kotlin
 override fun process(resolver: Resolver): List<KSAnnotated> {
     val symbols = resolver.getSymbolsWithAnnotation("com.example.annotation.Builder")
     val ret = symbols.filter { !it.validate() }
