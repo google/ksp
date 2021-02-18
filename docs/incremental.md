@@ -53,7 +53,7 @@ where `A` extends `B`. The processor got `A` by `Resolver.getSymbolsWithAnnotati
 `B` by `KSClassDeclaration.superTypes` from `A`. Because the inclusion of `B` is due to `A`,
 `B.kt` doesn't need to be specified in `dependencies` for `outputForA`. You can still specify `B.kt` in this case, but it is unnecessary.
 
-```
+```kotlin
 // A.kt
 @Interesting
 class A : B()
