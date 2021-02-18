@@ -38,12 +38,15 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
+import com.jetbrains.rd.util.string.printToString
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.URLClassLoader
 import java.nio.file.Files
 
@@ -129,13 +132,17 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                     ksFiles
             )
             processors.forEach {
-                it.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
+                handleException {
+                    it.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
+                }
                 deferredSymbols[it] = mutableListOf()
             }
             initialized = true
         }
         processors.forEach {
-            deferredSymbols[it] = it.process(resolver)
+            handleException {
+                deferredSymbols[it] = it.process(resolver)
+            }
             if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
                 deferredSymbols.remove(it)
             }
@@ -154,12 +161,16 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (logger.hasError()) {
             finished = true
             processors.forEach {
-                it.onError()
+                handleException {
+                    it.onError()
+                }
             }
         } else {
             if (finished) {
                 processors.forEach {
-                    it.finish()
+                    handleException {
+                        it.finish()
+                    }
                 }
                 if (deferredSymbols.isNotEmpty()) {
                     deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
@@ -203,6 +214,21 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
 
     private fun KSPLogger.hasError(): Boolean {
         return (this as MessageCollectorBasedKSPLogger).recordedEvents.any { it.severity == CompilerMessageSeverity.ERROR || it.severity == CompilerMessageSeverity.EXCEPTION }
+    }
+
+    private fun handleException(call: () -> Unit) {
+        try {
+            call()
+        } catch (e: Exception) {
+            // Throws KSP exceptions
+            if (e.stackTrace.first().className.startsWith("com.google.devtools.ksp")) {
+                throw e
+            } else {
+                val sw = StringWriter()
+                e.printStackTrace(PrintWriter(sw))
+                logger.error(sw.toString())
+            }
+        }
     }
 }
 
