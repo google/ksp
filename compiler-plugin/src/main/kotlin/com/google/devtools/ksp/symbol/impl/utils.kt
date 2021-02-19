@@ -49,7 +49,7 @@ import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 
-val jvmModifierMap = mapOf(
+private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
     JvmModifier.PRIVATE to Modifier.PRIVATE,
     JvmModifier.ABSTRACT to Modifier.ABSTRACT,
@@ -63,10 +63,7 @@ val jvmModifierMap = mapOf(
     JvmModifier.VOLATILE to Modifier.JAVA_VOLATILE
 )
 
-fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
-    val modifiers = mutableSetOf<Modifier>()
-    val modifierList = this.modifierList ?: return modifiers
-    val modifierMap = mapOf(
+private val modifierMap = mapOf(
         KtTokens.PUBLIC_KEYWORD to Modifier.PUBLIC,
         KtTokens.PRIVATE_KEYWORD to Modifier.PRIVATE,
         KtTokens.INTERNAL_KEYWORD to Modifier.INTERNAL,
@@ -95,7 +92,11 @@ fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
         KtTokens.REIFIED_KEYWORD to Modifier.REIFIED,
         KtTokens.EXPECT_KEYWORD to Modifier.EXPECT,
         KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL
-    )
+)
+
+fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
+    val modifiers = mutableSetOf<Modifier>()
+    val modifierList = this.modifierList ?: return modifiers
     modifiers.addAll(
         modifierMap.entries
             .filter { modifierList.hasModifier(it.key) }
