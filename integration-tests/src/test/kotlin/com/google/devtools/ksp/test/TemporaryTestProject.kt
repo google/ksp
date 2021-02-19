@@ -13,10 +13,12 @@ class TemporaryTestProject(projectName: String) : TemporaryFolder() {
 
         val kotlinVersion = System.getProperty("kotlinVersion")
         val kspVersion = System.getProperty("kspVersion")
+        val agpVersion = System.getProperty("agpVersion")
         val testRepo = System.getProperty("testRepo")
         val gradleProperties = File(root, "gradle.properties")
         gradleProperties.appendText("\nkotlinVersion=$kotlinVersion")
         gradleProperties.appendText("\nkspVersion=$kspVersion")
+        gradleProperties.appendText("\nagpVersion=$agpVersion")
         gradleProperties.appendText("\ntestRepo=$testRepo")
     }
 
