@@ -55,7 +55,11 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
-        return descriptor.sealedSubclassesSequence()
+        return if (Modifier.SEALED in modifiers) {
+            descriptor.sealedSubclassesSequence()
+        } else {
+            emptySequence()
+        }
     }
 
     override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
