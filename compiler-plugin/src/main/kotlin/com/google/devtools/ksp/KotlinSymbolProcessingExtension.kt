@@ -81,7 +81,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     lateinit var cleanFilenames: Set<String>
     lateinit var codeGenerator: CodeGeneratorImpl
     var rounds = 0
-    private val multipleRoundThreshold = 100
+    companion object {
+        private const val KSP_PACKAGE_NAME = "com.google.devtools.ksp"
+        private const val MULTI_ROUND_THRESHOLD = 100
+    }
 
     override fun doAnalysis(
         project: Project,
@@ -92,7 +95,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         componentProvider: ComponentProvider
     ): AnalysisResult? {
         rounds++
-        if (rounds > multipleRoundThreshold) {
+        if (rounds > MULTI_ROUND_THRESHOLD) {
             logger.warn("Current processing rounds exceeds 100, check processors for potential infinite rounds")
         }
         val psiManager = PsiManager.getInstance(project)
@@ -139,9 +142,12 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             }
             initialized = true
         }
-        processors.forEach {
+        processors.forEach processing@{
             handleException {
                 deferredSymbols[it] = it.process(resolver)
+            }
+            if (logger.hasError()) {
+                return@processing
             }
             if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
                 deferredSymbols.remove(it)
@@ -175,7 +181,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                 if (deferredSymbols.isNotEmpty()) {
                     deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
                 }
-                incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+                if (!logger.hasError()) {
+                    incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+                }
             }
         }
         if (finished) {
@@ -221,7 +229,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             call()
         } catch (e: Exception) {
             // Throws KSP exceptions
-            if (e.stackTrace.first().className.startsWith("com.google.devtools.ksp")) {
+            if (e.stackTrace.first().className.startsWith(KSP_PACKAGE_NAME)) {
                 throw e
             } else {
                 val sw = StringWriter()
