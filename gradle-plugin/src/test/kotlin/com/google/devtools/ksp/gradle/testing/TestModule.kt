@@ -113,7 +113,7 @@ class TestModule(
         }
 
     val kspServicesFile
-        get() = servicesDir.resolve("com.google.devtools.ksp.processing.SymbolProcessor")
+        get() = servicesDir.resolve("com.google.devtools.ksp.processing.SymbolProcessorProvider")
 
     private val buildFile
         get() = moduleRoot.resolve("build.gradle.kts")
