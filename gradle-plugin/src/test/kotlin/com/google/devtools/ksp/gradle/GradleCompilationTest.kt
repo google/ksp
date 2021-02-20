@@ -17,8 +17,8 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
-import com.google.devtools.ksp.gradle.processor.TestSymbolProcessor
 import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.module
+import com.google.devtools.ksp.gradle.processor.TestSymbolProcessor
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
