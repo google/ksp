@@ -60,6 +60,9 @@
 
 ## Use your own processor in a project
 
+<details open>
+<summary>Setup using Kotlin DSL</summary>
+  
 * Create another module that contains a workload where you want to try out your processor.
 * In the project's `settings.gradle.kts`, add `google()` to `repositories` for the KSP plugin.
   
@@ -98,6 +101,47 @@
       ksp(project(":test-processor"))
   }
   ```
+
+</details>
+<details>
+<summary>Setup using Groovy</summary>
+
+* In the projects `settings.gradle`, add `google()` to `repositories` for the KSP plugin:
+    
+  ```groovy
+  pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+    }
+  }
+  ```
+* In your projects `build.gradle` file add a plugins block containing the ksp plugin:
+
+  ```groovy
+  plugins {
+    id "com.google.devtools.ksp" version "1.4.30-1.0.0-alpha02"
+  }
+  ```
+  
+* In the modules `build.gradle`, add the following:
+  * Apply the `com.google.devtools.ksp` plugin:
+  
+  ```groovy
+  apply plugin: 'com.google.devtools.ksp'
+  ```
+  
+  * Add `ksp <your processor>` to the list of dependencies.
+  
+  ```groovy
+  dependencies {
+      implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+      implementation project(":test-processor")
+      ksp project(":test-processor")
+  }
+  ```
+
+</details>
 
 ## Pass Options to Processors
 Processor options in `SymbolProcessor.init(options: Map<String, String>, ...)` are specified in gradle build scripts:
