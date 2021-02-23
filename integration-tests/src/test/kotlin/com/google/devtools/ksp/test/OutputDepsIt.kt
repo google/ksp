@@ -34,6 +34,39 @@ class OutputDepsIt {
             ),
     )
 
+    val deletedSrc2Output = listOf(
+            "workload/src/main/java/p1/J1.java" to listOf(
+                    "kotlin/p1/Anno1Generated.kt",
+                    "kotlin/p1/Anno2Generated.kt",
+                    "kotlin/p1/J2Generated.kt",
+                    "kotlin/p1/K1Generated.kt",
+                    "kotlin/p1/K2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+            "workload/src/main/java/p1/J2.java" to listOf(
+                    "kotlin/p1/Anno1Generated.kt",
+                    "kotlin/p1/Anno2Generated.kt",
+                    "kotlin/p1/K1Generated.kt",
+                    "kotlin/p1/K2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+            "workload/src/main/kotlin/p1/K1.kt" to listOf(
+                    "kotlin/p1/Anno1Generated.kt",
+                    "kotlin/p1/Anno2Generated.kt",
+                    "kotlin/p1/K2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+            "workload/src/main/kotlin/p1/K2.kt" to listOf(
+                    "kotlin/p1/Anno1Generated.kt",
+                    "kotlin/p1/Anno2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+    )
+
     @Test
     fun testOutputDeps() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -53,5 +86,24 @@ class OutputDepsIt {
         }
         val incrementalArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
         Assert.assertEquals(cleanArtifact, incrementalArtifact)
+    }
+
+    @Test
+    fun testDeletion() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments("assemble").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+        }
+
+        deletedSrc2Output.forEach { (src, expectedDirties) ->
+            File(project.root, src).delete()
+            gradleRunner.withArguments("assemble").build().let { result ->
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
+                val outputs = outputRoot.walk().filter { it.isFile() }.map { it.toRelativeString(outputRoot) }.toList().sorted()
+                Assert.assertEquals(expectedDirties, outputs)
+            }
+        }
     }
 }

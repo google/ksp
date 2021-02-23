@@ -38,6 +38,12 @@ class TestProcessor : SymbolProcessor {
 
         resolver.getNewFiles().forEach { file ->
             logger.warn("${file.packageName.asString()}/${file.fileName}")
+            val outputBaseFN = file.fileName.replace(".kt", "Generated").replace(".java", "Generated")
+            codeGenerator.createNewFile(Dependencies(false, file), file.packageName.asString(), outputBaseFN, "kt").use { output ->
+                OutputStreamWriter(output).use { writer ->
+                    writer.write("private val unused = \"unused\"")
+                }
+            }
         }
         processed = true
         return emptyList()

@@ -380,7 +380,7 @@ class IncrementalContext(
         logSourceToOutputs()
 
         sourceToOutputsMap.flush(false)
-        sourceToOutputsMap.close()
+        // Don't close the map yet. It'll be used to calculate clean outputs.
     }
 
     // TODO: Recover if processing failed.
@@ -447,14 +447,16 @@ class IncrementalContext(
         cachesUpToDateFile.delete()
         assert(!cachesUpToDateFile.exists())
 
-        val cleanOutputs = mutableSetOf<File>()
         val dirtyFilePaths = dirtyFiles.map { it.relativeFile }
+
+        updateCaches(dirtyFilePaths, outputs, sourceToOutputs)
+
+        val cleanOutputs = mutableSetOf<File>()
         sourceToOutputsMap.keys.forEach { source ->
             if (source !in dirtyFilePaths && source != anyChangesWildcard)
                 cleanOutputs.addAll(sourceToOutputsMap[source]!!)
         }
-
-        updateCaches(dirtyFilePaths, outputs, sourceToOutputs)
+        sourceToOutputsMap.close()
         updateOutputs(outputs, cleanOutputs)
 
         cachesUpToDateFile.createNewFile()
