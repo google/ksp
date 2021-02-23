@@ -34,6 +34,35 @@ class OutputDepsIt {
             ),
     )
 
+    val src2Output = mapOf(
+            "workload/src/main/java/p1/J1.java" to setOf(
+                    "kotlin/p1/J1Generated.kt",
+                    "kotlin/p1/K1Generated.kt",
+                    "kotlin/p1/K2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+            "workload/src/main/java/p1/J2.java" to setOf(
+                    "kotlin/p1/J2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+            "workload/src/main/kotlin/p1/K1.kt" to setOf(
+                    "kotlin/p1/J1Generated.kt",
+                    "kotlin/p1/K1Generated.kt",
+                    "kotlin/p1/K2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+            "workload/src/main/kotlin/p1/K2.kt" to setOf(
+                    "kotlin/p1/J1Generated.kt",
+                    "kotlin/p1/K1Generated.kt",
+                    "kotlin/p1/K2Generated.kt",
+                    "resources/p1.Anno1.log",
+                    "resources/p1.Anno2.log",
+            ),
+    )
+
     val deletedSrc2Output = listOf(
             "workload/src/main/java/p1/J1.java" to listOf(
                     "kotlin/p1/Anno1Generated.kt",
@@ -77,11 +106,25 @@ class OutputDepsIt {
         val cleanArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
 
         src2Dirty.forEach { (src, expectedDirties) ->
-            File(project.root, src).appendText("\n\n")
+            val srcFile = File(project.root, src)
+            // In case that the test goes faster than the precision of timestamps.
+            // 10ms should be a safe assumption for modern file systems.
+            Thread.sleep(20)
+            srcFile.appendText("\n\n")
+            Thread.sleep(20)
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
+
+                val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
+                outputRoot.walk().filter { it.isFile() }.forEach {
+                    if (it.toRelativeString(outputRoot) in src2Output[src]!!) {
+                        Assert.assertTrue(it.lastModified() > srcFile.lastModified())
+                    } else {
+                        Assert.assertTrue(it.lastModified() < srcFile.lastModified())
+                    }
+                }
             }
         }
         val incrementalArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))

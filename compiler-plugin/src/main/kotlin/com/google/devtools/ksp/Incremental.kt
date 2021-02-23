@@ -45,6 +45,8 @@ import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.io.DataInput
 import java.io.DataOutput
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.*
 
 class FileToSymbolsMap(storageFile: File) : BasicMap<File, Collection<LookupSymbol>>(storageFile, FileKeyDescriptor, CollectionExternalizer(LookupSymbolExternalizer, { HashSet() })) {
@@ -395,7 +397,6 @@ class IncrementalContext(
         logSourceToOutputs(outputs, sourceToOutputs)
 
         sourceToOutputsMap.flush(false)
-        // Don't close the map yet. It'll be used to calculate clean outputs.
     }
 
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
@@ -404,6 +405,20 @@ class IncrementalContext(
 
         fun File.abs() = File(baseDir, path)
         fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
+
+        // Copy recursively, including last-modified-time of file and its parent dirs.
+        //
+        // `java.nio.file.Files.copy(path1, path2, options...)` keeps last-modified-time (if supported) according to
+        // https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html
+        fun copy(src: File, dst: File, overwrite: Boolean) {
+            if (!dst.parentFile.exists())
+                copy(src.parentFile, dst.parentFile, false)
+            if (overwrite) {
+                Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING)
+            } else {
+                Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES)
+            }
+        }
 
         // Backing up outputs is necessary for two reasons:
         //
@@ -418,13 +433,14 @@ class IncrementalContext(
 
         // Backup
         outputs.forEach { generated ->
-            generated.abs().copyTo(generated.bak(), overwrite = true)
+            copy(generated.abs(), generated.bak(), true)
         }
 
         // Restore non-dirty outputs
         cleanOutputs.forEach { dst ->
-            if (dst !in outputs)
-                dst.bak().copyTo(dst.abs(), overwrite = false)
+            if (dst !in outputs) {
+                copy(dst.bak(), dst.abs(), false)
+            }
         }
     }
 
