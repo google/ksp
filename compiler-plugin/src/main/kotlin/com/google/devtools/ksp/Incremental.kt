@@ -114,7 +114,6 @@ class FileToFilesMap(storageFile: File) : BasicMap<File, Collection<File>>(stora
     override fun dumpValue(value: Collection<File>) =
             value.dumpCollection()
 
-    // TODO: remove values.
     fun remove(key: File) {
         storage.remove(key)
     }
@@ -303,18 +302,34 @@ class IncrementalContext(
         logFile.appendText("\n")
     }
 
-    private fun logSourceToOutputs() {
+    private fun logSourceToOutputs(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         if (!options.incrementalLog)
             return
 
         val logFile = File(logsDir, "kspSourceToOutputs.log")
         logFile.appendText("=== Build $buildTime ===\n")
-        logFile.appendText("All outputs\n")
+        logFile.appendText("Accumulated source to outputs map\n")
         sourceToOutputsMap.keys.forEach { source ->
             logFile.appendText("  $source:\n")
             sourceToOutputsMap[source]!!.forEach { output ->
                 logFile.appendText("    $output\n")
             }
+        }
+        logFile.appendText("\n")
+
+        logFile.appendText("Reprocessed sources and their outputs\n")
+        sourceToOutputs.forEach { (source, outputs) ->
+            logFile.appendText("  $source:\n")
+            outputs.forEach {
+                logFile.appendText("    $it\n")
+            }
+        }
+        logFile.appendText("\n")
+
+        // Can be larger than the union of the above, because some outputs may have no source.
+        logFile.appendText("All reprocessed outputs\n")
+        outputs.forEach {
+            logFile.appendText("  $it\n")
         }
         logFile.appendText("\n")
     }
@@ -377,13 +392,12 @@ class IncrementalContext(
             sourceToOutputs[source]?.let { sourceToOutputsMap[source] = it} ?: sourceToOutputsMap.remove(source)
         }
 
-        logSourceToOutputs()
+        logSourceToOutputs(outputs, sourceToOutputs)
 
         sourceToOutputsMap.flush(false)
         // Don't close the map yet. It'll be used to calculate clean outputs.
     }
 
-    // TODO: Recover if processing failed.
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
         val outRoot = options.kspOutputDir
         val bakRoot = File(options.cachesDir, "backups")
@@ -440,6 +454,7 @@ class IncrementalContext(
         symbolsMap.close()
     }
 
+    // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
     fun updateCachesAndOutputs(dirtyFiles: Collection<KSFile>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         if (!isIncremental)
             return
