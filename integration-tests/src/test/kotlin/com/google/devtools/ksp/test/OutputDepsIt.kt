@@ -108,10 +108,10 @@ class OutputDepsIt {
         src2Dirty.forEach { (src, expectedDirties) ->
             val srcFile = File(project.root, src)
             // In case that the test goes faster than the precision of timestamps.
-            // 10ms should be a safe assumption for modern file systems.
-            Thread.sleep(20)
+            // It's 1s on Github's CI.
+            Thread.sleep(1000)
             srcFile.appendText("\n\n")
-            Thread.sleep(20)
+            Thread.sleep(1000)
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
