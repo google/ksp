@@ -38,7 +38,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
-import com.jetbrains.rd.util.string.printToString
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -81,6 +80,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     lateinit var cleanFilenames: Set<String>
     lateinit var codeGenerator: CodeGeneratorImpl
     var rounds = 0
+
     companion object {
         private const val KSP_PACKAGE_NAME = "com.google.devtools.ksp"
         private const val MULTI_ROUND_THRESHOLD = 100
@@ -134,23 +134,28 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                     anyChangesWildcard,
                     ksFiles
             )
-            processors.forEach {
+            processors.forEach init@{ processor ->
                 handleException {
-                    it.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
+                    processor.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
+                }?.let { return it }
+                if (logger.hasError()) {
+                    return@init
                 }
-                deferredSymbols[it] = mutableListOf()
+                deferredSymbols[processor] = mutableListOf()
             }
             initialized = true
         }
-        processors.forEach processing@{
-            handleException {
-                deferredSymbols[it] = it.process(resolver)
-            }
-            if (logger.hasError()) {
-                return@processing
-            }
-            if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
-                deferredSymbols.remove(it)
+        if (!logger.hasError()) {
+            processors.forEach processing@{ processor ->
+                handleException {
+                    deferredSymbols[processor] = processor.process(resolver)
+                }?.let { return it }
+                if (logger.hasError()) {
+                    return@processing
+                }
+                if (!deferredSymbols.containsKey(processor) || deferredSymbols[processor]!!.isEmpty()) {
+                    deferredSymbols.remove(processor)
+                }
             }
         }
         // Post processing.
@@ -166,17 +171,17 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         codeGenerator.closeFiles()
         if (logger.hasError()) {
             finished = true
-            processors.forEach {
+            processors.forEach { processor ->
                 handleException {
-                    it.onError()
-                }
+                    processor.onError()
+                }?.let { return it }
             }
         } else {
             if (finished) {
-                processors.forEach {
+                processors.forEach { processor ->
                     handleException {
-                        it.finish()
-                    }
+                        processor.finish()
+                    }?.let { return it }
                 }
                 if (deferredSymbols.isNotEmpty()) {
                     deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
@@ -189,23 +194,17 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (finished) {
             logger.reportAll()
         }
-        return AnalysisResult.EMPTY
-    }
-
-    abstract fun loadProcessors(): List<SymbolProcessor>
-
-    override fun analysisCompleted(
-        project: Project,
-        module: ModuleDescriptor,
-        bindingTrace: BindingTrace,
-        files: Collection<KtFile>
-    ): AnalysisResult? {
         return if (finished) {
-            AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+            if (logger.hasError())
+                AnalysisResult.compilationError(BindingContext.EMPTY)
+            else
+                AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
         } else {
             AnalysisResult.RetryWithAdditionalRoots(BindingContext.EMPTY, module, listOf(options.javaOutputDir), listOf(options.kotlinOutputDir), listOf(options.classOutputDir))
         }
     }
+
+    abstract fun loadProcessors(): List<SymbolProcessor>
 
     private var annotationProcessingComplete = false
 
@@ -224,19 +223,20 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         return (this as MessageCollectorBasedKSPLogger).recordedEvents.any { it.severity == CompilerMessageSeverity.ERROR || it.severity == CompilerMessageSeverity.EXCEPTION }
     }
 
-    private fun handleException(call: () -> Unit) {
+    private fun handleException(call: () -> Unit): AnalysisResult? {
         try {
             call()
         } catch (e: Exception) {
             // Throws KSP exceptions
             if (e.stackTrace.first().className.startsWith(KSP_PACKAGE_NAME)) {
-                throw e
+                return AnalysisResult.internalError(BindingContext.EMPTY, e)
             } else {
                 val sw = StringWriter()
                 e.printStackTrace(PrintWriter(sw))
                 logger.error(sw.toString())
             }
         }
+        return null
     }
 }
 
