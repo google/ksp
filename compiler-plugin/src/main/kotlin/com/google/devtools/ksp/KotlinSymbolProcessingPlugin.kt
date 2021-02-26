@@ -66,8 +66,8 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
             val (k, v) = value.split('=', ignoreCase = false, limit = 2)
             processingOptions.put(k, v)
         }
-        KspCliOption.KNOWN_MODIFIED_OPTION -> knownModified.addAll(value.split('=').map { File(it) } )
-        KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split('=').map { File(it) } )
+        KspCliOption.KNOWN_MODIFIED_OPTION -> knownModified.addAll(value.split(File.pathSeparator).map { File(it) } )
+        KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split(File.pathSeparator).map { File(it) } )
         KspCliOption.INCREMENTAL_OPTION -> incremental = value.toBoolean()
         KspCliOption.INCREMENTAL_LOG_OPTION -> incrementalLog = value.toBoolean()
     }
