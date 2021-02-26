@@ -315,8 +315,8 @@ fun K2JVMCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
 fun K2JVMCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
     if (changedFiles is ChangedFiles.Known) {
         val options = mutableListOf<SubpluginOption>()
-        changedFiles.modified.ifNotEmpty { options += SubpluginOption("knownModified", map { it.path }.joinToString(":")) }
-        changedFiles.removed.ifNotEmpty { options += SubpluginOption("knownRemoved", map { it.path }.joinToString(":")) }
+        changedFiles.modified.ifNotEmpty { options += SubpluginOption("knownModified", map { it.path }.joinToString(File.pathSeparator)) }
+        changedFiles.removed.ifNotEmpty { options += SubpluginOption("knownRemoved", map { it.path }.joinToString(File.pathSeparator)) }
         options.ifNotEmpty { addPluginOptions(this) }
     }
 }
