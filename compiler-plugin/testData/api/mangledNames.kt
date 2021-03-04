@@ -36,12 +36,23 @@
 // internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule
 // internalInlineReturningFun -> internalInlineReturningFun-HRn7Rpw$mainModule
 // <init> -> <init>
+// mainPackage.AbstractKotlinClass -> declarations
+// get-abstractVar -> getAbstractVar
+// set-abstractVar -> setAbstractVar
+// get-abstractVal -> getAbstractVal
+// get-internalAbstractVar -> getInternalAbstractVar$mainModule
+// set-internalAbstractVar -> setInternalAbstractVar$mainModule
+// get-internalAbstractVal -> getInternalAbstractVal$mainModule
+// set-internalAbstractVal -> setInternalAbstractVal$mainModule
 // fileLevelInternalFun -> fileLevelInternalFun
 // fileLevelInlineReceivingFun -> fileLevelInlineReceivingFun-E03SJzc
 // fileLevelInlineReturningFun -> fileLevelInlineReturningFun
 // fileLevelInternalInlineReceivingFun -> fileLevelInternalInlineReceivingFun-E03SJzc
 // fileLevelInternalInlineReturningFun -> fileLevelInternalInlineReturningFun
 // mainPackage.MyInterface -> declarations
+// get-x -> getX
+// get-y -> getY
+// set-y -> setY
 // JavaInput -> declarations
 // javaFunction -> javaFunction
 // staticJavaFunction -> staticJavaFunction
@@ -66,6 +77,18 @@
 // internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib
 // normalFun -> normalFun
 // <init> -> <init>
+// libPackage.AbstractKotlinClass -> declarations
+// get-abstractVal -> getAbstractVal
+// get-abstractVar -> getAbstractVar
+// set-abstractVar -> setAbstractVar
+// get-internalAbstractVal -> getInternalAbstractVal$lib
+// set-internalAbstractVal -> setInternalAbstractVal$lib
+// get-internalAbstractVar -> getInternalAbstractVar$lib
+// set-internalAbstractVar -> setInternalAbstractVar$lib
+// libPackage.MyInterface -> declarations
+// get-x -> getX
+// get-y -> getY
+// set-y -> setY
 // END
 // MODULE: lib
 // FILE: input.kt
@@ -91,6 +114,17 @@ class Foo {
     internal fun internalInlineReturningFun(): Inline1 = TODO()
 }
 
+abstract class AbstractKotlinClass {
+    abstract var abstractVar:String
+    abstract val abstractVal:String
+    internal abstract var internalAbstractVar:String
+    internal abstract var internalAbstractVal:String
+}
+
+interface MyInterface {
+    val x:Int
+    var y:Int
+}
 // MODULE: mainModule(lib)
 // FILE: input.kt
 package mainPackage;
@@ -110,6 +144,13 @@ class Foo {
     fun inlineReturningFun(): Inline1 = TODO()
     internal fun internalInlineReceivingFun(value: Inline1) {}
     internal fun internalInlineReturningFun(): Inline1 = TODO()
+}
+
+abstract class AbstractKotlinClass {
+    abstract var abstractVar:String
+    abstract val abstractVal:String
+    internal abstract var internalAbstractVar:String
+    internal abstract var internalAbstractVal:String
 }
 
 internal fun fileLevelInternalFun(): Unit = TODO()

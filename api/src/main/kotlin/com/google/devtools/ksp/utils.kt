@@ -155,8 +155,16 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
 
 fun KSClassDeclaration.isAbstract() = this.classKind == ClassKind.INTERFACE || this.modifiers.contains(Modifier.ABSTRACT)
 
-fun KSPropertyDeclaration.isAbstract() = this.modifiers.contains(Modifier.ABSTRACT)
-        || ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE && this.getter == null && this.setter == null)
+fun KSPropertyDeclaration.isAbstract() : Boolean {
+    if (modifiers.contains(Modifier.ABSTRACT)) {
+        return true
+    }
+    val parentClass = parentDeclaration as? KSClassDeclaration ?: return false
+    if (parentClass.classKind != ClassKind.INTERFACE) return false
+    // this is abstract if it does not have setter/getter or setter/getter have abstract modifiers
+    return (getter?.modifiers?.contains(Modifier.ABSTRACT) ?: true) &&
+        (setter?.modifiers?.contains(Modifier.ABSTRACT) ?: true)
+}
 
 fun KSDeclaration.isOpen() = !this.isLocal()
         && ((this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
