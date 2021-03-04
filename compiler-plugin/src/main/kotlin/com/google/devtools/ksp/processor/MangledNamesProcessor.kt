@@ -22,6 +22,12 @@ class MangledNamesProcessor : AbstractTestProcessor() {
         resolver.getClassDeclarationByName("libPackage.Foo")?.accept(
             MangledNamesVisitor(resolver), mangledDependencyNames
         )
+        resolver.getClassDeclarationByName("libPackage.AbstractKotlinClass")?.accept(
+            MangledNamesVisitor(resolver), mangledDependencyNames
+        )
+        resolver.getClassDeclarationByName("libPackage.MyInterface")?.accept(
+            MangledNamesVisitor(resolver), mangledDependencyNames
+        )
         results.addAll(
             mangleSourceNames.entries.map { (decl, name) ->
                 "$decl -> $name"

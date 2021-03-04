@@ -12,8 +12,8 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // NOTE: There are two cases this test ignores.
         // a) For property annotations with target, they get added to the property getter/setter whereas it would show
-        //    on the property if it was in kotlin source. This test ignores it by using the property name as key for
-        //    property getters/setters
+        //    on the property as well if it was in kotlin source. This test expects it in both for kotlin source
+        //    whereas it expects it only in the getter/setter for compiled kotlin source
         // b) When an annotation without a target is used in a constructor (with field), that annotation is not copied
         //    to the backing field for .class files. The assertion line in test ignores it (see the NoTargetAnnotation
         //    output difference for the DataClass)
@@ -53,7 +53,8 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
             is KSValueParameter -> name?.let {
                 "parameter ${it.asString()}"
             } ?: "no-name-value-parameter"
-            is KSPropertyAccessor -> receiver.toSignature()
+            is KSPropertyGetter -> "getter of ${receiver.toSignature()}"
+            is KSPropertySetter -> "setter of ${receiver.toSignature()}"
             else -> {
                 error("unexpected annotated")
             }

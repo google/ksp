@@ -23,6 +23,7 @@
 // class main.KotlinClass : annotations.NoTargetAnnotation{[value = onClass]}
 // function myFun : annotations.FunctionTarget{[value = onMyFun]}
 // function myFun : annotations.NoTargetAnnotation{[value = onMyFun]}
+// getter of property prop : annotations.PropertyGetterTarget{[value = get:]}
 // parameter param1 : annotations.NoTargetAnnotation{[value = onParam1]}
 // parameter param1 : annotations.ValueParameterTarget{[value = onParam1]}
 // parameter param2 : annotations.NoTargetAnnotation{[value = onParam2]}
@@ -33,11 +34,13 @@
 // property prop : annotations.PropertyGetterTarget{[value = get:]}
 // property prop : annotations.PropertySetterTarget{[value = set:]}
 // property prop : annotations.PropertyTarget{[value = onProp]}
+// setter of property prop : annotations.PropertySetterTarget{[value = set:]}
 // lib.KotlinClass ->
 // class lib.KotlinClass : annotations.ClassTarget{[value = onClass]}
 // class lib.KotlinClass : annotations.NoTargetAnnotation{[value = onClass]}
 // function myFun : annotations.FunctionTarget{[value = onMyFun]}
 // function myFun : annotations.NoTargetAnnotation{[value = onMyFun]}
+// getter of property prop : annotations.PropertyGetterTarget{[value = get:]}
 // parameter param1 : annotations.NoTargetAnnotation{[value = onParam1]}
 // parameter param1 : annotations.ValueParameterTarget{[value = onParam1]}
 // parameter param2 : annotations.NoTargetAnnotation{[value = onParam2]}
@@ -45,9 +48,8 @@
 // property prop : annotations.FieldTarget2{[value = field:]}
 // property prop : annotations.FieldTarget{[value = onProp]}
 // property prop : annotations.NoTargetAnnotation{[value = onProp]}
-// property prop : annotations.PropertyGetterTarget{[value = get:]}
-// property prop : annotations.PropertySetterTarget{[value = set:]}
 // property prop : annotations.PropertyTarget{[value = onProp]}
+// setter of property prop : annotations.PropertySetterTarget{[value = set:]}
 // main.DataClass ->
 // class main.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class main.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
@@ -66,12 +68,12 @@
 // lib.DataClass ->
 // class lib.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class lib.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
+// getter of property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
 // parameter constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // property constructorParam : annotations.FieldTarget2{[value = field:]}
 // property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
-// property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
-// property constructorParam : annotations.PropertySetterTarget{[value = set:]}
 // property constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
+// setter of property constructorParam : annotations.PropertySetterTarget{[value = set:]}
 // END
 // MODULE: annotations
 // FILE: Annotations.kt
