@@ -99,6 +99,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun apply(project: Project) {
         project.extensions.create("ksp", KspExtension::class.java)
+        // Always include the main `ksp` configuration.
+        // TODO: multiplatform
+        project.configurations.create(KSP_MAIN_CONFIGURATION_NAME)
         project.plugins.withType(KotlinPluginWrapper::class.java) {
             // kotlin extension has the compilation target that we need to look for to create configurations
             decorateKotlinExtension(project)
@@ -161,6 +164,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             it.kspConfiguration(project)?.let {
                 kspConfigurations.add(it)
             }
+        }
+        // Always include the main `ksp` configuration.
+        // TODO: multiplatform
+        project.configurations.findByName(KSP_MAIN_CONFIGURATION_NAME)?.let {
+            kspConfigurations.add(it)
         }
         val nonEmptyKspConfigurations = kspConfigurations.filter { it.dependencies.isNotEmpty() }
         if (nonEmptyKspConfigurations.isEmpty()) {
