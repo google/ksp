@@ -22,10 +22,10 @@
 // <null>
 // <null>
 // <init>,<init>,<init>
-// readOnly.get(): CLASS annotations from property: GetAnno
-// readOnly.getter.owner: readOnly: CLASS
+// readOnly.get(): SYNTHETIC annotations from property: GetAnno
+// readOnly.getter.owner: readOnly: KOTLIN
 // readWrite.get(): KOTLIN
-// readWrite.set(): CLASS annotations from property: SetAnno
+// readWrite.set(): SYNTHETIC annotations from property: SetAnno
 // <init>
 // comp1.get(): SYNTHETIC
 // comp2.get(): SYNTHETIC

@@ -20,22 +20,29 @@ package com.google.devtools.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.findPsi
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import org.jetbrains.kotlin.psi.KtParameter
-import org.jetbrains.kotlin.psi.KtProperty
+import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
 
 abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) : KSPropertyAccessor {
-    override val origin: Origin = Origin.CLASS
+    override val origin: Origin
+        get() = when(receiver.origin) {
+            // if receiver is kotlin source, that means we are a synthetic where developer
+            // didn't declare an explicit accessor so we used the descriptor instead
+            Origin.KOTLIN -> Origin.SYNTHETIC
+            else -> Origin.CLASS
+        }
 
     override val receiver: KSPropertyDeclaration by lazy {
-        KSPropertyDeclarationDescriptorImpl.getCached(descriptor.correspondingProperty)
+        descriptor.correspondingProperty.toKSPropertyDeclaration()
     }
 
-    override val location: Location = NonExistLocation
+    override val location: Location
+        get() {
+            // if receiver is kotlin source, that means `this` is synthetic hence we want the property's location
+            // Otherwise, receiver is also from a .class file where the location will be NoLocation
+            return receiver.location
+        }
 
     override val annotations: List<KSAnnotation> by lazy {
         descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
