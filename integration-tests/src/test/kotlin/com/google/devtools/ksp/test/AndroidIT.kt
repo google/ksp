@@ -11,7 +11,7 @@ import java.util.jar.*
 class AndroidIT {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android")
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground")
 
     @Test
     fun testPlaygroundAndroid() {
