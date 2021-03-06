@@ -789,3 +789,11 @@ private inline fun ClassDescriptor.findEnclosedDescriptor(
         kindFilter.accepts(it) && filter(it)
     }
 }
+
+internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Collection<KSAnnotation> {
+    return when (this) {
+        is KSPropertyGetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.GET } }
+        is KSPropertySetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SET } }
+        else -> emptyList()
+    } ?: emptyList()
+}

@@ -29,6 +29,7 @@ import com.google.devtools.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStubbedPsiUtil
@@ -39,6 +40,10 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     KSExpectActual by KSExpectActualImpl(ktParameter) {
     companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
+    }
+
+    override val annotations: List<KSAnnotation> by lazy {
+        ktParameter.filterAccessorAnnotation().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {

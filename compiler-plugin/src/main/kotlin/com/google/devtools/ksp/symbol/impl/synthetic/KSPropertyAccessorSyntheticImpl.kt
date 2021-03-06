@@ -18,10 +18,13 @@
 
 package com.google.devtools.ksp.symbol.impl.synthetic
 
+import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 
 abstract class KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration: KSPropertyDeclaration) : KSPropertyAccessor {
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: List<KSAnnotation> by lazy {
+        this.findAnnotationFromUseSiteTarget().toList()
+    }
 
     override val location: Location by lazy {
         ksPropertyDeclaration.location

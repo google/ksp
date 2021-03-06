@@ -193,14 +193,6 @@ fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
     }
 }
 
-fun KSAnnotated.findAnnotationFromUseSiteTarget(): Collection<KSAnnotation> {
-    return when (this) {
-        is KSPropertyGetter -> this.receiver.annotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.GET }
-        is KSPropertySetter -> this.receiver.annotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SET }
-        else -> emptyList()
-    }
-}
-
 
 // TODO: cross module visibility is not handled
 fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {

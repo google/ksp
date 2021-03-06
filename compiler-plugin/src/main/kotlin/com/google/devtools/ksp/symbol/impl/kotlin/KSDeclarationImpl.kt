@@ -67,4 +67,8 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
     override fun toString(): String {
         return this.simpleName.asString()
     }
+
+    internal val originalAnnotations: List<KSAnnotation> by lazy {
+        ktDeclaration.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+    }
 }
