@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
@@ -29,7 +30,7 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
         KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
     }
     override val annotations: List<KSAnnotation> by lazy {
-        ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+        ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val location: Location by lazy {
