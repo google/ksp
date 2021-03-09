@@ -17,12 +17,14 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
-import com.google.devtools.ksp.gradle.processor.TestSymbolProcessor
+import com.google.devtools.ksp.gradle.processor.TestSymbolProcessorProvider
 import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.module
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import com.google.devtools.ksp.gradle.testing.PluginDeclaration
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.junit.Rule
@@ -247,7 +249,7 @@ class SourceSetConfigurationsTest {
             testRule.appModule.addTestSource("InTest.kt", testSource)
         }
 
-        class Processor : TestSymbolProcessor() {
+        class Processor(val codeGenerator: CodeGenerator) : SymbolProcessor {
             override fun process(resolver: Resolver): List<KSAnnotated> {
                 resolver.getSymbolsWithAnnotation(Suppress::class.qualifiedName!!)
                     .filterIsInstance<KSClassDeclaration>()
@@ -265,7 +267,10 @@ class SourceSetConfigurationsTest {
                 return emptyList()
             }
         }
-        testRule.addProcessor(Processor::class)
+
+        class Provider : TestSymbolProcessorProvider({ _, _, codeGenerator, _ -> Processor(codeGenerator) })
+
+        testRule.addProvider(Provider::class)
         if (useAndroidTest) {
             testRule.appModule.dependencies.add(
                 module("kspAndroidTest", testRule.processorModule)

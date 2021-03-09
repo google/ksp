@@ -21,25 +21,18 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
-abstract class TestSymbolProcessor : SymbolProcessor, SymbolProcessorProvider {
-    lateinit var options: Map<String, String>
-        private set
-    lateinit var kotlinVersion: KotlinVersion
-        private set
-    lateinit var codeGenerator: CodeGenerator
-        private set
-    lateinit var logger: KSPLogger
-        private set
-
+abstract class TestSymbolProcessorProvider(
+    private val builder: (
+        options: Map<String, String>,
+        version: KotlinVersion,
+        codeGenerator: CodeGenerator,
+        logger: KSPLogger
+    ) -> SymbolProcessor
+) : SymbolProcessorProvider {
     override fun create(
         options: Map<String, String>,
         kotlinVersion: KotlinVersion,
         codeGenerator: CodeGenerator,
         logger: KSPLogger
-    ): SymbolProcessor = this.apply {
-        this.options = options
-        this.kotlinVersion = kotlinVersion
-        this.codeGenerator = codeGenerator
-        this.logger = logger
-    }
+    ): SymbolProcessor = builder(options, kotlinVersion, codeGenerator, logger)
 }
