@@ -16,7 +16,7 @@
  */
 package com.google.devtools.ksp.gradle.testing
 
-import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestWatcher
@@ -64,15 +64,15 @@ class KspIntegrationTestRule(
     }
 
     /**
-     * Adds the given [SymbolProcessor] to the list of processors in the processor module.
-     * These processors will run on the test application.
+     * Adds the given [SymbolProcessorProvider] to the list of providers in the processor module.
+     * The processors built with these providers will run on the test application.
      *
      * The passed argument must be a class with a name (e.g. not inline) as it will be added to
      * the classpath of the processor and will be re-loaded when the test runs. For this reason,
      * these classes cannot access to the rest of the test instance.
      */
-    fun addProcessor(processor: KClass<out SymbolProcessor>) {
-        val qName = checkNotNull(processor.java.name) {
+    fun addProvider(provider: KClass<out SymbolProcessorProvider>) {
+        val qName = checkNotNull(provider.java.name) {
             "Must provide a class that can be loaded by qualified name"
         }
         testProject.processorModule.kspServicesFile.appendText("$qName\n")
