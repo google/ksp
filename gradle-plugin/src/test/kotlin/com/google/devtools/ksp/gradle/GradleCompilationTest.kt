@@ -17,11 +17,14 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
+import com.google.devtools.ksp.gradle.processor.TestSymbolProcessorProvider
 import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.module
-import com.google.devtools.ksp.gradle.processor.TestSymbolProcessor
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import org.junit.Rule
 import org.junit.Test
@@ -49,13 +52,16 @@ class GradleCompilationTest {
             }
             """.trimIndent()
         )
-        class ErrorReporting : TestSymbolProcessor() {
+        class ErrorReporting(private val logger: KSPLogger) : SymbolProcessor {
             override fun process(resolver: Resolver): List<KSAnnotated> {
                 logger.error("my processor failure")
                 return emptyList()
             }
         }
-        testRule.addProcessor(ErrorReporting::class)
+
+        class Provider : TestSymbolProcessorProvider({ _, _, _, logger -> ErrorReporting(logger) })
+
+        testRule.addProvider(Provider::class)
         val failure = testRule.runner()
             .withArguments("app:assemble")
             .buildAndFail()
@@ -84,7 +90,7 @@ class GradleCompilationTest {
             }
             """.trimIndent()
         )
-        class MyProcessor : TestSymbolProcessor() {
+        class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
             var count = 0
             override fun process(resolver: Resolver): List<KSAnnotated> {
                 if(count == 0) {
@@ -98,7 +104,10 @@ class GradleCompilationTest {
                 return emptyList()
             }
         }
-        testRule.addProcessor(MyProcessor::class)
+
+        class Provider : TestSymbolProcessorProvider({ _, _, codeGenerator, _ -> MyProcessor(codeGenerator) })
+
+        testRule.addProvider(Provider::class)
 
         testRule.runner()
             .withDebug(true)
