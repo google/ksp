@@ -48,5 +48,7 @@ class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProje
         }
     }
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: List<KSAnnotation> by lazy {
+        descriptor.type.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
+    }
 }
