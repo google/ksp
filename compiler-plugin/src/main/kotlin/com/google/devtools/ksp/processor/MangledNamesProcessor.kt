@@ -13,11 +13,11 @@ class MangledNamesProcessor : AbstractTestProcessor() {
     override fun toResult() = results
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val mangleSourceNames = mutableMapOf<String, String>()
+        val mangleSourceNames = mutableMapOf<String, String?>()
         resolver.getAllFiles().forEach {
             it.accept(MangledNamesVisitor(resolver), mangleSourceNames)
         }
-        val mangledDependencyNames = LinkedHashMap<String, String>()
+        val mangledDependencyNames = LinkedHashMap<String, String?>()
         // also collect results from library dependencies to ensure we resolve module name property
         resolver.getClassDeclarationByName("libPackage.Foo")?.accept(
             MangledNamesVisitor(resolver), mangledDependencyNames
@@ -43,11 +43,11 @@ class MangledNamesProcessor : AbstractTestProcessor() {
 
     private class MangledNamesVisitor(
         val resolver: Resolver
-    ) : KSTopDownVisitor<MutableMap<String, String>, Unit>() {
-        override fun defaultHandler(node: KSNode, data: MutableMap<String, String>) {
+    ) : KSTopDownVisitor<MutableMap<String, String?>, Unit>() {
+        override fun defaultHandler(node: KSNode, data: MutableMap<String, String?>) {
         }
 
-        override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableMap<String, String>) {
+        override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableMap<String, String?>) {
             if (classDeclaration.modifiers.contains(Modifier.INLINE)) {
                 // do not visit inline classes
                 return
@@ -57,18 +57,18 @@ class MangledNamesProcessor : AbstractTestProcessor() {
             super.visitClassDeclaration(classDeclaration, data)
         }
 
-        override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: MutableMap<String, String>) {
+        override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: MutableMap<String, String?>) {
             if (function.simpleName.asString() in IGNORED_FUNCTIONS) return
             super.visitFunctionDeclaration(function, data)
             data[function.simpleName.asString()] = resolver.getJvmName(function)
         }
 
-        override fun visitPropertyGetter(getter: KSPropertyGetter, data: MutableMap<String, String>) {
+        override fun visitPropertyGetter(getter: KSPropertyGetter, data: MutableMap<String, String?>) {
             super.visitPropertyGetter(getter, data)
             data["get-${getter.receiver.simpleName.asString()}"] = resolver.getJvmName(getter)
         }
 
-        override fun visitPropertySetter(setter: KSPropertySetter, data: MutableMap<String, String>) {
+        override fun visitPropertySetter(setter: KSPropertySetter, data: MutableMap<String, String?>) {
             super.visitPropertySetter(setter, data)
             data["set-${setter.receiver.simpleName.asString()}"] = resolver.getJvmName(setter)
         }

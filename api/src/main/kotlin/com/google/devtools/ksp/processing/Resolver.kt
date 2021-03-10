@@ -82,9 +82,12 @@ interface Resolver {
 
     /**
      * map a declaration to jvm signature.
+     * This function might fail due to resolution error, in case of error, null is returned.
+     * Resolution error could be caused by bad code that could not be resolved by compiler, or KSP bugs.
+     * If you believe your code is correct, please file a bug at https://github.com/google/ksp/issues/new
      */
     @KspExperimental
-    fun mapToJvmSignature(declaration: KSDeclaration): String
+    fun mapToJvmSignature(declaration: KSDeclaration): String?
 
     /**
      * @param overrider the candidate overriding declaration being checked.
@@ -154,6 +157,9 @@ interface Resolver {
 
     /**
      * Returns the jvm name of the given function.
+     * This function might fail due to resolution error, in case of error, null is returned.
+     * Resolution error could be caused by bad code that could not be resolved by compiler, or KSP bugs.
+     * If you believe your code is correct, please file a bug at https://github.com/google/ksp/issues/new
      *
      * The jvm name of a function might depend on the Kotlin Compiler version hence it is not guaranteed to be
      * compatible between different compiler versions except for the rules outlined in the Java interoperability
@@ -170,10 +176,13 @@ interface Resolver {
      * kotlin version used in the project.
      */
     @KspExperimental
-    fun getJvmName(declaration: KSFunctionDeclaration): String
+    fun getJvmName(declaration: KSFunctionDeclaration): String?
 
     /**
      * Returns the jvm name of the given property accessor.
+     * This function might fail due to resolution error, in case of error, null is returned.
+     * Resolution error could be caused by bad code that could not be resolved by compiler, or KSP bugs.
+     * If you believe your code is correct, please file a bug at https://github.com/google/ksp/issues/new
      *
      * The jvm name of an accessor might depend on the Kotlin Compiler version hence it is not guaranteed to be
      * compatible between different compiler versions except for the rules outlined in the Java interoperability
@@ -193,5 +202,5 @@ interface Resolver {
      * see: https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties
      */
     @KspExperimental
-    fun getJvmName(accessor: KSPropertyAccessor): String
+    fun getJvmName(accessor: KSPropertyAccessor): String?
 }
