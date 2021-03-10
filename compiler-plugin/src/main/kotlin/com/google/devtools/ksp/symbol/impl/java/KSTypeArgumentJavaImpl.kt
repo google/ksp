@@ -51,7 +51,7 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
             when {
                 psi.isExtends -> Variance.COVARIANT
                 psi.isSuper -> Variance.CONTRAVARIANT
-                psi.bound == null -> Variance.COVARIANT
+                psi.bound == null -> Variance.STAR
                 else -> Variance.INVARIANT
             }
         } else {

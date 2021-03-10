@@ -55,11 +55,8 @@ class KSTypeImpl private constructor(
         }
     }
 
-    /**
-     * Even though that [KSTypeArgumentDescriptorImpl] is no heavier than [ksTypeArguments], the former doesn't carry [KSAnnotation].
-     */
     override val arguments: List<KSTypeArgument> by lazy {
-        ksTypeArguments ?: kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it) }
+        kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it) }
     }
 
     override fun isAssignableFrom(that: KSType): Boolean {

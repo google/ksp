@@ -22,7 +22,7 @@
 // C<*kotlin.Any?>
 // kotlin.Int
 // kotlin.String?
-// kotlin.collections.MutableSet<out kotlin.Any?>?
+// kotlin.collections.MutableSet<*kotlin.Any?>?
 // kotlin.Unit
 // kotlin.IntArray?
 // C.T?

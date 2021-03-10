@@ -187,6 +187,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/multipleModules.kt");
     }
 
+    @TestMetadata(("nestedClassType.kt"))
+    public void testNestedClassType() throws Exception {
+        runTest("testData/api/nestedClassType.kt");
+    }
+
     @TestMetadata(("overridee.kt"))
     public void testOverridee() throws Exception {
         runTest("testData/api/overridee.kt");
