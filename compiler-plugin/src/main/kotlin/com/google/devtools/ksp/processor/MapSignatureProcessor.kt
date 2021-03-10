@@ -36,7 +36,7 @@ class MapSignatureProcessor : AbstractTestProcessor() {
             .map { className ->
                 resolver.getClassDeclarationByName(className)!!
             }.forEach { subject ->
-                result.add(resolver.mapToJvmSignature(subject))
+                result.add(resolver.mapToJvmSignature(subject)!!)
                 subject.declarations.map {
                     result.add(it.simpleName.asString() + ": " + resolver.mapToJvmSignature(it))
                 }

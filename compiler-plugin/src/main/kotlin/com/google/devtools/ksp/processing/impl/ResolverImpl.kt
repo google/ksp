@@ -257,14 +257,14 @@ class ResolverImpl(
     }
 
     @KspExperimental
-    override fun mapToJvmSignature(declaration: KSDeclaration): String {
+    override fun mapToJvmSignature(declaration: KSDeclaration): String? {
         return when (declaration) {
-            is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor } ?: ""
-            is KSFunctionDeclaration -> resolveFunctionDeclaration(declaration)?.let { typeMapper.mapAsmMethod(it).descriptor } ?: ""
+            is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor }
+            is KSFunctionDeclaration -> resolveFunctionDeclaration(declaration)?.let { typeMapper.mapAsmMethod(it).descriptor }
             is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)?.let {
                 typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
-            } ?: ""
-            else -> ""
+            }
+            else -> null
         }
     }
 
@@ -558,23 +558,23 @@ class ResolverImpl(
     }
 
     @KspExperimental
-    override fun getJvmName(accessor: KSPropertyAccessor) :String {
+    override fun getJvmName(accessor: KSPropertyAccessor) :String? {
         val descriptor = resolvePropertyAccessorDeclaration(accessor)
 
         return descriptor?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
             typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
-        } ?: error("Cannot find descriptor for $accessor")
+        }
     }
 
     @KspExperimental
-    override fun getJvmName(declaration: KSFunctionDeclaration) :String {
+    override fun getJvmName(declaration: KSFunctionDeclaration) :String? {
         // function names might be mangled if they receive inline class parameters or they are internal
         val descriptor = resolveFunctionDeclaration(declaration)
         return descriptor?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
             typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
-        } ?: error("Cannot find descriptor for $declaration")
+        }
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
