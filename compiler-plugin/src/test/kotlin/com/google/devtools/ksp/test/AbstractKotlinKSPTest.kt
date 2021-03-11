@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.incremental.LookupTrackerImpl
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.test.*
+import org.jetbrains.kotlin.test.util.KtTestUtil
 import java.io.File
 
 abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspTestFile>() {
@@ -43,7 +44,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         val EXPECTED_RESULTS = "// EXPECTED:"
     }
     private val testTmpDir by lazy {
-        KotlinTestUtils.tmpDir("test")
+        KtTestUtil.tmpDir("test")
     }
 
     override fun doMultiFileTest(wholeFile: File, files: List<KspTestFile>) {
@@ -111,7 +112,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
             ConfigurationKind.NO_KOTLIN_REFLECT,
             TestJdkKind.FULL_JDK_9,
             TargetBackend.JVM,
-            listOf(KotlinTestUtils.getAnnotationsJar()) + dependencies,
+            listOf(KtTestUtil.getAnnotationsJar()) + dependencies,
             listOf(module.javaSrcDir),
             emptyList()
         )
@@ -148,7 +149,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
             if (hasJavaSources) {
                 // need to compile java sources as well
                 val javaOutDir = module.rootDir.resolve("javaOut").apply { mkdirs() }
-                val classpath = (dependencies + KotlinTestUtils.getAnnotationsJar() + module.outDir)
+                val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
                     .joinToString(File.pathSeparator) { it.absolutePath }
                 val options = listOf(
                     "-classpath", classpath,
