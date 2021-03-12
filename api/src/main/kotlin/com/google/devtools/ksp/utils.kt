@@ -21,6 +21,7 @@ package com.google.devtools.ksp
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSValidateVisitor
+import kotlin.jvm.Throws
 
 /**
  * Try to resolve the [KSClassDeclaration] for a class using its fully qualified name.

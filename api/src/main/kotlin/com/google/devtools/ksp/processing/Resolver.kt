@@ -203,4 +203,12 @@ interface Resolver {
      */
     @KspExperimental
     fun getJvmName(accessor: KSPropertyAccessor): String?
+
+    /**
+     * Returns checked exceptions declared in a function's header.
+     * @return A sequence of [KSType] declared in `throws` statement for a Java method or in @Throws annotation for a Kotlin function.
+     * Checked exceptions from class files are not supported yet, an empty sequence will be returned instead.
+     */
+    @KspExperimental
+    fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType>
 }
