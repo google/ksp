@@ -247,6 +247,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/signatureMapper.kt");
     }
 
+    @TestMetadata("throwList.kt")
+    public void testThrowList() throws Exception {
+        runTest("testData/api/throwList.kt");
+    }
+
     @TestMetadata("typeAlias.kt")
     public void testTypeAlias() throws Exception {
         runTest("testData/api/typeAlias.kt");

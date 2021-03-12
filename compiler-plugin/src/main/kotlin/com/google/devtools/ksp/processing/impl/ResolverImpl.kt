@@ -80,7 +80,6 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
-import java.io.File
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -574,6 +573,28 @@ class ResolverImpl(
         return descriptor?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
             typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        }
+    }
+
+    @KspExperimental
+    override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
+        return when (function.origin) {
+            Origin.JAVA -> {
+                val psi = (function as KSFunctionDeclarationJavaImpl).psi
+                psi.throwsList.referencedTypes.map { getKSTypeCached(resolveJavaType(it)) }.asSequence()
+            }
+            Origin.KOTLIN -> {
+                function.annotations
+                        .singleOrNull {
+                            it.shortName.asString() == "Throws" && it.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.Throws"
+                        }
+                        ?.arguments
+                        ?.singleOrNull()
+                        ?.let { (it.value as? ArrayList<KSType>) }
+                        ?.asSequence()
+                        ?: emptySequence()
+            }
+            else -> emptySequence()
         }
     }
 
