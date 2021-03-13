@@ -81,6 +81,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     private val javaSerializableType = ResolverImpl.instance.javaSerializableType
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
+        if (javaSerializableType == null)
+            return@lazy emptySequence()
+
         descriptor.defaultType.constructor.supertypes.asSequence().map {
             KSTypeReferenceDescriptorImpl.getCached(
                 if (it === mockSerializableType) javaSerializableType else it,
