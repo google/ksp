@@ -32,7 +32,7 @@ import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
-import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
+import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 import java.io.File
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.incremental.LookupTrackerImpl

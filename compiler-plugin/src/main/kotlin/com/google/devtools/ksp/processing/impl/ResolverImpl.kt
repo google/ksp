@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.container.tryGetService
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
@@ -131,10 +132,11 @@ class ResolverImpl(
         constantExpressionEvaluator = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
-        val javaResolverComponents = componentProvider.get<JavaResolverComponents>()
-        lazyJavaResolverContext = LazyJavaResolverContext(javaResolverComponents, TypeParameterResolver.EMPTY) { null }
-        javaTypeResolver = lazyJavaResolverContext.typeResolver
-        moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
+        val javaResolverComponents = componentProvider.tryGetService(JavaResolverComponents::class.java)?.let {
+            lazyJavaResolverContext = LazyJavaResolverContext(it, TypeParameterResolver.EMPTY) { null }
+            javaTypeResolver = lazyJavaResolverContext.typeResolver
+            moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
+        }
         instance = this
 
         nameToKSMap = mutableMapOf()
@@ -801,11 +803,11 @@ class ResolverImpl(
         }
     }
 
-    internal val mockSerializableType = module.builtIns.numberType.supertypes().single {
+    internal val mockSerializableType = module.builtIns.numberType.supertypes().singleOrNull {
         it.constructor.declarationDescriptor?.name?.asString() == "Serializable"
     }
 
-    internal val javaSerializableType = module.resolveClassByFqName(FqName("java.io.Serializable"), NoLookupLocation.WHEN_FIND_BY_FQNAME)!!.defaultType
+    internal val javaSerializableType = module.resolveClassByFqName(FqName("java.io.Serializable"), NoLookupLocation.WHEN_FIND_BY_FQNAME)?.defaultType
 
     private fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
 
