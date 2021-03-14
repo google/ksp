@@ -1,19 +1,21 @@
+import com.google.devtools.ksp.configureKtlint
+import com.google.devtools.ksp.configureKtlintApplyToIdea
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-plugins {
-    kotlin("jvm") version "1.4.30" apply false
-}
 
 if (!extra.has("kspVersion")) {
     val kotlinBaseVersion: String by project
     val today = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)
     extra.set("kspVersion", "$kotlinBaseVersion-dev-experimental-$today")
 }
-
+repositories {
+    mavenCentral()
+}
+project.configureKtlintApplyToIdea()
 subprojects {
     group = "com.google.devtools.ksp"
     version = rootProject.extra.get("kspVersion") as String
+    this.configureKtlint()
     repositories {
         mavenCentral()
         google()

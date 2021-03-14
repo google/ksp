@@ -3,6 +3,14 @@ pluginManagement {
         gradlePluginPortal()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
+    val kotlinBaseVersion: String by settings
+    resolutionStrategy {
+        eachPlugin {
+            if ( requested.id.id == "org.jetbrains.kotlin.jvm" ) {
+                useModule( "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion" )
+            }
+        }
+    }
 }
 
 include("api")
