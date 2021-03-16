@@ -24,16 +24,13 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.*
-import com.google.devtools.ksp.symbol.impl.findClosestOverridee
+import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
-import com.google.devtools.ksp.symbol.impl.resolveContainingClass
-import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
-import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
-import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
-import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -815,6 +812,22 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Collection<KSAnnotat
     return when (this) {
         is KSPropertyGetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.GET } }
         is KSPropertySetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SET } }
+        is KSValueParameter-> {
+            var parent = when (this) {
+                is KSValueParameterSyntheticImpl -> this.owner
+                is KSValueParameterImpl -> this.ktParameter.findParentAnnotated()
+                else -> null
+            }
+            val annotationsFromParents = mutableListOf<KSAnnotation>()
+            (parent as? KSPropertyAccessorImpl)?.let {
+                annotationsFromParents.addAll(it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })
+                parent = (parent as KSPropertyAccessorImpl).receiver
+            }
+            (parent as? KSPropertyDeclarationImpl)?.let {
+                annotationsFromParents.addAll(it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })
+            }
+            annotationsFromParents
+        }
         else -> emptyList()
     } ?: emptyList()
 }

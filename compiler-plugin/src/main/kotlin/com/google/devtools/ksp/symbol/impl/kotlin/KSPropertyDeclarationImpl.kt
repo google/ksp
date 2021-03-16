@@ -18,15 +18,11 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.isLocal
-import com.google.devtools.ksp.isPrivate
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.KSPropertyGetterDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
-import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
@@ -46,7 +42,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     override val annotations: List<KSAnnotation> by lazy {
-        ktProperty.filterAccessorAnnotation().map { KSAnnotationImpl.getCached(it) }
+        ktProperty.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
@@ -105,10 +101,11 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 }
 
-internal fun KtAnnotated.filterAccessorAnnotation(): List<KtAnnotationEntry> {
+internal fun KtAnnotated.filterUseSiteTargetAnnotations(): List<KtAnnotationEntry> {
     return this.annotationEntries.filter { property ->
         property.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
             it != AnnotationUseSiteTarget.PROPERTY_GETTER && it != AnnotationUseSiteTarget.PROPERTY_SETTER
+                && it != AnnotationUseSiteTarget.SETTER_PARAMETER
         } ?: true
     }
 }

@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSAnnotationDescriptorImpl
@@ -10,10 +11,10 @@ import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
 
-class KSValueParameterSyntheticImpl(resolve: () -> ValueParameterDescriptor?) : KSValueParameter {
+class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> ValueParameterDescriptor?) : KSValueParameter {
 
-    companion object : KSObjectCache<() -> ValueParameterDescriptor?, KSValueParameterSyntheticImpl>() {
-        fun getCached(resolve: () -> ValueParameterDescriptor?) = KSValueParameterSyntheticImpl.cache.getOrPut(resolve) { KSValueParameterSyntheticImpl(resolve) }
+    companion object : KSObjectCache<Pair<KSAnnotated?, () -> ValueParameterDescriptor?>, KSValueParameterSyntheticImpl>() {
+        fun getCached(owner: KSAnnotated? = null, resolve: () -> ValueParameterDescriptor?) = KSValueParameterSyntheticImpl.cache.getOrPut(Pair(owner, resolve)) { KSValueParameterSyntheticImpl(owner, resolve) }
     }
     private val descriptor by lazy {
         resolve() ?: throw IllegalStateException("Failed to resolve for synthetic value parameter, $ExceptionMessage")
@@ -40,7 +41,7 @@ class KSValueParameterSyntheticImpl(resolve: () -> ValueParameterDescriptor?) : 
     override val hasDefault: Boolean = descriptor.hasDefaultValue()
 
     override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
+        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val origin: Origin = Origin.SYNTHETIC

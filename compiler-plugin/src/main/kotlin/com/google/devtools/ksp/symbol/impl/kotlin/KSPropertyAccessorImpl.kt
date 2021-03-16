@@ -30,7 +30,7 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
         KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
     }
     override val annotations: List<KSAnnotation> by lazy {
-        ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
+        ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val location: Location by lazy {
@@ -45,5 +45,9 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyAccessor(this, data)
+    }
+
+    internal val originalAnnotations: List<KSAnnotation> by lazy {
+        ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }
 }

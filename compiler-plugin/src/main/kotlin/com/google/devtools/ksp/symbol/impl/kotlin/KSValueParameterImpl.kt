@@ -18,9 +18,9 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
@@ -40,7 +40,7 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
     }
 
     override val annotations: List<KSAnnotation> by lazy {
-        ktParameter.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+        ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val isCrossInline: Boolean = ktParameter.hasModifier(CROSSINLINE_KEYWORD)

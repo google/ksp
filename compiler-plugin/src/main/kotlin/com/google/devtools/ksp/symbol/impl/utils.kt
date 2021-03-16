@@ -170,7 +170,7 @@ fun FunctionDescriptor.toFunctionKSModifiers(): Set<Modifier> {
     return modifiers
 }
 
-fun PsiElement.findParentDeclaration(): KSDeclaration? {
+fun PsiElement.findParentAnnotated(): KSAnnotated? {
     var parent = this.parent
 
     while (parent != null && parent !is KtDeclaration && parent !is KtFile && parent !is PsiClass && parent !is PsiMethod && parent !is PsiJavaFile) {
@@ -184,8 +184,14 @@ fun PsiElement.findParentDeclaration(): KSDeclaration? {
         is PsiClass -> KSClassDeclarationJavaImpl.getCached(parent)
         is PsiJavaFile -> null
         is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(parent)
+        is KtProperty -> KSPropertyDeclarationImpl.getCached(parent)
+        is KtPropertyAccessor -> if(parent.isGetter) { KSPropertyGetterImpl.getCached(parent) } else { KSPropertySetterImpl.getCached(parent) }
         else -> null
     }
+}
+
+fun PsiElement.findParentDeclaration(): KSDeclaration? {
+    return this.findParentAnnotated() as? KSDeclaration
 }
 
 fun PsiElement.toLocation(): Location {
