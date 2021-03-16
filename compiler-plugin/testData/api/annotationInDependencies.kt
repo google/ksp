@@ -24,6 +24,8 @@
 // function myFun : annotations.FunctionTarget{[value = onMyFun]}
 // function myFun : annotations.NoTargetAnnotation{[value = onMyFun]}
 // getter of property prop : annotations.PropertyGetterTarget{[value = get:]}
+// parameter <set-?> : annotations.ValueParameterTarget{[value = onPropSetter]}
+// parameter <set-?> : annotations.ValueParameterTarget{[value = onProp]}
 // parameter param1 : annotations.NoTargetAnnotation{[value = onParam1]}
 // parameter param1 : annotations.ValueParameterTarget{[value = onParam1]}
 // parameter param2 : annotations.NoTargetAnnotation{[value = onParam2]}
@@ -52,11 +54,10 @@
 // class main.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class main.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
 // getter of property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
+// parameter <set-?> : annotations.ValueParameterTarget{[value = onConstructorParam]}
 // parameter constructorParam : annotations.FieldTarget2{[value = field:]}
 // parameter constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // parameter constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
-// parameter constructorParam : annotations.PropertyGetterTarget{[value = get:]}
-// parameter constructorParam : annotations.PropertySetterTarget{[value = set:]}
 // parameter constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.FieldTarget2{[value = field:]}
 // property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
@@ -157,7 +158,10 @@ class KotlinClass {
     @set:PropertySetterTarget("set:")
     @get:PropertyGetterTarget("get:")
     @field:FieldTarget2("field:")
+    @setparam:ValueParameterTarget("onProp")
     var prop : String = ""
+        @setparam:ValueParameterTarget("onPropSetter")
+        set
 
     @NoTargetAnnotation("onMyFun")
     @FunctionTarget("onMyFun")
@@ -181,6 +185,7 @@ class DataClass(
     @set:PropertySetterTarget("set:")
     @get:PropertyGetterTarget("get:")
     @field:FieldTarget2("field:")
+    @setparam:ValueParameterTarget("onConstructorParam")
     var constructorParam : String = ""
 )
 // FILE: main/JavaClassInModule2.java
