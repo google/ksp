@@ -25,12 +25,13 @@ import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.types.*
 
 class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType) : KSTypeReference {
-    companion object : KSObjectCache<KotlinType, KSTypeReferenceDescriptorImpl>() {
-        fun getCached(kotlinType: KotlinType) = cache.getOrPut(kotlinType) { KSTypeReferenceDescriptorImpl(kotlinType) }
+    companion object : KSObjectCache<IdKey<KotlinType>, KSTypeReferenceDescriptorImpl>() {
+        fun getCached(kotlinType: KotlinType) = cache.getOrPut(IdKey(kotlinType)) { KSTypeReferenceDescriptorImpl(kotlinType) }
     }
 
     override val origin = Origin.CLASS
