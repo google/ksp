@@ -147,7 +147,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kspVersion = javaClass.`package`.implementationVersion
         val kotlinVersion = project.getKotlinPluginVersion() ?: "N/A"
 
-        if (!kspVersion.startsWith(kotlinVersion))
+        // Check version and show warning by default.
+        val noVersionCheck = project.findProperty("ksp.version.check")?.toString()?.toBoolean() == false
+        if (!noVersionCheck && !kspVersion.startsWith(kotlinVersion))
             project.logger.warn("ksp-$kspVersion might not work with kotlin-$kotlinVersion properly. Please pick the same version of ksp and kotlin plugins.")
 
         return true
