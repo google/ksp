@@ -25,6 +25,7 @@ import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
@@ -280,9 +281,16 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
         }
 
 open class KspTask : KspTaskJ() {
+    @Internal
     lateinit var options: List<SubpluginOption>
+
+    @Internal
     lateinit var kotlinCompile: KotlinCompile
+
+    @Internal
     lateinit var destination: File
+
+    @Input
     var blockOtherCompilerPlugins: Boolean = false
 
     @Input
