@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
@@ -39,6 +40,10 @@ open class TypeParameterReferenceProcessor: AbstractTestProcessor() {
             val r = i.resolve()
             results.add("${r.declaration.qualifiedName?.asString()}: ${r.isMarkedNullable}")
         }
+        val libFoo = resolver.getClassDeclarationByName("LibFoo")!!
+        libFoo.declarations.filterIsInstance<KSPropertyDeclaration>().forEach { results.add(it.type.toString()) }
+        val javaLib = resolver.getClassDeclarationByName("JavaLib")!!
+        javaLib.declarations.filterIsInstance<KSFunctionDeclaration>().forEach { results.add(it.returnType.toString()) }
         return emptyList()
     }
 

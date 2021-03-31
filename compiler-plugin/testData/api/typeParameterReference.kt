@@ -18,17 +18,42 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: TypeParameterReferenceProcessor
 // EXPECTED:
+// LibFoo: false
+// kotlin.String: false
 // Foo.T1: true
 // Foo.bar.T2: false
 // foo.T3: false
+// T
+// List<T>
+// T
+// MutableList<(T..T?)>
 // END
 
+// MODULE: lib
+// FILE: lib.kt
+interface LibFoo<T> {
+    val v: T
+    val w: List<T>
+}
+
+// FILE: JavaLib.java
+import java.util.List;
+
+interface JavaLib<T> {
+    public T genericFun();
+    public List<T> list();
+}
+
+// MODULE: main(lib)
+// FILE: main.kt
 class Foo<T1> {
     inner class Bar {
         val v: T1?
     }
 
     fun <T2> bar(p: T2) = 1
+
+    val libFoo: LibFoo<String>
 }
 
 fun <T3> foo(p: T3) = 1

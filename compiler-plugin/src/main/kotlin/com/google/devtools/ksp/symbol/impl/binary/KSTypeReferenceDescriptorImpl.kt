@@ -39,18 +39,7 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
     override val location: Location = NonExistLocation
 
     override val element: KSReferenceElement by lazy {
-        when {
-            kotlinType.constructor.declarationDescriptor is ClassDescriptor -> KSClassifierReferenceDescriptorImpl.getCached(kotlinType)
-            kotlinType.constructor.declarationDescriptor is TypeParameterDescriptor -> {
-                val upperBound = TypeUtils.getTypeParameterDescriptorOrNull(kotlinType)!!.upperBounds.first()
-                when (upperBound) {
-                    is FlexibleType -> KSClassifierReferenceDescriptorImpl.getCached(upperBound.upperBound)
-                    is SimpleType -> KSClassifierReferenceDescriptorImpl.getCached(upperBound)
-                    else -> throw IllegalStateException("Unexpected upperbound type ${upperBound.javaClass}, $ExceptionMessage")
-                }
-            }
-            else -> throw IllegalStateException("Unexpected type: ${kotlinType.constructor.declarationDescriptor?.javaClass}, $ExceptionMessage")
-        }
+        KSClassifierReferenceDescriptorImpl.getCached(kotlinType)
     }
 
     override val annotations: List<KSAnnotation> by lazy {
