@@ -18,6 +18,8 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
@@ -44,7 +46,15 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        ktDeclaration.toKSModifiers()
+        val modifiers = ktDeclaration.toKSModifiers()
+        val hasJvmStatic = annotations.any {
+            it.annotationType.resolve().declaration == ResolverImpl.instance.jvmStaticClassDeclaration
+        }
+        if (hasJvmStatic) {
+            modifiers + Modifier.JAVA_STATIC
+        } else {
+            modifiers
+        }
     }
     override val containingFile: KSFile? by lazy {
         KSFileImpl.getCached(ktDeclaration.containingKtFile)

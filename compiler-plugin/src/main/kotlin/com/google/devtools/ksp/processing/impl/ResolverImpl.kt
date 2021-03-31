@@ -93,6 +93,12 @@ class ResolverImpl(
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
 
     /**
+     * Cached class declaration for JvmStatic annotation as it is repeatedly used for modifier resolution
+     */
+    val jvmStaticClassDeclaration : KSClassDeclaration? by lazy {
+        getClassDeclarationByName(JvmStatic::class.java.canonicalName)
+    }
+    /**
      * Checking as member of is an expensive operation, hence we cache result values in this map.
      */
     private val functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
