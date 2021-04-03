@@ -18,7 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.findActualType
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
@@ -47,8 +47,20 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
 
     override val modifiers: Set<Modifier> by lazy {
         val modifiers = ktDeclaration.toKSModifiers()
-        val hasJvmStatic = annotations.any {
-            it.annotationType.resolve().declaration == ResolverImpl.instance.jvmStaticClassDeclaration
+        val hasJvmStatic = when(ktDeclaration) {
+            is KtFunction, is KtProperty, is KtPropertyAccessor -> {
+                annotations.any {
+                    val declaration = it.annotationType.resolve().declaration.let { decl ->
+                        if (decl is KSTypeAlias) {
+                            decl.findActualType()
+                        } else {
+                            decl
+                        }
+                    }
+                    declaration == ResolverImpl.instance.jvmStaticClassDeclaration
+                }
+            }
+            else -> false
         }
         if (hasJvmStatic) {
             modifiers + Modifier.JAVA_STATIC

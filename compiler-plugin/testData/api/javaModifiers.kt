@@ -54,6 +54,8 @@
 // Companion.privateCompanionField: PRIVATE
 // Companion.jvmStaticCompanionMethod: JAVA_STATIC
 // Companion.jvmStaticCompanionField: JAVA_STATIC
+// Companion.customJvmStaticCompanionMethod: JAVA_STATIC
+// Companion.customJvmStaticCompanionField: JAVA_STATIC
 // Companion.<init>: FINAL PUBLIC
 // OuterKotlinClass.<init>: FINAL PUBLIC
 // DependencyOuterJavaClass: OPEN PUBLIC
@@ -73,9 +75,11 @@
 // DependencyOuterKotlinClass: OPEN PUBLIC
 // DependencyOuterKotlinClass.Companion: FINAL PUBLIC
 // Companion.companionField: FINAL PUBLIC
+// Companion.customJvmStaticCompanionField: JAVA_STATIC FINAL PUBLIC
 // Companion.jvmStaticCompanionField: JAVA_STATIC FINAL PUBLIC
 // Companion.privateCompanionField: FINAL PUBLIC
 // Companion.companionMethod: FINAL PUBLIC
+// Companion.customJvmStaticCompanionMethod: JAVA_STATIC FINAL PUBLIC
 // Companion.jvmStaticCompanionMethod: JAVA_STATIC FINAL PUBLIC
 // Companion.privateCompanionMethod: FINAL PRIVATE
 // Companion.<init>: FINAL PRIVATE
@@ -100,6 +104,7 @@ public class DependencyOuterJavaClass {
     private static String staticPrivateField;
 }
 // FILE: DependencyOuterKotlinClass.kt
+typealias DependencyCustomJvmStatic=JvmStatic
 open class DependencyOuterKotlinClass {
     inner class DependencyInnerKotlinClass
     open class DependencyNestedKotlinClass
@@ -112,6 +117,10 @@ open class DependencyOuterKotlinClass {
         fun jvmStaticCompanionMethod() {}
         @JvmStatic
         val jvmStaticCompanionField:String = ""
+        @DependencyCustomJvmStatic
+        fun customJvmStaticCompanionMethod() {}
+        @DependencyCustomJvmStatic
+        val customJvmStaticCompanionField:String = ""
     }
 }
 // MODULE: main(module1)
@@ -174,6 +183,7 @@ public class OuterJavaClass {
     private static String staticPrivateField;
 }
 // FILE: OuterKotlinClass.kt
+typealias CustomJvmStatic=JvmStatic
 open class OuterKotlinClass {
     inner class InnerKotlinClass
     open class NestedKotlinClass
@@ -186,5 +196,9 @@ open class OuterKotlinClass {
         fun jvmStaticCompanionMethod() {}
         @JvmStatic
         val jvmStaticCompanionField:String = ""
+        @CustomJvmStatic
+        fun customJvmStaticCompanionMethod() {}
+        @CustomJvmStatic
+        val customJvmStaticCompanionField:String = ""
     }
 }
