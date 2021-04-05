@@ -57,7 +57,7 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
                             decl
                         }
                     }
-                    declaration == ResolverImpl.instance.jvmStaticClassDeclaration
+                    declaration.qualifiedName?.asString() == JvmStatic::class.java.canonicalName
                 }
             }
             else -> false
