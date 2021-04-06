@@ -52,10 +52,10 @@
 // Companion.companionField:
 // Companion.privateCompanionMethod: PRIVATE
 // Companion.privateCompanionField: PRIVATE
-// Companion.jvmStaticCompanionMethod: JAVA_STATIC
-// Companion.jvmStaticCompanionField: JAVA_STATIC
-// Companion.customJvmStaticCompanionMethod: JAVA_STATIC
-// Companion.customJvmStaticCompanionField: JAVA_STATIC
+// Companion.jvmStaticCompanionMethod:
+// Companion.jvmStaticCompanionField:
+// Companion.customJvmStaticCompanionMethod:
+// Companion.customJvmStaticCompanionField:
 // Companion.<init>: FINAL PUBLIC
 // OuterKotlinClass.<init>: FINAL PUBLIC
 // DependencyOuterJavaClass: OPEN PUBLIC
@@ -75,12 +75,12 @@
 // DependencyOuterKotlinClass: OPEN PUBLIC
 // DependencyOuterKotlinClass.Companion: FINAL PUBLIC
 // Companion.companionField: FINAL PUBLIC
-// Companion.customJvmStaticCompanionField: JAVA_STATIC FINAL PUBLIC
-// Companion.jvmStaticCompanionField: JAVA_STATIC FINAL PUBLIC
+// Companion.customJvmStaticCompanionField: FINAL PUBLIC
+// Companion.jvmStaticCompanionField: FINAL PUBLIC
 // Companion.privateCompanionField: FINAL PUBLIC
 // Companion.companionMethod: FINAL PUBLIC
-// Companion.customJvmStaticCompanionMethod: JAVA_STATIC FINAL PUBLIC
-// Companion.jvmStaticCompanionMethod: JAVA_STATIC FINAL PUBLIC
+// Companion.customJvmStaticCompanionMethod: FINAL PUBLIC
+// Companion.jvmStaticCompanionMethod: FINAL PUBLIC
 // Companion.privateCompanionMethod: FINAL PRIVATE
 // Companion.<init>: FINAL PRIVATE
 // DependencyOuterKotlinClass.DependencyInnerKotlinClass: FINAL PUBLIC INNER
