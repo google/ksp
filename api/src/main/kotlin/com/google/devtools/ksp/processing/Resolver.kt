@@ -211,4 +211,13 @@ interface Resolver {
      */
     @KspExperimental
     fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType>
+
+    /**
+     * Returns declarations with the given package name.
+     * @param packageName the package name to look up.
+     * @return A sequence of [KSDeclaration] with matching package name.
+     * This will return declarations from both dependencies and source.
+     */
+    @KspExperimental
+    fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration>
 }

@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
@@ -593,6 +594,15 @@ class ResolverImpl(
             }
             else -> emptySequence()
         }
+    }
+
+    @KspExperimental
+    override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
+        module.getPackage(FqName(packageName)).memberScope
+        val res = (module as ModuleDescriptorImpl).packageFragmentProvider.packageFragments(FqName(packageName))
+            .flatMap{ it.getMemberScope().getContributedDescriptors() }
+            .mapNotNull { (it as? MemberDescriptor)?.toKSDeclaration() }
+        return res.asSequence()
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
