@@ -132,7 +132,9 @@ fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
     if (this.isExternal) {
         modifiers.add(Modifier.EXTERNAL)
     }
-    val isStatic = this.hasJvmStaticAnnotation() || (this.containingDeclaration as? ClassDescriptor)?.let { containingClass ->
+    // we are not checking for JVM_STATIC annotation here intentionally
+    // see: https://github.com/google/ksp/issues/378
+    val isStatic = (this.containingDeclaration as? ClassDescriptor)?.let { containingClass ->
         containingClass.staticScope.getContributedDescriptors(
             nameFilter = {
                 it == this.name
