@@ -38,8 +38,6 @@ class JavaModifierProcessor : AbstractTestProcessor() {
             .forEach {
                 it.superTypes.single().resolve().declaration.accept(ModifierVisitor(), Unit)
             }
-//        val symbol = resolver.getSymbolsWithAnnotation("Test").single() as KSClassDeclaration
-//        symbol.superTypes.single().resolve()!!.declaration.accept(ModifierVisitor(), Unit)
         return emptyList()
     }
 
@@ -68,7 +66,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
                 "${parent.simpleName.asString()}."
             } + simpleName.asString()
             val modifiersSignature = modifiers.map { it.toString() }.joinToString(" ")
-            return "$id: $modifiersSignature"
+            return "$id: $modifiersSignature".trim()
         }
     }
 }

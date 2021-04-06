@@ -34,6 +34,7 @@ import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSTypeArgumentJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.intellij.psi.impl.source.PsiClassImpl
+import org.jetbrains.kotlin.builtins.getFunctionalClassKind
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
@@ -48,6 +49,8 @@ import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
+import org.jetbrains.kotlin.resolve.annotations.hasJvmStaticAnnotation
+import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 
 private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -96,7 +99,7 @@ private val modifierMap = mapOf(
 
 fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
     val modifiers = mutableSetOf<Modifier>()
-    val modifierList = this.modifierList ?: return modifiers
+    val modifierList = this.modifierList ?: return emptySet()
     modifiers.addAll(
         modifierMap.entries
             .filter { modifierList.hasModifier(it.key) }
@@ -129,21 +132,41 @@ fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
     if (this.isExternal) {
         modifiers.add(Modifier.EXTERNAL)
     }
+    val isStatic = this.hasJvmStaticAnnotation() || (this.containingDeclaration as? ClassDescriptor)?.let { containingClass ->
+        containingClass.staticScope.getContributedDescriptors(
+            nameFilter = {
+                it == this.name
+            }
+        ).any {
+            it == this
+        }
+    } ?: false
+    if (isStatic) {
+        modifiers.add(Modifier.JAVA_STATIC)
+    }
     when (this.modality) {
         Modality.SEALED -> modifiers.add(Modifier.SEALED)
         Modality.FINAL -> modifiers.add(Modifier.FINAL)
-        Modality.OPEN -> modifiers.add(Modifier.OPEN)
+        Modality.OPEN -> {
+            if (!isStatic && this.visibility != DescriptorVisibilities.PRIVATE) {
+                // private methods still show up as OPEN
+                modifiers.add(Modifier.OPEN)
+            }
+        }
         Modality.ABSTRACT -> modifiers.add(Modifier.ABSTRACT)
     }
     when (this.visibility) {
         DescriptorVisibilities.PUBLIC -> modifiers.add(Modifier.PUBLIC)
-        DescriptorVisibilities.PROTECTED, JavaDescriptorVisibilities.PROTECTED_AND_PACKAGE -> modifiers.add(Modifier.PROTECTED)
+        DescriptorVisibilities.PROTECTED,
+        JavaDescriptorVisibilities.PROTECTED_AND_PACKAGE,
+        JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY -> modifiers.add(Modifier.PROTECTED)
         DescriptorVisibilities.PRIVATE -> modifiers.add(Modifier.PRIVATE)
         DescriptorVisibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
         // Since there is no modifier for package-private, use No modifier to tell if a symbol from binary is package private.
         JavaDescriptorVisibilities.PACKAGE_VISIBILITY, JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY -> Unit
         else -> throw IllegalStateException("unhandled visibility: ${this.visibility}")
     }
+
     return modifiers
 }
 
@@ -167,6 +190,7 @@ fun FunctionDescriptor.toFunctionKSModifiers(): Set<Modifier> {
     if (this.overriddenDescriptors.isNotEmpty()) {
         modifiers.add(Modifier.OVERRIDE)
     }
+
     return modifiers
 }
 
