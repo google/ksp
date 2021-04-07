@@ -13,6 +13,7 @@ words, a processor needs to associate an output with the sources of the correspo
 * `Resolver.getAllFiles`
 * `Resolver.getSymbolsWithAnnotation`
 * `Resolver.getClassDeclarationByName`
+* `Resolver.getDeclarationsFromPackage`
 
 Currently, only changes in Kotlin and Java sources are tracked. Changes to the classpath, namely to other modules
 or libraries, trigger a full re-processing of all sources.
