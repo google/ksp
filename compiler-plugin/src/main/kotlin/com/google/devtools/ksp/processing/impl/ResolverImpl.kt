@@ -598,11 +598,11 @@ class ResolverImpl(
 
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
-        module.getPackage(FqName(packageName)).memberScope
-        val res = (module as ModuleDescriptorImpl).packageFragmentProvider.packageFragments(FqName(packageName))
-            .flatMap{ it.getMemberScope().getContributedDescriptors() }
+        val noPackageFilter = DescriptorKindFilter.ALL.withoutKinds(DescriptorKindFilter.PACKAGES_MASK)
+        return module.getPackage(FqName(packageName))
+            .memberScope.getContributedDescriptors(noPackageFilter)
             .mapNotNull { (it as? MemberDescriptor)?.toKSDeclaration() }
-        return res.asSequence()
+            .asSequence()
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
