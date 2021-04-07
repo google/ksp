@@ -1,6 +1,6 @@
 # Quickstart
 
-[Here's](https://github.com/google/ksp/releases/download/1.4.32-1.0.0-alpha06/playground.zip) a sample processor that you can check out.
+[Here's](https://github.com/google/ksp/releases/download/1.4.32-1.0.0-alpha07/playground.zip) a sample processor that you can check out.
 
 ## Create a processor of your own
 
@@ -36,7 +36,7 @@
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.32-1.0.0-alpha06")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.32-1.0.0-alpha07")
   }
   ```
 
@@ -84,7 +84,7 @@
 
   ```
   plugins {
-      id("com.google.devtools.ksp") version "1.4.32-1.0.0-alpha06"
+      id("com.google.devtools.ksp") version "1.4.32-1.0.0-alpha07"
       kotlin("jvm") 
   }
 
@@ -120,7 +120,7 @@
 
   ```groovy
   plugins {
-    id "com.google.devtools.ksp" version "1.4.32-1.0.0-alpha06"
+    id "com.google.devtools.ksp" version "1.4.32-1.0.0-alpha07"
   }
   ```
   
