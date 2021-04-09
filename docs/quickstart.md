@@ -42,9 +42,8 @@
 
 * The processor you're writing needs to implement [`com.google.devtools.ksp.processing.SymbolProcessorProvider`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessorProvider.kt).
   Note the following:
-  * Your main logic should be in the `SymbolProcessor#process()` method.
-  * Capture any dependencies your processor needs (e.g. `CodeGenerator`) by passing
-    them to your implementation of `SymbolProcessor` through `SymbolProcessorProvider#create()`.
+  * Implement `SymbolProcessorProvider.create()` to create a `SymbolProcessor`. Dependencies your processor needs (e.g. `CodeGenerator`, processor options) are passed through the parameters of `SymbolProcessorProvider.create()`.
+  * Your main logic should be in the `SymbolProcessor.process()` method.
   * Use `resolver.getSymbolsWithAnnotation()` to get the symbols you want to process, given
     the fully-qualified name of an annotation.
   * A common use case for KSP is to implement a customized visitor (interface
