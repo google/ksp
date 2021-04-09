@@ -172,7 +172,7 @@ The table below includes a list of popular libraries on Android and their variou
 
 |Library|Status|Tracking issue for KSP|
 |---|---|---|
-|Room|In progress|[Link](https://issuetracker.google.com/160322705)|
+|Room|[Experimentally supported](https://developer.android.com/jetpack/androidx/releases/room#2.3.0-beta02)|   |
 |Moshi|[Experimentally supported](https://github.com/ZacSweers/MoshiX/tree/main/moshi-ksp)|   |
 |Auto Factory|Not yet supported|[Link](https://github.com/google/auto/issues/982)|
 |Dagger|Not yet supported|[Link](https://github.com/google/dagger/issues/2349)|
