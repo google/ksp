@@ -128,6 +128,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
             cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
             newFiles = dirtyFiles
+        } else {
+            incrementalContext.registerGeneratedFiles(newFiles)
         }
 
         // dirtyFiles cannot be reused because they are created in the old container.

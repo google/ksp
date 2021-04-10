@@ -192,7 +192,7 @@ class IncrementalContext(
         options.cachesDir.deleteRecursively()
     }
 
-    private fun collectDefinedSymbols(ksFiles: List<KSFile>) {
+    private fun collectDefinedSymbols(ksFiles: Collection<KSFile>) {
         ksFiles.forEach { file ->
             file.accept(symbolCollector) {
                 updatedSymbols.putValue(file.relativeFile, it)
@@ -200,9 +200,9 @@ class IncrementalContext(
         }
     }
 
-    private fun updateLookupCache(dirtyFiles: Collection<File>) {
+    private fun updateLookupCache(dirtyFiles: Collection<File>, removedOutputs: List<File>) {
         if (lookupTracker is LookupTrackerImpl) {
-            lookupCache.update(lookupTracker, dirtyFiles, options.knownRemoved)
+            lookupCache.update(lookupTracker, dirtyFiles, options.knownRemoved + removedOutputs.map { it.absoluteFile })
             lookupCache.flush(false)
             lookupCache.close()
         }
@@ -383,15 +383,23 @@ class IncrementalContext(
         }
     }
 
-    private fun updateSourceToOutputs(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+    private fun updateSourceToOutputs(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>, removedOutputs: List<File>) {
         // Prune deleted sources in source-to-outputs map.
         removed.forEach {
             sourceToOutputsMap.remove(it)
         }
 
-        // Merge source-to-outputs map from those reprocessed.
-        dirtyFiles.forEach { source ->
-            sourceToOutputs[source]?.let { sourceToOutputsMap[source] = it} ?: sourceToOutputsMap.remove(source)
+        dirtyFiles.filterNot { sourceToOutputs.containsKey(it) }.forEach {
+            sourceToOutputsMap.remove(it)
+        }
+
+        removedOutputs.forEach {
+            sourceToOutputsMap.remove(it)
+        }
+
+        // Update source-to-outputs map from those reprocessed.
+        sourceToOutputs.forEach { src, outs ->
+            sourceToOutputsMap[src] = outs
         }
 
         logSourceToOutputs(outputs, sourceToOutputs)
@@ -444,10 +452,12 @@ class IncrementalContext(
         }
     }
 
-    // TODO: Don't do anything if processing failed.
     private fun updateCaches(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
-        updateSourceToOutputs(dirtyFiles, outputs, sourceToOutputs)
-        updateLookupCache(dirtyFiles)
+        // dirtyFiles may contain new files, which are unknown to sourceToOutputsMap.
+        val oldOutputs = dirtyFiles.flatMap { sourceToOutputsMap[it] ?: emptyList() }.distinct()
+        val removedOutputs = oldOutputs.filterNot { it in outputs }
+        updateSourceToOutputs(dirtyFiles, outputs, sourceToOutputs, removedOutputs)
+        updateLookupCache(dirtyFiles, removedOutputs)
 
         // Update symbolsMap
         if (!rebuild) {
@@ -460,6 +470,10 @@ class IncrementalContext(
             options.knownRemoved.forEach {
                 symbolsMap.remove(it)
             }
+
+            removedOutputs.forEach {
+                symbolsMap.remove(it.absoluteFile)
+            }
         } else {
             symbolsMap.clean()
             updatedSymbols.keySet().forEach {
@@ -468,6 +482,10 @@ class IncrementalContext(
         }
         symbolsMap.flush(false)
         symbolsMap.close()
+    }
+
+    fun registerGeneratedFiles(newFiles: Collection<KSFile>) {
+        collectDefinedSymbols(newFiles)
     }
 
     // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
