@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processing.impl.ResolverImpl
@@ -54,17 +55,25 @@ class KotlinSymbolProcessingExtension(
     logger: KSPLogger,
     val testProcessor: AbstractTestProcessor? = null
 ) : AbstractKotlinSymbolProcessingExtension(options, logger, testProcessor != null) {
-    override fun loadProcessors(): List<SymbolProcessor> {
+    override fun loadProviders(): List<SymbolProcessorProvider> {
         if (!initialized) {
-            processors = if (testProcessor != null) {
+            providers = if (testProcessor != null) {
                 listOf(testProcessor)
             } else {
                 val processingClasspath = options.processingClasspath
                 val classLoader = URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
-                ServiceLoaderLite.loadImplementations(SymbolProcessor::class.java, classLoader)
+
+                ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader)
+                    .plus(loadProvidersForLegacySymbolProcessors(classLoader))
             }
         }
-        return processors
+        return providers
+    }
+
+    private fun loadProvidersForLegacySymbolProcessors(classLoader: URLClassLoader): List<SymbolProcessorProvider> {
+        return ServiceLoaderLite
+            .loadImplementations(SymbolProcessor::class.java, classLoader)
+            .map(::LegacySymbolProcessorAdapter)
     }
 }
 
@@ -73,6 +82,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     var initialized = false
     var finished = false
     val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
+    lateinit var providers: List<SymbolProcessorProvider>
     lateinit var processors: List<SymbolProcessor>
     lateinit var newFiles: Collection<KSFile>
     lateinit var incrementalContext: IncrementalContext
@@ -123,7 +133,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         // dirtyFiles cannot be reused because they are created in the old container.
         val resolver = ResolverImpl(module, ksFiles.filterNot { it.filePath in cleanFilenames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext)
 
-        val processors = loadProcessors()
+        val providers = loadProviders()
         if (!initialized) {
             codeGenerator = CodeGeneratorImpl(
                     options.classOutputDir,
@@ -134,14 +144,15 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                     anyChangesWildcard,
                     ksFiles
             )
-            processors.forEach init@{ processor ->
+            processors = providers.mapNotNull { provider ->
+                var processor: SymbolProcessor? = null
                 handleException {
-                    processor.init(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
-                }?.let { return it }
+                    processor = provider.create(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
+                }?.let { analysisResult -> return@doAnalysis analysisResult }
                 if (logger.hasError()) {
-                    return@init
+                    return@mapNotNull null
                 }
-                deferredSymbols[processor] = mutableListOf()
+                processor?.also { deferredSymbols[it] = mutableListOf() }
             }
             initialized = true
         }
@@ -204,7 +215,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         }
     }
 
-    abstract fun loadProcessors(): List<SymbolProcessor>
+    abstract fun loadProviders(): List<SymbolProcessorProvider>
 
     private var annotationProcessingComplete = false
 

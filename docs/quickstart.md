@@ -40,17 +40,16 @@
   }
   ```
 
-* The processor you're writing needs to implement [`com.google.devtools.ksp.processing.SymbolProcessor`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessor.kt).
+* The processor you're writing needs to implement [`com.google.devtools.ksp.processing.SymbolProcessorProvider`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessorProvider.kt).
   Note the following:
-  * Your main logic should be in the `process()` method.
-  * Use `CodeGenerator` in the `init()` method for code generation. You can also save
-    the `CodeGenerator` instance for later use in either `process()` or `finish()`.
+  * Implement [`SymbolProcessorProvider.create()`](https://github.com/google/ksp/blob/master/api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessorProvider.kt) to create a `SymbolProcessor`. Dependencies your processor needs (e.g. `CodeGenerator`, processor options) are passed through the parameters of `SymbolProcessorProvider.create()`.
+  * Your main logic should be in the [`SymbolProcessor.process()`](https://github.com/google/ksp/blob/master/api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessor.kt) method.
   * Use `resolver.getSymbolsWithAnnotation()` to get the symbols you want to process, given
     the fully-qualified name of an annotation.
   * A common use case for KSP is to implement a customized visitor (interface
     `com.google.devtools.ksp.symbol.KSVisitor`) for operating on symbols. A simple template
     visitor is `com.google.devtools.ksp.symbol.KSDefaultVisitor`.
-  * For sample implementations of the `SymbolProcessor` interface, see the following files
+  * For sample implementations of the `SymbolProcessorProvider` and `SymbolProcessor` interfaces, see the following files
     in the sample project.
     * `src/main/kotlin/BuilderProcessor.kt`
     * `src/main/kotlin/TestProcessor.kt`
@@ -144,7 +143,7 @@
 </details>
 
 ## Pass Options to Processors
-Processor options in `SymbolProcessor.init(options: Map<String, String>, ...)` are specified in gradle build scripts:
+Processor options in `SymbolProcessorProvider.create(options: Map<String, String>, ...)` are specified in gradle build scripts:
 ```
   ksp {
     arg("option1", "value1")
