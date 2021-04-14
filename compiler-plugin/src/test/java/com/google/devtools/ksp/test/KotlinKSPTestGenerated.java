@@ -132,6 +132,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/getPackage.kt");
     }
 
+    @TestMetadata("getByName.kt")
+    public void testGetByName() throws Exception {
+        runTest("testData/api/getByName.kt");
+    }
+
     @TestMetadata("getSymbolsFromAnnotation.kt")
     public void testGetSymbolsFromAnnotation() throws Exception {
         runTest("testData/api/getSymbolsFromAnnotation.kt");

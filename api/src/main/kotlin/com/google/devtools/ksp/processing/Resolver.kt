@@ -57,6 +57,24 @@ interface Resolver {
     fun getClassDeclarationByName(name: KSName): KSClassDeclaration?
 
     /**
+     * Find functions in the compilation classpath for the given name.
+     *
+     * @param name fully qualified name of the function to be loaded; using '.' as separator.
+     * @param includeTopLevel a boolean value indicate if top level functions should be searched. Default false. Note if top level functions are included, this operation can be expensive.
+     * @return a Sequence of KSFunctionDeclaration
+     */
+    fun getFunctionDeclarationsByName(name: KSName, includeTopLevel: Boolean = false): Sequence<KSFunctionDeclaration>
+
+    /**
+     * Find a property in the compilation classpath for the given name.
+     *
+     * @param name fully qualified name of the property to be loaded; using '.' as separator.
+     * @param includeTopLevel a boolean value indicate if top level properties should be searched. Default false. Note if top level properties are included, this operation can be expensive.
+     * @return a KSPropertyDeclaration, or null if not found.
+     */
+    fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean = false): KSPropertyDeclaration?
+
+    /**
      * Compose a type argument out of a type reference and a variance
      *
      * @param typeRef a type reference to be used in type argument

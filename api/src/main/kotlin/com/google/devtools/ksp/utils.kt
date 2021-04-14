@@ -21,7 +21,6 @@ package com.google.devtools.ksp
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSValidateVisitor
-import kotlin.jvm.Throws
 
 /**
  * Try to resolve the [KSClassDeclaration] for a class using its fully qualified name.
@@ -44,6 +43,24 @@ inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration?
  * @return a KSClassDeclaration, or null if not found.
  */
 fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getClassDeclarationByName(getKSNameFromString(name))
+
+/**
+ * Find functions in the compilation classpath for the given name.
+ *
+ * @param name fully qualified name of the function to be loaded; using '.' as separator.
+ * @param includeTopLevel a boolean value indicate if top level functions should be searched. Default false. Note if top level functions are included, this operation can be expensive.
+ * @return a Sequence of KSFunctionDeclaration.
+ */
+fun Resolver.getFunctionDeclarationsByName(name: String, includeTopLevel: Boolean = false): Sequence<KSFunctionDeclaration> = getFunctionDeclarationsByName(getKSNameFromString(name), includeTopLevel)
+
+/**
+ * Find a property in the compilation classpath for the given name.
+ *
+ * @param name fully qualified name of the property to be loaded; using '.' as separator.
+ * @param includeTopLevel a boolean value indicate if top level properties should be searched. Default false. Note if top level properties are included, this operation can be expensive.
+ * @return a KSPropertyDeclaration, or null if not found.
+ */
+fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean = false): KSPropertyDeclaration? = getPropertyDeclarationByName(getKSNameFromString(name), includeTopLevel)
 
 /**
  * Get functions directly declared inside the class declaration.
