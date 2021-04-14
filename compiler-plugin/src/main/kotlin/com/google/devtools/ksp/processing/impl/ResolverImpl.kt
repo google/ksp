@@ -177,6 +177,37 @@ class ResolverImpl(
             }
     }
 
+    override fun getFunctionDeclarationsByName(name: KSName, includeTopLevel: Boolean): Sequence<KSFunctionDeclaration> {
+        val qualifier = name.getQualifier()
+        val functionName = name.getShortName()
+        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()?.filter{ it.simpleName.asString() == functionName }?.asSequence() ?: emptySequence()
+        return if (!includeTopLevel) nonTopLevelResult else {
+            nonTopLevelResult.plus(module.getPackage(FqName(qualifier))
+                .memberScope.getContributedDescriptors(DescriptorKindFilter.FUNCTIONS) { it.asString() == functionName }
+                .filterIsInstance<MemberDescriptor>().mapNotNull {  it.toKSDeclaration() as? KSFunctionDeclaration} )
+        }
+    }
+
+    override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
+        val qualifier = name.getQualifier()
+        val propertyName = name.getShortName()
+        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()?.singleOrNull { it.simpleName.asString() == propertyName }
+        return if (!includeTopLevel) nonTopLevelResult else {
+            val topLevelResult = (module.getPackage(FqName(qualifier))
+                .memberScope.getContributedDescriptors(DescriptorKindFilter.VARIABLES) { it.asString() == propertyName }
+                .also {
+                    if (it.size > 1) {
+                        throw IllegalStateException("Found multiple properties with same qualified name")
+                    }
+                }
+                .singleOrNull() as? MemberDescriptor)?.toKSDeclaration() as? KSPropertyDeclaration
+            if (topLevelResult != null && nonTopLevelResult != null) {
+                throw IllegalStateException("Found multiple properties with same qualified name")
+            }
+            nonTopLevelResult ?: topLevelResult
+        }
+    }
+
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): List<KSAnnotated> {
         fun checkAnnotation(annotated: KSAnnotated): Boolean {
             val ksName = KSNameImpl.getCached(annotationName)
