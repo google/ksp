@@ -462,12 +462,12 @@ class IncrementalContext(
         // Update symbolsMap
         if (!rebuild) {
             // Update symbol caches from modified files.
-            options.knownModified.forEach {
+            updatedSymbols.keySet().forEach {
                 symbolsMap.set(it, updatedSymbols[it].toSet())
             }
 
             // Remove symbol caches from removed files.
-            options.knownRemoved.forEach {
+            removed.forEach {
                 symbolsMap.remove(it)
             }
 
