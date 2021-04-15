@@ -23,12 +23,12 @@ class GeneratedSrcsIncIT {
 
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
-            Assert.assertEquals(outputs, expected)
+            Assert.assertEquals(expected, outputs)
         }
         File(project.root, "workload/src/main/kotlin/com/example/Baz.kt").appendText("\n\n")
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
-            Assert.assertEquals(outputs, expected)
+            Assert.assertEquals(expected, outputs)
         }
     }
 }
