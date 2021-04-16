@@ -353,7 +353,7 @@ class IncrementalContext(
     }
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
-    fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> {
+    fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
         if (!isIncremental) {
             cleanIncrementalCache()
             return ksFiles
@@ -484,12 +484,27 @@ class IncrementalContext(
         symbolsMap.close()
     }
 
-    fun registerGeneratedFiles(newFiles: Collection<KSFile>) {
+    fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
         collectDefinedSymbols(newFiles)
     }
 
+    private inline fun <T> closeFilesOnException(f: () -> T): T {
+        try {
+            return f()
+        } catch (e: Exception) {
+            symbolsMap.close()
+            lookupCache.close()
+            sourceToOutputsMap.close()
+            throw e
+        }
+    }
+
     // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
-    fun updateCachesAndOutputs(dirtyFiles: Collection<KSFile>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+    fun updateCachesAndOutputs(
+        dirtyFiles: Collection<KSFile>,
+        outputs: Set<File>,
+        sourceToOutputs: Map<File, Set<File>>
+    ) = closeFilesOnException {
         if (!isIncremental)
             return
 
