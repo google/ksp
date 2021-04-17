@@ -161,7 +161,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (!logger.hasError()) {
             processors.forEach processing@{ processor ->
                 handleException {
-                    deferredSymbols[processor] = processor.process(resolver)
+                    deferredSymbols[processor] = processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
                 }?.let { return it }
                 if (logger.hasError()) {
                     return@processing
