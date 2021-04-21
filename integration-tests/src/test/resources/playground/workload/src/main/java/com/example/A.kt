@@ -1,6 +1,6 @@
 package com.example
 
-import HELLO
+import hello.HELLO
 
 fun main() {
     val hello = HELLO()

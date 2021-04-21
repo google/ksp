@@ -242,7 +242,7 @@ class ResolverImpl(
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
-        return visitor.symbols.toList() + deferredSymbols.values.flatten().filter{ checkAnnotation(it)  }
+        return visitor.symbols.toList() + deferredSymbols.values.flatten().mapNotNull { it.getInstanceForCurrentRound() }.filter{ checkAnnotation(it)  }
     }
 
     override fun getKSNameFromString(name: String): KSName {

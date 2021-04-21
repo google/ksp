@@ -27,7 +27,8 @@ class TestProcessor : SymbolProcessor {
         if (invoked) {
             return emptyList()
         }
-        val fileKt = codeGenerator.createNewFile(Dependencies(false), "", "HELLO", "java")
+        val fileKt = codeGenerator.createNewFile(Dependencies(false), "hello", "HELLO", "java")
+        fileKt.appendText("package hello;\n")
         fileKt.appendText("public class HELLO{\n")
         fileKt.appendText("public int foo() { return 1234; }\n")
         fileKt.appendText("}")
