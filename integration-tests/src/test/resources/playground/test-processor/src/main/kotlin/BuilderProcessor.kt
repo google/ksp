@@ -27,7 +27,7 @@ class BuilderProcessor : SymbolProcessor {
 
     inner class BuilderVisitor : KSVisitorVoid() {
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-            classDeclaration.primaryConstructor!!.accept(this, data)
+            classDeclaration.primaryConstructor?.accept(this, data)
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
@@ -36,7 +36,7 @@ class BuilderProcessor : SymbolProcessor {
             val className = "${parent.simpleName.asString()}Builder"
             val file = codeGenerator.createNewFile(Dependencies(true, function.containingFile!!), packageName , className)
             file.appendText("package $packageName\n\n")
-            file.appendText("import HELLO\n\n")
+            file.appendText("import hello.HELLO\n\n")
             file.appendText("class $className{\n")
             function.parameters.forEach {
                 val name = it.name!!.asString()

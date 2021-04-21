@@ -28,11 +28,11 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSPropertyDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
-import com.google.devtools.ksp.symbol.impl.java.KSClassDeclarationJavaImpl
-import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
-import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
-import com.google.devtools.ksp.symbol.impl.java.KSTypeArgumentJavaImpl
+import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
 import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.builtins.getFunctionalClassKind
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -361,10 +361,43 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
     return null
 }
 
-fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): ClassDescriptor? {
+internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): ClassDescriptor? {
     return if (psiMethod.isConstructor) {
         resolveClass(JavaConstructorImpl(psiMethod).containingClass)
     } else {
         resolveClass(JavaMethodImpl(psiMethod).containingClass)
+    }
+}
+
+internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? {
+    if (this.origin == Origin.CLASS) {
+        return null
+    }
+    return when (this) {
+        is KSClassDeclarationImpl -> KSClassDeclarationImpl.getCached(this.ktClassOrObject)
+        is KSFileImpl -> KSFileImpl.getCached(this.file)
+        is KSFunctionDeclarationImpl -> KSFunctionDeclarationImpl.getCached(this.ktFunction)
+        is KSPropertyDeclarationImpl -> KSPropertyDeclarationImpl.getCached(this.ktProperty)
+        is KSPropertyGetterImpl -> KSPropertyGetterImpl.getCached(this.ktPropertyAccessor)
+        is KSPropertySetterImpl -> KSPropertySetterImpl.getCached(this.ktPropertyAccessor)
+        is KSTypeAliasImpl -> KSTypeAliasImpl.getCached(this.ktTypeAlias)
+        is KSTypeArgumentLiteImpl -> KSTypeArgumentLiteImpl.getCached(this.type, this.variance)
+        is KSTypeArgumentKtImpl -> KSTypeArgumentKtImpl.getCached(this.ktTypeArgument)
+        is KSTypeParameterImpl -> KSTypeParameterImpl.getCached(this.ktTypeParameter, this.owner)
+        is KSTypeReferenceImpl -> KSTypeReferenceImpl.getCached(this.ktTypeReference)
+        is KSValueParameterImpl -> KSValueParameterImpl.getCached(this.ktParameter)
+        is KSClassDeclarationJavaEnumEntryImpl -> KSClassDeclarationJavaEnumEntryImpl.getCached(this.psi)
+        is KSClassDeclarationJavaImpl -> KSClassDeclarationJavaImpl.getCached(this.psi)
+        is KSFileJavaImpl -> KSFileJavaImpl.getCached(this.psi)
+        is KSFunctionDeclarationJavaImpl -> KSFunctionDeclarationJavaImpl.getCached(this.psi)
+        is KSPropertyDeclarationJavaImpl -> KSPropertyDeclarationJavaImpl.getCached(this.psi)
+        is KSTypeArgumentJavaImpl -> KSTypeArgumentJavaImpl.getCached(this.psi)
+        is KSTypeParameterJavaImpl -> KSTypeParameterJavaImpl.getCached(this.psi)
+        is KSTypeReferenceJavaImpl -> KSTypeReferenceJavaImpl.getCached(this.psi)
+        is KSValueParameterJavaImpl -> KSValueParameterJavaImpl.getCached(this.psi)
+        is KSPropertyGetterSyntheticImpl -> KSPropertyGetterSyntheticImpl.getCached(this.ksPropertyDeclaration)
+        is KSPropertySetterSyntheticImpl -> KSPropertySetterSyntheticImpl.getCached(this.ksPropertyDeclaration)
+        is KSValueParameterSyntheticImpl -> KSPropertySetterImpl.getCached(this.owner as KtPropertyAccessor).parameter
+        else -> null
     }
 }
