@@ -23,8 +23,10 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -220,10 +222,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.destination = destinationDir
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
+
+            // depends on the processor; if the processor changes, it needs to be reprocessed.
+            val processorClasspath = project.configurations.maybeCreate("ProcessorClasspath")
+                .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
+            kspTask.processorClasspath.from(processorClasspath)
+
             nonEmptyKspConfigurations.forEach {
                 kspTask.dependsOn(it.buildDependencies)
-                // depends on the processor; if the processor changes, it needs to be reprocessed.
-                kspTask.source(it)
             }
         }.apply {
             configure {
@@ -280,7 +286,7 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
             else -> null
         }
 
-open class KspTask : KspTaskJ() {
+abstract class KspTask : KspTaskJ() {
     @Internal
     lateinit var options: List<SubpluginOption>
 
@@ -297,6 +303,9 @@ open class KspTask : KspTaskJ() {
     open fun getApOptions(): Map<String, String> {
         return project.extensions.getByType(KspExtension::class.java).apOptions
     }
+
+    @get:InputFiles
+    abstract val processorClasspath: ConfigurableFileCollection
 
     init {
         // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:

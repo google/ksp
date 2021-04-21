@@ -235,4 +235,29 @@ class IncrementalIT {
         project.restore("workload/build.gradle.kts")
         buildAndCheck()
     }
+
+    @Test
+    fun testProcessorChange() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.withArguments("build").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+            Assert.assertEquals(TaskOutcome.NO_SOURCE, result.task(":workload:kspTestKotlin")?.outcome)
+        }
+        val cleanArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
+
+        val expectedDirties = src2Dirty.map { it.second }.flatten().toSet()
+        fun buildAndCheck() {
+            gradleRunner.withArguments("build").build().let { result ->
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assert.assertEquals(TaskOutcome.NO_SOURCE, result.task(":workload:kspTestKotlin")?.outcome)
+                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                Assert.assertEquals(dirties, expectedDirties)
+            }
+            val incrementalArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
+            Assert.assertEquals(cleanArtifact, incrementalArtifact)
+        }
+
+        File(project.root, "validator/src/main/kotlin/Validator.kt").appendText("\n")
+        buildAndCheck()
+    }
 }
