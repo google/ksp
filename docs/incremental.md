@@ -2,7 +2,7 @@
 
 Incremental processing is a processing technique that avoids re-processing of sources as much as possible.
 The primary goal of incremental processing is to reduce the turn-around time of a typical change-compile-test cycle.
-For general information, see Wikipedia's article on[incremental computing](https://en.wikipedia.org/wiki/Incremental_computing).
+For general information, see Wikipedia's article on [incremental computing](https://en.wikipedia.org/wiki/Incremental_computing).
 
 To determine which sources are _dirty_ (i.e., those that need to be reprocessed), KSP needs
 processors' help to identify which input sources correspond to which generated outputs.
