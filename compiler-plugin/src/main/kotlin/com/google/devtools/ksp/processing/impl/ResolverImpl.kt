@@ -26,7 +26,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.*
-import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
@@ -41,7 +40,6 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
-import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
@@ -602,6 +600,26 @@ class ResolverImpl(
         return descriptor?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
             typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        }
+    }
+
+    @KspExperimental
+    override fun getOwnerJvmClassName(declaration: KSPropertyDeclaration): String? {
+        val descriptor = resolvePropertyDeclaration(declaration) ?: return null
+        return getJvmOwnerQualifiedName(descriptor)
+    }
+
+    @KspExperimental
+    override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
+        val descriptor = resolveFunctionDeclaration(declaration) ?: return null
+        return getJvmOwnerQualifiedName(descriptor)
+    }
+
+    private fun getJvmOwnerQualifiedName(descriptor: DeclarationDescriptor): String? {
+        return try {
+            typeMapper.mapImplementationOwner(descriptor).className
+        } catch (unsupported: UnsupportedOperationException) {
+            null
         }
     }
 
