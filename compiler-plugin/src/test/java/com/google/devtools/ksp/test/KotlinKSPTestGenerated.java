@@ -267,6 +267,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/throwList.kt");
     }
 
+    @TestMetadata("topLevelMembers.kt")
+    public void testTopLevelMembers() throws Exception {
+        runTest("testData/api/topLevelMembers.kt");
+    }
+
     @TestMetadata("typeAlias.kt")
     public void testTypeAlias() throws Exception {
         runTest("testData/api/typeAlias.kt");
