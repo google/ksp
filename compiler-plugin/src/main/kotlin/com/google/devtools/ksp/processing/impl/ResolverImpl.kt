@@ -581,7 +581,7 @@ class ResolverImpl(
         if (declaration is KtNamedFunction) {
             val dataFlowInfo = DataFlowInfo.EMPTY
             val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(declaration)
-            bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope)
+            bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope, null)
         }
     }
 
