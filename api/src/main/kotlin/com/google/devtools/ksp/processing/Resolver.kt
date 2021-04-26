@@ -223,6 +223,38 @@ interface Resolver {
     fun getJvmName(accessor: KSPropertyAccessor): String?
 
     /**
+     * Returns the [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) of the
+     * owner class in JVM for the given [KSPropertyDeclaration].
+     *
+     * For properties declared in classes / interfaces; this value is the binary class name of the declaring class.
+     *
+     * For top level properties, this is the binary class name of the synthetic class that is generated for the Kotlin
+     * file.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#package-level-functions
+     *
+     * Note that, for properties declared in companion objects, the returned owner class will be the Companion class.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
+     */
+    @KspExperimental
+    fun getOwnerJvmClassName(declaration: KSPropertyDeclaration): String?
+
+    /**
+     * Returns the [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) of the
+     * owner class in JVM for the given [KSFunctionDeclaration].
+     *
+     * For functions declared in classes / interfaces; this value is the binary class name of the declaring class.
+     *
+     * For top level functions, this is the binary class name of the synthetic class that is generated for the Kotlin
+     * file.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#package-level-functions
+     *
+     * Note that, for functions declared in companion objects, the returned owner class will be the Companion class.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
+     */
+    @KspExperimental
+    fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String?
+
+    /**
      * Returns checked exceptions declared in a function's header.
      * @return A sequence of [KSType] declared in `throws` statement for a Java method or in @Throws annotation for a Kotlin function.
      * Checked exceptions from class files are not supported yet, an empty sequence will be returned instead.
