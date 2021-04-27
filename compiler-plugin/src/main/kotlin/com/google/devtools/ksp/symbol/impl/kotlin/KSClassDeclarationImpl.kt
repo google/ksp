@@ -56,6 +56,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         return if (Modifier.SEALED in modifiers) {
+            ResolverImpl.instance.incrementalContext.recordGetSealedSubclasses(this)
             descriptor.sealedSubclassesSequence()
         } else {
             emptySequence()
