@@ -57,6 +57,24 @@ interface Resolver {
     fun getClassDeclarationByName(name: KSName): KSClassDeclaration?
 
     /**
+     * Find functions in the compilation classpath for the given name.
+     *
+     * @param name fully qualified name of the function to be loaded; using '.' as separator.
+     * @param includeTopLevel a boolean value indicate if top level functions should be searched. Default false. Note if top level functions are included, this operation can be expensive.
+     * @return a Sequence of KSFunctionDeclaration
+     */
+    fun getFunctionDeclarationsByName(name: KSName, includeTopLevel: Boolean = false): Sequence<KSFunctionDeclaration>
+
+    /**
+     * Find a property in the compilation classpath for the given name.
+     *
+     * @param name fully qualified name of the property to be loaded; using '.' as separator.
+     * @param includeTopLevel a boolean value indicate if top level properties should be searched. Default false. Note if top level properties are included, this operation can be expensive.
+     * @return a KSPropertyDeclaration, or null if not found.
+     */
+    fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean = false): KSPropertyDeclaration?
+
+    /**
      * Compose a type argument out of a type reference and a variance
      *
      * @param typeRef a type reference to be used in type argument
@@ -203,6 +221,38 @@ interface Resolver {
      */
     @KspExperimental
     fun getJvmName(accessor: KSPropertyAccessor): String?
+
+    /**
+     * Returns the [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) of the
+     * owner class in JVM for the given [KSPropertyDeclaration].
+     *
+     * For properties declared in classes / interfaces; this value is the binary class name of the declaring class.
+     *
+     * For top level properties, this is the binary class name of the synthetic class that is generated for the Kotlin
+     * file.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#package-level-functions
+     *
+     * Note that, for properties declared in companion objects, the returned owner class will be the Companion class.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
+     */
+    @KspExperimental
+    fun getOwnerJvmClassName(declaration: KSPropertyDeclaration): String?
+
+    /**
+     * Returns the [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) of the
+     * owner class in JVM for the given [KSFunctionDeclaration].
+     *
+     * For functions declared in classes / interfaces; this value is the binary class name of the declaring class.
+     *
+     * For top level functions, this is the binary class name of the synthetic class that is generated for the Kotlin
+     * file.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#package-level-functions
+     *
+     * Note that, for functions declared in companion objects, the returned owner class will be the Companion class.
+     * see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
+     */
+    @KspExperimental
+    fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String?
 
     /**
      * Returns checked exceptions declared in a function's header.

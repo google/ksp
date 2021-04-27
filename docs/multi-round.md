@@ -28,8 +28,9 @@ override fun process(resolver: Resolver): List<KSAnnotated> {
 #### Defer symbols to the next round
 
 Processors can defer the processing of certain symbols to the next round. When you defer a symbol, you're waiting for other processors to provide additional information, and you can continue deferring the symbol as much as needed. Once the other processors provide the required information, the processor can then process the symbol.
+You should only defer invalid symbols which are lacking necessary information. Therefore deferring symbols from classpath is not possible and will be filtered out by KSP.
 
-As an example, a processor that creates a builder for an annotated class might require all parameter types of its constructors to be valid (i.e. resolves to a concrete type). In the first round, <this happens>. Then in the second round, <this happens>.
+As an example, a processor that creates a builder for an annotated class might require all parameter types of its constructors to be valid (i.e. resolves to a concrete type). In the first round, one of the parameter type is not resolvable. Then in the second round, it became resolvable because of the generated files from first round.
 
 #### Validate symbols
 A convenient way to decide if a symbol should be deferred is through validation. A processor should know which information is necessary to properly process the symbol.

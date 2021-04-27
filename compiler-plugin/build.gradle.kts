@@ -49,7 +49,9 @@ dependencies {
 
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-tests:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:test-infrastructure-utils:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:tests-compiler-utils:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:tests-mutes:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
@@ -125,8 +127,7 @@ repositories {
         }
     }
     flatDir {
-        dirs("${project.rootDir}/third_party/prebuilt/tests-common/")
-        dirs("${project.rootDir}/third_party/prebuilt/tests-mutes/")
+        dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }

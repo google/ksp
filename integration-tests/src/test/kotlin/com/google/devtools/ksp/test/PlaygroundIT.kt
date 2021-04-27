@@ -26,7 +26,7 @@ class PlaygroundIT {
 
         JarFile(artifact).use { jarFile ->
             Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("HELLO.class").size > 0)
+            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
     }

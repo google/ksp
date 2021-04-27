@@ -80,7 +80,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         // make sure we don't have any false positive equals
         functionsBySignature.forEach { (signature, functions) ->
             functionsBySignature.forEach { (otherSignature, otherFunctions) ->
-                if (signature != otherSignature && otherFunctions.contains(functions)) {
+                if (signature != otherSignature && functions.any { otherFunctions.contains(it) }) {
                     results.add("Unexpected equals between $otherSignature and $signature")
                 }
             }

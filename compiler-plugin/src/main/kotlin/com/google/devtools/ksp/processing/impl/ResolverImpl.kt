@@ -26,7 +26,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.*
-import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.kotlin.*
@@ -41,7 +40,6 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
-import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
@@ -177,6 +175,37 @@ class ResolverImpl(
             }
     }
 
+    override fun getFunctionDeclarationsByName(name: KSName, includeTopLevel: Boolean): Sequence<KSFunctionDeclaration> {
+        val qualifier = name.getQualifier()
+        val functionName = name.getShortName()
+        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()?.filter{ it.simpleName.asString() == functionName }?.asSequence() ?: emptySequence()
+        return if (!includeTopLevel) nonTopLevelResult else {
+            nonTopLevelResult.plus(module.getPackage(FqName(qualifier))
+                .memberScope.getContributedDescriptors(DescriptorKindFilter.FUNCTIONS) { it.asString() == functionName }
+                .filterIsInstance<MemberDescriptor>().mapNotNull {  it.toKSDeclaration() as? KSFunctionDeclaration} )
+        }
+    }
+
+    override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
+        val qualifier = name.getQualifier()
+        val propertyName = name.getShortName()
+        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()?.singleOrNull { it.simpleName.asString() == propertyName }
+        return if (!includeTopLevel) nonTopLevelResult else {
+            val topLevelResult = (module.getPackage(FqName(qualifier))
+                .memberScope.getContributedDescriptors(DescriptorKindFilter.VARIABLES) { it.asString() == propertyName }
+                .also {
+                    if (it.size > 1) {
+                        throw IllegalStateException("Found multiple properties with same qualified name")
+                    }
+                }
+                .singleOrNull() as? MemberDescriptor)?.toKSDeclaration() as? KSPropertyDeclaration
+            if (topLevelResult != null && nonTopLevelResult != null) {
+                throw IllegalStateException("Found multiple properties with same qualified name")
+            }
+            nonTopLevelResult ?: topLevelResult
+        }
+    }
+
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): List<KSAnnotated> {
         fun checkAnnotation(annotated: KSAnnotated): Boolean {
             val ksName = KSNameImpl.getCached(annotationName)
@@ -242,7 +271,7 @@ class ResolverImpl(
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
-        return visitor.symbols.toList() + deferredSymbols.values.flatten().filter{ checkAnnotation(it)  }
+        return visitor.symbols.toList() + deferredSymbols.values.flatten().mapNotNull { it.getInstanceForCurrentRound() }.filter{ checkAnnotation(it)  }
     }
 
     override fun getKSNameFromString(name: String): KSName {
@@ -550,7 +579,7 @@ class ResolverImpl(
         if (declaration is KtNamedFunction) {
             val dataFlowInfo = DataFlowInfo.EMPTY
             val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(declaration)
-            bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope)
+            bodyResolver.resolveFunctionBody(dataFlowInfo, bindingTrace, declaration, containingFD as FunctionDescriptor, scope, null)
         }
     }
 
@@ -571,6 +600,26 @@ class ResolverImpl(
         return descriptor?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
             typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+        }
+    }
+
+    @KspExperimental
+    override fun getOwnerJvmClassName(declaration: KSPropertyDeclaration): String? {
+        val descriptor = resolvePropertyDeclaration(declaration) ?: return null
+        return getJvmOwnerQualifiedName(descriptor)
+    }
+
+    @KspExperimental
+    override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
+        val descriptor = resolveFunctionDeclaration(declaration) ?: return null
+        return getJvmOwnerQualifiedName(descriptor)
+    }
+
+    private fun getJvmOwnerQualifiedName(descriptor: DeclarationDescriptor): String? {
+        return try {
+            typeMapper.mapImplementationOwner(descriptor).className
+        } catch (unsupported: UnsupportedOperationException) {
+            null
         }
     }
 

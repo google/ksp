@@ -224,7 +224,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
 
             // depends on the processor; if the processor changes, it needs to be reprocessed.
-            val processorClasspath = project.configurations.maybeCreate("ProcessorClasspath")
+            val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
                 .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
             kspTask.processorClasspath.from(processorClasspath)
 

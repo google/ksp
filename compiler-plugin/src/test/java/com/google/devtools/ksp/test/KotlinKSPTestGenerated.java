@@ -132,6 +132,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/getPackage.kt");
     }
 
+    @TestMetadata("getByName.kt")
+    public void testGetByName() throws Exception {
+        runTest("testData/api/getByName.kt");
+    }
+
     @TestMetadata("getSymbolsFromAnnotation.kt")
     public void testGetSymbolsFromAnnotation() throws Exception {
         runTest("testData/api/getSymbolsFromAnnotation.kt");
@@ -260,6 +265,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
     @TestMetadata("throwList.kt")
     public void testThrowList() throws Exception {
         runTest("testData/api/throwList.kt");
+    }
+
+    @TestMetadata("topLevelMembers.kt")
+    public void testTopLevelMembers() throws Exception {
+        runTest("testData/api/topLevelMembers.kt");
     }
 
     @TestMetadata("typeAlias.kt")
