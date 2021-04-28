@@ -2,19 +2,10 @@ import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import java.io.OutputStreamWriter
 
-
-class TestProcessor : SymbolProcessor {
-    lateinit var codeGenerator: CodeGenerator
-    lateinit var logger: KSPLogger
-
-    override fun finish() {
-    }
-
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
-        this.codeGenerator = codeGenerator
-        this.logger = logger
-    }
-
+class TestProcessor(
+    val codeGenerator: CodeGenerator,
+    val logger: KSPLogger
+) : SymbolProcessor {
     // FIXME: use getSymbolsWithAnnotation after it is fixed.
     var rounds = 0
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -51,5 +42,16 @@ class TestProcessor : SymbolProcessor {
         }
 
         return emptyList()
+    }
+}
+
+class TestProcessorProvider : SymbolProcessorProvider {
+    override fun create(
+        options: Map<String, String>,
+        kotlinVersion: KotlinVersion,
+        codeGenerator: CodeGenerator,
+        logger: KSPLogger
+    ): SymbolProcessor {
+        return TestProcessor(codeGenerator, logger)
     }
 }
