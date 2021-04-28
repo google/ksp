@@ -7,7 +7,7 @@ To build and copy the jars:
 ```
 $ # setup kotlin build environment. see https://github.com/JetBrains/kotlin
 $ cd path_to_kotlin_compiler_src
-$ ./gradlew :compiler:tests-mutes:build :compiler:test-infrastructure-utils:build :compiler:tests-compiler-utils:build
+$ ./gradlew :compiler:tests-mutes:build :compiler:test-infrastructure-utils:testJar :compiler:tests-compiler-utils:testJar
 $ cp compiler/tests-mutes/build/libs/*.jar .../repo
 $ cp compiler/tests-compiler-utils/build/libs/tests-compiler-utils-<version>-tests.jar \
                                      .../repo/tests-compiler-utils-<version>.jar
