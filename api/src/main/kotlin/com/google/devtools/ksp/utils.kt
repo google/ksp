@@ -265,3 +265,14 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
 fun KSFunctionDeclaration.isConstructor() = this.simpleName.asString() == "<init>"
 
 const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"
+
+val KSType.outerType: KSType?
+    get() {
+        if (Modifier.INNER !in declaration.modifiers)
+            return null
+        val outerDecl = declaration.parentDeclaration as? KSClassDeclaration ?: return null
+        return outerDecl.asType(arguments.subList(declaration.typeParameters.size, arguments.size))
+    }
+
+val KSType.innerArguments: List<KSTypeArgument>
+    get() = arguments.subList(0, declaration.typeParameters.size)
