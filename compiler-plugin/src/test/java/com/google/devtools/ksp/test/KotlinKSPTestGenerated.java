@@ -47,6 +47,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/annotationInDependencies.kt");
     }
 
+    @TestMetadata("annotationOnConstructorParameter.kt")
+    public void testAnnotationOnConstructorParameter() throws Exception {
+        runTest("testData/api/annotationOnConstructorParameter.kt");
+    }
+
     @TestMetadata("annotationValue.kt")
     public void testAnnotationValue() throws Exception {
         runTest("testData/api/annotationValue.kt");
@@ -157,9 +162,9 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/implicitPropertyAccessors.kt");
     }
 
-    @TestMetadata("annotationOnConstructorParameter.kt")
-    public void testAnnotationOnConstructorParameter() throws Exception {
-        runTest("testData/api/annotationOnConstructorParameter.kt");
+    @TestMetadata("innerTypes.kt")
+    public void testInnerTypes() throws Exception {
+        runTest("testData/api/innerTypes.kt");
     }
 
     @TestMetadata("interfaceWithDefault.kt")
