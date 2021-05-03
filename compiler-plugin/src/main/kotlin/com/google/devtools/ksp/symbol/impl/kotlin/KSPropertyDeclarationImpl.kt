@@ -99,6 +99,9 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun asMemberOf(containing: KSType): KSType =
+        ResolverImpl.instance.asMemberOf(this, containing)
 }
 
 internal fun KtAnnotated.filterUseSiteTargetAnnotations(): List<KtAnnotationEntry> {

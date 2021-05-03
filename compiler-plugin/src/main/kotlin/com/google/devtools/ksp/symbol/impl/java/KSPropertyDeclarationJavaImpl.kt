@@ -18,6 +18,7 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
+import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiJavaFile
 import com.google.devtools.ksp.symbol.*
@@ -87,4 +88,6 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
         return visitor.visitPropertyDeclaration(this, data)
     }
 
+    override fun asMemberOf(containing: KSType): KSType =
+        ResolverImpl.instance.asMemberOf(this, containing)
 }
