@@ -95,4 +95,14 @@ interface KSType {
      * True if the type is an error type, which means the type can't be resolved by compiler.
      */
     val isError: Boolean
+
+    /**
+     * True if the type is a function type. Note that a suspend function will return false here.
+     */
+    val isFunctionType: Boolean
+
+    /**
+     * True if the type is a suspend function
+     */
+    val isSuspendFunctionType: Boolean
 }
