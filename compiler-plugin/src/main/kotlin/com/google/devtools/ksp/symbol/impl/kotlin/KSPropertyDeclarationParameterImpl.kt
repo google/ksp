@@ -81,4 +81,7 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun asMemberOf(containing: KSType): KSType =
+        ResolverImpl.instance.asMemberOf(this, containing)
 }

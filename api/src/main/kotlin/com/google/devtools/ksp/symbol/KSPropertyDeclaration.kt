@@ -85,4 +85,9 @@ interface KSPropertyDeclaration : KSDeclaration {
      * Calling [findOverridee] is expensive and should be avoided if possible.
      */
     fun findOverridee(): KSPropertyDeclaration?
+
+    /**
+     * See Resolver.asMemberOf(property: KSPropertyDeclaration, containing: KSType).
+     */
+    fun asMemberOf(containing: KSType): KSType
 }

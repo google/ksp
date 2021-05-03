@@ -102,4 +102,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFunctionDeclaration(this, data)
     }
+
+    override fun asMemberOf(containing: KSType): KSFunction =
+        ResolverImpl.instance.asMemberOf(this, containing)
 }

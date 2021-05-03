@@ -97,4 +97,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun asMemberOf(containing: KSType): KSType =
+        ResolverImpl.instance.asMemberOf(this, containing)
 }
