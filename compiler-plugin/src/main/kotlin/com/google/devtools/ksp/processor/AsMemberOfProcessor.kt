@@ -65,7 +65,8 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         // make sure values are cached
         val first = resolver.asMemberOf(listGet, listOfStrings)
         val second = resolver.asMemberOf(listGet, listOfStrings)
-        if (first !== second) {
+        val third = listGet.asMemberOf(listOfStrings)
+        if (first !== second || second !== third) {
             results.add("cache error, repeated computation")
         }
 
@@ -125,7 +126,11 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         containing: KSType
     ): String {
         val result = kotlin.runCatching {
-            asMemberOf(function, containing)
+            asMemberOf(function, containing).also {
+                if (it !== function.asMemberOf(containing)) {
+                    results.add("Error: Resolver.asMemberOf(function, containing) !== function.asMemberOf(containing)")
+                }
+            }
         }
         return if (result.isSuccess) {
             val ksFunction = result.getOrThrow()
@@ -145,7 +150,11 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         containing: KSType
     ): String {
         val result = kotlin.runCatching {
-            asMemberOf(property, containing)
+            asMemberOf(property, containing).also {
+                if (it !== property.asMemberOf(containing)) {
+                    results.add("Error: Resolver.asMemberOf(property, containing) !== property.asMemberOf(containing)")
+                }
+            }
         }
         return if (result.isSuccess) {
             result.getOrThrow().toSignature()

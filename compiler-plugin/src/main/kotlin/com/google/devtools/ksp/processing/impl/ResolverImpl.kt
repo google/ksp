@@ -95,6 +95,7 @@ class ResolverImpl(
      * Checking as member of is an expensive operation, hence we cache result values in this map.
      */
     private val functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
+    private val propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
 
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
@@ -132,6 +133,7 @@ class ResolverImpl(
 
         nameToKSMap = mutableMapOf()
         functionAsMemberOfCache = mutableMapOf()
+        propertyAsMemberOfCache = mutableMapOf()
 
         val visitor = object : KSVisitorVoid() {
             override fun visitFile(file: KSFile, data: Unit) {
@@ -659,6 +661,16 @@ class ResolverImpl(
     }
 
     override fun asMemberOf(
+        property: KSPropertyDeclaration,
+        containing: KSType
+    ): KSType {
+        val key = property to containing
+        return propertyAsMemberOfCache.getOrPut(key) {
+            computeAsMemberOf(property, containing)
+        }
+    }
+
+    private fun computeAsMemberOf(
         property: KSPropertyDeclaration,
         containing: KSType
     ): KSType {
