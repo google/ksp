@@ -23,6 +23,10 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
+import org.jetbrains.kotlin.builtins.isFunctionType
+import org.jetbrains.kotlin.builtins.isKFunctionType
+import org.jetbrains.kotlin.builtins.isKSuspendFunctionType
+import org.jetbrains.kotlin.builtins.isSuspendFunctionType
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.isError
@@ -102,6 +106,12 @@ class KSTypeImpl private constructor(
     override fun hashCode(): Int = kotlinType.hashCode()
 
     override fun toString(): String = (kotlinType.getAbbreviation() ?: kotlinType).toString()
+
+    override val isFunctionType: Boolean
+        get() = kotlinType.isFunctionType || kotlinType.isKFunctionType
+
+    override val isSuspendFunctionType: Boolean
+        get() = kotlinType.isSuspendFunctionType || kotlinType.isKSuspendFunctionType
 }
 
 class IdKey<T>(private val k: T) {
