@@ -132,6 +132,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/functionTypeAlias.kt");
     }
 
+    @TestMetadata("functionTypes.kt")
+    public void testFunctionTypes() throws Exception {
+        runTest("testData/api/functionTypes.kt");
+    }
+
     @TestMetadata("getPackage.kt")
     public void testGetPackage() throws Exception {
         runTest("testData/api/getPackage.kt");
