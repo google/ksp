@@ -86,7 +86,30 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     fun findOverridee(): KSFunctionDeclaration?
 
     /**
-     * See Resolver.asMemberOf(function: KSFunctionDeclaration, containing: KSType).
+     * Returns the type of the [function] when it is viewed as member of the [containing] type.
+     *
+     * For instance, for the following input:
+     * ```
+     * interface Base<T> {
+     *   fun f(t:T?):T
+     * }
+     * val foo: Base<Int>
+     * val bar: Base<String>
+     * ```
+     * When `f()` is viewed as member of `foo`, this method will return a [KSFunction] where
+     * the [KSFunction.returnType] is `Int` and the parameter `t` is of type `Int?`.
+     * When `f()` is viewed as member of `bar`, this method will return a [KSFunction]
+     * where the [KSFunction.returnType] is `String` and the parameter `t` is of type `String?`.
+     *
+     * If the function has type parameters, they'll not be resolved and can be read from
+     * [KSFunction.typeParameters].
+     *
+     * If the substitution fails (e.g. if [containing] is an error type, a [KSFunction] with [KSFunction.isError] `true`
+     * is returned.
+     *
+     * @param containing The type that contains [function].
+     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not contain [function]
+     * or if the [function] is not declared in a class, object or interface.
      */
     fun asMemberOf(containing: KSType): KSFunction
 }
