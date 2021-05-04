@@ -276,3 +276,23 @@ val KSType.outerType: KSType?
 
 val KSType.innerArguments: List<KSTypeArgument>
     get() = arguments.subList(0, declaration.typeParameters.size)
+
+@KspExperimental
+fun Resolver.getKotlinClassByName(name: KSName): KSClassDeclaration? {
+    val kotlinName = mapJavaNameToKotlin(name) ?: name
+    return getClassDeclarationByName(kotlinName)
+}
+
+@KspExperimental
+fun Resolver.getKotlinClassByName(name: String): KSClassDeclaration? =
+    getKotlinClassByName(getKSNameFromString(name))
+
+@KspExperimental
+fun Resolver.getJavaClassByName(name: KSName): KSClassDeclaration? {
+    val javaName = mapKotlinNameToJava(name) ?: name
+    return getClassDeclarationByName(javaName)
+}
+
+@KspExperimental
+fun Resolver.getJavaClassByName(name: String): KSClassDeclaration? =
+    getJavaClassByName(getKSNameFromString(name))
