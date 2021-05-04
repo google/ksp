@@ -48,7 +48,7 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
             }
         }
 
-        resolver.asMemberOf(function!!, type!!)
+        function!!.asMemberOf(type!!)
 
         if (resolver is ResolverImpl) {
             val m = resolver.incrementalContext.dumpLookupRecords()

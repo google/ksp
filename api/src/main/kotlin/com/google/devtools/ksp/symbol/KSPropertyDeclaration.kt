@@ -87,7 +87,24 @@ interface KSPropertyDeclaration : KSDeclaration {
     fun findOverridee(): KSPropertyDeclaration?
 
     /**
-     * See Resolver.asMemberOf(property: KSPropertyDeclaration, containing: KSType).
+     * Returns the type of the [property] when it is viewed as member of the [containing] type.
+     *
+     * For instance, for the following input:
+     * ```
+     * class Base<T>(val x:T)
+     * val foo: Base<Int>
+     * val bar: Base<String>
+     * ```
+     * When `x` is viewed as member of `foo`, this method will return the [KSType] for `Int`
+     * whereas when `x` is viewed as member of `bar`, this method will return the [KSType]
+     * representing `String`.
+     *
+     * If the substitution fails (e.g. if [containing] is an error type, a [KSType] with [KSType.isError] `true` is
+     * returned.
+     *
+     * @param containing The type that contains [property]
+     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not contain
+     * [property] or if the [property] is not declared in a class, object or interface.
      */
     fun asMemberOf(containing: KSType): KSType
 }
