@@ -19,8 +19,11 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getJavaClassByName
+import com.google.devtools.ksp.getKotlinClassByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.getClassDeclarationByName
 
 @KspExperimental
 open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
@@ -57,6 +60,12 @@ open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
             )?.asString()
             results.add("$it -> $j")
         }
+
+        if (resolver.getClassDeclarationByName("java.lang.String") != resolver.getJavaClassByName("kotlin.String"))
+            results.add("Error: getJavaClassByName")
+
+        if (resolver.getClassDeclarationByName("kotlin.String") != resolver.getKotlinClassByName("java.lang.String"))
+            results.add("Error: getKotlinClassByName")
 
         return emptyList()
     }
