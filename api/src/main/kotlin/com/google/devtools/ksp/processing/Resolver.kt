@@ -51,6 +51,15 @@ interface Resolver {
     /**
      * Find a class in the compilation classpath for the given name.
      *
+     * This returns the exact platform class when given a platform name. Note that java.lang.String isn't compatible
+     * with kotlin.String in the type system. Therefore, processors need to use mapJavaNameToKotlin() and mapKotlinNameToJava()
+     * explicitly to find the corresponding class names before calling getClassDeclarationByName if type checking
+     * is needed for the classes loaded by this.
+     *
+     * This behavior is limited to getClassDeclarationByName; When processors get a class or type from a Java source
+     * file, the conversion is done automatically. E.g., a java.lang.String in a Java source file is loaded as
+     * kotlin.String in KSP.
+     *
      * @param name fully qualified name of the class to be loaded; using '.' as separator.
      * @return a KSClassDeclaration, or null if not found.
      */
@@ -212,4 +221,35 @@ interface Resolver {
      */
     @KspExperimental
     fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration>
+
+    /**
+     * Returns the corresponding Kotlin class with the given Java class.
+     *
+     * E.g.
+     * java.lang.String -> kotlin.String
+     * java.lang.Integer -> kotlin.Int
+     * java.util.List -> kotlin.List
+     * java.util.Map.Entry -> kotlin.Map.Entry
+     * java.lang.Void -> null
+     *
+     * @param javaName a Java class name
+     * @return corresponding Kotlin class name or null
+     */
+    @KspExperimental
+    fun mapJavaNameToKotlin(javaName: KSName): KSName?
+
+    /**
+     * Returns the corresponding Java class with the given Kotlin class.
+     *
+     * E.g.
+     * kotlin.Throwable -> java.lang.Throwable
+     * kotlin.Int -> java.lang.Integer
+     * kotlin.Nothing -> java.lang.Void
+     * kotlin.IntArray -> null
+     *
+     * @param kotlinName a Java class name
+     * @return corresponding Java class name or null
+     */
+    @KspExperimental
+    fun mapKotlinNameToJava(kotlinName: KSName): KSName?
 }
