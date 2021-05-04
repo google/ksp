@@ -182,6 +182,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/javaModifiers.kt");
     }
 
+    @TestMetadata("javaToKotlinMapper.kt")
+    public void testJavaToKotlinMapper() throws Exception {
+        runTest("testData/api/javaToKotlinMapper.kt");
+    }
+
     @TestMetadata("javaTypes.kt")
     public void testJavaTypes() throws Exception {
         runTest("testData/api/javaTypes.kt");

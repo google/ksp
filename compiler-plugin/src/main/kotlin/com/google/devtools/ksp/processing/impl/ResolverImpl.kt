@@ -33,6 +33,7 @@ import com.google.devtools.ksp.symbol.impl.synthetic.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
@@ -51,7 +52,9 @@ import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDesc
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.structure.impl.*
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
@@ -772,6 +775,15 @@ class ResolverImpl(
 
     internal val javaSerializableType = module.resolveClassByFqName(FqName("java.io.Serializable"), NoLookupLocation.WHEN_FIND_BY_FQNAME)!!.defaultType
 
+    private fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
+
+    @KspExperimental
+    override fun mapJavaNameToKotlin(javaName: KSName): KSName? =
+        JavaToKotlinClassMap.mapJavaToKotlin(FqName(javaName.asString()))?.toKSName()
+
+    @KspExperimental
+    override fun mapKotlinNameToJava(kotlinName: KSName): KSName? =
+        JavaToKotlinClassMap.mapKotlinToJava(FqNameUnsafe(kotlinName.asString()))?.toKSName()
 }
 
 open class BaseVisitor : KSVisitorVoid() {
