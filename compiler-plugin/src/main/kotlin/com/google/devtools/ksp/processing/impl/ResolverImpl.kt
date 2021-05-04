@@ -660,7 +660,7 @@ class ResolverImpl(
         return KSTypeArgumentLiteImpl.getCached(typeRef, variance)
     }
 
-    override fun asMemberOf(
+    internal fun asMemberOf(
         property: KSPropertyDeclaration,
         containing: KSType
     ): KSType {
@@ -696,7 +696,7 @@ class ResolverImpl(
         return KSErrorType
     }
 
-    override fun asMemberOf(
+    internal fun asMemberOf(
         function: KSFunctionDeclaration,
         containing: KSType
     ): KSFunction {
