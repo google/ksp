@@ -1,20 +1,20 @@
 # Quickstart
 
-[Here's](https://github.com/google/ksp/releases/download/1.4.32-1.0.0-alpha08/playground.zip) a sample processor that you can check out.
+[Here's](https://github.com/google/ksp/releases/download/1.5.0-1.0.0-alpha09/playground.zip) a sample processor that you can check out.
 
 ## Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.4.32` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.5.0` of the Kotlin plugin in the root project for use in other project modules.
 
   ```
   plugins {
-      kotlin("jvm") version "1.4.32" apply false
+      kotlin("jvm") version "1.5.0" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.4.32"))
+          classpath(kotlin("gradle-plugin", version = "1.5.0"))
       }
   }
   ```
@@ -36,7 +36,7 @@
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.4.32-1.0.0-alpha08")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.5.0-1.0.0-alpha09")
   }
   ```
 
@@ -83,7 +83,7 @@
 
   ```
   plugins {
-      id("com.google.devtools.ksp") version "1.4.32-1.0.0-alpha08"
+      id("com.google.devtools.ksp") version "1.5.0-1.0.0-alpha09"
       kotlin("jvm") 
   }
 
@@ -119,7 +119,7 @@
 
   ```groovy
   plugins {
-    id "com.google.devtools.ksp" version "1.4.32-1.0.0-alpha08"
+    id "com.google.devtools.ksp" version "1.5.0-1.0.0-alpha09"
   }
   ```
   
