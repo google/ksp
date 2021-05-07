@@ -2,8 +2,8 @@
 // TEST PROCESSOR: CrossModuleTypeAliasTestProcessor
 // EXPECTED:
 // A1(KOTLIN)
-// A2(CLASS)
-// M1(CLASS)
+// A2(KOTLIN_LIB)
+// M1(KOTLIN_LIB)
 // END
 
 // MODULE: module1

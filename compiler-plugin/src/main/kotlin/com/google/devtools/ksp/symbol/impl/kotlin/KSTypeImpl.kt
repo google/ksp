@@ -59,8 +59,9 @@ class KSTypeImpl private constructor(
         }
     }
 
+    // TODO: fix calls to getKSTypeCached and use ksTypeArguments when available.
     override val arguments: List<KSTypeArgument> by lazy {
-        kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it) }
+        kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, Origin.SYNTHETIC) }
     }
 
     override fun isAssignableFrom(that: KSType): Boolean {

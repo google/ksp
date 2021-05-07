@@ -20,12 +20,12 @@
 // symbols from package lib1
 // lib1.FooInSource KOTLIN
 // lib1.propInSource KOTLIN
-// lib1.Bar CLASS
-// lib1.Foo CLASS
-// lib1.funcFoo CLASS
+// lib1.Bar JAVA_LIB
+// lib1.Foo KOTLIN_LIB
+// lib1.funcFoo KOTLIN_LIB
 // symbols from package lib2
-// lib2.Foo CLASS
-// lib2.a CLASS
+// lib2.Foo KOTLIN_LIB
+// lib2.a KOTLIN_LIB
 // symbols from package main
 // main.KotlinMain KOTLIN
 // END

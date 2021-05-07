@@ -83,7 +83,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     override val superTypes: Sequence<KSTypeReference> by lazy {
         descriptor.defaultType.constructor.supertypes.asSequence().map {
             KSTypeReferenceDescriptorImpl.getCached(
-                if (it === mockSerializableType) javaSerializableType else it
+                if (it === mockSerializableType) javaSerializableType else it,
+                origin
             )
         }.memoized()
     }

@@ -40,7 +40,7 @@ open class ReferenceElementProcessor: AbstractTestProcessor() {
         for (i in sortedReferences)
             results.add("KSClassifierReferenceImpl: Qualifier of ${i.element} is ${(i.element as KSClassifierReference).qualifier}")
 
-        val descriptorReferences = sortedReferences.map { KSTypeReferenceDescriptorImpl.getCached((it.resolve() as KSTypeImpl).kotlinType) }
+        val descriptorReferences = sortedReferences.map { KSTypeReferenceDescriptorImpl.getCached((it.resolve() as KSTypeImpl).kotlinType, Origin.SYNTHETIC) }
         for (i in descriptorReferences) {
             results.add("KSClassifierReferenceDescriptorImpl: Qualifier of ${i.element} is ${(i.element as KSClassifierReference).qualifier}")
         }

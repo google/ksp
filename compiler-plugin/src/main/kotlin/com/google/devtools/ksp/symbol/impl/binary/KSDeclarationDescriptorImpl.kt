@@ -25,12 +25,17 @@ import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.memoized
+import org.jetbrains.kotlin.load.java.descriptors.JavaClassDescriptor
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parents
+import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 
-abstract class KSDeclarationDescriptorImpl(descriptor: DeclarationDescriptor) : KSDeclaration {
+abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDescriptor) : KSDeclaration {
 
-    override val origin = Origin.CLASS
+    override val origin by lazy {
+        descriptor.origin
+    }
 
     override val containingFile: KSFile? = null
 
@@ -66,3 +71,10 @@ abstract class KSDeclarationDescriptorImpl(descriptor: DeclarationDescriptor) : 
     }
 
 }
+
+val DeclarationDescriptor.origin: Origin
+    get() = if (parentsWithSelf.firstIsInstanceOrNull<JavaClassDescriptor>() != null) {
+        Origin.JAVA_LIB
+    } else {
+        Origin.KOTLIN_LIB
+    }

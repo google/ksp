@@ -30,7 +30,7 @@ class KSTypeAliasDescriptorImpl(descriptor: TypeAliasDescriptor) : KSTypeAlias,
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.underlyingType)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.underlyingType, origin)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

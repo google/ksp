@@ -25,36 +25,35 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSClassifierReferenceDescriptorImpl private constructor(val descriptor: ClassifierDescriptor, val arguments: List<TypeProjection>) :
+class KSClassifierReferenceDescriptorImpl private constructor(val descriptor: ClassifierDescriptor, val arguments: List<TypeProjection>, override val origin: Origin) :
     KSClassifierReference {
-    companion object : KSObjectCache<Pair<ClassifierDescriptor, List<TypeProjection>>, KSClassifierReferenceDescriptorImpl>() {
-        fun getCached(kotlinType: KotlinType) = cache.getOrPut(
-            Pair(
+    companion object : KSObjectCache<Triple<ClassifierDescriptor, List<TypeProjection>, Origin>, KSClassifierReferenceDescriptorImpl>() {
+        fun getCached(kotlinType: KotlinType, origin: Origin) = cache.getOrPut(
+            Triple(
                 kotlinType.constructor.declarationDescriptor!!,
-                kotlinType.arguments
+                kotlinType.arguments,
+                origin
             )
-        ) { KSClassifierReferenceDescriptorImpl(kotlinType.constructor.declarationDescriptor!!, kotlinType.arguments) }
+        ) { KSClassifierReferenceDescriptorImpl(kotlinType.constructor.declarationDescriptor!!, kotlinType.arguments, origin) }
 
-        fun getCached(descriptor: ClassifierDescriptor, arguments: List<TypeProjection>) =
-            cache.getOrPut(Pair(descriptor, arguments)) { KSClassifierReferenceDescriptorImpl(descriptor, arguments) }
+        fun getCached(descriptor: ClassifierDescriptor, arguments: List<TypeProjection>, origin: Origin) =
+            cache.getOrPut(Triple(descriptor, arguments, origin)) { KSClassifierReferenceDescriptorImpl(descriptor, arguments, origin) }
     }
 
     private val nDeclaredArgs by lazy {
         (descriptor as? ClassifierDescriptorWithTypeParameters)?.declaredTypeParameters?.size ?: 0
     }
 
-    override val origin = Origin.CLASS
-
     override val location: Location = NonExistLocation
 
     override val qualifier: KSClassifierReference? by lazy {
         val outerDescriptor = descriptor.containingDeclaration as? ClassifierDescriptor ?: return@lazy null
         val outerArguments = arguments.drop(nDeclaredArgs)
-        getCached(outerDescriptor, outerArguments)
+        getCached(outerDescriptor, outerArguments, origin)
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        arguments.map { KSTypeArgumentDescriptorImpl.getCached(it) }
+        arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, origin) }
     }
 
     override fun referencedName(): String {

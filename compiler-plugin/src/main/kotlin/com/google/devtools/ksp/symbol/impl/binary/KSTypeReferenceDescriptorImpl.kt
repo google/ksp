@@ -30,17 +30,15 @@ import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.memoized
 import org.jetbrains.kotlin.types.*
 
-class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType) : KSTypeReference {
-    companion object : KSObjectCache<IdKey<KotlinType>, KSTypeReferenceDescriptorImpl>() {
-        fun getCached(kotlinType: KotlinType) = cache.getOrPut(IdKey(kotlinType)) { KSTypeReferenceDescriptorImpl(kotlinType) }
+class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType, override val origin: Origin) : KSTypeReference {
+    companion object : KSObjectCache<IdKey<Pair<KotlinType, Origin>>, KSTypeReferenceDescriptorImpl>() {
+        fun getCached(kotlinType: KotlinType, origin: Origin) = cache.getOrPut(IdKey(Pair(kotlinType, origin))) { KSTypeReferenceDescriptorImpl(kotlinType, origin) }
     }
-
-    override val origin = Origin.CLASS
 
     override val location: Location = NonExistLocation
 
     override val element: KSReferenceElement by lazy {
-        KSClassifierReferenceDescriptorImpl.getCached(kotlinType)
+        KSClassifierReferenceDescriptorImpl.getCached(kotlinType, origin)
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {

@@ -32,6 +32,8 @@ import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
+import org.jetbrains.kotlin.load.java.components.JavaAnnotationDescriptor
+import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaAnnotationDescriptor
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
@@ -42,12 +44,17 @@ class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationD
         fun getCached(descriptor: AnnotationDescriptor) = cache.getOrPut(descriptor) { KSAnnotationDescriptorImpl(descriptor) }
     }
 
-    override val origin = Origin.CLASS
+    override val origin =
+        when (descriptor) {
+            is JavaAnnotationDescriptor, is LazyJavaAnnotationDescriptor -> Origin.JAVA_LIB
+            else -> Origin.KOTLIN_LIB
+        }
+
 
     override val location: Location = NonExistLocation
 
     override val annotationType: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
     override val arguments: List<KSValueArgument> by lazy {

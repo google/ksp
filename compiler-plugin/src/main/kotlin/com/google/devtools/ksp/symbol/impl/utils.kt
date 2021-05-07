@@ -373,8 +373,8 @@ internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): C
 }
 
 internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? {
-    if (this.origin == Origin.CLASS) {
-        return null
+    when (origin) {
+        Origin.KOTLIN_LIB, Origin.JAVA_LIB -> return null
     }
     return when (this) {
         is KSClassDeclarationImpl -> KSClassDeclarationImpl.getCached(this.ktClassOrObject)
