@@ -68,7 +68,7 @@ fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean
  * What are included: member functions, constructors, extension functions declared inside it, etc.
  * What are NOT included: inherited functions, extension functions declared outside it.
  */
-fun KSClassDeclaration.getDeclaredFunctions(): List<KSFunctionDeclaration> {
+fun KSClassDeclaration.getDeclaredFunctions(): Sequence<KSFunctionDeclaration> {
     return this.declarations.filterIsInstance<KSFunctionDeclaration>()
 }
 
@@ -78,11 +78,11 @@ fun KSClassDeclaration.getDeclaredFunctions(): List<KSFunctionDeclaration> {
  * What are included: member properties, extension properties declared inside it, etc.
  * What are NOT included: inherited properties, extension properties declared outside it.
  */
-fun KSClassDeclaration.getDeclaredProperties(): List<KSPropertyDeclaration> {
+fun KSClassDeclaration.getDeclaredProperties(): Sequence<KSPropertyDeclaration> {
     return this.declarations.filterIsInstance<KSPropertyDeclaration>()
 }
 
-fun KSClassDeclaration.getConstructors(): List<KSFunctionDeclaration> {
+fun KSClassDeclaration.getConstructors(): Sequence<KSFunctionDeclaration> {
     return getDeclaredFunctions().filter {
         it.isConstructor()
     }

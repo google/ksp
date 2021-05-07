@@ -30,14 +30,14 @@ interface Resolver {
      *
      * @return new files generated from last last round of processing in the module.
      */
-    fun getNewFiles(): List<KSFile>
+    fun getNewFiles(): Sequence<KSFile>
 
     /**
      * Get all files in the module / compilation unit.
      *
      * @return all files generated from last last round of processing in the module.
      */
-    fun getAllFiles(): List<KSFile>
+    fun getAllFiles(): Sequence<KSFile>
 
     /**
      * Get all symbols with specified annotation.
@@ -46,7 +46,7 @@ interface Resolver {
      * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.
      * @return Elements annotated with the specified annotation.
      */
-    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean = false): List<KSAnnotated>
+    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean = false): Sequence<KSAnnotated>
 
     /**
      * Find a class in the compilation classpath for the given name.
