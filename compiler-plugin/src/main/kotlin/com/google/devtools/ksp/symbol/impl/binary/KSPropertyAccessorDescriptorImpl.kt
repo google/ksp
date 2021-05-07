@@ -24,15 +24,19 @@ import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
+import org.jetbrains.kotlin.load.java.descriptors.JavaClassDescriptor
+import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 
 abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) : KSPropertyAccessor {
-    override val origin: Origin
-        get() = when(receiver.origin) {
+    override val origin: Origin by lazy {
+        when (receiver.origin) {
             // if receiver is kotlin source, that means we are a synthetic where developer
             // didn't declare an explicit accessor so we used the descriptor instead
             Origin.KOTLIN -> Origin.SYNTHETIC
-            else -> Origin.CLASS
+            else -> descriptor.origin
         }
+    }
 
     override val receiver: KSPropertyDeclaration by lazy {
         descriptor.correspondingProperty.toKSPropertyDeclaration()

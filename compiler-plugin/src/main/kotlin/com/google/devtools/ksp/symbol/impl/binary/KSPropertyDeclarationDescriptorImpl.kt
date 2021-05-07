@@ -32,7 +32,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
 
     override val extensionReceiver: KSTypeReference? by lazy {
         if (descriptor.extensionReceiverParameter != null) {
-            KSTypeReferenceDescriptorImpl.getCached(descriptor.extensionReceiverParameter!!.type)
+            KSTypeReferenceDescriptorImpl.getCached(descriptor.extensionReceiverParameter!!.type, origin)
         } else {
             null
         }
@@ -78,7 +78,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
     override fun findOverridee(): KSPropertyDeclaration? {

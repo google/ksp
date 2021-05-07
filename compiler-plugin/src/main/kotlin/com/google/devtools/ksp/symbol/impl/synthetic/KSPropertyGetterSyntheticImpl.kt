@@ -40,7 +40,7 @@ class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
 
     override val returnType: KSTypeReference? by lazy {
         if (descriptor.returnType != null) {
-            KSTypeReferenceDescriptorImpl.getCached(descriptor.returnType!!)
+            KSTypeReferenceDescriptorImpl.getCached(descriptor.returnType!!, origin)
         } else {
             null
         }

@@ -2,11 +2,11 @@
 // TEST PROCESSOR: MultiModuleTestProcessor
 // EXPECTED:
 // ClassInMainModule[KOTLIN]
-// ClassInModule1[CLASS]
-// ClassInModule2[CLASS]
+// ClassInModule1[KOTLIN_LIB]
+// ClassInModule2[KOTLIN_LIB]
 // JavaClassInMainModule[JAVA]
-// JavaClassInModule1[CLASS]
-// JavaClassInModule2[CLASS]
+// JavaClassInModule1[JAVA_LIB]
+// JavaClassInModule2[JAVA_LIB]
 // TestTarget[KOTLIN]
 // END
 // MODULE: module1

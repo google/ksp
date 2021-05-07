@@ -24,17 +24,15 @@ import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProjection) : KSTypeArgumentImpl() {
-    companion object : KSObjectCache<IdKey<TypeProjection>, KSTypeArgumentDescriptorImpl>() {
-        fun getCached(descriptor: TypeProjection) = cache.getOrPut(IdKey(descriptor)) { KSTypeArgumentDescriptorImpl(descriptor) }
+class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProjection, override val origin: Origin) : KSTypeArgumentImpl() {
+    companion object : KSObjectCache<IdKey<Pair<TypeProjection, Origin>>, KSTypeArgumentDescriptorImpl>() {
+        fun getCached(descriptor: TypeProjection, origin: Origin) = cache.getOrPut(IdKey(Pair(descriptor, origin))) { KSTypeArgumentDescriptorImpl(descriptor, origin) }
     }
-
-    override val origin = Origin.CLASS
 
     override val location: Location = NonExistLocation
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
     override val variance: Variance by lazy {

@@ -40,7 +40,7 @@ class KSPropertyGetterImpl private constructor(ktPropertyGetter: KtPropertyAcces
             KSTypeReferenceImpl.getCached(property.typeReference!!)
         } else {
             val desc = ResolverImpl.instance.resolveDeclaration(property) as PropertyDescriptor
-            KSTypeReferenceDescriptorImpl.getCached(desc.returnType!!)
+            KSTypeReferenceDescriptorImpl.getCached(desc.returnType!!, origin)
         }
     }
 
