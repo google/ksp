@@ -54,7 +54,7 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
 
     override val arguments: List<KSValueArgument> by lazy {
         val annotationConstructor =
-            ((annotationType.resolve() as KSTypeImpl).kotlinType.constructor.declarationDescriptor as? ClassDescriptor)
+            ((annotationType.resolve() as? KSTypeImpl)?.kotlinType?.constructor?.declarationDescriptor as? ClassDescriptor)
                 ?.constructors?.single()
         val presentValueArguments = psi.parameterList.attributes
             .mapIndexed { index, it ->
