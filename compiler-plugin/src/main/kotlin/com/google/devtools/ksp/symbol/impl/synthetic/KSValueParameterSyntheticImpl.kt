@@ -25,7 +25,7 @@ class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> Valu
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
     override val isVararg: Boolean = descriptor.isVararg

@@ -197,6 +197,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/javaTypes2.kt");
     }
 
+    @TestMetadata("libOrigins.kt")
+    public void testLibOrigins() throws Exception {
+        runTest("testData/api/libOrigins.kt");
+    }
+
     @TestMetadata("makeNullable.kt")
     public void testMakeNullable() throws Exception {
         runTest("testData/api/makeNullable.kt");

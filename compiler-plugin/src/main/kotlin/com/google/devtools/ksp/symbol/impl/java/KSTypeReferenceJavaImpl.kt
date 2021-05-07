@@ -76,20 +76,21 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
         when (type) {
             is PsiClassType -> KSClassifierReferenceJavaImpl.getCached(type)
             is PsiWildcardType -> KSClassifierReferenceJavaImpl.getCached(type.extendsBound as PsiClassType)
-            is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType())
+            is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType(), origin)
             is PsiArrayType -> {
                 val componentType = ResolverImpl.instance.resolveJavaType(type.componentType)
                 if (type.componentType !is PsiPrimitiveType) {
                     KSClassifierReferenceDescriptorImpl.getCached(
-                        ResolverImpl.instance.module.builtIns.getArrayType(Variance.INVARIANT, componentType)
+                        ResolverImpl.instance.module.builtIns.getArrayType(Variance.INVARIANT, componentType),
+                        origin
                     )
                 } else {
                     KSClassifierReferenceDescriptorImpl.getCached(
-                        ResolverImpl.instance.module.builtIns.getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(componentType)!!
+                        ResolverImpl.instance.module.builtIns.getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(componentType)!!, origin
                     )
                 }
             }
-            null -> KSClassifierReferenceDescriptorImpl.getCached((ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable())
+            null -> KSClassifierReferenceDescriptorImpl.getCached((ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable(), origin)
             else -> throw IllegalStateException("Unexpected psi type for ${type.javaClass}, $ExceptionMessage")
         }
     }

@@ -24,13 +24,16 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
+import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
 
 class KSValueParameterDescriptorImpl private constructor(val descriptor: ValueParameterDescriptor) : KSValueParameter {
     companion object : KSObjectCache<ValueParameterDescriptor, KSValueParameterDescriptorImpl>() {
         fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) { KSValueParameterDescriptorImpl(descriptor) }
     }
 
-    override val origin = Origin.CLASS
+    override val origin by lazy {
+        descriptor.origin
+    }
 
     override val location: Location = NonExistLocation
 
@@ -53,7 +56,7 @@ class KSValueParameterDescriptorImpl private constructor(val descriptor: ValuePa
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
     override val hasDefault: Boolean = descriptor.hasDefaultValue()

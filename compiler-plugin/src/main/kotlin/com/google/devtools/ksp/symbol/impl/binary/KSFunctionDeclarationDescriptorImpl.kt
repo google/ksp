@@ -56,7 +56,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     override val extensionReceiver: KSTypeReference? by lazy {
         val extensionReceiver = descriptor.extensionReceiverParameter?.type
         if (extensionReceiver != null) {
-            KSTypeReferenceDescriptorImpl.getCached(extensionReceiver)
+            KSTypeReferenceDescriptorImpl.getCached(extensionReceiver, origin)
         } else {
             null
         }
@@ -95,7 +95,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         if (returnType == null) {
             null
         } else {
-            KSTypeReferenceDescriptorImpl.getCached(returnType)
+            KSTypeReferenceDescriptorImpl.getCached(returnType, origin)
         }
     }
 

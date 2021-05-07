@@ -20,7 +20,8 @@ package com.google.devtools.ksp.symbol
 
 enum class Origin {
     KOTLIN,
-    CLASS,
+    KOTLIN_LIB,
     JAVA,
+    JAVA_LIB,
     SYNTHETIC
 }
