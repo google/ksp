@@ -35,9 +35,9 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
     val primaryConstructor: KSFunctionDeclaration?
 
     /**
-     * List of supertypes of this class, containing both super class and implemented interfaces.
+     * Sequence of supertypes of this class, containing both super class and implemented interfaces.
      */
-    val superTypes: List<KSTypeReference>
+    val superTypes: Sequence<KSTypeReference>
 
     /**
      * Determine whether this class declaration is a companion object.
@@ -53,17 +53,17 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
 
     /**
      * Get all member functions of a class declaration, including declared and inherited.
-     * @return List of function declarations from the class members.
+     * @return Sequence of function declarations from the class members.
      * Calling [getAllFunctions] requires type resolution therefore is expensive and should be avoided if possible.
      */
-    fun getAllFunctions(): List<KSFunctionDeclaration>
+    fun getAllFunctions(): Sequence<KSFunctionDeclaration>
 
     /**
      * Get all member properties of a class declaration, including declared and inherited.
-     * @return List of properties declarations from the class members.
+     * @return Sequence of properties declarations from the class members.
      * Calling [getAllProperties] requires type resolution therefore is expensive and should be avoided if possible.
      */
-    fun getAllProperties(): List<KSPropertyDeclaration>
+    fun getAllProperties(): Sequence<KSPropertyDeclaration>
 
     /**
      * Create a type by applying a list of type arguments to this class' type parameters.

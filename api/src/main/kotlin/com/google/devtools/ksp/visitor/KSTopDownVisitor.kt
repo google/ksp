@@ -26,7 +26,7 @@ import com.google.devtools.ksp.symbol.*
  * For subclasses overriding a function, remember to call the corresponding super method.
  */
 abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
-    private fun Collection<KSNode>.accept(data: D) {
+    private fun Sequence<KSNode>.accept(data: D) {
         forEach { it.accept(this@KSTopDownVisitor, data) }
     }
 

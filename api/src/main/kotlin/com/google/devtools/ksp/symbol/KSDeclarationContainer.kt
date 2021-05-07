@@ -25,5 +25,5 @@ interface KSDeclarationContainer : KSNode {
     /**
      * Declarations that are lexically declared inside the current container.
      */
-    val declarations: List<KSDeclaration>
+    val declarations: Sequence<KSDeclaration>
 }

@@ -26,5 +26,5 @@ interface KSAnnotated : KSNode {
     /**
      * All annotations on this symbol.
      */
-    val annotations: List<KSAnnotation>
+    val annotations: Sequence<KSAnnotation>
 }
