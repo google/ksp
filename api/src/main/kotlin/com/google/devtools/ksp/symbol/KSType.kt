@@ -44,7 +44,7 @@ interface KSType {
     /**
      * Type annotations to the type.
      */
-    val annotations: List<KSAnnotation>
+    val annotations: Sequence<KSAnnotation>
 
     /**
      * Check whether this type is assign-compatible from another type.

@@ -39,12 +39,12 @@ interface KSExpectActual {
      *
      * @return a list of corresponding `actual` implementations, or an empty list if not applicable.
      */
-    fun findActuals(): List<KSDeclaration>
+    fun findActuals(): Sequence<KSDeclaration>
 
     /**
      * Finds all corresponding `expect` declarations for `this`.
      *
      * @return a list of corresponding `expect` implementations, or an empty list if not applicable.
      */
-    fun findExpects(): List<KSDeclaration>
+    fun findExpects(): Sequence<KSDeclaration>
 }

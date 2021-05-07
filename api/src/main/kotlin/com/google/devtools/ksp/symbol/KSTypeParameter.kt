@@ -42,5 +42,5 @@ interface KSTypeParameter : KSDeclaration {
     /**
      * Upper bounds of the type parameter.
      */
-    val bounds: List<KSTypeReference>
+    val bounds: Sequence<KSTypeReference>
 }
