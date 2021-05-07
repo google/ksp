@@ -25,4 +25,8 @@ class KSTypeReferenceSyntheticImpl(val ksType: KSType) : KSTypeReference {
     override fun resolve(): KSType {
         return ksType
     }
+
+    override fun toString(): String {
+        return ksType.toString()
+    }
 }
