@@ -36,7 +36,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumConstant) : KSClassDeclaration, KSDeclarationJavaImpl(),
+class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumConstant) : KSClassDeclaration, KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiEnumConstant, KSClassDeclarationJavaEnumEntryImpl>() {
         fun getCached(psi: PsiEnumConstant) = cache.getOrPut(psi) { KSClassDeclarationJavaEnumEntryImpl(psi) }

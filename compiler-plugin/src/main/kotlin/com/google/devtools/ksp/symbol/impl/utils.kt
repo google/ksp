@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
+import org.jetbrains.kotlin.psi.psiUtil.siblings
 import org.jetbrains.kotlin.resolve.annotations.hasJvmStaticAnnotation
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 
@@ -228,6 +229,21 @@ fun PsiElement.toLocation(): Location {
     val document = ResolverImpl.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
     return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
 }
+
+private fun parseDocString(raw: String): String? {
+    val t1 = raw.trim()
+    if (!t1.startsWith("/**") || !t1.endsWith("*/"))
+        return null
+    val lineSep = t1.findAnyOf(listOf("\r\n", "\n", "\r"))?.second ?: ""
+    return t1.trim('/').trim('*').lines().joinToString(lineSep) {
+        it.trimStart().trimStart('*')
+    }
+}
+
+fun PsiElement.getDocString(): String? =
+    this.firstChild.siblings().firstOrNull { it is PsiComment }?.let {
+        parseDocString(it.text)
+    }
 
 // TODO: handle local functions/classes correctly
 fun Sequence<KtElement>.getKSDeclarations(): Sequence<KSDeclaration> =

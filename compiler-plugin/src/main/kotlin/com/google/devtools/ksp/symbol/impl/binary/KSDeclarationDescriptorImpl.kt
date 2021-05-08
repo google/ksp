@@ -65,4 +65,5 @@ abstract class KSDeclarationDescriptorImpl(descriptor: DeclarationDescriptor) : 
         return this.simpleName.asString()
     }
 
+    override val docString = null
 }
