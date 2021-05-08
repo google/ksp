@@ -9,6 +9,14 @@ kotlin {
     jvm {
         withJava()
     }
+    linuxX64()
+    mingwX64()
+    macosX64()
+    ios()
+    js() {
+        browser()
+        nodejs()
+    }
     sourceSets {
         val commonMain by getting
         val jvmMain by getting {
