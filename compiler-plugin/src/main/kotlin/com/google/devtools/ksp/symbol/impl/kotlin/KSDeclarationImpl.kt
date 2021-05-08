@@ -21,6 +21,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.memoized
+import com.google.devtools.ksp.symbol.impl.getDocString
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
@@ -74,5 +75,9 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
 
     internal val originalAnnotations: List<KSAnnotation> by lazy {
         ktDeclaration.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+    }
+
+    override val docString by lazy {
+        ktDeclaration.getDocString()
     }
 }

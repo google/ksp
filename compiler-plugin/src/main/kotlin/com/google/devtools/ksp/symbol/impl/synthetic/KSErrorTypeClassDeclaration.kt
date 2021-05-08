@@ -90,4 +90,6 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
     override fun toString(): String {
         return "Error type synthetic declaration"
     }
+
+    override val docString = null
 }

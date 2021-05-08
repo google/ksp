@@ -20,13 +20,19 @@ package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.impl.getDocString
+import com.intellij.psi.PsiElement
 
-abstract class KSDeclarationJavaImpl : KSDeclaration {
+abstract class KSDeclarationJavaImpl(private val psi: PsiElement) : KSDeclaration {
     override val packageName: KSName by lazy {
         this.containingFile!!.packageName
     }
 
     override fun toString(): String {
         return this.simpleName.asString()
+    }
+
+    override val docString by lazy {
+        psi.getDocString()
     }
 }
