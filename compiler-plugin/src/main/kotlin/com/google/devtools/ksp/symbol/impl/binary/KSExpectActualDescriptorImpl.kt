@@ -29,23 +29,23 @@ class KSExpectActualDescriptorImpl(val descriptor: MemberDescriptor) : KSExpectA
 
     override val isActual: Boolean = descriptor.isActual
 
-    private val expects: List<KSDeclaration> by lazy {
+    private val expects: Sequence<KSDeclaration> by lazy {
         descriptor.findExpectsInKSDeclaration()
     }
 
-    override fun findExpects(): List<KSDeclaration> {
+    override fun findExpects(): Sequence<KSDeclaration> {
         if (!isActual)
-            return emptyList()
+            return emptySequence()
         return expects
     }
 
-    private val actuals: List<KSDeclaration> by lazy {
+    private val actuals: Sequence<KSDeclaration> by lazy {
         descriptor.findActualsInKSDeclaration()
     }
 
-    override fun findActuals(): List<KSDeclaration> {
+    override fun findActuals(): Sequence<KSDeclaration> {
         if (!isExpect)
-            return emptyList()
+            return emptySequence()
         return actuals
     }
 }

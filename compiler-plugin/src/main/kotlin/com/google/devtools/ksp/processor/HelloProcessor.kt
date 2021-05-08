@@ -27,8 +27,8 @@ class HelloProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation("test.Anno")
-        results.add(symbols.size.toString())
-        symbols.map { it.accept(visitor, Unit) }
+        results.add(symbols.toList().size.toString())
+        symbols.forEach{ it.accept(visitor, Unit) }
         return emptyList()
     }
 

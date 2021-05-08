@@ -63,21 +63,21 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
         }
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
+    override fun getAllFunctions(): Sequence<KSFunctionDeclaration> = descriptor.getAllFunctions()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> = descriptor.getAllProperties()
+    override fun getAllProperties(): Sequence<KSPropertyDeclaration> = descriptor.getAllProperties()
 
-    override val declarations: List<KSDeclaration> by lazy {
+    override val declarations: Sequence<KSDeclaration> by lazy {
         val propertiesFromConstructor = primaryConstructor?.parameters
+            ?.asSequence()
             ?.filter { it.isVar || it.isVal }
-            ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptyList()
-        val result = ktClassOrObject.declarations.getKSDeclarations().toMutableList<KSDeclaration>()
-        result.addAll(propertiesFromConstructor)
+            ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) } ?: emptySequence()
+        var result = ktClassOrObject.declarations.asSequence().getKSDeclarations().plus(propertiesFromConstructor)
         primaryConstructor?.let { primaryConstructor: KSFunctionDeclaration ->
             // if primary constructor is from source, it won't show up in declarations
             // hence add it as well.
             if (primaryConstructor.origin == Origin.KOTLIN) {
-                result.add(primaryConstructor)
+                result = result.plus(primaryConstructor)
             }
         }
         if (classKind != ClassKind.INTERFACE) {
@@ -102,8 +102,8 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
                 KSConstructorSyntheticImpl.getCached(this) else null
     }
 
-    override val superTypes: List<KSTypeReference> by lazy {
-        ktClassOrObject.superTypeListEntries.map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
+    override val superTypes: Sequence<KSTypeReference> by lazy {
+        ktClassOrObject.superTypeListEntries.asSequence().map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
     }
 
     private val descriptor: ClassDescriptor by lazy {

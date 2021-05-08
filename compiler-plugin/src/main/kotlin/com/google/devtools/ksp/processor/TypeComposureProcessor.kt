@@ -47,8 +47,8 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
         }
 
         val composed = mutableSetOf<KSType>()
-        val types = references.filter { it.resolve()!!.arguments.size == 1 }.map { it.resolve()!! }
-        val refs0Arg = references.filter { it.resolve()!!.arguments.size == 0 }
+        val types = references.filter { it.resolve()!!.arguments.toList().size == 1 }.map { it.resolve()!! }
+        val refs0Arg = references.filter { it.resolve()!!.arguments.toList().size == 0 }
 
         for (c in classes) {
             for (ref in refs0Arg) {

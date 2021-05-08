@@ -38,7 +38,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         val errorInComponent = classC.declarations.single { it.simpleName.asString() == "errorInComponent" } as KSPropertyDeclaration
         result.add(errorAtTop.type.resolve().print() ?: "")
         result.add(errorInComponent.type.resolve().print() ?: "")
-        errorInComponent.type.resolve().arguments.map { result.add(it.type!!.resolve().print()) }
+        errorInComponent.type.resolve().arguments.forEach{ result.add(it.type!!.resolve().print()) }
         result.add(
             "errorInComponent is assignable from errorAtTop: ${
                 errorAtTop.type.resolve().isAssignableFrom(errorAtTop.type.resolve())
@@ -65,7 +65,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
             }"
         )
         val Cls = resolver.getClassDeclarationByName("Cls")!!
-        val type = Cls.superTypes[0].resolve()
+        val type = Cls.superTypes.toList()[0].resolve()
         result.add("Cls's super type is Error type: ${type.isError}")
         Cls.annotations.forEach {
             val annotation = it.annotationType.resolve()

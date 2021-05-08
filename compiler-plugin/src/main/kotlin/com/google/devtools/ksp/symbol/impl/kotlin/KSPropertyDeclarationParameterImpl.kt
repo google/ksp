@@ -33,7 +33,7 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazy {
         ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
     }
 

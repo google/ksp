@@ -41,7 +41,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         ResolverImpl.instance.resolveDeclaration(ktProperty) as? PropertyDescriptor
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazy {
         ktProperty.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
     }
 
@@ -104,8 +104,8 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         ResolverImpl.instance.asMemberOf(this, containing)
 }
 
-internal fun KtAnnotated.filterUseSiteTargetAnnotations(): List<KtAnnotationEntry> {
-    return this.annotationEntries.filter { property ->
+internal fun KtAnnotated.filterUseSiteTargetAnnotations(): Sequence<KtAnnotationEntry> {
+    return this.annotationEntries.asSequence().filter { property ->
         property.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
             it != AnnotationUseSiteTarget.PROPERTY_GETTER && it != AnnotationUseSiteTarget.PROPERTY_SETTER
                 && it != AnnotationUseSiteTarget.SETTER_PARAMETER

@@ -69,9 +69,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         return descriptor.sealedSubclassesSequence()
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> = descriptor.getAllFunctions()
+    override fun getAllFunctions(): Sequence<KSFunctionDeclaration> = descriptor.getAllFunctions()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> = descriptor.getAllProperties()
+    override fun getAllProperties(): Sequence<KSPropertyDeclaration> = descriptor.getAllProperties()
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         descriptor.unsubstitutedPrimaryConstructor?.let { KSFunctionDeclarationDescriptorImpl.getCached(it) }
@@ -81,8 +81,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     private val mockSerializableType = ResolverImpl.instance.mockSerializableType
     private val javaSerializableType = ResolverImpl.instance.javaSerializableType
 
-    override val superTypes: List<KSTypeReference> by lazy {
-        descriptor.defaultType.constructor.supertypes.map {
+    override val superTypes: Sequence<KSTypeReference> by lazy {
+        descriptor.defaultType.constructor.supertypes.asSequence().map {
             KSTypeReferenceDescriptorImpl.getCached(
                 if (it === mockSerializableType) javaSerializableType else it
             )
@@ -93,8 +93,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         descriptor.declaredTypeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
 
-    override val declarations: List<KSDeclaration> by lazy {
-        listOf(
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        sequenceOf(
             descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(),
             descriptor.staticScope.getDescriptorsFiltered(),
             descriptor.constructors
@@ -151,12 +151,12 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     }
 }
 
-internal fun ClassDescriptor.getAllFunctions(): List<KSFunctionDeclaration> {
+internal fun ClassDescriptor.getAllFunctions(): Sequence<KSFunctionDeclaration> {
     ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(this)
-    val functionDescriptors = unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS).toList()
-            .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }.toMutableList()
-    functionDescriptors += constructors
-    return functionDescriptors.map {
+    val functionDescriptors = unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
+        .asSequence()
+        .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
+    return functionDescriptors.plus(constructors).map {
         when (val psi = it.findPsi()) {
             is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
             is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
@@ -165,9 +165,9 @@ internal fun ClassDescriptor.getAllFunctions(): List<KSFunctionDeclaration> {
     }
 }
 
-internal fun ClassDescriptor.getAllProperties(): List<KSPropertyDeclaration> {
+internal fun ClassDescriptor.getAllProperties(): Sequence<KSPropertyDeclaration> {
     ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(this)
-    return unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).toList()
+    return unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).asSequence()
             .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
             .map {
                 when (val psi = it.findPsi()) {

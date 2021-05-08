@@ -51,7 +51,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         descriptor.typeParameters.map { KSTypeParameterDescriptorImpl.getCached(it) }
     }
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 
     override val extensionReceiver: KSTypeReference? by lazy {
         val extensionReceiver = descriptor.extensionReceiverParameter?.type

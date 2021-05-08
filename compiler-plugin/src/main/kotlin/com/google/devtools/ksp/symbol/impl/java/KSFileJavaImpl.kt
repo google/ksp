@@ -35,10 +35,10 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
         psi.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
-    override val declarations: List<KSDeclaration> by lazy {
-        psi.classes.map { KSClassDeclarationJavaImpl.getCached(it) }
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        psi.classes.asSequence().map { KSClassDeclarationJavaImpl.getCached(it) }
     }
 
     override val fileName: String by lazy {

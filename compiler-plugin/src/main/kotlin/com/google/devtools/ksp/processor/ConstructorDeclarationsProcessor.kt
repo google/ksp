@@ -31,7 +31,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getAllFiles().map { it.accept(visitor, Unit) }
+        resolver.getAllFiles().forEach { it.accept(visitor, Unit) }
         val classNames = visitor.classNames().toList() // copy
         // each class has a cousin in the lib package, visit them as well, make sure
         // we report the same structure when they are compiled code as well
@@ -84,7 +84,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         }
 
         override fun visitFile(file: KSFile, data: Unit) {
-            file.declarations.map { it.accept(this, Unit) }
+            file.declarations.forEach{ it.accept(this, Unit) }
         }
     }
 }

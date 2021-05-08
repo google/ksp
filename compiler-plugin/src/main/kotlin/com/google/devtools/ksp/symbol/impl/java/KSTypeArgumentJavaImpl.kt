@@ -37,8 +37,8 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
         (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     // Could be unbounded, need to model unbdouned type argument.

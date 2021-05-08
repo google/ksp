@@ -30,7 +30,7 @@ class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -
 
     override val location: Location = NonExistLocation
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val element: KSReferenceElement? = null
 

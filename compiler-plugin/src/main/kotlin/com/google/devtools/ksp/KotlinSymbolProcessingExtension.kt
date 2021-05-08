@@ -257,10 +257,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
  * Used when an output potentially depends on new information.
  */
 internal class AnyChanges(val baseDir: File) : KSFile {
-    override val annotations: List<KSAnnotation>
+    override val annotations: Sequence<KSAnnotation>
         get() = throw Exception("AnyChanges should not be used.")
 
-    override val declarations: List<KSDeclaration>
+    override val declarations: Sequence<KSDeclaration>
         get() = throw Exception("AnyChanges should not be used.")
 
     override val fileName: String

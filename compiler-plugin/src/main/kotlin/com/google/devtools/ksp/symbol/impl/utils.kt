@@ -229,7 +229,7 @@ fun PsiElement.toLocation(): Location {
 }
 
 // TODO: handle local functions/classes correctly
-fun List<KtElement>.getKSDeclarations() =
+fun Sequence<KtElement>.getKSDeclarations(): Sequence<KSDeclaration> =
     this.mapNotNull {
         when (it) {
             is KtFunction -> KSFunctionDeclarationImpl.getCached(it)

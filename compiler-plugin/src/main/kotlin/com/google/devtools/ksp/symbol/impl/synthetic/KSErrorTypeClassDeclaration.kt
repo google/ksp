@@ -23,13 +23,13 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 
 object KSErrorTypeClassDeclaration : KSClassDeclaration {
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val classKind: ClassKind = ClassKind.CLASS
 
     override val containingFile: KSFile? = null
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 
     override val isActual: Boolean = false
 
@@ -53,7 +53,7 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
 
     override val simpleName: KSName = KSNameImpl.getCached("<Error>")
 
-    override val superTypes: List<KSTypeReference> = emptyList()
+    override val superTypes: Sequence<KSTypeReference> = emptySequence()
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
@@ -67,20 +67,20 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
         return ResolverImpl.instance.builtIns.nothingType
     }
 
-    override fun findActuals(): List<KSDeclaration> {
-        return emptyList()
+    override fun findActuals(): Sequence<KSDeclaration> {
+        return emptySequence()
     }
 
-    override fun findExpects(): List<KSDeclaration> {
-        return emptyList()
+    override fun findExpects(): Sequence<KSDeclaration> {
+        return emptySequence()
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> {
-        return emptyList()
+    override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
+        return emptySequence()
     }
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> {
-        return emptyList()
+    override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
+        return emptySequence()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

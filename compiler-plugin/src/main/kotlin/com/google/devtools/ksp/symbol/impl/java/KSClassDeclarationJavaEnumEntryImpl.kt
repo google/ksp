@@ -48,8 +48,8 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
         psi.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     override val classKind: ClassKind = ClassKind.ENUM_ENTRY
@@ -66,13 +66,13 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
         ResolverImpl.instance.resolveJavaDeclaration(psi) as ClassDescriptor
     }
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> =
-            descriptor?.getAllFunctions() ?: emptyList()
+    override fun getAllFunctions(): Sequence<KSFunctionDeclaration> =
+            descriptor?.getAllFunctions() ?: emptySequence()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> =
-            descriptor?.getAllProperties() ?: emptyList()
+    override fun getAllProperties(): Sequence<KSPropertyDeclaration> =
+            descriptor?.getAllProperties() ?: emptySequence()
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 
     override val modifiers: Set<Modifier> by lazy {
         psi.toKSModifiers()
@@ -92,7 +92,7 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
         KSNameImpl.getCached(psi.name)
     }
 
-    override val superTypes: List<KSTypeReference> = emptyList()
+    override val superTypes: Sequence<KSTypeReference> = emptySequence()
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
 

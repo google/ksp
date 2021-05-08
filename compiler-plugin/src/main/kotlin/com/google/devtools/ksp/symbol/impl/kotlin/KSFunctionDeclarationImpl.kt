@@ -51,11 +51,11 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         }
     }
 
-    override val declarations: List<KSDeclaration> by lazy {
+    override val declarations: Sequence<KSDeclaration> by lazy {
         if (!ktFunction.hasBlockBody()) {
-            emptyList()
+            emptySequence()
         } else {
-            ktFunction.bodyBlockExpression?.statements?.getKSDeclarations() ?: emptyList()
+            ktFunction.bodyBlockExpression?.statements?.asSequence()?.getKSDeclarations() ?: emptySequence()
         }
     }
 

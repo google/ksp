@@ -52,9 +52,9 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
         }
     }
 
-    override val bounds: List<KSTypeReference> by lazy {
-        val list = mutableListOf(ktTypeParameter.extendsBound)
-        list.addAll(
+    override val bounds: Sequence<KSTypeReference> by lazy {
+        val list = sequenceOf(ktTypeParameter.extendsBound)
+        list.plus(
             owner.typeConstraints
                 .filter { it.subjectTypeParameterName!!.getReferencedName() == ktTypeParameter.nameAsSafeName.asString() }
                 .map { it.boundTypeReference }
