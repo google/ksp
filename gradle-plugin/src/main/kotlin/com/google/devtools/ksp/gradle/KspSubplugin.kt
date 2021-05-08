@@ -80,6 +80,31 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         @JvmStatic
         fun getKspCachesDir(project: Project, sourceSetName: String) =
                 File(project.project.buildDir, "kspCaches/$sourceSetName")
+
+        @JvmStatic
+        private fun getSubpluginOptions(
+            project: Project,
+            kspExtension: KspExtension,
+            nonEmptyKspConfigurations: List<Configuration>,
+            sourceSetName: String
+        ): List<SubpluginOption> {
+            val options = mutableListOf<SubpluginOption>()
+            options += SubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName).path)
+            options += SubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName).path)
+            options += SubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName).path)
+            options += SubpluginOption("resourceOutputDir", getKspResourceOutputDir(project, sourceSetName).path)
+            options += SubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName).path)
+            options += SubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName).path)
+            options += SubpluginOption("incremental", project.findProperty("ksp.incremental")?.toString() ?: "true")
+            options += SubpluginOption("incrementalLog", project.findProperty("ksp.incremental.log")?.toString() ?: "false")
+            options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
+            options += FilesSubpluginOption("apclasspath", nonEmptyKspConfigurations.flatten())
+
+            kspExtension.apOptions.forEach {
+                options += SubpluginOption("apoption", "${it.key}=${it.value}")
+            }
+            return options
+        }
     }
 
     private val androidIntegration by lazy {
@@ -179,29 +204,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         if (nonEmptyKspConfigurations.isEmpty()) {
             return project.provider { emptyList() }
         }
-        val options = mutableListOf<SubpluginOption>()
-        options += FilesSubpluginOption("apclasspath", nonEmptyKspConfigurations.flatten())
 
         val sourceSetName = kotlinCompilation.compilationName
         val classOutputDir = getKspClassOutputDir(project, sourceSetName)
         val javaOutputDir = getKspJavaOutputDir(project, sourceSetName)
         val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName)
         val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName)
-        val cachesDir = getKspCachesDir(project, sourceSetName)
         val kspOutputDir = getKspOutputDir(project, sourceSetName)
-        options += SubpluginOption("classOutputDir", classOutputDir.path)
-        options += SubpluginOption("javaOutputDir", javaOutputDir.path)
-        options += SubpluginOption("kotlinOutputDir", kotlinOutputDir.path)
-        options += SubpluginOption("resourceOutputDir", resourceOutputDir.path)
-        options += SubpluginOption("cachesDir", cachesDir.path)
-        options += SubpluginOption("incremental", project.findProperty("ksp.incremental")?.toString() ?: "true")
-        options += SubpluginOption("incrementalLog", project.findProperty("ksp.incremental.log")?.toString() ?: "false")
-        options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
-        options += SubpluginOption("kspOutputDir", kspOutputDir.path)
-
-        kspExtension.apOptions.forEach {
-            options += SubpluginOption("apoption", "${it.key}=${it.value}")
-        }
 
         if (javaCompile != null) {
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
@@ -212,14 +221,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
-        val destinationDir = getKspOutputDir(project, sourceSetName)
-        InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation, project.provider { destinationDir })
+        InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation, project.provider { kspOutputDir })
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
-            kspTask.setDestinationDir(destinationDir)
-            kspTask.options = options
+            kspTask.destinationDir = kspOutputDir
+            kspTask.options = getSubpluginOptions(project, kspExtension, nonEmptyKspConfigurations, sourceSetName)
             kspTask.kotlinCompile = kotlinCompileProvider.get()
-            kspTask.destination = destinationDir
+            kspTask.destination = kspOutputDir
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
 
