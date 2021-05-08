@@ -41,7 +41,7 @@ class VisibilityProcessor : AbstractTestProcessor() {
         allFunctions.map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                     "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
-        }.map { results.add(it) }
+        }.forEach { results.add(it) }
         return emptyList()
     }
 }

@@ -40,8 +40,8 @@ class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> Valu
 
     override val hasDefault: Boolean = descriptor.hasDefaultValue()
 
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val origin: Origin = Origin.SYNTHETIC

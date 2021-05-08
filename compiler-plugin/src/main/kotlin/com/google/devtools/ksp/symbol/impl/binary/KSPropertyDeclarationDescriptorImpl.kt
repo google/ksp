@@ -38,7 +38,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         }
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazy {
         // annotations on backing field will not visible in the property declaration so we query it directly to load
         // its annotations as well.
         val backingFieldAnnotations = descriptor.backingField?.annotations?.map {
@@ -52,13 +52,9 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        if (descriptor is PropertyDescriptor) {
-            val modifiers = mutableSetOf<Modifier>()
-            modifiers.addAll(descriptor.toKSModifiers())
-            modifiers
-        } else {
-            emptySet<Modifier>()
-        }
+        val modifiers = mutableSetOf<Modifier>()
+        modifiers.addAll(descriptor.toKSModifiers())
+        modifiers
     }
 
     override val setter: KSPropertySetter? by lazy {

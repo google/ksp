@@ -30,7 +30,7 @@ class KSValueArgumentLiteImpl private constructor(override val name: KSName, ove
 
     override val location: Location = NonExistLocation
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val isSpread: Boolean = false
 }

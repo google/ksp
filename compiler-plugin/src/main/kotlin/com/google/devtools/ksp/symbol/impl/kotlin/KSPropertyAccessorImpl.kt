@@ -29,7 +29,7 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
     override val receiver: KSPropertyDeclaration by lazy {
         KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
     }
-    override val annotations: List<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 

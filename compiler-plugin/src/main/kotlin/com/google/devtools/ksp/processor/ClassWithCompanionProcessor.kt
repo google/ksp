@@ -29,7 +29,7 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
     val visitor = CompanionVisitor()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getNewFiles().map { it.accept(CompanionVisitor(), Unit) }
+        resolver.getNewFiles().forEach { it.accept(CompanionVisitor(), Unit) }
         return emptyList()
     }
 
@@ -39,12 +39,12 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
 
     inner class CompanionVisitor : KSVisitorVoid() {
         override fun visitFile(file: KSFile, data: Unit) {
-            file.declarations.map { it.accept(this, Unit) }
+            file.declarations.forEach{ it.accept(this, Unit) }
         }
 
         override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
             results.add("${type.simpleName.asString()}:${type.isCompanionObject}")
-            type.declarations.map { it.accept(this, Unit) }
+            type.declarations.forEach{ it.accept(this, Unit) }
         }
     }
 }

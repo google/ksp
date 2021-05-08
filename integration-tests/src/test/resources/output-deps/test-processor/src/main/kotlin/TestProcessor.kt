@@ -25,7 +25,7 @@ class TestProcessor : SymbolProcessor {
             return emptyList()
         }
         fun outputForAnno(anno: String) {
-            val annoFiles = resolver.getSymbolsWithAnnotation(anno).map { (it as KSDeclaration).containingFile!! }
+            val annoFiles = resolver.getSymbolsWithAnnotation(anno).map { (it as KSDeclaration).containingFile!! }.toList()
             codeGenerator.createNewFile(Dependencies(false, *annoFiles.toTypedArray()), "", anno, "log").use { output ->
                 OutputStreamWriter(output).use { writer ->
                     writer.write(annoFiles.map { it.fileName }.joinToString(", "))

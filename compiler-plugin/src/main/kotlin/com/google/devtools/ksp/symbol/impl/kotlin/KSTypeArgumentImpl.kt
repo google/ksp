@@ -73,7 +73,7 @@ class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProject
         }
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        ktTypeArgument.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        ktTypeArgument.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
 }

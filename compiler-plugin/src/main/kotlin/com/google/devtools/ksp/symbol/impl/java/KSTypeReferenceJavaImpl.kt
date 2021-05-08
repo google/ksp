@@ -45,8 +45,8 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
         (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     override val modifiers: Set<Modifier> = emptySet()

@@ -33,7 +33,7 @@ class KSDynamicReferenceImpl private constructor() : KSDynamicReference {
         NonExistLocation
     }
 
-    override val typeArguments: List<KSTypeArgument> = listOf<KSTypeArgument>()
+    override val typeArguments: List<KSTypeArgument> = emptyList()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitDynamicReference(this, data)

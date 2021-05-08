@@ -98,13 +98,13 @@ fun AnnotationDescriptor.createKSValueArguments(): List<KSValueArgument> {
         )
     }
     val presentValueArgumentNames = presentValueArguments.map { it.name.asString() }
-    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()?.let {
-        it.getAbsentDefaultArguments(presentValueArgumentNames)
+    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()?.let { argumentsFromDefault ->
+        argumentsFromDefault.getAbsentDefaultArguments(presentValueArgumentNames)
     } ?: emptyList()
     return presentValueArguments.plus(argumentsFromDefault)
 }
 
-fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: Collection<String>): Collection<KSValueArgument> {
+fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: List<String>): List<KSValueArgument> {
     return this.valueParameters.filterNot { param -> excludeNames.contains(param.name.asString()) || !param.hasDefaultValue() }
         .map { param ->
             KSValueArgumentLiteImpl.getCached(

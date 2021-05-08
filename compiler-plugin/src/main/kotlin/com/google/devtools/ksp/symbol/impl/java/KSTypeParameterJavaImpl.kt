@@ -39,12 +39,12 @@ class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : K
         psi.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
-    override val bounds: List<KSTypeReference> by lazy {
-        psi.extendsListTypes.map { KSTypeReferenceJavaImpl.getCached(it) }
+    override val bounds: Sequence<KSTypeReference> by lazy {
+        psi.extendsListTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }
     }
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached(psi.name ?: "_")

@@ -32,7 +32,7 @@ class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType) : KSType
 
     override val element: KSReferenceElement? = null
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val modifiers: Set<Modifier> = emptySet()
 

@@ -37,5 +37,5 @@ class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeRefere
 
     override val location: Location = NonExistLocation
 
-    override val annotations: List<KSAnnotation> = type.annotations
+    override val annotations: Sequence<KSAnnotation> = type.annotations
 }

@@ -60,7 +60,7 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         val comp2 = dataClass.declarations.single { it.simpleName.asString() == "comp2" } as KSPropertyDeclaration
         comp2.getter?.let { result.add("comp2.get(): ${it.origin}") }
         comp2.setter?.let { result.add("comp2.set(): ${it.origin}") }
-        val annotationType = comp1.getter?.let { result.add(it.annotations[0].annotationType.resolve().declaration.qualifiedName!!.asString()) }
+        val annotationType = comp1.getter?.let { result.add(it.annotations.toList()[0].annotationType.resolve().declaration.qualifiedName!!.asString()) }
         val ClassWithoutImplicitPrimaryConstructor = resolver.getClassDeclarationByName("ClassWithoutImplicitPrimaryConstructor")!!
         result.add(ClassWithoutImplicitPrimaryConstructor.getConstructors().map { it.toString() }.joinToString(","))
         val ImplictConstructorJava = resolver.getClassDeclarationByName("ImplictConstructorJava")!!

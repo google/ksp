@@ -38,8 +38,8 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
         ktTypeReference.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        ktTypeReference.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        ktTypeReference.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val modifiers: Set<Modifier> by lazy {

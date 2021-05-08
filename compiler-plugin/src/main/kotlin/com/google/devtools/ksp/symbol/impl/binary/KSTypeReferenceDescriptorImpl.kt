@@ -42,8 +42,8 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
         KSClassifierReferenceDescriptorImpl.getCached(kotlinType)
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        kotlinType.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        kotlinType.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
     }
 
     override val modifiers: Set<Modifier> by lazy {

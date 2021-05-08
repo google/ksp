@@ -8,7 +8,7 @@ class KSTypeReferenceSyntheticImpl(val ksType: KSType) : KSTypeReference {
         fun getCached(ksType: KSType) = KSTypeReferenceSyntheticImpl.cache.getOrPut(ksType) { KSTypeReferenceSyntheticImpl(ksType) }
     }
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val element: KSReferenceElement? = null
 

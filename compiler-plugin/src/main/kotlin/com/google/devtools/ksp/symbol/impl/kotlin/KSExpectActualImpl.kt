@@ -39,23 +39,23 @@ class KSExpectActualImpl(val declaration: KtDeclaration) : KSExpectActual {
 
     override val isExpect: Boolean = declaration.isExpect()
 
-    private val expects: List<KSDeclaration> by lazy {
-        descriptor?.findExpectsInKSDeclaration() ?: emptyList()
+    private val expects: Sequence<KSDeclaration> by lazy {
+        descriptor?.findExpectsInKSDeclaration() ?: emptySequence()
     }
 
-    override fun findExpects(): List<KSDeclaration> {
+    override fun findExpects(): Sequence<KSDeclaration> {
         if (!isActual)
-            return emptyList()
+            return emptySequence()
         return expects
     }
 
-    private val actuals: List<KSDeclaration> by lazy {
-        descriptor?.findActualsInKSDeclaration() ?: emptyList()
+    private val actuals: Sequence<KSDeclaration> by lazy {
+        descriptor?.findActualsInKSDeclaration() ?: emptySequence()
     }
 
-    override fun findActuals(): List<KSDeclaration> {
+    override fun findActuals(): Sequence<KSDeclaration> {
         if (!isExpect)
-            return emptyList()
+            return emptySequence()
         return actuals
     }
 

@@ -26,7 +26,7 @@ class KSExpectActualNoImpl : KSExpectActual {
 
     override val isExpect: Boolean = false
 
-    override fun findActuals(): List<KSDeclaration> = emptyList()
+    override fun findActuals(): Sequence<KSDeclaration> = emptySequence()
 
-    override fun findExpects(): List<KSDeclaration> = emptyList()
+    override fun findExpects(): Sequence<KSDeclaration> = emptySequence()
 }

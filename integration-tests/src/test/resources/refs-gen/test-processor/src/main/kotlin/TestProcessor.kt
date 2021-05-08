@@ -11,7 +11,7 @@ class TestProcessor(
     var rounds = 0
     override fun process(resolver: Resolver): List<KSAnnotated> {
         rounds++
-        logger.warn("$rounds: ${resolver.getNewFiles()}")
+        logger.warn("$rounds: ${resolver.getNewFiles().toList()}")
 
         if (rounds == 1) {
             codeGenerator.createNewFile(Dependencies(false), "", "Foo", "kt").use { output ->

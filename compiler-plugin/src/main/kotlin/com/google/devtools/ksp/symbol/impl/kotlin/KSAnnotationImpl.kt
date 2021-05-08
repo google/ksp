@@ -42,7 +42,7 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        resolved?.createKSValueArguments() ?: listOf()
+        resolved?.createKSValueArguments() ?: emptyList()
     }
 
     override val shortName: KSName by lazy {

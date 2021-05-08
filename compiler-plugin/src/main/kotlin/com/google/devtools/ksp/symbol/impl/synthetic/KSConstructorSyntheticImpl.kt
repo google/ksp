@@ -62,13 +62,13 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
         )
     }
 
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val isActual: Boolean = false
 
     override val isExpect: Boolean = false
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 
     override val location: Location by lazy {
         ksClassDeclaration.location
@@ -87,12 +87,12 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : K
 
     override fun findOverridee(): KSFunctionDeclaration? = null
 
-    override fun findActuals(): List<KSDeclaration> {
-        return emptyList()
+    override fun findActuals(): Sequence<KSDeclaration> {
+        return emptySequence()
     }
 
-    override fun findExpects(): List<KSDeclaration> {
-        return emptyList()
+    override fun findExpects(): Sequence<KSDeclaration> {
+        return emptySequence()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

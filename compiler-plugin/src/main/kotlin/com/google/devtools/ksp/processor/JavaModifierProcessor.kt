@@ -47,7 +47,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             results.add(classDeclaration.toSignature())
-            classDeclaration.declarations.map { it.accept(this, data) }
+            classDeclaration.declarations.forEach{ it.accept(this, data) }
         }
 
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {

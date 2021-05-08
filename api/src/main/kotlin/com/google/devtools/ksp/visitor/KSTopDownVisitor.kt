@@ -29,6 +29,9 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     private fun Sequence<KSNode>.accept(data: D) {
         forEach { it.accept(this@KSTopDownVisitor, data) }
     }
+    private fun List<KSNode>.accept(data: D) {
+        forEach { it.accept(this@KSTopDownVisitor, data) }
+    }
 
     private fun KSNode.accept(data: D) = accept(this@KSTopDownVisitor, data)
 

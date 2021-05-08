@@ -21,8 +21,8 @@ class BuilderProcessor : SymbolProcessor {
         val ret = symbols.filter { !it.validate() }
         symbols
             .filter { it is KSClassDeclaration && it.validate() }
-            .map { it.accept(BuilderVisitor(), Unit) }
-        return ret
+            .forEach { it.accept(BuilderVisitor(), Unit) }
+        return ret.toList()
     }
 
     inner class BuilderVisitor : KSVisitorVoid() {
@@ -42,7 +42,7 @@ class BuilderProcessor : SymbolProcessor {
                 val name = it.name!!.asString()
                 val typeName = StringBuilder(it.type.resolve().declaration.qualifiedName?.asString() ?: "<ERROR>")
                 val typeArgs = it.type.element!!.typeArguments
-                if (it.type.element!!.typeArguments.isNotEmpty()) {
+                if (it.type.element!!.typeArguments.toList().isNotEmpty()) {
                     typeName.append("<")
                     typeName.append(
                             typeArgs.map {
