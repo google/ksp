@@ -44,8 +44,8 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
             return receiver.location
         }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
     }
 
     override val modifiers: Set<Modifier> by lazy {

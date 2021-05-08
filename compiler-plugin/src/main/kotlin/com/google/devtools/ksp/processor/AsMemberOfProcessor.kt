@@ -167,7 +167,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         val name = this.declaration.qualifiedName?.asString()
             ?: this.declaration.simpleName.asString()
         val qName = name + nullability.toSignature()
-        if (arguments.isEmpty()) {
+        if (arguments.toList().isEmpty()) {
             return qName
         }
         val args = arguments.joinToString(", ") {
@@ -177,7 +177,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
     }
 
     private fun KSTypeParameter.toSignature(): String {
-        val boundsSignature = if (bounds.isEmpty()) {
+        val boundsSignature = if (bounds.toList().isEmpty()) {
             ""
         } else {
             bounds.joinToString(

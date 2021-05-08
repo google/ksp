@@ -76,8 +76,9 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
         }
 
         override fun visitAnnotated(annotated: KSAnnotated, data: MutableMap<KSAnnotated, List<KSAnnotation>>) {
-            if (annotated.annotations.isNotEmpty()) {
-                data[annotated] = annotated.annotations
+            val annotations = annotated.annotations.toList()
+            if (annotations.isNotEmpty()) {
+                data[annotated] = annotations
             }
             super.visitAnnotated(annotated, data)
         }

@@ -91,7 +91,7 @@ class TestProcessor : SymbolProcessor {
 //                return
 //            }
             if (checkVisited(file)) return
-            file.annotations.map{ it.accept(this, "$data  ") }
+            file.annotations.forEach { it.accept(this, "$data  ") }
             emit(file.packageName.asString(), data)
             for (declaration in file.declarations) {
                 declaration.accept(this, data)
@@ -102,13 +102,13 @@ class TestProcessor : SymbolProcessor {
             if (checkVisited(annotation)) return
             emit("annotation", data)
             annotation.annotationType.accept(this, "$data  ")
-            annotation.arguments.map { it.accept(this, "$data  ") }
+            annotation.arguments.forEach { it.accept(this, "$data  ") }
         }
 
         override fun visitCallableReference(reference: KSCallableReference, data: String) {
             if (checkVisited(reference)) return
             emit("element: ", data)
-            reference.functionParameters.map { it.accept(this, "$data  ") }
+            reference.functionParameters.forEach { it.accept(this, "$data  ") }
             reference.receiverType?.accept(this, "$data receiver")
             reference.returnType.accept(this, "$data  ")
         }
@@ -116,7 +116,7 @@ class TestProcessor : SymbolProcessor {
         override fun visitPropertyGetter(getter: KSPropertyGetter, data: String) {
             if (checkVisited(getter)) return
             emit("propertyGetter: ", data)
-            getter.annotations.map { it.accept(this, "$data  ") }
+            getter.annotations.forEach { it.accept(this, "$data  ") }
             emit(getter.modifiers.joinToString(" "), data)
             getter.returnType?.accept(this, "$data  ")
         }
@@ -124,14 +124,14 @@ class TestProcessor : SymbolProcessor {
         override fun visitPropertySetter(setter: KSPropertySetter, data: String) {
             if (checkVisited(setter)) return
             emit("propertySetter: ", data)
-            setter.annotations.map { it.accept(this, "$data  ") }
+            setter.annotations.forEach { it.accept(this, "$data  ") }
             emit(setter.modifiers.joinToString(" "), data)
 //            setter.parameter.accept(this, "$data  ")
         }
 
         override fun visitTypeArgument(typeArgument: KSTypeArgument, data: String) {
             if (checkVisited(typeArgument)) return
-            typeArgument.annotations.map{ it.accept(this, "$data  ") }
+            typeArgument.annotations.forEach { it.accept(this, "$data  ") }
             emit(
               when (typeArgument.variance) {
                   Variance.STAR -> "*"
@@ -145,7 +145,7 @@ class TestProcessor : SymbolProcessor {
 
         override fun visitTypeParameter(typeParameter: KSTypeParameter, data: String) {
             if (checkVisited(typeParameter)) return
-            typeParameter.annotations.map{ it.accept(this, "$data  ") }
+            typeParameter.annotations.forEach { it.accept(this, "$data  ") }
             if (typeParameter.isReified) {
                 emit("reified ", data)
             }
@@ -156,14 +156,14 @@ class TestProcessor : SymbolProcessor {
                   else -> ""
               } + typeParameter.name.asString(), data
             )
-            if (typeParameter.bounds.isNotEmpty()) {
-                typeParameter.bounds.map { it.accept(this, "$data  ") }
+            if (typeParameter.bounds.toList().isNotEmpty()) {
+                typeParameter.bounds.forEach { it.accept(this, "$data  ") }
             }
         }
 
         override fun visitValueParameter(valueParameter: KSValueParameter, data: String) {
             if (checkVisited(valueParameter)) return
-            valueParameter.annotations.map { it.accept(this, "$data  ") }
+            valueParameter.annotations.forEach { it.accept(this, "$data  ") }
             if (valueParameter.isVararg) {
                 emit("vararg", "$data  ")
             }
@@ -183,8 +183,8 @@ class TestProcessor : SymbolProcessor {
             for (declaration in function.declarations) {
                 declaration.accept(this, "$data  ")
             }
-            function.parameters.map { it.accept(this, "$data  ") }
-            function.typeParameters.map { it.accept(this, "$data  ") }
+            function.parameters.forEach { it.accept(this, "$data  ") }
+            function.typeParameters.forEach { it.accept(this, "$data  ") }
             function.extensionReceiver?.accept(this, "$data extension:")
             emit("returnType:", data)
             function.returnType?.accept(this, "$data  ")
@@ -197,7 +197,7 @@ class TestProcessor : SymbolProcessor {
             for (declaration in classDeclaration.declarations) {
                 declaration.accept(this, "$data ")
             }
-            classDeclaration.superTypes.map { it.accept(this, "$data  ") }
+            classDeclaration.superTypes.forEach { it.accept(this, "$data  ") }
             classDeclaration.primaryConstructor?.accept(this, "$data  ")
         }
 
@@ -212,7 +212,7 @@ class TestProcessor : SymbolProcessor {
 
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             if (checkVisited(typeReference)) return
-            typeReference.annotations.map{ it.accept(this, "$data  ") }
+            typeReference.annotations.forEach { it.accept(this, "$data  ") }
             val type = typeReference.resolve()
             type.let {
                 emit("resolved to: ${it.declaration.qualifiedName?.asString()}", data)
@@ -240,8 +240,8 @@ class TestProcessor : SymbolProcessor {
 
         override fun visitClassifierReference(reference: KSClassifierReference, data: String) {
             if (checkVisited(reference)) return
-            if (reference.typeArguments.isNotEmpty()) {
-                reference.typeArguments.map { it.accept(this, "$data  ") }
+            if (reference.typeArguments.toList().isNotEmpty()) {
+                reference.typeArguments.forEach { it.accept(this, "$data  ") }
             }
         }
 
@@ -252,7 +252,7 @@ class TestProcessor : SymbolProcessor {
             if (checkVisited(valueArgument)) return
             val name = valueArgument.name?.asString() ?: "<no name>"
             emit("$name: ${valueArgument.value}", data)
-            valueArgument.annotations.map { it.accept(this, "$data  ") }
+            valueArgument.annotations.forEach { it.accept(this, "$data  ") }
         }
     }
 

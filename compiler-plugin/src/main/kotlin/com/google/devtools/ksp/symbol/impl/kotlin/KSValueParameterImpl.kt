@@ -39,7 +39,7 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
         ktParameter.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazy {
         ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 

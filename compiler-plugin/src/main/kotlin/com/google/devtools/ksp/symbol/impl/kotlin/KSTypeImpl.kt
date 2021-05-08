@@ -35,13 +35,13 @@ import org.jetbrains.kotlin.types.typeUtil.*
 class KSTypeImpl private constructor(
     val kotlinType: KotlinType,
     private val ksTypeArguments: List<KSTypeArgument>? = null,
-    override val annotations: List<KSAnnotation> = listOf()
+    override val annotations: Sequence<KSAnnotation> = sequenceOf()
 ) : KSType {
     companion object : KSObjectCache<IdKey<KotlinType>, KSTypeImpl>() {
         fun getCached(
             kotlinType: KotlinType,
             ksTypeArguments: List<KSTypeArgument>? = null,
-            annotations: List<KSAnnotation> = listOf()
+            annotations: Sequence<KSAnnotation> = sequenceOf()
         ): KSTypeImpl {
             return cache.getOrPut(IdKey(kotlinType)) { KSTypeImpl(kotlinType, ksTypeArguments, annotations) }
         }
@@ -122,7 +122,7 @@ class IdKey<T>(private val k: T) {
 fun getKSTypeCached(
     kotlinType: KotlinType,
     ksTypeArguments: List<KSTypeArgument>? = null,
-    annotations: List<KSAnnotation> = listOf()
+    annotations: Sequence<KSAnnotation> = sequenceOf()
 ): KSType {
     return if (kotlinType.isError) {
         KSErrorType

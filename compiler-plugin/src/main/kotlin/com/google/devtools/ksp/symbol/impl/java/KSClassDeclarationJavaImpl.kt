@@ -55,8 +55,8 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         psi.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     override val classKind: ClassKind by lazy {
@@ -82,14 +82,14 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     // TODO in 1.5 + jvmTarget 15, will we return Java permitted types?
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()
 
-    override fun getAllFunctions(): List<KSFunctionDeclaration> =
-            descriptor?.getAllFunctions() ?: emptyList()
+    override fun getAllFunctions(): Sequence<KSFunctionDeclaration> =
+            descriptor?.getAllFunctions() ?: emptySequence()
 
-    override fun getAllProperties(): List<KSPropertyDeclaration> =
-            descriptor?.getAllProperties() ?: emptyList()
+    override fun getAllProperties(): Sequence<KSPropertyDeclaration> =
+            descriptor?.getAllProperties() ?: emptySequence()
 
-    override val declarations: List<KSDeclaration> by lazy {
-        val allDeclarations = (psi.fields.map {
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        val allDeclarations = (psi.fields.asSequence().map {
             when (it) {
                 is PsiEnumConstant -> KSClassDeclarationJavaEnumEntryImpl.getCached(it)
                 else -> KSPropertyDeclarationJavaImpl.getCached(it)
@@ -140,8 +140,8 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         KSNameImpl.getCached(psi.name!!)
     }
 
-    override val superTypes: List<KSTypeReference> by lazy {
-        psi.superTypes.map { KSTypeReferenceJavaImpl.getCached(it) }
+    override val superTypes: Sequence<KSTypeReference> by lazy {
+        psi.superTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {

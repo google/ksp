@@ -9,13 +9,13 @@ class GetSymbolsFromAnnotationProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         result.add("==== Anno superficial====")
-        resolver.getSymbolsWithAnnotation("Anno").map { result.add(it.toString()) }
+        resolver.getSymbolsWithAnnotation("Anno").forEach{ result.add(it.toString()) }
         result.add("==== Anno in depth ====")
-        resolver.getSymbolsWithAnnotation("Anno", true).map { result.add(it.toString()) }
+        resolver.getSymbolsWithAnnotation("Anno", true).forEach{ result.add(it.toString()) }
         result.add("==== Bnno superficial====")
-        resolver.getSymbolsWithAnnotation("Bnno").map { result.add(it.toString()) }
+        resolver.getSymbolsWithAnnotation("Bnno").forEach{ result.add(it.toString()) }
         result.add("==== Bnno in depth ====")
-        resolver.getSymbolsWithAnnotation("Bnno", true).map { result.add(it.toString()) }
+        resolver.getSymbolsWithAnnotation("Bnno", true).forEach{ result.add(it.toString()) }
         return emptyList()
     }
 }

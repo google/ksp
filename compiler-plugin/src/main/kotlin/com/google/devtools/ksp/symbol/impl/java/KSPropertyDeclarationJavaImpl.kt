@@ -40,8 +40,8 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
 
     override val isMutable: Boolean = true
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     override val containingFile: KSFile? by lazy {

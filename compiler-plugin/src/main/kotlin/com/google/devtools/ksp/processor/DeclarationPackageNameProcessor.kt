@@ -31,7 +31,7 @@ class DeclarationPackageNameProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val visitor = NameCollector()
-        resolver.getNewFiles().map { it.accept(visitor, result) }
+        resolver.getNewFiles().forEach{ it.accept(visitor, result) }
         return emptyList()
     }
 }

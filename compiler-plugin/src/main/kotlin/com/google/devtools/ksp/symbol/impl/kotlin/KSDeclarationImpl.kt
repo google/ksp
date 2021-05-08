@@ -39,8 +39,8 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
         (ktDeclaration as? KtNamedDeclaration)?.fqName?.let { KSNameImpl.getCached(it.asString()) }
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        ktDeclaration.annotationEntries.map { KSAnnotationImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        ktDeclaration.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val modifiers: Set<Modifier> by lazy {

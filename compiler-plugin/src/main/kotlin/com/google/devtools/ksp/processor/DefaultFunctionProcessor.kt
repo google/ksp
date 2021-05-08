@@ -63,6 +63,7 @@ class DefaultFunctionProcessor : AbstractTestProcessor() {
         return classDec.getDeclaredFunctions()
             .filter { funList.contains(it.simpleName.asString()) }
             .map { "${it.simpleName.asString()}: ${it.isAbstract}" }
+            .toList()
     }
 
     override fun toResult(): List<String> {

@@ -22,7 +22,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSErrorTypeClassDeclaration
 
 object KSErrorType : KSType {
-    override val annotations: List<KSAnnotation> = emptyList()
+    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val arguments: List<KSTypeArgument> = emptyList()
 

@@ -10,7 +10,7 @@ class TestProcessor(
     var rounds = 0
     override fun process(resolver: Resolver): List<KSAnnotated> {
         rounds++
-        logger.warn("$rounds: ${resolver.getNewFiles()}")
+        logger.warn("$rounds: ${resolver.getNewFiles().toList()}")
 
         // Would fail if "Bar.kt" isn't dirty.
         val barKt = resolver.getAllFiles().single { it.fileName == "Bar.kt" }

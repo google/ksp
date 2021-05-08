@@ -35,8 +35,8 @@ class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSVa
         psi.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     override val isCrossInline: Boolean = false

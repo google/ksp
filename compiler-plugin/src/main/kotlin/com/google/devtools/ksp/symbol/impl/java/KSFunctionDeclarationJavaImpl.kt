@@ -40,8 +40,8 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
         psi.toLocation()
     }
 
-    override val annotations: List<KSAnnotation> by lazy {
-        psi.annotations.map { KSAnnotationJavaImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
     }
 
     override val containingFile: KSFile? by lazy {
@@ -53,7 +53,7 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
         return descriptor?.findClosestOverridee()?.toKSFunctionDeclaration()
     }
 
-    override val declarations: List<KSDeclaration> = emptyList()
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 
     override val extensionReceiver: KSTypeReference? = null
 

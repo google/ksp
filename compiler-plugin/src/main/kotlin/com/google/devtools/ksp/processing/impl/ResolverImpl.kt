@@ -137,7 +137,7 @@ class ResolverImpl(
 
         val visitor = object : KSVisitorVoid() {
             override fun visitFile(file: KSFile, data: Unit) {
-                file.declarations.map { it.accept(this, data) }
+                file.declarations.forEach { it.accept(this, data) }
             }
 
             override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
@@ -145,18 +145,18 @@ class ResolverImpl(
                 if (qualifiedName != null) {
                     nameToKSMap[qualifiedName] = classDeclaration
                 }
-                classDeclaration.declarations.map { it.accept(this, data) }
+                classDeclaration.declarations.forEach { it.accept(this, data) }
             }
         }
-        allKSFiles.map { it.accept(visitor, Unit) }
+        allKSFiles.forEach { it.accept(visitor, Unit) }
     }
 
-    override fun getNewFiles(): List<KSFile> {
-        return newKSFiles.toList()
+    override fun getNewFiles(): Sequence<KSFile> {
+        return newKSFiles.asSequence()
     }
 
-    override fun getAllFiles(): List<KSFile> {
-        return allKSFiles.toList()
+    override fun getAllFiles(): Sequence<KSFile> {
+        return allKSFiles.asSequence()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -208,7 +208,7 @@ class ResolverImpl(
         }
     }
 
-    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): List<KSAnnotated> {
+    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
         fun checkAnnotation(annotated: KSAnnotated): Boolean {
             val ksName = KSNameImpl.getCached(annotationName)
 
@@ -230,13 +230,13 @@ class ResolverImpl(
 
             override fun visitFile(file: KSFile, data: Unit) {
                 visitAnnotated(file, data)
-                file.declarations.map { it.accept(this, data) }
+                file.declarations.forEach{ it.accept(this, data) }
             }
 
             override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
                 visitAnnotated(classDeclaration, data)
-                classDeclaration.typeParameters.map { it.accept(this, data) }
-                classDeclaration.declarations.map { it.accept(this, data) }
+                classDeclaration.typeParameters.forEach { it.accept(this, data) }
+                classDeclaration.declarations.forEach { it.accept(this, data) }
                 classDeclaration.primaryConstructor?.let { it.accept(this, data) }
             }
 
@@ -250,16 +250,16 @@ class ResolverImpl(
 
             override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
                 visitAnnotated(function, data)
-                function.typeParameters.map { it.accept(this, data) }
-                function.parameters.map { it.accept(this, data) }
+                function.typeParameters.forEach { it.accept(this, data) }
+                function.parameters.forEach { it.accept(this, data) }
                 if (inDepth) {
-                    function.declarations.map { it.accept(this, data) }
+                    function.declarations.forEach { it.accept(this, data) }
                 }
             }
 
             override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
                 visitAnnotated(property, data)
-                property.typeParameters.map { it.accept(this, data) }
+                property.typeParameters.forEach { it.accept(this, data) }
                 property.getter?.let { it.accept(this, data) }
                 property.setter?.let { it.accept(this, data) }
             }
@@ -273,7 +273,7 @@ class ResolverImpl(
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
-        return visitor.symbols.toList() + deferredSymbols.values.flatten().mapNotNull { it.getInstanceForCurrentRound() }.filter{ checkAnnotation(it)  }
+        return visitor.symbols.asSequence() + deferredSymbols.values.flatten().mapNotNull { it.getInstanceForCurrentRound() }.filter{ checkAnnotation(it)  }
     }
 
     override fun getKSNameFromString(name: String): KSName {
@@ -630,7 +630,7 @@ class ResolverImpl(
         return when (function.origin) {
             Origin.JAVA -> {
                 val psi = (function as KSFunctionDeclarationJavaImpl).psi
-                psi.throwsList.referencedTypes.map { getKSTypeCached(resolveJavaType(it)) }.asSequence()
+                psi.throwsList.referencedTypes.asSequence().map { getKSTypeCached(resolveJavaType(it)) }
             }
             Origin.KOTLIN -> {
                 function.annotations
@@ -652,8 +652,8 @@ class ResolverImpl(
         val noPackageFilter = DescriptorKindFilter.ALL.withoutKinds(DescriptorKindFilter.PACKAGES_MASK)
         return module.getPackage(FqName(packageName))
             .memberScope.getContributedDescriptors(noPackageFilter)
-            .mapNotNull { (it as? MemberDescriptor)?.toKSDeclaration() }
             .asSequence()
+            .mapNotNull { (it as? MemberDescriptor)?.toKSDeclaration() }
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -795,14 +795,14 @@ open class BaseVisitor : KSVisitorVoid() {
 }
 
 // TODO: cross module resolution
-fun DeclarationDescriptor.findExpectsInKSDeclaration(): List<KSDeclaration> =
-    findExpects().map {
+fun DeclarationDescriptor.findExpectsInKSDeclaration(): Sequence<KSDeclaration> =
+    findExpects().asSequence().map {
         it.toKSDeclaration()
     }
 
 // TODO: cross module resolution
-fun DeclarationDescriptor.findActualsInKSDeclaration(): List<KSDeclaration> =
-    findActuals().map {
+fun DeclarationDescriptor.findActualsInKSDeclaration(): Sequence<KSDeclaration> =
+    findActuals().asSequence().map {
         it.toKSDeclaration()
     }
 
@@ -879,10 +879,10 @@ private inline fun ClassDescriptor.findEnclosedDescriptor(
     }
 }
 
-internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Collection<KSAnnotation> {
+internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {
     return when (this) {
-        is KSPropertyGetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.GET } }
-        is KSPropertySetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SET } }
+        is KSPropertyGetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.GET } }
+        is KSPropertySetter -> (this.receiver as? KSDeclarationImpl)?.let { it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SET } }
         is KSValueParameter-> {
             var parent = when (this) {
                 is KSValueParameterSyntheticImpl -> this.owner
@@ -891,14 +891,14 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Collection<KSAnnotat
             }
             val annotationsFromParents = mutableListOf<KSAnnotation>()
             (parent as? KSPropertyAccessorImpl)?.let {
-                annotationsFromParents.addAll(it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })
+                annotationsFromParents.addAll(it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })
                 parent = (parent as KSPropertyAccessorImpl).receiver
             }
             (parent as? KSPropertyDeclarationImpl)?.let {
-                annotationsFromParents.addAll(it.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })
+                annotationsFromParents.addAll(it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })
             }
-            annotationsFromParents
+            annotationsFromParents.asSequence()
         }
-        else -> emptyList()
-    } ?: emptyList()
+        else -> emptySequence()
+    } ?: emptySequence()
 }

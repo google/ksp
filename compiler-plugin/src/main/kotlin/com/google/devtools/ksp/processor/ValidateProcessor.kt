@@ -25,7 +25,7 @@ class ValidateProcessor : AbstractTestProcessor() {
         val BadJavaClass = resolver.getClassDeclarationByName("BadJavaClass")!!
         val ErrorAnnotationType = resolver.getClassDeclarationByName("ErrorAnnotationType")!!
         validate(ErrorInMember)
-        ErrorInMember.declarations.map { validate(it) }
+        ErrorInMember.declarations.forEach{ validate(it) }
         validate(GoodClass)
         validate(C)
         validate(BadJavaClass)

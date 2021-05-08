@@ -34,8 +34,8 @@ class KSValueParameterDescriptorImpl private constructor(val descriptor: ValuePa
 
     override val location: Location = NonExistLocation
 
-    override val annotations: List<KSAnnotation> by lazy {
-        descriptor.annotations.map { KSAnnotationDescriptorImpl.getCached(it) }
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
     }
 
     override val isCrossInline: Boolean = descriptor.isCrossinline
