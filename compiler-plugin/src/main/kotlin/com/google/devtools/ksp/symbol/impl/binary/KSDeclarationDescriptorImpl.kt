@@ -70,6 +70,7 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
         return this.simpleName.asString()
     }
 
+    override val docString = null
 }
 
 val DeclarationDescriptor.origin: Origin
