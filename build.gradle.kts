@@ -17,6 +17,7 @@ subprojects {
     version = rootProject.extra.get("kspVersion") as String
     this.configureKtlint()
     repositories {
+        mavenLocal()
         mavenCentral()
         google()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
