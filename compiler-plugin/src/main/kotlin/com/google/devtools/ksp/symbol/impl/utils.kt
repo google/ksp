@@ -80,6 +80,8 @@ private val modifierMap = mapOf(
         KtTokens.ANNOTATION_KEYWORD to Modifier.ANNOTATION,
         KtTokens.DATA_KEYWORD to Modifier.DATA,
         KtTokens.INNER_KEYWORD to Modifier.INNER,
+        KtTokens.FUN_KEYWORD to Modifier.FUN,
+        KtTokens.VALUE_KEYWORD to Modifier.VALUE,
         KtTokens.SUSPEND_KEYWORD to Modifier.SUSPEND,
         KtTokens.TAILREC_KEYWORD to Modifier.TAILREC,
         KtTokens.OPERATOR_KEYWORD to Modifier.OPERATOR,

@@ -130,6 +130,12 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         if (descriptor.isInner) {
             modifiers.add(Modifier.INNER)
         }
+        if (descriptor.isFun) {
+            modifiers.add(Modifier.FUN)
+        }
+        if (descriptor.isValue) {
+            modifiers.add(Modifier.VALUE)
+        }
         modifiers
     }
 
