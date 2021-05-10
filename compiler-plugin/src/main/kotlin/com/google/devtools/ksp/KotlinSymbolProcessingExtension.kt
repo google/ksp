@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
@@ -149,7 +150,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             processors = providers.mapNotNull { provider ->
                 var processor: SymbolProcessor? = null
                 handleException {
-                    processor = provider.create(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger)
+                    processor = provider.create(SymbolProcessorEnvironment(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger))
                 }?.let { analysisResult -> return@doAnalysis analysisResult }
                 if (logger.hasError()) {
                     return@mapNotNull null

@@ -99,12 +99,7 @@ KSP expects an implementation of the `SymbolProcessorProvider` interface to inst
 
 ```kotlin
 interface SymbolProcessorProvider {
-    fun create(
-        options: Map<String, String>,
-        kotlinVersion: KotlinVersion,
-        codeGenerator: CodeGenerator,
-        logger: KSPLogger
-    ): SymbolProcessor
+    fun create(environment: SymbolProcessorEnvironment): SymbolProcessor
 }
 ```
 
@@ -148,7 +143,7 @@ class HelloFunctionFinderProcessor : SymbolProcessor() {
     ...
     
     class Provider : SymbolProcessorProvider {
-        override fun create(...): SymbolProcessor = ...
+        override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor = ...
     }
 }
 ```
