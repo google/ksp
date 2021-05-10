@@ -7,7 +7,6 @@ pluginManagement {
         kotlin("multiplatform") version kotlinVersion apply false
     }
     repositories {
-        mavenLocal()
         maven(testRepo)
         gradlePluginPortal()
         google()
