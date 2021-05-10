@@ -5,7 +5,6 @@ plugins {
 val testRepo: String by project
 subprojects {
     repositories {
-        mavenLocal()
         maven(testRepo)
         mavenCentral()
         google()
