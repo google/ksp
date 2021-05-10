@@ -1,6 +1,5 @@
 package com.google.devtools.ksp.visitor
 
-import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 
 class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : KSDefaultVisitor<KSNode?, Boolean>() {

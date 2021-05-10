@@ -16,23 +16,14 @@
  */
 package com.google.devtools.ksp.gradle.processor
 
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
 abstract class TestSymbolProcessorProvider(
     private val builder: (
-        options: Map<String, String>,
-        version: KotlinVersion,
-        codeGenerator: CodeGenerator,
-        logger: KSPLogger
+        environment: SymbolProcessorEnvironment
     ) -> SymbolProcessor
 ) : SymbolProcessorProvider {
-    override fun create(
-        options: Map<String, String>,
-        kotlinVersion: KotlinVersion,
-        codeGenerator: CodeGenerator,
-        logger: KSPLogger
-    ): SymbolProcessor = builder(options, kotlinVersion, codeGenerator, logger)
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor = builder(environment)
 }

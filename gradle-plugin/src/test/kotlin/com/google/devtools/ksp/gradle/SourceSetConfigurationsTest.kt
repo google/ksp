@@ -268,7 +268,7 @@ class SourceSetConfigurationsTest {
             }
         }
 
-        class Provider : TestSymbolProcessorProvider({ _, _, codeGenerator, _ -> Processor(codeGenerator) })
+        class Provider : TestSymbolProcessorProvider({ env -> Processor(env.codeGenerator) })
 
         testRule.addProvider(Provider::class)
         if (useAndroidTest) {

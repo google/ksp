@@ -37,10 +37,7 @@ class TestProcessor(options: Map<String, String>, val codeGenerator: CodeGenerat
 
     class Provider : SymbolProcessorProvider {
         override fun create(
-            options: Map<String, String>,
-            kotlinVersion: KotlinVersion,
-            codeGenerator: CodeGenerator,
-            logger: KSPLogger
-        ): SymbolProcessor = TestProcessor(options, codeGenerator)
+            environment: SymbolProcessorEnvironment
+        ): SymbolProcessor = TestProcessor(environment.options, environment.codeGenerator)
     }
 }

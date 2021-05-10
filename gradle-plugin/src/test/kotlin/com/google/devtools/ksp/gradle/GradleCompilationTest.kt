@@ -59,7 +59,7 @@ class GradleCompilationTest {
             }
         }
 
-        class Provider : TestSymbolProcessorProvider({ _, _, _, logger -> ErrorReporting(logger) })
+        class Provider : TestSymbolProcessorProvider({ env -> ErrorReporting(env.logger) })
 
         testRule.addProvider(Provider::class)
         val failure = testRule.runner()
@@ -105,7 +105,7 @@ class GradleCompilationTest {
             }
         }
 
-        class Provider : TestSymbolProcessorProvider({ _, _, codeGenerator, _ -> MyProcessor(codeGenerator) })
+        class Provider : TestSymbolProcessorProvider({ env -> MyProcessor(env.codeGenerator) })
 
         testRule.addProvider(Provider::class)
 
