@@ -18,18 +18,12 @@
 
 package com.google.devtools.ksp.processor
 
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
 abstract class AbstractTestProcessor : SymbolProcessor, SymbolProcessorProvider {
     abstract fun toResult(): List<String>
 
-    override fun create(
-        options: Map<String, String>,
-        kotlinVersion: KotlinVersion,
-        codeGenerator: CodeGenerator,
-        logger: KSPLogger
-    ): SymbolProcessor = this
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor = this
 }

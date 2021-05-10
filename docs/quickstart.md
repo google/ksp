@@ -143,7 +143,7 @@
 </details>
 
 ## Pass Options to Processors
-Processor options in `SymbolProcessorProvider.create(options: Map<String, String>, ...)` are specified in gradle build scripts:
+Processor options in `SymbolProcessorEnvironment.options` are specified in gradle build scripts:
 ```
   ksp {
     arg("option1", "value1")
