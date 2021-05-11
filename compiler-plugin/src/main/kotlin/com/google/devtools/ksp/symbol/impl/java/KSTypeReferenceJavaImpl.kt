@@ -28,6 +28,7 @@ import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorIm
 import com.google.devtools.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
@@ -46,7 +47,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
     override val modifiers: Set<Modifier> = emptySet()

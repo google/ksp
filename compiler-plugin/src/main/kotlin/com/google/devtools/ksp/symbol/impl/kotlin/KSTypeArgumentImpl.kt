@@ -20,6 +20,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
@@ -74,6 +75,6 @@ class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProject
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeArgument.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
+        ktTypeArgument.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }.memoized()
     }
 }

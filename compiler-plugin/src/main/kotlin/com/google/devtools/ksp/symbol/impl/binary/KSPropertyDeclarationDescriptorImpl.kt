@@ -44,7 +44,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         val backingFieldAnnotations = descriptor.backingField?.annotations?.map {
             KSAnnotationDescriptorImpl.getCached(it)
         }.orEmpty()
-        super.annotations + backingFieldAnnotations
+        (super.annotations + backingFieldAnnotations).memoized()
     }
 
     override val isMutable: Boolean by lazy {

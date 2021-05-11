@@ -56,7 +56,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
     override val classKind: ClassKind by lazy {
@@ -105,12 +105,12 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
                 it is KSFunctionDeclaration && it.isConstructor()
             }
             if (hasConstructor) {
-                allDeclarations
+                allDeclarations.memoized()
             } else {
-                allDeclarations + KSConstructorSyntheticImpl(this)
+                (allDeclarations + KSConstructorSyntheticImpl(this)).memoized()
             }
         } else {
-            allDeclarations
+            allDeclarations.memoized()
         }
     }
 
@@ -141,7 +141,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        psi.superTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }
+        psi.superTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }.memoized()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {

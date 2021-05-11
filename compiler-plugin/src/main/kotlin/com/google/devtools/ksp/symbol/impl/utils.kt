@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.symbol.impl
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.MemoizedSequence
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.*
 import org.jetbrains.kotlin.descriptors.*
@@ -401,3 +402,5 @@ internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? {
         else -> null
     }
 }
+
+internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
