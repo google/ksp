@@ -86,12 +86,12 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
                 it is KSFunctionDeclaration && it.isConstructor()
             }
             if (hasConstructor) {
-                result
+                result.memoized()
             } else {
-                result + KSConstructorSyntheticImpl(this)
+                (result + KSConstructorSyntheticImpl(this)).memoized()
             }
         } else {
-            result
+            result.memoized()
         }
     }
 
@@ -103,7 +103,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        ktClassOrObject.superTypeListEntries.asSequence().map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
+        ktClassOrObject.superTypeListEntries.asSequence().map { KSTypeReferenceImpl.getCached(it.typeReference!!) }.memoized()
     }
 
     private val descriptor: ClassDescriptor by lazy {

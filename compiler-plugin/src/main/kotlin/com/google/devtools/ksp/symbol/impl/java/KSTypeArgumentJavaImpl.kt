@@ -24,6 +24,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 
 class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgumentImpl() {
@@ -38,7 +39,7 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
     // Could be unbounded, need to model unbdouned type argument.

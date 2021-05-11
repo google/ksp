@@ -21,6 +21,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -58,8 +59,7 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
             owner.typeConstraints
                 .filter { it.subjectTypeParameterName!!.getReferencedName() == ktTypeParameter.nameAsSafeName.asString() }
                 .map { it.boundTypeReference }
-        )
-        list.filterNotNull().map { KSTypeReferenceImpl.getCached(it) }
+        ).filterNotNull().map { KSTypeReferenceImpl.getCached(it) }.memoized()
     }
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached(ktTypeParameter.name ?: "_")

@@ -21,6 +21,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.getKSDeclarations
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtFile
 
@@ -40,11 +41,11 @@ class KSFileImpl private constructor(val file: KtFile) : KSFile {
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        file.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
+        file.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }.memoized()
     }
 
     override val declarations: Sequence<KSDeclaration> by lazy {
-        file.declarations.asSequence().getKSDeclarations()
+        file.declarations.asSequence().getKSDeclarations().memoized()
     }
 
     override val fileName: String by lazy {

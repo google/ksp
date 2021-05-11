@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 
 class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter, KSDeclarationJavaImpl(),
@@ -40,11 +41,11 @@ class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : K
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        psi.extendsListTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }
+        psi.extendsListTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }.memoized()
     }
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached(psi.name ?: "_")

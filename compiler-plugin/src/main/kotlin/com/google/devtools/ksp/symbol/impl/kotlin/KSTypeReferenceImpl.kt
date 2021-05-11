@@ -22,6 +22,7 @@ import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
@@ -39,7 +40,7 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeReference.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
+        ktTypeReference.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }.memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {

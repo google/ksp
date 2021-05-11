@@ -41,7 +41,7 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }
+        psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
     override val containingFile: KSFile? by lazy {
