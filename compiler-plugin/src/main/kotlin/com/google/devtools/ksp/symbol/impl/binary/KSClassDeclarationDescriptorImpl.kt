@@ -21,7 +21,7 @@ package com.google.devtools.ksp.symbol.impl.binary
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
@@ -31,7 +31,6 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.descriptors.*
@@ -86,7 +85,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
             KSTypeReferenceDescriptorImpl.getCached(
                 if (it === mockSerializableType) javaSerializableType else it
             )
-        }
+        }.memoized()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
@@ -112,7 +111,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
                     is ClassDescriptor -> getCached(it)
                     else -> throw IllegalStateException("Unexpected descriptor type ${it.javaClass}, $ExceptionMessage")
                 }
-            }
+            }.memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {

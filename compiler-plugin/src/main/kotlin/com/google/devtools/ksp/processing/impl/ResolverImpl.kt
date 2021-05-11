@@ -223,6 +223,7 @@ class ResolverImpl(
                     })
         }
 
+        // TODO: Make visitor a generator
         val visitor = object : KSVisitorVoid() {
             val symbols = mutableSetOf<KSAnnotated>()
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
@@ -901,6 +902,7 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotatio
                 is KSValueParameterImpl -> this.ktParameter.findParentAnnotated()
                 else -> null
             }
+            // TODO: eliminate annotationsFromParents to make this fully sequence.
             val annotationsFromParents = mutableListOf<KSAnnotation>()
             (parent as? KSPropertyAccessorImpl)?.let {
                 annotationsFromParents.addAll(it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM })

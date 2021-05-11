@@ -22,6 +22,7 @@ import com.intellij.psi.PsiJavaFile
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 
 class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
@@ -38,7 +39,7 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val declarations: Sequence<KSDeclaration> by lazy {
-        psi.classes.asSequence().map { KSClassDeclarationJavaImpl.getCached(it) }
+        psi.classes.asSequence().map { KSClassDeclarationJavaImpl.getCached(it) }.memoized()
     }
 
     override val fileName: String by lazy {

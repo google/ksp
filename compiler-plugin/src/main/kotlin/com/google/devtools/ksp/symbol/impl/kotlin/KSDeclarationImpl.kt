@@ -20,6 +20,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
@@ -40,7 +41,7 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktDeclaration.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }
+        ktDeclaration.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }.memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {

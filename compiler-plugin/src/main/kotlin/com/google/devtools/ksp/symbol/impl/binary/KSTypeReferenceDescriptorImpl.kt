@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
+import com.google.devtools.ksp.symbol.impl.memoized
 import org.jetbrains.kotlin.types.*
 
 class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType) : KSTypeReference {
@@ -43,7 +44,7 @@ class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinTy
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        kotlinType.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
+        kotlinType.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {

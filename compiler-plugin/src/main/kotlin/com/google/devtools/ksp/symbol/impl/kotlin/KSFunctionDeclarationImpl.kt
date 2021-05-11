@@ -55,7 +55,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         if (!ktFunction.hasBlockBody()) {
             emptySequence()
         } else {
-            ktFunction.bodyBlockExpression?.statements?.asSequence()?.getKSDeclarations() ?: emptySequence()
+            ktFunction.bodyBlockExpression?.statements?.asSequence()?.getKSDeclarations()?.memoized() ?: emptySequence()
         }
     }
 

@@ -20,6 +20,7 @@ package com.google.devtools.ksp.symbol.impl.binary
 
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
@@ -45,7 +46,7 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {
