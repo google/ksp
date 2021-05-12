@@ -102,8 +102,8 @@ When sourceA is removed:
 When sourceB is removed:
 * Nothing needs to be reprocessed.
 
-## How file dirtyness is determined
-A dirty file is either directly *changed* by users or indirectly *affected* by other dirty files. KSP propagates dirtyness in two steps:
+## How file dirtiness is determined
+A dirty file is either directly *changed* by users or indirectly *affected* by other dirty files. KSP propagates dirtiness in two steps:
 * Propagation by *resolution tracing*:
   Resolving a type reference (implicitly or explicitly) is the only way to navigate from one file
   to another. When a type reference is resolved by a processor, a *changed* or *affected* file that
