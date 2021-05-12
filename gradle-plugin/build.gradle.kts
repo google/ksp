@@ -8,7 +8,6 @@ val googleTruthVersion: String by project
 val agpBaseVersion: String by project
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
 }
 
