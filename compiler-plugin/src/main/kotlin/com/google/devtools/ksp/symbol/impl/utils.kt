@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.builtins.getFunctionalClassKind
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
+import org.jetbrains.kotlin.load.java.isFromJava
 import org.jetbrains.kotlin.load.java.structure.JavaMember
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
@@ -50,9 +51,13 @@ import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
+import org.jetbrains.kotlin.load.java.lazy.descriptors.isJavaField
 import org.jetbrains.kotlin.psi.psiUtil.siblings
+import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.annotations.hasJvmStaticAnnotation
+import org.jetbrains.kotlin.resolve.hasBackingField
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
 
 private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -422,3 +427,19 @@ internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? {
 }
 
 internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
+
+internal fun PropertyDescriptor.hasBackingFieldFixed(): Boolean {
+    // from: https://github.com/JetBrains/kotlin/blob/92d200e093c693b3c06e53a39e0b0973b84c7ec5/plugins/kotlin-serialization/kotlin-serialization-compiler/src/org/jetbrains/kotlinx/serialization/compiler/resolve/SerializableProperties.kt#L53
+    return hasBackingField(BindingContext.EMPTY) || (this is DeserializedPropertyDescriptor && this.backingField != null) // workaround for TODO in .hasBackingField
+        // workaround for overridden getter (val) and getter+setter (var) - in this case hasBackingField returning false
+        // but initializer presents only for property with backing field
+        || this.declaresDefaultValue
+}
+
+// from: https://github.com/JetBrains/kotlin/blob/92d200e093c693b3c06e53a39e0b0973b84c7ec5/plugins/kotlin-serialization/kotlin-serialization-compiler/src/org/jetbrains/kotlinx/serialization/compiler/resolve/SerializableProperty.kt#L45
+private val PropertyDescriptor.declaresDefaultValue: Boolean
+    get() = when (val declaration = this.source.getPsi()) {
+        is KtDeclarationWithInitializer -> declaration.initializer != null
+        is KtParameter -> declaration.defaultValue != null
+        else -> false
+    }
