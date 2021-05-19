@@ -272,6 +272,13 @@ class ResolverImpl(
                 visitAnnotated(typeParameter, data)
                 super.visitTypeParameter(typeParameter, data)
             }
+
+            override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
+                if (valueParameter.isVal || valueParameter.isVar) {
+                    return
+                }
+                visitAnnotated(valueParameter, data)
+            }
         }
 
         for (file in newKSFiles) {
