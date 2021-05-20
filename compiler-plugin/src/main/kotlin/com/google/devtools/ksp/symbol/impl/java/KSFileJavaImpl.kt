@@ -50,7 +50,7 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
         psi.virtualFile.path
     }
 
-    override val packageName: KSName = KSNameImpl.getCached(if (psi.packageName == "") "<root>" else psi.packageName)
+    override val packageName: KSName = KSNameImpl.getCached(psi.packageName)
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFile(this, data)
