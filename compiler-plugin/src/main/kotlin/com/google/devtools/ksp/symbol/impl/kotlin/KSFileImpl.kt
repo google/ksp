@@ -37,7 +37,7 @@ class KSFileImpl private constructor(val file: KtFile) : KSFile {
     }
 
     override val packageName: KSName by lazy {
-        KSNameImpl.getCached(file.packageFqName.toString())
+        KSNameImpl.getCached(file.packageFqName.asString())
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
