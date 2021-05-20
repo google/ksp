@@ -26,12 +26,17 @@ class DeclarationPackageNameProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
-        return result
+        return result.sorted()
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val visitor = NameCollector()
         resolver.getNewFiles().forEach{ it.accept(visitor, result) }
+        listOf("K1", "J1").mapNotNull {
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString(it))
+        }.forEach {
+            it.accept(visitor, result)
+        }
         return emptyList()
     }
 }

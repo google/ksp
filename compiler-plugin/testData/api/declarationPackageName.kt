@@ -17,29 +17,54 @@
 
 // TEST PROCESSOR: DeclarationPackageNameProcessor
 // EXPECTED:
-// test.pack:Outer
-// test.pack:Val
-// test.pack:Outer.Foo
-// test.pack:Inner
-// test.pack:innerVal
-// test.pack:Inner.innerFoo
-// test.pack:InnerLocal
-// test.pack:InnerLocal.<init>
-// test.pack:Inner.<init>
-// test.pack:Nested
-// test.pack:nestedVal
-// test.pack:Nested.nestedFoo
-// test.pack:a
-// test.pack:Nested.<init>
-// test.pack:Outer.<init>
+// <no name>:J1
+// <no name>:J1.<init>
+// <no name>:J2
+// <no name>:J2.<init>
+// <no name>:K1
+// <no name>:K1.<init>
+// <no name>:K2
+// <no name>:K2.<init>
 // test.java.pack:C
+// test.java.pack:C.<init>
 // test.java.pack:Inner
 // test.java.pack:Inner.<init>
 // test.java.pack:Nested
 // test.java.pack:Nested.<init>
-// test.java.pack:C.<init>
+// test.pack:Inner
+// test.pack:Inner.<init>
+// test.pack:Inner.innerFoo
+// test.pack:InnerLocal
+// test.pack:InnerLocal.<init>
+// test.pack:Nested
+// test.pack:Nested.<init>
+// test.pack:Nested.nestedFoo
+// test.pack:Outer
+// test.pack:Outer.<init>
+// test.pack:Outer.Foo
+// test.pack:Val
+// test.pack:a
+// test.pack:innerVal
+// test.pack:nestedVal
 // END
-//FILE: a.kt
+
+// MODULE: module1
+// FILE: K1.kt
+class K1
+
+// FILE: J1.java
+class J1 {
+}
+
+// MODULE: main(module1)
+// FILE: K2.kt
+class K2
+
+// FILE: J2.java
+class J2 {
+}
+
+// FILE: a.kt
 package test.pack
 
 class Outer {
