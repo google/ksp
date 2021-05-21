@@ -26,10 +26,10 @@
 // symbols from package lib2
 // lib2.Foo KOTLIN_LIB
 // lib2.a KOTLIN_LIB
-// symbols from package main
-// main.KotlinMain KOTLIN
-// main.C JAVA
-// main.D JAVA
+// symbols from package main.test
+// main.test.KotlinMain KOTLIN
+// main.test.C JAVA
+// main.test.D JAVA
 // END
 
 // MODULE: lib1
@@ -66,17 +66,34 @@ class FooInSource
 
 val propInSource = 1
 // FILE: main.kt
-package main
+package main.test
 
 class KotlinMain
 
-// FILE: C.java
-package main;
+// FILE: main/test/C.java
+package main.test;
 
 public class C {
 
 }
 
 class D {
+
+}
+
+// FILE: wrongDir/K.java
+package main;
+
+public class K {
+
+}
+
+class KK {}
+
+
+// FILE: main/test/main/test/L.java
+package main.test;
+
+public class L {
 
 }

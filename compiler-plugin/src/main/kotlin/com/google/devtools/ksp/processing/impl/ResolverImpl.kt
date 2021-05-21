@@ -79,6 +79,8 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
+import java.io.File
+import java.nio.file.FileSystem
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -88,7 +90,8 @@ class ResolverImpl(
     val bindingTrace: BindingTrace,
     val project: Project,
     componentProvider: ComponentProvider,
-    val incrementalContext: IncrementalContext
+    val incrementalContext: IncrementalContext,
+    val options: KspOptions
 ) : Resolver {
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     val javaActualAnnotationArgumentExtractor = JavaActualAnnotationArgumentExtractor()
@@ -661,8 +664,15 @@ class ResolverImpl(
     private val javaPackageToClassMap: Map<String, List<KSDeclaration>> by lazy {
         val packageToClassMapping = mutableMapOf<String, List<KSDeclaration>>()
         allKSFiles
-            .filter { it.origin == Origin.JAVA }
-            .forEach { packageToClassMapping.put(it.packageName.asString(), packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList()).plus(it.declarations)) }
+            .filter { file ->
+                file.origin == Origin.JAVA &&
+                    options.javaSourceRoots.any { root ->
+                        file.filePath.startsWith(root.absolutePath) &&
+                            file.filePath.substringAfter(root.absolutePath).dropLastWhile { c -> c != File.separatorChar }.dropLast(1).drop(1).replace(File.separatorChar, '.') == file.packageName.asString()
+                    }
+            }
+            .forEach { packageToClassMapping.put(it.packageName.asString(), packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList())
+                .plus(it.declarations.filterNot { it.containingFile?.fileName?.split(".")?.first() == it.simpleName.asString() })) }
         packageToClassMapping
     }
 
@@ -841,6 +851,9 @@ fun MemberDescriptor.toKSDeclaration(): KSDeclaration =
         is KtFunction -> KSFunctionDeclarationImpl.getCached(psi)
         is KtProperty -> KSPropertyDeclarationImpl.getCached((psi))
         is KtTypeAlias -> KSTypeAliasImpl.getCached(psi)
+        is PsiClass -> KSClassDeclarationJavaImpl.getCached(psi)
+        is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(psi)
+        is PsiField -> KSPropertyDeclarationJavaImpl.getCached(psi)
         else -> when (this) {
             is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(this)
             is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(this)
