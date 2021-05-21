@@ -18,16 +18,6 @@
 
 package com.google.devtools.ksp
 
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.StandardFileSystems
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiManager
-import org.jetbrains.kotlin.analyzer.AnalysisResult
-import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
-import org.jetbrains.kotlin.container.ComponentProvider
-import org.jetbrains.kotlin.context.ProjectContext
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
@@ -40,7 +30,20 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
+import com.intellij.openapi.extensions.ExtensionPoint
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiTreeChangeAdapter
+import com.intellij.psi.PsiTreeChangeListener
+import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
+import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.context.ProjectContext
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -110,8 +113,20 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             logger.warn("Current processing rounds exceeds 100, check processors for potential infinite rounds")
         }
         val psiManager = PsiManager.getInstance(project)
+        if (!initialized) {
+            // Dummy extension point; Required by dropPsiCaches().
+            project.extensionArea.registerExtensionPoint(
+                PsiTreeChangeListener.EP.name,
+                PsiTreeChangeAdapter::class.java.canonicalName,
+                ExtensionPoint.Kind.INTERFACE
+            )
+        } else {
+            psiManager.dropPsiCaches()
+        }
+
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        val javaFiles = options.javaSourceRoots
+        val javaSourceRoots = if (initialized) options.javaSourceRoots + options.javaOutputDir else options.javaSourceRoots
+        val javaFiles = javaSourceRoots
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
             .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // This time is for .java files
