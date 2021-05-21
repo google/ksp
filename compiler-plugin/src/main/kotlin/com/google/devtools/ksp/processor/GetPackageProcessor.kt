@@ -15,7 +15,7 @@ class GetPackageProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         addPackage("lib1", resolver)
         addPackage("lib2", resolver)
-        addPackage("main", resolver)
+        addPackage("main.test", resolver)
         return emptyList()
     }
 
