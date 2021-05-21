@@ -28,6 +28,8 @@
 // lib2.a KOTLIN_LIB
 // symbols from package main
 // main.KotlinMain KOTLIN
+// main.C JAVA
+// main.D JAVA
 // END
 
 // MODULE: lib1
@@ -67,3 +69,14 @@ val propInSource = 1
 package main
 
 class KotlinMain
+
+// FILE: C.java
+package main;
+
+public class C {
+
+}
+
+class D {
+
+}

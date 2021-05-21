@@ -658,6 +658,14 @@ class ResolverImpl(
         }
     }
 
+    private val javaPackageToClassMap: Map<String, List<KSDeclaration>> by lazy {
+        val packageToClassMapping = mutableMapOf<String, List<KSDeclaration>>()
+        allKSFiles
+            .filter { it.origin == Origin.JAVA }
+            .forEach { packageToClassMapping.put(it.packageName.asString(), packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList()).plus(it.declarations)) }
+        packageToClassMapping
+    }
+
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
         val noPackageFilter = DescriptorKindFilter.ALL.withoutKinds(DescriptorKindFilter.PACKAGES_MASK)
@@ -665,6 +673,7 @@ class ResolverImpl(
             .memberScope.getContributedDescriptors(noPackageFilter)
             .asSequence()
             .mapNotNull { (it as? MemberDescriptor)?.toKSDeclaration() }
+            .plus(javaPackageToClassMap.getOrDefault(packageName, emptyList()).asSequence())
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
