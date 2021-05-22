@@ -7,7 +7,7 @@
 * Create an empty gradle project.
 * Specify version `1.5.0` of the Kotlin plugin in the root project for use in other project modules.
 
-  ```
+  ```kotlin
   plugins {
       kotlin("jvm") version "1.5.0" apply false
   }
@@ -25,7 +25,7 @@
     * Apply Kotlin plugin
     * Add the KSP API to the `dependencies` block.
 
-  ```
+  ```kotlin
   plugins {
       kotlin("jvm")
   }
@@ -65,7 +65,7 @@
 * Create another module that contains a workload where you want to try out your processor.
 * In the project's `settings.gradle.kts`, add `google()` to `repositories` for the KSP plugin.
   
-  ```
+  ```kotlin
   pluginManagement {
       repositories {
          gradlePluginPortal()
@@ -81,7 +81,7 @@
   `build/generated/source/ksp`.
 * Here's a `sample build.gradle.kts` to apply the KSP plugin to a workload. 
 
-  ```
+  ```kotlin
   plugins {
       id("com.google.devtools.ksp") version "1.5.0-1.0.0-alpha10"
       kotlin("jvm") 
