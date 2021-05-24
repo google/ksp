@@ -52,8 +52,6 @@ open class BackingFieldProcessor : AbstractTestProcessor() {
             data.add(property)
             super.visitPropertyDeclaration(property, data)
         }
-
-
     }
 
     override fun toResult(): List<String> {

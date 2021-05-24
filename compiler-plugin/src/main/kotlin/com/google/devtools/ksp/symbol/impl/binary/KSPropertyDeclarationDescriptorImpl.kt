@@ -22,8 +22,6 @@ import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
-import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.hasBackingField
 
 class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) : KSPropertyDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
@@ -83,12 +81,9 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
-    override val hasBackingField: Boolean
-        get() {
-            // TODO figure out how to do this. existing hasBackingField does not seem to work as I assumed
-            //  see links in `hasBackingFieldFixed` for more details
-            return descriptor.hasBackingFieldFixed()
-        }
+    override val hasBackingField: Boolean by lazy {
+        descriptor.hasBackingFieldWithBinaryClassSupport()
+    }
 
     override fun findOverridee(): KSPropertyDeclaration? {
         val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)

@@ -60,7 +60,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     override val hasBackingField: Boolean
-        get() = propertyDescriptor?.hasBackingFieldFixed() ?: true
+        get() = ktProperty.initializer != null
 
     override val getter: KSPropertyGetter? by lazy {
         ktProperty.getter?.let {

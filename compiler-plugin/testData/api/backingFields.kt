@@ -18,10 +18,24 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: BackingFieldProcessor
 // EXPECTED:
+// lib.BaseClass.abstractProp_willBeBacked: false
+// lib.BaseClass.abstractProp_wontBeBacked: false
+// lib.BaseClass.notOverriddenAbstractProp: true
+// lib.BaseClass.overriddenBaseProp_willBeBacked: true
+// lib.BaseClass.overriddenBaseProp_wontBeBacked: true
+// lib.ChildClass.abstractProp_willBeBacked: true
+// lib.ChildClass.abstractProp_wontBeBacked: false
+// lib.ChildClass.interfaceProp_willBeBacked: true
+// lib.ChildClass.interfaceProp_wontBeBacked: false
+// lib.ChildClass.overriddenBaseProp_willBeBacked: true
+// lib.ChildClass.overriddenBaseProp_wontBeBacked: false
 // lib.DataClass.value_Param: true
 // lib.DataClass.variable_Param: true
 // lib.JavaClass.javaField: true
 // lib.JavaClass.javaFieldWithAccessors: true
+// lib.MyInterface.interfaceProp_willBeBacked: false
+// lib.MyInterface.interfaceProp_wontBeBacked: false
+// lib.NormalClass.jvmField_withBacking: true
 // lib.NormalClass.value: true
 // lib.NormalClass.value_Param: true
 // lib.NormalClass.value_noBacking: false
@@ -36,10 +50,23 @@
 // lib.variable: true
 // lib.variable_noBacking: false
 // lib.variable_withBacking: true
+// main.BaseClass.abstractProp_willBeBacked: false
+// main.BaseClass.abstractProp_wontBeBacked: false
+// main.BaseClass.notOverriddenAbstractProp: true
+// main.BaseClass.overriddenBaseProp_willBeBacked: true
+// main.BaseClass.overriddenBaseProp_wontBeBacked: true
+// main.ChildClass.abstractProp_willBeBacked: true
+// main.ChildClass.abstractProp_wontBeBacked: false
+// main.ChildClass.interfaceProp_willBeBacked: true
+// main.ChildClass.interfaceProp_wontBeBacked: false
+// main.ChildClass.overriddenBaseProp_willBeBacked: true
+// main.ChildClass.overriddenBaseProp_wontBeBacked: false
 // main.DataClass.value_Param: true
 // main.DataClass.variable_Param: true
 // main.JavaClass.javaField: true
 // main.JavaClass.javaFieldWithAccessors: true
+// main.MyInterface.interfaceProp_willBeBacked: false
+// main.MyInterface.interfaceProp_wontBeBacked: false
 // main.NormalClass.value: true
 // main.NormalClass.value_Param: true
 // main.NormalClass.value_noBacking: false
@@ -59,6 +86,7 @@
 // MODULE: lib
 // FILE: lib.kt
 package lib
+
 val value: String = ""
 var variable: String = ""
 val value_noBacking: String
@@ -70,6 +98,7 @@ val value_withBacking: String = ""
     get() = field
 var variable_withBacking: String? = null
     get() = field
+
 data class DataClass(
     val value_Param: String,
     var variable_Param: String
@@ -91,6 +120,32 @@ class NormalClass(
         get() = field
     var variable_withBacking: String? = null
         get() = field
+    val jvmField_withBacking: String = ""
+}
+
+abstract class BaseClass {
+    open val overriddenBaseProp_willBeBacked: String = ""
+    open val overriddenBaseProp_wontBeBacked: String = ""
+    open val notOverriddenAbstractProp: String = ""
+    abstract val abstractProp_willBeBacked: String
+    abstract val abstractProp_wontBeBacked: String
+}
+
+interface MyInterface {
+    val interfaceProp_willBeBacked: String
+    val interfaceProp_wontBeBacked: String
+}
+
+class ChildClass: BaseClass(), MyInterface {
+    override val overriddenBaseProp_willBeBacked: String = ""
+    override val overriddenBaseProp_wontBeBacked: String
+        get() = ""
+    override val abstractProp_willBeBacked: String = ""
+    override val abstractProp_wontBeBacked: String
+        get() = ""
+    override val interfaceProp_willBeBacked: String = ""
+    override val interfaceProp_wontBeBacked: String
+        get() = ""
 }
 
 // FILE: lib/JavaClass.java
@@ -99,11 +154,15 @@ public class JavaClass {
     private String javaField;
     private String javaFieldWithAccessors;
 
-    public String getJavaFieldWithAccessors() { return ""; }
-    public void setJavaFieldWithAccessors(String value) { }
+    public String getJavaFieldWithAccessors()
+    { return ""; }
+    public void setJavaFieldWithAccessors(String value )
+    {}
 
-    public String getJavaAccessorWithoutField() { return ""; }
-    public void setJavaAccessorWithoutField(String value) { }
+    public String getJavaAccessorWithoutField()
+    { return ""; }
+    public void setJavaAccessorWithoutField(String value )
+    {}
 }
 
 // MODULE: main(lib)
@@ -125,6 +184,7 @@ data class DataClass(
     val value_Param: String,
     var variable_Param: String
 )
+
 class NormalClass(
     val value_Param: String,
     var variable_Param: String,
@@ -142,15 +202,45 @@ class NormalClass(
     var variable_withBacking: String? = null
         get() = field
 }
+
+abstract class BaseClass {
+    open val overriddenBaseProp_willBeBacked: String = ""
+    open val overriddenBaseProp_wontBeBacked: String = ""
+    open val notOverriddenAbstractProp: String = ""
+    abstract val abstractProp_willBeBacked: String
+    abstract val abstractProp_wontBeBacked: String
+}
+
+interface MyInterface {
+    val interfaceProp_willBeBacked: String
+    val interfaceProp_wontBeBacked: String
+}
+
+class ChildClass: BaseClass(), MyInterface {
+    override val overriddenBaseProp_willBeBacked: String = ""
+    override val overriddenBaseProp_wontBeBacked: String
+        get() = ""
+    override val abstractProp_willBeBacked: String = ""
+    override val abstractProp_wontBeBacked: String
+        get() = ""
+    override val interfaceProp_willBeBacked: String = ""
+    override val interfaceProp_wontBeBacked: String
+        get() = ""
+}
+
 // FILE: main/JavaClass.java
 package main;
 public class JavaClass {
     private String javaField;
     private String javaFieldWithAccessors;
 
-    public String getJavaFieldWithAccessors() { return ""; }
-    public void setJavaFieldWithAccessors(String value) { }
+    public String getJavaFieldWithAccessors()
+    { return ""; }
+    public void setJavaFieldWithAccessors(String value )
+    {}
 
-    public String getJavaAccessorWithoutField() { return ""; }
-    public void setJavaAccessorWithoutField(String value) { }
+    public String getJavaAccessorWithoutField()
+    { return ""; }
+    public void setJavaAccessorWithoutField(String value )
+    {}
 }
