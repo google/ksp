@@ -81,6 +81,10 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
     }
 
+    override val hasBackingField: Boolean by lazy {
+        descriptor.hasBackingFieldWithBinaryClassSupport()
+    }
+
     override fun findOverridee(): KSPropertyDeclaration? {
         val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
         return propertyDescriptor?.findClosestOverridee()?.toKSPropertyDeclaration()

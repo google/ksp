@@ -72,6 +72,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/asMemberOf.kt");
     }
 
+    @TestMetadata("backingFields.kt")
+    public void testBackingFields() throws Exception {
+        runTest("testData/api/backingFields.kt");
+    }
+
     @TestMetadata("builtInTypes.kt")
     public void testBuiltInTypes() throws Exception {
         runTest("testData/api/builtInTypes.kt");

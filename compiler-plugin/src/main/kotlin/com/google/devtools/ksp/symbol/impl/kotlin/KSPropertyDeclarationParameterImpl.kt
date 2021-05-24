@@ -41,6 +41,9 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         ktParameter.findParentDeclaration()!!.parentDeclaration
     }
 
+    override val hasBackingField: Boolean
+        get() = true
+
     override val extensionReceiver: KSTypeReference? = null
 
     override val isMutable: Boolean by lazy {

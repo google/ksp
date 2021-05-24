@@ -30,6 +30,8 @@ import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
+import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.hasBackingField
 
 class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration, KSDeclarationImpl(ktProperty),
     KSExpectActual by KSExpectActualImpl(ktProperty) {
@@ -56,6 +58,9 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     override val isMutable: Boolean by lazy {
         ktProperty.isVar
     }
+
+    override val hasBackingField: Boolean
+        get() = ktProperty.initializer != null
 
     override val getter: KSPropertyGetter? by lazy {
         ktProperty.getter?.let {

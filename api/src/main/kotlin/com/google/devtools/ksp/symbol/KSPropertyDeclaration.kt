@@ -53,6 +53,16 @@ interface KSPropertyDeclaration : KSDeclaration {
     val isMutable: Boolean
 
     /**
+     * True if this property has a backing field.
+     *
+     * Note that, this is specific to the current property and does not check for properties that are overridden by this
+     * property.
+     *
+     * https://kotlinlang.org/docs/properties.html#backing-fields
+     */
+    val hasBackingField: Boolean
+
+    /**
      * Indicates whether this is a delegated property.
      */
     fun isDelegated(): Boolean
