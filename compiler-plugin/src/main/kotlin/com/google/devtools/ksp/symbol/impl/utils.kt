@@ -35,11 +35,9 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticIm
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
 import com.intellij.psi.impl.source.PsiClassImpl
-import org.jetbrains.kotlin.builtins.getFunctionalClassKind
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
-import org.jetbrains.kotlin.load.java.structure.JavaMember
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.psi.*
@@ -50,9 +48,15 @@ import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
+import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.psiUtil.siblings
-import org.jetbrains.kotlin.resolve.annotations.hasJvmStaticAnnotation
-import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.hasBackingField
+import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
 
 private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -422,3 +426,60 @@ internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? {
 }
 
 internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
+
+/**
+ * Custom check for backing fields of descriptors that support properties coming from .class files.
+ * The compiler API always returns true for them even when they don't have backing fields.
+ */
+internal fun PropertyDescriptor.hasBackingFieldWithBinaryClassSupport(): Boolean {
+    return when {
+        extensionReceiverParameter != null -> false // extension properties do not have backing fields
+        compileTimeInitializer != null -> true // compile time initialization requires backing field
+        this is DeserializedPropertyDescriptor -> this.hasBackingFieldInBinaryClass() // kotlin class, check binary
+        this.source is KotlinSourceElement -> this.declaresDefaultValue // kotlin source
+        else -> true // Java source or class
+    }
+}
+
+/**
+ * Lookup cache for field names names for deserialized classes.
+ * To check if a field has backing field, we need to look for binary field names, hence they are cached here.
+ */
+internal object BinaryFieldsCache : KSObjectCache<ClassId, Set<Name>>() {
+    fun getCached(
+        kotlinJvmBinaryClass: KotlinJvmBinaryClass
+    ) = cache.getOrPut(kotlinJvmBinaryClass.classId) {
+        val visitor = PropNamesVisitor()
+        kotlinJvmBinaryClass.visitMembers(visitor, null)
+        visitor.propNames
+    }
+
+    private class PropNamesVisitor : KotlinJvmBinaryClass.MemberVisitor {
+        val propNames = mutableSetOf<Name>()
+        override fun visitField(name: Name, desc: String, initializer: Any?): KotlinJvmBinaryClass.AnnotationVisitor? {
+            propNames.add(name)
+            return null
+        }
+
+        override fun visitMethod(name: Name, desc: String): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
+            return null
+        }
+    }
+}
+
+/**
+ * Workaround for backingField in deserialized descriptors.
+ * They always return non-null for backing field even when they don't have a backing field.
+ */
+private fun DeserializedPropertyDescriptor.hasBackingFieldInBinaryClass(): Boolean {
+    val kotlinJvmBinaryClass = this.getContainingKotlinJvmBinaryClass() ?: return false
+    return BinaryFieldsCache.getCached(kotlinJvmBinaryClass).contains(name)
+}
+
+// from: https://github.com/JetBrains/kotlin/blob/92d200e093c693b3c06e53a39e0b0973b84c7ec5/plugins/kotlin-serialization/kotlin-serialization-compiler/src/org/jetbrains/kotlinx/serialization/compiler/resolve/SerializableProperty.kt#L45
+private val PropertyDescriptor.declaresDefaultValue: Boolean
+    get() = when (val declaration = this.source.getPsi()) {
+        is KtDeclarationWithInitializer -> declaration.initializer != null
+        is KtParameter -> declaration.defaultValue != null
+        else -> false
+    }
