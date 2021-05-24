@@ -55,6 +55,7 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.psiUtil.siblings
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.hasBackingField
+import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
 
 private val jvmModifierMap = mapOf(
@@ -431,9 +432,13 @@ internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
  * The compiler API always returns true for them even when they don't have backing fields.
  */
 internal fun PropertyDescriptor.hasBackingFieldWithBinaryClassSupport(): Boolean {
-    return this.hasBackingField(BindingContext.EMPTY) ||
-        (this is DeserializedPropertyDescriptor && this.hasBackingFieldInBinaryClass()) ||
-        this.declaresDefaultValue
+    return when {
+        extensionReceiverParameter != null -> false // extension properties do not have backing fields
+        compileTimeInitializer != null -> true // compile time initialization requires backing field
+        this is DeserializedPropertyDescriptor -> this.hasBackingFieldInBinaryClass() // kotlin class, check binary
+        this.source is KotlinSourceElement -> this.declaresDefaultValue // kotlin source
+        else -> true // Java source or class
+    }
 }
 
 /**
