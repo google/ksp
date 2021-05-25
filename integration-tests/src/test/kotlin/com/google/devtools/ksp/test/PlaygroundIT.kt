@@ -13,11 +13,8 @@ class PlaygroundIT {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground")
 
-    @Test
-    fun testPlayground() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-
-        val resultCleanBuild = gradleRunner.withArguments("clean", "build").build()
+    private fun GradleRunner.buildAndCheck() {
+        val resultCleanBuild = this.withArguments("clean", "build").build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
@@ -29,5 +26,22 @@ class PlaygroundIT {
             Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
+    }
+
+    @Test
+    fun testPlayground() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck()
+    }
+
+    // TODO: add another plugin and see if it is blocked.
+    // Or use a project that depends on a builtin plugin like all-open and see if the build fails
+    @Test
+    fun testBlockOtherCompilerPlugins() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload/build.gradle.kts").appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
+        gradleRunner.buildAndCheck()
+        project.restore("workload/build.gradle.kts")
     }
 }
