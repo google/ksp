@@ -330,7 +330,8 @@ abstract class KspTask : KspTaskJ() {
         // Start with / copy from kotlinCompile.
         kotlinCompile.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
         if (blockOtherCompilerPlugins) {
-            val cfg = project.configurations.getByName(PLUGIN_CLASSPATH_CONFIGURATION_NAME)
+            // FIXME: ask upstream to provide an API to make this not implementation-dependent.
+            val cfg = project.configurations.getByName((pluginClasspath as Configuration).name)
             val dep = cfg.dependencies.single { it.name == KspGradleSubplugin.KSP_ARTIFACT_NAME }
             args.pluginClasspaths = cfg.files(dep).map { it.canonicalPath }.toTypedArray()
             args.pluginOptions = arrayOf()
