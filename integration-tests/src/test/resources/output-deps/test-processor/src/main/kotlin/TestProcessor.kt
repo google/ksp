@@ -11,7 +11,7 @@ class TestProcessor : SymbolProcessor {
     lateinit var logger: KSPLogger
     var processed = false
 
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
         this.logger = logger
     }
@@ -43,5 +43,15 @@ class TestProcessor : SymbolProcessor {
         }
         processed = true
         return emptyList()
+    }
+}
+
+class TestProcessorProvider : SymbolProcessorProvider {
+    override fun create(
+        env: SymbolProcessorEnvironment
+    ): SymbolProcessor {
+        return TestProcessor().apply {
+            init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)
+        }
     }
 }

@@ -11,7 +11,7 @@ class BuilderProcessor : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
     lateinit var logger: KSPLogger
 
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
         this.logger = logger
     }
@@ -73,4 +73,14 @@ class BuilderProcessor : SymbolProcessor {
         }
     }
 
+}
+
+class TestProcessorProvider : SymbolProcessorProvider {
+    override fun create(
+        env: SymbolProcessorEnvironment
+    ): SymbolProcessor {
+        return BuilderProcessor().apply {
+            init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)
+        }
+    }
 }

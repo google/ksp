@@ -12,7 +12,7 @@ class NormalProcessor : SymbolProcessor {
         logger.error("NormalProcessor called error on $rounds")
     }
 
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.logger = logger
         this.codeGenerator = codeGenerator
     }
@@ -27,3 +27,12 @@ class NormalProcessor : SymbolProcessor {
 }
 
 
+class TestProcessorProvider2 : SymbolProcessorProvider {
+    override fun create(
+        env: SymbolProcessorEnvironment
+    ): SymbolProcessor {
+        return NormalProcessor().apply {
+            init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)
+        }
+    }
+}

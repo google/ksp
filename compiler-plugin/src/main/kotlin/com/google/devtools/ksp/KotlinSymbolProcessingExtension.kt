@@ -67,16 +67,9 @@ class KotlinSymbolProcessingExtension(
                 val classLoader = URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
 
                 ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader)
-                    .plus(loadProvidersForLegacySymbolProcessors(classLoader))
             }
         }
         return providers
-    }
-
-    private fun loadProvidersForLegacySymbolProcessors(classLoader: URLClassLoader): List<SymbolProcessorProvider> {
-        return ServiceLoaderLite
-            .loadImplementations(SymbolProcessor::class.java, classLoader)
-            .map(::LegacySymbolProcessorAdapter)
     }
 }
 
