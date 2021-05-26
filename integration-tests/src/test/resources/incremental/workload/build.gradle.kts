@@ -16,7 +16,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(project(":validator"))
-    testImplementation("junit:junit:4.12")
+    testImplementation("junit:junit:4.13.2")
     ksp(project(":validator"))
 }
 

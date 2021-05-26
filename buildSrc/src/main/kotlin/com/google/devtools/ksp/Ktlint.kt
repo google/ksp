@@ -92,7 +92,7 @@ private fun JavaExec.configureCommonKtlintParams(
 
 private fun Project.getKtlintConfiguration(): Configuration {
     return configurations.findByName("ktlint") ?: configurations.create("ktlint") {
-        val dependency = dependencies.create("com.pinterest:ktlint:0.40.0")
+        val dependency = dependencies.create("com.pinterest:ktlint:0.41.0")
         it.dependencies.add(dependency)
     }
 }
