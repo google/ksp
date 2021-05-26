@@ -22,16 +22,27 @@
 // KSClassifierReferenceImpl: Qualifier of C is A
 // KSClassifierReferenceImpl: Qualifier of Int is null
 // KSClassifierReferenceImpl: Qualifier of String is null
-// KSClassifierReferenceDescriptorImpl: Qualifier of B is A
-// KSClassifierReferenceDescriptorImpl: Qualifier of C<Int> is A<String>
 // KSClassifierReferenceDescriptorImpl: Qualifier of Int is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of String is null
+// KSClassifierReferenceDescriptorImpl: Qualifier of Y is X
+// KSClassifierReferenceDescriptorImpl: Qualifier of Z<Int> is X<String>
 // KSClassifierReferenceJavaImpl: Qualifier of H is J<String>
 // KSClassifierReferenceJavaImpl: Qualifier of I is J
 // KSClassifierReferenceJavaImpl: Qualifier of Object is null
 // KSClassifierReferenceJavaImpl: Qualifier of String is null
 // END
 
+// MODULE: lib
+// FILE: lib.kt
+class X<T1> {
+    class Y
+    inner class Z<T2>
+}
+
+val z: X.Y = X.Y()
+val w: X<String>.Z<Int> = X<String>().Z<Int>()
+
+// MODULE: main(lib)
 // FILE: reference.kt
 class A<T1> {
     class B
