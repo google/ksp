@@ -19,7 +19,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.impl.BaseVisitor
+import com.google.devtools.ksp.processor.BaseVisitor
 import com.google.devtools.ksp.symbol.*
 
 class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {

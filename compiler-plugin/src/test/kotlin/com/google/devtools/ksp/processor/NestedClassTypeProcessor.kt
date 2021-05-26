@@ -4,7 +4,6 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
 
 class NestedClassTypeProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
