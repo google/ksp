@@ -1,8 +1,4 @@
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
@@ -16,7 +12,7 @@ class Validator : SymbolProcessor {
     lateinit var logger: KSPLogger
     var processed = false
 
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
         this.logger = logger
     }
@@ -48,4 +44,12 @@ class Validator : SymbolProcessor {
     }
 }
 
-
+class TestProcessorProvider : SymbolProcessorProvider {
+    override fun create(
+        env: SymbolProcessorEnvironment
+    ): SymbolProcessor {
+        return Validator().apply {
+            init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)
+        }
+    }
+}

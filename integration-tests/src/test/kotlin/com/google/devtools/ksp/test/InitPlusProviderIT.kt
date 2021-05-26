@@ -26,10 +26,7 @@ class InitPlusProviderIT {
 
         JarFile(artifact).use { jarFile ->
             Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("TestProcessorInit.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("HelloFromInit.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("HelloFromProvider.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("GeneratedFromInit.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("GeneratedFromProvider.class").size > 0)
         }
     }

@@ -32,16 +32,6 @@ import com.google.devtools.ksp.symbol.KSAnnotated
  */
 interface SymbolProcessor {
     /**
-     * Called by Kotlin Symbol Processing to initialize the processor.
-     *
-     * @param options passed from command line, Gradle, etc.
-     * @param kotlinVersion language version of compilation environment.
-     * @param codeGenerator creates managed files.
-     */
-    @Deprecated("Implement the SymbolProcessorProvider interface instead. This warning will become an error in beta.")
-    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {}
-
-    /**
      * Called by Kotlin Symbol Processing to run the processing task.
      *
      * @param resolver provides [SymbolProcessor] with access to compiler details such as Symbols.
