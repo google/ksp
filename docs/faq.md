@@ -16,6 +16,4 @@ Additionally, KSP’s incremental processing model has a finer granularity than 
 KSP can process Java sources as well. The API is unified, meaning that when you parse a Java class and a Kotlin class you get a unified data structure in KSP.
 
 ## What is KSP’s project status and roadmap?
-KSP is currently in the alpha phase, which means that the API is open to feedback and is subject to changes. You are welcome to give it a try but we would recommend not using it in production yet.
-
-Once KSP enters beta, the API will be stabilized and the development focus will be on fixing issues / bugs in the implementation. We’ll do our best to minimize backward compatibility issues starting from the beta release.
+KSP is currently in the beta phase, which means that the existing API is mostly fixed and unlikely to change. You are welcome to use it and we'll do our best to minimize the compatibility / migration issues for you. Please give it a try and let use know what's needed and what doesn't work!
