@@ -13,7 +13,7 @@ class ErrorProcessor : SymbolProcessor {
     var rounds = 0
     lateinit var exception: String
 
-    override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         exception = if (options.containsKey("exception")) {
             options["exception"]!!
         } else {
@@ -54,4 +54,12 @@ class ErrorProcessor : SymbolProcessor {
     }
 }
 
-
+class TestProcessorProvider : SymbolProcessorProvider {
+    override fun create(
+        env: SymbolProcessorEnvironment
+    ): SymbolProcessor {
+        return ErrorProcessor().apply {
+            init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)
+        }
+    }
+}

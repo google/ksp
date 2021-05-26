@@ -15,7 +15,6 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    ksp(project(":init-processor"))
     ksp(project(":provider-processor"))
 }
 
