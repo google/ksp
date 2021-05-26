@@ -813,26 +813,6 @@ class ResolverImpl(
         JavaToKotlinClassMap.mapKotlinToJava(FqNameUnsafe(kotlinName.asString()))?.toKSName()
 }
 
-open class BaseVisitor : KSVisitorVoid() {
-    override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
-        for (declaration in type.declarations) {
-            declaration.accept(this, Unit)
-        }
-    }
-
-    override fun visitFile(file: KSFile, data: Unit) {
-        for (declaration in file.declarations) {
-            declaration.accept(this, Unit)
-        }
-    }
-
-    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
-        for (declaration in function.declarations) {
-            declaration.accept(this, Unit)
-        }
-    }
-}
-
 // TODO: cross module resolution
 fun DeclarationDescriptor.findExpectsInKSDeclaration(): Sequence<KSDeclaration> =
     findExpects().asSequence().map {

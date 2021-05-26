@@ -20,7 +20,6 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -51,7 +50,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         )
         result.add(
             "Any is assignable from errorInComponent: ${
-                ResolverImpl.instance.builtIns.anyType.isAssignableFrom(errorAtTop.type.resolve())
+                resolver.builtIns.anyType.isAssignableFrom(errorAtTop.type.resolve())
             }"
         )
         result.add(
@@ -61,7 +60,7 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         )
         result.add(
             "Any is assignable from class C: ${
-                ResolverImpl.instance.builtIns.anyType.isAssignableFrom(classC.asStarProjectedType())
+                resolver.builtIns.anyType.isAssignableFrom(classC.asStarProjectedType())
             }"
         )
         val Cls = resolver.getClassDeclarationByName("Cls")!!
