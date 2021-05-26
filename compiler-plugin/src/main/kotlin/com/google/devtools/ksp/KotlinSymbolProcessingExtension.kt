@@ -25,7 +25,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
@@ -57,7 +56,7 @@ import java.nio.file.Files
 class KotlinSymbolProcessingExtension(
     options: KspOptions,
     logger: KSPLogger,
-    val testProcessor: AbstractTestProcessor? = null
+    val testProcessor: SymbolProcessorProvider? = null
 ) : AbstractKotlinSymbolProcessingExtension(options, logger, testProcessor != null) {
     override fun loadProviders(): List<SymbolProcessorProvider> {
         if (!initialized) {
