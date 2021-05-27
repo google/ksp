@@ -40,7 +40,9 @@
   }
   ```
 
-* The processor you're writing needs to implement [`com.google.devtools.ksp.processing.SymbolProcessorProvider`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessorProvider.kt).
+* You'll need to implement [`com.google.devtools.ksp.processing.SymbolProcessor`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessor.kt) and
+ [`com.google.devtools.ksp.processing.SymbolProcessorProvider`](../api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessorProvider.kt).
+ Your implementation of `SymbolProcessorProvider` will be loaded as a service to instantiate the `SymbolProcessor` you implement.
   Note the following:
   * Implement [`SymbolProcessorProvider.create()`](https://github.com/google/ksp/blob/master/api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessorProvider.kt) to create a `SymbolProcessor`. Dependencies your processor needs (e.g. `CodeGenerator`, processor options) are passed through the parameters of `SymbolProcessorProvider.create()`.
   * Your main logic should be in the [`SymbolProcessor.process()`](https://github.com/google/ksp/blob/master/api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessor.kt) method.
@@ -53,9 +55,9 @@
     in the sample project.
     * `src/main/kotlin/BuilderProcessor.kt`
     * `src/main/kotlin/TestProcessor.kt`
-  * After writing your own processor, register your processor to the package by including
-    the fully-qualified name of that processor in
-    `resources/META-INF/services/com.google.devtools.ksp.processing.SymbolProcessor`.
+  * After writing your own processor, register your processor provider to the package by including
+    its fully-qualified name in
+    `resources/META-INF/services/com.google.devtools.ksp.processing.SymbolProcessorProvider`.
 
 ## Use your own processor in a project
 
