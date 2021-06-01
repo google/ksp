@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
@@ -41,6 +43,8 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTaskData
+import org.jetbrains.kotlin.gradle.tasks.SourceRoots
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
@@ -221,7 +225,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
-        InternalTrampoline.KotlinCompileTaskData_register(kspTaskName, kotlinCompilation, project.provider { kspOutputDir })
+        val kotlinCompileTaskData = KotlinCompileTaskData.register(kspTaskName, kotlinCompilation)
+        kotlinCompileTaskData.destinationDir.set(project.provider { kspOutputDir })
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
             kspTask.destinationDir = kspOutputDir
@@ -294,7 +299,7 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
             else -> null
         }
 
-abstract class KspTask : KspTaskJ() {
+abstract class KspTask : KotlinCompile() {
     @Internal
     lateinit var options: List<SubpluginOption>
 
@@ -341,6 +346,18 @@ abstract class KspTask : KspTaskJ() {
     }
 
     override fun getClasspath() = kotlinCompile.classpath
+
+    // Overrding an internal function is hacky.
+    // TODO: Ask upstream to open it.
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    fun `callCompilerAsync$kotlin_gradle_plugin`(
+        args: K2JVMCompilerArguments,
+        sourceRoots: SourceRoots,
+        changedFiles: ChangedFiles
+    ) {
+        args.addChangedFiles(changedFiles)
+        super.callCompilerAsync(args, sourceRoots, changedFiles)
+    }
 }
 
 fun K2JVMCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
