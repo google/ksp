@@ -85,6 +85,9 @@
 // errorType: (<Error>?) -> <Error>?
 // expected comparison failures
 // <BaseTypeArg1: kotlin.Any?>(Base.functionArgType.BaseTypeArg1?) -> kotlin.String?
+// () -> kotlin.Int!!
+// () -> kotlin.Int!!
+// (kotlin.Int!!) -> kotlin.Unit!!
 // END
 // FILE: Input.kt
 open class Base<BaseTypeArg1, BaseTypeArg2> {
@@ -125,6 +128,11 @@ fun <T>fileLevelFunction():Unit = TODO()
 val fileLevelProperty:Int = 3
 val errorType: NonExistingType
 
+interface KotlinInterface {
+    val x:Int
+    var y:Int
+}
+
 // FILE: JavaInput.java
 class JavaBase<BaseTypeArg1, BaseTypeArg2> {
     int intType;
@@ -142,4 +150,15 @@ class JavaBase<BaseTypeArg1, BaseTypeArg2> {
 }
 
 class JavaChild1 extends JavaBase<String, Integer> {
+}
+
+class JavaImpl implements KotlinInterface {
+    public int getX() {
+        return 1;
+    }
+    public int getY() {
+        return 1;
+    }
+    public void setY(int value) {
+    }
 }

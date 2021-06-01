@@ -754,6 +754,11 @@ class ResolverImpl(
                 )
             }
             val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
+            if (declaration is PropertyAccessorDescriptor) {
+                val substitutedProperty = (declaration.correspondingProperty).substitute(typeSubstitutor)
+                // TODO: Fix in upstream for property accessors: https://github.com/JetBrains/kotlin/blob/master/core/descriptors/src/org/jetbrains/kotlin/descriptors/impl/PropertyAccessorDescriptorImpl.java#L122
+                return KSFunctionImpl((substitutedProperty as PropertyDescriptor).accessors.single { it.name == declaration.name })
+            }
             val substituted = declaration.substitute(typeSubstitutor)
             return KSFunctionImpl(substituted)
         }
