@@ -85,6 +85,13 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
                 }
             }
         }
+        val javaImpl = resolver.getClassDeclarationByName("JavaImpl")!!
+        val getX = javaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getX" }
+        val getY = javaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getY" }
+        val setY = javaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "setY" }
+        results.add(getX.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
+        results.add(getY.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
+        results.add(setY.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
         return emptyList()
     }
 
