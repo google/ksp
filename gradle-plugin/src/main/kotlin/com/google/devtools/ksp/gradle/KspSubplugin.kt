@@ -266,6 +266,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 kspTaskProvider = kspTaskProvider,
                 javaOutputDir = javaOutputDir,
                 classOutputDir = classOutputDir,
+                resourcesOutputDir = project.fileTree(resourceOutputDir)
             )
         }
 
