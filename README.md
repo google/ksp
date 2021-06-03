@@ -183,6 +183,7 @@ The table below includes a list of popular libraries on Android and their variou
 |---|---|---|
 |Room|[Experimentally supported](https://developer.android.com/jetpack/androidx/releases/room#2.3.0-beta02)|   |
 |Moshi|[Experimentally supported](https://github.com/ZacSweers/MoshiX/tree/main/moshi-ksp)|   |
+|Kotshi|[Experimentally supported](https://github.com/ansman/kotshi)|   |
 |Auto Factory|Not yet supported|[Link](https://github.com/google/auto/issues/982)|
 |Dagger|Not yet supported|[Link](https://github.com/google/dagger/issues/2349)|
 |Hilt|Not yet supported|[Link](https://issuetracker.google.com/179057202)|
