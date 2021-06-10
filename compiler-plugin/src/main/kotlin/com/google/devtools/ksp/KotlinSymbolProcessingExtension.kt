@@ -105,14 +105,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             logger.warn("Current processing rounds exceeds 100, check processors for potential infinite rounds")
         }
         val psiManager = PsiManager.getInstance(project)
-        if (!initialized) {
-            // Dummy extension point; Required by dropPsiCaches().
-            project.extensionArea.registerExtensionPoint(
-                PsiTreeChangeListener.EP.name,
-                PsiTreeChangeAdapter::class.java.canonicalName,
-                ExtensionPoint.Kind.INTERFACE
-            )
-        } else {
+        if (initialized) {
             psiManager.dropPsiCaches()
         }
 
