@@ -28,6 +28,9 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
+import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.psi.PsiTreeChangeAdapter
+import com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
@@ -86,6 +89,9 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
             configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, LookupTrackerImpl(LookupTracker.DO_NOTHING))
+
+            // Dummy extension point; Required by dropPsiCaches().
+            CoreApplicationEnvironment.registerExtensionPoint(project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java)
         }
     }
 }
