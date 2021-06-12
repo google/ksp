@@ -191,8 +191,9 @@ class SourceSetConfigurationsTest {
             .withArguments(":app:dependencies")
             .build()
 
+        // kaptClasspath_* seem to be intermediate configurations that never run.
         val kaptConfigurations = result.output.lines().filter {
-            it.startsWith("kapt")
+            it.startsWith("kapt") && !it.startsWith("kaptClasspath_")
         }
         val kspConfigurations = result.output.lines().filter {
             it.startsWith("ksp")
