@@ -99,7 +99,9 @@ fun KSDeclaration.isLocal(): Boolean {
  * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope are valid, i.e. resolvable.
  * @param predicate: A lambda for filtering interested symbols for performance purpose. Default checks all.
  */
-fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _-> true } ): Boolean {
+fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { parent, current ->
+    true
+} ): Boolean {
     return this.accept(KSValidateVisitor(predicate), null)
 }
 
