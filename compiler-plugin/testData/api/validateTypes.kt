@@ -27,9 +27,13 @@ class ErrorAnnotationType {
 
 @Anno(1)
 open class GoodClass {
-    val a: Int
+    val a: Int = 1
 
     fun foo(): Int = 1
+
+    fun bar() {
+        val x = a
+    }
 }
 
 // FILE: C.java

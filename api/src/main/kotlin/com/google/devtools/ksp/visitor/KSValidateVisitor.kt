@@ -2,7 +2,7 @@ package com.google.devtools.ksp.visitor
 
 import com.google.devtools.ksp.symbol.*
 
-class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : KSDefaultVisitor<KSNode?, Boolean>() {
+open class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : KSDefaultVisitor<KSNode?, Boolean>() {
     private fun validateType(type: KSType): Boolean {
         return !type.isError && !type.arguments.any { it.type?.accept(this, null) == false }
     }
@@ -22,7 +22,7 @@ class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : K
     }
 
     override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: KSNode?): Boolean {
-        return !predicate(data, declarationContainer) || declarationContainer.declarations.all { it.accept(this, declarationContainer) }
+        return declarationContainer.declarations.all { !predicate(declarationContainer, it) || it.accept(this, declarationContainer) }
     }
 
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: KSNode?): Boolean {
@@ -65,9 +65,6 @@ class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) : K
             return false
         }
         if (!this.visitDeclaration(function, data)) {
-            return false
-        }
-        if (!this.visitDeclarationContainer(function, data)) {
             return false
         }
         return true
