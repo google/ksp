@@ -34,6 +34,16 @@ class BuilderProcessor : SymbolProcessor {
             val parent = function.parentDeclaration as KSClassDeclaration
             val packageName = parent.containingFile!!.packageName.asString()
             val className = "${parent.simpleName.asString()}Builder"
+
+            // For regression testing https://github.com/google/ksp/pull/467
+            codeGenerator.createNewFile(
+                Dependencies(true, function.containingFile!!),
+                "",
+                "META-INF/proguard/builder-${className}.pro"
+            ).use { proguardFile ->
+                proguardFile.appendText("-keep class ${packageName}.${className} { *; }")
+            }
+
             val file = codeGenerator.createNewFile(Dependencies(true, function.containingFile!!), packageName , className)
             file.appendText("package $packageName\n\n")
             file.appendText("import hello.HELLO\n\n")
