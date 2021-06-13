@@ -17,8 +17,9 @@ class AndroidIT {
     fun testPlaygroundAndroid() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        gradleRunner.withArguments("clean", "build", "--info", "--stacktrace").build().let { result ->
+        gradleRunner.withArguments("clean", "build", "minifyReleaseWithR8", "--info", "--stacktrace").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+            // TODO assert configuration file contains generated rule
         }
     }
 }
