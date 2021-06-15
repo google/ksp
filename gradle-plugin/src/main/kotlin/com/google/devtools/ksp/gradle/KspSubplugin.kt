@@ -26,8 +26,10 @@ import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -38,9 +40,12 @@ import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.cli.common.arguments.Argument
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsOptionsImpl
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptionsImpl
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
+import org.jetbrains.kotlin.gradle.dsl.fillDefaultValues
 import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
 import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.plugin.*
@@ -49,6 +54,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.SourceRoots
 import org.jetbrains.kotlin.incremental.ChangedFiles
@@ -236,6 +242,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinCompileTask = kotlinCompileProvider.get()
         val kspTaskClass = when (kotlinCompileTask) {
             is KotlinCompile -> KspTaskJvm::class.java
+            is Kotlin2JsCompile -> KspTaskJS::class.java
             else -> return project.provider { emptyList() }
         }
 
@@ -384,6 +391,64 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
     fun `callCompilerAsync$kotlin_gradle_plugin`(
         args: K2JVMCompilerArguments,
+        sourceRoots: SourceRoots,
+        changedFiles: ChangedFiles
+    ) {
+        args.addChangedFiles(changedFiles)
+        super.callCompilerAsync(args, sourceRoots, changedFiles)
+    }
+}
+
+
+@CacheableTask
+abstract class KspTaskJS @Inject constructor(
+    objectFactory: ObjectFactory
+) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory), KspTask {
+    @Internal
+    override fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
+        AbstractKotlinCompile.Configurator<KspTaskJS>(kotlinCompilation).configure(this)
+        kotlinCompile as Kotlin2JsCompile
+        val providerFactory = kotlinCompile.project.providers
+        compileKotlinArgumentsContributor.set(
+            providerFactory.provider {
+                kotlinCompile.abstractKotlinCompileArgumentsContributor
+            }
+        )
+    }
+
+    @get:Internal
+    internal abstract val compileKotlinArgumentsContributor: Property<CompilerArgumentsContributor<K2JSCompilerArguments>>
+
+    init {
+        // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
+        // * It doesn't consider private / internal changes when computing dirty sets.
+        // * It compiles iteratively; Sources can be compiled in different rounds.
+        incremental = false
+    }
+
+    override fun setupCompilerArgs(
+        args: K2JSCompilerArguments,
+        defaultsOnly: Boolean,
+        ignoreClasspathResolutionErrors: Boolean
+    ) {
+        // Start with / copy from kotlinCompile.
+        args.fillDefaultValues()
+        compileKotlinArgumentsContributor.get().contributeArguments(args, compilerArgumentsConfigurationFlags(
+            defaultsOnly,
+            ignoreClasspathResolutionErrors
+        ))
+        if (blockOtherCompilerPlugins) {
+            args.blockOtherPlugins(project, pluginConfigurationName)
+        }
+        args.addPluginOptions(options)
+        args.outputFile = File(destination, "dummyOutput.js").canonicalPath
+    }
+
+    // Overrding an internal function is hacky.
+    // TODO: Ask upstream to open it.
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    fun `callCompilerAsync$kotlin_gradle_plugin`(
+        args: K2JSCompilerArguments,
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles
     ) {
