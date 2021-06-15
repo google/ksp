@@ -37,6 +37,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.cli.common.arguments.Argument
+import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptionsImpl
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
@@ -195,8 +196,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
-        val kotlinCompileProvider: TaskProvider<KotlinCompile> = project.locateTask(kotlinCompilation.compileKotlinTaskName)
-                ?: return project.provider { emptyList() }
+        val kotlinCompileProvider: TaskProvider<AbstractKotlinCompile<CommonCompilerArguments>> =
+            project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
         val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
         val kspConfigurations = LinkedHashSet<Configuration>()
@@ -232,11 +233,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
-        val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
+        val kotlinCompileTask = kotlinCompileProvider.get()
+        val kspTaskClass = when (kotlinCompileTask) {
+            is KotlinCompile -> KspTaskJvm::class.java
+            else -> return project.provider { emptyList() }
+        }
+
+        val kspTaskProvider = project.tasks.register(kspTaskName, kspTaskClass) { kspTask ->
+            kspTask.configure(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask)
             // TODO: Move into Configurator.
-            val kotlinCompileTask = kotlinCompileProvider.get()
-            val providerFactory = kotlinCompileTask.project.providers
-            KspTask.Configurator(kotlinCompilation as KotlinCompilationData<*>).configure(kspTask)
             kspTask.destinationDir = kspOutputDir
             kspTask.options = getSubpluginOptions(project, kspExtension, nonEmptyKspConfigurations, sourceSetName)
             kspTask.classpath = kotlinCompileTask.project.files(Callable { kotlinCompileTask.classpath })
@@ -244,11 +249,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.pluginConfigurationName = kotlinCompilation.pluginConfigurationName
-            kspTask.compileKotlinArgumentsContributor.set(
-                providerFactory.provider {
-                    kotlinCompileTask.compilerArgumentsContributor
-                }
-            )
 
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
@@ -282,7 +282,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             androidIntegration.registerGeneratedJavaSources(
                 project = project,
                 kotlinCompilation = kotlinCompilation,
-                kspTaskProvider = kspTaskProvider,
+                kspTaskProvider = kspTaskProvider as TaskProvider<KspTaskJvm>,
                 javaOutputDir = javaOutputDir,
                 classOutputDir = classOutputDir,
                 resourcesOutputDir = project.files(resourceOutputDir)
@@ -314,23 +314,18 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
             else -> null
         }
 
-abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
-    class Configurator(kotlinCompilation: KotlinCompilationData<*>) : AbstractKotlinCompile.Configurator<KotlinCompile>(kotlinCompilation)
-
-    @Internal
-    lateinit var options: List<SubpluginOption>
+interface KspTask : Task {
+    @get:Internal
+    var options: List<SubpluginOption>
 
     @get:Internal
-    internal abstract val compileKotlinArgumentsContributor: Property<CompilerArgumentsContributor<K2JVMCompilerArguments>>
+    var destination: File
 
-    @Internal
-    lateinit var destination: File
+    @get:Internal
+    var pluginConfigurationName: String
 
-    @Internal
-    lateinit var pluginConfigurationName: String
-
-    @Input
-    var blockOtherCompilerPlugins: Boolean = false
+    @get:Input
+    var blockOtherCompilerPlugins: Boolean
 
     @Input
     open fun getApOptions(): Map<String, String> {
@@ -339,6 +334,26 @@ abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
 
     @get:InputFiles
     abstract val processorClasspath: ConfigurableFileCollection
+
+    @Internal
+    fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>)
+}
+
+abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
+    @Internal
+    override fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
+        AbstractKotlinCompile.Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
+        kotlinCompile as KotlinCompile
+        val providerFactory = kotlinCompile.project.providers
+        compileKotlinArgumentsContributor.set(
+            providerFactory.provider {
+                kotlinCompile.compilerArgumentsContributor
+            }
+        )
+    }
+
+    @get:Internal
+    internal abstract val compileKotlinArgumentsContributor: Property<CompilerArgumentsContributor<K2JVMCompilerArguments>>
 
     init {
         // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
@@ -358,11 +373,7 @@ abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
             ignoreClasspathResolutionErrors
         ))
         if (blockOtherCompilerPlugins) {
-            // FIXME: ask upstream to provide an API to make this not implementation-dependent.
-            val cfg = project.configurations.getByName(pluginConfigurationName)
-            val dep = cfg.dependencies.single { it.name == KspGradleSubplugin.KSP_ARTIFACT_NAME }
-            args.pluginClasspaths = cfg.files(dep).map { it.canonicalPath }.toTypedArray()
-            args.pluginOptions = arrayOf()
+            args.blockOtherPlugins(project, pluginConfigurationName)
         }
         args.addPluginOptions(options)
         args.destinationAsFile = destination
@@ -381,12 +392,12 @@ abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
     }
 }
 
-fun K2JVMCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
+fun CommonCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
     fun SubpluginOption.toArg() = "plugin:${KspGradleSubplugin.KSP_PLUGIN_ID}:${key}=${value}"
     pluginOptions = (options.map { it.toArg() } + pluginOptions!!).toTypedArray()
 }
 
-fun K2JVMCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
+fun CommonCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
     if (changedFiles is ChangedFiles.Known) {
         val options = mutableListOf<SubpluginOption>()
         changedFiles.modified.ifNotEmpty { options += SubpluginOption("knownModified", map { it.path }.joinToString(File.pathSeparator)) }
@@ -395,22 +406,32 @@ fun K2JVMCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
     }
 }
 
+private fun CommonCompilerArguments.blockOtherPlugins(project: Project, pluginConfigurationName: String) {
+    // FIXME: ask upstream to provide an API to make this not implementation-dependent.
+    val cfg = project.configurations.getByName(pluginConfigurationName)
+    val dep = cfg.dependencies.single { it.name == KspGradleSubplugin.KSP_ARTIFACT_NAME }
+    pluginClasspaths = cfg.files(dep).map { it.canonicalPath }.toTypedArray()
+    pluginOptions = arrayOf()
+
+}
+
+// TODO: Move into dumpArgs after the compiler supports local function in inline functions.
+private inline fun <reified T: CommonCompilerArguments> T.toPair(property: KProperty1<T, *>): Pair<String, String> {
+    @Suppress("UNCHECKED_CAST")
+    val value = (property as KProperty1<T, *>).get(this)
+    return property.name to if (value is Array<*>)
+        value.asList().toString()
+    else
+        value.toString()
+}
+
 @Suppress("unused")
-internal fun dumpArgs(args: K2JVMCompilerArguments): Map<String, String> {
+internal inline fun <reified T: CommonCompilerArguments> dumpArgs(args: T): Map<String, String> {
     @Suppress("UNCHECKED_CAST")
     val argumentProperties =
         args::class.members.mapNotNull { member ->
-            (member as? KProperty1<K2JVMCompilerArguments, *>)?.takeIf { it.annotations.any { ann -> ann is Argument } }
+            (member as? KProperty1<T, *>)?.takeIf { it.annotations.any { ann -> ann is Argument } }
         }
 
-    fun toPair(property: KProperty1<K2JVMCompilerArguments, *>): Pair<String, String> {
-        @Suppress("UNCHECKED_CAST")
-        val value = (property as KProperty1<K2JVMCompilerArguments, *>).get(args)
-        return property.name to if (value is Array<*>)
-            value.asList().toString()
-        else
-            value.toString()
-    }
-
-    return argumentProperties.associate(::toPair).toSortedMap()
+    return argumentProperties.associate(args::toPair).toSortedMap()
 }
