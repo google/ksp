@@ -42,8 +42,10 @@ import org.jetbrains.kotlin.cli.common.arguments.Argument
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsOptionsImpl
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptionsImpl
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonOptionsImpl
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
 import org.jetbrains.kotlin.gradle.dsl.fillDefaultValues
 import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
@@ -56,6 +58,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jetbrains.kotlin.gradle.tasks.SourceRoots
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.destinationAsFile
@@ -243,6 +246,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kspTaskClass = when (kotlinCompileTask) {
             is KotlinCompile -> KspTaskJvm::class.java
             is Kotlin2JsCompile -> KspTaskJS::class.java
+            is KotlinCompileCommon -> KspTaskMetadata::class.java
             else -> return project.provider { emptyList() }
         }
 
@@ -449,6 +453,60 @@ abstract class KspTaskJS @Inject constructor(
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
     fun `callCompilerAsync$kotlin_gradle_plugin`(
         args: K2JSCompilerArguments,
+        sourceRoots: SourceRoots,
+        changedFiles: ChangedFiles
+    ) {
+        args.addChangedFiles(changedFiles)
+        super.callCompilerAsync(args, sourceRoots, changedFiles)
+    }
+}
+
+abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl()), KspTask {
+    @Internal
+    override fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
+        AbstractKotlinCompile.Configurator<KspTaskMetadata>(kotlinCompilation).configure(this)
+        kotlinCompile as KotlinCompileCommon
+        val providerFactory = kotlinCompile.project.providers
+        compileKotlinArgumentsContributor.set(
+            providerFactory.provider {
+                kotlinCompile.abstractKotlinCompileArgumentsContributor
+            }
+        )
+    }
+
+    @get:Internal
+    internal abstract val compileKotlinArgumentsContributor: Property<CompilerArgumentsContributor<K2MetadataCompilerArguments>>
+
+    init {
+        // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
+        // * It doesn't consider private / internal changes when computing dirty sets.
+        // * It compiles iteratively; Sources can be compiled in different rounds.
+        incremental = false
+    }
+
+    override fun setupCompilerArgs(
+        args: K2MetadataCompilerArguments,
+        defaultsOnly: Boolean,
+        ignoreClasspathResolutionErrors: Boolean
+    ) {
+        // Start with / copy from kotlinCompile.
+        args.apply { fillDefaultValues() }
+        compileKotlinArgumentsContributor.get().contributeArguments(args, compilerArgumentsConfigurationFlags(
+            defaultsOnly,
+            ignoreClasspathResolutionErrors
+        ))
+        if (blockOtherCompilerPlugins) {
+            args.blockOtherPlugins(project, pluginConfigurationName)
+        }
+        args.addPluginOptions(options)
+        args.destination = destination.canonicalPath
+    }
+
+    // Overrding an internal function is hacky.
+    // TODO: Ask upstream to open it.
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    fun `callCompilerAsync$kotlin_gradle_plugin`(
+        args: K2MetadataCompilerArguments,
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles
     ) {
