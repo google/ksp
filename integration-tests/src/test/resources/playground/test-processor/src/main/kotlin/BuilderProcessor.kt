@@ -39,7 +39,8 @@ class BuilderProcessor : SymbolProcessor {
             codeGenerator.createNewFile(
                 Dependencies(true, function.containingFile!!),
                 "",
-                "META-INF/proguard/builder-${className}.pro"
+                "META-INF/proguard/builder-${className}",
+                "pro"
             ).use { proguardFile ->
                 proguardFile.appendText("-keep class ${packageName}.${className} { *; }")
             }
