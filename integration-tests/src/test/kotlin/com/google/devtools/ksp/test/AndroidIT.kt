@@ -6,7 +6,6 @@ import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
-import java.util.jar.*
 
 class AndroidIT {
     @Rule
@@ -19,7 +18,14 @@ class AndroidIT {
 
         gradleRunner.withArguments("clean", "build", "minifyReleaseWithR8", "--info", "--stacktrace").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
-            // TODO assert configuration file contains generated rule
+            val mergedConfiguration = File(project.root, "build/outputs/mapping/release/configuration.txt")
+            assert(mergedConfiguration.exists()) {
+                "Merged configuration file not found!"
+            }
+            val configurationText = mergedConfiguration.readText()
+            assert("-keep class com.example.android.AClassBuilder { *; }" in configurationText) {
+                "Merged configuration did not contain generated proguard rules!\n$configurationText"
+            }
         }
     }
 }
