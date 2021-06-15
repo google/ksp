@@ -26,6 +26,7 @@ import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -39,6 +40,8 @@ import org.jetbrains.kotlin.cli.common.arguments.Argument
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptionsImpl
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
+import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
+import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
@@ -52,6 +55,7 @@ import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.*
+import java.util.concurrent.Callable
 import javax.inject.Inject
 import kotlin.collections.LinkedHashSet
 import kotlin.reflect.KProperty1
@@ -229,14 +233,22 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
         val kspTaskProvider = project.tasks.register(kspTaskName, KspTask::class.java) { kspTask ->
+            // TODO: Move into Configurator.
+            val kotlinCompileTask = kotlinCompileProvider.get()
+            val providerFactory = kotlinCompileTask.project.providers
             KspTask.Configurator(kotlinCompilation as KotlinCompilationData<*>).configure(kspTask)
             kspTask.destinationDir = kspOutputDir
             kspTask.options = getSubpluginOptions(project, kspExtension, nonEmptyKspConfigurations, sourceSetName)
-            kspTask.kotlinCompile = kotlinCompileProvider.get()
+            kspTask.classpath = kotlinCompileTask.project.files(Callable { kotlinCompileTask.classpath })
             kspTask.destination = kspOutputDir
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.pluginConfigurationName = kotlinCompilation.pluginConfigurationName
+            kspTask.compileKotlinArgumentsContributor.set(
+                providerFactory.provider {
+                    kotlinCompileTask.compilerArgumentsContributor
+                }
+            )
 
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
@@ -307,8 +319,8 @@ abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
     @Internal
     lateinit var options: List<SubpluginOption>
 
-    @Internal
-    lateinit var kotlinCompile: KotlinCompile
+    @get:Internal
+    internal abstract val compileKotlinArgumentsContributor: Property<CompilerArgumentsContributor<K2JVMCompilerArguments>>
 
     @Internal
     lateinit var destination: File
@@ -340,7 +352,10 @@ abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
             ignoreClasspathResolutionErrors: Boolean
     ) {
         // Start with / copy from kotlinCompile.
-        kotlinCompile.setupCompilerArgs(args, defaultsOnly, ignoreClasspathResolutionErrors)
+        compileKotlinArgumentsContributor.get().contributeArguments(args, compilerArgumentsConfigurationFlags(
+            defaultsOnly,
+            ignoreClasspathResolutionErrors
+        ))
         if (blockOtherCompilerPlugins) {
             // FIXME: ask upstream to provide an API to make this not implementation-dependent.
             val cfg = project.configurations.getByName(pluginConfigurationName)
@@ -351,8 +366,6 @@ abstract class KspTask : KotlinCompile(KotlinJvmOptionsImpl()) {
         args.addPluginOptions(options)
         args.destinationAsFile = destination
     }
-
-    override fun getClasspath() = kotlinCompile.classpath
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.

@@ -13,8 +13,8 @@ class PlaygroundIT {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground")
 
-    private fun GradleRunner.buildAndCheck() {
-        val resultCleanBuild = this.withArguments("clean", "build").build()
+    private fun GradleRunner.buildAndCheck(vararg flags: String) {
+        val resultCleanBuild = this.withArguments(*flags, "clean", "build").build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
@@ -43,5 +43,11 @@ class PlaygroundIT {
         File(project.root, "workload/build.gradle.kts").appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
         gradleRunner.buildAndCheck()
         project.restore("workload/build.gradle.kts")
+    }
+
+    @Test
+    fun testBuildWithConfigurationCache() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("--configuration-cache")
     }
 }
