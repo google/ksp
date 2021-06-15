@@ -79,7 +79,7 @@ class AndroidPluginIntegration(
     fun registerGeneratedJavaSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<KspTask>,
+        kspTaskProvider: TaskProvider<KspTaskJvm>,
         javaOutputDir: File,
         classOutputDir: File,
         resourcesOutputDir: FileCollection,
