@@ -31,6 +31,13 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+    buildTypes {
+        getByName("release") {
+            // For regression testing https://github.com/google/ksp/pull/467
+            proguardFiles.add(file("proguard-rules.pro"))
+            isMinifyEnabled = true
+        }
+    }
 }
 
 ksp {
