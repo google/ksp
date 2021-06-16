@@ -1,1 +1,1 @@
--keep class com.example.android.AClass { *; }
+-keep class com.example.AClass { *; }
