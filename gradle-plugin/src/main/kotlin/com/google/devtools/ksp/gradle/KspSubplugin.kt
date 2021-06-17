@@ -225,7 +225,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             return project.provider { emptyList() }
         }
 
-        val sourceSetName = kotlinCompilation.compilationName
+        val sourceSetName = kotlinCompilation.defaultSourceSetName
         val classOutputDir = getKspClassOutputDir(project, sourceSetName)
         val javaOutputDir = getKspJavaOutputDir(project, sourceSetName)
         val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName)
