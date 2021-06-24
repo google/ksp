@@ -173,7 +173,7 @@ or connecting with our team in the `#ksp` channel in the
 Here are some planned features that have not yet been implemented:
 
 * Make the IDE aware of the generated code.
-* Support Kotlin Multiplatform.
+* Support Kotlin Native.
 
 ## Supported libraries
 
