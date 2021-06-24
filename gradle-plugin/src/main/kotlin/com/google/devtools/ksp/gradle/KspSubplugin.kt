@@ -30,6 +30,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -251,7 +252,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         val kspTaskProvider = project.tasks.register(kspTaskName, kspTaskClass) { kspTask ->
-            kspTask.configure(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask)
+            kspTask.configureCompilation(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask)
             // TODO: Move into Configurator.
             kspTask.destinationDir = kspOutputDir
             kspTask.options = getSubpluginOptions(project, kspExtension, nonEmptyKspConfigurations, sourceSetName)
@@ -343,16 +344,15 @@ interface KspTask : Task {
         return project.extensions.getByType(KspExtension::class.java).apOptions
     }
 
+    @get:CompileClasspath
     @get:InputFiles
     abstract val processorClasspath: ConfigurableFileCollection
 
-    @Internal
-    fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>)
+    fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>)
 }
 
 abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
-    @Internal
-    override fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
+    override fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
         AbstractKotlinCompile.Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompile
         val providerFactory = kotlinCompile.project.providers
@@ -408,8 +408,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
 abstract class KspTaskJS @Inject constructor(
     objectFactory: ObjectFactory
 ) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory), KspTask {
-    @Internal
-    override fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
+    override fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
         AbstractKotlinCompile.Configurator<KspTaskJS>(kotlinCompilation).configure(this)
         kotlinCompile as Kotlin2JsCompile
         val providerFactory = kotlinCompile.project.providers
@@ -462,8 +461,7 @@ abstract class KspTaskJS @Inject constructor(
 }
 
 abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl()), KspTask {
-    @Internal
-    override fun configure(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
+    override fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
         AbstractKotlinCompile.Configurator<KspTaskMetadata>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompileCommon
         val providerFactory = kotlinCompile.project.providers
