@@ -41,6 +41,14 @@
 // lib.MyInterface.interfaceProp_willBeBacked: false
 // lib.MyInterface.interfaceProp_wontBeBacked: false
 // lib.MyInterface.lateinit_var_3: false
+// lib.NormalClass.Companion.companionVar: true
+// lib.NormalClass.Companion.companion_noBackingVal: false
+// lib.NormalClass.Companion.companion_noBackingVar: false
+// lib.NormalClass.Companion.companion_withBackingAndGetter: true
+// lib.NormalClass.Companion.staticVar: true
+// lib.NormalClass.Companion.static_noBackingVal: false
+// lib.NormalClass.Companion.static_noBackingVar: false
+// lib.NormalClass.Companion.static_withBackingAndGetter: true
 // lib.NormalClass.jvmField_withBacking: true
 // lib.NormalClass.lateinit_var: true
 // lib.NormalClass.value: true
@@ -81,6 +89,14 @@
 // main.MyInterface.interfaceProp_willBeBacked: false
 // main.MyInterface.interfaceProp_wontBeBacked: false
 // main.MyInterface.lateinit_var_3: false
+// main.NormalClass.Companion.companionVar: true
+// main.NormalClass.Companion.companion_noBackingVal: false
+// main.NormalClass.Companion.companion_noBackingVar: false
+// main.NormalClass.Companion.companion_withBackingAndGetter: true
+// main.NormalClass.Companion.staticVar: true
+// main.NormalClass.Companion.static_noBackingVal: false
+// main.NormalClass.Companion.static_noBackingVar: false
+// main.NormalClass.Companion.static_withBackingAndGetter: true
 // main.NormalClass.lateinit_var: true
 // main.NormalClass.value: true
 // main.NormalClass.value_Param: true
@@ -139,6 +155,31 @@ class NormalClass(
         get() = field
     val jvmField_withBacking: String = ""
     lateinit var lateinit_var: String
+
+    companion object {
+        @JvmStatic
+        var staticVar: String = ""
+        @JvmStatic
+        val static_withBackingAndGetter: String = ""
+            get() = field
+        @JvmStatic
+        val static_noBackingVal: String
+            get() = ""
+        @JvmStatic
+        var static_noBackingVar: String
+            get() = ""
+            set(value) {}
+        var companionVar: String = ""
+        val companion_withBackingAndGetter: String = ""
+            get() = field
+        @JvmStatic
+        val companion_noBackingVal: String
+            get() = ""
+        @JvmStatic
+        var companion_noBackingVar: String
+            get() = ""
+            set(value) {}
+    }
 }
 
 abstract class BaseClass {
@@ -229,6 +270,31 @@ class NormalClass(
     var variable_withBacking: String? = null
         get() = field
     lateinit var lateinit_var: String
+
+    companion object {
+        @JvmStatic
+        var staticVar: String = ""
+        @JvmStatic
+        val static_withBackingAndGetter: String = ""
+            get() = field
+        @JvmStatic
+        val static_noBackingVal: String
+            get() = ""
+        @JvmStatic
+        var static_noBackingVar: String
+            get() = ""
+            set(value) {}
+        var companionVar: String = ""
+        val companion_withBackingAndGetter: String = ""
+            get() = field
+        @JvmStatic
+        val companion_noBackingVal: String
+            get() = ""
+        @JvmStatic
+        var companion_noBackingVar: String
+            get() = ""
+            set(value) {}
+    }
 }
 
 abstract class BaseClass {
