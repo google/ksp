@@ -353,7 +353,7 @@ interface KspTask : Task {
 
 abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
     override fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
-        AbstractKotlinCompile.Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
+        Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompile
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
@@ -361,6 +361,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
                 kotlinCompile.compilerArgumentsContributor
             }
         )
+        this.useClasspathSnapshot.value(false).disallowChanges()
     }
 
     @get:Internal
@@ -409,7 +410,7 @@ abstract class KspTaskJS @Inject constructor(
     objectFactory: ObjectFactory
 ) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory), KspTask {
     override fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
-        AbstractKotlinCompile.Configurator<KspTaskJS>(kotlinCompilation).configure(this)
+        Configurator<KspTaskJS>(kotlinCompilation).configure(this)
         kotlinCompile as Kotlin2JsCompile
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
@@ -462,7 +463,7 @@ abstract class KspTaskJS @Inject constructor(
 
 abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl()), KspTask {
     override fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) {
-        AbstractKotlinCompile.Configurator<KspTaskMetadata>(kotlinCompilation).configure(this)
+        Configurator<KspTaskMetadata>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompileCommon
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
