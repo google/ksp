@@ -4,6 +4,7 @@ buildscript {
     repositories {
         maven(testRepo)
         mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
         jcenter()
         google()
     }
@@ -14,6 +15,7 @@ allprojects {
     repositories {
         maven(testRepo)
         mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
         jcenter()
         google()
     }

@@ -129,4 +129,5 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
 }
