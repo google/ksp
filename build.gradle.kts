@@ -10,6 +10,7 @@ if (!extra.has("kspVersion")) {
 }
 repositories {
     mavenCentral()
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
 }
 project.configureKtlintApplyToIdea()
 subprojects {
@@ -20,6 +21,7 @@ subprojects {
         mavenCentral()
         google()
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
         jcenter()
     }
     tasks.withType<Jar>().configureEach {
