@@ -64,6 +64,7 @@ class TestProject(
                         maven("${testConfig.mavenRepoDir}")
                         gradlePluginPortal()
                         google()
+                        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
                     }
                 }
             """.trimIndent()
@@ -83,6 +84,7 @@ class TestProject(
             repositories {
                 maven("${testConfig.mavenRepoDir}")
                 mavenCentral()
+                maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
                 google()
             }
             configurations.all {
@@ -96,6 +98,7 @@ class TestProject(
                 repositories {
                     maven("${testConfig.mavenRepoDir}")
                     mavenCentral()
+                    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
                     google()
                 }
                 configurations.all {
