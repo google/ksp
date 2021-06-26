@@ -11,7 +11,7 @@ class GetPackageProcessor : AbstractTestProcessor() {
         return results
     }
 
-    @KspExperimental
+    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         addPackage("lib1", resolver)
         addPackage("lib2", resolver)

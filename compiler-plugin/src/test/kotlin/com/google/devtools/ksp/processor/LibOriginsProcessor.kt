@@ -77,7 +77,7 @@ class LibOriginsProcessor : AbstractTestProcessor() {
         }
     }
 
-    @KspExperimental
+    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val visitor = MyCollector()
 
