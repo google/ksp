@@ -69,7 +69,8 @@ tasks.register<Copy>("CopyLibsForTesting") {
     }
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
-    rename("(.+)-[0-9].+\\.jar", "$1.jar")
+    val escaped = Regex.escape(kotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
 fun Project.javaPluginConvention(): JavaPluginConvention = the()
