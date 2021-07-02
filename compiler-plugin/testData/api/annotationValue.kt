@@ -26,15 +26,17 @@
 // @Foo
 // @Suppress
 // G
+// ONE
 // 31
 // Str
 // 42
 // Foo
 // File
-// <ERROR TYPE>
+// Error type synthetic declaration
 // @Foo
 // @Suppress
 // G
+// ONE
 // 31
 // [warning1, warning 2]
 // Throws
@@ -62,11 +64,12 @@ annotation class Bar(
     val argAnnoUser: Foo,
     val argAnnoLib: Suppress,
     val argEnum: RGB,
+    val argJavaNum: JavaEnum,
     val argDef: Int = 31
 )
 
 fun Fun() {
-    @Bar("Str", 40 + 2, Foo::class, java.io.File::class, Local::class, Foo(17), Suppress("name1", "name2"), RGB.G)
+    @Bar("Str", 40 + 2, Foo::class, java.io.File::class, Local::class, Foo(17), Suppress("name1", "name2"), RGB.G, JavaEnum.ONE)
     class Local
 }
 
@@ -84,5 +87,10 @@ class C {
     argClsLocal = Local.class, // intentional error type
     argAnnoUser = @Foo(s = 17),
     argAnnoLib = @Suppress(names = {"name1", "name2"}),
-    argEnum = RGB.G)
+    argEnum = RGB.G,
+    argJavaNum = JavaEnum.ONE)
 public class JavaAnnotated {}
+
+// FILE: JavaEnum.java
+
+enum JavaEnum { ONE, TWO, THREE }
