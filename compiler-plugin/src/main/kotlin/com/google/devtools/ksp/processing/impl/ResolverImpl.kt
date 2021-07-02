@@ -551,6 +551,7 @@ class ResolverImpl(
                 is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
                 is PsiClass -> KSClassDeclarationJavaImpl.getCached(psi)
                 is KtTypeAlias -> KSTypeAliasImpl.getCached(psi)
+                is PsiEnumConstant -> KSClassDeclarationJavaEnumEntryImpl.getCached(psi)
                 else -> throw IllegalStateException("Unexpected psi type: ${psi.javaClass}, $ExceptionMessage")
             }
         } else {
