@@ -67,10 +67,6 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) : KSClas
         }
     }
 
-    override val containingFile: KSFile? by lazy {
-        KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
-    }
-
     override val isCompanionObject = false
 
     // Could the resolution ever fail?

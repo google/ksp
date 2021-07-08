@@ -54,10 +54,6 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
 
     override val classKind: ClassKind = ClassKind.ENUM_ENTRY
 
-    override val containingFile: KSFile? by lazy {
-        KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
-    }
-
     override val isCompanionObject = false
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()

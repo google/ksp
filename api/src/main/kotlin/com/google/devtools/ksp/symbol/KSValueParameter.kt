@@ -21,7 +21,7 @@ package com.google.devtools.ksp.symbol
 /**
  * A value parameter
  */
-interface KSValueParameter : KSAnnotated {
+interface KSValueParameter : KSFileSymbol, KSAnnotated {
     /**
      * Name of the parameter
      */

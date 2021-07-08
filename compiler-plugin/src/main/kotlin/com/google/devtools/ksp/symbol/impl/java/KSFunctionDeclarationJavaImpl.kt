@@ -43,10 +43,6 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
         psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
-    override val containingFile: KSFile? by lazy {
-        KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
-    }
-
     override fun findOverridee(): KSDeclaration? {
         val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
         return descriptor?.findClosestOverridee()?.toKSDeclaration()

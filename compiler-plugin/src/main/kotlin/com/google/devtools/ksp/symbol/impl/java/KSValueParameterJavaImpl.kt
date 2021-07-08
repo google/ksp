@@ -24,7 +24,9 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 
-class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
+class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter,
+    KSFileSymbol by KSFileSymbolJavaImpl(psi) {
+
     companion object : KSObjectCache<PsiParameter, KSValueParameterJavaImpl>() {
         fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSValueParameterJavaImpl(psi) }
     }

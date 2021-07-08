@@ -21,7 +21,7 @@ package com.google.devtools.ksp.symbol
 /**
  * A declaration, can be function declaration, clsss declaration and property declaration, or a type alias.
  */
-interface KSDeclaration : KSModifierListOwner, KSAnnotated, KSExpectActual {
+interface KSDeclaration : KSModifierListOwner, KSFileSymbol, KSAnnotated, KSExpectActual {
     /**
      * Simple name of this declaration, usually the name identifier at the declaration site.
      */
@@ -47,11 +47,6 @@ interface KSDeclaration : KSModifierListOwner, KSAnnotated, KSExpectActual {
      * File is not a declaration, so this property will be null for top level declarations.
      */
     val parentDeclaration: KSDeclaration?
-
-    /**
-     * The containing source file of this declaration, can be null if symbol does not come from a source file, i.e. from a class file.
-     */
-    val containingFile: KSFile?
 
     /**
      * The doc string enclosed by \/\*\* and \*\/
