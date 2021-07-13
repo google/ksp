@@ -57,6 +57,10 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.hasBackingField
 import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import kotlin.reflect.KClass
 
 private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -484,3 +488,101 @@ private val PropertyDescriptor.declaresDefaultValue: Boolean
         is KtParameter -> declaration.defaultValue != null
         else -> false
     }
+
+fun <T : Annotation> KSAnnotated.getAnnotation(annotationKClass: KClass<T>): T? {
+    return this.annotations.firstOrNull { annotationKClass.qualifiedName == it.annotationType.resolve().declaration.qualifiedName?.asString() }
+        ?.toAnnotation(annotationKClass)
+}
+
+fun KSAnnotated.getAnnotations(): Sequence<Annotation> {
+    return this.annotations.map { it.toAnnotation(Annotation::class) }
+}
+
+fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> =
+    this.getAnnotations().mapNotNull {
+        @Suppress("UNCHECKED_CAST")
+        if (it::class == annotationKClass) it as T else null
+    }
+
+fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean =
+    getAnnotation(annotationKClass)?.let { true } ?: false
+
+private fun <T : Annotation> KSAnnotation.toAnnotation(annotationKClass: KClass<T>): T {
+    val clazz = annotationKClass.java
+    if (this.annotationType.resolve().declaration.qualifiedName?.asString() != clazz.canonicalName) {
+        throw IllegalArgumentException(
+            "Class ${this.annotationType.resolve().declaration.qualifiedName?.asString()} " +
+                "cannot be cast to ${clazz.canonicalName}"
+        )
+    }
+    @Suppress("UNCHECKED_CAST")
+    return Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz), createInvocationHandler(clazz)) as T
+}
+
+@Suppress("TooGenericExceptionCaught")
+private fun <T : Annotation> KSAnnotation.createInvocationHandler(annotationClass: Class<T>) =
+    InvocationHandler { _, method, _ ->
+        if (method.name == "toString" && arguments.none { it.name?.asString() == "toString" }) {
+            "${annotationClass.canonicalName}@${Integer.toHexString(arguments.hashCode())}"
+        } else {
+            val argument = try {
+                arguments.first { it.name?.asString() == method.name }
+            } catch (e: NullPointerException) {
+                throw IllegalArgumentException("This is a bug using the default KClass for an annotation", e)
+            }
+            val result = argument.value ?: method.defaultValue
+            if (result is ArrayList<*>) {
+                result.toArray(method)
+            } else {
+                when {
+                    method.returnType.isEnum -> Class.forName(method.returnType.name).valueOf(result.toString())
+                    method.returnType.name == "java.lang.Class" ->
+                        Class.forName((result as KSType).declaration.qualifiedName!!.asString())
+                    method.returnType.name == "byte" -> if (result is Int) result.toByte() else result
+                    else -> result // original value
+                }
+            }
+        }
+    }
+
+@Suppress("UNCHECKED_CAST")
+private fun ArrayList<*>.toArray(method: Method) =
+    when (method.returnType.componentType.name) {
+        "boolean" -> (this as ArrayList<Boolean>).toBooleanArray()
+        "byte" -> (this as ArrayList<Byte>).toByteArray()
+        "char" -> (this as ArrayList<Char>).toCharArray()
+        "double" -> (this as ArrayList<Double>).toDoubleArray()
+        "float" -> (this as ArrayList<Float>).toFloatArray()
+        "int" -> (this as ArrayList<Int>).toIntArray()
+        "long" -> (this as ArrayList<Long>).toLongArray()
+        "java.lang.Class" -> (this as ArrayList<KSType>).map {
+            Class.forName(it.declaration.qualifiedName!!.asString())
+        }.toTypedArray()
+        "java.lang.String" -> (this as ArrayList<String>).toTypedArray()
+        else -> { // enums
+            if (method.returnType.componentType.isEnum) {
+                val array: Array<Any> = java.lang.reflect.Array.newInstance(
+                    method.returnType.componentType,
+                    this.size
+                ) as Array<Any>
+                for (r in 0 until this.size) {
+                    array[r] = method.returnType.componentType.valueOf(this[r].toString())
+                }
+                array
+            } else {
+                throw IllegalStateException(
+                    "Unable to process type ${method.returnType.componentType.name}"
+                )
+            }
+        }
+    }
+
+private fun <T> Class<T>.valueOf(value: String): T {
+    if (this.isEnum) {
+        val method = this.getDeclaredMethod("valueOf", java.lang.String::class.java)
+        @Suppress("UNCHECKED_CAST")
+        return method.invoke(null, value) as T
+    } else {
+        throw IllegalArgumentException("$this is not an Enum type")
+    }
+}
