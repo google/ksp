@@ -642,6 +642,17 @@ class ResolverImpl(
         }
     }
 
+    @SuppressWarnings("UNCHECKED_CAST")
+    private fun extractThrowsAnnotation(annotated: KSAnnotated): Sequence<KSType> {
+        return annotated.annotations
+            .singleOrNull {
+                it.shortName.asString() == "Throws" && it.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.Throws"
+            }?.arguments
+            ?.singleOrNull()
+            ?.let { it.value as? ArrayList<KSType> }
+            ?.asSequence() ?: emptySequence()
+    }
+
     @KspExperimental
     override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
         return when (function.origin) {
@@ -650,15 +661,17 @@ class ResolverImpl(
                 psi.throwsList.referencedTypes.asSequence().map { getKSTypeCached(resolveJavaType(it)) }
             }
             Origin.KOTLIN -> {
-                function.annotations
-                        .singleOrNull {
-                            it.shortName.asString() == "Throws" && it.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.Throws"
-                        }
-                        ?.arguments
-                        ?.singleOrNull()
-                        ?.let { (it.value as? ArrayList<KSType>) }
-                        ?.asSequence()
-                        ?: emptySequence()
+                extractThrowsAnnotation(function)
+            }
+            else -> emptySequence()
+        }
+    }
+
+    @KspExperimental
+    override fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType> {
+        return when(accessor.origin) {
+            Origin.KOTLIN, Origin.SYNTHETIC -> {
+                extractThrowsAnnotation(accessor)
             }
             else -> emptySequence()
         }

@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 
 @KspExperimental
@@ -20,6 +21,9 @@ class ThrowListProcessor : AbstractTestProcessor() {
         val jlass = resolver.getClassDeclarationByName("ThrowsException")!!
         result.add(resolver.getJvmCheckedException(klass.declarations.single { it.simpleName.asString() == "throwsKT" } as KSFunctionDeclaration).toResult())
         result.add(resolver.getJvmCheckedException((jlass.declarations.single { it.simpleName.asString() == "foo" } as KSFunctionDeclaration)).toResult())
+        val propertyA = klass.declarations.single { it.simpleName.asString() == "a" } as KSPropertyDeclaration
+        result.add(resolver.getJvmCheckedException(propertyA.getter!!).toResult())
+        result.add(resolver.getJvmCheckedException(propertyA.setter!!).toResult())
         return emptyList()
     }
 
