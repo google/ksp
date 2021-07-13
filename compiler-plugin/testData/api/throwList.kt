@@ -20,6 +20,8 @@
 // EXPECTED:
 // java.io.IOException,java.util.NoSuchElementException
 // java.io.IOException,java.lang.IndexOutOfBoundsException
+// java.io.IOException,java.util.NoSuchElementException
+// java.lang.IndexOutOfBoundsException
 // END
 // FILE: ThrowsException.java
 import java.io.IOException;
@@ -34,4 +36,14 @@ public class ThrowsException {
 class ThrowsKt {
     @Throws(java.io.IOException::class, java.util.NoSuchElementException::class)
     fun throwsKT()
+
+    @set:Throws(java.lang.IndexOutOfBoundsException::class)
+    var a: Int
+    @Throws(java.io.IOException::class, java.util.NoSuchElementException::class)
+    get() {
+        return 1
+    }
+    set(a: Int) {
+
+    }
 }
