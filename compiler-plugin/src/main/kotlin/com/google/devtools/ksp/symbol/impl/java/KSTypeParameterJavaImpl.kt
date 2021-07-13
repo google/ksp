@@ -61,10 +61,6 @@ class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : K
         psi.findParentDeclaration()
     }
 
-    override val containingFile: KSFile? by lazy {
-        KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
-    }
-
     override val modifiers: Set<Modifier> = emptySet()
 
     override val isReified: Boolean = false

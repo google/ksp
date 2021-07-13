@@ -47,10 +47,6 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSP
         psi.annotations.asSequence().map { KSAnnotationJavaImpl.getCached(it) }.memoized()
     }
 
-    override val containingFile: KSFile? by lazy {
-        KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
-    }
-
     override val extensionReceiver: KSTypeReference? = null
 
     override val getter: KSPropertyGetter? = null

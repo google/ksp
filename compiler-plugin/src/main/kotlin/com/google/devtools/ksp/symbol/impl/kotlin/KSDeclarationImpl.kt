@@ -26,7 +26,9 @@ import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 
-abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
+abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration,
+    KSFileSymbol by KSFileSymbolImpl(ktDeclaration) {
+
     override val origin: Origin = Origin.KOTLIN
 
     override val location: Location by lazy {
@@ -50,9 +52,6 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
         // not in this class.
         // see: https://github.com/google/ksp/issues/378
         ktDeclaration.toKSModifiers()
-    }
-    override val containingFile: KSFile? by lazy {
-        KSFileImpl.getCached(ktDeclaration.containingKtFile)
     }
 
     override val packageName: KSName by lazy {

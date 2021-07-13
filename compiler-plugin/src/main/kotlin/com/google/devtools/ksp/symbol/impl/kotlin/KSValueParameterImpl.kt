@@ -29,7 +29,9 @@ import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 
-class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : KSValueParameter {
+class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : KSValueParameter,
+    KSFileSymbol by KSFileSymbolImpl(ktParameter) {
+
     companion object : KSObjectCache<KtParameter, KSValueParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSValueParameterImpl(ktParameter) }
     }
