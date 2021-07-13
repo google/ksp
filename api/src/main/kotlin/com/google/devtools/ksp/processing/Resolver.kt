@@ -214,6 +214,14 @@ interface Resolver {
     fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType>
 
     /**
+     * Returns checked exceptions declared in a property accessor's header.
+     * @return A sequence of [KSType] declared @Throws annotation for a Kotlin property accessor.
+     * Checked exceptions from class files are not supported yet, an empty sequence will be returned instead.
+     */
+    @KspExperimental
+    fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType>
+
+    /**
      * Returns declarations with the given package name.
      * @param packageName the package name to look up.
      * @return A sequence of [KSDeclaration] with matching package name.
