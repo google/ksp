@@ -76,6 +76,11 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
     }
 }
 
+// Changes here may break some third party libraries like Kotlin Compile Testing, where the compiler is invoked in
+// another way. Do our best to notify them when changing this.
+//
+// Third party libraries:
+//   https://github.com/tschuchortdev/kotlin-compile-testing
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
