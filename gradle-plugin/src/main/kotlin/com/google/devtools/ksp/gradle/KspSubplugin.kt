@@ -27,6 +27,7 @@ import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -261,6 +262,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.outputs.dirs(kotlinOutputDir, javaOutputDir, classOutputDir, resourceOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.pluginConfigurationName = kotlinCompilation.pluginConfigurationName
+            kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
 
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
@@ -339,14 +341,12 @@ interface KspTask : Task {
     @get:Input
     var blockOtherCompilerPlugins: Boolean
 
-    @Input
-    open fun getApOptions(): Map<String, String> {
-        return project.extensions.getByType(KspExtension::class.java).apOptions
-    }
+    @get:Input
+    val apOptions: MapProperty<String, String>
 
     @get:CompileClasspath
     @get:InputFiles
-    abstract val processorClasspath: ConfigurableFileCollection
+    val processorClasspath: ConfigurableFileCollection
 
     fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>)
 }
