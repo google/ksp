@@ -22,7 +22,44 @@
 // java.io.IOException,java.lang.IndexOutOfBoundsException
 // java.io.IOException,java.util.NoSuchElementException
 // java.lang.IndexOutOfBoundsException
+// java.io.IOException
+// java.io.IOException,java.lang.IndexOutOfBoundsException
+// java.lang.IndexOutOfBoundsException
+// java.io.IOException
+// java.lang.IndexOutOfBoundsException
+// java.io.IOException,java.lang.IndexOutOfBoundsException
 // END
+// MODULE: lib
+// FILE: JavaLib.java
+import java.io.IOException;
+import java.lang.IndexOutOfBoundsException;
+public class JavaLib {
+    public void foo() throws IOException {
+        throw new IOException();
+    }
+    public void foo(int i) throws IndexOutOfBoundsException {
+        throw new IndexOutOfBoundsException();
+    }
+    public void foo(String[] s) throws IOException, IndexOutOfBoundsException {
+        throw new IOException();
+    }
+}
+// FILE: KtLib.kt
+class KtLib {
+    @Throws(java.io.IOException::class)
+    fun throwsLibKt() {
+        throw java.io.IOException()
+    }
+    @Throws(java.lang.IndexOutOfBoundsException::class)
+    fun throwsLibKt(i: Int) {
+        throw java.lang.IndexOutOfBoundsException()
+    }
+    @Throws(java.io.IOException::class, java.lang.IndexOutOfBoundsException::class)
+    fun throwsLibKt(s: Array<String>) {
+        throw java.io.IOException()
+    }
+}
+// MODULE: main(lib)
 // FILE: ThrowsException.java
 import java.io.IOException;
 import java.lang.IndexOutOfBoundsException;
