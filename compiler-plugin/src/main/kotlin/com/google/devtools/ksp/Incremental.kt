@@ -33,7 +33,6 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.incremental.*
-import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.BasicMap
@@ -193,10 +192,17 @@ class IncrementalContext(
     private val modified = options.knownModified.map{ it.relativeTo(baseDir) }.toSet()
     private val removed = options.knownRemoved.map { it.relativeTo(baseDir) }.toSet()
 
-    private val lookupTracker: LookupTracker = componentProvider.get()
-    private val lookupCacheDir = options.cachesDir
+    private val dualLookupTracker: DualLookupTracker = componentProvider.get()
     private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
-    private val lookupCache = LookupStorage(lookupCacheDir, PATH_CONVERTER)
+
+    private val symbolLookupTracker = dualLookupTracker.symbolTracker
+    private val symbolLookupCacheDir = File(options.cachesDir, "symbolLookups")
+    private val symbolLookupCache = LookupStorage(symbolLookupCacheDir, PATH_CONVERTER)
+
+    // TODO: rewrite LookupStorage to share file-to-id, etc.
+    private val classLookupTracker = dualLookupTracker.classTracker
+    private val classLookupCacheDir = File(options.cachesDir, "classLookups")
+    private val classLookupCache = LookupStorage(classLookupCacheDir, PATH_CONVERTER)
 
     private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
 
@@ -213,11 +219,13 @@ class IncrementalContext(
     }
 
     private fun updateLookupCache(dirtyFiles: Collection<File>, removedOutputs: List<File>) {
-        if (lookupTracker is LookupTrackerImpl) {
-            lookupCache.update(lookupTracker, dirtyFiles, options.knownRemoved + removedOutputs.map { it.absoluteFile })
-            lookupCache.flush(false)
-            lookupCache.close()
-        }
+        symbolLookupCache.update(symbolLookupTracker, dirtyFiles, options.knownRemoved + removedOutputs.map { it.absoluteFile })
+        symbolLookupCache.flush(false)
+        symbolLookupCache.close()
+
+        classLookupCache.update(classLookupTracker, dirtyFiles, options.knownRemoved + removedOutputs.map { it.absoluteFile })
+        classLookupCache.flush(false)
+        classLookupCache.close()
     }
 
     private fun calcDirtySetByDeps(ksFiles: List<KSFile>): Set<File> {
@@ -243,7 +251,7 @@ class IncrementalContext(
         changedSyms.addAll(sealedMap.keys.flatMap { sealedMap[it]!! })
 
         // For each changed symbol, either changed, modified or removed, invalidate files that looked them up, recursively.
-        val invalidator = DepInvalidator(lookupCache, symbolsMap, modified)
+        val invalidator = DepInvalidator(symbolLookupCache, symbolsMap, modified)
         changedSyms.forEach {
             invalidator.invalidate(it)
         }
@@ -517,7 +525,8 @@ class IncrementalContext(
         } catch (e: Exception) {
             symbolsMap.close()
             sealedMap.close()
-            lookupCache.close()
+            symbolLookupCache.close()
+            classLookupCache.close()
             sourceToOutputsMap.close()
             throw e
         }
@@ -559,7 +568,7 @@ class IncrementalContext(
 
         // Java types are classes. Therefore lookups only happen in packages.
         fun record(scope: String, name: String) =
-            lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.PACKAGE, name)
+            symbolLookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.PACKAGE, name)
 
         record(scope, name)
 
@@ -693,11 +702,9 @@ class IncrementalContext(
     // Debugging and testing only.
     internal fun dumpLookupRecords(): Map<String, List<String>> {
         val map = mutableMapOf<String, List<String>>()
-        if (lookupTracker is LookupTrackerImpl) {
-            lookupTracker.lookups.entrySet().forEach { e ->
-                val key = "${e.key.scope}.${e.key.name}"
-                map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
-            }
+        symbolLookupTracker.lookups.entrySet().forEach { e ->
+            val key = "${e.key.scope}.${e.key.name}"
+            map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
         }
         return map
     }
