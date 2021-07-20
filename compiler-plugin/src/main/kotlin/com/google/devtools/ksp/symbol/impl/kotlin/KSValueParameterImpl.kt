@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 
 class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : KSValueParameter {
+
     companion object : KSObjectCache<KtParameter, KSValueParameterImpl>() {
         fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSValueParameterImpl(ktParameter) }
     }
@@ -64,6 +65,10 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
 
     override val type: KSTypeReference by lazy {
         ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) } ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
+    }
+
+    override val containingFile: KSFile? by lazy {
+        KSFileImpl.getCached(ktParameter.containingKtFile)
     }
 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()

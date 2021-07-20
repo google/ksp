@@ -23,8 +23,10 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiJavaFile
 
 class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
+
     companion object : KSObjectCache<PsiParameter, KSValueParameterJavaImpl>() {
         fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSValueParameterJavaImpl(psi) }
     }
@@ -59,6 +61,10 @@ class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSVa
 
     override val type: KSTypeReference by lazy {
         KSTypeReferenceJavaImpl.getCached(psi.type)
+    }
+
+    override val containingFile: KSFile? by lazy {
+        KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
     }
 
     override val hasDefault: Boolean = false

@@ -41,6 +41,8 @@ class KSValueParameterDescriptorImpl private constructor(val descriptor: ValuePa
         descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
     }
 
+    override val containingFile: KSFile? = null
+
     override val isCrossInline: Boolean = descriptor.isCrossinline
 
     override val isNoInline: Boolean = descriptor.isNoinline

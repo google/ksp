@@ -44,6 +44,8 @@ class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> Valu
         descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
+    override val containingFile: KSFile? = null
+
     override val origin: Origin = Origin.SYNTHETIC
 
     override val location: Location = NonExistLocation

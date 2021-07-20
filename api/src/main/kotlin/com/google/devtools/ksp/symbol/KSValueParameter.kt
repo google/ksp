@@ -33,6 +33,11 @@ interface KSValueParameter : KSAnnotated {
     val type: KSTypeReference
 
     /**
+     * The containing source file of this declaration, can be null if symbol does not come from a source file, i.e. from a class file.
+     */
+    val containingFile: KSFile?
+
+    /**
      * True if it is a vararg.
      */
     val isVararg: Boolean
