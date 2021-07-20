@@ -242,8 +242,18 @@ class IncrementalContext(
             }
         }
 
+        // Calculate dirty files by dirty classes in CP.
+        val dirtyFilesByCP = options.changedClasses.flatMap { fqn ->
+            val name = fqn.substringAfterLast('.')
+            val scope = fqn.substringBeforeLast('.', "<anonymous>")
+            classLookupCache.get(LookupSymbol(name, scope)).map { File(it) } +
+                symbolLookupCache.get(LookupSymbol(name, scope)).map { File(it) }
+        }.toSet()
+
+        logDirtyFilesByCP(dirtyFilesByCP)
+
         // Add previously defined symbols in removed and modified files
-        (modified + removed).forEach { file ->
+        (modified + removed + dirtyFilesByCP).forEach { file ->
             symbolsMap[file]?.let {
                 changedSyms.addAll(it)
             }
@@ -254,7 +264,7 @@ class IncrementalContext(
         changedSyms.addAll(sealedMap.keys.flatMap { sealedMap[it]!! })
 
         // For each changed symbol, either changed, modified or removed, invalidate files that looked them up, recursively.
-        val invalidator = DepInvalidator(symbolLookupCache, symbolsMap, modified)
+        val invalidator = DepInvalidator(symbolLookupCache, symbolsMap, modified + dirtyFilesByCP)
         changedSyms.forEach {
             invalidator.invalidate(it)
         }
@@ -291,6 +301,17 @@ class IncrementalContext(
         }
 
         return visited
+    }
+
+    private fun logDirtyFilesByCP(dirtyFiles: Collection<File>) {
+        if (!options.incrementalLog)
+            return
+
+        val logFile = File(logsDir, "kspDirtySetByCP.log")
+        logFile.appendText("=== Build $buildTime ===\n")
+        logFile.appendText("CP_changes: ${options.changedClasses}\n")
+        dirtyFiles.forEach { logFile.appendText("  ${it}\n") }
+        logFile.appendText("\n")
     }
 
     private fun logDirtyFilesByDeps(dirtyFiles: Collection<File>) {
