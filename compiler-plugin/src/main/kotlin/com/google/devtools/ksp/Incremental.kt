@@ -183,9 +183,7 @@ class IncrementalContext(
 
     private val cachesUpToDateFile = File(options.cachesDir, "caches.uptodate")
     private val isIncremental = options.incremental
-    private var rebuild = !isIncremental || !cachesUpToDateFile.exists()
-            || (options.knownModified.isEmpty() && options.knownRemoved.isEmpty())
-            || (options.knownModified + options.knownRemoved).any { !it.isKotlinFile(listOf("kt")) && !it.isJavaFile() }
+    private val rebuild = !cachesUpToDateFile.exists()
 
     private val baseDir = options.projectBaseDir
 
@@ -205,10 +203,6 @@ class IncrementalContext(
     private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
     private val KSFile.relativeFile
         get() = filePath.toRelativeFile()
-
-    private fun cleanIncrementalCache() {
-        options.cachesDir.deleteRecursively()
-    }
 
     private fun collectDefinedSymbols(ksFiles: Collection<KSFile>) {
         ksFiles.forEach { file ->
@@ -377,7 +371,6 @@ class IncrementalContext(
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
     fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
         if (!isIncremental) {
-            cleanIncrementalCache()
             return ksFiles
         }
 
@@ -398,7 +391,6 @@ class IncrementalContext(
             logDirtyFiles(ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }, ksFiles)
             return ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }
         } else {
-            cleanIncrementalCache()
             collectDefinedSymbols(ksFiles)
             logDirtyFiles(ksFiles, ksFiles)
             return ksFiles
