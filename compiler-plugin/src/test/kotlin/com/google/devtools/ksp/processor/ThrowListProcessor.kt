@@ -24,6 +24,10 @@ class ThrowListProcessor : AbstractTestProcessor() {
         val propertyA = klass.declarations.single { it.simpleName.asString() == "a" } as KSPropertyDeclaration
         result.add(resolver.getJvmCheckedException(propertyA.getter!!).toResult())
         result.add(resolver.getJvmCheckedException(propertyA.setter!!).toResult())
+        val jlib = resolver.getClassDeclarationByName("JavaLib")!!
+        val klib = resolver.getClassDeclarationByName("KtLib")!!
+        klib.declarations.filter { it.simpleName.asString() == "throwsLibKt" }.map {  resolver.getJvmCheckedException(it as KSFunctionDeclaration).toResult()}.forEach { result.add(it) }
+        jlib.declarations.filter{ it.simpleName.asString() == "foo" }.map {  resolver.getJvmCheckedException(it as KSFunctionDeclaration).toResult()}.forEach { result.add(it) }
         return emptyList()
     }
 
