@@ -26,6 +26,7 @@ import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -35,6 +36,7 @@ import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
@@ -52,6 +54,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinSingleTargetExtension
 import org.jetbrains.kotlin.gradle.dsl.fillDefaultValues
 import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
 import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
+import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
@@ -64,6 +67,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jetbrains.kotlin.gradle.tasks.SourceRoots
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.destinationAsFile
+import org.jetbrains.kotlin.incremental.isJavaFile
+import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.*
@@ -263,6 +268,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.pluginConfigurationName = kotlinCompilation.pluginConfigurationName
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
+            kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName)).disallowChanges()
 
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
@@ -348,6 +354,12 @@ interface KspTask : Task {
     @get:InputFiles
     val processorClasspath: ConfigurableFileCollection
 
+    /**
+     * Output directory that contains caches necessary to support incremental annotation processing.
+     */
+    @get:LocalState
+    val kspCacheDir: DirectoryProperty
+
     fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>)
 }
 
@@ -398,7 +410,11 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles
     ) {
-        args.addChangedFiles(changedFiles)
+        if (changedFiles.hasNonSourceChange()) {
+            clearIncCache()
+        } else {
+            args.addChangedFiles(changedFiles)
+        }
         super.callCompilerAsync(args, sourceRoots, changedFiles)
     }
 }
@@ -455,7 +471,11 @@ abstract class KspTaskJS @Inject constructor(
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles
     ) {
-        args.addChangedFiles(changedFiles)
+        if (changedFiles.hasNonSourceChange()) {
+            clearIncCache()
+        } else {
+            args.addChangedFiles(changedFiles)
+        }
         super.callCompilerAsync(args, sourceRoots, changedFiles)
     }
 }
@@ -508,8 +528,34 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles
     ) {
-        args.addChangedFiles(changedFiles)
+        if (changedFiles.hasNonSourceChange()) {
+            clearIncCache()
+        } else {
+            args.addChangedFiles(changedFiles)
+        }
         super.callCompilerAsync(args, sourceRoots, changedFiles)
+    }
+}
+
+// This forces rebuild.
+private fun KspTask.clearIncCache() {
+    kspCacheDir.get().asFile.deleteRecursively()
+}
+
+private fun ChangedFiles.hasNonSourceChange(): Boolean {
+    if (this !is ChangedFiles.Known)
+        return true
+
+    return !(this.modified + this.removed).all {
+        it.isKotlinFile(listOf("kt")) || it.isJavaFile()
+    }
+}
+
+fun CommonCompilerArguments.addChangedClasses(changed: KaptClasspathChanges) {
+    if (changed is KaptClasspathChanges.Known) {
+        changed.names.ifNotEmpty {
+            addPluginOptions(listOf(SubpluginOption("changedClasses", joinToString(":"))))
+        }
     }
 }
 
@@ -521,8 +567,12 @@ fun CommonCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
 fun CommonCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
     if (changedFiles is ChangedFiles.Known) {
         val options = mutableListOf<SubpluginOption>()
-        changedFiles.modified.ifNotEmpty { options += SubpluginOption("knownModified", map { it.path }.joinToString(File.pathSeparator)) }
-        changedFiles.removed.ifNotEmpty { options += SubpluginOption("knownRemoved", map { it.path }.joinToString(File.pathSeparator)) }
+        changedFiles.modified.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
+            options += SubpluginOption("knownModified", map { it.path }.joinToString(File.pathSeparator))
+        }
+        changedFiles.removed.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
+            options += SubpluginOption("knownRemoved", map { it.path }.joinToString(File.pathSeparator))
+        }
         options.ifNotEmpty { addPluginOptions(this) }
     }
 }
