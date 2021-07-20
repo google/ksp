@@ -34,9 +34,6 @@ import com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 import java.io.File
-import org.jetbrains.kotlin.config.JVMConfigurationKeys
-import org.jetbrains.kotlin.incremental.LookupTrackerImpl
-import org.jetbrains.kotlin.incremental.components.LookupTracker
 
 private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("Ksp options")
 
@@ -94,7 +91,7 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         if (options.processingClasspath.isNotEmpty()) {
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
-            configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, LookupTrackerImpl(LookupTracker.DO_NOTHING))
+            configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, DualLookupTracker())
 
             // Dummy extension point; Required by dropPsiCaches().
             CoreApplicationEnvironment.registerExtensionPoint(project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java)
