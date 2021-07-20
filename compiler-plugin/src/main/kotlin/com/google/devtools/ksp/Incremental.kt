@@ -557,8 +557,9 @@ class IncrementalContext(
         val name = fqn.substringAfterLast('.')
         val scope = fqn.substringBeforeLast('.', "<anonymous>")
 
+        // Java types are classes. Therefore lookups only happen in packages.
         fun record(scope: String, name: String) =
-            lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.CLASSIFIER, name)
+            lookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.PACKAGE, name)
 
         record(scope, name)
 
