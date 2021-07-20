@@ -1,8 +1,8 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+        maven("https://www.jetbrains.com/intellij-repository/snapshots")
     }
     val kotlinBaseVersion: String by settings
     resolutionStrategy {
