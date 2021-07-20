@@ -20,9 +20,8 @@ subprojects {
     repositories {
         mavenCentral()
         google()
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
-        jcenter()
+        maven("https://www.jetbrains.com/intellij-repository/snapshots")
     }
     tasks.withType<Jar>().configureEach {
         manifest.attributes.apply {
