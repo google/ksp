@@ -33,6 +33,7 @@ import com.google.devtools.ksp.symbol.impl.synthetic.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import java.io.File
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
@@ -42,6 +43,7 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.container.tryGetService
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.descriptors.resolveClassByFqName
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
@@ -52,7 +54,12 @@ import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.impl.*
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaClass
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
+import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
+import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
@@ -79,9 +86,12 @@ import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
+import org.jetbrains.kotlin.types.withAbbreviation
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
-import java.io.File
-import java.nio.file.FileSystem
+import org.jetbrains.org.objectweb.asm.ClassReader
+import org.jetbrains.org.objectweb.asm.ClassVisitor
+import org.jetbrains.org.objectweb.asm.MethodVisitor
+import org.jetbrains.org.objectweb.asm.Opcodes.API_VERSION
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -653,6 +663,7 @@ class ResolverImpl(
             ?.asSequence() ?: emptySequence()
     }
 
+
     @KspExperimental
     override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
         return when (function.origin) {
@@ -662,6 +673,35 @@ class ResolverImpl(
             }
             Origin.KOTLIN -> {
                 extractThrowsAnnotation(function)
+            }
+            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+                val descriptor = (function as KSFunctionDeclarationDescriptorImpl).descriptor
+                val jvmDesc = this.mapToJvmSignature(function)
+                val virtualFileContent = if(function.origin == Origin.KOTLIN_LIB) {
+                    (descriptor.getContainingKotlinJvmBinaryClass() as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
+                } else {
+                    (((descriptor.source as? JavaSourceElement)?.javaElement as? BinaryJavaMethod)?.containingClass as? BinaryJavaClass)?.virtualFile?.contentsToByteArray()
+                }
+                if (virtualFileContent == null) {
+                    return emptySequence()
+                }
+                val exceptionNames = mutableListOf<String>()
+                ClassReader(virtualFileContent).accept(object: ClassVisitor(API_VERSION) {
+                    override fun visitMethod(
+                        access: Int,
+                        name: String?,
+                        descriptor: String?,
+                        signature: String?,
+                        exceptions: Array<out String>?
+                    ): MethodVisitor {
+                        if (name == function.simpleName.asString() && jvmDesc == descriptor) {
+                            exceptions?.toList()?.let { exceptionNames.addAll(it) }
+                        }
+                        return object: MethodVisitor(API_VERSION) {
+                        }
+                    }
+                }, ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+                exceptionNames.mapNotNull { this@ResolverImpl.getClassDeclarationByName(it.replace("/", "."))?.asStarProjectedType() }.asSequence()
             }
             else -> emptySequence()
         }
