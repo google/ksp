@@ -73,6 +73,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split(File.pathSeparator).map { File(it) } )
         KspCliOption.INCREMENTAL_OPTION -> incremental = value.toBoolean()
         KspCliOption.INCREMENTAL_LOG_OPTION -> incrementalLog = value.toBoolean()
+        KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
     }
 }
 
@@ -202,6 +203,14 @@ enum class KspCliOption(
     "log dirty files",
     false,
     false
+    ),
+
+    CHANGED_CLASSES_OPTION(
+    "changedClasses",
+    "<changedClasses>",
+    "dirty classes in classpath",
+    false,
+    false
     );
 }
 
@@ -227,6 +236,7 @@ class KspOptions(
     val kspOutputDir: File,
     val incremental: Boolean,
     val incrementalLog: Boolean,
+    val changedClasses: List<String>,
 ) {
     class Builder {
         var projectBaseDir: File? = null
@@ -250,6 +260,7 @@ class KspOptions(
         var kspOutputDir: File? = null
         var incremental: Boolean = false
         var incrementalLog: Boolean = false
+        var changedClasses: MutableList<String> = mutableListOf()
 
         fun build(): KspOptions {
             return KspOptions(
@@ -259,7 +270,7 @@ class KspOptions(
                 kotlinOutputDir!!,
                 resourceOutputDir!!,
                 processingClasspath, processors, processingOptions,
-                knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog
+                knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog, changedClasses
             )
         }
     }
