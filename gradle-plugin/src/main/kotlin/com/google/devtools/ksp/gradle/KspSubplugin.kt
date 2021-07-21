@@ -397,14 +397,10 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
 
         isIntermoduleIncremental = project.findProperty("ksp.incremental.intermodule")?.toString().toBoolean()
         if (isIncremental && isIntermoduleIncremental) {
-            val classStructureIfIncremental = project.configurations.create("_classStructure${name}")
+            val classStructureIfIncremental = project.configurations.detachedConfiguration(
+                project.dependencies.create(project.files(project.provider { kotlinCompile.classpath }))
+            )
             maybeRegisterTransform(project)
-
-            // Wrap the `kotlinCompile.classpath` into a file collection, so that, if the classpath is represented by a configuration,
-            // the configuration is not extended (via extendsFrom, which normally happens when one configuration is _added_ into another)
-            // but is instead included as the (lazily) resolved files. This is needed because the class structure configuration doesn't have
-            // the attributes that are potentially needed to resolve dependencies on MPP modules, and the classpath configuration does.
-            project.dependencies.add(classStructureIfIncremental.name, project.files(project.provider { kotlinCompile.classpath }))
 
             classpathStructure.from(
                 classStructureIfIncremental.incoming.artifactView { viewConfig ->
