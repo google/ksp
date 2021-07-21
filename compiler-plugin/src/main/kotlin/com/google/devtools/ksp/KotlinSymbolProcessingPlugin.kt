@@ -205,7 +205,7 @@ enum class KspCliOption(
     CHANGED_CLASSES_OPTION(
     "changedClasses",
     "<changedClasses>",
-    "dirty classes in classpath",
+    "canonical / dot-separated names of dirty classes in classpath",
     false,
     false
     );
