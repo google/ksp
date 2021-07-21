@@ -120,12 +120,12 @@ Note that both of them are transitive and the second forms equivalence classes.
 To report a bug, please set Gradle properties `ksp.incremental=true` and `ksp.incremental.log=true`,
 and perform a clean build. This build produces two log files:
 
-* `build/kspDirtySet.log`
-* `build/kspSourceToOutputs.log`
+* `build/kspCaches/<source set>/logs/kspDirtySet.log`
+* `build/kspCaches/<source set>/logs/kspSourceToOutputs.log`
 
 You can then run successive incremental builds, which will generate two additional log files:
 
-* `build/kspDirtySetByDeps.log`
-* `build/kspDirtySetByOutputs.log`
+* `build/kspCaches/<source set>/logs/kspDirtySetByDeps.log`
+* `build/kspCaches/<source set>/logs/kspDirtySetByOutputs.log`
 
 These logs contain file names of sources and outputs, plus the timestamps of the builds.
