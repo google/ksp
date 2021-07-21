@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.incremental.*
+import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.BasicMap
@@ -181,7 +182,6 @@ class IncrementalContext(
     private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
 
     private val cachesUpToDateFile = File(options.cachesDir, "caches.uptodate")
-    private val isIncremental = options.incremental
     private val rebuild = !cachesUpToDateFile.exists()
 
     private val baseDir = options.projectBaseDir
@@ -192,15 +192,18 @@ class IncrementalContext(
     private val modified = options.knownModified.map{ it.relativeTo(baseDir) }.toSet()
     private val removed = options.knownRemoved.map { it.relativeTo(baseDir) }.toSet()
 
-    private val dualLookupTracker: DualLookupTracker = componentProvider.get()
+    private val lookupTracker: LookupTracker = componentProvider.get()
+    // Disable incremental processing if somehow DualLookupTracker failed to be registered.
+    // This may happen when a platform hasn't support incremental compilation yet. E.g, Common / Metadata.
+    private val isIncremental = options.incremental && lookupTracker is DualLookupTracker
     private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
 
-    private val symbolLookupTracker = dualLookupTracker.symbolTracker
+    private val symbolLookupTracker = (lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING
     private val symbolLookupCacheDir = File(options.cachesDir, "symbolLookups")
     private val symbolLookupCache = LookupStorage(symbolLookupCacheDir, PATH_CONVERTER)
 
     // TODO: rewrite LookupStorage to share file-to-id, etc.
-    private val classLookupTracker = dualLookupTracker.classTracker
+    private val classLookupTracker = (lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING
     private val classLookupCacheDir = File(options.cachesDir, "classLookups")
     private val classLookupCache = LookupStorage(classLookupCacheDir, PATH_CONVERTER)
 
@@ -516,6 +519,9 @@ class IncrementalContext(
     }
 
     fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
+        if (!isIncremental)
+            return@closeFilesOnException
+
         collectDefinedSymbols(newFiles)
     }
 
@@ -702,7 +708,7 @@ class IncrementalContext(
     // Debugging and testing only.
     internal fun dumpLookupRecords(): Map<String, List<String>> {
         val map = mutableMapOf<String, List<String>>()
-        symbolLookupTracker.lookups.entrySet().forEach { e ->
+        (symbolLookupTracker as LookupTrackerImpl).lookups.entrySet().forEach { e ->
             val key = "${e.key.scope}.${e.key.name}"
             map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
         }
