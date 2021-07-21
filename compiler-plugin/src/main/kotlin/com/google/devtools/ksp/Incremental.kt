@@ -186,7 +186,7 @@ class IncrementalContext(
 
     private val baseDir = options.projectBaseDir
 
-    private val logsDir = File(baseDir, "build").apply { mkdir() }
+    private val logsDir = File(options.cachesDir, "logs").apply { mkdirs() }
     private val buildTime = Date().time
 
     private val modified = options.knownModified.map{ it.relativeTo(baseDir) }.toSet()
