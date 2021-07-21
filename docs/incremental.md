@@ -16,7 +16,8 @@ words, a processor needs to associate an output with the sources of the correspo
 * `Resolver.getDeclarationsFromPackage`
 
 Currently, only changes in Kotlin and Java sources are tracked. Changes to the classpath, namely to other modules
-or libraries, trigger a full re-processing of all sources.
+or libraries, trigger a full re-processing of all sources by default. To track changes in classpath, set the Gradle property
+`ksp.incremental.intermodule=true` for an experimental implementation on JVM.
 
 Incremental processing is currently enabled by default. To disable it, set the Gradle property
 `ksp.incremental=false`. To enable logs that dump the dirty set according to dependencies and
