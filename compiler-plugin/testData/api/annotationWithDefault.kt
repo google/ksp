@@ -21,11 +21,17 @@
 // JavaAnnotation -> debug:debug,withDefaultValue:OK
 // JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
 // KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
+// KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib
 // KotlinAnnotation -> a:debugJava,b:default
 // JavaAnnotation -> debug:debugJava2,withDefaultValue:OK
 // JavaAnnotation2 -> y:y-java,x:x-java,z:z-default
 // KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default
 // END
+// MODULE: lib
+// FILE: Default.kt
+annotation class KotlinAnnotationLib(val a: String, val b: String = "defaultInLib")
+
+// MODULE: main(lib)
 // FILE: a.kt
 
 annotation class KotlinAnnotation(val a: String, val b:String = "default")
@@ -35,6 +41,7 @@ annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", va
 @JavaAnnotation("debug")
 @JavaAnnotation2(y="y-kotlin", x="x-kotlin")
 @KotlinAnnotation2(y="y-kotlin", x="x-kotlin")
+@KotlinAnnotationLib("debugLibKt")
 class A
 
 // FILE: JavaAnnotation.java
