@@ -32,12 +32,38 @@ import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
+import org.jetbrains.kotlin.builtins.StandardNames
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.load.java.components.JavaAnnotationDescriptor
+import org.jetbrains.kotlin.load.java.components.JavaPropertyInitializerEvaluatorImpl
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaAnnotationDescriptor
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotationAsAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaArrayAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaArrayType
+import org.jetbrains.kotlin.load.java.structure.JavaClassObjectAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
+import org.jetbrains.kotlin.load.java.structure.JavaEnumValueAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaLiteralAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.JavaPrimitiveType
+import org.jetbrains.kotlin.load.java.structure.JavaType
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSignatureParser
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
+import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
+import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.typeUtil.builtIns
+import org.jetbrains.org.objectweb.asm.AnnotationVisitor
+import org.jetbrains.org.objectweb.asm.ClassReader
+import org.jetbrains.org.objectweb.asm.ClassVisitor
+import org.jetbrains.org.objectweb.asm.MethodVisitor
+import org.jetbrains.org.objectweb.asm.Opcodes.API_VERSION
 
 class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationDescriptor) : KSAnnotation {
     companion object : KSObjectCache<AnnotationDescriptor, KSAnnotationDescriptorImpl>() {
@@ -122,11 +148,112 @@ fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: List<Stri
 }
 
 fun ValueParameterDescriptor.getDefaultValue(): Any? {
+
+    // Copied from kotlin compiler
+    // TODO: expose in upstream
+    fun convertTypeToKClassValue(javaType: JavaType): KClassValue? {
+        var type = javaType
+        var arrayDimensions = 0
+        while (type is JavaArrayType) {
+            type = type.componentType
+            arrayDimensions++
+        }
+        return when (type) {
+            is JavaPrimitiveType -> {
+                val primitiveType = type.type
+                // void.class is not representable in Kotlin, we approximate it by Unit::class
+                    ?: return KClassValue(ClassId.topLevel(StandardNames.FqNames.unit.toSafe()), 0)
+                if (arrayDimensions > 0) {
+                    KClassValue(ClassId.topLevel(primitiveType.arrayTypeFqName), arrayDimensions - 1)
+                } else {
+                    KClassValue(ClassId.topLevel(primitiveType.typeFqName), arrayDimensions)
+                }
+            }
+            is JavaClassifierType -> {
+                val fqName = FqName(type.classifierQualifiedName)
+                // TODO: support nested classes somehow
+                val classId = JavaToKotlinClassMap.mapJavaToKotlin(fqName) ?: ClassId.topLevel(fqName)
+                KClassValue(classId, arrayDimensions)
+            }
+            else -> null
+        }
+    }
+
+    // Copied from kotlin compiler
+    // TODO: expose in upstream
+    fun JavaAnnotationArgument.convert(expectedType: KotlinType): ConstantValue<*>? {
+        return when (this) {
+            is JavaLiteralAnnotationArgument -> value?.let {
+                when (value) {
+                    // Note: `value` expression may be of class that does not match field type in some cases
+                    // tested for Int, left other checks just in case
+                    is Byte, is Short, is Int, is Long -> {
+                        ConstantValueFactory.createIntegerConstantValue((value as Number).toLong(), expectedType, false)
+                    }
+                    else -> {
+                        ConstantValueFactory.createConstantValue(value)
+                    }
+                }
+            }
+            is JavaEnumValueAnnotationArgument -> {
+                enumClassId?.let { enumClassId ->
+                    entryName?.let { entryName ->
+                        EnumValue(enumClassId, entryName)
+                    }
+                }
+            }
+            is JavaArrayAnnotationArgument -> {
+                val elementType = expectedType.builtIns.getArrayElementType(expectedType)
+                ConstantValueFactory.createArrayValue(getElements().mapNotNull { it.convert(elementType) }, expectedType)
+            }
+            is JavaAnnotationAsAnnotationArgument -> {
+                // TODO: support annotations as annotation arguments (KT-28077)
+                null
+            }
+            is JavaClassObjectAnnotationArgument -> {
+                convertTypeToKClassValue(getReferencedType())
+            }
+            else -> null
+        }
+    }
     val psi = this.findPsi()
     return when (psi) {
         null -> {
-            // TODO: This will only work for symbols from Java class.
-            ResolverImpl.instance.javaActualAnnotationArgumentExtractor.extractDefaultValue(this, this.type)?.toValue()
+            val defaultFromJava = ResolverImpl.instance.javaActualAnnotationArgumentExtractor.extractDefaultValue(this, this.type)?.toValue()
+            if (defaultFromJava != null) {
+                defaultFromJava
+            } else {
+                val file =
+                    (this.containingDeclaration.getContainingKotlinJvmBinaryClass() as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
+                if (file == null) {
+                    null
+                } else {
+                    var defaultValue: JavaAnnotationArgument? = null
+                    ClassReader(file).accept(object : ClassVisitor(API_VERSION) {
+                        override fun visitMethod(
+                            access: Int,
+                            name: String?,
+                            desc: String?,
+                            signature: String?,
+                            exceptions: Array<out String>?
+                        ): MethodVisitor {
+                            return if (name == this@getDefaultValue.name.asString()) {
+                                object : MethodVisitor(API_VERSION) {
+                                    override fun visitAnnotationDefault(): AnnotationVisitor =
+                                        BinaryJavaAnnotationVisitor(
+                                            ClassifierResolutionContext { null },
+                                            BinaryClassSignatureParser()
+                                        ) {
+                                            defaultValue = it
+                                        }
+                                }
+                            } else
+                                object : MethodVisitor(API_VERSION) {}
+                        }
+                    }, ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+                    defaultValue?.convert(this.type)?.toValue()
+                }
+            }
         }
         is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.value
         is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper.computeConstantExpression((psi).defaultValue)
