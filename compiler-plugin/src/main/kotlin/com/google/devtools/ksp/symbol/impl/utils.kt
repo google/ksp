@@ -20,9 +20,6 @@ package com.google.devtools.ksp.symbol.impl
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.MemoizedSequence
-import com.intellij.lang.jvm.JvmModifier
-import com.intellij.psi.*
-import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.ClassKind
@@ -34,29 +31,36 @@ import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
+import com.intellij.lang.jvm.JvmModifier
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassImpl
+import com.intellij.util.castSafelyTo
+import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
+import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
-import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
-import org.jetbrains.kotlin.resolve.source.getPsi
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.StarProjectionImpl
-import org.jetbrains.kotlin.types.TypeProjectionImpl
-import org.jetbrains.kotlin.types.replace
-import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.siblings
-import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.hasBackingField
+import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
 import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
+import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.StarProjectionImpl
+import org.jetbrains.kotlin.types.TypeProjectionImpl
+import org.jetbrains.kotlin.types.replace
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
 private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -484,3 +488,140 @@ private val PropertyDescriptor.declaresDefaultValue: Boolean
         is KtParameter -> declaration.defaultValue != null
         else -> false
     }
+
+fun <T : Annotation> KSAnnotated.getAnnotation(annotationKClass: KClass<T>): T? {
+    return this.annotations.firstOrNull {
+        annotationKClass.qualifiedName == it.annotationType.resolve().declaration.qualifiedName?.asString()
+    }?.toAnnotation(annotationKClass)
+}
+
+fun KSAnnotated.getAnnotations(): Sequence<out Annotation> {
+    return this.annotations.map {
+        val kClass = Class.forName(it.annotationType.resolve().declaration.qualifiedName?.asString()).kotlin
+        it.toAnnotation(kClass as KClass<Annotation>)
+    }
+}
+
+fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> {
+    return this.annotations.filter {
+        it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
+    }.map { it.toAnnotation(annotationKClass) }
+}
+
+fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean =
+    getAnnotation(annotationKClass)?.let { true } ?: false
+
+@Suppress("UNCHECKED_CAST")
+private fun <T : Annotation> KSAnnotation.toAnnotation(annotationKClass: KClass<T>): T {
+    val clazz = annotationKClass.java
+    return Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz), createInvocationHandler(clazz)) as T
+}
+
+@Suppress("TooGenericExceptionCaught")
+private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHandler {
+    val cache = ConcurrentHashMap<Pair<Class<*>, Any>, Any>(arguments.size)
+    return InvocationHandler { proxy, method, _ ->
+        if (method.name == "toString" && arguments.none { it.name?.asString() == "toString" }) {
+            clazz.canonicalName +
+                arguments.map { argument: KSValueArgument ->
+                    // handles default values for enums otherwise returns null
+                    val methodName = argument.name?.asString()
+                    val value = proxy.javaClass.methods.find { m -> m.name == methodName }?.invoke(proxy)
+                    "$methodName=$value"
+                }.toList()
+        } else {
+            val argument = try {
+                arguments.first { it.name?.asString() == method.name }
+            } catch (e: NullPointerException) {
+                throw IllegalArgumentException("This is a bug using the default KClass for an annotation", e)
+            }
+            when (val result = argument.value ?: method.defaultValue) {
+                is Proxy -> result
+                is ArrayList<*> -> {
+                    val value = { result.asArray(method) }
+                    cache.getOrPut(Pair(method.returnType, result), value)
+                }
+                else -> {
+                    when {
+                        method.returnType.isEnum -> {
+                            val value = { result.asEnum(method.returnType) }
+                            cache.getOrPut(Pair(method.returnType, result), value)
+                        }
+                        method.returnType.isAnnotation -> {
+                            val value = { (result as KSAnnotation).asAnnotation(method.returnType) }
+                            cache.getOrPut(Pair(method.returnType, result), value)
+                        }
+                        method.returnType.name == "java.lang.Class" -> {
+                            val value = { (result as KSType).asClass() }
+                            cache.getOrPut(Pair(method.returnType, result), value)
+                        }
+                        method.returnType.name == "byte" -> {
+                            val value = { result.asByte() }
+                            cache.getOrPut(Pair(method.returnType, result), value)
+                        }
+                        else -> result // original value
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun KSAnnotation.asAnnotation(
+    annotationInterface: Class<*>
+): Any {
+    return Proxy.newProxyInstance(
+        this.javaClass.classLoader, arrayOf(annotationInterface),
+        this.createInvocationHandler(annotationInterface)
+    ) as Proxy
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun ArrayList<*>.asArray(method: Method) =
+    when (method.returnType.componentType.name) {
+        "boolean" -> (this.castSafelyTo<ArrayList<Boolean>>())?.toBooleanArray()
+        "byte" -> (this as ArrayList<Byte>).toByteArray()
+        "char" -> (this as ArrayList<Char>).toCharArray()
+        "double" -> (this as ArrayList<Double>).toDoubleArray()
+        "float" -> (this as ArrayList<Float>).toFloatArray()
+        "int" -> (this as ArrayList<Int>).toIntArray()
+        "long" -> (this as ArrayList<Long>).toLongArray()
+        "java.lang.Class" -> (this as ArrayList<KSType>).map {
+            Class.forName(it.declaration.qualifiedName!!.asString())
+        }.toTypedArray()
+        "java.lang.String" -> (this as ArrayList<String>).toTypedArray()
+        else -> { // arrays of enums or annotations
+            when {
+                method.returnType.componentType.isEnum -> {
+                    this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
+                }
+                method.returnType.componentType.isAnnotation -> {
+                    this.toArray(method) { result ->
+                        (result as KSAnnotation).asAnnotation(method.returnType.componentType)
+                    }
+                }
+                else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
+            }
+        }
+    }
+
+@Suppress("UNCHECKED_CAST")
+private fun ArrayList<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<Any> {
+    val array: Array<Any> = java.lang.reflect.Array.newInstance(
+        method.returnType.componentType,
+        this.size
+    ) as Array<Any>
+    for (r in 0 until this.size) {
+        array[r] = valueProvider.invoke(this[r])
+    }
+    return array
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun <T> Any.asEnum(returnType: Class<T>): T =
+    returnType.getDeclaredMethod("valueOf", String::class.java).invoke(null, this.toString()) as T
+
+private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
+
+private fun KSType.asClass() = Class.forName(this.declaration.qualifiedName!!.asString())
