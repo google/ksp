@@ -33,11 +33,11 @@ For incoming PRs, we would like to request changes covered by tests for good pra
  We do end to end test for KSP, which means you need to write a lightweight processor to be loaded with KSP for testing.
 The form of the test itself is flexible as long as the logic is being covered. 
 
-Here are some [sample test processors](compiler-plugin/src/main/kotlin/com/google/devtools/ksp/processor) for your reference.
+Here are some [sample test processors](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/processor) for your reference.
 
 #### Steps for writing a test
 * Create a test processor under the sample processor folder.
-it should be extending [AbstractTestProcessor](compiler-plugin/src/main/kotlin/com/google/devtools/ksp/processor/AbstractTestProcessor.kt)
+it should be extending [AbstractTestProcessor](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/processor/AbstractTestProcessor.kt)
 * Write your logic by overriding corresponding functions. 
     * Test is performed by running test processor and get a collection of test results in the form of List<String>.
     * Make sure you override toResult() function to collect test result. 
@@ -45,7 +45,7 @@ it should be extending [AbstractTestProcessor](compiler-plugin/src/main/kotlin/c
     * To help with easy testing, you can create an annotation for test, and annotate the specific part of the code to avoid doing 
     excess filtering when traveling along the program.
 * Write your test case to work with test processor.
-    * Create a test kt file under [testData](../../../plugins/ksp/testData/api) folder. 
+    * Create a test kt file under [testData](compiler-plugin/testData/api) folder. 
     Every kt file under this folder corrsponds to a test case.
     * Inside the test file:
         * [optional] Add ```// WITH_RUNTIME``` to the top if you need access to standard library.
