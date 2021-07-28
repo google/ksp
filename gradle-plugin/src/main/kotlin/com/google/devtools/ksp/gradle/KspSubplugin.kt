@@ -271,7 +271,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true
             kspTask.configureCompilation(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask, isIncremental)
             // TODO: Move into Configurator.
-            kspTask.destinationDir = kspOutputDir
+            kspTask.getDestinationDirectory().set(kspOutputDir)
             kspTask.options = getSubpluginOptions(project, kspExtension, nonEmptyKspConfigurations, sourceSetName, isIncremental)
             kspTask.classpath = kotlinCompileTask.project.files(Callable { kotlinCompileTask.classpath })
             kspTask.destination = kspOutputDir
