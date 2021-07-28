@@ -506,6 +506,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         }
         args.addPluginOptions(options)
         args.destinationAsFile = destination
+        args.allowNoSourceFiles = true
     }
 
     // Overrding an internal function is hacky.
@@ -530,6 +531,8 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         args.addChangedFiles(changedFiles)
         super.callCompilerAsync(args, sourceRoots, changedFiles)
     }
+
+    override fun skipCondition(): Boolean = false
 }
 
 
