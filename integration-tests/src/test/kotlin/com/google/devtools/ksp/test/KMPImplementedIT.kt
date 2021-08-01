@@ -24,6 +24,12 @@ class KMPImplementedIT {
         }
     }
 
+    private fun verifyKexe(path: String) {
+        val artifact = File(project.root, path)
+        Assert.assertTrue(artifact.exists())
+        Assert.assertTrue(artifact.readBytes().size > 0)
+    }
+
     @Test
     fun testAll() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -52,5 +58,8 @@ class KMPImplementedIT {
                 "com/example/Foo.kotlin_metadata"
             )
         )
+
+        verifyKexe("workload/build/bin/linuxX64/debugExecutable/workload.kexe")
+        verifyKexe("workload/build/bin/linuxX64/releaseExecutable/workload.kexe")
     }
 }
