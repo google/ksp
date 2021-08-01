@@ -22,6 +22,8 @@ class TemporaryTestProject(projectName: String, baseProject: String? = null) : T
         gradleProperties.appendText("\nkspVersion=$kspVersion")
         gradleProperties.appendText("\nagpVersion=$agpVersion")
         gradleProperties.appendText("\ntestRepo=$testRepo")
+        // Uncomment this to debug compiler and compiler plugin.
+        // gradleProperties.appendText("\nkotlin.compiler.execution.strategy=in-process")
     }
 
     fun restore(file: String) {
