@@ -13,6 +13,11 @@ kotlin {
         browser()
         nodejs()
     }
+    linuxX64() {
+        binaries {
+            executable()
+        }
+    }
     sourceSets {
         val commonMain by getting {
             dependencies {
