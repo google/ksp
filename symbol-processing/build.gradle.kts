@@ -40,7 +40,7 @@ tasks {
 
 publishing {
     publications {
-        val publication = create<MavenPublication>("shadow") {
+        create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
             artifact(tasks["sourcesJar"])
             artifact(tasks["shadowJar"])
@@ -66,6 +66,16 @@ publishing {
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                     }
                 }
+            }
+        }
+
+        create<MavenPublication>("cmdline") {
+            artifactId = "symbol-processing-cmdline"
+            artifact(tasks["sourcesJar"])
+            from(project(":compiler-plugin").components["java"])
+            pom {
+                name.set("com.google.devtools.ksp:symbol-processing-cmdline")
+                description.set("Symbol processing for K/N and command line")
             }
         }
     }
