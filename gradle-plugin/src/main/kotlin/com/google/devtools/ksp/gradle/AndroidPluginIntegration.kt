@@ -90,6 +90,8 @@ class AndroidPluginIntegration(
         kspClassOutput.include("**/*.class")
         kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
         kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
-        kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
+        kotlinCompilation.androidVariant.processJavaResourcesProvider.configure {
+            it.from(resourcesOutputDir)
+        }
     }
 }
