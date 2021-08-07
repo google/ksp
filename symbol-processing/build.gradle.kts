@@ -25,16 +25,12 @@ tasks.withType<ShadowJar>() {
 tasks {
     publish {
         dependsOn(shadowJar)
+        dependsOn(project(":compiler-plugin:dokkaJavadocJar"))
     }
 
     val sourcesJar by creating(Jar::class) {
         archiveClassifier.set("sources")
         from(project(":compiler-plugin").sourceSets.main.get().allSource)
-    }
-
-    artifacts {
-        archives(sourcesJar)
-        archives(jar)
     }
 }
 
@@ -43,6 +39,7 @@ publishing {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
             artifact(tasks["sourcesJar"])
+            artifact(project(":compiler-plugin").tasks["dokkaJavadocJar"])
             artifact(tasks["shadowJar"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing")
@@ -72,6 +69,7 @@ publishing {
         create<MavenPublication>("cmdline") {
             artifactId = "symbol-processing-cmdline"
             artifact(tasks["sourcesJar"])
+            artifact(project(":compiler-plugin").tasks["dokkaJavadocJar"])
             from(project(":compiler-plugin").components["java"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-cmdline")

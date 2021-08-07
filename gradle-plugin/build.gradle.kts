@@ -15,6 +15,7 @@ plugins {
     kotlin("jvm")
     id("java-gradle-plugin")
     `maven-publish`
+    id("org.jetbrains.dokka") version ("1.4.32")
 }
 
 dependencies {
@@ -56,6 +57,11 @@ tasks {
     }
 }
 
+val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+    dependsOn(tasks.dokkaJavadoc)
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    archiveClassifier.set("javadoc")
+}
 
 publishing {
     publications {
@@ -64,6 +70,7 @@ publishing {
         this.create<MavenPublication>("pluginMaven") {
             artifactId = "symbol-processing-gradle-plugin"
             artifact(tasks["sourcesJar"])
+            artifact(tasks["dokkaJavadocJar"])
             pom {
                 name.set("symbol-processing-gradle-plugin")
                 description.set("Kotlin symbol processing integration for Gradle")
