@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.test
 
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
@@ -13,8 +14,8 @@ class PlaygroundIT {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground")
 
-    private fun GradleRunner.buildAndCheck(vararg flags: String) {
-        val resultCleanBuild = this.withArguments(*flags, "clean", "build").build()
+    private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) {
+        val resultCleanBuild = this.withArguments(*args).build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
@@ -26,12 +27,14 @@ class PlaygroundIT {
             Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
+
+        extraCheck(resultCleanBuild)
     }
 
     @Test
     fun testPlayground() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        gradleRunner.buildAndCheck()
+        gradleRunner.buildAndCheck("clean", "build")
     }
 
     // TODO: add another plugin and see if it is blocked.
@@ -41,13 +44,24 @@ class PlaygroundIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/build.gradle.kts").appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
-        gradleRunner.buildAndCheck()
+        gradleRunner.buildAndCheck("clean", "build")
         project.restore("workload/build.gradle.kts")
     }
 
     @Test
     fun testBuildWithConfigurationCache() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        gradleRunner.buildAndCheck("--configuration-cache")
+        gradleRunner.buildAndCheck("--configuration-cache", "clean", "build")
+    }
+
+    @Test
+    fun testBuildCache() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build") {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
+        }
+        gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build") {
+            Assert.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
+        }
     }
 }
