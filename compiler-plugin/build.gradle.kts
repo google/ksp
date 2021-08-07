@@ -17,6 +17,7 @@ tasks.withType<KotlinCompile> {
 plugins {
     kotlin("jvm")
     id("org.jetbrains.intellij") version "0.6.4"
+    id("org.jetbrains.dokka") version ("1.4.32")
 }
 
 intellij {
@@ -132,4 +133,10 @@ repositories {
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
     maven("https://www.jetbrains.com/intellij-repository/snapshots")
+}
+
+val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+    dependsOn(tasks.dokkaJavadoc)
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    archiveClassifier.set("javadoc")
 }
