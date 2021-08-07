@@ -33,12 +33,12 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
@@ -408,7 +408,7 @@ interface KspTask : Task {
     @get:Internal
     var options: List<SubpluginOption>
 
-    @get:Internal
+    @get:OutputDirectory
     var destination: File
 
     @get:Internal
@@ -420,7 +420,11 @@ interface KspTask : Task {
     @get:Input
     val apOptions: MapProperty<String, String>
 
-    @get:CompileClasspath
+    // @PathSensitive and @Classpath doesn't seem working together. Effectively, we are forced to choose between
+    // 1. remote cache, or
+    // 2. detecting trivial changes in processors.
+    // Only processor authors need 2. so let's favor 1. for broader audience.
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     val processorClasspath: ConfigurableFileCollection
 
@@ -433,6 +437,7 @@ interface KspTask : Task {
     fun configureCompilation(kotlinCompilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>, isIncremental: Boolean)
 }
 
+@CacheableTask
 abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
