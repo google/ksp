@@ -166,6 +166,21 @@ build/generated/ksp/main/java/
 ```
 
 and perhaps also resource directory if your IDE supports them:
+
 ```
-build/generated/ksp/main/resources
+build/generated/ksp/main/resources/
+```
+
+It may also be necessary to configure these directories in your KSP consumer module:
+
+###### build.gradle.kts
+```kotlin
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+    sourceSets.test {
+        kotlin.srcDir("build/generated/ksp/test/kotlin")
+    }
+}
 ```
