@@ -25,6 +25,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -246,6 +247,20 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val nonEmptyKspConfigurations = kspConfigurations.filter { it.dependencies.isNotEmpty() }
         if (nonEmptyKspConfigurations.isEmpty()) {
             return project.provider { emptyList() }
+        }
+        fun setupEvaluationDeps(cfg: Configuration, project: Project) {
+            cfg.dependencies.forEach {
+                if (it is ProjectDependency) {
+                    val dependencyProject = it.dependencyProject
+                    project.evaluationDependsOn(dependencyProject.path)
+                    dependencyProject.configurations.forEach {
+                        setupEvaluationDeps(it, dependencyProject)
+                    }
+                }
+            }
+        }
+        nonEmptyKspConfigurations.forEach {
+            setupEvaluationDeps(it, project)
         }
 
         val sourceSetName = kotlinCompilation.defaultSourceSetName
