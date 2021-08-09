@@ -18,6 +18,18 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: MangledNamesProcessor
 // EXPECTED:
+// JavaEnum -> declarations
+// JavaEnum.VAL1 -> declarations
+// JavaEnum.VAL2 -> declarations
+// values -> values
+// valueOf -> valueOf
+// <init> -> <init>
+// JavaInput -> declarations
+// javaFunction -> javaFunction
+// staticJavaFunction -> staticJavaFunction
+// getX -> getX
+// getY -> getY
+// setY -> setY
 // mainPackage.Foo -> declarations
 // get-normalProp -> getNormalProp
 // set-normalProp -> setNormalProp
@@ -35,7 +47,6 @@
 // inlineReturningFun -> inlineReturningFun-HRn7Rpw
 // internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule
 // internalInlineReturningFun -> internalInlineReturningFun-HRn7Rpw$mainModule
-// <init> -> <init>
 // mainPackage.AbstractKotlinClass -> declarations
 // get-abstractVar -> getAbstractVar
 // set-abstractVar -> setAbstractVar
@@ -53,12 +64,6 @@
 // get-x -> getX
 // get-y -> getY
 // set-y -> setY
-// JavaInput -> declarations
-// javaFunction -> javaFunction
-// staticJavaFunction -> staticJavaFunction
-// getX -> getX
-// getY -> getY
-// setY -> setY
 // libPackage.Foo -> declarations
 // get-inlineProp -> getInlineProp-b_MPbnQ
 // set-inlineProp -> setInlineProp-mQ73O9w
@@ -180,4 +185,10 @@ class JavaInput implements MyInterface {
     }
     public void setY(int value) {
     }
+}
+
+// FILE: JavaEnum.java
+public enum JavaEnum {
+    VAL1,
+    VAL2;
 }

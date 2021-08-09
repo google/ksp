@@ -14,7 +14,7 @@ class MangledNamesProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val mangleSourceNames = mutableMapOf<String, String?>()
-        resolver.getAllFiles().forEach {
+        resolver.getAllFiles().sortedBy { it.fileName }.forEach {
             it.accept(MangledNamesVisitor(resolver), mangleSourceNames)
         }
         val mangledDependencyNames = LinkedHashMap<String, String?>()

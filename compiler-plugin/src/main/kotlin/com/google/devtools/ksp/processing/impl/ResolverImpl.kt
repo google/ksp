@@ -395,11 +395,17 @@ class ResolverImpl(
                         }
                 } else null
                 property ?: moduleClassResolver
-                    .resolveContainingClass(psi)
-                    ?.findEnclosedDescriptor(
-                        kindFilter = DescriptorKindFilter.FUNCTIONS,
-                        filter = { it.findPsi() == psi }
-                    )
+                    .resolveContainingClass(psi)?.let { containingClass ->
+                        val filter = if (psi is SyntheticElement) {
+                            { declaration: DeclarationDescriptor -> declaration.name.asString() == psi.name }
+                        } else {
+                            { declaration: DeclarationDescriptor -> declaration.findPsi() == psi }
+                        }
+                        containingClass.findEnclosedDescriptor(
+                            kindFilter = DescriptorKindFilter.FUNCTIONS,
+                            filter = filter
+                        )
+                }
             }
             is PsiField -> {
                 moduleClassResolver
