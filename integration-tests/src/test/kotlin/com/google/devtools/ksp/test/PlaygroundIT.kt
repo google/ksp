@@ -15,9 +15,9 @@ class PlaygroundIT {
     val project: TemporaryTestProject = TemporaryTestProject("playground")
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) {
-        val resultCleanBuild = this.withArguments(*args).build()
+        val result = this.withArguments(*args).build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
         Assert.assertTrue(artifact.exists())
@@ -28,7 +28,7 @@ class PlaygroundIT {
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
 
-        extraCheck(resultCleanBuild)
+        extraCheck(result)
     }
 
     @Test
@@ -63,5 +63,25 @@ class PlaygroundIT {
         gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build") {
             Assert.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
         }
+    }
+
+    // Compiler's test infra report this kind of error before KSP, so it is not testable there.
+    @Test
+    fun testNoFunctionName() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        fun buildAndFileAndCheck() {
+            gradleRunner.withArguments("build").buildAndFail().let { result ->
+                Assert.assertTrue(result.output.contains("Function declaration must have a name"))
+            }
+        }
+
+        File(project.root, "workload/src/main/java/com/example/A.kt").appendText("\n{}\n")
+        buildAndFileAndCheck()
+        project.restore("workload/src/main/java/com/example/A.kt")
+
+        File(project.root, "workload/src/main/java/com/example/A.kt").appendText("\nfun() = {0}\n")
+        buildAndFileAndCheck()
+        project.restore("workload/src/main/java/com/example/A.kt")
     }
 }

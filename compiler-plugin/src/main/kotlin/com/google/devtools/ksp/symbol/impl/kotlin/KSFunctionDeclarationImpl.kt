@@ -22,12 +22,14 @@ import com.google.devtools.ksp.ExceptionMessage
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import com.google.devtools.ksp.isOpen
 import com.google.devtools.ksp.isVisibleFrom
+import com.google.devtools.ksp.processing.impl.KSPCompilationError
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.OverridingUtil
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
 import java.lang.IllegalStateException
@@ -47,6 +49,9 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
         if (ktFunction is KtConstructor<*>) {
             KSNameImpl.getCached("<init>")
         } else {
+            if (ktFunction.name == null) {
+                throw KSPCompilationError(ktFunction.containingFile, ktFunction.startOffset, "Function declaration must have a name")
+            }
             KSNameImpl.getCached(ktFunction.name!!)
         }
     }

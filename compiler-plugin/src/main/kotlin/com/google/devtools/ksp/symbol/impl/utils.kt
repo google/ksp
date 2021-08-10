@@ -34,6 +34,7 @@ import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
+import com.intellij.openapi.project.Project
 import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
@@ -232,6 +233,14 @@ fun PsiElement.toLocation(): Location {
     val file = this.containingFile
     val document = ResolverImpl.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
     return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
+}
+
+fun Project.findLocationString(file: PsiFile, offset: Int): String {
+    val psiDocumentManager = PsiDocumentManager.getInstance(this)
+    val document = psiDocumentManager.getDocument(file) ?: return "<unknown>"
+    val lineNumber = document.getLineNumber(offset)
+    val offsetInLine = offset - document.getLineStartOffset(lineNumber)
+    return "${file.virtualFile.path}: (${lineNumber + 1}, ${offsetInLine + 1})"
 }
 
 private fun parseDocString(raw: String): String? {
