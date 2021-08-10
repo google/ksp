@@ -23,10 +23,12 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.processing.impl.KSPCompilationError
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
+import com.google.devtools.ksp.symbol.impl.findLocationString
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.intellij.openapi.extensions.ExtensionPoint
@@ -121,17 +123,19 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
 
-        if (!initialized) {
-            incrementalContext = IncrementalContext(
+        handleException(project) {
+            if (!initialized) {
+                incrementalContext = IncrementalContext(
                     options, componentProvider,
                     File(anyChangesWildcard.filePath).relativeTo(options.projectBaseDir)
-            )
-            dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
-            cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
-            newFiles = dirtyFiles
-        } else {
-            incrementalContext.registerGeneratedFiles(newFiles)
-        }
+                )
+                dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
+                cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
+                newFiles = dirtyFiles
+            } else {
+                incrementalContext.registerGeneratedFiles(newFiles)
+            }
+        }?.let { return@doAnalysis it }
 
         // dirtyFiles cannot be reused because they are created in the old container.
         val resolver = ResolverImpl(module, ksFiles.filterNot { it.filePath in cleanFilenames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext, options)
@@ -149,7 +153,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             )
             processors = providers.mapNotNull { provider ->
                 var processor: SymbolProcessor? = null
-                handleException {
+                handleException(project) {
                     processor = provider.create(SymbolProcessorEnvironment(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger))
                 }?.let { analysisResult -> return@doAnalysis analysisResult }
                 if (logger.hasError()) {
@@ -161,7 +165,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         }
         if (!logger.hasError()) {
             processors.forEach processing@{ processor ->
-                handleException {
+                handleException(project) {
                     deferredSymbols[processor] = processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
                 }?.let { return it }
                 if (logger.hasError()) {
@@ -186,14 +190,14 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (logger.hasError()) {
             finished = true
             processors.forEach { processor ->
-                handleException {
+                handleException(project) {
                     processor.onError()
                 }?.let { return it }
             }
         } else {
             if (finished) {
                 processors.forEach { processor ->
-                    handleException {
+                    handleException(project) {
                         processor.finish()
                     }?.let { return it }
                 }
@@ -237,17 +241,27 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         return (this as MessageCollectorBasedKSPLogger).recordedEvents.any { it.severity == CompilerMessageSeverity.ERROR || it.severity == CompilerMessageSeverity.EXCEPTION }
     }
 
-    private fun handleException(call: () -> Unit): AnalysisResult? {
+    private fun handleException(project: Project, call: () -> Unit): AnalysisResult? {
         try {
             call()
         } catch (e: Exception) {
             // Throws KSP exceptions
-            if (e.stackTrace.first().className.startsWith(KSP_PACKAGE_NAME)) {
-                return AnalysisResult.internalError(BindingContext.EMPTY, e)
-            } else {
-                val sw = StringWriter()
-                e.printStackTrace(PrintWriter(sw))
-                logger.error(sw.toString())
+            when {
+                e is KSPCompilationError -> {
+                    logger.error("${project.findLocationString(e.file, e.offset)}: ${e.message}")
+                    logger.reportAll()
+                    return AnalysisResult.compilationError(BindingContext.EMPTY)
+                }
+
+                e.stackTrace.first().className.startsWith(KSP_PACKAGE_NAME) -> {
+                    return AnalysisResult.internalError(BindingContext.EMPTY, e)
+                }
+
+                else -> {
+                    val sw = StringWriter()
+                    e.printStackTrace(PrintWriter(sw))
+                    logger.error(sw.toString())
+                }
             }
         }
         return null
