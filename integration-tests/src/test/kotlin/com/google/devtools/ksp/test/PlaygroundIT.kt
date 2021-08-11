@@ -54,6 +54,13 @@ class PlaygroundIT {
         gradleRunner.buildAndCheck("--configuration-cache", "clean", "build")
     }
 
+    /** Regression test for https://github.com/google/ksp/issues/518. */
+    @Test
+    fun testBuildWithConfigureOnDemand() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("--configure-on-demand", ":workload:build")
+    }
+
     @Test
     fun testBuildCache() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
