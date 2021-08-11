@@ -29,6 +29,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -268,14 +269,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinCompileTask = kotlinCompileProvider.get()
 
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
-            kspTask.options =
-                getSubpluginOptions(
-                    project,
-                    kspExtension,
-                    nonEmptyKspConfigurations,
-                    sourceSetName,
-                    isIncremental
-                )
+            kspTask.options.addAll(
+                kspTask.project.provider {
+                    getSubpluginOptions(
+                        project,
+                        kspExtension,
+                        nonEmptyKspConfigurations,
+                        sourceSetName,
+                        isIncremental
+                    )
+                }
+            )
             kspTask.destination = kspOutputDir
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.pluginConfigurationName = kotlinCompilation.pluginConfigurationName
@@ -406,7 +410,7 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
 
 interface KspTask : Task {
     @get:Internal
-    var options: List<SubpluginOption>
+    val options: ListProperty<SubpluginOption>
 
     @get:OutputDirectory
     var destination: File
@@ -566,7 +570,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         if (blockOtherCompilerPlugins) {
             args.blockOtherPlugins(project, pluginConfigurationName)
         }
-        args.addPluginOptions(options)
+        args.addPluginOptions(options.get())
         args.destinationAsFile = destination
         args.allowNoSourceFiles = true
     }
@@ -637,7 +641,7 @@ abstract class KspTaskJS @Inject constructor(
         if (blockOtherCompilerPlugins) {
             args.blockOtherPlugins(project, pluginConfigurationName)
         }
-        args.addPluginOptions(options)
+        args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
     }
 
@@ -694,7 +698,7 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         if (blockOtherCompilerPlugins) {
             args.blockOtherPlugins(project, pluginConfigurationName)
         }
-        args.addPluginOptions(options)
+        args.addPluginOptions(options.get())
         args.destination = destination.canonicalPath
     }
 
@@ -720,7 +724,7 @@ abstract class KspTaskNative @Inject constructor(
     injected: KotlinNativeCompilationData<*>
 ) : KotlinNativeCompile(injected), KspTask {
     override fun buildCompilerArgs(): List<String> {
-        val kspOptions = options.flatMap { listOf("-P", it.toArg()) }
+        val kspOptions = options.get().flatMap { listOf("-P", it.toArg()) }
         return super.buildCompilerArgs() + kspOptions
     }
 
