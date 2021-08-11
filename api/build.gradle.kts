@@ -2,6 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processing API"
 
+val signingKey: String? by project
+val signingPassword: String? by project
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
 }
@@ -9,6 +12,7 @@ tasks.withType<KotlinCompile> {
 plugins {
     kotlin("jvm")
     `maven-publish`
+    signing
     id("org.jetbrains.dokka") version ("1.4.32")
 }
 
@@ -38,4 +42,9 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    isRequired = hasProperty("signingKey") && !gradle.taskGraph.hasTask("publishToMavenLocal")
+    sign(publishing.publications.findByName("default"))
 }

@@ -1,11 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val kotlinBaseVersion: String by project
+val signingKey: String? by project
+val signingPassword: String? by project
 
 plugins {
     kotlin("jvm")
     id("com.github.johnrengelman.shadow") version "6.0.0"
     `maven-publish`
+    signing
 }
 
 val packedJars by configurations.creating
@@ -77,4 +80,10 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    isRequired = hasProperty("signingKey") && !gradle.taskGraph.hasTask("publishToMavenLocal")
+    sign(publishing.publications.findByName("shadow"))
+    sign(publishing.publications.findByName("cmdline"))
 }
