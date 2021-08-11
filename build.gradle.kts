@@ -3,6 +3,8 @@ import com.google.devtools.ksp.configureKtlintApplyToIdea
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+val sonatypeUserName: String? by project
+val sonatypePassword: String? by project
 if (!extra.has("kspVersion")) {
     val kotlinBaseVersion: String by project
     val today = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)
@@ -12,6 +14,21 @@ repositories {
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
 }
+
+plugins {
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+}
+
+nexusPublishing {
+    packageGroup.set("com.google.devtools.ksp")
+    repositories {
+        sonatype {
+            username.set(sonatypeUserName)
+            password.set(sonatypePassword)
+        }
+    }
+}
+
 project.configureKtlintApplyToIdea()
 subprojects {
     group = "com.google.devtools.ksp"
