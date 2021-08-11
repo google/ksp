@@ -6,6 +6,8 @@ val kotlinBaseVersion: String by project
 val junitVersion: String by project
 val googleTruthVersion: String by project
 val agpBaseVersion: String by project
+val signingKey: String? by project
+val signingPassword: String? by project
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
@@ -15,6 +17,7 @@ plugins {
     kotlin("jvm")
     id("java-gradle-plugin")
     `maven-publish`
+    signing
     id("org.jetbrains.dokka") version ("1.4.32")
 }
 
@@ -77,6 +80,11 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    isRequired = hasProperty("signingKey") && !gradle.taskGraph.hasTask("publishToMavenLocal")
+    sign(publishing.publications.findByName("pluginMaven"))
 }
 
 /**
