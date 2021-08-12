@@ -84,6 +84,5 @@ publishing {
 
 signing {
     isRequired = hasProperty("signingKey") && !gradle.taskGraph.hasTask("publishToMavenLocal")
-    sign(publishing.publications.findByName("shadow"))
-    sign(publishing.publications.findByName("cmdline"))
+    sign(extensions.getByType<PublishingExtension>().publications)
 }
