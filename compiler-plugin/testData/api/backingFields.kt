@@ -20,6 +20,8 @@
 // EXPECTED:
 // lib.BaseClass.abstractProp_willBeBacked: false
 // lib.BaseClass.abstractProp_wontBeBacked: false
+// lib.BaseClass.lateinit_var_1: true
+// lib.BaseClass.lateinit_var_2: true
 // lib.BaseClass.notOverriddenAbstractProp: true
 // lib.BaseClass.overriddenBaseProp_willBeBacked: true
 // lib.BaseClass.overriddenBaseProp_wontBeBacked: true
@@ -27,6 +29,9 @@
 // lib.ChildClass.abstractProp_wontBeBacked: false
 // lib.ChildClass.interfaceProp_willBeBacked: true
 // lib.ChildClass.interfaceProp_wontBeBacked: false
+// lib.ChildClass.lateinit_var_1: false
+// lib.ChildClass.lateinit_var_2: true
+// lib.ChildClass.lateinit_var_3: true
 // lib.ChildClass.overriddenBaseProp_willBeBacked: true
 // lib.ChildClass.overriddenBaseProp_wontBeBacked: false
 // lib.DataClass.value_Param: true
@@ -35,7 +40,9 @@
 // lib.JavaClass.javaFieldWithAccessors: true
 // lib.MyInterface.interfaceProp_willBeBacked: false
 // lib.MyInterface.interfaceProp_wontBeBacked: false
+// lib.MyInterface.lateinit_var_3: false
 // lib.NormalClass.jvmField_withBacking: true
+// lib.NormalClass.lateinit_var: true
 // lib.NormalClass.value: true
 // lib.NormalClass.value_Param: true
 // lib.NormalClass.value_noBacking: false
@@ -44,6 +51,7 @@
 // lib.NormalClass.variable_Param: true
 // lib.NormalClass.variable_noBacking: false
 // lib.NormalClass.variable_withBacking: true
+// lib.lateinit_var: true
 // lib.value: true
 // lib.value_noBacking: false
 // lib.value_withBacking: true
@@ -52,6 +60,8 @@
 // lib.variable_withBacking: true
 // main.BaseClass.abstractProp_willBeBacked: false
 // main.BaseClass.abstractProp_wontBeBacked: false
+// main.BaseClass.lateinit_var_1: true
+// main.BaseClass.lateinit_var_2: true
 // main.BaseClass.notOverriddenAbstractProp: true
 // main.BaseClass.overriddenBaseProp_willBeBacked: true
 // main.BaseClass.overriddenBaseProp_wontBeBacked: true
@@ -59,6 +69,9 @@
 // main.ChildClass.abstractProp_wontBeBacked: false
 // main.ChildClass.interfaceProp_willBeBacked: true
 // main.ChildClass.interfaceProp_wontBeBacked: false
+// main.ChildClass.lateinit_var_1: false
+// main.ChildClass.lateinit_var_2: true
+// main.ChildClass.lateinit_var_3: true
 // main.ChildClass.overriddenBaseProp_willBeBacked: true
 // main.ChildClass.overriddenBaseProp_wontBeBacked: false
 // main.DataClass.value_Param: true
@@ -67,6 +80,8 @@
 // main.JavaClass.javaFieldWithAccessors: true
 // main.MyInterface.interfaceProp_willBeBacked: false
 // main.MyInterface.interfaceProp_wontBeBacked: false
+// main.MyInterface.lateinit_var_3: false
+// main.NormalClass.lateinit_var: true
 // main.NormalClass.value: true
 // main.NormalClass.value_Param: true
 // main.NormalClass.value_noBacking: false
@@ -75,6 +90,7 @@
 // main.NormalClass.variable_Param: true
 // main.NormalClass.variable_noBacking: false
 // main.NormalClass.variable_withBacking: true
+// main.lateinit_var: true
 // main.value: true
 // main.value_noBacking: false
 // main.value_withBacking: true
@@ -98,6 +114,7 @@ val value_withBacking: String = ""
     get() = field
 var variable_withBacking: String? = null
     get() = field
+lateinit var lateinit_var: String
 
 data class DataClass(
     val value_Param: String,
@@ -121,6 +138,7 @@ class NormalClass(
     var variable_withBacking: String? = null
         get() = field
     val jvmField_withBacking: String = ""
+    lateinit var lateinit_var: String
 }
 
 abstract class BaseClass {
@@ -129,11 +147,14 @@ abstract class BaseClass {
     open val notOverriddenAbstractProp: String = ""
     abstract val abstractProp_willBeBacked: String
     abstract val abstractProp_wontBeBacked: String
+    open lateinit var lateinit_var_1: String
+    open lateinit var lateinit_var_2: String
 }
 
 interface MyInterface {
     val interfaceProp_willBeBacked: String
     val interfaceProp_wontBeBacked: String
+    var lateinit_var_3: String
 }
 
 class ChildClass: BaseClass(), MyInterface {
@@ -146,6 +167,11 @@ class ChildClass: BaseClass(), MyInterface {
     override val interfaceProp_willBeBacked: String = ""
     override val interfaceProp_wontBeBacked: String
         get() = ""
+    override var lateinit_var_1: String
+        get() = ""
+        set(v: String) = Unit
+    override var lateinit_var_2: String = ""
+    override lateinit var lateinit_var_3: String
 }
 
 // FILE: lib/JavaClass.java
@@ -179,6 +205,7 @@ val value_withBacking: String = ""
     get() = field
 var variable_withBacking: String? = null
     get() = field
+lateinit var lateinit_var: String
 
 data class DataClass(
     val value_Param: String,
@@ -201,6 +228,7 @@ class NormalClass(
         get() = field
     var variable_withBacking: String? = null
         get() = field
+    lateinit var lateinit_var: String
 }
 
 abstract class BaseClass {
@@ -209,11 +237,14 @@ abstract class BaseClass {
     open val notOverriddenAbstractProp: String = ""
     abstract val abstractProp_willBeBacked: String
     abstract val abstractProp_wontBeBacked: String
+    open lateinit var lateinit_var_1: String
+    open lateinit var lateinit_var_2: String
 }
 
 interface MyInterface {
     val interfaceProp_willBeBacked: String
     val interfaceProp_wontBeBacked: String
+    var lateinit_var_3: String
 }
 
 class ChildClass: BaseClass(), MyInterface {
@@ -226,6 +257,11 @@ class ChildClass: BaseClass(), MyInterface {
     override val interfaceProp_willBeBacked: String = ""
     override val interfaceProp_wontBeBacked: String
         get() = ""
+    override var lateinit_var_1: String
+        get() = ""
+        set(v: String) = Unit
+    override var lateinit_var_2: String = ""
+    override lateinit var lateinit_var_3: String
 }
 
 // FILE: main/JavaClass.java

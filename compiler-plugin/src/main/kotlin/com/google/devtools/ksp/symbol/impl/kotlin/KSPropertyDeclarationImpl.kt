@@ -26,12 +26,11 @@ import com.google.devtools.ksp.symbol.impl.binary.KSPropertySetterDescriptorImpl
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptorWithAccessors
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
-import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.hasBackingField
 
 class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration, KSDeclarationImpl(ktProperty),
     KSExpectActual by KSExpectActualImpl(ktProperty) {
@@ -60,7 +59,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     override val hasBackingField: Boolean
-        get() = ktProperty.initializer != null
+        get() = ktProperty.initializer != null || ktProperty.hasModifier(KtTokens.LATEINIT_KEYWORD)
 
     override val getter: KSPropertyGetter? by lazy {
         ktProperty.getter?.let {
