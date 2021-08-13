@@ -4,9 +4,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, kotlin-1.5.21 ]
+    branches: [ main, kotlin-1.5.30 ]
   pull_request:
-    branches: [ main, kotlin-1.5.21 ]
+    branches: [ main, kotlin-1.5.30 ]
 
 jobs:
   build-and-test:
