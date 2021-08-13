@@ -35,6 +35,7 @@ class PlaygroundIT {
     fun testPlayground() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build")
+        gradleRunner.buildAndCheck("clean", "build")
     }
 
     // TODO: add another plugin and see if it is blocked.
@@ -45,13 +46,8 @@ class PlaygroundIT {
 
         File(project.root, "workload/build.gradle.kts").appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
         gradleRunner.buildAndCheck("clean", "build")
+        gradleRunner.buildAndCheck("clean", "build")
         project.restore("workload/build.gradle.kts")
-    }
-
-    @Test
-    fun testBuildWithConfigurationCache() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        gradleRunner.buildAndCheck("--configuration-cache", "clean", "build")
     }
 
     /** Regression test for https://github.com/google/ksp/issues/518. */
