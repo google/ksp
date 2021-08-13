@@ -28,6 +28,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -282,7 +283,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
             kspTask.destination = kspOutputDir
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
-            kspTask.pluginConfigurationName = kotlinCompilation.pluginConfigurationName
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
             kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName)).disallowChanges()
 
@@ -293,6 +293,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             nonEmptyKspConfigurations.forEach {
                 kspTask.dependsOn(it.buildDependencies)
+            }
+
+            if (kspExtension.blockOtherCompilerPlugins) {
+                // FIXME: ask upstream to provide an API to make this not implementation-dependent.
+                val cfg = project.configurations.getByName(kotlinCompilation.pluginConfigurationName)
+                kspTask.overridePluginClasspath.value(
+                    kspTask.project.provider {
+                        val dep = cfg.dependencies.single { it.name == KSP_ARTIFACT_NAME }
+                        cfg.fileCollection(dep)
+                    }
+                )
             }
         }
 
@@ -415,8 +426,10 @@ interface KspTask : Task {
     @get:OutputDirectory
     var destination: File
 
-    @get:Internal
-    var pluginConfigurationName: String
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    val overridePluginClasspath: Property<FileCollection>
 
     @get:Input
     var blockOtherCompilerPlugins: Boolean
@@ -568,7 +581,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
             ignoreClasspathResolutionErrors
         ))
         if (blockOtherCompilerPlugins) {
-            args.blockOtherPlugins(project, pluginConfigurationName)
+            args.blockOtherPlugins(overridePluginClasspath.get())
         }
         args.addPluginOptions(options.get())
         args.destinationAsFile = destination
@@ -639,7 +652,7 @@ abstract class KspTaskJS @Inject constructor(
             ignoreClasspathResolutionErrors
         ))
         if (blockOtherCompilerPlugins) {
-            args.blockOtherPlugins(project, pluginConfigurationName)
+            args.blockOtherPlugins(overridePluginClasspath.get())
         }
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
@@ -696,7 +709,7 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
             ignoreClasspathResolutionErrors
         ))
         if (blockOtherCompilerPlugins) {
-            args.blockOtherPlugins(project, pluginConfigurationName)
+            args.blockOtherPlugins(overridePluginClasspath.get())
         }
         args.addPluginOptions(options.get())
         args.destination = destination.canonicalPath
@@ -726,6 +739,12 @@ abstract class KspTaskNative @Inject constructor(
     override fun buildCompilerArgs(): List<String> {
         val kspOptions = options.get().flatMap { listOf("-P", it.toArg()) }
         return super.buildCompilerArgs() + kspOptions
+    }
+
+    override fun buildCommonArgs(defaultsOnly: Boolean): List<String> {
+        if (blockOtherCompilerPlugins)
+            compilerPluginClasspath = overridePluginClasspath.get()
+        return super.buildCommonArgs(defaultsOnly)
     }
 
     override fun configureCompilation(
@@ -781,11 +800,8 @@ fun CommonCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
     }
 }
 
-private fun CommonCompilerArguments.blockOtherPlugins(project: Project, pluginConfigurationName: String) {
-    // FIXME: ask upstream to provide an API to make this not implementation-dependent.
-    val cfg = project.configurations.getByName(pluginConfigurationName)
-    val dep = cfg.dependencies.single { it.name == KspGradleSubplugin.KSP_ARTIFACT_NAME }
-    pluginClasspaths = cfg.files(dep).map { it.canonicalPath }.toTypedArray()
+private fun CommonCompilerArguments.blockOtherPlugins(kspPluginClasspath: FileCollection) {
+    pluginClasspaths = kspPluginClasspath.map { it.canonicalPath }.toTypedArray()
     pluginOptions = arrayOf()
 
 }
