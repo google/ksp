@@ -1,6 +1,6 @@
 # Quickstart
 
-[Here's](https://github.com/google/ksp/releases/download/1.5.21-1.0.0-beta06/playground.zip) a sample processor that you can check out.
+[Here's](https://github.com/google/ksp/releases/download/1.5.21-1.0.0-beta07/playground.zip) a sample processor that you can check out.
 
 ## Create a processor of your own
 
@@ -21,7 +21,6 @@
 
 * Add a module for hosting the processor.
 * In the module's `build.gradle.kts` file, do the following:
-    * Add `google()` to repositories so that Gradle can find our plugins.
     * Apply Kotlin plugin
     * Add the KSP API to the `dependencies` block.
 
@@ -32,11 +31,10 @@
 
   repositories {
       mavenCentral()
-      google()
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.5.21-1.0.0-beta06")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.5.21-1.0.0-beta07")
   }
   ```
 
@@ -65,13 +63,11 @@
 <summary>Setup using Kotlin DSL</summary>
   
 * Create another module that contains a workload where you want to try out your processor.
-* In the project's `settings.gradle.kts`, add `google()` to `repositories` for the KSP plugin.
   
   ```kotlin
   pluginManagement {
       repositories {
          gradlePluginPortal()
-         google()
       }
   }
   ```
@@ -85,7 +81,7 @@
 
   ```kotlin
   plugins {
-      id("com.google.devtools.ksp") version "1.5.21-1.0.0-beta06"
+      id("com.google.devtools.ksp") version "1.5.21-1.0.0-beta07"
       kotlin("jvm") 
   }
 
@@ -93,7 +89,6 @@
 
   repositories {
       mavenCentral()
-      google()
   }
 
   dependencies {
@@ -107,13 +102,11 @@
 <details>
 <summary>Setup using Groovy</summary>
 
-* In the projects `settings.gradle`, add `google()` to `repositories` for the KSP plugin:
     
   ```groovy
   pluginManagement {
     repositories {
         gradlePluginPortal()
-        google()
     }
   }
   ```
@@ -121,7 +114,7 @@
 
   ```groovy
   plugins {
-    id "com.google.devtools.ksp" version "1.5.21-1.0.0-beta06"
+    id "com.google.devtools.ksp" version "1.5.21-1.0.0-beta07"
   }
   ```
   
