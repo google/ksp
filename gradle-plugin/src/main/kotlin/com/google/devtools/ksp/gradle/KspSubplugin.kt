@@ -322,18 +322,18 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
             is KotlinNativeCompile -> {
                 val kspTaskClass = KspTaskNative::class.java
+                val pluginConfigurationName =
+                    (kotlinCompileTask.compilation as AbstractKotlinNativeCompilation).pluginConfigurationName
+                project.configurations.getByName(pluginConfigurationName).dependencies.add(
+                    project.dependencies.create(apiArtifact)
+                )
                 project.tasks.register(kspTaskName, kspTaskClass, kotlinCompileTask.compilation).apply {
                     configure { kspTask ->
                         configureAsKspTask(kspTask, false)
                         configureAsAbstractCompile(kspTask)
 
                         // KotlinNativeCompile computes -Xplugin=... from compilerPluginClasspath.
-                        val pluginConfigurationName =
-                            (kotlinCompileTask.compilation as AbstractKotlinNativeCompilation).pluginConfigurationName
-                        val compilerPluginCP = project.configurations.getByName(pluginConfigurationName)
-                        val apiDep = project.dependencies.create(apiArtifact)
-                        compilerPluginCP.dependencies.add(apiDep)
-                        kspTask.compilerPluginClasspath = compilerPluginCP
+                        kspTask.compilerPluginClasspath = project.configurations.getByName(pluginConfigurationName)
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
                     }
                 }
