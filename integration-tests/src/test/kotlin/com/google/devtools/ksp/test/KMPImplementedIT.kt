@@ -63,5 +63,9 @@ class KMPImplementedIT {
 
         verifyKexe("workload/build/bin/linuxX64/debugExecutable/workload.kexe")
         verifyKexe("workload/build/bin/linuxX64/releaseExecutable/workload.kexe")
+        verifyKexe("workload/build/bin/androidNativeX64/debugExecutable/workload.so")
+        verifyKexe("workload/build/bin/androidNativeX64/releaseExecutable/workload.so")
+        verifyKexe("workload/build/bin/androidNativeArm64/debugExecutable/workload.so")
+        verifyKexe("workload/build/bin/androidNativeArm64/releaseExecutable/workload.so")
     }
 }
