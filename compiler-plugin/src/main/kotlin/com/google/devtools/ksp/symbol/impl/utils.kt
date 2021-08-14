@@ -41,19 +41,23 @@ import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.siblings
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
+import org.jetbrains.kotlin.resolve.descriptorUtil.isCompanionObject
 import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
 import org.jetbrains.kotlin.resolve.source.getPsi
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 private val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -488,7 +492,14 @@ internal object BinaryFieldsCache : KSObjectCache<ClassId, Set<Name>>() {
  * They always return non-null for backing field even when they don't have a backing field.
  */
 private fun DeserializedPropertyDescriptor.hasBackingFieldInBinaryClass(): Boolean {
-    val kotlinJvmBinaryClass = this.getContainingKotlinJvmBinaryClass() ?: return false
+    val kotlinJvmBinaryClass = if (containingDeclaration.isCompanionObject()) {
+        // Companion objects have backing fields in containing classes.
+        // https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-fields
+        val container = containingDeclaration.containingDeclaration as? DeserializedClassDescriptor
+        container?.source?.safeAs<KotlinJvmBinarySourceElement>()?.binaryClass
+    } else {
+        this.getContainingKotlinJvmBinaryClass()
+    } ?: return false
     return BinaryFieldsCache.getCached(kotlinJvmBinaryClass).contains(name)
 }
 
