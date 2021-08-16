@@ -35,7 +35,8 @@ class KMPImplementedIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         // KotlinNative doesn't support configuration cache yet.
-        val resultCleanBuild = gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
+        val resultCleanBuild = gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build")
+            .build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 

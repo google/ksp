@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -39,12 +38,12 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
 
     inner class CompanionVisitor : KSVisitorVoid() {
         override fun visitFile(file: KSFile, data: Unit) {
-            file.declarations.forEach{ it.accept(this, Unit) }
+            file.declarations.forEach { it.accept(this, Unit) }
         }
 
         override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
             results.add("${type.simpleName.asString()}:${type.isCompanionObject}")
-            type.declarations.forEach{ it.accept(this, Unit) }
+            type.declarations.forEach { it.accept(this, Unit) }
         }
     }
 }

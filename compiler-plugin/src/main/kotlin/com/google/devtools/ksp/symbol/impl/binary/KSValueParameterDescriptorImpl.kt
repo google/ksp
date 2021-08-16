@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
+import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
-import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
 
 class KSValueParameterDescriptorImpl private constructor(val descriptor: ValueParameterDescriptor) : KSValueParameter {
     companion object : KSObjectCache<ValueParameterDescriptor, KSValueParameterDescriptorImpl>() {
-        fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) { KSValueParameterDescriptorImpl(descriptor) }
+        fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) {
+            KSValueParameterDescriptorImpl(descriptor)
+        }
     }
 
     override val origin by lazy {

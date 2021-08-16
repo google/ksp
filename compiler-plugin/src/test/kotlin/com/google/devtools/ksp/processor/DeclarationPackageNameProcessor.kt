@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -31,7 +30,7 @@ class DeclarationPackageNameProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val visitor = NameCollector()
-        resolver.getNewFiles().forEach{ it.accept(visitor, result) }
+        resolver.getNewFiles().forEach { it.accept(visitor, result) }
         listOf("K1", "J1").mapNotNull {
             resolver.getClassDeclarationByName(resolver.getKSNameFromString(it))
         }.forEach {
@@ -46,7 +45,9 @@ class NameCollector : KSTopDownVisitor<MutableCollection<String>, Unit>() {
     override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {}
 
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableCollection<String>) {
-        classDeclaration.packageName.asString().let { data.add("${if (it == "") "<no name>" else it}:${classDeclaration.simpleName.asString()}") }
+        classDeclaration.packageName.asString().let {
+            data.add("${if (it == "") "<no name>" else it}:${classDeclaration.simpleName.asString()}")
+        }
         super.visitClassDeclaration(classDeclaration, data)
     }
 
@@ -65,7 +66,9 @@ class NameCollector : KSTopDownVisitor<MutableCollection<String>, Unit>() {
     }
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: MutableCollection<String>) {
-        property.packageName.asString().let { data.add("${if (it == "") "<no name>" else it}:${property.simpleName.asString()}") }
+        property.packageName.asString().let {
+            data.add("${if (it == "") "<no name>" else it}:${property.simpleName.asString()}")
+        }
         super.visitPropertyDeclaration(property, data)
     }
 }

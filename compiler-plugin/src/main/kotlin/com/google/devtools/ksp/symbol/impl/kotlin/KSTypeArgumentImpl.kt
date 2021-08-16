@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
@@ -48,7 +47,9 @@ abstract class KSTypeArgumentImpl : KSTypeArgument {
 
 class KSTypeArgumentKtImpl private constructor(val ktTypeArgument: KtTypeProjection) : KSTypeArgumentImpl() {
     companion object : KSObjectCache<KtTypeProjection, KSTypeArgumentKtImpl>() {
-        fun getCached(ktTypeArgument: KtTypeProjection) = cache.getOrPut(ktTypeArgument) { KSTypeArgumentKtImpl(ktTypeArgument) }
+        fun getCached(ktTypeArgument: KtTypeProjection) = cache.getOrPut(ktTypeArgument) {
+            KSTypeArgumentKtImpl(ktTypeArgument)
+        }
     }
 
     override val origin = Origin.KOTLIN

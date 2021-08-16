@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -31,19 +30,22 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
         val references = mutableSetOf<KSTypeReference>()
 
         files.forEach {
-            it.accept(object: KSTopDownVisitor<Unit, Unit>(){
-                override fun defaultHandler(node: KSNode, data: Unit) = Unit
+            it.accept(
+                object : KSTopDownVisitor<Unit, Unit>() {
+                    override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-                    super.visitClassDeclaration(classDeclaration, Unit)
-                    classes.add(classDeclaration)
-                }
+                    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+                        super.visitClassDeclaration(classDeclaration, Unit)
+                        classes.add(classDeclaration)
+                    }
 
-                override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {
-                    super.visitTypeReference(typeReference, data)
-                    references.add(typeReference)
-                }
-            }, Unit)
+                    override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {
+                        super.visitTypeReference(typeReference, data)
+                        references.add(typeReference)
+                    }
+                },
+                Unit
+            )
         }
 
         val composed = mutableSetOf<KSType>()

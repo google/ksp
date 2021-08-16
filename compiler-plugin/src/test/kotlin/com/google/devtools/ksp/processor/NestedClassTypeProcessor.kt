@@ -15,11 +15,17 @@ class NestedClassTypeProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val c = resolver.getClassDeclarationByName("C")!!
         c.declarations.filterIsInstance<KSPropertyDeclaration>()
-                .forEach{
-                    result.add(it.simpleName.asString())
-                    result.add(it.type.resolve().arguments.map { it.type?.annotations?.joinToString(separator = ",") { it.toString() } }.joinToString())
-                    result.add(it.type.resolve().arguments.joinToString(separator = ",") { it.toString() })
-                }
+            .forEach {
+                result.add(it.simpleName.asString())
+                result.add(
+                    it.type.resolve().arguments.map {
+                        it.type?.annotations?.joinToString(separator = ",") {
+                            it.toString()
+                        }
+                    }.joinToString()
+                )
+                result.add(it.type.resolve().arguments.joinToString(separator = ",") { it.toString() })
+            }
         return emptyList()
     }
 }

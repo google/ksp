@@ -1,6 +1,5 @@
 package com.google.devtools.ksp.test
 
-import Artifact
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert

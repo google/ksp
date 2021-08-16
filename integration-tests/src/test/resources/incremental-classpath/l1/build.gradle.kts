@@ -16,4 +16,3 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(project(":l2"))
 }
-

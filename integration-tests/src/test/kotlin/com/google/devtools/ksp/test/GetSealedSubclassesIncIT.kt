@@ -36,20 +36,20 @@ class GetSealedSubclassesIncIT {
         )
 
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected2, outputs)
         }
 
         File(project.root, "workload/src/main/kotlin/com/example/Impl3.kt").appendText("package com.example\n\n")
         File(project.root, "workload/src/main/kotlin/com/example/Impl3.kt").appendText("class Impl3 : Sealed()\n")
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected3, outputs)
         }
 
         File(project.root, "workload/src/main/kotlin/com/example/Impl3.kt").delete()
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected2, outputs)
         }
     }

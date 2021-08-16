@@ -20,14 +20,10 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.*
 
 @Suppress("unused") // used by tests
-class OverrideeProcessor: AbstractTestProcessor() {
+class OverrideeProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun toResult() = results
@@ -47,7 +43,7 @@ class OverrideeProcessor: AbstractTestProcessor() {
         return emptyList()
     }
 
-    private fun logSubject(resolver: Resolver, qName:String) {
+    private fun logSubject(resolver: Resolver, qName: String) {
         results.add("$qName:")
         val subject = resolver.getClassDeclarationByName(qName)!!
         subject.declarations.filterIsInstance<KSClassDeclaration>().forEach {
@@ -69,13 +65,15 @@ class OverrideeProcessor: AbstractTestProcessor() {
     }
 
     private fun checkOverridee(declaration: KSDeclaration) {
-        val signature = if (declaration is KSPropertyDeclaration) declaration.toSignature() else (declaration as KSFunctionDeclaration).toSignature()
-        val overrideeSignature = if (declaration is KSPropertyDeclaration) declaration.findOverridee()?.toSignature() else (declaration as KSFunctionDeclaration).findOverridee()?.toSignature()
+        val signature = if (declaration is KSPropertyDeclaration) declaration.toSignature() else
+            (declaration as KSFunctionDeclaration).toSignature()
+        val overrideeSignature = if (declaration is KSPropertyDeclaration) declaration.findOverridee()?.toSignature()
+        else (declaration as KSFunctionDeclaration).findOverridee()?.toSignature()
         results.add("$signature -> $overrideeSignature")
     }
 
     private fun KSDeclaration.toSignature(): String {
-        return when(this) {
+        return when (this) {
             is KSFunctionDeclaration -> this.toSignature()
             is KSPropertyDeclaration -> this.toSignature()
             else -> throw IllegalStateException()
@@ -110,4 +108,3 @@ class OverrideeProcessor: AbstractTestProcessor() {
         private val IGNORED_METHOD_NAMES = listOf("equals", "hashCode", "toString", "<init>")
     }
 }
-

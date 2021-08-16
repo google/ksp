@@ -52,14 +52,18 @@ import java.util.*
 abstract class PersistentMap<K : Comparable<K>, V>(
     storageFile: File,
     keyDescriptor: KeyDescriptor<K>,
-    valueExternalizer: DataExternalizer<V>
+    valueExternalizer: DataExternalizer<V>,
 ) : BasicMap<K, V>(storageFile, keyDescriptor, valueExternalizer) {
     abstract operator fun get(key: K): V?
     abstract operator fun set(key: K, value: V)
     abstract fun remove(key: K)
 }
 
-class FileToSymbolsMap(storageFile: File) : PersistentMap<File, Collection<LookupSymbol>>(storageFile, FileKeyDescriptor, CollectionExternalizer(LookupSymbolExternalizer, { HashSet() })) {
+class FileToSymbolsMap(storageFile: File) : PersistentMap<File, Collection<LookupSymbol>>(
+    storageFile,
+    FileKeyDescriptor,
+    CollectionExternalizer(LookupSymbolExternalizer, { HashSet() })
+) {
     override fun dumpKey(key: File): String = key.toString()
 
     override fun dumpValue(value: Collection<LookupSymbol>): String = value.toString()
@@ -113,7 +117,11 @@ object FileExternalizer : DataExternalizer<File> {
     }
 }
 
-class FileToFilesMap(storageFile: File) : PersistentMap<File, Collection<File>>(storageFile, FileKeyDescriptor, CollectionExternalizer(FileExternalizer, { HashSet() })) {
+class FileToFilesMap(storageFile: File) : PersistentMap<File, Collection<File>>(
+    storageFile,
+    FileKeyDescriptor,
+    CollectionExternalizer(FileExternalizer, { HashSet() })
+) {
 
     override operator fun get(key: File): Collection<File>? = storage[key]
 
@@ -124,7 +132,7 @@ class FileToFilesMap(storageFile: File) : PersistentMap<File, Collection<File>>(
     override fun dumpKey(key: File): String = key.path
 
     override fun dumpValue(value: Collection<File>) =
-            value.dumpCollection()
+        value.dumpCollection()
 
     override fun remove(key: File) {
         storage.remove(key)
@@ -142,7 +150,9 @@ object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
             return
 
         val name = declaration.simpleName.asString()
-        val scope = declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0))} ?: return
+        val scope =
+            declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) }
+                ?: return
         data(LookupSymbol(name, scope))
     }
 
@@ -163,9 +173,9 @@ internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConver
 }
 
 class IncrementalContext(
-        private val options: KspOptions,
-        private val componentProvider: ComponentProvider,
-        private val anyChangesWildcard: File
+    private val options: KspOptions,
+    private val componentProvider: ComponentProvider,
+    private val anyChangesWildcard: File,
 ) {
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
     private val updatedSymbols = MultiMap.createSet<File, LookupSymbol>()
@@ -189,10 +199,11 @@ class IncrementalContext(
     private val logsDir = File(options.cachesDir, "logs").apply { mkdirs() }
     private val buildTime = Date().time
 
-    private val modified = options.knownModified.map{ it.relativeTo(baseDir) }.toSet()
+    private val modified = options.knownModified.map { it.relativeTo(baseDir) }.toSet()
     private val removed = options.knownRemoved.map { it.relativeTo(baseDir) }.toSet()
 
     private val lookupTracker: LookupTracker = componentProvider.get()
+
     // Disable incremental processing if somehow DualLookupTracker failed to be registered.
     // This may happen when a platform hasn't support incremental compilation yet. E.g, Common / Metadata.
     private val isIncremental = options.incremental && lookupTracker is DualLookupTracker
@@ -222,11 +233,21 @@ class IncrementalContext(
     }
 
     private fun updateLookupCache(dirtyFiles: Collection<File>, removedOutputs: List<File>) {
-        symbolLookupCache.update(symbolLookupTracker, dirtyFiles, options.knownRemoved + removedOutputs.map { it.absoluteFile })
+        symbolLookupCache.update(
+            symbolLookupTracker, dirtyFiles,
+            options.knownRemoved + removedOutputs.map {
+                it.absoluteFile
+            }
+        )
         symbolLookupCache.flush(false)
         symbolLookupCache.close()
 
-        classLookupCache.update(classLookupTracker, dirtyFiles, options.knownRemoved + removedOutputs.map { it.absoluteFile })
+        classLookupCache.update(
+            classLookupTracker, dirtyFiles,
+            options.knownRemoved + removedOutputs.map {
+                it.absoluteFile
+            }
+        )
         classLookupCache.flush(false)
         classLookupCache.close()
     }
@@ -273,8 +294,10 @@ class IncrementalContext(
     }
 
     // Propagate dirtiness by source-output maps.
-    private fun calcDirtySetByOutputs(sourceToOutputs: FileToFilesMap,
-                                      initialSet: Set<File>): Set<File> {
+    private fun calcDirtySetByOutputs(
+        sourceToOutputs: FileToFilesMap,
+        initialSet: Set<File>,
+    ): Set<File> {
         val outputToSources = mutableMapOf<File, MutableSet<File>>()
         sourceToOutputs.keys.forEach { source ->
             if (source != anyChangesWildcard) {
@@ -348,7 +371,7 @@ class IncrementalContext(
         logFile.appendText("Dirty sources\n")
         dirtyFiles.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("Outputs to remove\n")
-        outputsToRemove.forEach { logFile.appendText("  $it\n")}
+        outputsToRemove.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("\n")
     }
 
@@ -429,7 +452,12 @@ class IncrementalContext(
         }
     }
 
-    private fun updateSourceToOutputs(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>, removedOutputs: List<File>) {
+    private fun updateSourceToOutputs(
+        dirtyFiles: Collection<File>,
+        outputs: Set<File>,
+        sourceToOutputs: Map<File, Set<File>>,
+        removedOutputs: List<File>,
+    ) {
         // Prune deleted sources in source-to-outputs map.
         removed.forEach {
             sourceToOutputsMap.remove(it)
@@ -468,7 +496,12 @@ class IncrementalContext(
             if (!dst.parentFile.exists())
                 copy(src.parentFile, dst.parentFile, false)
             if (overwrite) {
-                Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING)
+                Files.copy(
+                    src.toPath(),
+                    dst.toPath(),
+                    StandardCopyOption.COPY_ATTRIBUTES,
+                    StandardCopyOption.REPLACE_EXISTING
+                )
             } else {
                 Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES)
             }
@@ -506,14 +539,14 @@ class IncrementalContext(
         updateLookupCache(dirtyFiles, removedOutputs)
 
         // Update symbolsMap
-        fun <K: Comparable<K>, V> update(m: PersistentMap<K, Collection<V>>, u: MultiMap<K, V>) {
+        fun <K : Comparable<K>, V> update(m: PersistentMap<K, Collection<V>>, u: MultiMap<K, V>) {
             // Update symbol caches from modified files.
             u.keySet().forEach {
                 m.set(it, u[it].toSet())
             }
         }
 
-        fun <K: Comparable<K>, V> remove(m: PersistentMap<K, Collection<V>>, removedKeys: Collection<K>) {
+        fun <K : Comparable<K>, V> remove(m: PersistentMap<K, Collection<V>>, removedKeys: Collection<K>) {
             // Remove symbol caches from removed files.
             removedKeys.forEach {
                 m.remove(it)
@@ -563,7 +596,7 @@ class IncrementalContext(
     fun updateCachesAndOutputs(
         dirtyFiles: Collection<KSFile>,
         outputs: Set<File>,
-        sourceToOutputs: Map<File, Set<File>>
+        sourceToOutputs: Map<File, Set<File>>,
     ) = closeFilesOnException {
         if (!isIncremental)
             return
@@ -604,7 +637,7 @@ class IncrementalContext(
         //   1. definition of the name in the same package
         //   2. other * imports
         val onDemandImports =
-                psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
+            psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
         if (scope in onDemandImports) {
             record(psiFile.packageName, name)
             onDemandImports.forEach {
@@ -722,7 +755,8 @@ class IncrementalContext(
 
     fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
         val name = classDeclaration.simpleName.asString()
-        val scope = classDeclaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0))} ?: return
+        val scope = classDeclaration.qualifiedName?.asString()
+            ?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) } ?: return
         updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbol(name, scope))
     }
 
@@ -738,9 +772,9 @@ class IncrementalContext(
 }
 
 internal class DepInvalidator(
-        private val lookupCache: LookupStorage,
-        private val symbolsMap: FileToSymbolsMap,
-        changedFiles: Collection<File>
+    private val lookupCache: LookupStorage,
+    private val symbolsMap: FileToSymbolsMap,
+    changedFiles: Collection<File>,
 ) {
     private val visitedSyms = mutableSetOf<LookupSymbol>()
     val visitedFiles = mutableSetOf<File>().apply { addAll(changedFiles) }

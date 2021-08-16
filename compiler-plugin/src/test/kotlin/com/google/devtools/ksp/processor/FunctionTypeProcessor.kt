@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -42,7 +41,8 @@ open class FunctionTypeProcessor : AbstractTestProcessor() {
                         val typeName = type.declaration.simpleName.asString()
                         results.add("$propertyName: $typeName : ${type.isFunctionType}, ${type.isSuspendFunctionType}")
                     }
-                }, Unit
+                },
+                Unit
             )
         }
 
@@ -52,5 +52,4 @@ open class FunctionTypeProcessor : AbstractTestProcessor() {
     override fun toResult(): List<String> {
         return results.sorted()
     }
-
 }

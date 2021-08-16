@@ -15,20 +15,11 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
-import com.google.devtools.ksp.*
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassifierReference
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyAccessor
-import com.google.devtools.ksp.symbol.KSTypeArgument
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class LibOriginsProcessor : AbstractTestProcessor() {
@@ -42,7 +33,11 @@ class LibOriginsProcessor : AbstractTestProcessor() {
         override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
         override fun visitDeclaration(declaration: KSDeclaration, data: Unit) {
-            result.add("declaration: ${declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()}: ${declaration.origin.name}")
+            result.add(
+                "declaration: ${
+                declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
+                }: ${declaration.origin.name}"
+            )
             super.visitDeclaration(declaration, data)
         }
 

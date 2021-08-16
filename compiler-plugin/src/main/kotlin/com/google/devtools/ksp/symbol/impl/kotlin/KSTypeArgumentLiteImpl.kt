@@ -15,20 +15,22 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import org.jetbrains.kotlin.psi.KtTypeReference
 
-class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeReference, override val variance: Variance) : KSTypeArgumentImpl() {
+class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeReference, override val variance: Variance) :
+    KSTypeArgumentImpl() {
     companion object : KSObjectCache<Pair<KSTypeReference, Variance>, KSTypeArgumentLiteImpl>() {
         fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) {
             KSTypeArgumentLiteImpl(type, variance)
         }
 
-        fun getCached(type: KtTypeReference) = cache.getOrPut(Pair(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT)) {
+        fun getCached(type: KtTypeReference) = cache.getOrPut(
+            Pair(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT)
+        ) {
             KSTypeArgumentLiteImpl(KSTypeReferenceImpl.getCached(type), Variance.INVARIANT)
         }
     }

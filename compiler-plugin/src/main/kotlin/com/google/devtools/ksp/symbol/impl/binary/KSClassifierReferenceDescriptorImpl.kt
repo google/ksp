@@ -15,29 +15,41 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
-import org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
+import org.jetbrains.kotlin.descriptors.ClassifierDescriptorWithTypeParameters
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSClassifierReferenceDescriptorImpl private constructor(val descriptor: ClassifierDescriptor, val arguments: List<TypeProjection>, override val origin: Origin) :
+class KSClassifierReferenceDescriptorImpl private constructor(
+    val descriptor: ClassifierDescriptor,
+    val arguments: List<TypeProjection>,
+    override val origin: Origin,
+) :
     KSClassifierReference {
-    companion object : KSObjectCache<Triple<ClassifierDescriptor, List<TypeProjection>, Origin>, KSClassifierReferenceDescriptorImpl>() {
+    companion object : KSObjectCache
+    <Triple<ClassifierDescriptor, List<TypeProjection>, Origin>, KSClassifierReferenceDescriptorImpl>() {
         fun getCached(kotlinType: KotlinType, origin: Origin) = cache.getOrPut(
             Triple(
                 kotlinType.constructor.declarationDescriptor!!,
                 kotlinType.arguments,
                 origin
             )
-        ) { KSClassifierReferenceDescriptorImpl(kotlinType.constructor.declarationDescriptor!!, kotlinType.arguments, origin) }
+        ) {
+            KSClassifierReferenceDescriptorImpl(
+                kotlinType.constructor.declarationDescriptor!!,
+                kotlinType.arguments,
+                origin
+            )
+        }
 
         fun getCached(descriptor: ClassifierDescriptor, arguments: List<TypeProjection>, origin: Origin) =
-            cache.getOrPut(Triple(descriptor, arguments, origin)) { KSClassifierReferenceDescriptorImpl(descriptor, arguments, origin) }
+            cache.getOrPut(Triple(descriptor, arguments, origin)) {
+                KSClassifierReferenceDescriptorImpl(descriptor, arguments, origin)
+            }
     }
 
     private val nDeclaredArgs by lazy {
@@ -61,8 +73,10 @@ class KSClassifierReferenceDescriptorImpl private constructor(val descriptor: Cl
             emptyList()
         else
             arguments.subList(0, nDeclaredArgs)
-        return descriptor.name.asString() + if (declaredArgs.isNotEmpty()) "<${declaredArgs.map { it.toString() }
-            .joinToString(", ")}>" else ""
+        return descriptor.name.asString() + if (declaredArgs.isNotEmpty()) "<${
+        declaredArgs.map { it.toString() }
+            .joinToString(", ")
+        }>" else ""
     }
 
     override fun toString() = referencedName()

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -43,7 +42,7 @@ class CodeGeneratorImpl(
 
     // This function will also clear `fileOutputStreamMap` which will change the result of `generatedFile`
     internal fun closeFiles() {
-        fileOutputStreamMap.keys.forEach{
+        fileOutputStreamMap.keys.forEach {
             fileOutputStreamMap[it]!!.close()
         }
         fileOutputStreamMap.clear()
@@ -51,17 +50,22 @@ class CodeGeneratorImpl(
 
     fun pathOf(packageName: String, fileName: String, extensionName: String): String {
         val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
-        val extension = if (extensionName != "") ".${extensionName}" else ""
+        val extension = if (extensionName != "") ".$extensionName" else ""
         val typeRoot = when (extensionName) {
             "class" -> classDir
             "java" -> javaDir
             "kt" -> kotlinDir
             else -> resourcesDir
         }.path
-        return "$typeRoot$separator$packageDirs$fileName${extension}"
+        return "$typeRoot$separator$packageDirs$fileName$extension"
     }
 
-    override fun createNewFile(dependencies: Dependencies, packageName: String, fileName: String, extensionName: String): OutputStream {
+    override fun createNewFile(
+        dependencies: Dependencies,
+        packageName: String,
+        fileName: String,
+        extensionName: String
+    ): OutputStream {
         val path = pathOf(packageName, fileName, extensionName)
         if (fileOutputStreamMap[path] == null) {
             if (fileMap[path] == null) {

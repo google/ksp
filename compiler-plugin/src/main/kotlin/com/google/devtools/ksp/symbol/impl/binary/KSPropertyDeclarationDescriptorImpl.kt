@@ -15,19 +15,21 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import org.jetbrains.kotlin.descriptors.*
 
-class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) : KSPropertyDeclaration,
+class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) :
+    KSPropertyDeclaration,
     KSDeclarationDescriptorImpl(descriptor),
     KSExpectActual by KSExpectActualDescriptorImpl(descriptor) {
     companion object : KSObjectCache<PropertyDescriptor, KSPropertyDeclarationDescriptorImpl>() {
-        fun getCached(descriptor: PropertyDescriptor) = cache.getOrPut(descriptor) { KSPropertyDeclarationDescriptorImpl(descriptor) }
+        fun getCached(descriptor: PropertyDescriptor) = cache.getOrPut(descriptor) {
+            KSPropertyDeclarationDescriptorImpl(descriptor)
+        }
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {

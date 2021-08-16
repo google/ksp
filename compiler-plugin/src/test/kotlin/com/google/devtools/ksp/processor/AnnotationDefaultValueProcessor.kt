@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -39,7 +38,11 @@ class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
 
     private fun logAnnotations(classDeclaration: KSClassDeclaration) {
         classDeclaration.annotations.forEach { annotation ->
-            result.add("${annotation.shortName.asString()} -> ${annotation.arguments.map{ "${it.name?.asString()}:${it.value}" }.joinToString(",")}")
+            result.add(
+                "${annotation.shortName.asString()} -> ${annotation.arguments.map{
+                    "${it.name?.asString()}:${it.value}"
+                }.joinToString(",")}"
+            )
         }
     }
 }

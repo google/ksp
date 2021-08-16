@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.isPublic
@@ -24,10 +23,15 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 
-class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) : KSFunctionDeclaration, KSDeclaration by ksClassDeclaration {
+class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) :
+    KSFunctionDeclaration,
+    KSDeclaration
+    by ksClassDeclaration {
     companion object : KSObjectCache<KSClassDeclaration, KSConstructorSyntheticImpl>() {
         fun getCached(ksClassDeclaration: KSClassDeclaration) =
-            KSConstructorSyntheticImpl.cache.getOrPut(ksClassDeclaration) { KSConstructorSyntheticImpl(ksClassDeclaration) }
+            KSConstructorSyntheticImpl.cache.getOrPut(ksClassDeclaration) {
+                KSConstructorSyntheticImpl(ksClassDeclaration)
+            }
     }
 
     override val isAbstract: Boolean = false

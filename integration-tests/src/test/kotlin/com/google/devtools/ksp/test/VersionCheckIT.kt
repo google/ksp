@@ -1,11 +1,9 @@
 package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 import java.util.jar.*
 
 class VersionCheckIT {
@@ -16,14 +14,19 @@ class VersionCheckIT {
     @Test
     fun testVersion() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val result = gradleRunner.withArguments("-Dkotlin.compiler.execution.strategy=in-process", "-PkotlinVersion=1.4.20", "clean", "build").buildAndFail()
+        val result = gradleRunner.withArguments(
+            "-Dkotlin.compiler.execution.strategy=in-process", "-PkotlinVersion=1.4.20", "clean", "build"
+        ).buildAndFail()
         Assert.assertTrue(result.output.contains("Please pick the same version of ksp and kotlin plugins."))
     }
 
     @Test
     fun testMuteVersionCheck() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val result = gradleRunner.withArguments("-Dkotlin.compiler.execution.strategy=in-process", "-PkotlinVersion=1.4.20", "-Pksp.version.check=false", "clean", "build").buildAndFail()
+        val result = gradleRunner.withArguments(
+            "-Dkotlin.compiler.execution.strategy=in-process",
+            "-PkotlinVersion=1.4.20", "-Pksp.version.check=false", "clean", "build"
+        ).buildAndFail()
         Assert.assertFalse(result.output.contains("Please pick the same version of ksp and kotlin plugins."))
     }
 }

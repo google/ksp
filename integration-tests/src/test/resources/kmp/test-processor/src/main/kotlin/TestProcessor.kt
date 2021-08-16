@@ -3,7 +3,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 import java.io.OutputStreamWriter
 
-
 class TestProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger) : SymbolProcessor {
     var invoked = false
 
@@ -27,7 +26,6 @@ class TestProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger) : S
 
                 writer.write("}\n")
             }
-
         }
         return emptyList()
     }
@@ -45,7 +43,6 @@ class ClassVisitor : KSTopDownVisitor<OutputStreamWriter, Unit>() {
         val symbolName = classDeclaration.simpleName.asString().toLowerCase()
         data.write("    val $symbolName = true\n")
     }
-
 }
 
 class TestProcessorProvider : SymbolProcessorProvider {

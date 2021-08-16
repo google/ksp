@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
@@ -30,7 +29,9 @@ import java.lang.IllegalStateException
 
 class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReference) : KSTypeReference {
     companion object : KSObjectCache<KtTypeReference, KSTypeReferenceImpl>() {
-        fun getCached(ktTypeReference: KtTypeReference) = cache.getOrPut(ktTypeReference) { KSTypeReferenceImpl(ktTypeReference) }
+        fun getCached(ktTypeReference: KtTypeReference) = cache.getOrPut(ktTypeReference) {
+            KSTypeReferenceImpl(ktTypeReference)
+        }
     }
 
     override val origin = Origin.KOTLIN

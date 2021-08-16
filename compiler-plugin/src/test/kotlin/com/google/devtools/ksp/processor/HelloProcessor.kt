@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -28,7 +27,7 @@ class HelloProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation("test.Anno")
         results.add(symbols.toList().size.toString())
-        symbols.forEach{ it.accept(visitor, Unit) }
+        symbols.forEach { it.accept(visitor, Unit) }
         return emptyList()
     }
 
@@ -50,4 +49,3 @@ class HelloProcessor : AbstractTestProcessor() {
         }
     }
 }
-
