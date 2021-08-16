@@ -1,17 +1,22 @@
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
-import java.io.File
 import java.io.OutputStream
 
 fun OutputStream.appendText(str: String) {
     this.write(str.toByteArray())
 }
+
 class BuilderProcessor : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
     lateinit var logger: KSPLogger
 
-    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(
+        options: Map<String, String>,
+        kotlinVersion: KotlinVersion,
+        codeGenerator: CodeGenerator,
+        logger: KSPLogger,
+    ) {
         this.codeGenerator = codeGenerator
         this.logger = logger
     }
@@ -39,13 +44,15 @@ class BuilderProcessor : SymbolProcessor {
             codeGenerator.createNewFile(
                 Dependencies(true, function.containingFile!!),
                 "",
-                "META-INF/proguard/builder-${className}",
+                "META-INF/proguard/builder-$className",
                 "pro"
             ).use { proguardFile ->
-                proguardFile.appendText("-keep class ${packageName}.${className} { *; }")
+                proguardFile.appendText("-keep class $packageName.$className { *; }")
             }
 
-            val file = codeGenerator.createNewFile(Dependencies(true, function.containingFile!!), packageName , className)
+            val file = codeGenerator.createNewFile(
+                Dependencies(true, function.containingFile!!), packageName, className
+            )
             file.appendText("package $packageName\n\n")
             file.appendText("import hello.HELLO\n\n")
             file.appendText("class $className{\n")
@@ -56,11 +63,11 @@ class BuilderProcessor : SymbolProcessor {
                 if (it.type.element!!.typeArguments.toList().isNotEmpty()) {
                     typeName.append("<")
                     typeName.append(
-                            typeArgs.map {
-                                val type = it.type?.resolve()
-                                "${it.variance.label} ${type?.declaration?.qualifiedName?.asString() ?: "ERROR"}" +
-                                        if (type?.nullability == Nullability.NULLABLE) "?" else ""
-                            }.joinToString(", ")
+                        typeArgs.map {
+                            val type = it.type?.resolve()
+                            "${it.variance.label} ${type?.declaration?.qualifiedName?.asString() ?: "ERROR"}" +
+                                if (type?.nullability == Nullability.NULLABLE) "?" else ""
+                        }.joinToString(", ")
                     )
                     typeName.append(">")
                 }
@@ -83,12 +90,11 @@ class BuilderProcessor : SymbolProcessor {
             file.close()
         }
     }
-
 }
 
 class TestProcessorProvider : SymbolProcessorProvider {
     override fun create(
-        env: SymbolProcessorEnvironment
+        env: SymbolProcessorEnvironment,
     ): SymbolProcessor {
         return BuilderProcessor().apply {
             init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)

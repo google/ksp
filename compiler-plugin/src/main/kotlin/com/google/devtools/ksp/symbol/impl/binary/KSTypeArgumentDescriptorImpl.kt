@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.binary
 
 import com.google.devtools.ksp.symbol.*
@@ -24,9 +23,12 @@ import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProjection, override val origin: Origin) : KSTypeArgumentImpl() {
+class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProjection, override val origin: Origin) :
+    KSTypeArgumentImpl() {
     companion object : KSObjectCache<IdKey<Pair<TypeProjection, Origin>>, KSTypeArgumentDescriptorImpl>() {
-        fun getCached(descriptor: TypeProjection, origin: Origin) = cache.getOrPut(IdKey(Pair(descriptor, origin))) { KSTypeArgumentDescriptorImpl(descriptor, origin) }
+        fun getCached(descriptor: TypeProjection, origin: Origin) = cache.getOrPut(IdKey(Pair(descriptor, origin))) {
+            KSTypeArgumentDescriptorImpl(descriptor, origin)
+        }
     }
 
     override val location: Location = NonExistLocation

@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +44,6 @@ class OnErrorIT {
             Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
         }
         project.restore("workload/build.gradle.kts")
-
     }
 
     @Test

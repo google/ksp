@@ -15,14 +15,12 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class AnnotationOnConstructorParameterProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -47,4 +45,3 @@ class AnnotationOnConstructorParameterProcessor : AbstractTestProcessor() {
         return results
     }
 }
-

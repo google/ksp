@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -33,34 +32,36 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val classC = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))!!
-        val errorAtTop = classC.declarations.single { it.simpleName.asString() == "errorAtTop" } as KSPropertyDeclaration
-        val errorInComponent = classC.declarations.single { it.simpleName.asString() == "errorInComponent" } as KSPropertyDeclaration
+        val errorAtTop = classC.declarations.single { it.simpleName.asString() == "errorAtTop" }
+            as KSPropertyDeclaration
+        val errorInComponent = classC.declarations.single { it.simpleName.asString() == "errorInComponent" }
+            as KSPropertyDeclaration
         result.add(errorAtTop.type.resolve().print() ?: "")
         result.add(errorInComponent.type.resolve().print() ?: "")
-        errorInComponent.type.resolve().arguments.forEach{ result.add(it.type!!.resolve().print()) }
+        errorInComponent.type.resolve().arguments.forEach { result.add(it.type!!.resolve().print()) }
         result.add(
             "errorInComponent is assignable from errorAtTop: ${
-                errorAtTop.type.resolve().isAssignableFrom(errorAtTop.type.resolve())
+            errorAtTop.type.resolve().isAssignableFrom(errorAtTop.type.resolve())
             }"
         )
         result.add(
             "errorInComponent is assignable from class C: ${
-                errorAtTop.type.resolve().isAssignableFrom(classC.asStarProjectedType())
+            errorAtTop.type.resolve().isAssignableFrom(classC.asStarProjectedType())
             }"
         )
         result.add(
             "Any is assignable from errorInComponent: ${
-                resolver.builtIns.anyType.isAssignableFrom(errorAtTop.type.resolve())
+            resolver.builtIns.anyType.isAssignableFrom(errorAtTop.type.resolve())
             }"
         )
         result.add(
             "class C is assignable from errorInComponent: ${
-                classC.asStarProjectedType().isAssignableFrom(errorAtTop.type.resolve())
+            classC.asStarProjectedType().isAssignableFrom(errorAtTop.type.resolve())
             }"
         )
         result.add(
             "Any is assignable from class C: ${
-                resolver.builtIns.anyType.isAssignableFrom(classC.asStarProjectedType())
+            resolver.builtIns.anyType.isAssignableFrom(classC.asStarProjectedType())
             }"
         )
         val Cls = resolver.getClassDeclarationByName("Cls")!!
@@ -75,7 +76,8 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
 
     private fun KSType.print(): String {
         return if (this.isError) {
-            if (this.declaration.qualifiedName == null) "ERROR TYPE" else throw IllegalStateException("Error type should resolve to KSErrorTypeClassDeclaration")
+            if (this.declaration.qualifiedName == null) "ERROR TYPE" else
+                throw IllegalStateException("Error type should resolve to KSErrorTypeClassDeclaration")
         } else this.declaration.qualifiedName!!.asString()
     }
 }

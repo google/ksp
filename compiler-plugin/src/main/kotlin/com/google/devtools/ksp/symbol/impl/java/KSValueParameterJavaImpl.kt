@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiParameter
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiParameter
 
 class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
     companion object : KSObjectCache<PsiParameter, KSValueParameterJavaImpl>() {

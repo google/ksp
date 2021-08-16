@@ -26,7 +26,7 @@ data class DependencyDeclaration private constructor(
     val configuration: String,
     val dependency: String
 ) {
-    fun toCode() = "${configuration}($dependency)"
+    fun toCode() = "$configuration($dependency)"
 
     companion object {
         /**
@@ -47,5 +47,4 @@ data class DependencyDeclaration private constructor(
         fun files(configuration: String, path: String) =
             DependencyDeclaration(configuration, "files(\"$path\")")
     }
-
 }

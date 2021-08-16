@@ -15,16 +15,17 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentImpl
 
-class KSValueArgumentJavaImpl private constructor(override val name: KSName?, override val value: Any?) : KSValueArgumentImpl() {
+class KSValueArgumentJavaImpl private constructor(override val name: KSName?, override val value: Any?) :
+    KSValueArgumentImpl() {
     companion object : KSObjectCache<Pair<KSName?, Any?>, KSValueArgumentJavaImpl>() {
-        fun getCached(name: KSName?, value: Any?) = cache.getOrPut(Pair(name, value)) { KSValueArgumentJavaImpl(name, value) }
+        fun getCached(name: KSName?, value: Any?) =
+            cache.getOrPut(Pair(name, value)) { KSValueArgumentJavaImpl(name, value) }
     }
 
     override val origin = Origin.JAVA
@@ -36,6 +37,6 @@ class KSValueArgumentJavaImpl private constructor(override val name: KSName?, ov
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override fun toString(): String {
-        return "${name?.asString() ?: ""}:${value.toString()}"
+        return "${name?.asString() ?: ""}:$value"
     }
 }

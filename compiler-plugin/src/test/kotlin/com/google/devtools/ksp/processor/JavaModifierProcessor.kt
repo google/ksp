@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -47,7 +46,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             results.add(classDeclaration.toSignature())
-            classDeclaration.declarations.forEach{ it.accept(this, data) }
+            classDeclaration.declarations.forEach { it.accept(this, data) }
         }
 
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {

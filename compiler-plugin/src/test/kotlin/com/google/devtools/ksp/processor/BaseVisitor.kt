@@ -24,4 +24,3 @@ open class BaseVisitor : KSVisitorVoid() {
         }
     }
 }
-

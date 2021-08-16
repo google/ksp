@@ -15,12 +15,9 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.intellij.psi.*
-import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
@@ -30,6 +27,8 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
@@ -86,18 +85,26 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
                     )
                 } else {
                     KSClassifierReferenceDescriptorImpl.getCached(
-                        ResolverImpl.instance.module.builtIns.getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(componentType)!!, origin
+                        ResolverImpl.instance.module.builtIns
+                            .getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(componentType)!!,
+                        origin
                     )
                 }
             }
-            null -> KSClassifierReferenceDescriptorImpl.getCached((ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable(), origin)
+            null -> KSClassifierReferenceDescriptorImpl.getCached(
+                (ResolverImpl.instance.builtIns.anyType as KSTypeImpl)
+                    .kotlinType.makeNullable(),
+                origin
+            )
             else -> throw IllegalStateException("Unexpected psi type for ${type.javaClass}, $ExceptionMessage")
         }
     }
 
     override fun resolve(): KSType {
         val resolvedType = ResolverImpl.instance.resolveUserType(this)
-        return if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)?.descriptor is NotFoundClasses.MockClassDescriptor) {
+        return if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)
+            ?.descriptor is NotFoundClasses.MockClassDescriptor
+        ) {
             KSErrorType
         } else resolvedType
     }

@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.Resolver
@@ -42,7 +40,8 @@ inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration?
  * @param name fully qualified name of the class to be loaded; using '.' as separator.
  * @return a KSClassDeclaration, or null if not found.
  */
-fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getClassDeclarationByName(getKSNameFromString(name))
+fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? =
+    getClassDeclarationByName(getKSNameFromString(name))
 
 /**
  * Find functions in the compilation classpath for the given name.
@@ -51,7 +50,10 @@ fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getC
  * @param includeTopLevel a boolean value indicate if top level functions should be searched. Default false. Note if top level functions are included, this operation can be expensive.
  * @return a Sequence of KSFunctionDeclaration.
  */
-fun Resolver.getFunctionDeclarationsByName(name: String, includeTopLevel: Boolean = false): Sequence<KSFunctionDeclaration> = getFunctionDeclarationsByName(getKSNameFromString(name), includeTopLevel)
+fun Resolver.getFunctionDeclarationsByName(
+    name: String,
+    includeTopLevel: Boolean = false
+): Sequence<KSFunctionDeclaration> = getFunctionDeclarationsByName(getKSNameFromString(name), includeTopLevel)
 
 /**
  * Find a property in the compilation classpath for the given name.
@@ -60,7 +62,8 @@ fun Resolver.getFunctionDeclarationsByName(name: String, includeTopLevel: Boolea
  * @param includeTopLevel a boolean value indicate if top level properties should be searched. Default false. Note if top level properties are included, this operation can be expensive.
  * @return a KSPropertyDeclaration, or null if not found.
  */
-fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean = false): KSPropertyDeclaration? = getPropertyDeclarationByName(getKSNameFromString(name), includeTopLevel)
+fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean = false): KSPropertyDeclaration? =
+    getPropertyDeclarationByName(getKSNameFromString(name), includeTopLevel)
 
 /**
  * Get functions directly declared inside the class declaration.
@@ -99,9 +102,7 @@ fun KSDeclaration.isLocal(): Boolean {
  * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope are valid, i.e. resolvable.
  * @param predicate: A lambda for filtering interested symbols for performance purpose. Default checks all.
  */
-fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { parent, current ->
-    true
-} ): Boolean {
+fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }): Boolean {
     return this.accept(KSValidateVisitor(predicate), null)
 }
 
@@ -131,7 +132,8 @@ fun KSDeclaration.getVisibility(): Visibility {
         }
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
-        this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
+        this.modifiers.contains(Modifier.PROTECTED) ||
+            this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
         this.modifiers.contains(Modifier.PUBLIC) -> Visibility.PUBLIC
         else -> if (this.origin != Origin.JAVA) Visibility.PUBLIC else Visibility.JAVA_PACKAGE
@@ -173,9 +175,10 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
         .distinct()
 }
 
-fun KSClassDeclaration.isAbstract() = this.classKind == ClassKind.INTERFACE || this.modifiers.contains(Modifier.ABSTRACT)
+fun KSClassDeclaration.isAbstract() =
+    this.classKind == ClassKind.INTERFACE || this.modifiers.contains(Modifier.ABSTRACT)
 
-fun KSPropertyDeclaration.isAbstract() : Boolean {
+fun KSPropertyDeclaration.isAbstract(): Boolean {
     if (modifiers.contains(Modifier.ABSTRACT)) {
         return true
     }
@@ -186,13 +189,14 @@ fun KSPropertyDeclaration.isAbstract() : Boolean {
         (setter?.modifiers?.contains(Modifier.ABSTRACT) ?: true)
 }
 
-fun KSDeclaration.isOpen() = !this.isLocal()
-        && ((this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
-        || this.modifiers.contains(Modifier.OVERRIDE)
-        || this.modifiers.contains(Modifier.ABSTRACT)
-        || this.modifiers.contains(Modifier.OPEN)
-        || (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
-        || (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA)
+fun KSDeclaration.isOpen() = !this.isLocal() &&
+    (
+        (this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
+            this.modifiers.contains(Modifier.OVERRIDE) ||
+            this.modifiers.contains(Modifier.ABSTRACT) ||
+            this.modifiers.contains(Modifier.OPEN) ||
+            (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
+            (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA)
         )
 
 fun KSDeclaration.isPublic() = this.getVisibility() == Visibility.PUBLIC
@@ -213,10 +217,10 @@ fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
     }
 }
 
-
 // TODO: cross module visibility is not handled
 fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
-    fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean = this.containingFile?.packageName == other.containingFile?.packageName
+    fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean =
+        this.containingFile?.packageName == other.containingFile?.packageName
 
     // lexical scope for local declaration.
     fun KSDeclaration.parentDeclarationsForLocal(): List<KSDeclaration> {
@@ -235,14 +239,13 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     }
 
     fun KSDeclaration.isVisibleInPrivate(other: KSDeclaration) =
-        (other.isLocal() && other.parentDeclarationsForLocal().contains(this.parentDeclaration))
-                || this.parentDeclaration == other.parentDeclaration
-                || this.parentDeclaration == other
-                || (
-                this.parentDeclaration == null
-                        && other.parentDeclaration == null
-                        && this.containingFile == other.containingFile
-                )
+        (other.isLocal() && other.parentDeclarationsForLocal().contains(this.parentDeclaration)) ||
+            this.parentDeclaration == other.parentDeclaration ||
+            this.parentDeclaration == other || (
+            this.parentDeclaration == null &&
+                other.parentDeclaration == null &&
+                this.containingFile == other.containingFile
+            )
 
     return when {
         // locals are limited to lexical scope

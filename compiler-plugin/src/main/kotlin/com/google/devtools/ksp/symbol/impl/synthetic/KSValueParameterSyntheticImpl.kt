@@ -11,11 +11,17 @@ import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
 
-class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> ValueParameterDescriptor?) : KSValueParameter {
+class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> ValueParameterDescriptor?) :
+    KSValueParameter {
 
-    companion object : KSObjectCache<Pair<KSAnnotated?, () -> ValueParameterDescriptor?>, KSValueParameterSyntheticImpl>() {
-        fun getCached(owner: KSAnnotated? = null, resolve: () -> ValueParameterDescriptor?) = KSValueParameterSyntheticImpl.cache.getOrPut(Pair(owner, resolve)) { KSValueParameterSyntheticImpl(owner, resolve) }
+    companion object :
+        KSObjectCache<Pair<KSAnnotated?, () -> ValueParameterDescriptor?>, KSValueParameterSyntheticImpl>() {
+        fun getCached(owner: KSAnnotated? = null, resolve: () -> ValueParameterDescriptor?) =
+            KSValueParameterSyntheticImpl.cache.getOrPut(Pair(owner, resolve)) {
+                KSValueParameterSyntheticImpl(owner, resolve)
+            }
     }
+
     private val descriptor by lazy {
         resolve() ?: throw IllegalStateException("Failed to resolve for synthetic value parameter, $ExceptionMessage")
     }
@@ -41,7 +47,9 @@ class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> Valu
     override val hasDefault: Boolean = descriptor.hasDefaultValue()
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.plus(
+            this.findAnnotationFromUseSiteTarget()
+        )
     }
 
     override val origin: Origin = Origin.SYNTHETIC

@@ -1,7 +1,6 @@
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 
-
 class TestProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger

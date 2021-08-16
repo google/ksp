@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.binary
 
-import org.jetbrains.kotlin.descriptors.MemberDescriptor
 import com.google.devtools.ksp.processing.impl.findActualsInKSDeclaration
 import com.google.devtools.ksp.processing.impl.findExpectsInKSDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSExpectActual
+import org.jetbrains.kotlin.descriptors.MemberDescriptor
 
 class KSExpectActualDescriptorImpl(val descriptor: MemberDescriptor) : KSExpectActual {
     override val isExpect: Boolean = descriptor.isExpect

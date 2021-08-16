@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -35,7 +34,7 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
 
     class AllFunctionsVisitor : KSVisitorVoid() {
         private val declarationsByClass = mutableMapOf<String, MutableList<String>>()
-        fun toResult() : List<String> {
+        fun toResult(): List<String> {
             return declarationsByClass.entries
                 .sortedBy {
                     it.key
@@ -45,15 +44,15 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
         }
         fun KSFunctionDeclaration.toSignature(): String {
             return this.simpleName.asString() +
-                    "(${this.parameters.map { 
-                        buildString {
-                            append(it.type.resolve().declaration.qualifiedName?.asString())
-                            if (it.hasDefault) {
-                                append("(hasDefault)")
-                            }
+                "(${this.parameters.map {
+                    buildString {
+                        append(it.type.resolve().declaration.qualifiedName?.asString())
+                        if (it.hasDefault) {
+                            append("(hasDefault)")
                         }
-                    }.joinToString(",")})" +
-                    ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString() ?: ""}"
+                    }
+                }.joinToString(",")})" +
+                ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString() ?: ""}"
         }
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
@@ -74,7 +73,7 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
         }
 
         override fun visitFile(file: KSFile, data: Unit) {
-            file.declarations.forEach{ it.accept(this, Unit) }
+            file.declarations.forEach { it.accept(this, Unit) }
         }
     }
 }

@@ -61,6 +61,9 @@ jobs:
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+    # Run ktlint
+    - name: lint
+      run: ./gradlew ktlint
     # Run ksp generated tests
     - name: test
       run: ./gradlew --stacktrace --info :compiler-plugin:test --tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.*" -PcompilerTestEnabled=true

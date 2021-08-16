@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
@@ -30,7 +29,8 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
         KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
     }
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget())
+        ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
+            .plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val location: Location by lazy {

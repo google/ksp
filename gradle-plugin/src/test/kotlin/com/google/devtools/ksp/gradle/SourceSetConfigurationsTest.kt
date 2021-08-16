@@ -170,7 +170,8 @@ class SourceSetConfigurationsTest {
     @Test
     fun configurationsForAndroidApp_withBuildFlavorsMatchesKapt() {
         testRule.setupAppAsAndroidApp()
-        testRule.appModule.buildFileAdditions.add("""
+        testRule.appModule.buildFileAdditions.add(
+            """
             android {
                 flavorDimensions("version")
                 productFlavors {
@@ -184,7 +185,8 @@ class SourceSetConfigurationsTest {
                     }
                 }
             }
-        """.trimIndent())
+            """.trimIndent()
+        )
         testRule.appModule.plugins.add(PluginDeclaration.kotlin("kapt", testRule.testConfig.kotlinBaseVersion))
         testRule.appModule.addSource("Foo.kt", "class Foo")
         val result = testRule.runner()
@@ -221,7 +223,7 @@ class SourceSetConfigurationsTest {
         kspForTests(androidApp = true, useAndroidTest = false)
     }
 
-    private fun kspForTests(androidApp:Boolean, useAndroidTest: Boolean) {
+    private fun kspForTests(androidApp: Boolean, useAndroidTest: Boolean) {
         if (androidApp) {
             testRule.setupAppAsAndroidApp()
         } else {
@@ -233,17 +235,20 @@ class SourceSetConfigurationsTest {
             }
         }
 
-        testRule.appModule.addSource("App.kt", """
+        testRule.appModule.addSource(
+            "App.kt",
+            """
             @Suppress("app")
             class InApp {
             }
-        """.trimIndent())
+            """.trimIndent()
+        )
         val testSource = """
                 @Suppress("test")
                 class InTest {
                     val impl = InTest_Impl()
                 }
-                """.trimIndent()
+        """.trimIndent()
         if (useAndroidTest) {
             testRule.appModule.addAndroidTestSource("InTest.kt", testSource)
         } else {

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -36,13 +35,17 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
         var type: KSType? = null
         resolver.getAllFiles().forEach {
             if (it.fileName == "C.kt") {
-                type = (it.declarations.single {
-                    it is KSPropertyDeclaration && it.simpleName.asString() == "a"
-                } as KSPropertyDeclaration).type.resolve()
+                type = (
+                    it.declarations.single {
+                        it is KSPropertyDeclaration && it.simpleName.asString() == "a"
+                    } as KSPropertyDeclaration
+                    ).type.resolve()
             } else if (it.fileName == "B.java") {
-                function = (it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "B"
-                } as KSClassDeclaration).declarations.single {
+                function = (
+                    it.declarations.single {
+                        it is KSClassDeclaration && it.simpleName.asString() == "B"
+                    } as KSClassDeclaration
+                    ).declarations.single {
                     it is KSFunctionDeclaration && it.simpleName.asString() == "f"
                 } as KSFunctionDeclaration
             }
@@ -53,7 +56,7 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
         if (resolver is ResolverImpl) {
             val m = resolver.incrementalContext.dumpLookupRecords()
             m.toSortedMap().forEach { symbol, files ->
-                files.filter { it.endsWith(".java")}.sorted().forEach {
+                files.filter { it.endsWith(".java") }.sorted().forEach {
                     results.add("$symbol: $it")
                 }
             }

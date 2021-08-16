@@ -15,20 +15,22 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.createKSValueArguments
 import com.google.devtools.ksp.symbol.impl.toLocation
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
 class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEntry) : KSAnnotation {
     companion object : KSObjectCache<KtAnnotationEntry, KSAnnotationImpl>() {
-        fun getCached(ktAnnotationEntry: KtAnnotationEntry) = cache.getOrPut(ktAnnotationEntry) { KSAnnotationImpl(ktAnnotationEntry) }
+        fun getCached(ktAnnotationEntry: KtAnnotationEntry) = cache.getOrPut(ktAnnotationEntry) {
+            KSAnnotationImpl(ktAnnotationEntry)
+        }
     }
 
     override val origin = Origin.KOTLIN
@@ -52,15 +54,15 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
         when (ktAnnotationEntry.useSiteTarget?.getAnnotationUseSiteTarget()) {
             null -> null
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FILE -> AnnotationUseSiteTarget.FILE
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FIELD -> AnnotationUseSiteTarget.FIELD
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
-            org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+            FILE -> AnnotationUseSiteTarget.FILE
+            PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+            FIELD -> AnnotationUseSiteTarget.FIELD
+            PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+            PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+            RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+            CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+            SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+            PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
         }
     }
 

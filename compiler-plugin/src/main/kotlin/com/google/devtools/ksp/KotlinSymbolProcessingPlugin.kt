@@ -15,23 +15,22 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp
 
+import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
+import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
+import com.intellij.psi.PsiTreeChangeAdapter
+import com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
-import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
-import com.intellij.core.CoreApplicationEnvironment
-import com.intellij.psi.PsiTreeChangeAdapter
-import com.intellij.psi.PsiTreeChangeListener
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 import java.io.File
 
@@ -54,7 +53,9 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
     }
 
     private fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when (option) {
-        KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(File.pathSeparator).map{ File(it) }
+        KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(File.pathSeparator).map {
+            File(it)
+        }
         KspCliOption.CLASS_OUTPUT_DIR_OPTION -> classOutputDir = File(value)
         KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
         KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
@@ -66,8 +67,8 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
             val (k, v) = value.split('=', ignoreCase = false, limit = 2)
             processingOptions.put(k, v)
         }
-        KspCliOption.KNOWN_MODIFIED_OPTION -> knownModified.addAll(value.split(File.pathSeparator).map { File(it) } )
-        KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split(File.pathSeparator).map { File(it) } )
+        KspCliOption.KNOWN_MODIFIED_OPTION -> knownModified.addAll(value.split(File.pathSeparator).map { File(it) })
+        KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split(File.pathSeparator).map { File(it) })
         KspCliOption.INCREMENTAL_OPTION -> incremental = value.toBoolean()
         KspCliOption.INCREMENTAL_LOG_OPTION -> incrementalLog = value.toBoolean()
         KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
@@ -94,7 +95,9 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
             configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, DualLookupTracker())
 
             // Dummy extension point; Required by dropPsiCaches().
-            CoreApplicationEnvironment.registerExtensionPoint(project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java)
+            CoreApplicationEnvironment.registerExtensionPoint(
+                project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
+            )
         }
     }
 }
@@ -135,24 +138,24 @@ enum class KspCliOption(
     ),
 
     CACHES_DIR_OPTION(
-            "cachesDir",
-            "<cachesDir>",
-            "Dir of caches",
-            false
+        "cachesDir",
+        "<cachesDir>",
+        "Dir of caches",
+        false
     ),
 
     PROJECT_BASE_DIR_OPTION(
-            "projectBaseDir",
-            "<projectBaseDir>",
-            "path to gradle project",
-            false
+        "projectBaseDir",
+        "<projectBaseDir>",
+        "path to gradle project",
+        false
     ),
 
     KSP_OUTPUT_DIR_OPTION(
-            "kspOutputDir",
-            "<kspOutputDir>",
-            "root of ksp output dirs",
-            false
+        "kspOutputDir",
+        "<kspOutputDir>",
+        "root of ksp output dirs",
+        false
     ),
 
     PROCESSING_OPTIONS_OPTION(
@@ -171,43 +174,43 @@ enum class KspCliOption(
     ),
 
     KNOWN_MODIFIED_OPTION(
-            "knownModified",
-            "<knownModified>",
-            "known modified files",
-            false,
-            false
+        "knownModified",
+        "<knownModified>",
+        "known modified files",
+        false,
+        false
     ),
 
     KNOWN_REMOVED_OPTION(
-            "knownRemoved",
-            "<knownRemoved>",
-            "known removed fiels",
-            false,
-            false
+        "knownRemoved",
+        "<knownRemoved>",
+        "known removed fiels",
+        false,
+        false
     ),
 
     INCREMENTAL_OPTION(
-    "incremental",
-    "<incremental>",
-    "processing incrementally",
-    false,
-    false
+        "incremental",
+        "<incremental>",
+        "processing incrementally",
+        false,
+        false
     ),
 
     INCREMENTAL_LOG_OPTION(
-    "incrementalLog",
-    "<incrementalLog>",
-    "log dirty files",
-    false,
-    false
+        "incrementalLog",
+        "<incrementalLog>",
+        "log dirty files",
+        false,
+        false
     ),
 
     CHANGED_CLASSES_OPTION(
-    "changedClasses",
-    "<changedClasses>",
-    "canonical / dot-separated names of dirty classes in classpath",
-    false,
-    false
+        "changedClasses",
+        "<changedClasses>",
+        "canonical / dot-separated names of dirty classes in classpath",
+        false,
+        false
     );
 }
 

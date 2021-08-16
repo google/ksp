@@ -15,17 +15,15 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.findParentDeclaration
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 
-class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSTypeAlias, KSDeclarationImpl(ktTypeAlias),
+class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) :
+    KSTypeAlias,
+    KSDeclarationImpl(ktTypeAlias),
     KSExpectActual by KSExpectActualImpl(ktTypeAlias) {
     companion object : KSObjectCache<KtTypeAlias, KSTypeAliasImpl>() {
         fun getCached(ktTypeAlias: KtTypeAlias) = cache.getOrPut(ktTypeAlias) { KSTypeAliasImpl(ktTypeAlias) }
@@ -43,4 +41,3 @@ class KSTypeAliasImpl private constructor(val ktTypeAlias: KtTypeAlias) : KSType
         return visitor.visitTypeAlias(this, data)
     }
 }
-
