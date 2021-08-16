@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.isPrivate
@@ -26,11 +25,14 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticIm
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import org.jetbrains.kotlin.psi.KtParameter
 
-class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) : KSPropertyDeclaration,
+class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: KtParameter) :
+    KSPropertyDeclaration,
     KSDeclarationImpl(ktParameter),
     KSExpectActual by KSExpectActualImpl(ktParameter) {
     companion object : KSObjectCache<KtParameter, KSPropertyDeclarationParameterImpl>() {
-        fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) { KSPropertyDeclarationParameterImpl(ktParameter) }
+        fun getCached(ktParameter: KtParameter) = cache.getOrPut(ktParameter) {
+            KSPropertyDeclarationParameterImpl(ktParameter)
+        }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
@@ -77,7 +79,8 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     override fun isDelegated(): Boolean = false
 
     override fun findOverridee(): KSPropertyDeclaration? {
-        return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors?.singleOrNull { it.overriddenDescriptors.isEmpty() }
+        return ResolverImpl.instance.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors
+            ?.singleOrNull { it.overriddenDescriptors.isEmpty() }
             ?.toKSPropertyDeclaration()
     }
 

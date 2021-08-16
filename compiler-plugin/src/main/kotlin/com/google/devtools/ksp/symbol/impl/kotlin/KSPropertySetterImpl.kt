@@ -15,28 +15,29 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.binary.KSValueParameterDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
-class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAccessor) : KSPropertyAccessorImpl(ktPropertySetter),
+class KSPropertySetterImpl private constructor(ktPropertySetter: KtPropertyAccessor) :
+    KSPropertyAccessorImpl(ktPropertySetter),
     KSPropertySetter {
     companion object : KSObjectCache<KtPropertyAccessor, KSPropertySetterImpl>() {
-        fun getCached(ktPropertySetter: KtPropertyAccessor) = cache.getOrPut(ktPropertySetter) { KSPropertySetterImpl(ktPropertySetter) }
+        fun getCached(ktPropertySetter: KtPropertyAccessor) = cache.getOrPut(ktPropertySetter) {
+            KSPropertySetterImpl(ktPropertySetter)
+        }
     }
 
     override val parameter: KSValueParameter by lazy {
         ktPropertySetter.parameterList?.parameters?.singleOrNull()?.let { KSValueParameterImpl.getCached(it) }
-                ?: KSValueParameterSyntheticImpl.getCached(this) {
-                    ResolverImpl.instance.resolvePropertyAccessorDeclaration(this)
-                            ?.valueParameters?.singleOrNull()
-                }
+            ?: KSValueParameterSyntheticImpl.getCached(this) {
+                ResolverImpl.instance.resolvePropertyAccessorDeclaration(this)
+                    ?.valueParameters?.singleOrNull()
+            }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

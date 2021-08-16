@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
@@ -48,7 +47,10 @@ open class BackingFieldProcessor : AbstractTestProcessor() {
         override fun defaultHandler(node: KSNode, data: MutableList<KSPropertyDeclaration>) {
         }
 
-        override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: MutableList<KSPropertyDeclaration>) {
+        override fun visitPropertyDeclaration(
+            property: KSPropertyDeclaration,
+            data: MutableList<KSPropertyDeclaration>
+        ) {
             data.add(property)
             super.visitPropertyDeclaration(property, data)
         }

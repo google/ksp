@@ -27,7 +27,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
     private fun addToResults(resolver: Resolver, qName: String) {
         results.add("$qName ->")
         val collected = collectAnnotations(resolver, qName)
-        val signatures = collected.flatMap {(annotated, annotations) ->
+        val signatures = collected.flatMap { (annotated, annotations) ->
             val annotatedSignature = annotated.toSignature()
             annotations.map {
                 "$annotatedSignature : ${it.toSignature()}"
@@ -36,7 +36,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
         results.addAll(signatures)
     }
 
-    private fun collectAnnotations(resolver: Resolver, qName: String) : Map<KSAnnotated, List<KSAnnotation>> {
+    private fun collectAnnotations(resolver: Resolver, qName: String): Map<KSAnnotated, List<KSAnnotation>> {
         val output = mutableMapOf<KSAnnotated, List<KSAnnotation>>()
         resolver.getClassDeclarationByName(qName)?.accept(
             AnnotationVisitor(),
@@ -46,7 +46,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
     }
 
     private fun KSAnnotated.toSignature(): String {
-        return when(this) {
+        return when (this) {
             is KSClassDeclaration -> "class " + (qualifiedName ?: simpleName).asString()
             is KSPropertyDeclaration -> "property ${simpleName.asString()}"
             is KSFunctionDeclaration -> "function ${simpleName.asString()}"
@@ -83,7 +83,10 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
             super.visitAnnotated(annotated, data)
         }
 
-        override fun visitTypeReference(typeReference: KSTypeReference, data: MutableMap<KSAnnotated, List<KSAnnotation>>) {
+        override fun visitTypeReference(
+            typeReference: KSTypeReference,
+            data: MutableMap<KSAnnotated, List<KSAnnotation>>
+        ) {
             // don't traverse type references
         }
     }

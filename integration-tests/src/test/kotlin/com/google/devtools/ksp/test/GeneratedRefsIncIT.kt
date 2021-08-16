@@ -28,41 +28,41 @@ class GeneratedRefsIncIT {
         )
 
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected, outputs)
         }
 
         File(project.root, "workload/src/main/kotlin/com/example/Baz.kt").appendText("\n\n")
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected, outputs)
         }
 
         // Baz doesn't depend on Bar, so touching Bar won't invalidate Baz.
         File(project.root, "workload/src/main/kotlin/com/example/Bar.kt").appendText("\n\n")
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expectedBar, outputs)
         }
 
         // Make Baz depends on Bar; Bar will be invalidated.
         File(project.root, "workload/src/main/kotlin/com/example/Bar.kt").appendText("\nclass List<T>\n")
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected, outputs)
         }
 
         // Baz depended on Bar, so Baz should be invalidated.
         project.restore("workload/src/main/kotlin/com/example/Bar.kt")
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected, outputs)
         }
 
         // Baz doesn't depend on Bar, so touching Bar won't invalidate Baz.
         File(project.root, "workload/src/main/kotlin/com/example/Bar.kt").appendText("\n\n")
         gradleRunner.withArguments("assemble").build().let { result ->
-            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]")}
+            val outputs = result.output.split("\n").filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expectedBar, outputs)
         }
     }

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.KSPLogger
@@ -31,14 +30,11 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCacheManager
 import com.google.devtools.ksp.symbol.impl.findLocationString
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
-import com.intellij.openapi.extensions.ExtensionPoint
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiTreeChangeAdapter
-import com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
@@ -58,7 +54,7 @@ import java.nio.file.Files
 class KotlinSymbolProcessingExtension(
     options: KspOptions,
     logger: KSPLogger,
-    val testProcessor: SymbolProcessorProvider? = null
+    val testProcessor: SymbolProcessorProvider? = null,
 ) : AbstractKotlinSymbolProcessingExtension(options, logger, testProcessor != null) {
     override fun loadProviders(): List<SymbolProcessorProvider> {
         if (!initialized) {
@@ -66,7 +62,8 @@ class KotlinSymbolProcessingExtension(
                 listOf(testProcessor)
             } else {
                 val processingClasspath = options.processingClasspath
-                val classLoader = URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
+                val classLoader =
+                    URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
 
                 ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader)
             }
@@ -75,7 +72,11 @@ class KotlinSymbolProcessingExtension(
     }
 }
 
-abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, val logger: KSPLogger, val testMode: Boolean) :
+abstract class AbstractKotlinSymbolProcessingExtension(
+    val options: KspOptions,
+    val logger: KSPLogger,
+    val testMode: Boolean,
+) :
     AnalysisHandlerExtension {
     var initialized = false
     var finished = false
@@ -100,7 +101,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         projectContext: ProjectContext,
         files: Collection<KtFile>,
         bindingTrace: BindingTrace,
-        componentProvider: ComponentProvider
+        componentProvider: ComponentProvider,
     ): AnalysisResult? {
         rounds++
         if (rounds > MULTI_ROUND_THRESHOLD) {
@@ -112,7 +113,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         }
 
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        val javaSourceRoots = if (initialized) options.javaSourceRoots + options.javaOutputDir else options.javaSourceRoots
+        val javaSourceRoots =
+            if (initialized) options.javaSourceRoots + options.javaOutputDir else options.javaSourceRoots
         val javaFiles = javaSourceRoots
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
             .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
@@ -138,23 +140,36 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         }?.let { return@doAnalysis it }
 
         // dirtyFiles cannot be reused because they are created in the old container.
-        val resolver = ResolverImpl(module, ksFiles.filterNot { it.filePath in cleanFilenames }, newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext, options)
+        val resolver = ResolverImpl(
+            module,
+            ksFiles.filterNot {
+                it.filePath in cleanFilenames
+            },
+            newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext, options
+        )
 
         val providers = loadProviders()
         if (!initialized) {
             codeGenerator = CodeGeneratorImpl(
-                    options.classOutputDir,
-                    options.javaOutputDir,
-                    options.kotlinOutputDir,
-                    options.resourceOutputDir,
-                    options.projectBaseDir,
-                    anyChangesWildcard,
-                    ksFiles
+                options.classOutputDir,
+                options.javaOutputDir,
+                options.kotlinOutputDir,
+                options.resourceOutputDir,
+                options.projectBaseDir,
+                anyChangesWildcard,
+                ksFiles
             )
             processors = providers.mapNotNull { provider ->
                 var processor: SymbolProcessor? = null
                 handleException(project) {
-                    processor = provider.create(SymbolProcessorEnvironment(options.processingOptions, KotlinVersion.CURRENT, codeGenerator, logger))
+                    processor = provider.create(
+                        SymbolProcessorEnvironment(
+                            options.processingOptions,
+                            KotlinVersion.CURRENT,
+                            codeGenerator,
+                            logger
+                        )
+                    )
                 }?.let { analysisResult -> return@doAnalysis analysisResult }
                 if (logger.hasError()) {
                     return@mapNotNull null
@@ -166,7 +181,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         if (!logger.hasError()) {
             processors.forEach processing@{ processor ->
                 handleException(project) {
-                    deferredSymbols[processor] = processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
+                    deferredSymbols[processor] =
+                        processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
                 }?.let { return it }
                 if (logger.hasError()) {
                     return@processing
@@ -178,9 +194,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
         }
         // Post processing.
         val newKtFiles = codeGenerator.generatedFile.filter { it.extension == "kt" }
-                .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? KtFile }
+            .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? KtFile }
         val newJavaFiles = codeGenerator.generatedFile.filter { it.extension == "java" }
-                .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? PsiJavaFile}
+            .mapNotNull {
+                localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? PsiJavaFile
+            }
         newFiles = newKtFiles.map { KSFileImpl.getCached(it) } + newJavaFiles.map { KSFileJavaImpl.getCached(it) }
         if (codeGenerator.generatedFile.isEmpty()) {
             finished = true
@@ -202,10 +220,20 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
                     }?.let { return it }
                 }
                 if (deferredSymbols.isNotEmpty()) {
-                    deferredSymbols.map { entry -> logger.warn("Unable to process:${entry.key::class.qualifiedName}:   ${entry.value.map { it.toString() }.joinToString(";")}") }
+                    deferredSymbols.map { entry ->
+                        logger.warn(
+                            "Unable to process:${entry.key::class.qualifiedName}:   ${
+                            entry.value.map { it.toString() }.joinToString(";")
+                            }"
+                        )
+                    }
                 }
                 if (!logger.hasError()) {
-                    incrementalContext.updateCachesAndOutputs(dirtyFiles, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+                    incrementalContext.updateCachesAndOutputs(
+                        dirtyFiles,
+                        codeGenerator.outputs,
+                        codeGenerator.sourceToOutputs
+                    )
                 }
             }
         }
@@ -218,7 +246,13 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
             else
                 AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
         } else {
-            AnalysisResult.RetryWithAdditionalRoots(BindingContext.EMPTY, module, listOf(options.javaOutputDir), listOf(options.kotlinOutputDir), listOf(options.classOutputDir))
+            AnalysisResult.RetryWithAdditionalRoots(
+                BindingContext.EMPTY,
+                module,
+                listOf(options.javaOutputDir),
+                listOf(options.kotlinOutputDir),
+                listOf(options.classOutputDir)
+            )
         }
     }
 
@@ -238,7 +272,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(val options: KspOptions, 
     }
 
     private fun KSPLogger.hasError(): Boolean {
-        return (this as MessageCollectorBasedKSPLogger).recordedEvents.any { it.severity == CompilerMessageSeverity.ERROR || it.severity == CompilerMessageSeverity.EXCEPTION }
+        return (this as MessageCollectorBasedKSPLogger).recordedEvents.any {
+            it.severity == CompilerMessageSeverity.ERROR || it.severity == CompilerMessageSeverity.EXCEPTION
+        }
     }
 
     private fun handleException(project: Project, call: () -> Unit): AnalysisResult? {

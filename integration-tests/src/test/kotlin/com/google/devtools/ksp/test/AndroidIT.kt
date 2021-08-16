@@ -17,7 +17,9 @@ class AndroidIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
-        gradleRunner.withArguments("clean", "build", "minifyReleaseWithR8", "--configuration-cache-problems=warn", "--info", "--stacktrace").build().let { result ->
+        gradleRunner.withArguments(
+            "clean", "build", "minifyReleaseWithR8", "--configuration-cache-problems=warn", "--info", "--stacktrace"
+        ).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
             val mergedConfiguration = File(project.root, "workload/build/outputs/mapping/release/configuration.txt")
             assert(mergedConfiguration.exists()) {
@@ -47,7 +49,8 @@ fun printDirectoryTree(folder: File): String? {
 }
 
 private fun printDirectoryTree(
-    folder: File, indent: Int,
+    folder: File,
+    indent: Int,
     sb: StringBuilder
 ) {
     require(folder.isDirectory) { "folder is not a Directory" }

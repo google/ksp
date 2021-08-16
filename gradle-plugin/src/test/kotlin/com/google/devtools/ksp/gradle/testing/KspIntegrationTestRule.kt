@@ -82,10 +82,12 @@ class KspIntegrationTestRule(
      * Sets up the app module as a jvm app, adding necessary plugin dependencies.
      */
     fun setupAppAsJvmApp() {
-        testProject.appModule.plugins.addAll(listOf(
-            PluginDeclaration.kotlin("jvm", testConfig.kotlinBaseVersion),
-            PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
-        ))
+        testProject.appModule.plugins.addAll(
+            listOf(
+                PluginDeclaration.kotlin("jvm", testConfig.kotlinBaseVersion),
+                PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
+            )
+        )
     }
 
     /**
@@ -93,17 +95,19 @@ class KspIntegrationTestRule(
      * file and necessary gradle configuration.
      */
     fun setupAppAsAndroidApp() {
-        testProject.appModule.plugins.addAll(listOf(
-            PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
-            PluginDeclaration.kotlin("android", testConfig.kotlinBaseVersion),
-            PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
-        ))
+        testProject.appModule.plugins.addAll(
+            listOf(
+                PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
+                PluginDeclaration.kotlin("android", testConfig.kotlinBaseVersion),
+                PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
+            )
+        )
         testProject.appModule.buildFileAdditions.add(
             """
             android {
                 compileSdkVersion="android-29"
             }
-        """.trimIndent()
+            """.trimIndent()
         )
         testProject.appModule.moduleRoot.resolve("src/main/AndroidManifest.xml")
             .also {
@@ -114,7 +118,7 @@ class KspIntegrationTestRule(
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                 package="com.example.kspandroidtestapp">
             </manifest>
-            """.trimIndent()
+                """.trimIndent()
             )
     }
 

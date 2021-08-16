@@ -51,7 +51,12 @@ publishing {
                 //        or simply depends on kotlin-compiler-embeddable so that relocation
                 //        isn't needed, at the price of giving up composite build.
                 withXml {
-                    fun groovy.util.Node.addDependency(groupId: String, artifactId: String, version: String, scope: String = "runtime") {
+                    fun groovy.util.Node.addDependency(
+                        groupId: String,
+                        artifactId: String,
+                        version: String,
+                        scope: String = "runtime"
+                    ) {
                         appendNode("dependency").apply {
                             appendNode("groupId", groupId)
                             appendNode("artifactId", artifactId)

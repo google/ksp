@@ -1,7 +1,5 @@
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.validate
-import java.io.File
 import java.io.OutputStream
 
 fun OutputStream.appendText(str: String) {

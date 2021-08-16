@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getPropertyDeclarationByName
@@ -23,7 +22,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class ReferenceElementProcessor: AbstractTestProcessor() {
+open class ReferenceElementProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val collector = ReferenceCollector()
     val references = mutableSetOf<KSTypeReference>()
@@ -40,19 +39,34 @@ open class ReferenceElementProcessor: AbstractTestProcessor() {
 
         fun refName(it: KSTypeReference) = (it.element as KSClassifierReference).referencedName()
 
-        val sortedReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN }.sortedBy(::refName)
+        val sortedReferences =
+            references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN }.sortedBy(::refName)
         for (i in sortedReferences)
-            results.add("KSClassifierReferenceImpl: Qualifier of ${i.element} is ${(i.element as KSClassifierReference).qualifier}")
+            results.add(
+                "KSClassifierReferenceImpl: Qualifier of ${i.element} is ${
+                (i.element as KSClassifierReference).qualifier
+                }"
+            )
 
         // FIXME: References in getters and type arguments are not compared to equal.
-        val descriptorReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN_LIB }.distinctBy(::refName).sortedBy(::refName)
+        val descriptorReferences =
+            references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN_LIB }
+                .distinctBy(::refName).sortedBy(::refName)
         for (i in descriptorReferences) {
-            results.add("KSClassifierReferenceDescriptorImpl: Qualifier of ${i.element} is ${(i.element as KSClassifierReference).qualifier}")
+            results.add(
+                "KSClassifierReferenceDescriptorImpl: Qualifier of ${i.element} is ${
+                (i.element as KSClassifierReference).qualifier
+                }"
+            )
         }
 
-        val javaReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.JAVA }.sortedBy(::refName)
+        val javaReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.JAVA }
+            .sortedBy(::refName)
         for (i in javaReferences) {
-            results.add("KSClassifierReferenceJavaImpl: Qualifier of ${i.element} is ${(i.element as KSClassifierReference).qualifier}")
+            results.add(
+                "KSClassifierReferenceJavaImpl: Qualifier of ${i.element} is ${
+                (i.element as KSClassifierReference).qualifier}"
+            )
         }
         return emptyList()
     }
@@ -60,7 +74,6 @@ open class ReferenceElementProcessor: AbstractTestProcessor() {
     override fun toResult(): List<String> {
         return results
     }
-
 }
 
 class ReferenceCollector : KSTopDownVisitor<MutableSet<KSTypeReference>, Unit>() {

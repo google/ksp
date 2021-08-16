@@ -1,9 +1,5 @@
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.validate
-import com.google.devtools.ksp.visitor.KSDefaultVisitor
-import java.io.File
-import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 class TestProcessor : SymbolProcessor {
@@ -11,17 +7,23 @@ class TestProcessor : SymbolProcessor {
     lateinit var logger: KSPLogger
     var processed = false
 
-    fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
+    fun init(
+        options: Map<String, String>,
+        kotlinVersion: KotlinVersion,
+        codeGenerator: CodeGenerator,
+        logger: KSPLogger,
+    ) {
         this.codeGenerator = codeGenerator
         this.logger = logger
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        if(processed) {
+        if (processed) {
             return emptyList()
         }
         fun outputForAnno(anno: String) {
-            val annoFiles = resolver.getSymbolsWithAnnotation(anno).map { (it as KSDeclaration).containingFile!! }.toList()
+            val annoFiles =
+                resolver.getSymbolsWithAnnotation(anno).map { (it as KSDeclaration).containingFile!! }.toList()
             codeGenerator.createNewFile(Dependencies(false, *annoFiles.toTypedArray()), "", anno, "log").use { output ->
                 OutputStreamWriter(output).use { writer ->
                     writer.write(annoFiles.map { it.fileName }.joinToString(", "))
@@ -35,11 +37,12 @@ class TestProcessor : SymbolProcessor {
         resolver.getNewFiles().forEach { file ->
             logger.warn("${file.packageName.asString()}/${file.fileName}")
             val outputBaseFN = file.fileName.replace(".kt", "Generated").replace(".java", "Generated")
-            codeGenerator.createNewFile(Dependencies(false, file), file.packageName.asString(), outputBaseFN, "kt").use { output ->
-                OutputStreamWriter(output).use { writer ->
-                    writer.write("private val unused = \"unused\"")
+            codeGenerator.createNewFile(Dependencies(false, file), file.packageName.asString(), outputBaseFN, "kt")
+                .use { output ->
+                    OutputStreamWriter(output).use { writer ->
+                        writer.write("private val unused = \"unused\"")
+                    }
                 }
-            }
         }
         processed = true
         return emptyList()
@@ -48,7 +51,7 @@ class TestProcessor : SymbolProcessor {
 
 class TestProcessorProvider : SymbolProcessorProvider {
     override fun create(
-        env: SymbolProcessorEnvironment
+        env: SymbolProcessorEnvironment,
     ): SymbolProcessor {
         return TestProcessor().apply {
             init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)

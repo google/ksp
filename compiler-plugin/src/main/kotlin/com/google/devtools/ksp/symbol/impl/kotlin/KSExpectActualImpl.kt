@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processing.impl.findActualsInKSDeclaration
 import com.google.devtools.ksp.processing.impl.findExpectsInKSDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSExpectActual
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.psi.psiUtil.hasActualModifier

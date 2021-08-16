@@ -5,7 +5,9 @@ import com.google.devtools.ksp.symbol.impl.KSObjectCache
 
 class KSTypeReferenceSyntheticImpl(val ksType: KSType) : KSTypeReference {
     companion object : KSObjectCache<KSType, KSTypeReferenceSyntheticImpl>() {
-        fun getCached(ksType: KSType) = KSTypeReferenceSyntheticImpl.cache.getOrPut(ksType) { KSTypeReferenceSyntheticImpl(ksType) }
+        fun getCached(ksType: KSType) = KSTypeReferenceSyntheticImpl.cache.getOrPut(ksType) {
+            KSTypeReferenceSyntheticImpl(ksType)
+        }
     }
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
@@ -32,7 +31,9 @@ import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 
-class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) : KSPropertyDeclaration, KSDeclarationImpl(ktProperty),
+class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) :
+    KSPropertyDeclaration,
+    KSDeclarationImpl(ktProperty),
     KSExpectActual by KSExpectActualImpl(ktProperty) {
     companion object : KSObjectCache<KtProperty, KSPropertyDeclarationImpl>() {
         fun getCached(ktProperty: KtProperty) = cache.getOrPut(ktProperty) { KSPropertyDeclarationImpl(ktProperty) }
@@ -67,7 +68,6 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         } ?: propertyDescriptor?.getter?.let {
             KSPropertyGetterDescriptorImpl.getCached(it)
         }
-
     }
 
     override val setter: KSPropertySetter? by lazy {
@@ -76,7 +76,6 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         } ?: propertyDescriptor?.setter?.let {
             KSPropertySetterDescriptorImpl.getCached(it)
         }
-
     }
 
     override val type: KSTypeReference by lazy {
@@ -111,8 +110,8 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
 internal fun KtAnnotated.filterUseSiteTargetAnnotations(): Sequence<KtAnnotationEntry> {
     return this.annotationEntries.asSequence().filter { property ->
         property.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
-            it != AnnotationUseSiteTarget.PROPERTY_GETTER && it != AnnotationUseSiteTarget.PROPERTY_SETTER
-                && it != AnnotationUseSiteTarget.SETTER_PARAMETER
+            it != AnnotationUseSiteTarget.PROPERTY_GETTER && it != AnnotationUseSiteTarget.PROPERTY_SETTER &&
+                it != AnnotationUseSiteTarget.SETTER_PARAMETER
         } ?: true
     }
 }

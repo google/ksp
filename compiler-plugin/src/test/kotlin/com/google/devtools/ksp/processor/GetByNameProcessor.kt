@@ -13,9 +13,21 @@ class GetByNameProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val funNames = listOf("lib1.Foo.lib1MemberFun", "lib1.lib1TopFun", "lib1.Bar.lib1JavaMemberFun", "lib2.Foo.lib2MemberFun", "source.FooInSource.sourceMemberFun")
+        val funNames = listOf(
+            "lib1.Foo.lib1MemberFun",
+            "lib1.lib1TopFun",
+            "lib1.Bar.lib1JavaMemberFun",
+            "lib2.Foo.lib2MemberFun",
+            "source.FooInSource.sourceMemberFun"
+        )
         val overloadFunctionNames = listOf("lib1.Foo.overload")
-        val propNames = listOf("lib1.Foo.lib1MemberProp","lib1.lib1TopProp", "lib2.Foo.lib2MemberProp", "source.FooInSource.sourceMemberProp", "source.propInSource",)
+        val propNames = listOf(
+            "lib1.Foo.lib1MemberProp",
+            "lib1.lib1TopProp",
+            "lib2.Foo.lib2MemberProp",
+            "source.FooInSource.sourceMemberProp",
+            "source.propInSource",
+        )
         for (funName in funNames) {
             if (resolver.getFunctionDeclarationsByName(funName, true).none()) {
                 results.add("failed to get $funName")

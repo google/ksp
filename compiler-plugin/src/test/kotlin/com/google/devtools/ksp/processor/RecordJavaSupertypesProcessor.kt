@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -42,7 +41,7 @@ class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
         if (resolver is ResolverImpl) {
             val m = resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             m.forEach { symbol, files ->
-                files.filter { it.endsWith(".java")}.sorted().forEach {
+                files.filter { it.endsWith(".java") }.sorted().forEach {
                     results.add("$symbol: $it")
                 }
             }

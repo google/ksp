@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiTypeParameter
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
@@ -27,8 +24,12 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiTypeParameter
 
-class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) : KSTypeParameter, KSDeclarationJavaImpl(psi),
+class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) :
+    KSTypeParameter,
+    KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiTypeParameter, KSTypeParameterJavaImpl>() {
         fun getCached(psi: PsiTypeParameter) = cache.getOrPut(psi) { KSTypeParameterJavaImpl(psi) }

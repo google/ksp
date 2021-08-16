@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
@@ -27,7 +26,9 @@ import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 
-class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KSFunctionDeclaration, KSDeclarationJavaImpl(psi),
+class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
+    KSFunctionDeclaration,
+    KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiMethod, KSFunctionDeclarationJavaImpl>() {
         fun getCached(psi: PsiMethod) = cache.getOrPut(psi) { KSFunctionDeclarationJavaImpl(psi) }
@@ -63,8 +64,10 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) : KS
 
     override val isAbstract: Boolean by lazy {
         this.modifiers.contains(Modifier.ABSTRACT) ||
-                ((this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE &&
-                        !this.modifiers.contains(Modifier.JAVA_DEFAULT))
+            (
+                (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE &&
+                    !this.modifiers.contains(Modifier.JAVA_DEFAULT)
+                )
     }
 
     override val modifiers: Set<Modifier> by lazy {

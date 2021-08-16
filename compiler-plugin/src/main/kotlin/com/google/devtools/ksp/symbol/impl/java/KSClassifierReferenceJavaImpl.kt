@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiJavaCodeReferenceElement
-import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiJavaCodeReferenceElement
+import com.intellij.psi.impl.source.PsiClassReferenceType
 
 class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) : KSClassifierReference {
     companion object : KSObjectCache<PsiClassType, KSClassifierReferenceJavaImpl>() {
@@ -37,7 +36,8 @@ class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) :
     }
 
     override val qualifier: KSClassifierReference? by lazy {
-        val qualifierReference = (psi as? PsiClassReferenceType)?.reference?.qualifier as? PsiJavaCodeReferenceElement ?: return@lazy null
+        val qualifierReference = (psi as? PsiClassReferenceType)?.reference?.qualifier as? PsiJavaCodeReferenceElement
+            ?: return@lazy null
         val qualifierType = PsiClassReferenceType(qualifierReference, psi.languageLevel)
         getCached(qualifierType)
     }
@@ -48,7 +48,11 @@ class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) :
     }
 
     override fun referencedName(): String {
-        return psi.className + if (psi.parameterCount > 0) "<${psi.parameters.map { it.presentableText }.joinToString(", ")}>" else ""
+        return psi.className + if (psi.parameterCount > 0) "<${
+        psi.parameters.joinToString(", ") {
+            it.presentableText
+        }
+        }>" else ""
     }
 
     override fun toString() = referencedName()

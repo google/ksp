@@ -15,22 +15,20 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.memoized
-import com.google.devtools.ksp.symbol.impl.toKSModifiers
-import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
-class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParameter, val owner: KtTypeParameterListOwner) : KSTypeParameter,
-    KSDeclarationImpl(ktTypeParameter),
-    KSExpectActual by KSExpectActualNoImpl() {
+class KSTypeParameterImpl private constructor(
+    val ktTypeParameter: KtTypeParameter,
+    val owner:
+        KtTypeParameterListOwner,
+) : KSTypeParameter, KSDeclarationImpl(ktTypeParameter), KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<Pair<KtTypeParameter, KtTypeParameterListOwner>, KSTypeParameterImpl>() {
         fun getCached(ktTypeParameter: KtTypeParameter, owner: KtTypeParameterListOwner) =
             cache.getOrPut(Pair(ktTypeParameter, owner)) { KSTypeParameterImpl(ktTypeParameter, owner) }
@@ -57,7 +55,9 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
         val list = sequenceOf(ktTypeParameter.extendsBound)
         list.plus(
             owner.typeConstraints
-                .filter { it.subjectTypeParameterName!!.getReferencedName() == ktTypeParameter.nameAsSafeName.asString() }
+                .filter {
+                    it.subjectTypeParameterName!!.getReferencedName() == ktTypeParameter.nameAsSafeName.asString()
+                }
                 .map { it.boundTypeReference }
         ).filterNotNull().map { KSTypeReferenceImpl.getCached(it) }.memoized()
     }
@@ -72,7 +72,9 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
             is KtClassOrObject -> KSClassDeclarationImpl.getCached(owner)
             is KtFunction -> KSFunctionDeclarationImpl.getCached(owner)
             is KtProperty -> KSPropertyDeclarationImpl.getCached(owner)
-            else -> throw IllegalStateException("Unexpected containing declaration type ${owner.javaClass}, $ExceptionMessage")
+            else -> throw IllegalStateException(
+                "Unexpected containing declaration type ${owner.javaClass}, $ExceptionMessage"
+            )
         }
     }
 
