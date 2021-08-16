@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiJavaFile
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
+import com.intellij.psi.PsiField
+import com.intellij.psi.PsiJavaFile
 
-class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) : KSPropertyDeclaration, KSDeclarationJavaImpl(psi),
+class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) :
+    KSPropertyDeclaration,
+    KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiField, KSPropertyDeclarationJavaImpl>() {
         fun getCached(psi: PsiField) = cache.getOrPut(psi) { KSPropertyDeclarationJavaImpl(psi) }

@@ -15,24 +15,21 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.binary
 
-import com.google.devtools.ksp.ExceptionMessage
-import org.jetbrains.kotlin.builtins.isSuspendFunctionTypeOrSubtype
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.memoized
-import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.builtins.isSuspendFunctionTypeOrSubtype
+import org.jetbrains.kotlin.types.KotlinType
 
-class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType, override val origin: Origin) : KSTypeReference {
+class KSTypeReferenceDescriptorImpl private constructor(val kotlinType: KotlinType, override val origin: Origin) :
+    KSTypeReference {
     companion object : KSObjectCache<IdKey<Pair<KotlinType, Origin>>, KSTypeReferenceDescriptorImpl>() {
-        fun getCached(kotlinType: KotlinType, origin: Origin) = cache.getOrPut(IdKey(Pair(kotlinType, origin))) { KSTypeReferenceDescriptorImpl(kotlinType, origin) }
+        fun getCached(kotlinType: KotlinType, origin: Origin) =
+            cache.getOrPut(IdKey(Pair(kotlinType, origin))) { KSTypeReferenceDescriptorImpl(kotlinType, origin) }
     }
 
     override val location: Location = NonExistLocation

@@ -11,7 +11,7 @@ class AClass(private val a: Int, val b: String, val c: Double, val d: HELLO) {
     var hello2: HELLO = HELLO()
         get() { return hello2 }
         private set
-    class innerClass<T: HELLO>
+    class innerClass<T : HELLO>
 
     val generic = innerClass<HELLO>()
 }

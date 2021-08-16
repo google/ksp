@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -46,7 +45,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
     class ConstructorsVisitor : KSVisitorVoid() {
         private val declarationsByClass = LinkedHashMap<KSClassDeclaration, MutableList<String>>()
         fun classNames() = declarationsByClass.keys
-        fun toResult() : List<String> {
+        fun toResult(): List<String> {
             return declarationsByClass.entries
                 .sortedBy {
                     // sort by simple name to get cousin classes next to each-other
@@ -59,16 +58,16 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         }
         fun KSFunctionDeclaration.toSignature(): String {
             return this.simpleName.asString() +
-                    "(${this.parameters.map { 
-                        buildString {
-                            append(it.type.resolve().declaration.qualifiedName?.asString())
-                            if (it.hasDefault) {
-                                append("(hasDefault)")
-                            }
+                "(${this.parameters.map {
+                    buildString {
+                        append(it.type.resolve().declaration.qualifiedName?.asString())
+                        if (it.hasDefault) {
+                            append("(hasDefault)")
                         }
-                    }.joinToString(",")})" +
-                    ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString()
-                        ?: "<no-return>"}"
+                    }
+                }.joinToString(",")})" +
+                ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString()
+                    ?: "<no-return>"}"
         }
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
@@ -84,7 +83,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         }
 
         override fun visitFile(file: KSFile, data: Unit) {
-            file.declarations.forEach{ it.accept(this, Unit) }
+            file.declarations.forEach { it.accept(this, Unit) }
         }
     }
 }

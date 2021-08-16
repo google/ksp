@@ -14,66 +14,66 @@ class IncrementalIT {
     val project: TemporaryTestProject = TemporaryTestProject("incremental")
 
     val src2Dirty = listOf(
-            "workload/src/main/java/p1/J1.java" to setOf(
-                    "w: [ksp] p1/TestK2J.kt",
-                    "w: [ksp] p1/TestJ2J.java",
-                    "w: [ksp] p1/J1.java",
-            ),
-            "workload/src/main/java/p1/J2.java" to setOf(
-                    "w: [ksp] p1/J2.java",
-            ),
-            "workload/src/main/java/p1/TestJ2J.java" to setOf(
-                    "w: [ksp] p1/TestJ2J.java",
-            ),
-            "workload/src/main/java/p1/TestJ2K.java" to setOf(
-                    "w: [ksp] p1/TestJ2K.java",
-            ),
-            "workload/src/main/java/p2/J2.java" to setOf(
-                    "w: [ksp] p1/TestK2J.kt",
-                    "w: [ksp] p2/J2.java",
-                    "w: [ksp] p1/TestJ2J.java",
-            ),
-            "workload/src/main/java/p3/J1.java" to setOf(
-                    "w: [ksp] p3/J1.java",
-            ),
-            "workload/src/main/java/p3/J2.java" to setOf(
-                    "w: [ksp] p3/J2.java",
-            ),
-            "workload/src/main/java/p3/J3.java" to setOf(
-                    "w: [ksp] p1/TestK2J.kt",
-                    "w: [ksp] p1/TestJ2J.java",
-                    "w: [ksp] p3/J3.java",
-            ),
-            "workload/src/main/kotlin/p1/K1.kt" to setOf(
-                    "w: [ksp] p1/TestK2K.kt",
-                    "w: [ksp] p1/K1.kt",
-                    "w: [ksp] p1/TestJ2K.java",
-            ),
-            "workload/src/main/kotlin/p1/K2.kt" to setOf(
-                    "w: [ksp] p1/K2.kt",
-            ),
-            "workload/src/main/kotlin/p1/TestK2J.kt" to setOf(
-                    "w: [ksp] p1/TestK2J.kt",
-            ),
-            "workload/src/main/kotlin/p1/TestK2K.kt" to setOf(
-                    "w: [ksp] p1/TestK2K.kt",
-            ),
-            "workload/src/main/kotlin/p2/K2.kt" to setOf(
-                    "w: [ksp] p1/TestK2K.kt",
-                    "w: [ksp] p2/K2.kt",
-                    "w: [ksp] p1/TestJ2K.java",
-            ),
-            "workload/src/main/kotlin/p3/K1.kt" to setOf(
-                    "w: [ksp] p3/K1.kt",
-            ),
-            "workload/src/main/kotlin/p3/K2.kt" to setOf(
-                    "w: [ksp] p3/K2.kt",
-            ),
-            "workload/src/main/kotlin/p3/K3.kt" to setOf(
-                    "w: [ksp] p1/TestK2K.kt",
-                    "w: [ksp] p3/K3.kt",
-                    "w: [ksp] p1/TestJ2K.java",
-            )
+        "workload/src/main/java/p1/J1.java" to setOf(
+            "w: [ksp] p1/TestK2J.kt",
+            "w: [ksp] p1/TestJ2J.java",
+            "w: [ksp] p1/J1.java",
+        ),
+        "workload/src/main/java/p1/J2.java" to setOf(
+            "w: [ksp] p1/J2.java",
+        ),
+        "workload/src/main/java/p1/TestJ2J.java" to setOf(
+            "w: [ksp] p1/TestJ2J.java",
+        ),
+        "workload/src/main/java/p1/TestJ2K.java" to setOf(
+            "w: [ksp] p1/TestJ2K.java",
+        ),
+        "workload/src/main/java/p2/J2.java" to setOf(
+            "w: [ksp] p1/TestK2J.kt",
+            "w: [ksp] p2/J2.java",
+            "w: [ksp] p1/TestJ2J.java",
+        ),
+        "workload/src/main/java/p3/J1.java" to setOf(
+            "w: [ksp] p3/J1.java",
+        ),
+        "workload/src/main/java/p3/J2.java" to setOf(
+            "w: [ksp] p3/J2.java",
+        ),
+        "workload/src/main/java/p3/J3.java" to setOf(
+            "w: [ksp] p1/TestK2J.kt",
+            "w: [ksp] p1/TestJ2J.java",
+            "w: [ksp] p3/J3.java",
+        ),
+        "workload/src/main/kotlin/p1/K1.kt" to setOf(
+            "w: [ksp] p1/TestK2K.kt",
+            "w: [ksp] p1/K1.kt",
+            "w: [ksp] p1/TestJ2K.java",
+        ),
+        "workload/src/main/kotlin/p1/K2.kt" to setOf(
+            "w: [ksp] p1/K2.kt",
+        ),
+        "workload/src/main/kotlin/p1/TestK2J.kt" to setOf(
+            "w: [ksp] p1/TestK2J.kt",
+        ),
+        "workload/src/main/kotlin/p1/TestK2K.kt" to setOf(
+            "w: [ksp] p1/TestK2K.kt",
+        ),
+        "workload/src/main/kotlin/p2/K2.kt" to setOf(
+            "w: [ksp] p1/TestK2K.kt",
+            "w: [ksp] p2/K2.kt",
+            "w: [ksp] p1/TestJ2K.java",
+        ),
+        "workload/src/main/kotlin/p3/K1.kt" to setOf(
+            "w: [ksp] p3/K1.kt",
+        ),
+        "workload/src/main/kotlin/p3/K2.kt" to setOf(
+            "w: [ksp] p3/K2.kt",
+        ),
+        "workload/src/main/kotlin/p3/K3.kt" to setOf(
+            "w: [ksp] p1/TestK2K.kt",
+            "w: [ksp] p3/K3.kt",
+            "w: [ksp] p1/TestJ2K.java",
+        )
     )
 
     @Test
@@ -111,27 +111,27 @@ class IncrementalIT {
     }
 
     val changeSets = listOf(
-            listOf(7, 5),
-            listOf(0, 12),
-            listOf(13, 14),
-            listOf(8, 10),
-            listOf(11, 4),
-            listOf(3, 15),
-            listOf(6, 9),
-            listOf(2, 1),
-            listOf(3, 1, 12),
-            listOf(13, 0, 11),
-            listOf(6, 8, 4),
-            listOf(10, 9, 15),
-            listOf(2, 14, 5, 7),
-            listOf(5, 0, 13, 15),
-            listOf(3, 2, 6, 7),
-            listOf(4, 14, 10, 1),
-            listOf(12, 9, 8, 11),
-            listOf(12, 13, 5, 14, 7),
-            listOf(11, 2, 8, 8, 9),
-            listOf(11, 2, 8, 8, 9),
-            listOf(4, 0, 15, 1, 10),
+        listOf(7, 5),
+        listOf(0, 12),
+        listOf(13, 14),
+        listOf(8, 10),
+        listOf(11, 4),
+        listOf(3, 15),
+        listOf(6, 9),
+        listOf(2, 1),
+        listOf(3, 1, 12),
+        listOf(13, 0, 11),
+        listOf(6, 8, 4),
+        listOf(10, 9, 15),
+        listOf(2, 14, 5, 7),
+        listOf(5, 0, 13, 15),
+        listOf(3, 2, 6, 7),
+        listOf(4, 14, 10, 1),
+        listOf(12, 9, 8, 11),
+        listOf(12, 13, 5, 14, 7),
+        listOf(11, 2, 8, 8, 9),
+        listOf(11, 2, 8, 8, 9),
+        listOf(4, 0, 15, 1, 10),
     )
 
     @Test
@@ -154,7 +154,6 @@ class IncrementalIT {
                 val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
             }
-
         }
     }
 

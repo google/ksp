@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl

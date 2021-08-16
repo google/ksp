@@ -95,9 +95,11 @@ signing {
 val testPropsOutDir = project.layout.buildDirectory.dir("test-config")
 val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfiguration") {
     description = "Generates a properties file with the current environment for gradle integration tests"
-    this.setOutputFile(testPropsOutDir.map {
-        it.file("testprops.properties")
-    })
+    this.setOutputFile(
+        testPropsOutDir.map {
+            it.file("testprops.properties")
+        }
+    )
     property("kspVersion", version)
     property("mavenRepoDir", File(rootProject.buildDir, "repos/test").absolutePath)
     property("kspProjectRootDir", rootProject.projectDir.absolutePath)

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
@@ -41,7 +40,8 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }.plus(this.findAnnotationFromUseSiteTarget()).memoized()
+        ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
+            .plus(this.findAnnotationFromUseSiteTarget()).memoized()
     }
 
     override val isCrossInline: Boolean = ktParameter.hasModifier(CROSSINLINE_KEYWORD)
@@ -63,7 +63,8 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
     }
 
     override val type: KSTypeReference by lazy {
-        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) } ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
+        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) } ?: findPropertyForAccessor()?.type
+            ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
     }
 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()

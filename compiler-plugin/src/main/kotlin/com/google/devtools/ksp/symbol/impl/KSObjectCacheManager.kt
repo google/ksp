@@ -15,11 +15,7 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl
-
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
-import com.google.devtools.ksp.symbol.impl.binary.KSAnnotationDescriptorImpl
 
 class KSObjectCacheManager {
     companion object {

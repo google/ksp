@@ -1,6 +1,5 @@
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.validate
 import java.io.OutputStreamWriter
 
 class TestProcessor(

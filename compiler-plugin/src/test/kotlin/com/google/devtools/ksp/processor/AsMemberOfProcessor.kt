@@ -54,7 +54,10 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
 
         // TODO we should eventually support this, probably as different asReceiverOf kind of API
         val fileLevelExtensionFunction = resolver.getDeclaration<KSFunctionDeclaration>("fileLevelExtensionFunction")
-        results.add("fileLevelExtensionFunction: " + resolver.asMemberOfSignature(fileLevelExtensionFunction, listOfStrings))
+        results.add(
+            "fileLevelExtensionFunction: " +
+                resolver.asMemberOfSignature(fileLevelExtensionFunction, listOfStrings)
+        )
 
         val fileLevelProperty = resolver.getDeclaration<KSPropertyDeclaration>("fileLevelProperty")
         results.add("fileLevelProperty: " + resolver.asMemberOfSignature(fileLevelProperty, listOfStrings))

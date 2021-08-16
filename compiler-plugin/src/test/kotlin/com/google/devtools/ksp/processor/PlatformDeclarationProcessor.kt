@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.isConstructor
@@ -23,7 +22,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class PlatformDeclarationProcessor: AbstractTestProcessor() {
+open class PlatformDeclarationProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val collector = EverythingVisitor()
     val declarations = mutableListOf<KSDeclaration>()
@@ -42,22 +41,21 @@ open class PlatformDeclarationProcessor: AbstractTestProcessor() {
                 it is KSFunctionDeclaration && it.isConstructor()
             }
             .sortedBy { "${it.containingFile?.fileName} : ${it.qualifiedName?.asString()}" }.forEach {
-            val r = mutableListOf<Any?>()
-            r.add(it.containingFile?.fileName)
-            r.add(it.qualifiedName?.asString())
-            r.add(it.isActual)
-            r.add(it.isExpect)
-            r.add(it.findActuals().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
-            r.add(it.findExpects().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
-            results.add(r.map { it.toString() }.joinToString(" : "))
-        }
+                val r = mutableListOf<Any?>()
+                r.add(it.containingFile?.fileName)
+                r.add(it.qualifiedName?.asString())
+                r.add(it.isActual)
+                r.add(it.isExpect)
+                r.add(it.findActuals().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
+                r.add(it.findExpects().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
+                results.add(r.map { it.toString() }.joinToString(" : "))
+            }
         return emptyList()
     }
 
     override fun toResult(): List<String> {
         return results
     }
-
 }
 
 class EverythingVisitor : KSTopDownVisitor<MutableList<KSDeclaration>, Unit>() {

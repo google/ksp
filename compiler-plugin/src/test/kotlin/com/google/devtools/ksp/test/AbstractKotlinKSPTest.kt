@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.DualLookupTracker
@@ -66,7 +65,8 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
                     dependencies = module.dependencies.map {
                         it.outDir
                     },
-                    testProcessor = null)
+                    testProcessor = null
+                )
             }
         }
         // modules are compiled, now compile the test project with KSP
@@ -76,7 +76,8 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
             .single()
             .substringAfter(TEST_PROCESSOR)
             .trim()
-        val testProcessor = Class.forName("com.google.devtools.ksp.processor.$testProcessorName").newInstance() as AbstractTestProcessor
+        val testProcessor = Class.forName("com.google.devtools.ksp.processor.$testProcessorName").newInstance()
+            as AbstractTestProcessor
 
         compileModule(
             module = mainModule,
@@ -99,7 +100,8 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         module: TestModule,
         testFiles: List<KspTestFile>,
         dependencies: List<File>,
-        testProcessor: AbstractTestProcessor?) {
+        testProcessor: AbstractTestProcessor?
+    ) {
         val moduleRoot = module.rootDir
         val hasJavaSources = testFiles.any {
             it.isJavaFile()
@@ -130,16 +132,19 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
                 PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false)
             )
             val analysisExtension =
-                KotlinSymbolProcessingExtension(KspOptions.Builder().apply {
-                    javaSourceRoots.add(module.javaSrcDir)
-                    classOutputDir = File(moduleRoot,"kspTest/classes/main")
-                    javaOutputDir = File(moduleRoot,"kspTest/src/main/java")
-                    kotlinOutputDir = File(moduleRoot,"kspTest/src/main/kotlin")
-                    resourceOutputDir = File(moduleRoot,"kspTest/src/main/resources")
-                    projectBaseDir = moduleRoot
-                    cachesDir = File(moduleRoot, "kspTest/kspCaches")
-                    kspOutputDir = File(moduleRoot, "kspTest")
-                }.build(), logger, testProcessor)
+                KotlinSymbolProcessingExtension(
+                    KspOptions.Builder().apply {
+                        javaSourceRoots.add(module.javaSrcDir)
+                        classOutputDir = File(moduleRoot, "kspTest/classes/main")
+                        javaOutputDir = File(moduleRoot, "kspTest/src/main/java")
+                        kotlinOutputDir = File(moduleRoot, "kspTest/src/main/kotlin")
+                        resourceOutputDir = File(moduleRoot, "kspTest/src/main/resources")
+                        projectBaseDir = moduleRoot
+                        cachesDir = File(moduleRoot, "kspTest/kspCaches")
+                        kspOutputDir = File(moduleRoot, "kspTest")
+                    }.build(),
+                    logger, testProcessor
+                )
             val project = environment.project
             AnalysisHandlerExtension.registerExtension(project, analysisExtension)
             GenerationUtils.compileFiles(moduleFiles.psiFiles, environment, ClassBuilderFactories.TEST)
@@ -171,7 +176,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
     private fun groupFilesByModule(
         mainModule: TestModule,
         testFiles: List<KspTestFile>
-    ) : LinkedHashMap<TestModule, MutableList<KspTestFile>> {
+    ): LinkedHashMap<TestModule, MutableList<KspTestFile>> {
         val result = LinkedHashMap<TestModule, MutableList<KspTestFile>>()
         testFiles.forEach { testFile ->
             result.getOrPut(testFile.testModule ?: mainModule) {
@@ -184,7 +189,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
     /**
      * Write the java files in the given list into the java source directory of the TestModule.
      */
-    private fun TestModule.writeJavaFiles(testFiles : List<KspTestFile>) {
+    private fun TestModule.writeJavaFiles(testFiles: List<KspTestFile>) {
         val targetDir = javaSrcDir
         targetDir.mkdirs()
         testFiles.filter {
@@ -200,13 +205,13 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         }
     }
 
-    private val TestModule.rootDir:File
+    private val TestModule.rootDir: File
         get() = File(testTmpDir, name)
 
-    private val TestModule.javaSrcDir:File
+    private val TestModule.javaSrcDir: File
         get() = File(rootDir, "javaSrc")
 
-    private val TestModule.outDir:File
+    private val TestModule.outDir: File
         get() = File(rootDir, "out")
 
     private fun KspTestFile.isJavaFile() = name.endsWith(".java")

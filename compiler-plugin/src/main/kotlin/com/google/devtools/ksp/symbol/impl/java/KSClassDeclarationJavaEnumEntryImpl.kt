@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
@@ -29,14 +28,11 @@ import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.intellij.psi.PsiEnumConstant
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.PropertyDescriptor
-import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
-import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
-class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumConstant) : KSClassDeclaration, KSDeclarationJavaImpl(psi),
+class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumConstant) :
+    KSClassDeclaration,
+    KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
     companion object : KSObjectCache<PsiEnumConstant, KSClassDeclarationJavaEnumEntryImpl>() {
         fun getCached(psi: PsiEnumConstant) = cache.getOrPut(psi) { KSClassDeclarationJavaEnumEntryImpl(psi) }
@@ -67,10 +63,10 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> =
-            descriptor?.getAllFunctions() ?: emptySequence()
+        descriptor?.getAllFunctions() ?: emptySequence()
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> =
-            descriptor?.getAllProperties() ?: emptySequence()
+        descriptor?.getAllProperties() ?: emptySequence()
 
     override val declarations: Sequence<KSDeclaration> = emptySequence()
 

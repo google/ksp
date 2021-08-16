@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getJavaClassByName
 import com.google.devtools.ksp.getKotlinClassByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.getClassDeclarationByName
 
 @KspExperimental
 open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
@@ -73,5 +72,4 @@ open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
     override fun toResult(): List<String> {
         return results
     }
-
 }

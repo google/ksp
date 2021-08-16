@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -56,6 +55,4 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
     override fun toResult(): List<String> {
         return results
     }
-
 }
-

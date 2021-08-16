@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -30,14 +29,17 @@ open class ClassKindsProcessor : AbstractTestProcessor() {
         fun KSClassDeclaration.pretty(): String = "${qualifiedName!!.asString()}: $classKind"
         val files = resolver.getNewFiles()
         files.forEach {
-            it.accept(object : KSTopDownVisitor<Unit, Unit>() {
-                override fun defaultHandler(node: KSNode, data: Unit) = Unit
+            it.accept(
+                object : KSTopDownVisitor<Unit, Unit>() {
+                    override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-                    results.add(classDeclaration.pretty())
-                    super.visitClassDeclaration(classDeclaration, data)
-                }
-            }, Unit)
+                    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+                        results.add(classDeclaration.pretty())
+                        super.visitClassDeclaration(classDeclaration, data)
+                    }
+                },
+                Unit
+            )
         }
 
         results.add(resolver.getClassDeclarationByName("kotlin.Any")!!.pretty())
@@ -54,5 +56,4 @@ open class ClassKindsProcessor : AbstractTestProcessor() {
     override fun toResult(): List<String> {
         return results
     }
-
 }

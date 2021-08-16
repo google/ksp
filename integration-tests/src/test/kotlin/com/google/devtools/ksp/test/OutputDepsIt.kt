@@ -14,86 +14,86 @@ class OutputDepsIt {
     val project: TemporaryTestProject = TemporaryTestProject("output-deps")
 
     val src2Dirty = listOf(
-            "workload/src/main/java/p1/J1.java" to setOf(
-                    "w: [ksp] p1/J1.java",
-                    "w: [ksp] p1/K1.kt",
-                    "w: [ksp] p1/K2.kt",
-            ),
-            "workload/src/main/java/p1/J2.java" to setOf(
-                    "w: [ksp] p1/J2.java",
-            ),
-            "workload/src/main/kotlin/p1/K1.kt" to setOf(
-                    "w: [ksp] p1/J1.java",
-                    "w: [ksp] p1/K1.kt",
-                    "w: [ksp] p1/K2.kt",
-            ),
-            "workload/src/main/kotlin/p1/K2.kt" to setOf(
-                    "w: [ksp] p1/J1.java",
-                    "w: [ksp] p1/K1.kt",
-                    "w: [ksp] p1/K2.kt",
-            ),
+        "workload/src/main/java/p1/J1.java" to setOf(
+            "w: [ksp] p1/J1.java",
+            "w: [ksp] p1/K1.kt",
+            "w: [ksp] p1/K2.kt",
+        ),
+        "workload/src/main/java/p1/J2.java" to setOf(
+            "w: [ksp] p1/J2.java",
+        ),
+        "workload/src/main/kotlin/p1/K1.kt" to setOf(
+            "w: [ksp] p1/J1.java",
+            "w: [ksp] p1/K1.kt",
+            "w: [ksp] p1/K2.kt",
+        ),
+        "workload/src/main/kotlin/p1/K2.kt" to setOf(
+            "w: [ksp] p1/J1.java",
+            "w: [ksp] p1/K1.kt",
+            "w: [ksp] p1/K2.kt",
+        ),
     )
 
     val src2Output = mapOf(
-            "workload/src/main/java/p1/J1.java" to setOf(
-                    "kotlin/p1/J1Generated.kt",
-                    "kotlin/p1/K1Generated.kt",
-                    "kotlin/p1/K2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
-            "workload/src/main/java/p1/J2.java" to setOf(
-                    "kotlin/p1/J2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
-            "workload/src/main/kotlin/p1/K1.kt" to setOf(
-                    "kotlin/p1/J1Generated.kt",
-                    "kotlin/p1/K1Generated.kt",
-                    "kotlin/p1/K2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
-            "workload/src/main/kotlin/p1/K2.kt" to setOf(
-                    "kotlin/p1/J1Generated.kt",
-                    "kotlin/p1/K1Generated.kt",
-                    "kotlin/p1/K2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
+        "workload/src/main/java/p1/J1.java" to setOf(
+            "kotlin/p1/J1Generated.kt",
+            "kotlin/p1/K1Generated.kt",
+            "kotlin/p1/K2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
+        "workload/src/main/java/p1/J2.java" to setOf(
+            "kotlin/p1/J2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
+        "workload/src/main/kotlin/p1/K1.kt" to setOf(
+            "kotlin/p1/J1Generated.kt",
+            "kotlin/p1/K1Generated.kt",
+            "kotlin/p1/K2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
+        "workload/src/main/kotlin/p1/K2.kt" to setOf(
+            "kotlin/p1/J1Generated.kt",
+            "kotlin/p1/K1Generated.kt",
+            "kotlin/p1/K2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
     )
 
     val deletedSrc2Output = listOf(
-            "workload/src/main/java/p1/J1.java" to listOf(
-                    "kotlin/p1/Anno1Generated.kt",
-                    "kotlin/p1/Anno2Generated.kt",
-                    "kotlin/p1/J2Generated.kt",
-                    "kotlin/p1/K1Generated.kt",
-                    "kotlin/p1/K2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
-            "workload/src/main/java/p1/J2.java" to listOf(
-                    "kotlin/p1/Anno1Generated.kt",
-                    "kotlin/p1/Anno2Generated.kt",
-                    "kotlin/p1/K1Generated.kt",
-                    "kotlin/p1/K2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
-            "workload/src/main/kotlin/p1/K1.kt" to listOf(
-                    "kotlin/p1/Anno1Generated.kt",
-                    "kotlin/p1/Anno2Generated.kt",
-                    "kotlin/p1/K2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
-            "workload/src/main/kotlin/p1/K2.kt" to listOf(
-                    "kotlin/p1/Anno1Generated.kt",
-                    "kotlin/p1/Anno2Generated.kt",
-                    "resources/p1.Anno1.log",
-                    "resources/p1.Anno2.log",
-            ),
+        "workload/src/main/java/p1/J1.java" to listOf(
+            "kotlin/p1/Anno1Generated.kt",
+            "kotlin/p1/Anno2Generated.kt",
+            "kotlin/p1/J2Generated.kt",
+            "kotlin/p1/K1Generated.kt",
+            "kotlin/p1/K2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
+        "workload/src/main/java/p1/J2.java" to listOf(
+            "kotlin/p1/Anno1Generated.kt",
+            "kotlin/p1/Anno2Generated.kt",
+            "kotlin/p1/K1Generated.kt",
+            "kotlin/p1/K2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
+        "workload/src/main/kotlin/p1/K1.kt" to listOf(
+            "kotlin/p1/Anno1Generated.kt",
+            "kotlin/p1/Anno2Generated.kt",
+            "kotlin/p1/K2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
+        "workload/src/main/kotlin/p1/K2.kt" to listOf(
+            "kotlin/p1/Anno1Generated.kt",
+            "kotlin/p1/Anno2Generated.kt",
+            "resources/p1.Anno1.log",
+            "resources/p1.Anno2.log",
+        ),
     )
 
     @Test
@@ -144,7 +144,8 @@ class OutputDepsIt {
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
-                val outputs = outputRoot.walk().filter { it.isFile() }.map { it.toRelativeString(outputRoot) }.toList().sorted()
+                val outputs = outputRoot.walk().filter { it.isFile() }.map { it.toRelativeString(outputRoot) }
+                    .toList().sorted()
                 Assert.assertEquals(expectedDirties, outputs)
             }
         }

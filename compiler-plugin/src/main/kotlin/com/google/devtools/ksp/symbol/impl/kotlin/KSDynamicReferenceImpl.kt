@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import org.jetbrains.kotlin.psi.KtUserType
 
 class KSDynamicReferenceImpl private constructor() : KSDynamicReference {
     companion object : KSObjectCache<Unit, KSDynamicReferenceImpl>() {

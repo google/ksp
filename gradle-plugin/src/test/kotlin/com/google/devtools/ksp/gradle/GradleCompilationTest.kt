@@ -93,7 +93,7 @@ class GradleCompilationTest {
         class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
             var count = 0
             override fun process(resolver: Resolver): List<KSAnnotated> {
-                if(count == 0) {
+                if (count == 0) {
                     codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
                         it.writer(Charsets.UTF_8).use {
                             it.write("class ToBeGenerated")

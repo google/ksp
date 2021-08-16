@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
@@ -42,7 +41,7 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
         }
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-            classDeclaration.declarations.forEach{ it.accept(this, Unit) }
+            classDeclaration.declarations.forEach { it.accept(this, Unit) }
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
@@ -62,14 +61,16 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
     fun KSTypeReference.render(): String {
         val sb = StringBuilder(this.resolve().declaration.qualifiedName?.asString() ?: "<ERROR>")
         if (this.resolve().arguments.toList().isNotEmpty()) {
-            sb.append("<${this.resolve().arguments.map {
-                when (it.variance) {
-                    Variance.STAR -> "*"
-                    Variance.INVARIANT -> ""
-                    Variance.CONTRAVARIANT -> "in "
-                    Variance.COVARIANT -> "out "
-                } + it.type?.render() 
-            }.joinToString(", ")}>")
+            sb.append(
+                "<${this.resolve().arguments.map {
+                    when (it.variance) {
+                        Variance.STAR -> "*"
+                        Variance.INVARIANT -> ""
+                        Variance.CONTRAVARIANT -> "in "
+                        Variance.COVARIANT -> "out "
+                    } + it.type?.render()
+                }.joinToString(", ")}>"
+            )
         }
         if (this.resolve().nullability != Nullability.NOT_NULL) {
             sb.append("?")

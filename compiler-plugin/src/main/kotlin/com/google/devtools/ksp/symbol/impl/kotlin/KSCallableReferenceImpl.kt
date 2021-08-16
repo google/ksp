@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
@@ -25,7 +24,9 @@ import org.jetbrains.kotlin.psi.KtFunctionType
 
 class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunctionType) : KSCallableReference {
     companion object : KSObjectCache<KtFunctionType, KSCallableReferenceImpl>() {
-        fun getCached(ktFunctionType: KtFunctionType) = cache.getOrPut(ktFunctionType) { KSCallableReferenceImpl(ktFunctionType) }
+        fun getCached(ktFunctionType: KtFunctionType) = cache.getOrPut(ktFunctionType) {
+            KSCallableReferenceImpl(ktFunctionType)
+        }
     }
 
     override val origin = Origin.KOTLIN
@@ -55,6 +56,7 @@ class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunction
     }
 
     override fun toString(): String {
-        return "${receiverType?.let { "$it." } ?: ""}(${functionParameters.map { it.type.toString() }.joinToString(", ")}) -> $returnType"
+        return "${receiverType?.let { "$it." } ?: ""}(${functionParameters
+            .joinToString(", ") { it.type.toString() }}) -> $returnType"
     }
 }

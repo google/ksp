@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.innerArguments
@@ -45,7 +44,9 @@ open class InnerTypeProcessor : AbstractTestProcessor() {
             }
         }
 
-        val sortedTypes = types.filterNot { it.declaration.simpleName.asString() in ignoredNames }.sortedBy { it.toString() }
+        val sortedTypes = types.filterNot { it.declaration.simpleName.asString() in ignoredNames }.sortedBy {
+            it.toString()
+        }
 
         fun KSType.breakDown(): List<String> {
             var current: KSType? = this
@@ -67,5 +68,4 @@ open class InnerTypeProcessor : AbstractTestProcessor() {
     override fun toResult(): List<String> {
         return results
     }
-
 }

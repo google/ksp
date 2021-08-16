@@ -17,4 +17,3 @@ dependencies {
     implementation(kotlin("stdlib"))
     ksp(project(":on-error-processor"))
 }
-

@@ -21,7 +21,7 @@ dependencies {
     implementation(project(":test-processor"))
     ksp(project(":test-processor"))
 }
- 
+
 android {
     compileSdkVersion(30)
     defaultConfig {
