@@ -27,16 +27,6 @@ jobs:
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
       run: echo ::set-env name=JDK_9::$(echo $JAVA_HOME)
-    - name: Setup Java 8
-      uses: actions/setup-java@v1.4.3
-      with:
-        java-version: '8'
-        java-package: jdk
-        architecture: x64
-    - name: set JDK 6,7,8 environment variables for kotlin compiler
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-      run: echo ::set-env name=JDK_16::$(echo $JAVA_HOME) && echo ::set-env name=JDK_17::$(echo $JAVA_HOME) && echo ::set-env name=JDK_18::$(echo $JAVA_HOME)
     - name: Setup Java 11
       uses: actions/setup-java@v1.4.3
       with:
@@ -64,30 +54,13 @@ jobs:
     # Run ktlint
     - name: lint
       run: ./gradlew ktlint
-    # Run ksp generated tests
+
+    # Run tests
     - name: test
-      run: ./gradlew --stacktrace --info :compiler-plugin:test --tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.*" -PcompilerTestEnabled=true
+      run: ./gradlew --stacktrace --info test -PcompilerTestEnabled=true
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v2
       with:
         name: test-reports
         path: compiler-plugin/build/reports
-    # Run ksp integration tests
-    - name: integration tests
-      run: ./gradlew --stacktrace --info :integration-tests:test
-    - name: Upload integration test results
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: integration-tests-reports
-        path: integration-tests/build/reports
-    # Run gradle plugin tests
-    - name: gradle plugin tests
-      run: ./gradlew --stacktrace --info :gradle-plugin:test
-    - name: Upload gradle plugin test results
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: gradle-plugin-test-reports
-        path: gradle-plugin/build/reports
