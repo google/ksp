@@ -88,7 +88,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         descriptor.defaultType.constructor.supertypes.asSequence().map {
             KSTypeReferenceDescriptorImpl.getCached(
                 if (it === mockSerializableType) javaSerializableType else it,
-                origin
+                origin,
+                this
             )
         }.memoized()
     }

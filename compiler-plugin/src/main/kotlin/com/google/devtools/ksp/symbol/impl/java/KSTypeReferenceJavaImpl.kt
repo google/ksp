@@ -19,7 +19,16 @@ package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSReferenceElement
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.NonExistLocation
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
@@ -27,16 +36,21 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
 import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
-import com.intellij.psi.*
+import com.intellij.psi.PsiArrayType
+import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiPrimitiveType
+import com.intellij.psi.PsiType
+import com.intellij.psi.PsiWildcardType
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.typeUtil.makeNullable
 
-class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeReference {
-    companion object : KSObjectCache<PsiType, KSTypeReferenceJavaImpl>() {
-        fun getCached(psi: PsiType) = cache.getOrPut(psi) { KSTypeReferenceJavaImpl(psi) }
+class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val parent: KSNode?) : KSTypeReference {
+    companion object : KSObjectCache<Pair<PsiType, KSNode?>, KSTypeReferenceJavaImpl>() {
+        fun getCached(psi: PsiType, parent: KSNode?) = cache
+            .getOrPut(Pair(psi, parent)) { KSTypeReferenceJavaImpl(psi, parent) }
     }
 
     override val origin = Origin.JAVA
@@ -73,29 +87,29 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType) : KSTypeRefe
             psi
         }
         when (type) {
-            is PsiClassType -> KSClassifierReferenceJavaImpl.getCached(type)
-            is PsiWildcardType -> KSClassifierReferenceJavaImpl.getCached(type.extendsBound as PsiClassType)
-            is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType(), origin)
+            is PsiClassType -> KSClassifierReferenceJavaImpl.getCached(type, this)
+            is PsiWildcardType -> KSClassifierReferenceJavaImpl.getCached(type.extendsBound as PsiClassType, this)
+            is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType(), origin, this)
             is PsiArrayType -> {
                 val componentType = ResolverImpl.instance.resolveJavaType(type.componentType)
                 if (type.componentType !is PsiPrimitiveType) {
                     KSClassifierReferenceDescriptorImpl.getCached(
                         ResolverImpl.instance.module.builtIns.getArrayType(Variance.INVARIANT, componentType),
-                        origin
+                        origin,
+                        this
                     )
                 } else {
                     KSClassifierReferenceDescriptorImpl.getCached(
                         ResolverImpl.instance.module.builtIns
                             .getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(componentType)!!,
-                        origin
+                        origin, this
                     )
                 }
             }
-            null -> KSClassifierReferenceDescriptorImpl.getCached(
-                (ResolverImpl.instance.builtIns.anyType as KSTypeImpl)
-                    .kotlinType.makeNullable(),
-                origin
-            )
+            null ->
+                KSClassifierReferenceDescriptorImpl.getCached(
+                    (ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable(), origin, this
+                )
             else -> throw IllegalStateException("Unexpected psi type for ${type.javaClass}, $ExceptionMessage")
         }
     }

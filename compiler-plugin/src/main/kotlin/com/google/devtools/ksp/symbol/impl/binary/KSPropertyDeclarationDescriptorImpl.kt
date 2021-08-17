@@ -34,7 +34,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
 
     override val extensionReceiver: KSTypeReference? by lazy {
         if (descriptor.extensionReceiverParameter != null) {
-            KSTypeReferenceDescriptorImpl.getCached(descriptor.extensionReceiverParameter!!.type, origin)
+            KSTypeReferenceDescriptorImpl.getCached(descriptor.extensionReceiverParameter!!.type, origin, this)
         } else {
             null
         }
@@ -44,7 +44,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         // annotations on backing field will not visible in the property declaration so we query it directly to load
         // its annotations as well.
         val backingFieldAnnotations = descriptor.backingField?.annotations?.map {
-            KSAnnotationDescriptorImpl.getCached(it)
+            KSAnnotationDescriptorImpl.getCached(it, this)
         }.orEmpty()
         (super.annotations + backingFieldAnnotations).memoized()
     }
@@ -80,7 +80,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, this)
     }
 
     override val hasBackingField: Boolean by lazy {

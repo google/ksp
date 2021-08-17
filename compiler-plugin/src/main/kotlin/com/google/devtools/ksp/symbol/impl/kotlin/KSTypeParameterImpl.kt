@@ -17,21 +17,25 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.ExceptionMessage
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSExpectActual
+import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSTypeParameter
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.memoized
 import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtTypeParameter
+import org.jetbrains.kotlin.psi.KtTypeParameterListOwner
 
-class KSTypeParameterImpl private constructor(
-    val ktTypeParameter: KtTypeParameter,
-    val owner:
-        KtTypeParameterListOwner,
-) : KSTypeParameter, KSDeclarationImpl(ktTypeParameter), KSExpectActual by KSExpectActualNoImpl() {
-    companion object : KSObjectCache<Pair<KtTypeParameter, KtTypeParameterListOwner>, KSTypeParameterImpl>() {
-        fun getCached(ktTypeParameter: KtTypeParameter, owner: KtTypeParameterListOwner) =
-            cache.getOrPut(Pair(ktTypeParameter, owner)) { KSTypeParameterImpl(ktTypeParameter, owner) }
+class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParameter) :
+    KSTypeParameter,
+    KSDeclarationImpl(ktTypeParameter),
+    KSExpectActual by KSExpectActualNoImpl() {
+    companion object : KSObjectCache<KtTypeParameter, KSTypeParameterImpl>() {
+        fun getCached(ktTypeParameter: KtTypeParameter) =
+            cache.getOrPut(ktTypeParameter) { KSTypeParameterImpl(ktTypeParameter) }
     }
 
     override val name: KSName by lazy {
@@ -51,6 +55,10 @@ class KSTypeParameterImpl private constructor(
         }
     }
 
+    private val owner: KtTypeParameterListOwner by lazy {
+        (parentDeclaration as KSDeclarationImpl).ktDeclaration as KtTypeParameterListOwner
+    }
+
     override val bounds: Sequence<KSTypeReference> by lazy {
         val list = sequenceOf(ktTypeParameter.extendsBound)
         list.plus(
@@ -66,17 +74,6 @@ class KSTypeParameterImpl private constructor(
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        when (owner) {
-            is KtClassOrObject -> KSClassDeclarationImpl.getCached(owner)
-            is KtFunction -> KSFunctionDeclarationImpl.getCached(owner)
-            is KtProperty -> KSPropertyDeclarationImpl.getCached(owner)
-            else -> throw IllegalStateException(
-                "Unexpected containing declaration type ${owner.javaClass}, $ExceptionMessage"
-            )
-        }
-    }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeParameter(this, data)

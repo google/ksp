@@ -82,7 +82,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         if (ktProperty.typeReference != null) {
             KSTypeReferenceImpl.getCached(ktProperty.typeReference!!)
         } else {
-            KSTypeReferenceDeferredImpl.getCached {
+            KSTypeReferenceDeferredImpl.getCached(this) {
                 val desc = propertyDescriptor as? VariableDescriptorWithAccessors
                 if (desc == null) {
                     KSErrorType

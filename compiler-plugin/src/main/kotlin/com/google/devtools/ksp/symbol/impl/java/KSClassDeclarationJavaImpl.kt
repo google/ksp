@@ -123,10 +123,6 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
         modifiers
     }
 
-    override val parentDeclaration: KSDeclaration? by lazy {
-        psi.findParentDeclaration()
-    }
-
     override val primaryConstructor: KSFunctionDeclaration? = null
 
     override val qualifiedName: KSName by lazy {
@@ -138,7 +134,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        psi.superTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }.memoized()
+        psi.superTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it, this) }.memoized()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {

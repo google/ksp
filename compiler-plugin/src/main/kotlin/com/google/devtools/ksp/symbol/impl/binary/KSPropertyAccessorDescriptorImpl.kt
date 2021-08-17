@@ -38,6 +38,10 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         descriptor.correspondingProperty.toKSPropertyDeclaration()
     }
 
+    override val parent: KSNode? by lazy {
+        receiver
+    }
+
     override val location: Location
         get() {
             // if receiver is kotlin source, that means `this` is synthetic hence we want the property's location
@@ -46,7 +50,7 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.memoized()
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this) }.memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {
