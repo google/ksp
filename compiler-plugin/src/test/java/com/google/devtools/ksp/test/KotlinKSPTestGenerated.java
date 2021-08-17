@@ -232,6 +232,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/nestedClassType.kt");
     }
 
+    @TestMetadata("nullableTypes.kt")
+    public void testNullableTypes() throws Exception {
+        runTest("testData/api/nullableTypes.kt");
+    }
+
     @TestMetadata(("overridee.kt"))
     public void testOverridee() throws Exception {
         runTest("testData/api/overridee.kt");

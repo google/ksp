@@ -102,15 +102,21 @@ private val modifierMap = mapOf(
     KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL
 )
 
-fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
+fun KtModifierList?.toKSModifiers(): Set<Modifier> {
+    if (this == null)
+        return emptySet()
     val modifiers = mutableSetOf<Modifier>()
-    val modifierList = this.modifierList ?: return emptySet()
     modifiers.addAll(
         modifierMap.entries
-            .filter { modifierList.hasModifier(it.key) }
+            .filter { hasModifier(it.key) }
             .map { it.value }
     )
     return modifiers
+}
+
+fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
+    val modifierList = this.modifierList
+    return modifierList.toKSModifiers()
 }
 
 fun PsiModifierListOwner.toKSModifiers(): Set<Modifier> {
