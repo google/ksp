@@ -215,7 +215,7 @@ fun PsiElement.findParentAnnotated(): KSAnnotated? {
     var parent = this.parent
 
     while (parent != null && parent !is KtDeclaration && parent !is KtFile && parent !is PsiClass &&
-        parent !is PsiMethod && parent !is PsiJavaFile
+        parent !is PsiMethod && parent !is PsiJavaFile && parent !is KtTypeAlias
     ) {
         parent = parent.parent
     }
@@ -231,6 +231,7 @@ fun PsiElement.findParentAnnotated(): KSAnnotated? {
         is KtPropertyAccessor -> if (parent.isGetter) { KSPropertyGetterImpl.getCached(parent) } else {
             KSPropertySetterImpl.getCached(parent)
         }
+        is KtTypeAlias -> KSTypeAliasImpl.getCached(parent)
         else -> null
     }
 }
@@ -418,38 +419,54 @@ internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): C
     }
 }
 
-internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? {
-    when (origin) {
+internal inline fun <reified T> PsiElement.findParentOfType(): T? {
+    var parent = this.parent
+    while (parent != null && parent !is T) {
+        parent = parent.parent
+    }
+    return parent as? T
+}
+
+internal fun getInstanceForCurrentRound(node: KSNode): KSNode? {
+    when (node.origin) {
         Origin.KOTLIN_LIB, Origin.JAVA_LIB -> return null
     }
-    return when (this) {
-        is KSClassDeclarationImpl -> KSClassDeclarationImpl.getCached(this.ktClassOrObject)
-        is KSFileImpl -> KSFileImpl.getCached(this.file)
-        is KSFunctionDeclarationImpl -> KSFunctionDeclarationImpl.getCached(this.ktFunction)
-        is KSPropertyDeclarationImpl -> KSPropertyDeclarationImpl.getCached(this.ktProperty)
-        is KSPropertyGetterImpl -> KSPropertyGetterImpl.getCached(this.ktPropertyAccessor)
-        is KSPropertySetterImpl -> KSPropertySetterImpl.getCached(this.ktPropertyAccessor)
-        is KSTypeAliasImpl -> KSTypeAliasImpl.getCached(this.ktTypeAlias)
-        is KSTypeArgumentLiteImpl -> KSTypeArgumentLiteImpl.getCached(this.type, this.variance)
-        is KSTypeArgumentKtImpl -> KSTypeArgumentKtImpl.getCached(this.ktTypeArgument)
-        is KSTypeParameterImpl -> KSTypeParameterImpl.getCached(this.ktTypeParameter, this.owner)
-        is KSTypeReferenceImpl -> KSTypeReferenceImpl.getCached(this.ktTypeReference)
-        is KSValueParameterImpl -> KSValueParameterImpl.getCached(this.ktParameter)
-        is KSClassDeclarationJavaEnumEntryImpl -> KSClassDeclarationJavaEnumEntryImpl.getCached(this.psi)
-        is KSClassDeclarationJavaImpl -> KSClassDeclarationJavaImpl.getCached(this.psi)
-        is KSFileJavaImpl -> KSFileJavaImpl.getCached(this.psi)
-        is KSFunctionDeclarationJavaImpl -> KSFunctionDeclarationJavaImpl.getCached(this.psi)
-        is KSPropertyDeclarationJavaImpl -> KSPropertyDeclarationJavaImpl.getCached(this.psi)
-        is KSTypeArgumentJavaImpl -> KSTypeArgumentJavaImpl.getCached(this.psi)
-        is KSTypeParameterJavaImpl -> KSTypeParameterJavaImpl.getCached(this.psi)
-        is KSTypeReferenceJavaImpl -> KSTypeReferenceJavaImpl.getCached(this.psi)
-        is KSValueParameterJavaImpl -> KSValueParameterJavaImpl.getCached(this.psi)
-        is KSPropertyGetterSyntheticImpl -> KSPropertyGetterSyntheticImpl.getCached(this.ksPropertyDeclaration)
-        is KSPropertySetterSyntheticImpl -> KSPropertySetterSyntheticImpl.getCached(this.ksPropertyDeclaration)
-        is KSValueParameterSyntheticImpl -> KSPropertySetterImpl.getCached(this.owner as KtPropertyAccessor).parameter
+    return when (node) {
+        is KSClassDeclarationImpl -> KSClassDeclarationImpl.getCached(node.ktClassOrObject)
+        is KSFileImpl -> KSFileImpl.getCached(node.file)
+        is KSFunctionDeclarationImpl -> KSFunctionDeclarationImpl.getCached(node.ktFunction)
+        is KSPropertyDeclarationImpl -> KSPropertyDeclarationImpl.getCached(node.ktProperty)
+        is KSPropertyGetterImpl -> KSPropertyGetterImpl.getCached(node.ktPropertyAccessor)
+        is KSPropertySetterImpl -> KSPropertySetterImpl.getCached(node.ktPropertyAccessor)
+        is KSTypeAliasImpl -> KSTypeAliasImpl.getCached(node.ktTypeAlias)
+        is KSTypeArgumentLiteImpl -> KSTypeArgumentLiteImpl.getCached(node.type, node.variance)
+        is KSTypeArgumentKtImpl -> KSTypeArgumentKtImpl.getCached(node.ktTypeArgument)
+        is KSTypeParameterImpl -> KSTypeParameterImpl.getCached(node.ktTypeParameter)
+        is KSTypeReferenceImpl -> KSTypeReferenceImpl.getCached(node.ktTypeReference)
+        is KSValueParameterImpl -> KSValueParameterImpl.getCached(node.ktParameter)
+        is KSClassDeclarationJavaEnumEntryImpl -> KSClassDeclarationJavaEnumEntryImpl.getCached(node.psi)
+        is KSClassDeclarationJavaImpl -> KSClassDeclarationJavaImpl.getCached(node.psi)
+        is KSFileJavaImpl -> KSFileJavaImpl.getCached(node.psi)
+        is KSFunctionDeclarationJavaImpl -> KSFunctionDeclarationJavaImpl.getCached(node.psi)
+        is KSPropertyDeclarationJavaImpl -> KSPropertyDeclarationJavaImpl.getCached(node.psi)
+        is KSTypeArgumentJavaImpl -> KSTypeArgumentJavaImpl.getCached(node.psi, node.parent)
+        is KSTypeParameterJavaImpl -> KSTypeParameterJavaImpl.getCached(node.psi)
+        is KSTypeReferenceJavaImpl ->
+            KSTypeReferenceJavaImpl.getCached(node.psi, (node.parent as? KSAnnotated)?.getInstanceForCurrentRound())
+        is KSValueParameterJavaImpl -> KSValueParameterJavaImpl.getCached(node.psi)
+        is KSPropertyGetterSyntheticImpl -> KSPropertyGetterSyntheticImpl.getCached(node.ksPropertyDeclaration)
+        is KSPropertySetterSyntheticImpl -> KSPropertySetterSyntheticImpl.getCached(node.ksPropertyDeclaration)
+        is KSValueParameterSyntheticImpl -> KSPropertySetterImpl.getCached(node.owner as KtPropertyAccessor).parameter
+        is KSAnnotationJavaImpl -> KSAnnotationJavaImpl.getCached(node.psi)
+        is KSAnnotationImpl -> KSAnnotationImpl.getCached(node.ktAnnotationEntry)
+        is KSClassifierReferenceJavaImpl -> KSClassifierReferenceJavaImpl.getCached(node.psi, node.parent)
+        is KSValueArgumentJavaImpl ->
+            KSValueArgumentJavaImpl.getCached(node.name, node.value, getInstanceForCurrentRound(node.parent!!))
         else -> null
     }
 }
+
+internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? = getInstanceForCurrentRound(this) as? KSAnnotated
 
 internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
 

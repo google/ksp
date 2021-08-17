@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSTypeReference
@@ -41,11 +42,12 @@ class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
 
     override val returnType: KSTypeReference? by lazy {
         if (descriptor.returnType != null) {
-            KSTypeReferenceDescriptorImpl.getCached(descriptor.returnType!!, origin)
+            KSTypeReferenceDescriptorImpl.getCached(descriptor.returnType!!, origin, this)
         } else {
             null
         }
     }
+    override val parent: KSNode? = ksPropertyDeclaration
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyGetter(this, data)

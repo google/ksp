@@ -2,7 +2,16 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.NonExistLocation
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSAnnotationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
@@ -31,7 +40,7 @@ class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> Valu
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, this)
     }
 
     override val isVararg: Boolean = descriptor.isVararg
@@ -47,14 +56,15 @@ class KSValueParameterSyntheticImpl(val owner: KSAnnotated?, resolve: () -> Valu
     override val hasDefault: Boolean = descriptor.hasDefaultValue()
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.plus(
-            this.findAnnotationFromUseSiteTarget()
-        )
+        descriptor.annotations.asSequence()
+            .map { KSAnnotationDescriptorImpl.getCached(it, this) }.plus(this.findAnnotationFromUseSiteTarget())
     }
 
     override val origin: Origin = Origin.SYNTHETIC
 
     override val location: Location = NonExistLocation
+
+    override val parent: KSNode? = owner
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitValueParameter(this, data)

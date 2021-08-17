@@ -38,6 +38,8 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
 
     override val location: Location = NonExistLocation
 
+    override val parent: KSNode? = null
+
     override val modifiers: Set<Modifier> = emptySet()
 
     override val origin: Origin = Origin.SYNTHETIC

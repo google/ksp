@@ -325,7 +325,7 @@ class ResolverImpl(
     }
 
     override fun createKSTypeReferenceFromKSType(type: KSType): KSTypeReference {
-        return KSTypeReferenceSyntheticImpl.getCached(type)
+        return KSTypeReferenceSyntheticImpl.getCached(type, null)
     }
 
     @KspExperimental

@@ -35,6 +35,8 @@ class KSFileImpl private constructor(val file: KtFile) : KSFile {
         file.toLocation()
     }
 
+    override val parent: KSNode? = null
+
     override val packageName: KSName by lazy {
         KSNameImpl.getCached(file.packageFqName.asString())
     }
