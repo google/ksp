@@ -40,12 +40,37 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
         ktTypeReference.toLocation()
     }
 
+    // Parenthesized type in grammar seems to be implemented as KtNullableType.
+    private fun visitNullableType(visit: (KtNullableType) -> Unit) {
+        var typeElement = ktTypeReference.typeElement
+        while (typeElement is KtNullableType) {
+            visit(typeElement)
+            typeElement = typeElement.innerType
+        }
+    }
+
+    // Annotations and modifiers are only allowed in one of the parenthesized type.
+    // https://github.com/JetBrains/kotlin/blob/50e12239ef8141a45c4dca2bf0544be6191ecfb6/compiler/frontend/src/org/jetbrains/kotlin/diagnostics/rendering/DefaultErrorMessages.java#L608
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeReference.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }.memoized()
+        fun List<KtAnnotationEntry>.toKSAnnotations(): Sequence<KSAnnotation> =
+            asSequence().map {
+                KSAnnotationImpl.getCached(it)
+            }
+
+        val innerAnnotations = mutableListOf<Sequence<KSAnnotation>>()
+        visitNullableType {
+            innerAnnotations.add(it.annotationEntries.toKSAnnotations())
+        }
+
+        (ktTypeReference.annotationEntries.toKSAnnotations() + innerAnnotations.asSequence().flatten()).memoized()
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        ktTypeReference.toKSModifiers()
+        val innerModifiers = mutableSetOf<Modifier>()
+        visitNullableType {
+            innerModifiers.addAll(it.modifierList.toKSModifiers())
+        }
+        ktTypeReference.toKSModifiers() + innerModifiers
     }
 
     override val element: KSReferenceElement by lazy {
