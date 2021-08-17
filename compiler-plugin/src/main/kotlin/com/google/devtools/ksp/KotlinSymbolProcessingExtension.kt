@@ -329,6 +329,9 @@ internal class AnyChanges(val baseDir: File) : KSFile {
     override val location: Location
         get() = throw Exception("AnyChanges should not be used.")
 
+    override val parent: KSNode?
+        get() = throw Exception("AnyChanges should not be used.")
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         throw Exception("AnyChanges should not be used.")
     }

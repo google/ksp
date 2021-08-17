@@ -25,12 +25,25 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor) : KSPropertyAccessor {
+    companion object {
+        fun getCached(ktPropertyAccessor: KtPropertyAccessor): KSPropertyAccessor {
+            return if (ktPropertyAccessor.isGetter) {
+                KSPropertyGetterImpl.getCached(ktPropertyAccessor)
+            } else {
+                KSPropertySetterImpl.getCached(ktPropertyAccessor)
+            }
+        }
+    }
     override val receiver: KSPropertyDeclaration by lazy {
         KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
     }
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
             .plus(this.findAnnotationFromUseSiteTarget())
+    }
+
+    override val parent: KSNode? by lazy {
+        receiver
     }
 
     override val location: Location by lazy {

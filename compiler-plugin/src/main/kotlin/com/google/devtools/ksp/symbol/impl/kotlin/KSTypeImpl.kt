@@ -18,7 +18,12 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeArgument
+import com.google.devtools.ksp.symbol.Nullability
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
@@ -29,7 +34,12 @@ import org.jetbrains.kotlin.builtins.isSuspendFunctionType
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.isError
-import org.jetbrains.kotlin.types.typeUtil.*
+import org.jetbrains.kotlin.types.typeUtil.TypeNullability
+import org.jetbrains.kotlin.types.typeUtil.isSubtypeOf
+import org.jetbrains.kotlin.types.typeUtil.makeNotNullable
+import org.jetbrains.kotlin.types.typeUtil.makeNullable
+import org.jetbrains.kotlin.types.typeUtil.nullability
+import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
 class KSTypeImpl private constructor(
     val kotlinType: KotlinType,
@@ -60,7 +70,7 @@ class KSTypeImpl private constructor(
 
     // TODO: fix calls to getKSTypeCached and use ksTypeArguments when available.
     override val arguments: List<KSTypeArgument> by lazy {
-        kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, Origin.SYNTHETIC) }
+        kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, Origin.SYNTHETIC, null) }
     }
 
     override fun isAssignableFrom(that: KSType): Boolean {
@@ -117,6 +127,18 @@ class KSTypeImpl private constructor(
 class IdKey<T>(private val k: T) {
     override fun equals(other: Any?): Boolean = if (other is IdKey<*>) k === other.k else false
     override fun hashCode(): Int = k.hashCode()
+}
+
+class IdKeyPair<T, P>(private val k1: T, private val k2: P) {
+    override fun equals(other: Any?): Boolean = if (other is IdKeyPair<*, *>) k1 === other.k1 &&
+        k2 === other.k2 else false
+    override fun hashCode(): Int = k1.hashCode() * 31 + k2.hashCode()
+}
+
+class IdKeyTriple<T, P, Q>(private val k1: T, private val k2: P, private val k3: Q) {
+    override fun equals(other: Any?): Boolean = if (other is IdKeyTriple<*, *, *>) k1 === other.k1 &&
+        k2 === other.k2 && k3 === other.k3 else false
+    override fun hashCode(): Int = k1.hashCode() * 31 * 31 + k2.hashCode() * 31 + k3.hashCode()
 }
 
 fun getKSTypeCached(

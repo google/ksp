@@ -41,16 +41,36 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         psi.toLocation()
     }
 
+    override val parent: KSNode? by lazy {
+        var parentPsi = psi.parent
+        while (true) {
+            when (parentPsi) {
+                null, is PsiJavaFile, is PsiClass, is PsiMethod, is PsiParameter, is PsiTypeParameter, is PsiType ->
+                    break
+                else -> parentPsi = parentPsi.parent
+            }
+        }
+        when (parentPsi) {
+            is PsiJavaFile -> KSFileJavaImpl.getCached(parentPsi)
+            is PsiClass -> KSClassDeclarationJavaImpl.getCached(parentPsi)
+            is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(parentPsi)
+            is PsiParameter -> KSValueParameterJavaImpl.getCached(parentPsi)
+            is PsiTypeParameter -> KSTypeParameterJavaImpl.getCached(parentPsi)
+            is PsiType ->
+                if (parentPsi.parent is PsiClassType) KSTypeArgumentJavaImpl.getCached(parentPsi, this)
+                else KSTypeReferenceJavaImpl.getCached(parentPsi, this)
+            else -> null
+        }
+    }
+
     override val annotationType: KSTypeReference by lazy {
-        val psiClass =
-            psi.nameReferenceElement!!.resolve() as? PsiClass ?: return@lazy KSTypeReferenceLiteJavaImpl.getCached(
-                KSErrorType
-            )
+        val psiClass = psi.nameReferenceElement!!.resolve() as? PsiClass
+            ?: return@lazy KSTypeReferenceLiteJavaImpl.getCached(KSErrorType, this)
         (psi.containingFile as? PsiJavaFile)?.let {
             ResolverImpl.instance.incrementalContext.recordLookup(it, psiClass.qualifiedName!!)
         }
         KSTypeReferenceLiteJavaImpl.getCached(
-            KSClassDeclarationJavaImpl.getCached(psiClass).asType(emptyList())
+            KSClassDeclarationJavaImpl.getCached(psiClass).asType(emptyList()), this
         )
     }
 
@@ -73,12 +93,13 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
                 }
                 KSValueArgumentJavaImpl.getCached(
                     name = name?.let(KSNameImpl::getCached),
-                    value = calculatedValue
+                    value = calculatedValue,
+                    this
                 )
             }
         val presentValueArgumentNames = presentValueArguments.map { it.name?.asString() ?: "" }
         val argumentsFromDefault = annotationConstructor?.let {
-            it.getAbsentDefaultArguments(presentValueArgumentNames)
+            it.getAbsentDefaultArguments(presentValueArgumentNames, this)
         } ?: emptyList()
         presentValueArguments.plus(argumentsFromDefault)
     }

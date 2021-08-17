@@ -21,6 +21,8 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 
 class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
@@ -32,6 +34,20 @@ class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSVa
 
     override val location: Location by lazy {
         psi.toLocation()
+    }
+    override val parent: KSNode? by lazy {
+        var parentPsi = psi.parent
+        while (true) {
+            when (parentPsi) {
+                null, is PsiMethod, is PsiAnnotation -> break
+                else -> parentPsi = parentPsi.parent
+            }
+        }
+        when (parentPsi) {
+            is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(parentPsi)
+            is PsiAnnotation -> KSAnnotationJavaImpl.getCached(parentPsi)
+            else -> null
+        }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
@@ -57,7 +73,7 @@ class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSVa
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceJavaImpl.getCached(psi.type)
+        KSTypeReferenceJavaImpl.getCached(psi.type, this)
     }
 
     override val hasDefault: Boolean = false

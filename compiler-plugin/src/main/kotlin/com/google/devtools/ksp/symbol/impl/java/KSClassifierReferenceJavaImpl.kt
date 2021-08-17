@@ -19,14 +19,21 @@ package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.toLocation
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.impl.source.PsiClassReferenceType
 
-class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) : KSClassifierReference {
-    companion object : KSObjectCache<PsiClassType, KSClassifierReferenceJavaImpl>() {
-        fun getCached(psi: PsiClassType) = cache.getOrPut(psi) { KSClassifierReferenceJavaImpl(psi) }
+class KSClassifierReferenceJavaImpl private constructor(
+    val psi: PsiClassType,
+    override val parent: KSNode
+) : KSClassifierReference {
+    companion object : KSObjectCache<Pair<PsiClassType, KSNode>, KSClassifierReferenceJavaImpl>() {
+        fun getCached(psi: PsiClassType, parent: KSNode): KSClassifierReferenceJavaImpl {
+            val curParent = getInstanceForCurrentRound(parent) as KSTypeReference
+            return cache.getOrPut(Pair(psi, curParent)) { KSClassifierReferenceJavaImpl(psi, curParent) }
+        }
     }
 
     override val origin = Origin.JAVA
@@ -39,12 +46,12 @@ class KSClassifierReferenceJavaImpl private constructor(val psi: PsiClassType) :
         val qualifierReference = (psi as? PsiClassReferenceType)?.reference?.qualifier as? PsiJavaCodeReferenceElement
             ?: return@lazy null
         val qualifierType = PsiClassReferenceType(qualifierReference, psi.languageLevel)
-        getCached(qualifierType)
+        getCached(qualifierType, parent)
     }
 
     // PsiClassType.parameters is semantically argument
     override val typeArguments: List<KSTypeArgument> by lazy {
-        psi.parameters.map { KSTypeArgumentJavaImpl.getCached(it) }
+        psi.parameters.map { KSTypeArgumentJavaImpl.getCached(it, this) }
     }
 
     override fun referencedName(): String {

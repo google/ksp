@@ -18,15 +18,27 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtFunctionType
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : KSValueParameter {
     companion object : KSObjectCache<KtParameter, KSValueParameterImpl>() {
@@ -37,6 +49,23 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
 
     override val location: Location by lazy {
         ktParameter.toLocation()
+    }
+
+    override val parent: KSNode? by lazy {
+        var parentPsi = ktParameter.parent
+        while (
+            parentPsi != null && parentPsi !is KtAnnotationEntry && parentPsi !is KtFunctionType &&
+            parentPsi !is KtFunction && parentPsi !is KtPropertyAccessor
+        ) {
+            parentPsi = parentPsi.parent
+        }
+        when (parentPsi) {
+            is KtAnnotationEntry -> KSAnnotationImpl.getCached(parentPsi)
+            is KtFunctionType -> KSCallableReferenceImpl.getCached(parentPsi)
+            is KtFunction -> KSFunctionDeclarationImpl.getCached(parentPsi)
+            is KtPropertyAccessor -> if (parentPsi.isSetter) KSPropertySetterImpl.getCached(parentPsi) else null
+            else -> null
+        }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
@@ -63,8 +92,8 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
     }
 
     override val type: KSTypeReference by lazy {
-        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) } ?: findPropertyForAccessor()?.type
-            ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType)
+        ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) }
+            ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType, this)
     }
 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()

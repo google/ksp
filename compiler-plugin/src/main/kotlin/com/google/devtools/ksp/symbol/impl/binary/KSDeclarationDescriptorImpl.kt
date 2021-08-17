@@ -41,7 +41,7 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
     override val location: Location = NonExistLocation
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }.memoized()
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this) }.memoized()
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {
@@ -51,6 +51,10 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
             is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(containingDescriptor)
             else -> null
         } as KSDeclaration?
+    }
+
+    override val parent: KSNode? by lazy {
+        parentDeclaration
     }
 
     override val packageName: KSName by lazy {

@@ -26,9 +26,12 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWildcardType
 import com.intellij.psi.impl.source.PsiClassReferenceType
 
-class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgumentImpl() {
+class KSTypeArgumentJavaImpl private constructor(
+    val psi: PsiType,
+    override val parent: KSNode?
+) : KSTypeArgumentImpl() {
     companion object : KSObjectCache<PsiType, KSTypeArgumentJavaImpl>() {
-        fun getCached(psi: PsiType) = cache.getOrPut(psi) { KSTypeArgumentJavaImpl(psi) }
+        fun getCached(psi: PsiType, parent: KSNode?) = cache.getOrPut(psi) { KSTypeArgumentJavaImpl(psi, parent) }
     }
 
     override val origin = Origin.JAVA
@@ -43,7 +46,7 @@ class KSTypeArgumentJavaImpl private constructor(val psi: PsiType) : KSTypeArgum
 
     // Could be unbounded, need to model unbdouned type argument.
     override val type: KSTypeReference? by lazy {
-        KSTypeReferenceJavaImpl.getCached(psi)
+        KSTypeReferenceJavaImpl.getCached(psi, this)
     }
 
     override val variance: Variance by lazy {

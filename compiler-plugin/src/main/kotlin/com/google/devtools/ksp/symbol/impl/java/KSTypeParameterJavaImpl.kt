@@ -46,7 +46,7 @@ class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) :
     }
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        psi.extendsListTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it) }.memoized()
+        psi.extendsListTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it, this) }.memoized()
     }
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached(psi.name ?: "_")

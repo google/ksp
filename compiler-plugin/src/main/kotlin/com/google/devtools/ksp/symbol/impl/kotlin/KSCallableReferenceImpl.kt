@@ -19,8 +19,10 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findParentOfType
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.KtFunctionType
+import org.jetbrains.kotlin.psi.KtTypeReference
 
 class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunctionType) : KSCallableReference {
     companion object : KSObjectCache<KtFunctionType, KSCallableReferenceImpl>() {
@@ -33,6 +35,10 @@ class KSCallableReferenceImpl private constructor(val ktFunctionType: KtFunction
 
     override val location: Location by lazy {
         ktFunctionType.toLocation()
+    }
+
+    override val parent: KSNode? by lazy {
+        ktFunctionType.findParentOfType<KtTypeReference>()?.let { KSTypeReferenceImpl.getCached(it) }
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {

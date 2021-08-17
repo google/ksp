@@ -29,6 +29,9 @@
 // KSClassifierReferenceJavaImpl: Qualifier of H is J<String>
 // KSClassifierReferenceJavaImpl: Qualifier of I is J
 // KSClassifierReferenceJavaImpl: Qualifier of Object is null
+// KSClassifierReferenceJavaImpl: Qualifier of Object is null
+// KSClassifierReferenceJavaImpl: Qualifier of Object is null
+// KSClassifierReferenceJavaImpl: Qualifier of Object is null
 // KSClassifierReferenceJavaImpl: Qualifier of String is null
 // END
 
