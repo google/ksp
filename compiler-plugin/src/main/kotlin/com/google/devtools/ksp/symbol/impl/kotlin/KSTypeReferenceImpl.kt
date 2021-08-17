@@ -19,13 +19,32 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSReferenceElement
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.*
-import java.lang.IllegalStateException
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtDynamicType
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtFunctionType
+import org.jetbrains.kotlin.psi.KtNullableType
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtTypeAlias
+import org.jetbrains.kotlin.psi.KtTypeParameter
+import org.jetbrains.kotlin.psi.KtTypeProjection
+import org.jetbrains.kotlin.psi.KtTypeReference
+import org.jetbrains.kotlin.psi.KtUserType
 
 class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReference) : KSTypeReference {
     companion object : KSObjectCache<KtTypeReference, KSTypeReferenceImpl>() {
@@ -38,6 +57,30 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
 
     override val location: Location by lazy {
         ktTypeReference.toLocation()
+    }
+    override val parent: KSNode? by lazy {
+        var parentPsi = ktTypeReference.parent
+        while (
+            parentPsi != null && parentPsi !is KtAnnotationEntry && parentPsi !is KtFunctionType &&
+            parentPsi !is KtClassOrObject && parentPsi !is KtFunction && parentPsi !is KtUserType &&
+            parentPsi !is KtProperty && parentPsi !is KtTypeAlias && parentPsi !is KtTypeProjection &&
+            parentPsi !is KtTypeParameter && parentPsi !is KtParameter
+        ) {
+            parentPsi = parentPsi.parent
+        }
+        when (parentPsi) {
+            is KtAnnotationEntry -> KSAnnotationImpl.getCached(parentPsi)
+            is KtFunctionType -> KSCallableReferenceImpl.getCached(parentPsi)
+            is KtClassOrObject -> KSClassDeclarationImpl.getCached(parentPsi)
+            is KtFunction -> KSFunctionDeclarationImpl.getCached(parentPsi)
+            is KtUserType -> KSClassifierReferenceImpl.getCached(parentPsi)
+            is KtProperty -> KSPropertyDeclarationImpl.getCached(parentPsi)
+            is KtTypeAlias -> KSTypeAliasImpl.getCached(parentPsi)
+            is KtTypeProjection -> KSTypeArgumentKtImpl.getCached(parentPsi)
+            is KtTypeParameter -> KSTypeParameterImpl.getCached(parentPsi)
+            is KtParameter -> KSValueParameterImpl.getCached(parentPsi)
+            else -> null
+        }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
@@ -55,7 +98,7 @@ class KSTypeReferenceImpl private constructor(val ktTypeReference: KtTypeReferen
         when (typeElement) {
             is KtFunctionType -> KSCallableReferenceImpl.getCached(typeElement)
             is KtUserType -> KSClassifierReferenceImpl.getCached(typeElement)
-            is KtDynamicType -> KSDynamicReferenceImpl.getCached(Unit)
+            is KtDynamicType -> KSDynamicReferenceImpl.getCached(this)
             else -> throw IllegalStateException("Unexpected type element ${typeElement?.javaClass}, $ExceptionMessage")
         }
     }

@@ -18,10 +18,12 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.KSClassifierReference
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.findParentOfType
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 
@@ -34,6 +36,10 @@ class KSClassifierReferenceImpl private constructor(val ktUserType: KtUserType) 
 
     override val location: Location by lazy {
         ktUserType.toLocation()
+    }
+
+    override val parent: KSNode? by lazy {
+        ktUserType.findParentOfType<KtTypeReference>()?.let { KSTypeReferenceImpl.getCached(it) }
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {

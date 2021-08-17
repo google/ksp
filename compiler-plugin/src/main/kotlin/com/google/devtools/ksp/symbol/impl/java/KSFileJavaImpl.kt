@@ -34,6 +34,7 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
     override val location: Location by lazy {
         psi.toLocation()
     }
+    override val parent: KSNode? = null
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 

@@ -54,10 +54,14 @@ import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes.API_VERSION
 
-class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationDescriptor) : KSAnnotation {
-    companion object : KSObjectCache<AnnotationDescriptor, KSAnnotationDescriptorImpl>() {
-        fun getCached(descriptor: AnnotationDescriptor) =
-            cache.getOrPut(descriptor) { KSAnnotationDescriptorImpl(descriptor) }
+class KSAnnotationDescriptorImpl private constructor(
+    val descriptor: AnnotationDescriptor,
+    override val parent: KSNode?
+) : KSAnnotation {
+    companion object : KSObjectCache<Pair<AnnotationDescriptor, KSNode?>, KSAnnotationDescriptorImpl>() {
+        fun getCached(descriptor: AnnotationDescriptor, parent: KSNode?) = cache.getOrPut(Pair(descriptor, parent)) {
+            KSAnnotationDescriptorImpl(descriptor, parent)
+        }
     }
 
     override val origin =
@@ -69,11 +73,11 @@ class KSAnnotationDescriptorImpl private constructor(val descriptor: AnnotationD
     override val location: Location = NonExistLocation
 
     override val annotationType: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, this)
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        descriptor.createKSValueArguments()
+        descriptor.createKSValueArguments(this)
     }
 
     override val shortName: KSName by lazy {
@@ -98,9 +102,9 @@ private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
 
 private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProjectedType()
 
-private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
-    is AnnotationValue -> KSAnnotationDescriptorImpl.getCached(value)
-    is ArrayValue -> value.map { it.toValue() }
+private fun <T> ConstantValue<T>.toValue(parent: KSNode): Any? = when (this) {
+    is AnnotationValue -> KSAnnotationDescriptorImpl.getCached(value, parent)
+    is ArrayValue -> value.map { it.toValue(parent) }
     is EnumValue -> value.first.findKSClassDeclaration()?.declarations?.find {
         it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
             it.simpleName.asString() == value.second.asString()
@@ -113,35 +117,38 @@ private fun <T> ConstantValue<T>.toValue(): Any? = when (this) {
     else -> value
 }
 
-fun AnnotationDescriptor.createKSValueArguments(): List<KSValueArgument> {
+fun AnnotationDescriptor.createKSValueArguments(ownerAnnotation: KSAnnotation): List<KSValueArgument> {
     val presentValueArguments = allValueArguments.map { (name, constantValue) ->
         KSValueArgumentLiteImpl.getCached(
             KSNameImpl.getCached(name.asString()),
-            constantValue.toValue()
+            constantValue.toValue(ownerAnnotation),
+            ownerAnnotation
         )
     }
     val presentValueArgumentNames = presentValueArguments.map { it.name.asString() }
-    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)
-        ?.constructors?.single()?.let { argumentsFromDefault ->
-            argumentsFromDefault.getAbsentDefaultArguments(presentValueArgumentNames)
+    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()
+        ?.let { argumentsFromDefault ->
+            argumentsFromDefault.getAbsentDefaultArguments(presentValueArgumentNames, ownerAnnotation)
         } ?: emptyList()
     return presentValueArguments.plus(argumentsFromDefault)
 }
 
-fun ClassConstructorDescriptor.getAbsentDefaultArguments(excludeNames: List<String>): List<KSValueArgument> {
-    return this.valueParameters.filterNot { param ->
-        excludeNames.contains(param.name.asString()) ||
-            !param.hasDefaultValue()
-    }
+fun ClassConstructorDescriptor.getAbsentDefaultArguments(
+    excludeNames: List<String>,
+    ownerAnnotation: KSAnnotation
+): List<KSValueArgument> {
+    return this.valueParameters
+        .filterNot { param -> excludeNames.contains(param.name.asString()) || !param.hasDefaultValue() }
         .map { param ->
             KSValueArgumentLiteImpl.getCached(
                 KSNameImpl.getCached(param.name.asString()),
-                param.getDefaultValue()
+                param.getDefaultValue(ownerAnnotation),
+                ownerAnnotation
             )
         }
 }
 
-fun ValueParameterDescriptor.getDefaultValue(): Any? {
+fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any? {
 
     // Copied from kotlin compiler
     // TODO: expose in upstream
@@ -218,7 +225,7 @@ fun ValueParameterDescriptor.getDefaultValue(): Any? {
     return when (psi) {
         null -> {
             val defaultFromJava = ResolverImpl.instance.javaActualAnnotationArgumentExtractor
-                .extractDefaultValue(this, this.type)?.toValue()
+                .extractDefaultValue(this, this.type)?.toValue(ownerAnnotation)
             if (defaultFromJava != null) {
                 defaultFromJava
             } else {
@@ -235,7 +242,7 @@ fun ValueParameterDescriptor.getDefaultValue(): Any? {
                                 name: String?,
                                 desc: String?,
                                 signature: String?,
-                                exceptions: Array<out String>?,
+                                exceptions: Array<out String>?
                             ): MethodVisitor {
                                 return if (name == this@getDefaultValue.name.asString()) {
                                     object : MethodVisitor(API_VERSION) {
@@ -253,7 +260,7 @@ fun ValueParameterDescriptor.getDefaultValue(): Any? {
                         },
                         ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
                     )
-                    defaultValue?.convert(this.type)?.toValue()
+                    defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
                 }
             }
         }

@@ -24,11 +24,13 @@ import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
 
-class KSValueParameterDescriptorImpl private constructor(val descriptor: ValueParameterDescriptor) : KSValueParameter {
-    companion object : KSObjectCache<ValueParameterDescriptor, KSValueParameterDescriptorImpl>() {
-        fun getCached(descriptor: ValueParameterDescriptor) = cache.getOrPut(descriptor) {
-            KSValueParameterDescriptorImpl(descriptor)
-        }
+class KSValueParameterDescriptorImpl private constructor(
+    val descriptor: ValueParameterDescriptor,
+    override val parent: KSNode?
+) : KSValueParameter {
+    companion object : KSObjectCache<Pair<ValueParameterDescriptor, KSNode?>, KSValueParameterDescriptorImpl>() {
+        fun getCached(descriptor: ValueParameterDescriptor, parent: KSNode?) = cache
+            .getOrPut(Pair(descriptor, parent)) { KSValueParameterDescriptorImpl(descriptor, parent) }
     }
 
     override val origin by lazy {
@@ -38,7 +40,7 @@ class KSValueParameterDescriptorImpl private constructor(val descriptor: ValuePa
     override val location: Location = NonExistLocation
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this) }
     }
 
     override val isCrossInline: Boolean = descriptor.isCrossinline
@@ -56,7 +58,7 @@ class KSValueParameterDescriptorImpl private constructor(val descriptor: ValuePa
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, this)
     }
 
     override val hasDefault: Boolean = descriptor.hasDefaultValue()

@@ -17,24 +17,34 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.NonExistLocation
+import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
-import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
+import com.google.devtools.ksp.symbol.impl.kotlin.IdKeyTriple
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeArgumentImpl
 import org.jetbrains.kotlin.types.TypeProjection
 
-class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProjection, override val origin: Origin) :
-    KSTypeArgumentImpl() {
-    companion object : KSObjectCache<IdKey<Pair<TypeProjection, Origin>>, KSTypeArgumentDescriptorImpl>() {
-        fun getCached(descriptor: TypeProjection, origin: Origin) = cache.getOrPut(IdKey(Pair(descriptor, origin))) {
-            KSTypeArgumentDescriptorImpl(descriptor, origin)
-        }
+class KSTypeArgumentDescriptorImpl private constructor(
+    val descriptor: TypeProjection,
+    override val origin: Origin,
+    override val parent: KSNode?
+) : KSTypeArgumentImpl() {
+    companion object : KSObjectCache<IdKeyTriple<TypeProjection, Origin, KSNode?>, KSTypeArgumentDescriptorImpl>() {
+        fun getCached(descriptor: TypeProjection, origin: Origin, parent: KSNode?) = cache
+            .getOrPut(IdKeyTriple(descriptor, origin, parent)) {
+                KSTypeArgumentDescriptorImpl(descriptor, origin, parent)
+            }
     }
 
     override val location: Location = NonExistLocation
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin)
+        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, if (parent != null) this else null)
     }
 
     override val variance: Variance by lazy {
@@ -50,6 +60,6 @@ class KSTypeArgumentDescriptorImpl private constructor(val descriptor: TypeProje
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.type.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it) }
+        descriptor.type.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this) }
     }
 }

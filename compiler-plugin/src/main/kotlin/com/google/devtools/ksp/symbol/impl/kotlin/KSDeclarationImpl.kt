@@ -25,7 +25,7 @@ import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.psi.*
 
-abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
+abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) : KSDeclaration {
     override val origin: Origin = Origin.KOTLIN
 
     override val location: Location by lazy {
@@ -60,12 +60,16 @@ abstract class KSDeclarationImpl(ktDeclaration: KtDeclaration) : KSDeclaration {
 
     override val typeParameters: List<KSTypeParameter> by lazy {
         (ktDeclaration as? KtTypeParameterListOwner)?.let {
-            it.typeParameters.map { KSTypeParameterImpl.getCached(it, ktDeclaration) }
+            it.typeParameters.map { KSTypeParameterImpl.getCached(it) }
         } ?: emptyList()
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {
         ktDeclaration.findParentDeclaration()
+    }
+
+    override val parent: KSDeclaration? by lazy {
+        parentDeclaration
     }
 
     override fun toString(): String {

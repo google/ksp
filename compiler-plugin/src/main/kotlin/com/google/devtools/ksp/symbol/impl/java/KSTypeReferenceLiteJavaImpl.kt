@@ -17,12 +17,22 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSReferenceElement
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.NonExistLocation
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 
-class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType) : KSTypeReference {
-    companion object : KSObjectCache<KSType, KSTypeReferenceLiteJavaImpl>() {
-        fun getCached(type: KSType) = cache.getOrPut(type) { KSTypeReferenceLiteJavaImpl(type) }
+class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType, override val parent: KSNode) : KSTypeReference {
+    companion object : KSObjectCache<Pair<KSType, KSNode>, KSTypeReferenceLiteJavaImpl>() {
+        fun getCached(type: KSType, parent: KSNode) = cache
+            .getOrPut(Pair(type, parent)) { KSTypeReferenceLiteJavaImpl(type, parent) }
     }
 
     override val origin = Origin.JAVA

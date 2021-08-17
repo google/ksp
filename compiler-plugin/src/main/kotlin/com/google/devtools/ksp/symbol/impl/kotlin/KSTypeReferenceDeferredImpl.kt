@@ -17,12 +17,30 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSReferenceElement
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.NonExistLocation
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 
-class KSTypeReferenceDeferredImpl private constructor(private val resolver: () -> KSType) : KSTypeReference {
-    companion object : KSObjectCache<() -> KSType, KSTypeReferenceDeferredImpl>() {
-        fun getCached(resolver: () -> KSType) = cache.getOrPut(resolver) { KSTypeReferenceDeferredImpl(resolver) }
+class KSTypeReferenceDeferredImpl private constructor(
+    private val resolver: () -> KSType,
+    override val parent: KSNode?
+) : KSTypeReference {
+    companion object : KSObjectCache<KSDeclaration, KSTypeReferenceDeferredImpl>() {
+        fun getCached(parent: KSDeclaration, resolver: () -> KSType): KSTypeReferenceDeferredImpl {
+            val currentParent = parent.getInstanceForCurrentRound() as KSDeclaration
+            return cache
+                .getOrPut(currentParent) { KSTypeReferenceDeferredImpl(resolver, currentParent) }
+        }
     }
 
     override val origin = Origin.KOTLIN

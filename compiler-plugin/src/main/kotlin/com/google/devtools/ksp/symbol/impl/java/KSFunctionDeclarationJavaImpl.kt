@@ -89,12 +89,12 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
     override val returnType: KSTypeReference? by lazy {
         when {
             psi.returnType != null -> {
-                KSTypeReferenceJavaImpl.getCached(psi.returnType!!)
+                KSTypeReferenceJavaImpl.getCached(psi.returnType!!, this)
             }
             psi.isConstructor -> {
                 psi.containingClass?.let { containingClass ->
                     KSTypeReferenceLiteJavaImpl.getCached(
-                        KSClassDeclarationJavaImpl.getCached(containingClass).asStarProjectedType()
+                        KSClassDeclarationJavaImpl.getCached(containingClass).asStarProjectedType(), this
                     )
                 }
             }

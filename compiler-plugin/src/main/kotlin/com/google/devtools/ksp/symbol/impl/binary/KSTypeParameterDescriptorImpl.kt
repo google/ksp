@@ -40,7 +40,7 @@ class KSTypeParameterDescriptorImpl private constructor(val descriptor: TypePara
     }
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        descriptor.upperBounds.asSequence().map { KSTypeReferenceDescriptorImpl.getCached(it, origin) }
+        descriptor.upperBounds.asSequence().map { KSTypeReferenceDescriptorImpl.getCached(it, origin, this) }
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
