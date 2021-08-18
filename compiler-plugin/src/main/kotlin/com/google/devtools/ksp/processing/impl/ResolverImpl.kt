@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
+import com.google.devtools.ksp.symbol.impl.findParentPsiDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.java.*
@@ -50,12 +51,15 @@ import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
+import org.jetbrains.kotlin.load.java.lazy.childForClassOrPackage
+import org.jetbrains.kotlin.load.java.lazy.childForMethod
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaClass
@@ -94,6 +98,7 @@ import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes.API_VERSION
 import java.io.File
+import java.util.Stack
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -144,7 +149,7 @@ class ResolverImpl(
         constantExpressionEvaluator = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
-        val javaResolverComponents = componentProvider.tryGetService(JavaResolverComponents::class.java)?.let {
+        componentProvider.tryGetService(JavaResolverComponents::class.java)?.let {
             lazyJavaResolverContext = LazyJavaResolverContext(it, TypeParameterResolver.EMPTY) { null }
             javaTypeResolver = lazyJavaResolverContext.typeResolver
             moduleClassResolver = lazyJavaResolverContext.components.moduleClassResolver
@@ -503,7 +508,28 @@ class ResolverImpl(
     fun resolveJavaType(psi: PsiType): KotlinType {
         incrementalContext.recordLookup(psi)
         val javaType = JavaTypeImpl.create(psi)
-        return javaTypeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
+
+        var parent: PsiElement? = (psi as? PsiClassReferenceType)?.resolve()
+        val stack = Stack<PsiElement>()
+        while (parent != null && parent !is PsiJavaFile) {
+            stack.push(parent)
+            parent = parent.findParentPsiDeclaration()
+        }
+        // Construct resolver context for the PsiType
+        var resolverContext = lazyJavaResolverContext
+        for (e in stack) {
+            val descriptor = resolveJavaDeclaration(e)!!
+            when (e) {
+                is PsiMethod -> {
+                    resolverContext = resolverContext.childForMethod(descriptor, JavaMethodImpl(e))
+                }
+                is PsiClass -> {
+                    resolverContext = resolverContext
+                        .childForClassOrPackage(descriptor as ClassDescriptor, JavaClassImpl(e))
+                }
+            }
+        }
+        return resolverContext.typeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
 
     fun KotlinType.expandNonRecursively(): KotlinType =
