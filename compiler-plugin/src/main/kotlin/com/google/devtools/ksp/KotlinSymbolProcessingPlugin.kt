@@ -86,7 +86,7 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         val options = configuration[KSP_OPTIONS]?.apply {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
         }?.build() ?: return
-        val messageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
+        val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
             ?: throw IllegalStateException("message collector not found!")
         val logger = MessageCollectorBasedKSPLogger(messageCollector)
         if (options.processingClasspath.isNotEmpty()) {
