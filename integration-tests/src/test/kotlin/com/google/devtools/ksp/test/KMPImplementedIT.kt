@@ -67,5 +67,19 @@ class KMPImplementedIT {
         verifyKexe("workload/build/bin/androidNativeX64/releaseExecutable/workload.so")
         verifyKexe("workload/build/bin/androidNativeArm64/debugExecutable/workload.so")
         verifyKexe("workload/build/bin/androidNativeArm64/releaseExecutable/workload.so")
+
+        // TODO: Enable after CI's Xcode version catches up.
+        // Assert.assertTrue(
+        //     resultCleanBuild.task(":workload:kspKotlinIosArm64")?.outcome == TaskOutcome.SUCCESS ||
+        //         resultCleanBuild.task(":workload:kspKotlinIosArm64")?.outcome == TaskOutcome.SKIPPED
+        // )
+        // Assert.assertTrue(
+        //     resultCleanBuild.task(":workload:kspKotlinMacosX64")?.outcome == TaskOutcome.SUCCESS ||
+        //         resultCleanBuild.task(":workload:kspKotlinMacosX64")?.outcome == TaskOutcome.SKIPPED
+        // )
+        Assert.assertTrue(
+            resultCleanBuild.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SUCCESS ||
+                resultCleanBuild.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SKIPPED
+        )
     }
 }
