@@ -19,7 +19,9 @@
 // TEST PROCESSOR: TypeParameterReferenceProcessor
 // EXPECTED:
 // LibFoo: false
+// SelfReferencing: false
 // kotlin.String: false
+// SelfReferencing.T: false
 // Foo.T1: true
 // Foo.bar.T2: false
 // foo.T3: false
@@ -27,6 +29,7 @@
 // List<T>
 // T
 // MutableList<(T..T?)>
+// (SelfReferencingJava<(T..T?)>..SelfReferencingJava<(T..T?)>?)
 // END
 
 // MODULE: lib
@@ -35,6 +38,10 @@ interface LibFoo<T> {
     val v: T
     val w: List<T>
 }
+
+// FILE: LibSR.kt
+package lib;
+class SelfReferencing<T : SelfReferencing<T>>
 
 // FILE: JavaLib.java
 import java.util.List;
@@ -46,6 +53,9 @@ interface JavaLib<T> {
 
 // MODULE: main(lib)
 // FILE: main.kt
+
+class SelfReferencing<T : SelfReferencing<T>>
+
 class Foo<T1> {
     inner class Bar {
         val v: T1?
@@ -57,3 +67,7 @@ class Foo<T1> {
 }
 
 fun <T3> foo(p: T3) = 1
+
+// FILE: SelfReferencingJava.java
+public class SelfReferencingJava<T extends SelfReferencingJava<T>> {
+}
