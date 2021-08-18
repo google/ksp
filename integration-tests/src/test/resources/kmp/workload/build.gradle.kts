@@ -28,6 +28,10 @@ kotlin {
             executable()
         }
     }
+    // TODO: Enable after CI's Xcode version catches up.
+    // iosArm64()
+    // macosX64()
+    mingwX64()
     sourceSets {
         val commonMain by getting
         val linuxX64Main by getting
