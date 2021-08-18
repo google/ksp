@@ -17,7 +17,8 @@ class MultiplatformIT {
     fun testJVM() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        val resultCleanBuild = gradleRunner.withArguments("clean", "build").build()
+        val resultCleanBuild =
+            gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
