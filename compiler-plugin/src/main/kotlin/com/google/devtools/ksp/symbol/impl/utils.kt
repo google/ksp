@@ -231,6 +231,14 @@ fun PsiElement.findParentAnnotated(): KSAnnotated? {
     }
 }
 
+fun PsiElement.findParentPsiDeclaration(): PsiElement? {
+    var parent = this.parent
+    while (parent != null && parent !is PsiClass && parent !is PsiMethod && parent !is PsiJavaFile) {
+        parent = parent.parent
+    }
+    return parent
+}
+
 fun PsiElement.findParentDeclaration(): KSDeclaration? {
     return this.findParentAnnotated() as? KSDeclaration
 }
