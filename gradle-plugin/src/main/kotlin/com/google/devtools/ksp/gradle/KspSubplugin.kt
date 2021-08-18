@@ -51,6 +51,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinNativeCompilationData
 import org.jetbrains.kotlin.gradle.tasks.*
@@ -329,6 +330,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 )
                 project.tasks.register(kspTaskName, kspTaskClass, kotlinCompileTask.compilation).apply {
                     configure { kspTask ->
+                        kspTask.onlyIf {
+                            kotlinCompileTask.compilation.konanTarget.enabledOnCurrentHost
+                        }
                         configureAsKspTask(kspTask, false)
                         configureAsAbstractCompile(kspTask)
 
