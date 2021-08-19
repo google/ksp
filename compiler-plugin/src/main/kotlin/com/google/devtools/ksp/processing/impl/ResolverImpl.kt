@@ -128,6 +128,9 @@ class ResolverImpl(
         true
     )
 
+    private val aliasingFqNs: MutableMap<String, KSTypeAlias> = mutableMapOf()
+    private val aliasingNames: MutableSet<String> = mutableSetOf()
+
     companion object {
         lateinit var resolveSession: ResolveSession
         lateinit var bodyResolver: BodyResolver
@@ -172,7 +175,16 @@ class ResolverImpl(
                 }
                 classDeclaration.declarations.forEach { it.accept(this, data) }
             }
+
+            override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
+                typeAlias.qualifiedName?.asString()?.let { fqn ->
+                    aliasingFqNs[fqn] = typeAlias
+                    aliasingNames.add(fqn.substringAfterLast('.'))
+                }
+            }
         }
+
+        // FIXME: reuse results from previous rounds and only loop through newKSFiles.
         allKSFiles.forEach { it.accept(visitor, Unit) }
     }
 
@@ -247,17 +259,21 @@ class ResolverImpl(
     }
 
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        fun checkAnnotation(annotated: KSAnnotated): Boolean {
-            val ksName = KSNameImpl.getCached(annotationName)
+        // If annotationName is a typealias, resolve to underlying type.
+        val realAnnotationName =
+            aliasingFqNs[annotationName]?.type?.resolveToUnderlying()?.declaration?.qualifiedName?.asString()
+                ?: annotationName
 
-            return (
-                annotated.annotations.any {
-                    val annotationType = it.annotationType
-                    (annotationType.element as? KSClassifierReference)?.referencedName()
-                        .let { it == null || it == ksName.getShortName() } &&
-                        annotationType.resolve().declaration.qualifiedName == ksName
-                }
-                )
+        fun checkAnnotation(annotated: KSAnnotated): Boolean {
+            val ksName = KSNameImpl.getCached(realAnnotationName)
+
+            return annotated.annotations.any {
+                val annotationType = it.annotationType
+                val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
+                val simpleName = referencedName?.substringAfterLast('.')
+                (simpleName == null || simpleName == ksName.getShortName() || simpleName in aliasingNames) &&
+                    annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
+            }
         }
 
         // TODO: Make visitor a generator
@@ -1096,4 +1112,17 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotatio
         }
         else -> emptySequence()
     } ?: emptySequence()
+}
+
+// Resolve to underlying type.
+// Only slightly slower than resolving a plain type, because everything is resolved and cached in the first resolve().
+// FIXME: add a resolution mode in resolveUserType() to resolve to underlying type directly.
+internal fun KSTypeReference.resolveToUnderlying(): KSType {
+    var candidate = resolve()
+    var declaration = candidate.declaration
+    while (declaration is KSTypeAlias) {
+        candidate = declaration.type.resolve()
+        declaration = candidate.declaration
+    }
+    return candidate
 }
