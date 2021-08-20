@@ -25,7 +25,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
-import com.google.devtools.ksp.symbol.impl.findParentPsiDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.java.*
@@ -57,7 +56,9 @@ import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDesc
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
+import org.jetbrains.kotlin.load.java.structure.impl.JavaArrayTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
@@ -505,31 +506,41 @@ class ResolverImpl(
         } as PropertyAccessorDescriptor?
     }
 
-    fun resolveJavaType(psi: PsiType): KotlinType {
+    fun resolveJavaType(psi: PsiType, parentTypeReference: KSTypeReference? = null): KotlinType {
         incrementalContext.recordLookup(psi)
         val javaType = JavaTypeImpl.create(psi)
 
-        var parent: PsiElement? = (psi as? PsiClassReferenceType)?.resolve()
-        val stack = Stack<PsiElement>()
-        while (parent != null && parent !is PsiJavaFile) {
-            stack.push(parent)
-            parent = parent.findParentPsiDeclaration()
+        var parent: KSNode? = parentTypeReference
+
+        val stack = Stack<KSNode>()
+        while (parent != null) {
+            if (parent is KSFunctionDeclarationJavaImpl || parent is KSClassDeclarationJavaImpl) {
+                stack.push(parent)
+            }
+            parent = parent.parent
         }
         // Construct resolver context for the PsiType
         var resolverContext = lazyJavaResolverContext
         for (e in stack) {
-            val descriptor = resolveJavaDeclaration(e)!!
             when (e) {
-                is PsiMethod -> {
-                    resolverContext = resolverContext.childForMethod(descriptor, JavaMethodImpl(e))
-                }
-                is PsiClass -> {
+                is KSFunctionDeclarationJavaImpl -> {
                     resolverContext = resolverContext
-                        .childForClassOrPackage(descriptor as ClassDescriptor, JavaClassImpl(e))
+                        .childForMethod(
+                            resolveJavaDeclaration(e.psi)!!,
+                            if (e.psi.isConstructor) JavaConstructorImpl(e.psi) else JavaMethodImpl(e.psi)
+                        )
+                }
+                is KSClassDeclarationJavaImpl -> {
+                    resolverContext = resolverContext
+                        .childForClassOrPackage(resolveJavaDeclaration(e.psi) as ClassDescriptor, JavaClassImpl(e.psi))
                 }
             }
         }
-        return resolverContext.typeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
+        return if (javaType is JavaArrayTypeImpl)
+            resolverContext
+                .typeResolver.transformArrayType(javaType, TypeUsage.COMMON.toAttributes(), psi is PsiEllipsisType)
+        else
+            resolverContext.typeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
 
     fun KotlinType.expandNonRecursively(): KotlinType =
@@ -603,7 +614,10 @@ class ResolverImpl(
                         ).defaultType
                     )
                 } else {
-                    return getKSTypeCached(resolveJavaType(type.psi), type.element.typeArguments, type.annotations)
+                    return getKSTypeCached(
+                        resolveJavaType(type.psi, type),
+                        type.element.typeArguments, type.annotations
+                    )
                 }
             }
             else -> throw IllegalStateException("Unable to resolve type for $type, $ExceptionMessage")

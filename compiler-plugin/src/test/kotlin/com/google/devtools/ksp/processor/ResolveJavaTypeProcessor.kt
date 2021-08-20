@@ -18,7 +18,14 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.Nullability
+import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class ResolveJavaTypeProcessor : AbstractTestProcessor() {
@@ -31,8 +38,12 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbol = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))
+        val symbolTypeParameter = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Base"))
+        val another = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Another"))
         assert(symbol?.origin == Origin.JAVA)
         symbol!!.accept(visitor, Unit)
+        symbolTypeParameter!!.accept(visitor, Unit)
+        another!!.accept(visitor, Unit)
         return emptyList()
     }
 
