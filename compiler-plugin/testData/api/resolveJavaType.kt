@@ -31,6 +31,25 @@
 // kotlin.collections.MutableList<in kotlin.collections.MutableList<out kotlin.Double?>?>?
 // Bar?
 // kotlin.Array<Bar?>?
+// Foo<Base.T?, Base.Inner.P?>?
+// Bar<Base.Inner.P?, Base.T?>?
+// kotlin.collections.MutableList<Base.T?>?
+// kotlin.Unit
+// Base.T?
+// kotlin.Unit
+// kotlin.Array<Base.T?>?
+// kotlin.Unit
+// kotlin.Array<Base.T?>?
+// kotlin.Unit
+// kotlin.collections.MutableList<Base.T?>?
+// kotlin.Unit
+// Base.T?
+// kotlin.Unit
+// kotlin.Array<Base.T?>?
+// kotlin.Unit
+// kotlin.Array<Base.T?>?
+// kotlin.Unit
+// Base<Another.T?, Another.T?>?
 // END
 // FILE: a.kt
 annotation class Test
@@ -68,4 +87,30 @@ public class C<T> {
     public Bar BarFun() {}
 
     public Bar[] BarArryFun() {}
+}
+
+// FILE: Base.java
+import java.util.List;
+
+class Foo<T1,T2> {}
+class Bar<T1, T2> {}
+
+class Base<T,P> {
+    void genericT(List<T> t){};
+    void singleT(T t){};
+    void varargT(T... t){};
+    void arrayT(T[] t){};
+
+    class Inner<P> {
+        void genericT(List<T> t){};
+        void singleT(T t){};
+        void varargT(T... t){};
+        void arrayT(T[] t){};
+        Foo<T, P> foo;
+        Bar<P, T> bar;
+    }
+}
+
+class Another<T> {
+    Base<T, T> base;
 }
