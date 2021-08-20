@@ -91,7 +91,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
             is PsiWildcardType -> KSClassifierReferenceJavaImpl.getCached(type.extendsBound as PsiClassType, this)
             is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType(), origin, this)
             is PsiArrayType -> {
-                val componentType = ResolverImpl.instance.resolveJavaType(type.componentType)
+                val componentType = ResolverImpl.instance.resolveJavaType(type.componentType, this)
                 if (type.componentType !is PsiPrimitiveType) {
                     KSClassifierReferenceDescriptorImpl.getCached(
                         ResolverImpl.instance.module.builtIns.getArrayType(Variance.INVARIANT, componentType),
