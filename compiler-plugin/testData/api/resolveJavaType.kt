@@ -50,6 +50,13 @@
 // kotlin.Array<Base.T?>?
 // kotlin.Unit
 // Base<Another.T?, Another.T?>?
+// kotlin.Int
+// kotlin.Int
+// JavaEnum
+// kotlin.Unit
+// kotlin.Array<JavaEnum?>?
+// kotlin.String?
+// JavaEnum?
 // END
 // FILE: a.kt
 annotation class Test
@@ -113,4 +120,16 @@ class Base<T,P> {
 
 class Another<T> {
     Base<T, T> base;
+}
+
+public enum JavaEnum {
+    VAL1(1),
+    VAL2(2);
+
+    private int x;
+
+    JavaEnum(int x) {
+        this.x = x;
+    }
+    void enumMethod() {}
 }
