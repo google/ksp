@@ -40,10 +40,12 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
         val symbol = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))
         val symbolTypeParameter = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Base"))
         val another = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Another"))
+        val javaEnum = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaEnum"))
         assert(symbol?.origin == Origin.JAVA)
         symbol!!.accept(visitor, Unit)
         symbolTypeParameter!!.accept(visitor, Unit)
         another!!.accept(visitor, Unit)
+        javaEnum!!.accept(visitor, Unit)
         return emptyList()
     }
 
