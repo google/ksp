@@ -28,7 +28,7 @@ tasks.withType<ShadowJar>() {
 tasks {
     publish {
         dependsOn(shadowJar)
-        dependsOn(project(":compiler-plugin:dokkaJavadocJar"))
+        dependsOn(project(":compiler-plugin").tasks["dokkaJavadocJar"])
     }
 
     val sourcesJar by creating(Jar::class) {
