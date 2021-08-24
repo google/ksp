@@ -5,17 +5,20 @@ import java.time.format.DateTimeFormatter
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
+
 if (!extra.has("kspVersion")) {
     val kotlinBaseVersion: String by project
     val today = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)
     extra.set("kspVersion", "$kotlinBaseVersion-dev-experimental-$today")
 }
+
 repositories {
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
 }
 
 plugins {
+    kotlin("jvm")
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
