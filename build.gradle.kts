@@ -29,6 +29,8 @@ nexusPublishing {
     }
 }
 
+version = rootProject.extra.get("kspVersion") as String
+
 project.configureKtlintApplyToIdea()
 subprojects {
     group = "com.google.devtools.ksp"
