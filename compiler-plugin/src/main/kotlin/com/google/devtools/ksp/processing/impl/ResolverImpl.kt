@@ -540,6 +540,9 @@ class ResolverImpl(
         for (e in stack) {
             when (e) {
                 is KSFunctionDeclarationJavaImpl -> {
+                    // Non-physical methods have no interesting scope and may have no containing class
+                    if (!e.psi.isPhysical || e.psi.containingClass == null)
+                        continue
                     resolverContext = resolverContext
                         .childForMethod(
                             resolveJavaDeclaration(e.psi)!!,
