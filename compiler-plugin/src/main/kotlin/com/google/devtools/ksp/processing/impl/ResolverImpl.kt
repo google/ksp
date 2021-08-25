@@ -265,25 +265,31 @@ class ResolverImpl(
             aliasingFqNs[annotationName]?.type?.resolveToUnderlying()?.declaration?.qualifiedName?.asString()
                 ?: annotationName
 
-        fun checkAnnotation(annotated: KSAnnotated): Boolean {
-            val ksName = KSNameImpl.getCached(realAnnotationName)
+        val ksName = KSNameImpl.getCached(realAnnotationName)
+        val shortName = ksName.getShortName()
 
+        fun checkAnnotation(annotated: KSAnnotated): Boolean {
             return annotated.annotations.any {
                 val annotationType = it.annotationType
                 val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
                 val simpleName = referencedName?.substringAfterLast('.')
-                (simpleName == null || simpleName == ksName.getShortName() || simpleName in aliasingNames) &&
+                (simpleName == null || simpleName == shortName || simpleName in aliasingNames) &&
                     annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
             }
         }
 
+        val allAnnotated = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
+        return allAnnotated.asSequence().filter { checkAnnotation(it) }
+    }
+
+    private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
+        val symbols = arrayListOf<KSAnnotated>()
+
         // TODO: Make visitor a generator
         val visitor = object : KSVisitorVoid() {
-            val symbols = mutableSetOf<KSAnnotated>()
             override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
-                if (checkAnnotation(annotated)) {
+                if (annotated.annotations.any())
                     symbols.add(annotated)
-                }
             }
 
             override fun visitFile(file: KSFile, data: Unit) {
@@ -295,7 +301,6 @@ class ResolverImpl(
                 visitAnnotated(classDeclaration, data)
                 classDeclaration.typeParameters.forEach { it.accept(this, data) }
                 classDeclaration.declarations.forEach { it.accept(this, data) }
-                classDeclaration.primaryConstructor?.let { it.accept(this, data) }
             }
 
             override fun visitPropertyGetter(getter: KSPropertyGetter, data: Unit) {
@@ -318,8 +323,8 @@ class ResolverImpl(
             override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
                 visitAnnotated(property, data)
                 property.typeParameters.forEach { it.accept(this, data) }
-                property.getter?.let { it.accept(this, data) }
-                property.setter?.let { it.accept(this, data) }
+                property.getter?.accept(this, data)
+                property.setter?.accept(this, data)
             }
 
             override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {
@@ -338,8 +343,20 @@ class ResolverImpl(
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
-        return visitor.symbols.asSequence() + deferredSymbols.values.flatten()
-            .mapNotNull { it.getInstanceForCurrentRound() }.filter { checkAnnotation(it) }
+
+        return symbols
+    }
+
+    private val deferredSymbolsUpdated: Collection<KSAnnotated> by lazy {
+        deferredSymbols.values.flatten().mapNotNull { it.getInstanceForCurrentRound() }
+    }
+
+    private val newAnnotatedSymbols: Collection<KSAnnotated> by lazy {
+        collectAnnotatedSymbols(false) + deferredSymbolsUpdated
+    }
+
+    private val newAnnotatedSymbolsWithLocals: Collection<KSAnnotated> by lazy {
+        collectAnnotatedSymbols(true) + deferredSymbolsUpdated
     }
 
     override fun getKSNameFromString(name: String): KSName {
