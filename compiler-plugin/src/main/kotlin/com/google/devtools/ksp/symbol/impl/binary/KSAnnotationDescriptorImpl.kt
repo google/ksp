@@ -35,9 +35,12 @@ import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.load.java.components.JavaAnnotationDescriptor
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaAnnotationDescriptor
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.*
+import org.jetbrains.kotlin.load.java.structure.impl.VirtualFileBoundJavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSignatureParser
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
 import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
@@ -211,8 +214,9 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
                 )
             }
             is JavaAnnotationAsAnnotationArgument -> {
-                // TODO: support annotations as annotation arguments (KT-28077)
-                null
+                AnnotationValue(
+                    LazyJavaAnnotationDescriptor(ResolverImpl.lazyJavaResolverContext, this.getAnnotation())
+                )
             }
             is JavaClassObjectAnnotationArgument -> {
                 convertTypeToKClassValue(getReferencedType())
@@ -224,44 +228,45 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
     val psi = this.findPsi()
     return when (psi) {
         null -> {
-            val defaultFromJava = ResolverImpl.instance.javaActualAnnotationArgumentExtractor
-                .extractDefaultValue(this, this.type)?.toValue(ownerAnnotation)
-            if (defaultFromJava != null) {
-                defaultFromJava
+            val file = if (this.source is JavaSourceElement) {
+                (
+                    ((this.source as JavaSourceElement).javaElement as? BinaryJavaMethod)
+                        ?.containingClass as? VirtualFileBoundJavaClass
+                    )?.virtualFile?.contentsToByteArray()
             } else {
-                val file = (this.containingDeclaration.getContainingKotlinJvmBinaryClass() as? VirtualFileKotlinClass)
+                (this.containingDeclaration.getContainingKotlinJvmBinaryClass() as? VirtualFileKotlinClass)
                     ?.file?.contentsToByteArray()
-                if (file == null) {
-                    null
-                } else {
-                    var defaultValue: JavaAnnotationArgument? = null
-                    ClassReader(file).accept(
-                        object : ClassVisitor(API_VERSION) {
-                            override fun visitMethod(
-                                access: Int,
-                                name: String?,
-                                desc: String?,
-                                signature: String?,
-                                exceptions: Array<out String>?
-                            ): MethodVisitor {
-                                return if (name == this@getDefaultValue.name.asString()) {
-                                    object : MethodVisitor(API_VERSION) {
-                                        override fun visitAnnotationDefault(): AnnotationVisitor =
-                                            BinaryJavaAnnotationVisitor(
-                                                ClassifierResolutionContext { null },
-                                                BinaryClassSignatureParser()
-                                            ) {
-                                                defaultValue = it
-                                            }
-                                    }
-                                } else
-                                    object : MethodVisitor(API_VERSION) {}
-                            }
-                        },
-                        ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-                    )
-                    defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
-                }
+            }
+            if (file == null) {
+                null
+            } else {
+                var defaultValue: JavaAnnotationArgument? = null
+                ClassReader(file).accept(
+                    object : ClassVisitor(API_VERSION) {
+                        override fun visitMethod(
+                            access: Int,
+                            name: String?,
+                            desc: String?,
+                            signature: String?,
+                            exceptions: Array<out String>?
+                        ): MethodVisitor {
+                            return if (name == this@getDefaultValue.name.asString()) {
+                                object : MethodVisitor(API_VERSION) {
+                                    override fun visitAnnotationDefault(): AnnotationVisitor =
+                                        BinaryJavaAnnotationVisitor(
+                                            ClassifierResolutionContext { null },
+                                            BinaryClassSignatureParser()
+                                        ) {
+                                            defaultValue = it
+                                        }
+                                }
+                            } else
+                                object : MethodVisitor(API_VERSION) {}
+                        }
+                    },
+                    ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+                )
+                defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
             }
         }
         is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.value
