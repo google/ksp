@@ -83,11 +83,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(
     val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
     lateinit var providers: List<SymbolProcessorProvider>
     lateinit var processors: List<SymbolProcessor>
-    lateinit var newFiles: Collection<KSFile>
     lateinit var incrementalContext: IncrementalContext
     lateinit var dirtyFiles: Set<KSFile>
     lateinit var cleanFilenames: Set<String>
     lateinit var codeGenerator: CodeGeneratorImpl
+    var newFileNames: Collection<String> = emptySet()
     var rounds = 0
 
     companion object {
@@ -124,6 +124,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
+        var newFiles = ksFiles.filter { it.filePath in newFileNames }
 
         handleException(project) {
             if (!initialized) {
@@ -133,7 +134,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 )
                 dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
                 cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
-                newFiles = dirtyFiles
+                newFiles = dirtyFiles.toList()
             } else {
                 incrementalContext.registerGeneratedFiles(newFiles)
             }
@@ -193,13 +194,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             }
         }
         // Post processing.
-        val newKtFiles = codeGenerator.generatedFile.filter { it.extension == "kt" }
-            .mapNotNull { localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? KtFile }
-        val newJavaFiles = codeGenerator.generatedFile.filter { it.extension == "java" }
-            .mapNotNull {
-                localFileSystem.findFileByPath(it.canonicalPath)?.let { psiManager.findFile(it) } as? PsiJavaFile
-            }
-        newFiles = newKtFiles.map { KSFileImpl.getCached(it) } + newJavaFiles.map { KSFileJavaImpl.getCached(it) }
+        newFileNames = codeGenerator.generatedFile.filter { it.extension == "kt" || it.extension == "java" }
+            .map { it.canonicalPath }.toSet()
         if (codeGenerator.generatedFile.isEmpty()) {
             finished = true
         }
