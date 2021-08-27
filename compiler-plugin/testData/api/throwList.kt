@@ -25,6 +25,10 @@
 // java.io.IOException
 // java.io.IOException,java.lang.IndexOutOfBoundsException
 // java.lang.IndexOutOfBoundsException
+// java.lang.IllegalArgumentException
+// java.lang.IllegalStateException
+// java.io.IOException
+// java.lang.IllegalStateException,java.lang.IllegalArgumentException
 // java.io.IOException
 // java.lang.IndexOutOfBoundsException
 // java.io.IOException,java.lang.IndexOutOfBoundsException
@@ -45,6 +49,10 @@ public class JavaLib {
     }
 }
 // FILE: KtLib.kt
+import java.io.IOException
+import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
+
 class KtLib {
     @Throws(java.io.IOException::class)
     fun throwsLibKt() {
@@ -58,6 +66,14 @@ class KtLib {
     fun throwsLibKt(s: Array<String>) {
         throw java.io.IOException()
     }
+
+    @get:Throws(IllegalArgumentException::class)
+    val getterThrows: Int = 3
+    @set:Throws(IllegalStateException::class)
+    var setterThrows: Int = 3
+    @get:Throws(IOException::class)
+    @set:Throws(IllegalStateException::class, IllegalArgumentException::class)
+    var bothThrows: Int = 3
 }
 // MODULE: main(lib)
 // FILE: ThrowsException.java
