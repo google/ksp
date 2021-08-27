@@ -43,6 +43,18 @@ class ThrowListProcessor : AbstractTestProcessor() {
         klib.declarations.filter { it.simpleName.asString() == "throwsLibKt" }.map {
             resolver.getJvmCheckedException(it as KSFunctionDeclaration).toResult()
         }.forEach { result.add(it) }
+        klib.declarations.filter { it.simpleName.asString() == "getterThrows" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).getter!!).toResult()
+        }.forEach { result.add(it) }
+        klib.declarations.filter { it.simpleName.asString() == "setterThrows" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).setter!!).toResult()
+        }.forEach { result.add(it) }
+        klib.declarations.filter { it.simpleName.asString() == "bothThrows" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).getter!!).toResult()
+        }.forEach { result.add(it) }
+        klib.declarations.filter { it.simpleName.asString() == "bothThrows" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).setter!!).toResult()
+        }.forEach { result.add(it) }
         jlib.declarations.filter { it.simpleName.asString() == "foo" }.map {
             resolver.getJvmCheckedException(it as KSFunctionDeclaration).toResult()
         }.forEach { result.add(it) }

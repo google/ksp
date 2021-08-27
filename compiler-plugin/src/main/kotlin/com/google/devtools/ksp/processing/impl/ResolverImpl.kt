@@ -766,6 +766,35 @@ class ResolverImpl(
         }
     }
 
+    private fun extractThrowsFromClassFile(
+        virtualFileContent: ByteArray,
+        jvmDesc: String?,
+        simpleName: String?
+    ): Sequence<KSType> {
+        val exceptionNames = mutableListOf<String>()
+        ClassReader(virtualFileContent).accept(
+            object : ClassVisitor(API_VERSION) {
+                override fun visitMethod(
+                    access: Int,
+                    name: String?,
+                    descriptor: String?,
+                    signature: String?,
+                    exceptions: Array<out String>?,
+                ): MethodVisitor {
+                    if (name == simpleName && jvmDesc == descriptor) {
+                        exceptions?.toList()?.let { exceptionNames.addAll(it) }
+                    }
+                    return object : MethodVisitor(API_VERSION) {
+                    }
+                }
+            },
+            ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+        )
+        return exceptionNames.mapNotNull {
+            this@ResolverImpl.getClassDeclarationByName(it.replace("/", "."))?.asStarProjectedType()
+        }.asSequence()
+    }
+
     @SuppressWarnings("UNCHECKED_CAST")
     private fun extractThrowsAnnotation(annotated: KSAnnotated): Sequence<KSType> {
         return annotated.annotations
@@ -803,28 +832,7 @@ class ResolverImpl(
                 if (virtualFileContent == null) {
                     return emptySequence()
                 }
-                val exceptionNames = mutableListOf<String>()
-                ClassReader(virtualFileContent).accept(
-                    object : ClassVisitor(API_VERSION) {
-                        override fun visitMethod(
-                            access: Int,
-                            name: String?,
-                            descriptor: String?,
-                            signature: String?,
-                            exceptions: Array<out String>?,
-                        ): MethodVisitor {
-                            if (name == function.simpleName.asString() && jvmDesc == descriptor) {
-                                exceptions?.toList()?.let { exceptionNames.addAll(it) }
-                            }
-                            return object : MethodVisitor(API_VERSION) {
-                            }
-                        }
-                    },
-                    ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-                )
-                exceptionNames.mapNotNull {
-                    this@ResolverImpl.getClassDeclarationByName(it.replace("/", "."))?.asStarProjectedType()
-                }.asSequence()
+                extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
             }
             else -> emptySequence()
         }
@@ -835,6 +843,23 @@ class ResolverImpl(
         return when (accessor.origin) {
             Origin.KOTLIN, Origin.SYNTHETIC -> {
                 extractThrowsAnnotation(accessor)
+            }
+            Origin.KOTLIN_LIB -> {
+                val descriptor = (accessor as KSPropertyAccessorDescriptorImpl).descriptor
+                val jvmDesc = typeMapper.mapAsmMethod(descriptor).descriptor
+                val virtualFileContent = if (accessor.origin == Origin.KOTLIN_LIB) {
+                    (descriptor.correspondingProperty.getContainingKotlinJvmBinaryClass() as? VirtualFileKotlinClass)
+                        ?.file?.contentsToByteArray()
+                } else {
+                    (
+                        ((descriptor.source as? JavaSourceElement)?.javaElement as? BinaryJavaMethod)?.containingClass
+                            as? BinaryJavaClass
+                        )?.virtualFile?.contentsToByteArray()
+                }
+                if (virtualFileContent == null) {
+                    return emptySequence()
+                }
+                extractThrowsFromClassFile(virtualFileContent, jvmDesc, getJvmName(accessor))
             }
             else -> emptySequence()
         }
