@@ -286,6 +286,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 )
             }
+            kspTask.isKspIncremental = isIncremental
         }
 
         fun configureAsAbstractCompile(kspTask: AbstractCompile) {
@@ -317,7 +318,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     kspTask.configureCompilation(
                         kotlinCompilation as KotlinCompilationData<*>,
                         kotlinCompileTask,
-                        isIncremental
                     )
                 }
             }
@@ -445,10 +445,12 @@ interface KspTask : Task {
     @get:LocalState
     val kspCacheDir: DirectoryProperty
 
+    @get:Input
+    var isKspIncremental: Boolean
+
     fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
-        isIncremental: Boolean,
     )
 }
 
@@ -459,13 +461,12 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
     @get:InputFiles
     abstract val classpathStructure: ConfigurableFileCollection
 
-    @get:Internal
+    @get:Input
     var isIntermoduleIncremental: Boolean = false
 
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
-        isIncremental: Boolean,
     ) {
         Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompile
@@ -476,8 +477,10 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
             }
         )
 
-        isIntermoduleIncremental = project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true
-        if (isIncremental && isIntermoduleIncremental) {
+        isIntermoduleIncremental =
+            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) &&
+            isKspIncremental
+        if (isIntermoduleIncremental) {
             val classStructureIfIncremental = project.configurations.detachedConfiguration(
                 project.dependencies.create(project.files(project.provider { kotlinCompile.classpath }))
             )
@@ -604,7 +607,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
     ) {
-        if (isIntermoduleIncremental) {
+        if (isKspIncremental && isIntermoduleIncremental) {
             // findClasspathChanges may clear caches, if there are
             // 1. unknown changes, or
             // 2. changes in annotation processors.
@@ -629,7 +632,6 @@ abstract class KspTaskJS @Inject constructor(
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
-        isIncremental: Boolean,
     ) {
         Configurator<KspTaskJS>(kotlinCompilation).configure(this)
         kotlinCompile as Kotlin2JsCompile
@@ -694,7 +696,6 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
-        isIncremental: Boolean,
     ) {
         Configurator<KspTaskMetadata>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompileCommon
@@ -773,7 +774,6 @@ abstract class KspTaskNative @Inject constructor(
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
-        isIncremental: Boolean,
     ) = Unit
 
     // KotlinNativeCompile doesn't support Gradle incremental compilation. Therefore, there is no information about
