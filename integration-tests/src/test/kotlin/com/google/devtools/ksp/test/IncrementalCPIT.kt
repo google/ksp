@@ -61,4 +61,58 @@ class IncrementalCPIT {
             }
         }
     }
+
+    private fun toggleFlags(vararg extras: String) {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+
+        gradleRunner.withArguments(
+            *extras,
+            "--rerun-tasks",
+            "-Pksp.incremental=true",
+            "-Pksp.incremental.intermodule=true",
+            "assemble"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+        }
+
+        gradleRunner.withArguments(
+            *extras,
+            "--rerun-tasks",
+            "-Pksp.incremental=false",
+            "-Pksp.incremental.intermodule=true",
+            "assemble"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+        }
+
+        gradleRunner.withArguments(
+            *extras,
+            "--rerun-tasks",
+            "-Pksp.incremental=true",
+            "-Pksp.incremental.intermodule=false",
+            "assemble"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+        }
+
+        gradleRunner.withArguments(
+            *extras,
+            "--rerun-tasks",
+            "-Pksp.incremental=false",
+            "-Pksp.incremental.intermodule=false",
+            "assemble"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+        }
+    }
+
+    @Test
+    fun toggleIncrementalFlagsWithoutConfigurationCache() {
+        toggleFlags("--no-configuration-cache")
+    }
+
+    @Test
+    fun toggleIncrementalFlagsWithConfigurationCache() {
+        toggleFlags("--configuration-cache")
+    }
 }
