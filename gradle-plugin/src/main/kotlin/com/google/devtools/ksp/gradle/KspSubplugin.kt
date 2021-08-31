@@ -607,16 +607,20 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
     ) {
-        if (isKspIncremental && isIntermoduleIncremental) {
-            // findClasspathChanges may clear caches, if there are
-            // 1. unknown changes, or
-            // 2. changes in annotation processors.
-            val classpathChanges = findClasspathChanges(changedFiles)
-            args.addChangedClasses(classpathChanges)
-        } else {
-            if (changedFiles.hasNonSourceChange()) {
-                clearIncCache()
+        if (isKspIncremental) {
+            if (isIntermoduleIncremental) {
+                // findClasspathChanges may clear caches, if there are
+                // 1. unknown changes, or
+                // 2. changes in annotation processors.
+                val classpathChanges = findClasspathChanges(changedFiles)
+                args.addChangedClasses(classpathChanges)
+            } else {
+                if (changedFiles.hasNonSourceChange()) {
+                    clearIncCache()
+                }
             }
+        } else {
+            clearIncCache()
         }
         args.addChangedFiles(changedFiles)
         super.callCompilerAsync(args, sourceRoots, changedFiles)
@@ -683,7 +687,7 @@ abstract class KspTaskJS @Inject constructor(
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
     ) {
-        if (changedFiles.hasNonSourceChange()) {
+        if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
             clearIncCache()
         } else {
             args.addChangedFiles(changedFiles)
@@ -747,7 +751,7 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
     ) {
-        if (changedFiles.hasNonSourceChange()) {
+        if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
             clearIncCache()
         } else {
             args.addChangedFiles(changedFiles)
