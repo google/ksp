@@ -24,6 +24,8 @@
 // <init>: PUBLIC,visible in A, B, D: true, true, true
 // javaPackageField: JAVA_PACKAGE,visible in A, B, D: true, false, true
 // x: INTERNAL,visible in A, B, D: false, false, false
+// y: PROTECTED,visible in A, B, D: true, false, true
+// y: PUBLIC,visible in A, B, D: true, true, true
 // END
 
 // MODULE: lib
@@ -33,8 +35,9 @@ public class JavaClass {
 }
 
 // FILE: lib.kt
-class KotlinClass {
-    internal val x: Int = 0
+open class KotlinClass {
+    open internal val x: Int = 0
+    open protected val y: Int = 0
 }
 
 // MODULE: main(lib)
@@ -50,6 +53,9 @@ class A : C() {
 @TestD
 class D {}
 
+class KotlinSubClass : KotlinClass() {
+    public override val y = 1
+}
 
 // FILE: C.java
 class C {

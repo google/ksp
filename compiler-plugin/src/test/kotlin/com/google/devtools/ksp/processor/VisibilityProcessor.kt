@@ -45,11 +45,16 @@ class VisibilityProcessor : AbstractTestProcessor() {
         }.forEach { results.add(it) }
         val javaClass = resolver.getClassDeclarationByName("JavaClass")!!
         val kotlinClass = resolver.getClassDeclarationByName("KotlinClass")!!
+        val kotlinSubClass = resolver.getClassDeclarationByName("KotlinSubClass")!!
         javaClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                 "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
         }.forEach { results.add(it) }
         kotlinClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
+            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+        }.forEach { results.add(it) }
+        kotlinSubClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                 "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
         }.forEach { results.add(it) }
