@@ -137,6 +137,7 @@ fun KSTypeAlias.findActualType(): KSClassDeclaration {
  */
 fun KSDeclaration.getVisibility(): Visibility {
     return when {
+        this.modifiers.contains(Modifier.PUBLIC) -> Visibility.PUBLIC
         this.modifiers.contains(Modifier.OVERRIDE) -> {
             when (this) {
                 is KSFunctionDeclaration -> this.findOverridee()?.getVisibility()
@@ -149,7 +150,6 @@ fun KSDeclaration.getVisibility(): Visibility {
         this.modifiers.contains(Modifier.PROTECTED) ||
             this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
-        this.modifiers.contains(Modifier.PUBLIC) -> Visibility.PUBLIC
         else -> if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB)
             Visibility.PUBLIC else Visibility.JAVA_PACKAGE
     }
