@@ -150,7 +150,8 @@ fun KSDeclaration.getVisibility(): Visibility {
             this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
         this.modifiers.contains(Modifier.PUBLIC) -> Visibility.PUBLIC
-        else -> if (this.origin != Origin.JAVA) Visibility.PUBLIC else Visibility.JAVA_PACKAGE
+        else -> if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB)
+            Visibility.PUBLIC else Visibility.JAVA_PACKAGE
     }
 }
 
@@ -234,7 +235,7 @@ fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
 // TODO: cross module visibility is not handled
 fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     fun KSDeclaration.isSamePackage(other: KSDeclaration): Boolean =
-        this.containingFile?.packageName == other.containingFile?.packageName
+        this.packageName == other.packageName
 
     // lexical scope for local declaration.
     fun KSDeclaration.parentDeclarationsForLocal(): List<KSDeclaration> {
@@ -269,9 +270,9 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
         this.isPrivate() -> this.isVisibleInPrivate(other)
         this.isPublic() -> true
         this.isInternal() && other.containingFile != null && this.containingFile != null -> true
-        // Non-private symbols in Java are always visible in same package.
-        this.origin == Origin.JAVA -> this.isSamePackage(other)
-        this.isProtected() -> this.isVisibleInPrivate(other) || other.closestClassDeclaration()?.let {
+        this.isJavaPackagePrivate() -> this.isSamePackage(other)
+        this.isProtected() -> this.isVisibleInPrivate(other) || this.isSamePackage(other) ||
+            other.closestClassDeclaration()?.let {
             this.closestClassDeclaration()!!.asStarProjectedType().isAssignableFrom(it.asStarProjectedType())
         } ?: false
         else -> false

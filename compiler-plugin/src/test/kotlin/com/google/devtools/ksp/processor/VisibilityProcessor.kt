@@ -17,12 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
 class VisibilityProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -38,6 +40,16 @@ class VisibilityProcessor : AbstractTestProcessor() {
         val allFunctions = (symbolA.superTypes.single().resolve()!!.declaration as KSClassDeclaration)
             .declarations.filterIsInstance<KSFunctionDeclaration>()
         allFunctions.map {
+            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+        }.forEach { results.add(it) }
+        val javaClass = resolver.getClassDeclarationByName("JavaClass")!!
+        val kotlinClass = resolver.getClassDeclarationByName("KotlinClass")!!
+        javaClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
+            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+        }.forEach { results.add(it) }
+        kotlinClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                 "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
         }.forEach { results.add(it) }
