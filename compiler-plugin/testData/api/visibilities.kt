@@ -22,8 +22,22 @@
 // privateFun: PRIVATE,visible in A, B, D: false, false, false
 // protectedFun: PROTECTED,visible in A, B, D: true, false, true
 // <init>: PUBLIC,visible in A, B, D: true, true, true
+// javaPackageField: JAVA_PACKAGE,visible in A, B, D: true, false, true
+// x: INTERNAL,visible in A, B, D: false, false, false
 // END
 
+// MODULE: lib
+// FILE: JavaClass.java
+public class JavaClass {
+    int javaPackageField;
+}
+
+// FILE: lib.kt
+class KotlinClass {
+    internal val x: Int = 0
+}
+
+// MODULE: main(lib)
 // FILE: a.kt
 annotation class TestA
 annotation class TestB
