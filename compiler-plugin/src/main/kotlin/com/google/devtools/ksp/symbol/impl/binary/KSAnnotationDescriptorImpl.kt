@@ -22,6 +22,7 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.findPsi
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
@@ -51,6 +52,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.constants.*
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.isError
 import org.jetbrains.kotlin.types.typeUtil.builtIns
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.ClassReader
@@ -275,16 +277,25 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
                                             defaultValue = it
                                         }
                                 }
-                            } else
+                            } else {
                                 object : MethodVisitor(API_VERSION) {}
+                            }
                         }
                     },
                     ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
                 )
-                defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
+                if (!this.type.isError) {
+                    defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
+                } else {
+                    KSErrorType
+                }
             }
         }
-        is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.toValue(ownerAnnotation)
+        is KtParameter -> if (!this.type.isError) {
+            ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.toValue(ownerAnnotation)
+        } else {
+            KSErrorType
+        }
         is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
             .computeConstantExpression((psi).defaultValue)
         else -> throw IllegalStateException("Unexpected psi ${psi.javaClass}, $ExceptionMessage")

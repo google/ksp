@@ -41,7 +41,16 @@ open class KSValidateVisitor(
     }
 
     override fun visitAnnotation(annotation: KSAnnotation, data: KSNode?): Boolean {
-        return !predicate(data, annotation) || annotation.annotationType.accept(this, annotation)
+        if (!predicate(data, annotation)) {
+            return true
+        }
+        if (!annotation.annotationType.accept(this, annotation)) {
+            return false
+        }
+        if (annotation.arguments.any { !it.accept(this, it) }) {
+            return false
+        }
+        return true
     }
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: KSNode?): Boolean {
@@ -87,6 +96,16 @@ open class KSValidateVisitor(
             return false
         }
         return true
+    }
+
+    override fun visitValueArgument(valueArgument: KSValueArgument, data: KSNode?): Boolean {
+        fun visitValue(value: Any?): Boolean = when (value) {
+            is KSType -> this.validateType(value)
+            is KSAnnotation -> this.visitAnnotation(value, data)
+            is List<*> -> value.all { visitValue(it) }
+            else -> true
+        }
+        return visitValue(valueArgument.value)
     }
 
     override fun visitValueParameter(valueParameter: KSValueParameter, data: KSNode?): Boolean {
