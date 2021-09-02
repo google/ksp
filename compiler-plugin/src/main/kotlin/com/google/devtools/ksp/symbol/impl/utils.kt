@@ -22,6 +22,8 @@ import com.google.devtools.ksp.MemoizedSequence
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.binary.KSDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSPropertyDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
@@ -62,7 +64,10 @@ import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.Comparator
+import kotlin.collections.ArrayDeque
 import kotlin.reflect.KClass
 
 private val jvmModifierMap = mapOf(
@@ -679,3 +684,194 @@ private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byt
 private fun Any.asShort(): Short = if (this is Int) this.toShort() else this as Short
 
 private fun KSType.asClass() = Class.forName(this.declaration.qualifiedName!!.asString())
+
+/**
+ * Helper class to read the order of fields/methods in a .class file compiled from Kotlin.
+ *
+ * When a compiled Kotlin class is read from descriptors, the order of fields / methods do not match
+ * the order in the original source file (or the .class file).
+ * This helper class reads the order from the binary class (using the visitor API) and allows
+ * [KSClassDeclarationDescriptorImpl] to sort its declarations based on the .class file.
+ *
+ * Note that the ordering is relevant only for fields and methods. For any other declaration, the
+ * order that was returned from the descriptor API is kept.
+ *
+ * see: https://github.com/google/ksp/issues/250
+ */
+@KspExperimental
+internal class DeclarationOrdering(
+    binaryClass: KotlinJvmBinaryClass
+) : KotlinJvmBinaryClass.MemberVisitor {
+    // Map of fieldName -> Order
+    private val fieldOrdering = mutableMapOf<String, Int>()
+    // Map of method name to (jvm desc -> Order) map
+    // multiple methods might have the same name, hence we need to use signature matching for
+    // methods. That being said, we only do it when we find multiple methods with the same name
+    // otherwise, there is no reason to compute the jvm signature.
+    private val methodOrdering = mutableMapOf<String, MutableMap<String, Int>>()
+    // This map is built while we are sorting to ensure for the same declaration, we return the same
+    // order, in case it is not found in fields / methods.
+    private val declOrdering = IdentityHashMap<KSDeclaration, Int>()
+    // Helper class to generate ids that can be used for comparison.
+    private val orderProvider = OrderProvider()
+
+    init {
+        binaryClass.visitMembers(this, null)
+        orderProvider.seal()
+    }
+
+    val comparator = Comparator<KSDeclarationDescriptorImpl> { first, second ->
+        getOrder(first).compareTo(getOrder(second))
+    }
+
+    private fun getOrder(decl: KSDeclarationDescriptorImpl): Int {
+        return declOrdering.getOrPut(decl) {
+            when (decl) {
+                is KSPropertyDeclarationDescriptorImpl -> {
+                    fieldOrdering[decl.simpleName.asString()]?.let {
+                        return@getOrPut it
+                    }
+                    // might be a property without backing field. Use method ordering instead
+                    decl.getter?.let { getter ->
+                        return@getOrPut findMethodOrder(
+                            ResolverImpl.instance.getJvmName(getter).toString()
+                        ) {
+                            ResolverImpl.instance.mapToJvmSignature(getter)
+                        }
+                    }
+                    decl.setter?.let { setter ->
+                        return@getOrPut findMethodOrder(
+                            ResolverImpl.instance.getJvmName(setter).toString()
+                        ) {
+                            ResolverImpl.instance.mapToJvmSignature(setter)
+                        }
+                    }
+                    orderProvider.next(decl)
+                }
+                is KSFunctionDeclarationDescriptorImpl -> {
+                    findMethodOrder(
+                        ResolverImpl.instance.getJvmName(decl).toString()
+                    ) {
+                        ResolverImpl.instance.mapToJvmSignature(decl).toString()
+                    }
+                }
+                else -> orderProvider.nextIgnoreSealed()
+            }
+        }
+    }
+
+    private inline fun findMethodOrder(
+        jvmName: String,
+        crossinline getJvmDesc: () -> String
+    ): Int {
+        val methods = methodOrdering[jvmName]
+        // if there is 1 method w/ that name, just return.
+        // otherwise, we need signature matching
+        return when {
+            methods == null -> {
+                orderProvider.next(jvmName)
+            }
+            methods.size == 1 -> {
+                // only 1 method with this name, return it, no reason to resolve jvm
+                // signature
+                methods.values.first()
+            }
+            else -> {
+                // need to match using the jvm signature
+                val jvmDescriptor = getJvmDesc()
+                methods.getOrPut(jvmDescriptor) {
+                    orderProvider.next(jvmName)
+                }
+            }
+        }
+    }
+
+    override fun visitField(
+        name: Name,
+        desc: String,
+        initializer: Any?
+    ): KotlinJvmBinaryClass.AnnotationVisitor? {
+        fieldOrdering.getOrPut(name.asString()) {
+            orderProvider.next(name)
+        }
+        return null
+    }
+
+    override fun visitMethod(
+        name: Name,
+        desc: String
+    ): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
+        methodOrdering.getOrPut(name.asString()) {
+            mutableMapOf()
+        }.put(desc, orderProvider.next(name))
+        return null
+    }
+
+    /**
+     * Helper class to generate order values for items.
+     * Each time we see a new declaration, we give it an increasing order.
+     *
+     * This provider can also run in STRICT MODE to ensure that if we don't find an expected value
+     * during sorting, we can crash instead of picking the next ID. For now, it is only used for
+     * testing.
+     */
+    private class OrderProvider {
+        private var nextId = 0
+        private var sealed = false
+
+        /**
+         * Seals the provider, preventing it from generating new IDs if [STRICT_MODE] is enabled.
+         */
+        fun seal() {
+            sealed = true
+        }
+
+        /**
+         * Returns the next available order value.
+         *
+         * @param ref Used for logging if the data is sealed and we shouldn't provide a new order.
+         */
+        fun next(ref: Any): Int {
+            check(!sealed || !STRICT_MODE) {
+                "couldn't find item $ref"
+            }
+            return nextId ++
+        }
+
+        /**
+         * Returns the next ID without checking whether the model is sealed or not. This is useful
+         * for declarations where we don't care about the order (e.g. inner class declarations).
+         */
+        fun nextIgnoreSealed(): Int {
+            return nextId ++
+        }
+    }
+    companion object {
+        /**
+         * Used in tests to prevent fallback behavior of creating a new ID when we cannot find the
+         * order.
+         */
+        var STRICT_MODE = false
+    }
+}
+
+/**
+ * Same as KSDeclarationContainer.declarations, but sorted by declaration order in the source.
+ *
+ * Note that this is SLOW. AVOID IF POSSIBLE.
+ */
+@KspExperimental
+val KSDeclarationContainer.declarationsInSourceOrder: Sequence<KSDeclaration>
+    get() {
+        // Only Kotlin libs can be out of order.
+        if (this !is KSClassDeclarationDescriptorImpl || origin != Origin.KOTLIN_LIB)
+            return declarations
+
+        val declarationOrdering = descriptor.safeAs<DeserializedClassDescriptor>()
+            ?.source.safeAs<KotlinJvmBinarySourceElement>()?.binaryClass?.let {
+                DeclarationOrdering(it)
+            } ?: return declarations
+
+        return (declarations as? Sequence<KSDeclarationDescriptorImpl>)?.sortedWith(declarationOrdering.comparator)
+            ?: declarations
+    }

@@ -127,6 +127,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/declarationPackageName.kt");
     }
 
+    @TestMetadata("declarationOrder.kt")
+    public void testDeclarationOrder() throws Exception {
+        runTest("testData/api/declarationOrder.kt");
+    }
+
     @TestMetadata("declarationUtil.kt")
     public void testDeclarationUtil() throws Exception {
         runTest("testData/api/declarationUtil.kt");
