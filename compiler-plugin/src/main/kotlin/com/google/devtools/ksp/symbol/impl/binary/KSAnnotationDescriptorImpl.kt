@@ -113,7 +113,8 @@ private fun <T> ConstantValue<T>.toValue(parent: KSNode): Any? = when (this) {
             it.simpleName.asString() == value.second.asString()
     }?.let { (it as KSClassDeclaration).asStarProjectedType() }
     is KClassValue -> when (val classValue = value) {
-        is KClassValue.Value.NormalClass -> classValue.classId.findKSType()
+        is KClassValue.Value.NormalClass -> if (classValue.arrayDimensions > 0)
+            ResolverImpl.instance.builtIns.arrayType else classValue.classId.findKSType()
         is KClassValue.Value.LocalClass -> getKSTypeCached(classValue.type)
     }
     is ErrorValue, is NullValue -> null
