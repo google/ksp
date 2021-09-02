@@ -1046,6 +1046,13 @@ class ResolverImpl(
     @KspExperimental
     override fun mapKotlinNameToJava(kotlinName: KSName): KSName? =
         JavaToKotlinClassMap.mapKotlinToJava(FqNameUnsafe(kotlinName.asString()))?.toKSName()
+
+    @KspExperimental
+    internal fun mapToJvmSignature(accessor: KSPropertyAccessor): String {
+        return resolvePropertyAccessorDeclaration(accessor)?.let {
+            typeMapper.mapAsmMethod(it).descriptor
+        } ?: ""
+    }
 }
 
 // TODO: cross module resolution
