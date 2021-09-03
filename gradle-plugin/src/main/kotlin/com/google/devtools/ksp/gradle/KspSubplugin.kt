@@ -63,6 +63,7 @@ import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
+import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.Callable
 import javax.inject.Inject
@@ -304,6 +305,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     kspTask.source(sourceRoots.javaSourceRoots)
                 }
             }
+            kspTask.source.filter { !kspOutputDir.isParentOf(it) }
 
             // Don't support binary generation for K/N yet.
             // FIXME: figure out how to add user generated libraries.
@@ -862,4 +864,11 @@ internal inline fun <reified T : CommonCompilerArguments> dumpArgs(args: T): Map
         }
 
     return argumentProperties.associate(args::toPair).toSortedMap()
+}
+
+internal fun File.isParentOf(childCandidate: File): Boolean {
+    val parentPath = Paths.get(this.absolutePath).normalize()
+    val childCandidatePath = Paths.get(childCandidate.absolutePath).normalize()
+
+    return childCandidatePath.startsWith(parentPath)
 }
