@@ -6,6 +6,7 @@
 // baseTypeArg1: kotlin.Int!!
 // baseTypeArg2: kotlin.String?
 // typePair: kotlin.Pair!!<kotlin.String?, kotlin.Int!!>
+// errorType: <Error>?
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
 // returnArg1: () -> kotlin.Int!!
@@ -22,6 +23,7 @@
 // baseTypeArg1: kotlin.Any?
 // baseTypeArg2: kotlin.Any?
 // typePair: kotlin.Pair!!<kotlin.Any?, kotlin.Any?>
+// errorType: <Error>?
 // extensionProperty: kotlin.Any?
 // returnInt: () -> kotlin.Int!!
 // returnArg1: () -> kotlin.Any?
@@ -38,6 +40,7 @@
 // baseTypeArg1: kotlin.String!!
 // baseTypeArg2: kotlin.String?
 // typePair: kotlin.Pair!!<kotlin.String?, kotlin.String!!>
+// errorType: <Error>?
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
 // returnArg1: () -> kotlin.String!!
@@ -54,6 +57,7 @@
 // baseTypeArg1: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `baseTypeArg1` (Base)
 // baseTypeArg2: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `baseTypeArg2` (Base)
 // typePair: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `typePair` (Base)
+// errorType: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `errorType` (Base)
 // extensionProperty: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `extensionProperty` (Base)
 // returnInt: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt` (Base)
 // returnArg1: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg1` (Base)
@@ -75,6 +79,7 @@
 // intType: kotlin.Int!!
 // typeArg1: kotlin.String
 // typeArg2: kotlin.Int
+// errorType: <Error>?
 // returnArg1: () -> kotlin.Int
 // receiveArgs: (kotlin.String, kotlin.Int, kotlin.Int!!) -> kotlin.Unit!!
 // methodArgType: <BaseTypeArg1: kotlin.Any>(JavaBase.methodArgType.BaseTypeArg1, kotlin.Int) -> kotlin.Unit!!
@@ -95,6 +100,7 @@ open class Base<BaseTypeArg1, BaseTypeArg2> {
     val baseTypeArg1: BaseTypeArg1 = TODO()
     val baseTypeArg2: BaseTypeArg2 = TODO()
     val typePair: Pair<BaseTypeArg2, BaseTypeArg1>  = TODO()
+    val errorType: NonExistType = TODO()
     fun returnInt():Int = TODO()
     fun returnArg1(): BaseTypeArg1 = TODO()
     fun returnArg1Nullable(): BaseTypeArg1? = TODO()
@@ -138,6 +144,7 @@ class JavaBase<BaseTypeArg1, BaseTypeArg2> {
     int intType;
     BaseTypeArg1 typeArg1;
     BaseTypeArg2 typeArg2;
+    NonExist errorType;
     BaseTypeArg2 returnArg1() {
         return null;
     }
