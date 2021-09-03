@@ -23,3 +23,12 @@ ksp {
     arg("option1", "value1")
     arg("option2", "value2")
 }
+
+val compileKotlin: AbstractCompile by tasks
+tasks.register<Copy>("copyG") {
+    from("G.kt")
+    into(File(buildDir, "generatedSources").apply { mkdirs() })
+}.let {
+    // Magic. `map` creates a provider to propagate task dependency.
+    compileKotlin.source(it.map { it.destinationDir })
+}
