@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.builtins.isFunctionType
 import org.jetbrains.kotlin.builtins.isKFunctionType
 import org.jetbrains.kotlin.builtins.isKSuspendFunctionType
 import org.jetbrains.kotlin.builtins.isSuspendFunctionType
+import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.isError
@@ -90,17 +91,17 @@ class KSTypeImpl private constructor(
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return KSTypeImpl.getCached(kotlinType.replaceTypeArguments(arguments), arguments)
+        return getKSTypeCached(kotlinType.replaceTypeArguments(arguments), arguments)
     }
 
     override fun starProjection(): KSType {
-        return KSTypeImpl.getCached(kotlinType.replaceArgumentsWithStarProjections())
+        return getKSTypeCached(kotlinType.replaceArgumentsWithStarProjections())
     }
 
-    private val meNullable: KSType by lazy { KSTypeImpl.getCached(kotlinType.makeNullable()) }
+    private val meNullable: KSType by lazy { getKSTypeCached(kotlinType.makeNullable()) }
     override fun makeNullable(): KSType = meNullable
 
-    private val meNotNullable: KSType by lazy { KSTypeImpl.getCached(kotlinType.makeNotNullable()) }
+    private val meNotNullable: KSType by lazy { getKSTypeCached(kotlinType.makeNotNullable()) }
     override fun makeNotNullable(): KSType = meNotNullable
 
     override val isMarkedNullable: Boolean = kotlinType.isMarkedNullable
@@ -146,7 +147,9 @@ fun getKSTypeCached(
     ksTypeArguments: List<KSTypeArgument>? = null,
     annotations: Sequence<KSAnnotation> = sequenceOf()
 ): KSType {
-    return if (kotlinType.isError) {
+    return if (kotlinType.isError ||
+        kotlinType.constructor.declarationDescriptor is NotFoundClasses.MockClassDescriptor
+    ) {
         KSErrorType
     } else {
         KSTypeImpl.getCached(kotlinType, ksTypeArguments, annotations)
