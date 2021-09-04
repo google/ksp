@@ -138,29 +138,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         registry.register(KspModelBuilder())
     }
 
-    /**
-     * Creates a KSP configuration for each element in the object container.
-     * TODO: remove after revisiting AndroidPluginIntegration.
-     */
-    internal fun <T> NamedDomainObjectContainer<T>.createKspConfigurations(
-        project: Project,
-        getKspConfigurationNames: (T) -> List<String>,
-    ) {
-        val mainConfiguration = project.configurations.maybeCreate(KSP_MAIN_CONFIGURATION_NAME)
-        all {
-            getKspConfigurationNames(it).forEach { kspConfigurationName ->
-                if (kspConfigurationName != KSP_MAIN_CONFIGURATION_NAME) {
-                    val existing = project.configurations.findByName(kspConfigurationName)
-                    if (existing == null) {
-                        project.configurations.create(kspConfigurationName) {
-                            it.extendsFrom(mainConfiguration)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
         val project = kotlinCompilation.target.project
         val kspVersion = javaClass.`package`.implementationVersion
