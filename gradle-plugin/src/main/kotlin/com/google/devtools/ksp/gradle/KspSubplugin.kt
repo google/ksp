@@ -298,7 +298,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourceOutputDir
             )
             kotlinCompilation.allKotlinSourceSets.forEach { sourceSet -> kspTask.source(sourceSet.kotlin) }
-            kotlinCompilation.output.classesDirs.from(classOutputDir)
+
+            // Don't support binary generation for K/N yet.
+            // FIXME: figure out how to add user generated libraries.
+            if (kspTask !is KspTaskNative) {
+                kotlinCompilation.output.classesDirs.from(classOutputDir)
+            }
         }
 
         val kspTaskProvider = when (kotlinCompileTask) {
