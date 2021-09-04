@@ -39,6 +39,7 @@ class KMPImplementedIT {
             .build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:kspTestKotlinLinuxX64")?.outcome)
 
         verify(
             "workload/build/libs/workload-jvm-1.0-SNAPSHOT.jar",

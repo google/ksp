@@ -35,6 +35,7 @@ kotlin {
     sourceSets {
         val commonMain by getting
         val linuxX64Main by getting
+        val linuxX64Test by getting
         val androidNativeX64Main by getting
         val androidNativeArm64Main by getting
     }
