@@ -73,6 +73,47 @@ class SourceSetConfigurationsTest {
     }
 
     @Test
+    fun configurationsForMultiplatformApp() {
+        testRule.setupAppAsMultiplatformApp(
+            "jvm { }",
+            "android(name = \"foo\") { }",
+            "js { browser() }",
+            "androidNativeX86 { }",
+            "androidNativeX64(name = \"bar\") { }",
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+        val result = testRule.runner()
+            .withArguments(":app:dependencies")
+            .build()
+
+        assertThat(result.output.lines()).containsAtLeast(
+            "ksp",
+            // jvm target:
+            "kspJvm",
+            "kspJvmTest",
+            // android target, named foo:
+            "kspFoo",
+            "kspFooAndroidTest",
+            "kspFooAndroidTestDebug",
+            "kspFooAndroidTestRelease",
+            "kspFooDebug",
+            "kspFooRelease",
+            "kspFooTest",
+            "kspFooTestDebug",
+            "kspFooTestRelease",
+            // js target:
+            "kspJs",
+            "kspJsTest",
+            // androidNativeX86 target:
+            "kspAndroidNativeX86",
+            "kspAndroidNativeX86Test",
+            // androidNative64 target, named bar:
+            "kspBar",
+            "kspBarTest"
+        )
+    }
+
+    @Test
     fun registerJavaSourcesToAndroid() {
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(

@@ -77,6 +77,19 @@ class TestModule(
         srcDir.resolve(name).writeText(contents)
     }
 
+    /**
+     * Adds the given source file to the given KotlinSourceSet in a multiplatform project.
+     */
+    fun addMultiplatformSource(sourceSet: String, name: String, contents: String) {
+        require(name.endsWith(".kt")) { "multiplatform source extension needs to be *.kt." }
+        val srcDir = multiplatformKotlinSourceDir(sourceSet)
+        srcDir.resolve(name).writeText(contents)
+    }
+
+    private fun multiplatformKotlinSourceDir(sourceSet: String) = moduleRoot.resolve("src/$sourceSet/kotlin").also {
+        it.mkdirs()
+    }
+
     private val kotlinSourceDir
         get() = moduleRoot.resolve("src/main/kotlin").also {
             it.mkdirs()
