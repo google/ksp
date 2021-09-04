@@ -4,7 +4,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
-import java.util.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 
 /**
  * Creates and retrieves ksp-related configurations.
@@ -19,10 +19,16 @@ class KspConfigurations(private val project: Project) {
     private val rootMainConfiguration = project.configurations.create(ROOT)
 
     // Stores all saved configurations for quick access.
-    private val configurations = mutableMapOf<KotlinSourceSet, Configuration>()
+    private val kotlinConfigurations = mutableMapOf<KotlinSourceSet, Configuration>()
+    private val androidConfigurations = mutableMapOf<String, Configuration>()
 
     @OptIn(ExperimentalStdlibApi::class)
-    private fun addConfiguration(owner: KotlinSourceSet, parent: Configuration?, name: String): Configuration {
+    private fun <T: Any> saveConfiguration(
+        owner: T,
+        parent: Configuration?,
+        name: String,
+        cache: MutableMap<T, Configuration>
+    ): Configuration {
         val configName = ROOT + name.replaceFirstChar { it.uppercase() }
         val existingConfig = project.configurations.findByName(configName)
         if (existingConfig != null && configName != ROOT) {
@@ -30,10 +36,18 @@ class KspConfigurations(private val project: Project) {
         }
 
         val config = existingConfig ?: project.configurations.create(configName)
-        if (parent != null) config.extendsFrom(parent)
-        configurations[owner] = config
+        if (parent != null && parent.name != configName) {
+            config.extendsFrom(parent)
+        }
+        cache[owner] = config
         return config
     }
+
+    private fun saveKotlinConfiguration(owner: KotlinSourceSet, parent: Configuration?, name: String) =
+        saveConfiguration(owner, parent, name, kotlinConfigurations)
+
+    private fun saveAndroidConfiguration(owner: String, parent: Configuration?, name: String) =
+        saveConfiguration(owner, parent, name, androidConfigurations)
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
@@ -49,18 +63,33 @@ class KspConfigurations(private val project: Project) {
         }
     }
 
+    /**
+     * Decorate the source sets belonging to [target].
+     * The end goal is to have one KSP configuration per source set. Examples:
+     * - in a kotlin-jvm project, we want "ksp" (applied to main set) and "kspTest" (applied to test set)
+     * - in a kotlin-multiplatform project, we want "ksp<Target>" and "ksp<Target>Test" for each target.
+     * This is done by reading [KotlinCompilation.kotlinSourceSets], which contains appropriately named sets.
+     *
+     * For Android, we prefer to use AndroidSourceSets from AGP rather than [KotlinSourceSet]s like all other
+     * targets. There are very slight differences between the two - this could be re-evaluated in the future,
+     * because Kotlin Plugin does already create [KotlinSourceSet]s out of AndroidSourceSets
+     * ( https://kotlinlang.org/docs/mpp-configure-compilations.html#compilation-of-the-source-set-hierarchy ).
+     */
     private fun decorateKotlinTarget(target: KotlinTarget) {
         if (target.platformType == KotlinPlatformType.androidJvm) {
-            /**
-             * TODO: Android might need special handling. Discuss. Tricky points:
-             * 1) KotlinSourceSets are defined in terms of AGP Variants - a resolved, compilable entity.
-             *    Using them would be consistent with other targets and simple.
-             * 2) AGP AndroidSourceSets represent a hierarchy: we have "test", "debug", but also "testDebug"
-             *    which depends on the other two. Not clear if this dependency should be reflected in the
-             *    configurations.
-             * 3) Need to find a way to retrieve the correct configurations in applyToCompilation
-             */
-            Unit
+            AndroidPluginIntegration.findSourceSets(target.project) { setName ->
+                val isMain = setName.endsWith("main", ignoreCase = true)
+                val nameWithoutMain = when {
+                    isMain -> setName.substring(0, setName.length - 4)
+                    else -> setName
+                }
+                val nameWithTargetPrefix = when {
+                    target.name.isEmpty() -> nameWithoutMain
+                    else -> target.name + nameWithoutMain.replaceFirstChar { it.uppercase() }
+                }
+                val parent = if (isMain) rootMainConfiguration else null
+                saveAndroidConfiguration(setName, parent, nameWithTargetPrefix)
+            }
         } else {
             // We could add target-specific configurations here (kspJvm, parent of kspJvmMain & kspJvmTest)
             // but we decided that kspJvm should actually mean kspJvmMain, which in turn is not created.
@@ -84,9 +113,9 @@ class KspConfigurations(private val project: Project) {
         if (isMainCompilation && isDefaultSourceSet) {
             // Use target name instead of sourceSet name, to avoid creating "kspMain" or "kspJvmMain".
             // Note: on single-platform, target name is conveniently set to "" so this resolves to "ksp".
-            addConfiguration(sourceSet, parent, compilation.target.name)
+            saveKotlinConfiguration(sourceSet, parent, compilation.target.name)
         } else {
-            addConfiguration(sourceSet, parent, sourceSet.name)
+            saveKotlinConfiguration(sourceSet, parent, sourceSet.name)
         }
     }
 
@@ -100,7 +129,12 @@ class KspConfigurations(private val project: Project) {
      *    to share code between targets. They do not currently have their own ksp configuration.
      */
     fun find(compilation: KotlinCompilation<*>): Set<Configuration> {
-        val sourceSets = compilation.kotlinSourceSets
-        return sourceSets.mapNotNull { configurations[it] }.toSet()
+        val kotlinSourceSets = compilation.kotlinSourceSets
+        val kotlinConfigurations = kotlinSourceSets.mapNotNull { kotlinConfigurations[it] }
+        val androidConfigurations = if (compilation.platformType == KotlinPlatformType.androidJvm) {
+            val androidSourceSets = AndroidPluginIntegration.getCompilationSourceSets(compilation as KotlinJvmAndroidCompilation)
+            androidSourceSets.mapNotNull { androidConfigurations[it] }
+        } else emptyList()
+        return (kotlinConfigurations + androidConfigurations).toSet()
     }
 }

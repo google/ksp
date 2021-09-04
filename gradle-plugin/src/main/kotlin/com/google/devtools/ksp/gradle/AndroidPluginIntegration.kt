@@ -16,17 +16,15 @@
  */
 package com.google.devtools.ksp.gradle
 
-import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
-import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.KSP_MAIN_CONFIGURATION_NAME
+import com.android.build.gradle.api.AndroidSourceSet
+import org.gradle.api.Named
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import java.io.File
-import java.util.Locale
 
 /**
  * This helper class handles communication with the android plugin.
@@ -36,44 +34,35 @@ import java.util.Locale
  * plugin APIs directly without checking its existence (we have tests covering that case).
  */
 @Suppress("UnstableApiUsage") // some android APIs are unsable.
-class AndroidPluginIntegration(
-    private val kspGradleSubplugin: KspGradleSubplugin
-) {
+object AndroidPluginIntegration {
 
     private val agpPluginIds = listOf("com.android.application", "com.android.library", "com.android.dynamic-feature")
 
-    fun applyIfAndroidProject(project: Project) {
+    fun findSourceSets(project: Project, onSourceSet: (String) -> Unit) {
         agpPluginIds.forEach { agpPluginId ->
             project.pluginManager.withPlugin(agpPluginId) {
                 // for android apps, we need a configuration per source set
-                decorateAndroidExtension(project)
+                decorateAndroidExtension(project, onSourceSet)
             }
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
-    private val AndroidSourceSet.kspConfigurationName: String
-        get() {
-            return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-                KSP_MAIN_CONFIGURATION_NAME
-            } else {
-                "$KSP_MAIN_CONFIGURATION_NAME${name.capitalize(Locale.US)}"
-            }
-        }
-
-    private fun decorateAndroidExtension(project: Project) {
+    private fun decorateAndroidExtension(project: Project, onSourceSet: (String) -> Unit) {
         val sourceSets = when (val androidExt = project.extensions.getByName("android")) {
             is BaseExtension -> androidExt.sourceSets
             is CommonExtension<*, *, *, *> -> androidExt.sourceSets
             else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
         }
-
-        @Suppress("UnstableApiUsage")
-        kspGradleSubplugin.run {
-            sourceSets.createKspConfigurations(project) { androidSourceSet ->
-                listOf(androidSourceSet.kspConfigurationName)
-            }
+        sourceSets.configureEach {
+            onSourceSet(it.name)
         }
+    }
+
+    fun getCompilationSourceSets(kotlinCompilation: KotlinJvmAndroidCompilation): List<String> {
+        return kotlinCompilation.androidVariant
+            .sourceSets
+            .filterIsInstance(AndroidSourceSet::class.java)
+            .map { it.name }
     }
 
     fun registerGeneratedJavaSources(
