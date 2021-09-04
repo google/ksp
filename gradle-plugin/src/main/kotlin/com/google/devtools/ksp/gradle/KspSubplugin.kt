@@ -131,14 +131,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     }
 
     private lateinit var kspConfigurations: KspConfigurations
-    private val androidIntegration by lazy {
-        AndroidPluginIntegration(this)
-    }
 
-    override fun apply(project: Project) {
-        project.extensions.create("ksp", KspExtension::class.java)
-        kspConfigurations = KspConfigurations(project)
-        androidIntegration.applyIfAndroidProject(project)
+    override fun apply(target: Project) {
+        target.extensions.create("ksp", KspExtension::class.java)
+        kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
     }
 
@@ -330,7 +326,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
         }
         if (kotlinCompilation is KotlinJvmAndroidCompilation) {
-            androidIntegration.registerGeneratedJavaSources(
+            AndroidPluginIntegration.registerGeneratedJavaSources(
                 project = project,
                 kotlinCompilation = kotlinCompilation,
                 kspTaskProvider = kspTaskProvider as TaskProvider<KspTaskJvm>,
