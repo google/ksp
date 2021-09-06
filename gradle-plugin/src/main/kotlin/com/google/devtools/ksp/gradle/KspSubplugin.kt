@@ -162,7 +162,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
         val kspConfigurations = kspConfigurations.find(kotlinCompilation)
-        val nonEmptyKspConfigurations = kspConfigurations.filter { it.dependencies.isNotEmpty() }
+        val nonEmptyKspConfigurations = kspConfigurations.filter { it.allDependencies.isNotEmpty() }
         if (nonEmptyKspConfigurations.isEmpty()) {
             return project.provider { emptyList() }
         }
