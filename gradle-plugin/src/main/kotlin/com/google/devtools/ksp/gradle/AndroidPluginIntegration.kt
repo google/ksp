@@ -53,7 +53,7 @@ object AndroidPluginIntegration {
             is CommonExtension<*, *, *, *> -> androidExt.sourceSets
             else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
         }
-        sourceSets.configureEach {
+        sourceSets.all {
             onSourceSet(it.name)
         }
     }
