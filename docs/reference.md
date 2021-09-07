@@ -81,7 +81,7 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | **Java** | **KSP equivalent** |
 | -------- | ------------------ |
 | asType | ksClassDeclaration.asType(...) // Only available for KSClassDeclaration. Type arguments need to be supplied. |
-| getAnnotation | // To be implemented. |
+| getAnnotation | ksAnnotated.getAnnotationsByType(...) |
 | getAnnotationMirrors | ksDeclaration.annotations |
 | getEnclosedElements | ksDeclarationContainer.declarations |
 | getEnclosingElements | ksDeclaration.parentDeclaration |
@@ -204,9 +204,9 @@ How functionalities of Java annotation processing API can be carried out by KSP.
 | -------- | ------------------ |
 | getAllAnnotationMirrors | KSDeclarations.annotations |
 | getAllMembers | getAllFunctions and getAllProperties, the latter is not there yet |
-| getBinaryName | // To be decided, see [Java Spec](https://docs.oracle.com/javase/specs/jls/se13/html/jls-13.html#jls-13.1) |
+| getBinaryName | Resolver.getJvmName |
 | getConstantExpression | we have constant value, not expression |
-| getDocComment | // To be implemented |
+| getDocComment | KSDeclaration.docString |
 | getElementValuesWithDefaults | // To be implemented. |
 | getName | resolver.getKSNameFromString |
 | getPackageElement | Package not supported, while package information can be retrieved, operation on package is not possible for KSP |
