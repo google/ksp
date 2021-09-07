@@ -7,7 +7,6 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
 
 @KspExperimental
 class DeclarationOrderProcessor : AbstractTestProcessor() {
@@ -26,12 +25,12 @@ class DeclarationOrderProcessor : AbstractTestProcessor() {
         }.forEach { klass ->
             result.add(klass.qualifiedName!!.asString())
             result.addAll(
-                klass.declarationsInSourceOrder.filterIsInstance<KSPropertyDeclaration>().map {
+                resolver.getDeclarationsInSourceOrder(klass).filterIsInstance<KSPropertyDeclaration>().map {
                     it.toSignature(resolver)
                 }
             )
             result.addAll(
-                klass.declarationsInSourceOrder.filterIsInstance<KSFunctionDeclaration>().map {
+                resolver.getDeclarationsInSourceOrder(klass).filterIsInstance<KSFunctionDeclaration>().map {
                     it.toSignature(resolver)
                 }
             )

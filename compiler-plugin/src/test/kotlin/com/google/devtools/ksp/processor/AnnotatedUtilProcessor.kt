@@ -18,11 +18,11 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.impl.getAnnotationsByType
-import com.google.devtools.ksp.symbol.impl.isAnnotationPresent
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 import kotlin.reflect.KClass
 
