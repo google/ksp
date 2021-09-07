@@ -18,4 +18,5 @@ dependencies {
     implementation(project(":validator"))
     testImplementation("junit:junit:4.12")
     ksp(project(":validator"))
+    kspTest(project(":validator"))
 }
