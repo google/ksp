@@ -32,4 +32,9 @@ open class KspExtension {
     }
 
     open var blockOtherCompilerPlugins: Boolean = false
+
+    // Instruct KSP to pickup sources from compile tasks, instead of source sets.
+    // Note that it depends on behaviors of other Gradle plugins, that may bring surprises and can be hard to debug.
+    // Use your discretion.
+    open var allowSourcesFromOtherPlugins: Boolean = false
 }
