@@ -119,7 +119,7 @@ class KspIntegrationTestRule(
         testProject.appModule.buildFileAdditions.add(
             """
             kotlin {
-                ${targets.joinToString(separator = "\n") { it.trimIndent()} }
+                ${targets.joinToString(separator = "\n") { it.trimIndent() } }
             }
             """.trimIndent()
         )
