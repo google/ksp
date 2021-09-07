@@ -298,12 +298,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 classOutputDir,
                 resourceOutputDir
             )
-            kspTask.source(kotlinCompileTask.source)
-            if (kotlinCompileTask is AbstractKotlinCompile<*>) {
-                val sourceRoots = kotlinCompileTask.getSourceRoots()
-                if (sourceRoots is SourceRoots.ForJvm) {
-                    kspTask.source(sourceRoots.javaSourceRoots)
+            if (kspExtension.allowSourcesFromOtherPlugins) {
+                kspTask.source(kotlinCompileTask.source)
+                if (kotlinCompileTask is AbstractKotlinCompile<*>) {
+                    val sourceRoots = kotlinCompileTask.getSourceRoots()
+                    if (sourceRoots is SourceRoots.ForJvm) {
+                        kspTask.source(sourceRoots.javaSourceRoots)
+                    }
                 }
+            } else {
+                kotlinCompilation.allKotlinSourceSets.forEach { sourceSet -> kspTask.source(sourceSet.kotlin) }
             }
             kspTask.source.filter { !kspOutputDir.isParentOf(it) }
 
