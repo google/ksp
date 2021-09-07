@@ -258,4 +258,12 @@ interface Resolver {
      */
     @KspExperimental
     fun mapKotlinNameToJava(kotlinName: KSName): KSName?
+
+    /**
+     * Same as KSDeclarationContainer.declarations, but sorted by declaration order in the source.
+     *
+     * Note that this is SLOW. AVOID IF POSSIBLE.
+     */
+    @KspExperimental
+    fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration>
 }
