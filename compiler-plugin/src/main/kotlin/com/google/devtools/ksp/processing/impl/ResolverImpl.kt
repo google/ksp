@@ -24,6 +24,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
+import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
@@ -1052,6 +1053,11 @@ class ResolverImpl(
         return resolvePropertyAccessorDeclaration(accessor)?.let {
             typeMapper.mapAsmMethod(it).descriptor
         } ?: ""
+    }
+
+    @KspExperimental
+    override fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration> {
+        return container.declarationsInSourceOrder
     }
 }
 
