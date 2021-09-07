@@ -26,7 +26,6 @@ class PlaygroundIT {
             Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
             Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("g/G.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("g/GBuilder.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
 
@@ -46,9 +45,29 @@ class PlaygroundIT {
     fun testBlockOtherCompilerPlugins() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
         gradleRunner.buildAndCheck("clean", "build")
         gradleRunner.buildAndCheck("clean", "build")
+        project.restore("workload/build.gradle.kts")
+    }
+
+    @Test
+    fun testAllowSourcesFromOtherPlugins() {
+        fun checkGBuilder() {
+            val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
+
+            JarFile(artifact).use { jarFile ->
+                Assert.assertTrue(jarFile.getEntry("g/GBuilder.class").size > 0)
+            }
+        }
+
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp {\n  allowSourcesFromOtherPlugins = true\n}\n")
+        gradleRunner.buildAndCheck("clean", "build") { checkGBuilder() }
+        gradleRunner.buildAndCheck("clean", "build") { checkGBuilder() }
         project.restore("workload/build.gradle.kts")
     }
 
