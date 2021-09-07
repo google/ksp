@@ -11,34 +11,34 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
  */
 class KspConfigurations(private val project: Project) {
     companion object {
-        const val ROOT = "ksp"
+        private const val PREFIX = "ksp"
     }
 
-    // "ksp" configuration. In single-platform projects, it is applied to the "main" sourceSet.
-    // In multi-platform projects, it is applied to the "main" sourceSet of all targets.
-    private val rootMainConfiguration = project.configurations.create(ROOT)
+    // "ksp" configuration, applied to the "main" source set of all targets.
+    private val rootMainConfiguration = project.configurations.create(PREFIX)
 
-    // Stores all saved configurations for quick access.
+    // Store all ksp configurations for quick retrieval.
     private val kotlinConfigurations = mutableMapOf<KotlinSourceSet, Configuration>()
     private val androidConfigurations = mutableMapOf<String, Configuration>()
 
     @OptIn(ExperimentalStdlibApi::class)
-    private fun <T: Any> saveConfiguration(
+    private fun <T : Any> saveConfiguration(
         owner: T,
         parent: Configuration?,
         name: String,
         cache: MutableMap<T, Configuration>
     ): Configuration {
-        val configName = ROOT + name.replaceFirstChar { it.uppercase() }
-        val existingConfig = project.configurations.findByName(configName)
-        if (existingConfig != null && configName != ROOT) {
-            error("Unexpected duplicate configuration ($configName).")
-        }
-
-        val config = existingConfig ?: project.configurations.create(configName)
-        if (parent != null && parent.name != configName) {
-            config.extendsFrom(parent)
-        }
+        val configName = PREFIX + name.replaceFirstChar { it.uppercase() }
+        val config = if (configName == parent?.name) {
+            // trying to add config with same parent name. Can happen, for example
+            // with ksp<Target> when <Target> is "". Just use parent.
+            parent
+        } else {
+            // maybeCreate to be future-proof, but we should never have a duplicate with current logic
+            project.configurations.maybeCreate(configName).apply {
+                if (parent != null) extendsFrom(parent)
+            }
+        }!!
         cache[owner] = config
         return config
     }
@@ -51,7 +51,7 @@ class KspConfigurations(private val project: Project) {
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
-            // 1.6.0: decorateKotlinProject(project.kotlinExtension)
+            // 1.6.0: decorateKotlinProject(project.kotlinExtension)?
             decorateKotlinProject(project.extensions.getByName("kotlin") as KotlinProjectExtension)
         }
     }
@@ -64,16 +64,15 @@ class KspConfigurations(private val project: Project) {
     }
 
     /**
-     * Decorate the source sets belonging to [target].
-     * The end goal is to have one KSP configuration per source set. Examples:
-     * - in a kotlin-jvm project, we want "ksp" (applied to main set) and "kspTest" (applied to test set)
-     * - in a kotlin-multiplatform project, we want "ksp<Target>" and "ksp<Target>Test" for each target.
-     * This is done by reading [KotlinCompilation.kotlinSourceSets], which contains appropriately named sets.
+     * Decorate the [KotlinSourceSet]s belonging to [target] to create one KSP configuration per source set,
+     * named ksp<SourceSet>. The only exception is the main source set, for which we avoid using the
+     * "main" suffix (so what would be "kspJvmMain" becomes "kspJvm").
      *
-     * For Android, we prefer to use AndroidSourceSets from AGP rather than [KotlinSourceSet]s like all other
-     * targets. There are very slight differences between the two - this could be re-evaluated in the future,
-     * because Kotlin Plugin does already create [KotlinSourceSet]s out of AndroidSourceSets
-     * ( https://kotlinlang.org/docs/mpp-configure-compilations.html#compilation-of-the-source-set-hierarchy ).
+     * For Android, we prefer to use AndroidSourceSets from AGP rather than [KotlinSourceSet]s.
+     * Even though the Kotlin Plugin does create [KotlinSourceSet]s out of AndroidSourceSets
+     * ( https://kotlinlang.org/docs/mpp-configure-compilations.html#compilation-of-the-source-set-hierarchy ),
+     * there are slight differences between the two - Kotlin creates some extra sets with unexpected word ordering,
+     * and things get worse when you add product flavors. So, we use AGP sets as the source of truth.
      */
     private fun decorateKotlinTarget(target: KotlinTarget) {
         if (target.platformType == KotlinPlatformType.androidJvm) {
@@ -91,8 +90,6 @@ class KspConfigurations(private val project: Project) {
                 saveAndroidConfiguration(setName, parent, nameWithTargetPrefix)
             }
         } else {
-            // We could add target-specific configurations here (kspJvm, parent of kspJvmMain & kspJvmTest)
-            // but we decided that kspJvm should actually mean kspJvmMain, which in turn is not created.
             target.compilations.configureEach { compilation ->
                 val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
                 compilation.kotlinSourceSets.forEach { sourceSet ->
@@ -122,17 +119,16 @@ class KspConfigurations(private val project: Project) {
     /**
      * Returns the user-facing configurations involved in the given compilation.
      * We use [KotlinCompilation.kotlinSourceSets], not [KotlinCompilation.allKotlinSourceSets] for a few reasons:
-     * 1) consistency with how we created the configurations
-     * 2) all* can return sets belonging to other compilations. In this case the dependency should be tracked
-     *    by Gradle at the task level, not by us through configurations.
-     * 3) all* can return user-defined sets belonging to no compilation, like intermediate source sets defined
-     *    to share code between targets. They do not currently have their own ksp configuration.
+     * 1) consistency with how we created the configurations. For example, all* can return user-defined sets
+     *    that don't belong to any compilation, like user-defined intermediate source sets (e.g. iosMain).
+     *    These do not currently have their own ksp configuration.
+     * 2) all* can return sets belonging to other [KotlinCompilation]s
      */
     fun find(compilation: KotlinCompilation<*>): Set<Configuration> {
-        val kotlinSourceSets = compilation.kotlinSourceSets
-        val kotlinConfigurations = kotlinSourceSets.mapNotNull { kotlinConfigurations[it] }
+        val kotlinConfigurations = compilation.kotlinSourceSets.mapNotNull { kotlinConfigurations[it] }
         val androidConfigurations = if (compilation.platformType == KotlinPlatformType.androidJvm) {
-            val androidSourceSets = AndroidPluginIntegration.getCompilationSourceSets(compilation as KotlinJvmAndroidCompilation)
+            compilation as KotlinJvmAndroidCompilation
+            val androidSourceSets = AndroidPluginIntegration.getCompilationSourceSets(compilation)
             androidSourceSets.mapNotNull { androidConfigurations[it] }
         } else emptyList()
         return (kotlinConfigurations + androidConfigurations).toSet()
