@@ -43,4 +43,5 @@ kotlin {
 
 dependencies {
     ksp(project(":test-processor"))
+    add("kspLinuxX64Test", project(":test-processor"))
 }
