@@ -16,12 +16,12 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.intellij") version "0.6.4"
+    id("org.jetbrains.intellij") version "1.1.6"
     id("org.jetbrains.dokka") version ("1.5.0")
 }
 
 intellij {
-    version = intellijVersion
+    version.set(intellijVersion)
 }
 
 fun ModuleDependency.includeJars(vararg names: String) {
