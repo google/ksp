@@ -161,19 +161,20 @@ Some handy links:
 * [Contributor guide](CONTRIBUTING.md)
 * [FAQ](/docs/faq.md)
 
-## Development status
+## Feedback and Bug Reporting
 
-The API is still under development and is likely to change in the future.
-Please do not use it in production yet. The purpose of this preview is
-to get your feedback.
 [Please let us know what you think about KSP by filing a Github issue](https://github.com/google/ksp/issues)
 or connecting with our team in the `#ksp` channel in the
 [Kotlin Slack workspace](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up?_ga=2.185732459.358956950.1590619123-888878822.1567025441)!
 
-Here are some planned features that have not yet been implemented:
+## Ongoing and Future Works
 
-* Make the IDE aware of the generated code.
-* Support Kotlin Native.
+Here are some planned features that have not yet been completely implemented:
+* Support [new Kotlin compiler](https://kotlinlang.org/docs/roadmap.html)
+* Improve support to multiplatform. E.g., running KSP on a subset of targets / sharing computations between targets
+* Improve performance. There a bunch of optimizations to be done!
+* Make the IDE aware of the generated code
+* Keep fixing bugs!
 
 ## Supported libraries
 
