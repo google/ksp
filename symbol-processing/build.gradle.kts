@@ -6,7 +6,7 @@ val signingPassword: String? by project
 
 plugins {
     kotlin("jvm")
-    id("com.github.johnrengelman.shadow") version "6.0.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
     `maven-publish`
     signing
 }
