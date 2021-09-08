@@ -185,6 +185,7 @@ The table below includes a list of popular libraries on Android and their variou
 |Moshi|[Experimentally supported](https://github.com/ZacSweers/MoshiX/tree/main/moshi-ksp)|   |
 |Kotshi|[Experimentally supported](https://github.com/ansman/kotshi)|   |
 |Lyricist|[Experimentally supported](https://github.com/adrielcafe/lyricist)|   |
+|Lich SavedState|[Officially supported](https://github.com/line/lich/tree/master/savedstate)|   |
 |Auto Factory|Not yet supported|[Link](https://github.com/google/auto/issues/982)|
 |Dagger|Not yet supported|[Link](https://github.com/google/dagger/issues/2349)|
 |Hilt|Not yet supported|[Link](https://issuetracker.google.com/179057202)|
