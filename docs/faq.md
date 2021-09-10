@@ -15,6 +15,18 @@ Additionally, KSP’s incremental processing model has a finer granularity than 
 ## Is KSP Kotlin specific?
 KSP can process Java sources as well. The API is unified, meaning that when you parse a Java class and a Kotlin class you get a unified data structure in KSP.
 
+## Why having a Kotlin version as prefix in KSP's version?
+KSP is comprised of two parts: API and implementation:
+* The API rarely changes and is backward compatible; There can be new interfaces, but old interfaces never change.
+* Each release of KSP implementation is tied to a specific compiler version (the prefix).
+
+Processors only depend on API and therefore are not tied to compiler versions.
+On the other hand, users of processors need to bump KSP version when bumping the compiler version in their project.
+Note that they don't need to bump processor's version because processors only depend on API.
+
+For example, Some-Nice-Processor-2.0 is released and tested with KSP 1.5.30-1.0.0.
+Users can expect that the same Some-Nice-Processor-2.0 will work with Kotlin 1.6.0 + KSP 1.6.0-1.0.0.
+
 ## What is KSP’s future roadmap?
 The following items have been planned:
 * Support [new Kotlin compiler](https://kotlinlang.org/docs/roadmap.html)
