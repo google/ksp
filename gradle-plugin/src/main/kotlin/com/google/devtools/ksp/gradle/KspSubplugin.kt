@@ -383,8 +383,7 @@ interface KspTask : Task {
     var destination: File
 
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
+    @get:Classpath
     val overridePluginClasspath: Property<FileCollection>
 
     @get:Input
@@ -393,12 +392,7 @@ interface KspTask : Task {
     @get:Input
     val apOptions: MapProperty<String, String>
 
-    // @PathSensitive and @Classpath doesn't seem working together. Effectively, we are forced to choose between
-    // 1. remote cache, or
-    // 2. detecting trivial changes in processors.
-    // Only processor authors need 2. so let's favor 1. for broader audience.
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
+    @get:Classpath
     val processorClasspath: ConfigurableFileCollection
 
     /**
