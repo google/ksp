@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
 
-description = "Kotlin Symbol Processor"
+description = "Kotlin Symbol Processing"
 
 val kotlinProjectPath: String? by project
 val intellijVersion: String by project
