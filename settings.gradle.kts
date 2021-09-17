@@ -19,6 +19,7 @@ include("gradle-plugin")
 include("compiler-plugin")
 include("symbol-processing")
 include("integration-tests")
+include("kotlin-analysis-api")
 
 val kotlinProjectPath: String? by settings
 if (kotlinProjectPath != null) {
