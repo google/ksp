@@ -83,7 +83,7 @@ val Project.testSourceSet: SourceSet
 
 tasks.test {
     onlyIf {
-        compilerTestEnabled.toBoolean()
+        false
     }
     dependsOn("CopyLibsForTesting")
     maxHeapSize = "2g"
