@@ -5,16 +5,16 @@
 ## Create a processor of your own
 
 * Create an empty gradle project.
-* Specify version `1.5.30` of the Kotlin plugin in the root project for use in other project modules.
+* Specify version `1.5.31` of the Kotlin plugin in the root project for use in other project modules.
 
   ```kotlin
   plugins {
-      kotlin("jvm") version "1.5.30" apply false
+      kotlin("jvm") version "1.5.31" apply false
   }
 
   buildscript {
       dependencies {
-          classpath(kotlin("gradle-plugin", version = "1.5.30"))
+          classpath(kotlin("gradle-plugin", version = "1.5.31"))
       }
   }
   ```
@@ -34,7 +34,7 @@
   }
 
   dependencies {
-      implementation("com.google.devtools.ksp:symbol-processing-api:1.5.30-1.0.0")
+      implementation("com.google.devtools.ksp:symbol-processing-api:1.5.31-1.0.0")
   }
   ```
 
@@ -81,7 +81,7 @@
 
   ```kotlin
   plugins {
-      id("com.google.devtools.ksp") version "1.5.30-1.0.0"
+      id("com.google.devtools.ksp") version "1.5.31-1.0.0"
       kotlin("jvm") 
   }
 
@@ -114,7 +114,7 @@
 
   ```groovy
   plugins {
-    id "com.google.devtools.ksp" version "1.5.30-1.0.0"
+    id "com.google.devtools.ksp" version "1.5.31-1.0.0"
   }
   ```
   
