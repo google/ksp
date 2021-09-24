@@ -60,7 +60,6 @@ object AndroidPluginIntegration {
     fun getCompilationSourceSets(kotlinCompilation: KotlinJvmAndroidCompilation): List<String> {
         return kotlinCompilation.androidVariant
             .sourceSets
-            .filterIsInstance(AndroidSourceSet::class.java)
             .map { it.name }
     }
 
