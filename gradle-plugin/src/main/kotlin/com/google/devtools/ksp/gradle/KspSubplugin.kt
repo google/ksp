@@ -103,7 +103,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         private fun getSubpluginOptions(
             project: Project,
             kspExtension: KspExtension,
-            nonEmptyKspConfigurations: List<Configuration>,
+            classpath: Configuration,
             sourceSetName: String,
             isIncremental: Boolean,
         ): List<SubpluginOption> {
@@ -120,7 +120,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 project.findProperty("ksp.incremental.log")?.toString() ?: "false"
             )
             options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
-            options += FilesSubpluginOption("apclasspath", nonEmptyKspConfigurations.flatten())
+            options += FilesSubpluginOption("apclasspath", classpath.toList())
 
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
@@ -185,12 +185,18 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinCompileTask = kotlinCompileProvider.get()
 
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
+            // depends on the processor; if the processor changes, it needs to be reprocessed.
+            val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
+                .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
+            kspTask.processorClasspath.from(processorClasspath)
+            kspTask.dependsOn(processorClasspath.buildDependencies)
+
             kspTask.options.addAll(
                 kspTask.project.provider {
                     getSubpluginOptions(
                         project,
                         kspExtension,
-                        nonEmptyKspConfigurations,
+                        processorClasspath,
                         sourceSetName,
                         isIncremental
                     )
@@ -201,11 +207,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
             kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName)).disallowChanges()
 
-            // depends on the processor; if the processor changes, it needs to be reprocessed.
-            val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
-                .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
-            kspTask.processorClasspath.from(processorClasspath)
-            kspTask.dependsOn(processorClasspath.buildDependencies)
 
             if (kspExtension.blockOtherCompilerPlugins) {
                 // FIXME: ask upstream to provide an API to make this not implementation-dependent.

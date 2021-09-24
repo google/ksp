@@ -111,7 +111,7 @@ class GradleCompilationTest {
 
         testRule.runner()
             .withDebug(true)
-            .withArguments("app:assemble")
+            .withArguments("app:assemble", "--stacktrace")
             .forwardOutput()
             .build()
     }
