@@ -42,6 +42,17 @@ kotlin {
 }
 
 dependencies {
-    ksp(project(":test-processor"))
+    add("kspMetadata", project(":test-processor"))
+    add("kspJvm", project(":test-processor"))
+    add("kspJvmTest", project(":test-processor"))
+    add("kspJs", project(":test-processor"))
+    add("kspJsTest", project(":test-processor"))
+    add("kspAndroidNativeX64", project(":test-processor"))
+    add("kspAndroidNativeX64Test", project(":test-processor"))
+    add("kspAndroidNativeArm64", project(":test-processor"))
+    add("kspAndroidNativeArm64Test", project(":test-processor"))
+    add("kspLinuxX64", project(":test-processor"))
     add("kspLinuxX64Test", project(":test-processor"))
+    add("kspMingwX64", project(":test-processor"))
+    add("kspMingwX64Test", project(":test-processor"))
 }
