@@ -108,7 +108,7 @@ class KspIntegrationTestRule(
     /**
      * Sets up the app module as a multiplatform app with the specified [targets], wrapped in a kotlin { } block.
      */
-    fun setupAppAsMultiplatformApp(vararg targets: String) {
+    fun setupAppAsMultiplatformApp(targets: String) {
         testProject.appModule.plugins.addAll(
             listOf(
                 PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
@@ -116,13 +116,7 @@ class KspIntegrationTestRule(
                 PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
             )
         )
-        testProject.appModule.buildFileAdditions.add(
-            """
-            kotlin {
-                ${targets.joinToString(separator = "\n") { it.trimIndent() } }
-            }
-            """.trimIndent()
-        )
+        testProject.appModule.buildFileAdditions.add(targets)
         addAndroidBoilerplate()
     }
 
