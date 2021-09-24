@@ -74,13 +74,15 @@ class SourceSetConfigurationsTest {
 
     @Test
     fun configurationsForMultiplatformApp() {
-        testRule.setupAppAsMultiplatformApp(
-            "jvm { }",
-            "android(name = \"foo\") { }",
-            "js { browser() }",
-            "androidNativeX86 { }",
-            "androidNativeX64(name = \"bar\") { }",
-        )
+        testRule.setupAppAsMultiplatformApp("""
+            kotlin {
+                jvm { }
+                android(name = "foo") { }
+                js { browser() }
+                androidNativeX86 { }
+                androidNativeX64(name = "bar") { }
+            }
+        """.trimIndent())
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
         val result = testRule.runner()
             .withArguments(":app:dependencies")
