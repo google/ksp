@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.gradle
 
+import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.jetbrains.kotlin.gradle.dsl.*
@@ -14,8 +15,6 @@ class KspConfigurations(private val project: Project) {
         private const val PREFIX = "ksp"
     }
 
-    // "ksp" configuration, applied to the "main" source set of all targets.
-    private val rootMainConfiguration = project.configurations.create(PREFIX)
 
     // Store all ksp configurations for quick retrieval.
     private val kotlinConfigurations = mutableMapOf<KotlinSourceSet, Configuration>()
@@ -24,42 +23,46 @@ class KspConfigurations(private val project: Project) {
     @OptIn(ExperimentalStdlibApi::class)
     private fun <T : Any> saveConfiguration(
         owner: T,
-        parent: Configuration?,
         name: String,
         cache: MutableMap<T, Configuration>
     ): Configuration {
         val configName = PREFIX + name.replaceFirstChar { it.uppercase() }
-        val config = if (configName == parent?.name) {
-            // trying to add config with same parent name. Can happen, for example
-            // with ksp<Target> when <Target> is "". Just use parent.
-            parent
-        } else {
-            // maybeCreate to be future-proof, but we should never have a duplicate with current logic
-            project.configurations.maybeCreate(configName).apply {
-                if (parent != null) extendsFrom(parent)
-            }
-        }!!
+        // maybeCreate to be future-proof, but we should never have a duplicate with current logic
+        val config = project.configurations.maybeCreate(configName).apply {
+
+        }
         cache[owner] = config
         return config
     }
 
-    private fun saveKotlinConfiguration(owner: KotlinSourceSet, parent: Configuration?, name: String) =
-        saveConfiguration(owner, parent, name, kotlinConfigurations)
+    private fun saveKotlinConfiguration(owner: KotlinSourceSet, name: String) =
+        saveConfiguration(owner, name, kotlinConfigurations)
 
-    private fun saveAndroidConfiguration(owner: String, parent: Configuration?, name: String) =
-        saveConfiguration(owner, parent, name, androidConfigurations)
+    private fun saveAndroidConfiguration(owner: String, name: String) =
+        saveConfiguration(owner, name, androidConfigurations)
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
             // 1.6.0: decorateKotlinProject(project.kotlinExtension)?
-            decorateKotlinProject(project.extensions.getByName("kotlin") as KotlinProjectExtension)
+            decorateKotlinProject(project.extensions.getByName("kotlin") as KotlinProjectExtension, project)
         }
     }
 
-    private fun decorateKotlinProject(kotlin: KotlinProjectExtension) {
+    private fun decorateKotlinProject(kotlin: KotlinProjectExtension, project: Project) {
         when (kotlin) {
-            is KotlinMultiplatformExtension -> kotlin.targets.configureEach(::decorateKotlinTarget)
             is KotlinSingleTargetExtension -> decorateKotlinTarget(kotlin.target)
+            is KotlinMultiplatformExtension -> {
+                kotlin.targets.configureEach(::decorateKotlinTarget)
+
+                // Adding multiplatform configuration removed support for the root ksp configuration.
+                // Try to make this breaking change less breaking by adding a clear error.
+                project.configurations.create("ksp").dependencies.all {
+                    throw InvalidUserCodeException(
+                        "The 'ksp' configuration cannot be used in Kotlin Multiplatform projects. " +
+                            "Please use target-specific configurations like 'kspJvm' instead."
+                    )
+                }
+            }
         }
     }
 
@@ -86,33 +89,18 @@ class KspConfigurations(private val project: Project) {
                     target.name.isEmpty() -> nameWithoutMain
                     else -> target.name + nameWithoutMain.replaceFirstChar { it.uppercase() }
                 }
-                val parent = if (isMain) rootMainConfiguration else null
-                saveAndroidConfiguration(setName, parent, nameWithTargetPrefix)
+                saveAndroidConfiguration(setName, nameWithTargetPrefix)
             }
         } else {
             target.compilations.configureEach { compilation ->
                 val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
                 compilation.kotlinSourceSets.forEach { sourceSet ->
                     val isDefault = sourceSet.name == compilation.defaultSourceSetName
-                    decorateKotlinSourceSet(compilation, isMain, sourceSet, isDefault)
+                    // Note: on single-platform, target name is conveniently set to "" so this resolves to "ksp".
+                    val name = if (isMain && isDefault) target.name else sourceSet.name
+                    saveKotlinConfiguration(sourceSet, name)
                 }
             }
-        }
-    }
-
-    private fun decorateKotlinSourceSet(
-        compilation: KotlinCompilation<*>,
-        isMainCompilation: Boolean,
-        sourceSet: KotlinSourceSet,
-        isDefaultSourceSet: Boolean
-    ) {
-        val parent = if (isMainCompilation) rootMainConfiguration else null
-        if (isMainCompilation && isDefaultSourceSet) {
-            // Use target name instead of sourceSet name, to avoid creating "kspMain" or "kspJvmMain".
-            // Note: on single-platform, target name is conveniently set to "" so this resolves to "ksp".
-            saveKotlinConfiguration(sourceSet, parent, compilation.target.name)
-        } else {
-            saveKotlinConfiguration(sourceSet, parent, sourceSet.name)
         }
     }
 
