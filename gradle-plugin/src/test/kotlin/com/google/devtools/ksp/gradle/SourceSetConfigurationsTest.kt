@@ -47,8 +47,9 @@ class SourceSetConfigurationsTest {
         val result = testRule.runner()
             .withArguments(":app:dependencies")
             .build()
+        val configurations = result.output.lines().map { it.split(' ').first() }
 
-        assertThat(result.output.lines()).containsAtLeast("ksp", "kspTest")
+        assertThat(configurations).containsAtLeast("ksp", "kspTest")
     }
 
     @Test
@@ -58,8 +59,9 @@ class SourceSetConfigurationsTest {
         val result = testRule.runner()
             .withArguments(":app:dependencies")
             .build()
+        val configurations = result.output.lines().map { it.split(' ').first() }
 
-        assertThat(result.output.lines()).containsAtLeast(
+        assertThat(configurations).containsAtLeast(
             "ksp",
             "kspAndroidTest",
             "kspAndroidTestDebug",
@@ -87,8 +89,9 @@ class SourceSetConfigurationsTest {
         val result = testRule.runner()
             .withArguments(":app:dependencies")
             .build()
+        val configurations = result.output.lines().map { it.split(' ').first() }
 
-        assertThat(result.output.lines()).containsAtLeast(
+        assertThat(configurations).containsAtLeast(
             // jvm target:
             "kspJvm",
             "kspJvmTest",
@@ -112,6 +115,42 @@ class SourceSetConfigurationsTest {
             "kspBar",
             "kspBarTest"
         )
+    }
+
+    @Test
+    fun configurationsForMultiplatformApp_doesNotCrossCompilationBoundaries() {
+        // Adding a ksp dependency on jvmParent should not leak into jvmChild compilation,
+        // even if the source sets depend on each other. This works because we use
+        // KotlinCompilation.kotlinSourceSets instead of KotlinCompilation.allKotlinSourceSets
+        testRule.setupAppAsMultiplatformApp("""
+            kotlin {
+                jvm("jvmParent") { }
+                jvm("jvmChild") { }
+            }
+        """.trimIndent())
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add("""
+            kotlin {
+                sourceSets {
+                    this["jvmChildMain"].dependsOn(this["jvmParentMain"])
+                }
+            }
+            dependencies {
+                add("kspJvmParent", "androidx.room:room-compiler:2.3.0")
+            }
+            tasks.register("checkConfigurations") {
+                doLast {
+                    // child has no dependencies, so task is not created.
+                    val parent = tasks.findByName("kspKotlinJvmParent")
+                    val child = tasks.findByName("kspKotlinJvmChild")
+                    require(parent != null)
+                    require(child == null)
+                }
+            }
+        """.trimIndent())
+        testRule.runner()
+            .withArguments(":app:checkConfigurations")
+            .build()
     }
 
     @Test
@@ -236,10 +275,11 @@ class SourceSetConfigurationsTest {
             .build()
 
         // kaptClasspath_* seem to be intermediate configurations that never run.
-        val kaptConfigurations = result.output.lines().filter {
+        val configurations = result.output.lines().map { it.split(' ').first() }
+        val kaptConfigurations = configurations.filter {
             it.startsWith("kapt") && !it.startsWith("kaptClasspath_")
         }
-        val kspConfigurations = result.output.lines().filter {
+        val kspConfigurations = configurations.filter {
             it.startsWith("ksp")
         }
         assertThat(kspConfigurations).containsExactlyElementsIn(

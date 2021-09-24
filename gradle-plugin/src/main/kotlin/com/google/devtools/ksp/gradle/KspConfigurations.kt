@@ -115,6 +115,8 @@ class KspConfigurations(private val project: Project) {
      *    that don't belong to any compilation, like user-defined intermediate source sets (e.g. iosMain).
      *    These do not currently have their own ksp configuration.
      * 2) all* can return sets belonging to other [KotlinCompilation]s
+     *
+     * See test: SourceSetConfigurationsTest.configurationsForMultiplatformApp_doesNotCrossCompilationBoundaries
      */
     fun find(compilation: KotlinCompilation<*>): Set<Configuration> {
         val kotlinConfigurations = compilation.kotlinSourceSets.mapNotNull { kotlinConfigurations[it] }
