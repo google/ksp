@@ -22,24 +22,28 @@ class KspConfigurations(private val project: Project) {
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun <T : Any> saveConfiguration(
-        owner: T,
+        ownerSet: T,
+        ownerName: String,
         name: String,
         cache: MutableMap<T, Configuration>
     ): Configuration {
         val configName = PREFIX + name.replaceFirstChar { it.uppercase() }
         // maybeCreate to be future-proof, but we should never have a duplicate with current logic
         val config = project.configurations.maybeCreate(configName).apply {
-
+            description = "KSP dependencies for the '$ownerName' source set."
+            isCanBeResolved = false // we'll resolve the processor classpath config
+            isCanBeConsumed = false
+            isVisible = false
         }
-        cache[owner] = config
+        cache[ownerSet] = config
         return config
     }
 
     private fun saveKotlinConfiguration(owner: KotlinSourceSet, name: String) =
-        saveConfiguration(owner, name, kotlinConfigurations)
+        saveConfiguration(owner, owner.name, name, kotlinConfigurations)
 
-    private fun saveAndroidConfiguration(owner: String, name: String) =
-        saveConfiguration(owner, name, androidConfigurations)
+    private fun saveAndroidConfiguration(key: String, name: String) =
+        saveConfiguration(key, "$key (Android)", name, androidConfigurations)
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
@@ -79,17 +83,17 @@ class KspConfigurations(private val project: Project) {
      */
     private fun decorateKotlinTarget(target: KotlinTarget) {
         if (target.platformType == KotlinPlatformType.androidJvm) {
-            AndroidPluginIntegration.findSourceSets(target.project) { setName ->
-                val isMain = setName.endsWith("main", ignoreCase = true)
+            AndroidPluginIntegration.findSourceSets(target.project) { sourceSet ->
+                val isMain = sourceSet.endsWith("main", ignoreCase = true)
                 val nameWithoutMain = when {
-                    isMain -> setName.substring(0, setName.length - 4)
-                    else -> setName
+                    isMain -> sourceSet.substring(0, sourceSet.length - 4)
+                    else -> sourceSet
                 }
                 val nameWithTargetPrefix = when {
                     target.name.isEmpty() -> nameWithoutMain
                     else -> target.name + nameWithoutMain.replaceFirstChar { it.uppercase() }
                 }
-                saveAndroidConfiguration(setName, nameWithTargetPrefix)
+                saveAndroidConfiguration(sourceSet, nameWithTargetPrefix)
             }
         } else {
             target.compilations.configureEach { compilation ->
