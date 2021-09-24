@@ -89,7 +89,6 @@ class SourceSetConfigurationsTest {
             .build()
 
         assertThat(result.output.lines()).containsAtLeast(
-            "ksp",
             // jvm target:
             "kspJvm",
             "kspJvmTest",
