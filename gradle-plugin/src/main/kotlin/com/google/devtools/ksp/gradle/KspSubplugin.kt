@@ -205,10 +205,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
                 .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
             kspTask.processorClasspath.from(processorClasspath)
-
-            nonEmptyKspConfigurations.forEach {
-                kspTask.dependsOn(it.buildDependencies)
-            }
+            kspTask.dependsOn(processorClasspath.buildDependencies)
 
             if (kspExtension.blockOtherCompilerPlugins) {
                 // FIXME: ask upstream to provide an API to make this not implementation-dependent.
