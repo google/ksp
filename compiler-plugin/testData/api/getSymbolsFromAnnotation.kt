@@ -1,82 +1,94 @@
 // TEST PROCESSOR: GetSymbolsFromAnnotationProcessor
 // EXPECTED:
 // ==== Anno superficial====
-// Foo
-// propertyFoo
-// functionFoo
-// p1
-// constructorParameterFoo
-// <init>
-// param
-// Bar
-// Baz
+// Foo:KSClassDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
 // ==== Anno in depth ====
-// Foo
-// propertyFoo
-// functionFoo
-// p1
-// local
-// constructorParameterFoo
-// <init>
-// param
-// Bar
-// Baz
+// Foo:KSClassDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// local:KSPropertyDeclaration
+// constructorParameterFoo:KSPropertyDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
 // ==== Bnno superficial====
-// File: Foo.kt
-// <init>
-// propertyFoo.getter()
-// p2
+// File: Foo.kt:KSFile
+// <init>:KSFunctionDeclaration
+// propertyFoo.getter():KSPropertyAccessorImpl
+// p2:KSValueParameter
 // ==== Bnno in depth ====
-// File: Foo.kt
-// <init>
-// propertyFoo.getter()
-// p2
+// File: Foo.kt:KSFile
+// <init>:KSFunctionDeclaration
+// propertyFoo.getter():KSPropertyAccessorImpl
+// p2:KSValueParameter
 // ==== A1 superficial====
-// Foo
-// propertyFoo
-// functionFoo
-// p1
-// constructorParameterFoo
-// <init>
-// param
-// Bar
-// Baz
+// Foo:KSClassDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
 // ==== A1 in depth ====
-// Foo
-// propertyFoo
-// functionFoo
-// p1
-// local
-// constructorParameterFoo
-// <init>
-// param
-// Bar
-// Baz
+// Foo:KSClassDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// local:KSPropertyDeclaration
+// constructorParameterFoo:KSPropertyDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
 // ==== A2 superficial====
-// Foo
-// propertyFoo
-// functionFoo
-// p1
-// constructorParameterFoo
-// <init>
-// param
-// Bar
-// Baz
+// Foo:KSClassDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
 // ==== A2 in depth ====
-// Foo
-// propertyFoo
-// functionFoo
-// p1
-// local
-// constructorParameterFoo
-// <init>
-// param
-// Bar
-// Baz
+// Foo:KSClassDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// local:KSPropertyDeclaration
+// constructorParameterFoo:KSPropertyDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
+// ==== Cnno in depth ====
+// <set-?>:KSValueParameter
+// constructorParameterFoo:KSValueParameter
+// x:KSPropertyDeclaration
+// x:KSValueParameter
 // END
 //FILE: annotations.kt
 annotation class Anno
 annotation class Bnno
+annotation class Cnno
 typealias A1 = Anno
 typealias A2 = A1
 
@@ -84,7 +96,7 @@ typealias A2 = A1
 @file:Bnno
 
 @Anno
-class Foo @Anno constructor(@Anno val constructorParameterFoo: Int, @Anno param: Int){
+class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, @Anno param: Int){
     @Bnno constructor() {
 
     }
@@ -97,7 +109,12 @@ class Foo @Anno constructor(@Anno val constructorParameterFoo: Int, @Anno param:
     fun functionFoo(@Anno p1: Int, @Bnno p2: Int) {
         @Anno val local = 1
     }
+
+    @setparam:Cnno
+    var a = 1
 }
+
+class C(@Cnno val x: Int)
 
 @A1
 class Bar

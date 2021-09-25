@@ -49,7 +49,8 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val equalFunJava = javaList.getAllFunctions().single { it.simpleName.asString() == "equals" }
         val bazPropKt = resolver.getSymbolsWithAnnotation("BazAnno").single() as KSPropertyDeclaration
         val baz2PropKt = resolver.getSymbolsWithAnnotation("Baz2Anno").single() as KSPropertyDeclaration
-        val bazzPropKt = resolver.getSymbolsWithAnnotation("BazzAnno").single() as KSPropertyDeclaration
+        val bazzPropKt = resolver.getSymbolsWithAnnotation("BazzAnno")
+            .filterIsInstance<KSPropertyDeclaration>().single()
         val bazz2PropKt = resolver.getSymbolsWithAnnotation("Bazz2Anno").single() as KSPropertyDeclaration
         checkOverride(getFunKt, getFunJava)
         checkOverride(fooFunKt, fooFunJava)
