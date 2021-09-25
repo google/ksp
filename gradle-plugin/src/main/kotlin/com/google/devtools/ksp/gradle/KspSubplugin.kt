@@ -207,7 +207,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
             kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName)).disallowChanges()
 
-
             if (kspExtension.blockOtherCompilerPlugins) {
                 // FIXME: ask upstream to provide an API to make this not implementation-dependent.
                 val cfg = project.configurations.getByName(kotlinCompilation.pluginConfigurationName)
