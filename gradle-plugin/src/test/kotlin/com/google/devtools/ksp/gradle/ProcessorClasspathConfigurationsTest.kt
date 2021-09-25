@@ -40,22 +40,24 @@ class ProcessorClasspathConfigurationsTest {
     fun testConfigurationsForSinglePlatformApp() {
         testRule.setupAppAsJvmApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
-        testRule.appModule.buildFileAdditions.add("""
-            $kspConfigs.all {
-                // Make sure ksp configs are not empty.
-                project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
-            }
-            tasks.register("testConfigurations") {
-                // Resolve all tasks to trigger classpath config creation
-                dependsOn(tasks["tasks"])
-                doLast {
-                    val main = configurations["kspKotlinProcessorClasspath"]
-                    val test = configurations["kspTestKotlinProcessorClasspath"]
-                    require(main.extendsFrom.map { it.name } == listOf("ksp"))
-                    require(test.extendsFrom.map { it.name } == listOf("kspTest"))
+        testRule.appModule.buildFileAdditions.add(
+            """
+                $kspConfigs.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
                 }
-            }
-        """.trimIndent())
+                tasks.register("testConfigurations") {
+                    // Resolve all tasks to trigger classpath config creation
+                    dependsOn(tasks["tasks"])
+                    doLast {
+                        val main = configurations["kspKotlinProcessorClasspath"]
+                        val test = configurations["kspTestKotlinProcessorClasspath"]
+                        require(main.extendsFrom.map { it.name } == listOf("ksp"))
+                        require(test.extendsFrom.map { it.name } == listOf("kspTest"))
+                    }
+                }
+            """.trimIndent()
+        )
         testRule.runner()
             .withArguments(":app:testConfigurations")
             .build()
@@ -63,33 +65,37 @@ class ProcessorClasspathConfigurationsTest {
 
     @Test
     fun testConfigurationsForMultiPlatformApp() {
-        testRule.setupAppAsMultiplatformApp("""
-            kotlin {
-                jvm { }
-                js { browser() }
-            }
-        """.trimIndent())
-        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
-        testRule.appModule.buildFileAdditions.add("""
-            $kspConfigs.matching { it.name != "ksp" }.all {
-                // Make sure ksp configs are not empty.
-                project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
-            }
-            tasks.register("testConfigurations") {
-                // Resolve all tasks to trigger classpath config creation
-                dependsOn(tasks["tasks"])
-                doLast {
-                    val jvmMain = configurations["kspKotlinJvmProcessorClasspath"]
-                    val jvmTest = configurations["kspTestKotlinJvmProcessorClasspath"]
-                    val jsMain = configurations["kspKotlinJsProcessorClasspath"]
-                    val jsTest = configurations["kspTestKotlinJsProcessorClasspath"]
-                    require(jvmMain.extendsFrom.map { it.name } == listOf("kspJvm"))
-                    require(jvmTest.extendsFrom.map { it.name } == listOf("kspJvmTest"))
-                    require(jsMain.extendsFrom.map { it.name } == listOf("kspJs"))
-                    require(jsTest.extendsFrom.map { it.name } == listOf("kspJsTest"))
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin {
+                    jvm { }
+                    js { browser() }
                 }
-            }
-        """.trimIndent())
+            """.trimIndent()
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                $kspConfigs.matching { it.name != "ksp" }.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
+                }
+                tasks.register("testConfigurations") {
+                    // Resolve all tasks to trigger classpath config creation
+                    dependsOn(tasks["tasks"])
+                    doLast {
+                        val jvmMain = configurations["kspKotlinJvmProcessorClasspath"]
+                        val jvmTest = configurations["kspTestKotlinJvmProcessorClasspath"]
+                        val jsMain = configurations["kspKotlinJsProcessorClasspath"]
+                        val jsTest = configurations["kspTestKotlinJsProcessorClasspath"]
+                        require(jvmMain.extendsFrom.map { it.name } == listOf("kspJvm"))
+                        require(jvmTest.extendsFrom.map { it.name } == listOf("kspJvmTest"))
+                        require(jsMain.extendsFrom.map { it.name } == listOf("kspJs"))
+                        require(jsTest.extendsFrom.map { it.name } == listOf("kspJsTest"))
+                    }
+                }
+            """.trimIndent()
+        )
         testRule.runner()
             .withArguments(":app:testConfigurations")
             .build()
