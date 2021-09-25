@@ -15,7 +15,6 @@ class KspConfigurations(private val project: Project) {
         private const val PREFIX = "ksp"
     }
 
-
     // Store all ksp configurations for quick retrieval.
     private val kotlinConfigurations = mutableMapOf<KotlinSourceSet, Configuration>()
     private val androidConfigurations = mutableMapOf<String, Configuration>()
