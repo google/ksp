@@ -37,6 +37,7 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
 
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
+            .filter { it.useSiteTarget != AnnotationUseSiteTarget.PARAM }
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {

@@ -307,6 +307,7 @@ class ResolverImpl(
             }
 
             override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {
+                setter.parameter.accept(this, data)
                 visitAnnotated(setter, data)
             }
 
@@ -332,9 +333,6 @@ class ResolverImpl(
             }
 
             override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-                if (valueParameter.isVal || valueParameter.isVar) {
-                    return
-                }
                 visitAnnotated(valueParameter, data)
             }
         }
