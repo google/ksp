@@ -36,7 +36,7 @@ object AndroidPluginIntegration {
 
     private val agpPluginIds = listOf("com.android.application", "com.android.library", "com.android.dynamic-feature")
 
-    fun findSourceSets(project: Project, onSourceSet: (String) -> Unit) {
+    fun forEachAndroidSourceSet(project: Project, onSourceSet: (String) -> Unit) {
         agpPluginIds.forEach { agpPluginId ->
             project.pluginManager.withPlugin(agpPluginId) {
                 // for android apps, we need a configuration per source set
