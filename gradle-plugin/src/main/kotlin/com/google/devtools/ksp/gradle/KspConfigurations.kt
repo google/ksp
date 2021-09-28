@@ -82,7 +82,7 @@ class KspConfigurations(private val project: Project) {
      */
     private fun decorateKotlinTarget(target: KotlinTarget) {
         if (target.platformType == KotlinPlatformType.androidJvm) {
-            AndroidPluginIntegration.findSourceSets(target.project) { sourceSet ->
+            AndroidPluginIntegration.forEachAndroidSourceSet(target.project) { sourceSet ->
                 val isMain = sourceSet.endsWith("main", ignoreCase = true)
                 val nameWithoutMain = when {
                     isMain -> sourceSet.substring(0, sourceSet.length - 4)
