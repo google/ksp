@@ -15,34 +15,43 @@ class KspConfigurations(private val project: Project) {
         private const val PREFIX = "ksp"
     }
 
-    // Store all ksp configurations for quick retrieval.
-    private val kotlinConfigurations = mutableMapOf<KotlinSourceSet, Configuration>()
-    private val androidConfigurations = mutableMapOf<String, Configuration>()
+    private fun configurationNameOf(vararg parts: String): String {
+        return parts.joinToString("") {
+            it.replaceFirstChar { it.uppercase() }
+        }.replaceFirstChar { it.lowercase() }
+    }
 
     @OptIn(ExperimentalStdlibApi::class)
-    private fun <T : Any> saveConfiguration(
-        ownerSet: T,
-        ownerName: String,
+    private fun createConfiguration(
         name: String,
-        cache: MutableMap<T, Configuration>
+        readableSetName: String,
     ): Configuration {
-        val configName = PREFIX + name.replaceFirstChar { it.uppercase() }
         // maybeCreate to be future-proof, but we should never have a duplicate with current logic
-        val config = project.configurations.maybeCreate(configName).apply {
-            description = "KSP dependencies for the '$ownerName' source set."
+        return project.configurations.maybeCreate(name).apply {
+            description = "KSP dependencies for the '$readableSetName' source set."
             isCanBeResolved = false // we'll resolve the processor classpath config
             isCanBeConsumed = false
             isVisible = false
         }
-        cache[ownerSet] = config
-        return config
     }
 
-    private fun saveKotlinConfiguration(owner: KotlinSourceSet, name: String) =
-        saveConfiguration(owner, owner.name, name, kotlinConfigurations)
+    private fun getAndroidConfigurationName(target: KotlinTarget, sourceSet: String): String {
+        val isMain = sourceSet.endsWith("main", ignoreCase = true)
+        val nameWithoutMain = when {
+            isMain -> sourceSet.substring(0, sourceSet.length - 4)
+            else -> sourceSet
+        }
+        // Note: on single-platform, target name is conveniently set to "".
+        return configurationNameOf(PREFIX, target.name, nameWithoutMain)
+    }
 
-    private fun saveAndroidConfiguration(key: String, name: String) =
-        saveConfiguration(key, "$key (Android)", name, androidConfigurations)
+    private fun getKotlinConfigurationName(compilation: KotlinCompilation<*>, sourceSet: KotlinSourceSet): String {
+        val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
+        val isDefault = sourceSet.name == compilation.defaultSourceSetName
+        // Note: on single-platform, target name is conveniently set to "".
+        val name = if (isMain && isDefault) compilation.target.name else sourceSet.name
+        return configurationNameOf(PREFIX, name)
+    }
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
@@ -83,25 +92,18 @@ class KspConfigurations(private val project: Project) {
     private fun decorateKotlinTarget(target: KotlinTarget) {
         if (target.platformType == KotlinPlatformType.androidJvm) {
             AndroidPluginIntegration.forEachAndroidSourceSet(target.project) { sourceSet ->
-                val isMain = sourceSet.endsWith("main", ignoreCase = true)
-                val nameWithoutMain = when {
-                    isMain -> sourceSet.substring(0, sourceSet.length - 4)
-                    else -> sourceSet
-                }
-                val nameWithTargetPrefix = when {
-                    target.name.isEmpty() -> nameWithoutMain
-                    else -> target.name + nameWithoutMain.replaceFirstChar { it.uppercase() }
-                }
-                saveAndroidConfiguration(sourceSet, nameWithTargetPrefix)
+                createConfiguration(
+                    name = getAndroidConfigurationName(target, sourceSet),
+                    readableSetName = "$sourceSet (Android)"
+                )
             }
         } else {
             target.compilations.configureEach { compilation ->
-                val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
                 compilation.kotlinSourceSets.forEach { sourceSet ->
-                    val isDefault = sourceSet.name == compilation.defaultSourceSetName
-                    // Note: on single-platform, target name is conveniently set to "" so this resolves to "ksp".
-                    val name = if (isMain && isDefault) target.name else sourceSet.name
-                    saveKotlinConfiguration(sourceSet, name)
+                    createConfiguration(
+                        name = getKotlinConfigurationName(compilation, sourceSet),
+                        readableSetName = sourceSet.name
+                    )
                 }
             }
         }
@@ -118,12 +120,18 @@ class KspConfigurations(private val project: Project) {
      * See test: SourceSetConfigurationsTest.configurationsForMultiplatformApp_doesNotCrossCompilationBoundaries
      */
     fun find(compilation: KotlinCompilation<*>): Set<Configuration> {
-        val kotlinConfigurations = compilation.kotlinSourceSets.mapNotNull { kotlinConfigurations[it] }
-        val androidConfigurations = if (compilation.platformType == KotlinPlatformType.androidJvm) {
+        val results = mutableListOf<String>()
+        compilation.kotlinSourceSets.mapTo(results) {
+            getKotlinConfigurationName(compilation, it)
+        }
+        if (compilation.platformType == KotlinPlatformType.androidJvm) {
             compilation as KotlinJvmAndroidCompilation
-            val androidSourceSets = AndroidPluginIntegration.getCompilationSourceSets(compilation)
-            androidSourceSets.mapNotNull { androidConfigurations[it] }
-        } else emptyList()
-        return (kotlinConfigurations + androidConfigurations).toSet()
+            AndroidPluginIntegration.getCompilationSourceSets(compilation).mapTo(results) {
+                getAndroidConfigurationName(compilation.target, it)
+            }
+        }
+        return results.mapNotNull {
+            compilation.target.project.configurations.findByName(it)
+        }.toSet()
     }
 }
