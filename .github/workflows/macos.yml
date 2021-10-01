@@ -4,9 +4,9 @@ name: MacOS
 
 on:
   push:
-    branches: [ main, kotlin-1.5.31 ]
+    branches: [ main, kotlin-1.6.0 ]
   pull_request:
-    branches: [ main, kotlin-1.5.31 ]
+    branches: [ main, kotlin-1.6.0 ]
 
 jobs:
   build-and-test:
