@@ -10,3 +10,4 @@ build/
 !**/testData/**/*.iml
 local.properties
 compiler-plugin/dist
+kotlin-analysis-api/dist
