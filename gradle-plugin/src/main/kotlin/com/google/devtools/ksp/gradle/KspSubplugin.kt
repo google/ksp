@@ -419,6 +419,9 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
         Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
+        // Assign moduleName different from kotlin compilation to work around https://github.com/google/ksp/issues/647
+        // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
+        this.moduleName.set(kotlinCompile.moduleName.map { "$it-ksp" })
         kotlinCompile as KotlinCompile
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
