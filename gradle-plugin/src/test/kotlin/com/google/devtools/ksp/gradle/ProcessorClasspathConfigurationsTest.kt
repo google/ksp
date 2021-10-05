@@ -53,13 +53,40 @@ class ProcessorClasspathConfigurationsTest {
                         val main = configurations["kspKotlinProcessorClasspath"]
                         val test = configurations["kspTestKotlinProcessorClasspath"]
                         require(main.extendsFrom.map { it.name } == listOf("ksp"))
+                        require(test.extendsFrom.map { it.name } == listOf("kspTest", "ksp"))
+                    }
+                }
+            """.trimIndent()
+        )
+        testRule.runner()
+            .withArguments(":app:testConfigurations", "--info")
+            .build()
+    }
+
+    @Test
+    fun testConfigurationsForSinglePlatformAppDisallowAll() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                $kspConfigs.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
+                }
+                tasks.register("testConfigurations") {
+                    // Resolve all tasks to trigger classpath config creation
+                    dependsOn(tasks["tasks"])
+                    doLast {
+                        val main = configurations["kspKotlinProcessorClasspath"]
+                        val test = configurations["kspTestKotlinProcessorClasspath"]
+                        require(main.extendsFrom.map { it.name } == listOf("ksp"))
                         require(test.extendsFrom.map { it.name } == listOf("kspTest"))
                     }
                 }
             """.trimIndent()
         )
         testRule.runner()
-            .withArguments(":app:testConfigurations")
+            .withArguments(":app:testConfigurations", "-Pksp.allow_all_target_configuration=false")
             .build()
     }
 
