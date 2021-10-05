@@ -270,7 +270,7 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
                 defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
             }
         }
-        is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.value
+        is KtParameter -> ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.toValue(ownerAnnotation)
         is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
             .computeConstantExpression((psi).defaultValue)
         else -> throw IllegalStateException("Unexpected psi ${psi.javaClass}, $ExceptionMessage")
