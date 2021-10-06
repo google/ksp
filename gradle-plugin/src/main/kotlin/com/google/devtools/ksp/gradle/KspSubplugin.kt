@@ -40,6 +40,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
+import org.gradle.util.internal.VersionNumber
 import org.gradle.work.Incremental
 import org.jetbrains.kotlin.cli.common.arguments.*
 import org.jetbrains.kotlin.gradle.dsl.*
@@ -141,16 +142,25 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
         val project = kotlinCompilation.target.project
-        val kspVersion = javaClass.`package`.implementationVersion
-        val kotlinVersion = project.getKotlinPluginVersion() ?: "N/A"
+        val kspVersion = VersionNumber.parse(KSP_KOTLIN_BASE_VERSION)
+        val kotlinVersion = VersionNumber.parse(project.getKotlinPluginVersion())
 
         // Check version and show warning by default.
         val noVersionCheck = project.findProperty("ksp.version.check")?.toString()?.toBoolean() == false
-        if (!noVersionCheck && !kspVersion.startsWith(kotlinVersion))
-            project.logger.warn(
-                "ksp-$kspVersion might not work with kotlin-$kotlinVersion properly. " +
-                    "Please pick the same version of ksp and kotlin plugins."
-            )
+        if (!noVersionCheck) {
+            if (kspVersion < kotlinVersion) {
+                project.logger.warn(
+                    "ksp-$KSP_VERSION is too old for kotlin-$kotlinVersion. " +
+                        "Please upgrade ksp or downgrade kotlin-gradle-plugin to $KSP_KOTLIN_BASE_VERSION."
+                )
+            }
+            if (kspVersion > kotlinVersion) {
+                project.logger.warn(
+                    "ksp-$KSP_VERSION is too new for kotlin-$kotlinVersion. " +
+                        "Please upgrade kotlin-gradle-plugin to $KSP_KOTLIN_BASE_VERSION."
+                )
+            }
+        }
 
         return true
     }
@@ -330,17 +340,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
             artifactId = KSP_ARTIFACT_NAME,
-            version = javaClass.`package`.implementationVersion
+            version = KSP_VERSION
         )
 
     override fun getPluginArtifactForNative(): SubpluginArtifact? =
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
             artifactId = KSP_ARTIFACT_NAME_NATIVE,
-            version = javaClass.`package`.implementationVersion
+            version = KSP_VERSION
         )
 
-    val apiArtifact = "com.google.devtools.ksp:symbol-processing-api:${javaClass.`package`.implementationVersion}"
+    val apiArtifact = "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION"
 }
 
 private val artifactType = Attribute.of("artifactType", String::class.java)
