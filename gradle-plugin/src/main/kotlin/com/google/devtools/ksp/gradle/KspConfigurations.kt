@@ -15,6 +15,14 @@ class KspConfigurations(private val project: Project) {
         private const val PREFIX = "ksp"
     }
 
+    private val allowAllTargetConfiguration =
+        project.findProperty("ksp.allow.all.target.configuration")?.let {
+            it.toString().toBoolean()
+        } ?: true
+
+    // The "ksp" configuration, applied to every compilations.
+    private val configurationForAll = project.configurations.create(PREFIX)
+
     private fun configurationNameOf(vararg parts: String): String {
         return parts.joinToString("") {
             it.replaceFirstChar { it.uppercase() }
@@ -66,13 +74,19 @@ class KspConfigurations(private val project: Project) {
             is KotlinMultiplatformExtension -> {
                 kotlin.targets.configureEach(::decorateKotlinTarget)
 
-                // Adding multiplatform configuration removed support for the root ksp configuration.
-                // Try to make this breaking change less breaking by adding a clear error.
-                project.configurations.create("ksp").dependencies.all {
-                    throw InvalidUserCodeException(
-                        "The 'ksp' configuration cannot be used in Kotlin Multiplatform projects. " +
+                var reported = false
+                configurationForAll.dependencies.whenObjectAdded {
+                    if (!reported) {
+                        reported = true
+                        val msg = "The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. " +
                             "Please use target-specific configurations like 'kspJvm' instead."
-                    )
+
+                        if (allowAllTargetConfiguration) {
+                            project.logger.warn(msg)
+                        } else {
+                            throw InvalidUserCodeException(msg)
+                        }
+                    }
                 }
             }
         }
@@ -130,6 +144,12 @@ class KspConfigurations(private val project: Project) {
                 getAndroidConfigurationName(compilation.target, it)
             }
         }
+
+        // Include the `ksp` configuration, if it exists, for all compilations.
+        if (allowAllTargetConfiguration) {
+            results.add(configurationForAll.name)
+        }
+
         return results.mapNotNull {
             compilation.target.project.configurations.findByName(it)
         }.toSet()
