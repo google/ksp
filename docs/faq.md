@@ -15,17 +15,32 @@ Additionally, KSP’s incremental processing model has a finer granularity than 
 ## Is KSP Kotlin specific?
 KSP can process Java sources as well. The API is unified, meaning that when you parse a Java class and a Kotlin class you get a unified data structure in KSP.
 
-## Why having a Kotlin version as prefix in KSP's version?
+## Why do I get "ksp-A.B.C is too old for kotlin-X.Y.Z. Please upgrade ksp or downgrade kotlin-gradle-plugin"?
 KSP is comprised of two parts: API and implementation:
 * The API rarely changes and is backward compatible; There can be new interfaces, but old interfaces never change.
-* Each release of KSP implementation is tied to a specific compiler version (the prefix).
+* Each release of KSP implementation is tied to a specific compiler version.
 
 Processors only depend on API and therefore are not tied to compiler versions.
 On the other hand, users of processors need to bump KSP version when bumping the compiler version in their project.
 Note that they don't need to bump processor's version because processors only depend on API.
 
-For example, Some-Nice-Processor-2.0 is released and tested with KSP 1.5.30-1.0.0.
-Users can expect that the same Some-Nice-Processor-2.0 will work with Kotlin 1.6.0 + KSP 1.6.0-1.0.0.
+For example, Some-Nice-Processor-2.0 is released and tested with KSP 2.0.0, which depends strictly on Kotlin 1.6.0.
+Users can expect that the same Some-Nice-Processor-2.0 will work with Kotlin 1.7.0. The only thing users
+need to do is bump KSP to a version (e.g., KSP 2.1.0) that is built for Kotlin 1.7.0.
+
+## Can I use a newer KSP implementation with an older Kotlin compiler?
+With the same language version, Kotlin compiler is supposed to be backward compatible. Bumping Kotlin compiler should be
+trivial most of the time. If you need a newer KSP implementation, please upgrade the Kotlin compiler accordingly.
+
+## How often do you update KSP?
+With KSP version `major.minor.patch-preRelease`,
+* `major` is reserved for new large features. There is no pre-determined schedule for this.
+* `minor` is reserved for new small features. This is going to be updated approximately quarterly.
+* `patch` is reserved for bug fixes and new Kotlin releases. It's updated roughly monthly.
+* `preRelease` is reserved for Kotlin pre-releases. For example, KSP-2.0.0-RC is used for Kotlin-1.6.0-RC.
+
+Usually a corresponding KSP release is available within a couple of days after a new Kotlin version is released,
+including the pre-releases (e.g., M1/M2/RC).
 
 ## What is KSP’s future roadmap?
 The following items have been planned:
