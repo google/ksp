@@ -118,7 +118,7 @@ class KMPImplementedIT {
             "--configuration-cache-problems=warn",
             "clean",
             "build",
-            "-Pksp.allow_all_target_configuration=false"
+            "-Pksp.allow.all.target.configuration=false"
         ).buildAndFail().apply {
             Assert.assertTrue(
                 messages.all {

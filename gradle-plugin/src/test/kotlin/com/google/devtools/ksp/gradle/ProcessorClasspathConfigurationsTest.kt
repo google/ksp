@@ -86,7 +86,7 @@ class ProcessorClasspathConfigurationsTest {
             """.trimIndent()
         )
         testRule.runner()
-            .withArguments(":app:testConfigurations", "-Pksp.allow_all_target_configuration=false")
+            .withArguments(":app:testConfigurations", "-Pksp.allow.all.target.configuration=false")
             .build()
     }
 

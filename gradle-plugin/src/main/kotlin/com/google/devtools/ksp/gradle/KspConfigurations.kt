@@ -16,7 +16,7 @@ class KspConfigurations(private val project: Project) {
     }
 
     private val allowAllTargetConfiguration =
-        project.findProperty("ksp.allow_all_target_configuration")?.let {
+        project.findProperty("ksp.allow.all.target.configuration")?.let {
             it.toString().toBoolean()
         } ?: true
 
@@ -74,8 +74,10 @@ class KspConfigurations(private val project: Project) {
             is KotlinMultiplatformExtension -> {
                 kotlin.targets.configureEach(::decorateKotlinTarget)
 
-                project.afterEvaluate {
-                    if (configurationForAll.dependencies.isNotEmpty()) {
+                var reported = false
+                configurationForAll.dependencies.whenObjectAdded {
+                    if (!reported) {
+                        reported = true
                         val msg = "The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. " +
                             "Please use target-specific configurations like 'kspJvm' instead."
 
