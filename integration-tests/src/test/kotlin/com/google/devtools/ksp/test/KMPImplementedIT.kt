@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.test
 
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
@@ -35,11 +36,18 @@ class KMPImplementedIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         // KotlinNative doesn't support configuration cache yet.
-        val resultCleanBuild = gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build")
-            .build()
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            "build"
+        ).build().let {
+            verifyAll(it)
+        }
+    }
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:kspTestKotlinLinuxX64")?.outcome)
+    private fun verifyAll(result: BuildResult) {
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspTestKotlinLinuxX64")?.outcome)
 
         verify(
             "workload/build/libs/workload-jvm-1.0-SNAPSHOT.jar",
@@ -71,16 +79,66 @@ class KMPImplementedIT {
 
         // TODO: Enable after CI's Xcode version catches up.
         // Assert.assertTrue(
-        //     resultCleanBuild.task(":workload:kspKotlinIosArm64")?.outcome == TaskOutcome.SUCCESS ||
-        //         resultCleanBuild.task(":workload:kspKotlinIosArm64")?.outcome == TaskOutcome.SKIPPED
+        //     result.task(":workload:kspKotlinIosArm64")?.outcome == TaskOutcome.SUCCESS ||
+        //         result.task(":workload:kspKotlinIosArm64")?.outcome == TaskOutcome.SKIPPED
         // )
         // Assert.assertTrue(
-        //     resultCleanBuild.task(":workload:kspKotlinMacosX64")?.outcome == TaskOutcome.SUCCESS ||
-        //         resultCleanBuild.task(":workload:kspKotlinMacosX64")?.outcome == TaskOutcome.SKIPPED
+        //     result.task(":workload:kspKotlinMacosX64")?.outcome == TaskOutcome.SUCCESS ||
+        //         result.task(":workload:kspKotlinMacosX64")?.outcome == TaskOutcome.SKIPPED
         // )
         Assert.assertTrue(
-            resultCleanBuild.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SUCCESS ||
-                resultCleanBuild.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SKIPPED
+            result.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SUCCESS ||
+                result.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SKIPPED
         )
+    }
+
+    @Test
+    fun testMainConfiguration() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val buildScript = File(project.root, "workload/build.gradle.kts")
+        val lines = buildScript.readLines().takeWhile {
+            it.trimEnd() != "dependencies {"
+        }
+        buildScript.writeText(lines.joinToString(System.lineSeparator()))
+        buildScript.appendText(System.lineSeparator())
+        buildScript.appendText("dependencies {")
+        buildScript.appendText(System.lineSeparator())
+        buildScript.appendText("    add(\"ksp\", project(\":test-processor\"))")
+        buildScript.appendText(System.lineSeparator())
+        buildScript.appendText("}")
+
+        val messages = listOf(
+            "The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. ",
+            "Please use target-specific configurations like 'kspJvm' instead."
+        )
+
+        // KotlinNative doesn't support configuration cache yet.
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            "build",
+            "-Pksp.allow.all.target.configuration=false"
+        ).buildAndFail().apply {
+            Assert.assertTrue(
+                messages.all {
+                    output.contains(it)
+                }
+            )
+        }
+
+        // KotlinNative doesn't support configuration cache yet.
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            "build"
+        ).build().apply {
+            Assert.assertTrue(
+                messages.all {
+                    output.contains(it)
+                }
+            )
+            verifyAll(this)
+        }
     }
 }
