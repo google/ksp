@@ -1,15 +1,11 @@
 import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
 
 if (!extra.has("kspVersion")) {
-    val kotlinBaseVersion: String by project
-    val today = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-    extra.set("kspVersion", "$kotlinBaseVersion-dev-experimental-$today")
+    extra.set("kspVersion", "2.0.255-SNAPSHOT")
 }
 
 repositories {
@@ -44,12 +40,6 @@ subprojects {
         google()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
         maven("https://www.jetbrains.com/intellij-repository/snapshots")
-    }
-    tasks.withType<Jar>().configureEach {
-        manifest.attributes.apply {
-            put("Implementation-Vendor", "Google")
-            put("Implementation-Version", project.version)
-        }
     }
     pluginManager.withPlugin("maven-publish") {
         val publishExtension = extensions.getByType<PublishingExtension>()
