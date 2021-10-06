@@ -124,39 +124,35 @@ tasks.named<Test>("test").configure {
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
 }
 
-val kspVersionDir = File(project.buildDir, "generated/ksp-versions")
-val writeVersionSrcTask = tasks.register("generateKSPVersions") {
-    inputs.property("kspVersion", version)
-    inputs.property("kotlinBaseVersion", kotlinBaseVersion)
-    outputs.dir(kspVersionDir)
-    actions.add {
-        kspVersionDir.mkdirs()
-        File(kspVersionDir, "KSPVersions.kt").writeText(
+abstract class WriteVersionSrcTask @Inject constructor(
+    @get:Input val kspVersion: String,
+    @get:Input val kotlinVersion: String,
+    @get:org.gradle.api.tasks.OutputDirectory val outputSrcDir: File
+) : DefaultTask() {
+    @TaskAction
+    fun generate() {
+        File(outputSrcDir, "KSPVersions.kt").writeText(
             """
             package com.google.devtools.ksp.gradle
-            val KSP_KOTLIN_BASE_VERSION = "$kotlinBaseVersion"
-            val KSP_VERSION = "$version"
+            val KSP_KOTLIN_BASE_VERSION = "$kotlinVersion"
+            val KSP_VERSION = "$kspVersion"
             """.trimIndent()
         )
     }
 }
 
-tasks.named("compileKotlin").configure {
-    dependsOn(writeVersionSrcTask)
-}
-
-tasks.named("dokkaJavadoc").configure {
-    dependsOn(writeVersionSrcTask)
-}
-
-tasks.named("sourcesJar").configure {
-    dependsOn(writeVersionSrcTask)
-}
+val kspVersionDir = File(project.buildDir, "generated/ksp-versions")
+val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>(
+    "generateKSPVersions",
+    version.toString(),
+    kotlinBaseVersion,
+    kspVersionDir
+)
 
 kotlin {
     sourceSets {
         main {
-            kotlin.srcDir(kspVersionDir)
+            kotlin.srcDir(writeVersionSrcTask.map { it.outputSrcDir })
         }
     }
 }
