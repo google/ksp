@@ -17,7 +17,7 @@ class VersionCheckIT {
         val result = gradleRunner.withArguments(
             "-Dkotlin.compiler.execution.strategy=in-process", "-PkotlinVersion=1.4.20", "clean", "build"
         ).buildAndFail()
-        Assert.assertTrue(result.output.contains("Please pick the same version of ksp and kotlin plugins."))
+        Assert.assertTrue(result.output.contains("is too new for kotlin"))
     }
 
     @Test
@@ -27,6 +27,6 @@ class VersionCheckIT {
             "-Dkotlin.compiler.execution.strategy=in-process",
             "-PkotlinVersion=1.4.20", "-Pksp.version.check=false", "clean", "build"
         ).buildAndFail()
-        Assert.assertFalse(result.output.contains("Please pick the same version of ksp and kotlin plugins."))
+        Assert.assertFalse(result.output.contains("is too new for kotlin"))
     }
 }
