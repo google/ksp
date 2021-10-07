@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
+import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotationMethod
 import org.jetbrains.kotlin.builtins.StandardNames
@@ -113,8 +114,21 @@ private fun <T> ConstantValue<T>.toValue(parent: KSNode): Any? = when (this) {
             it.simpleName.asString() == value.second.asString()
     }?.let { (it as KSClassDeclaration).asStarProjectedType() }
     is KClassValue -> when (val classValue = value) {
-        is KClassValue.Value.NormalClass -> if (classValue.arrayDimensions > 0)
-            ResolverImpl.instance.builtIns.arrayType else classValue.classId.findKSType()
+        is KClassValue.Value.NormalClass -> if (classValue.arrayDimensions > 0) {
+            classValue.value.classId.findKSType()?.let { componentType ->
+                var resultingType = componentType
+                for (i in 1..classValue.arrayDimensions) {
+                    resultingType = ResolverImpl.instance.builtIns.arrayType.replace(
+                        listOf(
+                            ResolverImpl.instance.getTypeArgument(
+                                KSTypeReferenceSyntheticImpl.getCached(resultingType, null), Variance.INVARIANT
+                            )
+                        )
+                    )
+                }
+                resultingType
+            }
+        } else classValue.classId.findKSType()
         is KClassValue.Value.LocalClass -> getKSTypeCached(classValue.type)
     }
     is ErrorValue, is NullValue -> null
