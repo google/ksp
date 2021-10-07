@@ -35,15 +35,18 @@ import com.google.devtools.ksp.symbol.impl.synthetic.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.container.tryGetService
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
@@ -80,7 +83,9 @@ import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
+import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
@@ -91,6 +96,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.types.expressions.DoubleColonExpressionResolver
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
@@ -128,6 +134,7 @@ class ResolverImpl(
         KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT, // TODO use proper LanguageVersionSettings
         true
     )
+    private val qualifiedExpressionResolver = QualifiedExpressionResolver(LanguageVersionSettingsImpl.DEFAULT)
 
     private val aliasingFqNs: MutableMap<String, KSTypeAlias> = mutableMapOf()
     private val aliasingNames: MutableSet<String> = mutableSetOf()
@@ -143,6 +150,7 @@ class ResolverImpl(
         lateinit var moduleClassResolver: ModuleClassResolver
         lateinit var javaTypeResolver: JavaTypeResolver
         lateinit var lazyJavaResolverContext: LazyJavaResolverContext
+        lateinit var doubleColonExpressionResolver: DoubleColonExpressionResolver
     }
 
     init {
@@ -151,6 +159,7 @@ class ResolverImpl(
         declarationScopeProvider = componentProvider.get()
         topDownAnalyzer = componentProvider.get()
         constantExpressionEvaluator = componentProvider.get()
+        doubleColonExpressionResolver = componentProvider.get()
         annotationResolver = resolveSession.annotationResolver
 
         componentProvider.tryGetService(JavaResolverComponents::class.java)?.let {
@@ -428,7 +437,29 @@ class ResolverImpl(
     }
 
     fun evaluateConstant(expression: KtExpression?, expectedType: KotlinType): ConstantValue<*>? {
-        return expression?.let { constantExpressionEvaluator.evaluateToConstantValue(it, bindingTrace, expectedType) }
+        return expression?.let {
+            if (it is KtClassLiteralExpression && it.receiverExpression != null) {
+                val parent = KtStubbedPsiUtil.getPsiOrStubParent(it, KtPrimaryConstructor::class.java, false)
+                val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(parent)
+                val result = qualifiedExpressionResolver
+                    .resolveDescriptorForDoubleColonLHS(it.receiverExpression!!, scope, bindingTrace, false)
+                val classifier = result.classifierDescriptor ?: return null
+                val typeResolutionContext = TypeResolutionContext(scope, bindingTrace, true, true, false)
+                val possiblyBareType = resolveSession.typeResolver
+                    .resolveTypeForClassifier(typeResolutionContext, classifier, result, it, Annotations.EMPTY)
+                var actualType = if (possiblyBareType.isBare)
+                    possiblyBareType.bareTypeConstructor.declarationDescriptor.defaultType
+                else possiblyBareType.actualType
+                var arrayDimension = 0
+                while (KotlinBuiltIns.isArray(actualType)) {
+                    actualType = actualType.arguments.single().type
+                    arrayDimension += 1
+                }
+                KClassValue(actualType.constructor.declarationDescriptor.classId!!, arrayDimension)
+            } else {
+                constantExpressionEvaluator.evaluateExpression(it, bindingTrace)?.toConstantValue(expectedType)
+            }
+        }
     }
 
     fun resolveDeclaration(declaration: KtDeclaration): DeclarationDescriptor? {
