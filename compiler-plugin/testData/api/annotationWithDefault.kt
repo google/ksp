@@ -17,21 +17,21 @@
 
 // TEST PROCESSOR: AnnotationDefaultValueProcessor
 // EXPECTED:
-// KotlinAnnotation -> a:debugKt,b:default
+// KotlinAnnotation -> a:debugKt,b:default,kClassValue:Array<Array<InnerObj>>
 // JavaAnnotation -> debug:debug,withDefaultValue:OK
 // JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
 // KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
-// KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib
+// KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib,kClassValue:OtherKotlinAnnotation
 // JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
-// KotlinAnnotation -> a:debugJava,b:default
+// KotlinAnnotation -> a:debugJava,b:default,kClassValue:Array<Array<InnerObj>>
 // JavaAnnotation -> debug:debugJava2,withDefaultValue:OK
 // JavaAnnotation2 -> y:y-java,x:x-java,z:z-default
 // KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default
 // END
 // MODULE: lib
 // FILE: Default.kt
-annotation class KotlinAnnotationLib(val a: String, val b: String = "defaultInLib")
+annotation class KotlinAnnotationLib(val a: String, val b: String = "defaultInLib", val kClassValue: kotlin.reflect.KClass<*> = OtherKotlinAnnotation::class)
 
 annotation class OtherKotlinAnnotation(val b: String = "otherKotlinAnnotationDefault")
 
@@ -86,7 +86,9 @@ annotation class KotlinAnnotationWithDefaults(
 // MODULE: main(lib)
 // FILE: a.kt
 
-annotation class KotlinAnnotation(val a: String, val b:String = "default")
+annotation class KotlinAnnotation(val a: String, val b:String = "default", val kClassValue: kotlin.reflect.KClass<*> = Array<Array<InnerObj>>::class) {
+    object InnerObj
+}
 annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", val z:String = "z-default")
 
 @KotlinAnnotation("debugKt")
