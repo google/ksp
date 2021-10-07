@@ -64,7 +64,7 @@ class AndroidPluginIntegration(
     private fun decorateAndroidExtension(project: Project) {
         val sourceSets = when (val androidExt = project.extensions.getByName("android")) {
             is BaseExtension -> androidExt.sourceSets
-            is CommonExtension<*, *, *, *> -> androidExt.sourceSets
+            is CommonExtension<*, *, *, *, *, *, *, *> -> androidExt.sourceSets
             else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
         }
 
