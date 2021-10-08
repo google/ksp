@@ -32,12 +32,17 @@
 // java.io.IOException
 // java.lang.IndexOutOfBoundsException
 // java.io.IOException,java.lang.IndexOutOfBoundsException
+// java.io.IOException
 // END
 // MODULE: lib
 // FILE: JavaLib.java
 import java.io.IOException;
 import java.lang.IndexOutOfBoundsException;
 public class JavaLib {
+    public JavaLib() throws IOException {
+
+    }
+
     public void foo() throws IOException {
         throw new IOException();
     }

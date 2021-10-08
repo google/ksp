@@ -2,6 +2,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -57,6 +58,9 @@ class ThrowListProcessor : AbstractTestProcessor() {
         }.forEach { result.add(it) }
         jlib.declarations.filter { it.simpleName.asString() == "foo" }.map {
             resolver.getJvmCheckedException(it as KSFunctionDeclaration).toResult()
+        }.forEach { result.add(it) }
+        jlib.getConstructors().map {
+            resolver.getJvmCheckedException(it).toResult()
         }.forEach { result.add(it) }
         return emptyList()
     }
