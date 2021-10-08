@@ -66,6 +66,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethodBase
 import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
@@ -824,8 +825,8 @@ class ResolverImpl(
                         ?.contentsToByteArray()
                 } else {
                     (
-                        ((descriptor.source as? JavaSourceElement)?.javaElement as? BinaryJavaMethod)?.containingClass
-                            as? BinaryJavaClass
+                        ((descriptor.source as? JavaSourceElement)?.javaElement as? BinaryJavaMethodBase)
+                            ?.containingClass as? BinaryJavaClass
                         )?.virtualFile?.contentsToByteArray()
                 }
                 if (virtualFileContent == null) {
