@@ -41,6 +41,7 @@ import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.cli.common.arguments.*
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.*
@@ -581,9 +582,9 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
     fun `callCompilerAsync$kotlin_gradle_plugin`(
         args: K2JVMCompilerArguments,
         sourceRoots: SourceRoots,
-        changedFiles: ChangedFiles,
-        taskOutputsBackup: TaskOutputsBackup?,
+        inputChanges: InputChanges,
     ) {
+        val changedFiles = getChangedFiles(inputChanges, incrementalProps)
         if (isKspIncremental) {
             if (isIntermoduleIncremental) {
                 // findClasspathChanges may clear caches, if there are
@@ -600,7 +601,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
             clearIncCache()
         }
         args.addChangedFiles(changedFiles)
-        super.callCompilerAsync(args, sourceRoots, changedFiles, taskOutputsBackup)
+        super.callCompilerAsync(args, sourceRoots, inputChanges)
     }
 
     override fun skipCondition(): Boolean = false
@@ -674,15 +675,15 @@ abstract class KspTaskJS @Inject constructor(
     fun `callCompilerAsync$kotlin_gradle_plugin`(
         args: K2JSCompilerArguments,
         sourceRoots: SourceRoots,
-        changedFiles: ChangedFiles,
-        taskOutputsBackup: TaskOutputsBackup?,
+        inputChanges: InputChanges,
     ) {
+        val changedFiles = getChangedFiles(inputChanges, incrementalProps)
         if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
             clearIncCache()
         } else {
             args.addChangedFiles(changedFiles)
         }
-        super.callCompilerAsync(args, sourceRoots, changedFiles, taskOutputsBackup)
+        super.callCompilerAsync(args, sourceRoots, inputChanges)
     }
 
     // Overrding an internal function is hacky.
@@ -750,15 +751,15 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
     fun `callCompilerAsync$kotlin_gradle_plugin`(
         args: K2MetadataCompilerArguments,
         sourceRoots: SourceRoots,
-        changedFiles: ChangedFiles,
-        taskOutputsBackup: TaskOutputsBackup?,
+        inputChanges: InputChanges,
     ) {
+        val changedFiles = getChangedFiles(inputChanges, incrementalProps)
         if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
             clearIncCache()
         } else {
             args.addChangedFiles(changedFiles)
         }
-        super.callCompilerAsync(args, sourceRoots, changedFiles, taskOutputsBackup)
+        super.callCompilerAsync(args, sourceRoots, inputChanges)
     }
 }
 
