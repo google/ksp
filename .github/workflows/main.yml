@@ -4,17 +4,19 @@ name: CI
 
 on:
   push:
-    branches: [ main, kotlin-1.6.0 ]
+    branches: [ main, kotlin-1.6.0, 1.0.0-release ]
   pull_request:
-    branches: [ main, kotlin-1.6.0 ]
+    branches: [ main, kotlin-1.6.0, 1.0.0-release ]
 
 jobs:
   build-and-test:
     strategy:
       fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Setup Java 9
