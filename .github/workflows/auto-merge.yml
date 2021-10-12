@@ -30,7 +30,7 @@ jobs:
         MERGE_BASE=$(git merge-base HEAD origin/main)
         CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
         PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
-        VERSION_BUMPS=$(git log --pretty=%H $MERGE_BASE..origin/main third_party/prebuilt/repo .github)
+        VERSION_BUMPS=$(git log --pretty=%H $MERGE_BASE..origin/main third_party/prebuilt/repo)
         TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS") <(echo "$CANDIDATES") | tac)
         if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
 
