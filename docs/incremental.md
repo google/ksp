@@ -49,6 +49,28 @@ Here's a summary for readers familiar with Java annotation processing:
 * In an *aggregating* Java annotation processor, some outputs can be *isolating* and some be
 *aggregating* in KSP.
 
+
+### Aggregating v.s. Isolating: how it is implemented?
+The dependencies are calculated by the association of input and output files, instead of annotations.
+Note that it is a many-to-many relation.
+
+The dirtyness propagation rules due to input-output associations are:
+1. If an input file is changed, it will always be reprocessed.
+2. If an input file is changed, and it is associated with an output, then all other input files associated with the
+   same output will also be reprocessed. Note that this is transitive, i.e., invalidation happens repeatedly until
+   there is no new dirty file.
+3. All input files that are associated with one or more aggregating outputs will be reprocessed.
+   In other words, if an input file isn't associated with any aggregating outputs, it won't be reprocessed
+   (unless it meets 1. or 2. in the above).
+
+Reasons are:
+1. If an input is changed, new information can be introduced and therefore processors need to run again with the input.
+2. An output is made out of a set of inputs. Processors may need all the inputs to regenerate the output.
+3. `aggregating=true` means that an output may potentially depend on new information, which can come from either new
+   files, or changed, existing files.
+   `aggregating=false` means that processor is sure that the information only comes from certain input files and never
+   from other or new files.
+
 ## Example 1
 A processor generates `outputForA` after reading class `A` in `A.kt` and class `B` in `B.kt`,
 where `A` extends `B`. The processor got `A` by `Resolver.getSymbolsWithAnnotation` and then got
