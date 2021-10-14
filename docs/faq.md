@@ -42,6 +42,11 @@ With KSP version `major.minor.patch`,
 Usually a corresponding KSP release is available within a couple of days after a new Kotlin version is released,
 including the pre-releases (e.g., M1/M2/RC).
 
+## Besides Kotlin, are there other version requirements to libraries?
+Here is a list requirements of libraries / infrastructures:
+* Android Gradle Plugin 4.1.0+
+* Gradle 6.5+
+
 ## What is KSP’s future roadmap?
 The following items have been planned:
 * Support [new Kotlin compiler](https://kotlinlang.org/docs/roadmap.html)
