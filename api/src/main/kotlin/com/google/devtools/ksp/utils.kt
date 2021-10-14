@@ -414,7 +414,7 @@ private fun KSAnnotation.asAnnotation(
     annotationInterface: Class<*>,
 ): Any {
     return Proxy.newProxyInstance(
-        this.javaClass.classLoader, arrayOf(annotationInterface),
+        annotationInterface.classLoader, arrayOf(annotationInterface),
         this.createInvocationHandler(annotationInterface)
     ) as Proxy
 }
