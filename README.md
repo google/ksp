@@ -158,6 +158,7 @@ Some handy links:
 * [Reference for Java annotation processor authors](/docs/reference.md)
 * [Incremental processing notes](/docs/incremental.md)
 * [Multiple round processing notes](/docs/multi-round.md)
+* [KSP on multiplatform projects](/docs/kmp.md)
 * [Contributor guide](CONTRIBUTING.md)
 * [FAQ](/docs/faq.md)
 
