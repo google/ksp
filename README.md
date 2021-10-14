@@ -159,6 +159,7 @@ Some handy links:
 * [Incremental processing notes](/docs/incremental.md)
 * [Multiple round processing notes](/docs/multi-round.md)
 * [KSP on multiplatform projects](/docs/kmp.md)
+* [Running KSP from command line](/docs/cmdline.md)
 * [Contributor guide](CONTRIBUTING.md)
 * [FAQ](/docs/faq.md)
 
