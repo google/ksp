@@ -451,7 +451,12 @@ private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> Any.asEnum(returnType: Class<T>): T =
-    returnType.getDeclaredMethod("valueOf", String::class.java).invoke(null, this.toString()) as T
+  returnType.getDeclaredMethod("valueOf", String::class.java)
+    .invoke(
+      null,
+      // Change from upstream KSP - pull out the simple name to safely look it up
+      (this as KSType).declaration.simpleName.getShortName()
+    ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
 
