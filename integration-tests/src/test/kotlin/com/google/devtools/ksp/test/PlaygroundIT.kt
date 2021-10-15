@@ -89,6 +89,16 @@ class PlaygroundIT {
         }
     }
 
+    @Test
+    fun testAllWarningsAsErrors() {
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp {\n  allWarningsAsErrors = true\n}\n")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.withArguments("build").buildAndFail().let { result ->
+            Assert.assertTrue(result.output.contains("This is a harmless warning."))
+        }
+    }
+
     // Compiler's test infra report this kind of error before KSP, so it is not testable there.
     @Test
     fun testNoFunctionName() {

@@ -110,6 +110,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             classpath: Configuration,
             sourceSetName: String,
             isIncremental: Boolean,
+            allWarningsAsErrors: Boolean,
         ): List<SubpluginOption> {
             val options = mutableListOf<SubpluginOption>()
             options += SubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName).path)
@@ -124,6 +125,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 project.findProperty("ksp.incremental.log")?.toString() ?: "false"
             )
             options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
+            options += SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
             options += FilesSubpluginOption("apclasspath", classpath.toList())
 
             kspExtension.apOptions.forEach {
@@ -211,7 +213,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspExtension,
                         processorClasspath,
                         sourceSetName,
-                        isIncremental
+                        isIncremental,
+                        kspExtension.allWarningsAsErrors
                     )
                 }
             )
