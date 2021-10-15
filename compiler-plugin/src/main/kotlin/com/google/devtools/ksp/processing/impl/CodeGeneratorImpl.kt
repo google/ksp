@@ -67,28 +67,27 @@ class CodeGeneratorImpl(
         extensionName: String
     ): OutputStream {
         val path = pathOf(packageName, fileName, extensionName)
-        if (fileOutputStreamMap[path] == null) {
-            if (fileMap[path] == null) {
-                val file = File(path)
-                val parentFile = file.parentFile
-                if (!parentFile.exists() && !parentFile.mkdirs()) {
-                    throw IllegalStateException("failed to make parent directories.")
-                }
-                file.writeText("")
-                fileMap[path] = file
-                val sources = if (dependencies.isAllSources) {
-                    allSources + anyChangesWildcard
-                } else {
-                    if (dependencies.aggregating) {
-                        dependencies.originatingFiles + anyChangesWildcard
-                    } else {
-                        dependencies.originatingFiles
-                    }
-                }
-                associate(sources, path)
-            }
-            fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
+        val file = File(path)
+        if (path in fileMap) {
+            throw FileAlreadyExistsException(file)
         }
+        val parentFile = file.parentFile
+        if (!parentFile.exists() && !parentFile.mkdirs()) {
+            throw IllegalStateException("failed to make parent directories.")
+        }
+        file.writeText("")
+        fileMap[path] = file
+        val sources = if (dependencies.isAllSources) {
+            allSources + anyChangesWildcard
+        } else {
+            if (dependencies.aggregating) {
+                dependencies.originatingFiles + anyChangesWildcard
+            } else {
+                dependencies.originatingFiles
+            }
+        }
+        associate(sources, path)
+        fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
         return fileOutputStreamMap[path]!!
     }
 
