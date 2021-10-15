@@ -108,4 +108,17 @@ class PlaygroundIT {
         buildAndFileAndCheck()
         project.restore("workload/src/main/java/com/example/A.kt")
     }
+
+    @Test
+    fun testRewriteFile() {
+        File(
+            project.root,
+            "test-processor/src/main/resources/META-INF/services/" +
+                "com.google.devtools.ksp.processing.SymbolProcessorProvider"
+        ).writeText("RewriteProcessorProvider")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.withArguments("build").buildAndFail().let { result ->
+            Assert.assertTrue(result.output.contains("kotlin.io.FileAlreadyExistsException"))
+        }
+    }
 }
