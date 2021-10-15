@@ -86,9 +86,6 @@ annotation class ParametersTestAnnotation(
     val intValue: Int = 6,
     val longValue: Long = 7L,
     val stringValue: String = "emptystring",
-    // fails on getting the arguments from the KSAnnotation when no value is set for the kClassValue in
-    // the declaration. Throws an NPE with using a default value
-    // https://github.com/google/ksp/issues/53
     val kClassValue: KClass<*> = ParametersTestAnnotation::class,
     val enumValue: TestEnum = TestEnum.NONE,
 )

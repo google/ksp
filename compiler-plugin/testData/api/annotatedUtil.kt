@@ -23,8 +23,8 @@
 // ByType: com.google.devtools.ksp.processor.ParametersTestAnnotation[booleanValue=true, byteValue=5, shortValue=202, charValue=k, doubleValue=5.12, floatValue=123.3, intValue=2, longValue=4, stringValue=someValue, kClassValue=class java.lang.Throwable, enumValue=VALUE1]
 // Test: ParametersTestAnnotationWithDefaultsTest
 // IsPresent: class com.google.devtools.ksp.processor.ParametersTestAnnotation
-// ByType: com.google.devtools.ksp.processor.ParametersTestAnnotation[kClassValue=interface com.google.devtools.ksp.processor.ParametersTestAnnotation, booleanValue=false, byteValue=2, shortValue=3, charValue=b, doubleValue=4.0, floatValue=5.0, intValue=6, longValue=7, stringValue=emptystring, enumValue=NONE]
-// ByType: com.google.devtools.ksp.processor.ParametersTestAnnotation[kClassValue=interface com.google.devtools.ksp.processor.ParametersTestAnnotation, booleanValue=false, byteValue=2, shortValue=3, charValue=b, doubleValue=4.0, floatValue=5.0, intValue=6, longValue=7, stringValue=emptystring, enumValue=NONE]
+// ByType: com.google.devtools.ksp.processor.ParametersTestAnnotation[booleanValue=false, byteValue=2, shortValue=3, charValue=b, doubleValue=4.0, floatValue=5.0, intValue=6, longValue=7, stringValue=emptystring, kClassValue=interface com.google.devtools.ksp.processor.ParametersTestAnnotation, enumValue=NONE]
+// ByType: com.google.devtools.ksp.processor.ParametersTestAnnotation[booleanValue=false, byteValue=2, shortValue=3, charValue=b, doubleValue=4.0, floatValue=5.0, intValue=6, longValue=7, stringValue=emptystring, kClassValue=interface com.google.devtools.ksp.processor.ParametersTestAnnotation, enumValue=NONE]
 // Test: ParametersTestWithNegativeDefaultsAnnotationTest
 // IsPresent: class com.google.devtools.ksp.processor.ParametersTestWithNegativeDefaultsAnnotation
 // ByType: com.google.devtools.ksp.processor.ParametersTestWithNegativeDefaultsAnnotation[byteValue=-2, shortValue=-3, doubleValue=-4.0, floatValue=-5.0, intValue=-6, longValue=-7]
@@ -56,8 +56,6 @@ annotation class ParametersTestAnnotation(
     val intValue: Int = 6,
     val longValue: Long = 7L,
     val stringValue: String = "emptystring",
-    // fails on getting the arguments from the KSAnnotation when no value is set for the kClassValue in
-    // the declaration. Throws an NPE with using a default value
     val kClassValue: KClass<*> = ParametersTestAnnotation::class,
     val enumValue: TestEnum = TestEnum.NONE,
 )
@@ -120,8 +118,8 @@ class OnlyTestAnnotation
 @Test
 class ParametersTestAnnotationWithValuesTest
 
-@ParametersTestAnnotation(kClassValue = ParametersTestAnnotation::class)
-@ParametersTestAnnotation(kClassValue = ParametersTestAnnotation::class)
+@ParametersTestAnnotation
+@ParametersTestAnnotation
 @Test
 class ParametersTestAnnotationWithDefaultsTest
 
