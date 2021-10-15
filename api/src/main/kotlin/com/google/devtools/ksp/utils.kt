@@ -356,11 +356,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                     "$methodName=$value"
                 }.toList()
         } else {
-            val argument = try {
-                arguments.first { it.name?.asString() == method.name }
-            } catch (e: NullPointerException) {
-                throw IllegalArgumentException("This is a bug using the default KClass for an annotation", e)
-            }
+            val argument = arguments.first { it.name?.asString() == method.name }
             when (val result = argument.value ?: method.defaultValue) {
                 is Proxy -> result
                 is List<*> -> {
@@ -378,8 +374,18 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
                         method.returnType.name == "java.lang.Class" -> {
-                            val value = { (result as KSType).asClass() }
-                            cache.getOrPut(Pair(method.returnType, result), value)
+                            cache.getOrPut(Pair(method.returnType, result)) {
+                                when (result) {
+                                    is KSType -> result.asClass()
+                                    // Handles com.intellij.psi.impl.source.PsiImmediateClassType using reflection
+                                    // since api doesn't contain a reference to this
+                                    else -> Class.forName(
+                                        result.javaClass.methods
+                                            .first { it.name == "getCanonicalText" }
+                                            .invoke(result, false) as String
+                                    )
+                                }
+                            }
                         }
                         method.returnType.name == "byte" -> {
                             val value = { result.asByte() }
