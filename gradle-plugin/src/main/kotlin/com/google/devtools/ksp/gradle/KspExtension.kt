@@ -37,4 +37,7 @@ open class KspExtension {
     // Note that it depends on behaviors of other Gradle plugins, that may bring surprises and can be hard to debug.
     // Use your discretion.
     open var allowSourcesFromOtherPlugins: Boolean = false
+
+    // Treat all warning as errors.
+    open var allWarningsAsErrors: Boolean = false
 }

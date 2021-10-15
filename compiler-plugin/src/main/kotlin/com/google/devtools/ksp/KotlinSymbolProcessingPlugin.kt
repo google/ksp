@@ -71,6 +71,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         KspCliOption.KNOWN_REMOVED_OPTION -> knownRemoved.addAll(value.split(File.pathSeparator).map { File(it) })
         KspCliOption.INCREMENTAL_OPTION -> incremental = value.toBoolean()
         KspCliOption.INCREMENTAL_LOG_OPTION -> incrementalLog = value.toBoolean()
+        KspCliOption.ALL_WARNINGS_AS_ERRORS_OPTION -> allWarningsAsErrors = value.toBoolean()
         KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
     }
 }
@@ -88,7 +89,7 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         }?.build() ?: return
         val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
             ?: throw IllegalStateException("message collector not found!")
-        val logger = MessageCollectorBasedKSPLogger(messageCollector)
+        val logger = MessageCollectorBasedKSPLogger(messageCollector, options.allWarningsAsErrors)
         if (options.processingClasspath.isNotEmpty()) {
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
@@ -205,6 +206,14 @@ enum class KspCliOption(
         false
     ),
 
+    ALL_WARNINGS_AS_ERRORS_OPTION(
+        "allWarningsAsErrors",
+        "<allWarningsAsErrors>",
+        "treat all warnings as errors",
+        false,
+        false
+    ),
+
     CHANGED_CLASSES_OPTION(
         "changedClasses",
         "<changedClasses>",
@@ -236,6 +245,7 @@ class KspOptions(
     val kspOutputDir: File,
     val incremental: Boolean,
     val incrementalLog: Boolean,
+    val allWarningsAsErrors: Boolean,
     val changedClasses: List<String>,
 ) {
     class Builder {
@@ -260,6 +270,7 @@ class KspOptions(
         var kspOutputDir: File? = null
         var incremental: Boolean = false
         var incrementalLog: Boolean = false
+        var allWarningsAsErrors: Boolean = false
         var changedClasses: MutableList<String> = mutableListOf()
 
         fun build(): KspOptions {
@@ -270,7 +281,8 @@ class KspOptions(
                 kotlinOutputDir!!,
                 resourceOutputDir!!,
                 processingClasspath, processors, processingOptions,
-                knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog, changedClasses
+                knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog,
+                allWarningsAsErrors, changedClasses
             )
         }
     }
