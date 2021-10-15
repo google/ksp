@@ -1,6 +1,6 @@
 # Quickstart
 
-[Here's](https://github.com/google/ksp/releases/download/1.5.30-1.0.0/playground.zip) a sample processor that you can check out.
+[Here's](https://github.com/google/ksp/tree/main/examples/playground) a sample processor that you can check out.
 
 ## Create a processor of your own
 
