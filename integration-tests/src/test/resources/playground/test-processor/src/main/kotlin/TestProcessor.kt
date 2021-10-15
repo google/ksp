@@ -18,6 +18,7 @@ class TestProcessor : SymbolProcessor {
         codeGenerator: CodeGenerator,
         logger: KSPLogger
     ) {
+        logger.warn("This is a harmless warning.")
         this.codeGenerator = codeGenerator
         file = codeGenerator.createNewFile(Dependencies(false), "", "TestProcessor", "log")
         emit("TestProcessor: init($options)", "")

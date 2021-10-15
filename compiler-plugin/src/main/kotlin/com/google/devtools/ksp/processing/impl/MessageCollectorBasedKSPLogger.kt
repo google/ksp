@@ -26,7 +26,10 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import java.io.PrintWriter
 import java.io.StringWriter
 
-class MessageCollectorBasedKSPLogger(private val messageCollector: MessageCollector) : KSPLogger {
+class MessageCollectorBasedKSPLogger(
+    private val messageCollector: MessageCollector,
+    private val allWarningsAsErrors: Boolean
+) : KSPLogger {
 
     companion object {
         const val PREFIX = "[ksp] "
@@ -51,7 +54,8 @@ class MessageCollectorBasedKSPLogger(private val messageCollector: MessageCollec
     }
 
     override fun warn(message: String, symbol: KSNode?) {
-        recordedEvents.add(Event(CompilerMessageSeverity.WARNING, convertMessage(message, symbol)))
+        val severity = if (allWarningsAsErrors) CompilerMessageSeverity.ERROR else CompilerMessageSeverity.WARNING
+        recordedEvents.add(Event(severity, convertMessage(message, symbol)))
     }
 
     override fun error(message: String, symbol: KSNode?) {
