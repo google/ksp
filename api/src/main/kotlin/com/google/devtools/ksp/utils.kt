@@ -455,7 +455,7 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
         .invoke(
             null,
             if (this is KSType) {
-                (this as KSType).declaration.simpleName.getShortName()
+                this.declaration.simpleName.getShortName()
             } else {
                 this.toString()
             }
