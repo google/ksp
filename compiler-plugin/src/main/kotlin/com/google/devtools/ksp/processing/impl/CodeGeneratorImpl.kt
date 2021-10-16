@@ -17,8 +17,10 @@
 
 package com.google.devtools.ksp.processing.impl
 
+import com.google.devtools.ksp.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
 import java.io.FileOutputStream
@@ -94,6 +96,19 @@ class CodeGeneratorImpl(
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
         val path = pathOf(packageName, fileName, extensionName)
         associate(sources, path)
+    }
+
+    override fun associateWithClasses(
+        classes: List<KSClassDeclaration>,
+        packageName: String,
+        fileName: String,
+        extensionName: String
+    ) {
+        val path = pathOf(packageName, fileName, extensionName)
+        val files = classes.map {
+            it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
+        }
+        associate(files, path)
     }
 
     private fun associate(sources: List<KSFile>, outputPath: String) {

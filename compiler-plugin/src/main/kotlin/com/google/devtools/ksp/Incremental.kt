@@ -319,7 +319,10 @@ class IncrementalContext(
             }
         }
 
-        initialSet.forEach {
+        val cpSet = options.changedClasses.map { fqn ->
+            NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
+        }.toSet()
+        (initialSet + cpSet).forEach {
             visit(it)
         }
 

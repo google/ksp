@@ -15,15 +15,27 @@ class IncrementalCPIT {
     val src2Dirty = listOf(
         "l1/src/main/kotlin/p1/L1.kt" to setOf(
             "w: [ksp] p1/K1.kt",
+            "w: [ksp] processing done",
         ),
         "l2/src/main/kotlin/p1/L2.kt" to setOf(
             "w: [ksp] p1/K1.kt",
             "w: [ksp] p1/K2.kt",
+            "w: [ksp] processing done",
         ),
         "l3/src/main/kotlin/p1/L3.kt" to setOf(
             "w: [ksp] p1/K3.kt",
+            "w: [ksp] processing done",
+        ),
+        "l4/src/main/kotlin/p1/L4.kt" to setOf(
+            "w: [ksp] p1/K3.kt",
+            "w: [ksp] processing done",
+        ),
+        "l5/src/main/kotlin/p1/L5.kt" to setOf(
+            "w: [ksp] processing done",
         ),
     )
+
+    val emptyMessage = setOf("w: [ksp] processing done")
 
     @Test
     fun testCPChanges() {
@@ -57,7 +69,7 @@ class IncrementalCPIT {
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
                 // Non-signature changes should not affect anything.
-                Assert.assertEquals(emptySet<String>(), dirties)
+                Assert.assertEquals(emptyMessage, dirties)
             }
         }
     }

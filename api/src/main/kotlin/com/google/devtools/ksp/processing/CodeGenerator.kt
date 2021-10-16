@@ -77,6 +77,25 @@ interface CodeGenerator {
      */
     fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String = "kt")
 
+    /**
+     * Associate [classes] to an output file.
+     *
+     * @param classes are [KSClassDeclaration]s from which this output is built. Only those that are obtained directly
+     *                     from [Resolver] are required.
+     * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
+     * @param fileName file name
+     * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
+     *                      Otherwise its creation is only considered in incremental processing.
+     * @return OutputStream for writing into files.
+     * @see [CodeGenerator] for more details.
+     */
+    fun associateWithClasses(
+        classes: List<KSClassDeclaration>,
+        packageName: String,
+        fileName: String,
+        extensionName: String = "kt"
+    )
+
     val generatedFile: Collection<File>
 }
 
