@@ -21,7 +21,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 /**
  * [SymbolProcessor] is the interface used by plugins to integrate into Kotlin Symbol Processing.
  * SymbolProcessor supports multiple round execution, a processor may return a list of deferred symbols at the end
- * of every round, which will be passed to proceesors again in the next round, together with the newly generated symbols.
+ * of every round, which will be passed to processors again in the next round, together with the newly generated symbols.
  * Upon Exceptions, KSP will try to distinguish the exceptions from KSP and exceptions from processors.
  * Exceptions will result in a termination of processing immediately and be logged as an error in KSPLogger.
  * Exceptions from KSP should be reported to KSP developers for further investigation.
