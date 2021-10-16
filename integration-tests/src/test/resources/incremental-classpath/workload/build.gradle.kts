@@ -19,6 +19,8 @@ dependencies {
     implementation(project(":l1"))
     implementation(project(":l2"))
     implementation(project(":l3"))
+    implementation(project(":l4"))
+    implementation(project(":l5"))
     testImplementation("junit:junit:4.12")
     ksp(project(":validator"))
 }

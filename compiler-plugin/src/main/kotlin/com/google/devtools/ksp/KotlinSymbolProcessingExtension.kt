@@ -300,35 +300,45 @@ abstract class AbstractKotlinSymbolProcessingExtension(
     }
 }
 
-/**
- * Used when an output potentially depends on new information.
- */
-internal class AnyChanges(val baseDir: File) : KSFile {
+internal abstract class KSVirtualFile(val baseDir: File, val name: String) : KSFile {
     override val annotations: Sequence<KSAnnotation>
-        get() = throw Exception("AnyChanges should not be used.")
+        get() = throw Exception("$name should not be used.")
 
     override val declarations: Sequence<KSDeclaration>
-        get() = throw Exception("AnyChanges should not be used.")
+        get() = throw Exception("$name should not be used.")
 
     override val fileName: String
-        get() = "<AnyChanges is a virtual file; DO NOT USE.>"
+        get() = "<$name is a virtual file; DO NOT USE.>"
 
     override val filePath: String
         get() = File(baseDir, fileName).path
 
     override val packageName: KSName
-        get() = throw Exception("AnyChanges should not be used.")
+        get() = throw Exception("$name should not be used.")
 
     override val origin: Origin
-        get() = throw Exception("AnyChanges should not be used.")
+        get() = throw Exception("$name should not be used.")
 
     override val location: Location
-        get() = throw Exception("AnyChanges should not be used.")
+        get() = throw Exception("$name should not be used.")
 
     override val parent: KSNode?
-        get() = throw Exception("AnyChanges should not be used.")
+        get() = throw Exception("$name should not be used.")
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        throw Exception("AnyChanges should not be used.")
+        throw Exception("$name should not be used.")
     }
+}
+
+/**
+ * Used when an output potentially depends on new information.
+ */
+internal class AnyChanges(baseDir: File) : KSVirtualFile(baseDir, "AnyChanges")
+
+/**
+ * Used for classes from classpath, i.e., classes without source files.
+ */
+internal class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, "NoSourceFile") {
+    override val fileName: String
+        get() = "<NoSourceFile for $fqn is a virtual file; DO NOT USE.>"
 }
