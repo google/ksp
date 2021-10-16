@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
@@ -32,6 +33,7 @@ class Validator : SymbolProcessor {
             }
         }
 
+        // for each file, create an output from it and everything reachable from it.
         val files = resolver.getAllFiles()
         files.forEach { file ->
             logger.warn("${file.packageName.asString()}/${file.fileName}")
@@ -48,6 +50,19 @@ class Validator : SymbolProcessor {
             }
             output.close()
         }
+
+        // create an output from k3 + l4
+        val k3 = resolver.getClassDeclarationByName("p1.K3")!!
+        val l4 = resolver.getClassDeclarationByName("p1.L4")!!
+        codeGenerator.createNewFile(Dependencies(false), "p1", "l4", "log")
+        codeGenerator.associateWithClasses(listOf(k3, l4), "p1", "l4", "log")
+
+        // create an output from l5
+        val l5 = resolver.getClassDeclarationByName("p1.L5")!!
+        codeGenerator.createNewFile(Dependencies(false), "p1", "l5", "log")
+        codeGenerator.associateWithClasses(listOf(l5), "p1", "l5", "log")
+        logger.warn("processing done")
+
         processed = true
         return emptyList()
     }
