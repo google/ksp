@@ -454,8 +454,11 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
     returnType.getDeclaredMethod("valueOf", String::class.java)
         .invoke(
             null,
-            // Change from upstream KSP - pull out the simple name to safely look it up
-            (this as KSType).declaration.simpleName.getShortName()
+            if (this is KSType) {
+                (this as KSType).declaration.simpleName.getShortName()
+            } else {
+                this.toString()
+            }
         ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
