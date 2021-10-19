@@ -135,7 +135,7 @@ public class ParametersTestAnnotationWithValuesTest {}
     longValue = 4,
     stringValue = "someValue",
     kClassValue = java.lang.Throwable.class,
-        enumValue = TestEnum.VALUE1
+    enumValue = TestEnum.VALUE1
 )
 @Test
 public class ParametersTestAnnotationWithIntegerLiteralValuesTest {}
