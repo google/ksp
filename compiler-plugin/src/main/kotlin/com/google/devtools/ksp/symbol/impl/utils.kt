@@ -109,7 +109,8 @@ private val modifierMap = mapOf(
     KtTokens.CROSSINLINE_KEYWORD to Modifier.CROSSINLINE,
     KtTokens.REIFIED_KEYWORD to Modifier.REIFIED,
     KtTokens.EXPECT_KEYWORD to Modifier.EXPECT,
-    KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL
+    KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL,
+    KtTokens.CONST_KEYWORD to Modifier.CONST
 )
 
 fun KtModifierList?.toKSModifiers(): Set<Modifier> {
