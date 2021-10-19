@@ -701,6 +701,10 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         }
         args.addPluginOptions(options.get())
         args.destination = destination.canonicalPath
+        val classpathList = classpath.files.filter { it.exists() }.toMutableList()
+        args.classpath = classpathList.joinToString(File.pathSeparator)
+        args.friendPaths = friendPaths.files.map { it.absolutePath }.toTypedArray()
+        args.refinesPaths = refinesMetadataPaths.map { it.absolutePath }.toTypedArray()
     }
 
     // Overrding an internal function is hacky.
