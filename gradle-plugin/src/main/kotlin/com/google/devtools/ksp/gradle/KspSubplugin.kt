@@ -659,6 +659,7 @@ abstract class KspTaskJS @Inject constructor(
     }
 }
 
+@CacheableTask
 abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl()), KspTask {
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
