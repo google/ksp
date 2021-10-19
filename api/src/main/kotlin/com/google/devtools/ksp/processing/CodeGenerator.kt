@@ -72,7 +72,6 @@ interface CodeGenerator {
      * @param fileName file name
      * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
      *                      Otherwise its creation is only considered in incremental processing.
-     * @return OutputStream for writing into files.
      * @see [CodeGenerator] for more details.
      */
     fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String = "kt")
@@ -86,7 +85,6 @@ interface CodeGenerator {
      * @param fileName file name
      * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
      *                      Otherwise its creation is only considered in incremental processing.
-     * @return OutputStream for writing into files.
      * @see [CodeGenerator] for more details.
      */
     fun associateWithClasses(
