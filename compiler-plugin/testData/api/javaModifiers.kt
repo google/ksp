@@ -49,7 +49,7 @@
 // NestedKotlinClass.<init>: FINAL PUBLIC
 // OuterKotlinClass.Companion:
 // Companion.companionMethod:
-// Companion.companionField:
+// Companion.companionField: CONST
 // Companion.privateCompanionMethod: PRIVATE
 // Companion.privateCompanionField: PRIVATE
 // Companion.jvmStaticCompanionMethod:
@@ -189,7 +189,7 @@ open class OuterKotlinClass {
     open class NestedKotlinClass
     companion object {
         fun companionMethod() {}
-        val companionField:String = ""
+        const val companionField:String = ""
         private fun privateCompanionMethod() {}
         private val privateCompanionField:String = ""
         @JvmStatic
