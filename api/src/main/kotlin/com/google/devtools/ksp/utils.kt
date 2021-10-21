@@ -334,6 +334,7 @@ fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T
 fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean =
     getAnnotationsByType(annotationKClass).firstOrNull() != null
 
+@KspExperimental
 @Suppress("UNCHECKED_CAST")
 private fun <T : Annotation> KSAnnotation.toAnnotation(annotationClass: Class<T>): T {
     return Proxy.newProxyInstance(
@@ -343,6 +344,7 @@ private fun <T : Annotation> KSAnnotation.toAnnotation(annotationClass: Class<T>
     ) as T
 }
 
+@KspExperimental
 @Suppress("TooGenericExceptionCaught")
 private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHandler {
     val cache = ConcurrentHashMap<Pair<Class<*>, Any>, Any>(arguments.size)
@@ -415,6 +417,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
     }
 }
 
+@KspExperimental
 @Suppress("UNCHECKED_CAST")
 private fun KSAnnotation.asAnnotation(
     annotationInterface: Class<*>,
@@ -425,6 +428,7 @@ private fun KSAnnotation.asAnnotation(
     ) as Proxy
 }
 
+@KspExperimental
 @Suppress("UNCHECKED_CAST")
 private fun List<*>.asArray(method: Method) =
     when (method.returnType.componentType.name) {
@@ -436,9 +440,7 @@ private fun List<*>.asArray(method: Method) =
         "float" -> (this as List<Float>).toFloatArray()
         "int" -> (this as List<Int>).toIntArray()
         "long" -> (this as List<Long>).toLongArray()
-        "java.lang.Class" -> (this as List<KSType>).map {
-            Class.forName(it.declaration.qualifiedName!!.asString())
-        }.toTypedArray()
+        "java.lang.Class" -> (this as List<KSType>).asClasses().toTypedArray()
         "java.lang.String" -> (this as List<String>).toTypedArray()
         else -> { // arrays of enums or annotations
             when {
@@ -489,4 +491,23 @@ private fun Any.asFloat(): Float = if (this is Int) this.toFloat() else this as 
 
 private fun Any.asDouble(): Double = if (this is Int) this.toDouble() else this as Double
 
-private fun KSType.asClass() = Class.forName(this.declaration.qualifiedName!!.asString())
+// for Class/KClass member
+@KspExperimental
+class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) : RuntimeException(cause)
+// for Class[]/Array<KClass<*>> member.
+@KspExperimental
+class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) : RuntimeException(cause)
+
+@KspExperimental
+private fun KSType.asClass() = try {
+    Class.forName(this.declaration.qualifiedName!!.asString())
+} catch (e: Exception) {
+    throw KSTypeNotPresentException(this, e)
+}
+
+@KspExperimental
+private fun List<KSType>.asClasses() = try {
+    this.map(KSType::asClass)
+} catch (e: Exception) {
+    throw KSTypesNotPresentException(this, e)
+}
