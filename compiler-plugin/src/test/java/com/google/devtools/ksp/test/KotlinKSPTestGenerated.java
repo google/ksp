@@ -62,6 +62,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/annotationOnConstructorParameter.kt");
     }
 
+    @TestMetadata("annotationWithArbitraryClassValue.kt")
+    public void testAnnotationWithArbitraryClassValue() throws Exception {
+        runTest("testData/api/annotationWithArbitraryClassValue.kt");
+    }
+
     @TestMetadata("annotationValue.kt")
     public void testAnnotationValue() throws Exception {
         runTest("testData/api/annotationValue.kt");
