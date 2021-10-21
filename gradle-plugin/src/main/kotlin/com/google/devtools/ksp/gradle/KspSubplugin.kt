@@ -536,6 +536,10 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         // * It doesn't consider private / internal changes when computing dirty sets.
         // * It compiles iteratively; Sources can be compiled in different rounds.
         incremental = false
+
+        // Mute a warning from ScriptingGradleSubplugin, which tries to get `sourceSetName` before this task is
+        // configured.
+        sourceSetName.set("main")
     }
 
     override fun setupCompilerArgs(
