@@ -90,6 +90,8 @@ class KMPImplementedIT {
             result.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SUCCESS ||
                 result.task(":workload:kspKotlinMingwX64")?.outcome == TaskOutcome.SKIPPED
         )
+
+        Assert.assertFalse(result.output.contains("kotlin scripting plugin:"))
     }
 
     @Test
