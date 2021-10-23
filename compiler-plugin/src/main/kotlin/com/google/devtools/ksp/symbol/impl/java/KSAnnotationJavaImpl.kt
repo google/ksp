@@ -118,6 +118,15 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             }
         }
         return when (result) {
+            is PsiPrimitiveType -> {
+                // map Java primitives like int and short to Kotlin counterparts like kotlin.Int, kotlin.Short.
+                KSTypeImpl.getCached(ResolverImpl.instance.resolveJavaType(result))
+            }
+            is PsiArrayType -> {
+                // map Java Array to Kotlin Array.
+                // String[] -> Array<String> with platform nullability.
+                KSTypeImpl.getCached(ResolverImpl.instance.resolveJavaType(result))
+            }
             is PsiType -> {
                 ResolverImpl.instance.getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
                     ?: KSErrorType
