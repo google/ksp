@@ -77,6 +77,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/annotationWithDefault.kt");
     }
 
+    @TestMetadata("annotationWithJavaTypeValue.kt")
+    public void testAnnotationWithJavaTypeValue() throws Exception {
+        runTest("testData/api/annotationWithJavaTypeValue.kt");
+    }
+
     @TestMetadata("asMemberOf.kt")
     public void testAsMemberOf() throws Exception {
         runTest("testData/api/asMemberOf.kt");
