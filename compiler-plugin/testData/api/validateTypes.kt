@@ -3,7 +3,12 @@
 // EXPECTED:
 // ErrorInMember invalid
 // goodProp valid
+// badProp invalid
 // errorFun invalid
+// <init> valid
+// SkipErrorInMember valid
+// skipProp valid
+// skipFun valid
 // <init> valid
 // GoodClass valid
 // C valid
@@ -16,7 +21,15 @@ annotation class Anno(val i: Int)
 @Anno(1)
 class ErrorInMember : C {
     val goodProp: Int
+    val badProp: () -> NonExistType
     fun errorFun(): NonExistType {
+
+    }
+}
+
+class SkipErrorInMember {
+    val skipProp: NonExistType
+    fun skipFun(): NonExitType {
 
     }
 }
