@@ -66,7 +66,7 @@ open class KSValidateVisitor(
 
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: KSNode?): Boolean {
         if (function.returnType != null &&
-            !(predicate(function, function.returnType!!) && function.returnType!!.accept(this, data))
+            predicate(function, function.returnType!!) && !function.returnType!!.accept(this, data)
         ) {
             return false
         }
@@ -80,7 +80,7 @@ open class KSValidateVisitor(
     }
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: KSNode?): Boolean {
-        if (predicate(property, property.type) && property.type.resolve().isError) {
+        if (predicate(property, property.type) && !property.type.accept(this, data)) {
             return false
         }
         if (!this.visitDeclaration(property, data)) {
