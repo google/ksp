@@ -22,7 +22,7 @@
 // JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
 // KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
 // KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib,kClassValue:OtherKotlinAnnotation
-// JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
+// JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:JavaAnnotationWithDefaults.LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotation -> a:debugJava,b:default,kClassValue:Array<Array<InnerObj>>
 // JavaAnnotation -> debug:debugJava2,withDefaultValue:OK
@@ -62,9 +62,14 @@ public @interface JavaAnnotationWithDefaults {
     int[] intArrayVal() default {1, 3, 5};
     JavaEnum enumVal() default JavaEnum.DEFAULT;
     JavaEnum[] enumArrayVal() default {JavaEnum.VAL1, JavaEnum.VAL2};
+    LocalEnum localEnumVal() default LocalEnum.LOCAL1;
     OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
     OtherAnnotation[] otherAnnotationArrayVal() default {@OtherAnnotation("v1")};
     OtherKotlinAnnotation kotlinAnnotationLibVal() default @OtherKotlinAnnotation(b = "JavaAnnotationWithDefaults");
+    enum LocalEnum {
+        LOCAL1,
+        LOCAL2
+    }
 }
 
 // FILE: KotlinAnnotationWithDefaults.kt
