@@ -1,8 +1,10 @@
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
 val intellijVersion: String by project
-val kotlinBaseVersion: String by project
 val junitVersion: String by project
+val kotlinVersionFir = "1.6.20-dev-2497"
+val analysisAPIVersion = "1.6.20-dev-3387"
+val libsForTesting by configurations.creating
 
 plugins {
     kotlin("jvm")
@@ -25,16 +27,80 @@ fun ModuleDependency.includeJars(vararg names: String) {
 }
 
 dependencies {
-    implementation(kotlin("stdlib", kotlinBaseVersion))
-    implementation("org.jetbrains.kotlin:high-level-api-for-ide:1.6.255")
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.1")
+    implementation(kotlin("stdlib", kotlinVersionFir))
+    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinVersionFir")
+
+    implementation("org.jetbrains.kotlin:high-level-api-fir-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:high-level-api-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:low-level-api-fir-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:analysis-api-providers-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
 
     implementation(project(":api"))
+
+    libsForTesting(kotlin("stdlib", kotlinVersionFir))
+    libsForTesting(kotlin("test", kotlinVersionFir))
+    libsForTesting(kotlin("script-runtime", kotlinVersionFir))
 }
+
+tasks.register<Copy>("CopyLibsForTesting") {
+    from(configurations.get("libsForTesting"))
+    into("dist/kotlinc/lib")
+    val escaped = Regex.escape(kotlinVersionFir)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+sourceSets.main {
+    java.srcDirs("src/main/kotlin")
+}
+
+fun Project.javaPluginConvention(): JavaPluginConvention = the()
+val JavaPluginConvention.testSourceSet: SourceSet
+    get() = sourceSets.getByName("test")
+val Project.testSourceSet: SourceSet
+    get() = javaPluginConvention().testSourceSet
+
+tasks.test {
+    dependsOn("CopyLibsForTesting")
+    maxHeapSize = "2g"
+
+    systemProperty("idea.is.unit.test", "true")
+    systemProperty("idea.home.path", buildDir)
+    systemProperty("java.awt.headless", "true")
+    environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
+    environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
+    environment("PROJECT_BUILD_DIR", buildDir)
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+
+    var tempTestDir: File? = null
+    doFirst {
+        tempTestDir = createTempDir()
+        systemProperty("java.io.tmpdir", tempTestDir.toString())
+    }
+
+    doLast {
+        tempTestDir?.let { delete(it) }
+    }
+}
+
 repositories {
     flatDir {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
-    maven("https://www.jetbrains.com/intellij-repository/snapshots")
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
+    maven("https://www.jetbrains.com/intellij-repository/releases")
 }
