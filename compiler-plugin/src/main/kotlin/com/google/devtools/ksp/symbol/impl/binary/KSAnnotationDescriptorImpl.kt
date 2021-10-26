@@ -100,7 +100,7 @@ class KSAnnotationDescriptorImpl private constructor(
 }
 
 private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
-    val ksName = KSNameImpl.getCached(this.asSingleFqName().asString())
+    val ksName = KSNameImpl.getCached(this.asSingleFqName().asString().replace("$", "."))
     return ResolverImpl.instance.getClassDeclarationByName(ksName)
 }
 
