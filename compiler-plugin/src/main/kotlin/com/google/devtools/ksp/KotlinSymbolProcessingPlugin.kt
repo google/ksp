@@ -72,6 +72,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         KspCliOption.INCREMENTAL_OPTION -> incremental = value.toBoolean()
         KspCliOption.INCREMENTAL_LOG_OPTION -> incrementalLog = value.toBoolean()
         KspCliOption.ALL_WARNINGS_AS_ERRORS_OPTION -> allWarningsAsErrors = value.toBoolean()
+        KspCliOption.WITH_COMPILATION_OPTION -> withCompilation = value.toBoolean()
         KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
     }
 }
@@ -88,9 +89,12 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
         }?.build() ?: return
         val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
-            ?: throw IllegalStateException("message collector not found!")
+            ?: throw IllegalStateException("ksp: message collector not found!")
         val logger = MessageCollectorBasedKSPLogger(messageCollector, options.allWarningsAsErrors)
         if (options.processingClasspath.isNotEmpty()) {
+            if (options.withCompilation && options.incremental) {
+                throw IllegalStateException("ksp: `incremental` is incompatible with `withCompilation`.")
+            }
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
             AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
             configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, DualLookupTracker())
@@ -214,6 +218,14 @@ enum class KspCliOption(
         false
     ),
 
+    WITH_COMPILATION_OPTION(
+        "withCompilation",
+        "<withCompilation>",
+        "Run processors and compilation in a single compiler invocation",
+        false,
+        false
+    ),
+
     CHANGED_CLASSES_OPTION(
         "changedClasses",
         "<changedClasses>",
@@ -246,6 +258,7 @@ class KspOptions(
     val incremental: Boolean,
     val incrementalLog: Boolean,
     val allWarningsAsErrors: Boolean,
+    val withCompilation: Boolean,
     val changedClasses: List<String>,
 ) {
     class Builder {
@@ -271,6 +284,7 @@ class KspOptions(
         var incremental: Boolean = false
         var incrementalLog: Boolean = false
         var allWarningsAsErrors: Boolean = false
+        var withCompilation: Boolean = false
         var changedClasses: MutableList<String> = mutableListOf()
 
         fun build(): KspOptions {
@@ -282,7 +296,7 @@ class KspOptions(
                 resourceOutputDir!!,
                 processingClasspath, processors, processingOptions,
                 knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog,
-                allWarningsAsErrors, changedClasses
+                allWarningsAsErrors, withCompilation, changedClasses
             )
         }
     }

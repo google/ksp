@@ -103,6 +103,15 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         bindingTrace: BindingTrace,
         componentProvider: ComponentProvider,
     ): AnalysisResult? {
+        // with `withCompilation == true`:
+        // * KSP returns AnalysisResult.RetryWithAdditionalRoots in last round of processing, to notify compiler the generated sources.
+        // * This function will be called again, and returning null tells compiler to fall through with normal compilation.
+        if (finished) {
+            if (!options.withCompilation)
+                throw IllegalStateException("KSP is re-entered unexpectedly.")
+            return null
+        }
+
         rounds++
         if (rounds > MULTI_ROUND_THRESHOLD) {
             logger.warn("Current processing rounds exceeds 100, check processors for potential infinite rounds")
@@ -236,7 +245,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         if (finished) {
             logger.reportAll()
         }
-        return if (finished) {
+        return if (finished && !options.withCompilation) {
             if (logger.hasError())
                 AnalysisResult.compilationError(BindingContext.EMPTY)
             else
