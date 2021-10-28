@@ -104,6 +104,37 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
         presentValueArguments.plus(argumentsFromDefault)
     }
 
+    /*
+     * Don't map Java types in annotation parameters
+     *
+     * Users may specify Java types explicitly by instances of `Class<T>`.
+     * The situation is similar to `getClassDeclarationByName` where we have
+     * decided to keep those Java types not mapped.
+     *
+     * It would be troublesome if users try to use reflection on types that
+     * were mapped to Kotlin builtins, becuase some of those builtins don't
+     * even exist in classpath.
+     *
+     * Therefore, ResolverImpl.resolveJavaType cannot be used.
+     */
+    private fun resolveJavaTypeSimple(psiType: PsiType): KSType {
+        return when (psiType) {
+            is PsiPrimitiveType -> {
+                ResolverImpl.instance.getClassDeclarationByName(psiType.boxedTypeName!!)!!.asStarProjectedType()
+            }
+            is PsiArrayType -> {
+                val componentType = resolveJavaTypeSimple(psiType.componentType)
+                val componentTypeRef = ResolverImpl.instance.createKSTypeReferenceFromKSType(componentType)
+                val typeArgs = listOf(ResolverImpl.instance.getTypeArgument(componentTypeRef, Variance.INVARIANT))
+                ResolverImpl.instance.builtIns.arrayType.replace(typeArgs)
+            }
+            else -> {
+                ResolverImpl.instance.getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType()
+                    ?: KSErrorType
+            }
+        }
+    }
+
     private fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         if (value is PsiAnnotation) {
             return getCached(value)
@@ -118,18 +149,8 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             }
         }
         return when (result) {
-            is PsiPrimitiveType -> {
-                // map Java primitives like int and short to Kotlin counterparts like kotlin.Int, kotlin.Short.
-                KSTypeImpl.getCached(ResolverImpl.instance.resolveJavaType(result))
-            }
-            is PsiArrayType -> {
-                // map Java Array to Kotlin Array.
-                // String[] -> Array<String> with platform nullability.
-                KSTypeImpl.getCached(ResolverImpl.instance.resolveJavaType(result))
-            }
             is PsiType -> {
-                ResolverImpl.instance.getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
-                    ?: KSErrorType
+                resolveJavaTypeSimple(result)
             }
             is PsiLiteralValue -> {
                 result.value
