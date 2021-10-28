@@ -18,10 +18,10 @@
 // EXPECTED:
 // JavaAnnotated
 // JavaAnnotation ->
-// primitives = [Char, Boolean, Byte, Short, Int, Long, Float, Double]
+// primitives = [Character, Boolean, Byte, Short, Integer, Long, Float, Double]
 // objects = [Character, Boolean, Byte, Short, Integer, Long, Float, Double]
-// primitiveArrays = [(CharArray..CharArray?), (BooleanArray..BooleanArray?), (ByteArray..ByteArray?), (ShortArray..ShortArray?), (IntArray..IntArray?), (LongArray..LongArray?), (FloatArray..FloatArray?), (DoubleArray..DoubleArray?)]
-// objectArrays = [(Array<(Char..Char?)>..Array<out (Char..Char?)>?), (Array<(Boolean..Boolean?)>..Array<out (Boolean..Boolean?)>?), (Array<(Byte..Byte?)>..Array<out (Byte..Byte?)>?), (Array<(Short..Short?)>..Array<out (Short..Short?)>?), (Array<(Int..Int?)>..Array<out (Int..Int?)>?), (Array<(Long..Long?)>..Array<out (Long..Long?)>?), (Array<(Float..Float?)>..Array<out (Float..Float?)>?), (Array<(Double..Double?)>..Array<out (Double..Double?)>?), (Array<(String..String?)>..Array<out (String..String?)>?), (Array<(Any..Any?)>..Array<out (Any..Any?)>?)]
+// primitiveArrays = [Array<Character>, Array<Boolean>, Array<Byte>, Array<Short>, Array<Integer>, Array<Long>, Array<Float>, Array<Double>]
+// objectArrays = [Array<Character>, Array<Boolean>, Array<Byte>, Array<Short>, Array<Integer>, Array<Long>, Array<Float>, Array<Double>, Array<String>, Array<Object>]
 // END
 // FILE: a.kt
 
