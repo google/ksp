@@ -33,12 +33,13 @@ interface Resolver {
     /**
      * Get all files in the module / compilation unit.
      *
-     * @return all files generated from last last round of processing in the module.
+     * @return all input files including generated files from previous rounds, note when incremental is enabled, only dirty files up for processing will be returned.
      */
     fun getAllFiles(): Sequence<KSFile>
 
     /**
      * Get all symbols with specified annotation.
+     * Note that in multiple round processing, only symbols from deferred symbols of last round and symbols from newly generated files will be returned in this function.
      *
      * @param annotationName is the fully qualified name of the annotation; using '.' as separator.
      * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.

@@ -27,8 +27,8 @@ override fun process(resolver: Resolver): List<KSAnnotated> {
 
 #### Defer symbols to the next round
 
-Processors can defer the processing of certain symbols to the next round. When you defer a symbol, you're waiting for other processors to provide additional information, and you can continue deferring the symbol as much as needed. Once the other processors provide the required information, the processor can then process the symbol.
-You should only defer invalid symbols which are lacking necessary information. Therefore deferring symbols from classpath is not possible and will be filtered out by KSP.
+Processors can defer the processing of certain symbols to the next round. When a symbol is deferred, processor is waiting for other processors to provide additional information, and processor can continue deferring the symbol as many rounds as needed. Once the other processors provide the required information, the processor can then process the deferred symbol.
+Processor should only defer invalid symbols which are lacking necessary information. Therefore, processors should **NOT** defer symbols from classpath, KSP will also filter out any deferred symbols that are not from source code.
 
 As an example, a processor that creates a builder for an annotated class might require all parameter types of its constructors to be valid (i.e. resolves to a concrete type). In the first round, one of the parameter type is not resolvable. Then in the second round, it became resolvable because of the generated files from first round.
 
@@ -51,7 +51,7 @@ Both newly generated files and existing files are accessible through a `Resolver
 
 #### Changes to getSymbolsAnnotatedWith
 
-To avoid unnecessary reprocessing of symbols, `getSymbolsAnnotatedWith` returns only those symbols found in newly generated files.
+To avoid unnecessary reprocessing of symbols, `getSymbolsAnnotatedWith` returns only those symbols found in newly generated files, together with the symbols from deferred symbols from last round.
 
 
 #### Processor instantiating
