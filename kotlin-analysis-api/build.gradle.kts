@@ -2,8 +2,7 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 
 val intellijVersion: String by project
 val junitVersion: String by project
-val kotlinVersionFir = "1.6.20-dev-2497"
-val analysisAPIVersion = "1.6.20-dev-3387"
+val analysisAPIVersion = "1.6.20-dev-4603"
 val libsForTesting by configurations.creating
 
 plugins {
@@ -28,8 +27,8 @@ fun ModuleDependency.includeJars(vararg names: String) {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.1")
-    implementation(kotlin("stdlib", kotlinVersionFir))
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinVersionFir")
+    implementation(kotlin("stdlib", analysisAPIVersion))
+    implementation("org.jetbrains.kotlin:kotlin-compiler:$analysisAPIVersion")
 
     implementation("org.jetbrains.kotlin:high-level-api-fir-for-ide:$analysisAPIVersion") {
         isTransitive = false
@@ -46,18 +45,21 @@ dependencies {
     implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$analysisAPIVersion") {
         isTransitive = false
     }
+    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
 
     implementation(project(":api"))
 
-    libsForTesting(kotlin("stdlib", kotlinVersionFir))
-    libsForTesting(kotlin("test", kotlinVersionFir))
-    libsForTesting(kotlin("script-runtime", kotlinVersionFir))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
-    val escaped = Regex.escape(kotlinVersionFir)
+    val escaped = Regex.escape(analysisAPIVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
