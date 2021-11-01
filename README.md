@@ -187,7 +187,7 @@ The table below includes a list of popular libraries on Android and their variou
 |Room|[Experimentally supported](https://developer.android.com/jetpack/androidx/releases/room#2.3.0-beta02)|   |
 |Moshi|[Experimentally supported](https://github.com/ZacSweers/MoshiX/tree/main/moshi-ksp)|   |
 |Kotshi|[Experimentally supported](https://github.com/ansman/kotshi)|   |
-|Lyricist|[Experimentally supported](https://github.com/adrielcafe/lyricist)|   |
+|Lyricist|[Officially supported](https://github.com/adrielcafe/lyricist)|   |
 |Lich SavedState|[Officially supported](https://github.com/line/lich/tree/master/savedstate)|   |
 |gRPC Dekorator|[Officially supported](https://github.com/mottljan/grpc-dekorator)|   |
 |Auto Factory|Not yet supported|[Link](https://github.com/google/auto/issues/982)|
