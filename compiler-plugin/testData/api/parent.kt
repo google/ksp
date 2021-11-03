@@ -79,6 +79,7 @@
 // parent of ITF: ITF
 // parent of ITF: B
 // parent of T: B
+// parent of Anno: Anno
 // parent of Anno: @Anno
 // parent of @Anno: B
 // parent of B: File: B.java
