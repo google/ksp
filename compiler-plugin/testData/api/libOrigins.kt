@@ -27,6 +27,7 @@
 // classifier ref: Anno2: KOTLIN_LIB
 // classifier ref: Anno3: KOTLIN
 // classifier ref: Anno3: KOTLIN_LIB
+// classifier ref: Anno4: JAVA
 // classifier ref: Anno4: KOTLIN_LIB
 // classifier ref: Annotation: KOTLIN_LIB
 // classifier ref: Annotation: KOTLIN_LIB

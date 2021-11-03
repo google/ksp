@@ -28,18 +28,29 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
+import com.intellij.psi.PsiClass
 
-class KSTypeReferenceLiteJavaImpl private constructor(val type: KSType, override val parent: KSNode) : KSTypeReference {
-    companion object : KSObjectCache<Pair<KSType, KSNode>, KSTypeReferenceLiteJavaImpl>() {
-        fun getCached(type: KSType, parent: KSNode) = cache
-            .getOrPut(Pair(type, parent)) { KSTypeReferenceLiteJavaImpl(type, parent) }
+class KSTypeReferenceLiteJavaImpl private constructor(val psiClass: PsiClass?, override val parent: KSNode) :
+    KSTypeReference {
+    companion object : KSObjectCache<Pair<PsiClass?, KSNode>, KSTypeReferenceLiteJavaImpl>() {
+        fun getCached(psiClass: PsiClass? = null, parent: KSNode) = cache
+            .getOrPut(Pair(psiClass, parent)) { KSTypeReferenceLiteJavaImpl(psiClass, parent) }
+    }
+
+    val type: KSType by lazy {
+        psiClass?.let {
+            KSClassDeclarationJavaImpl.getCached(psiClass).asStarProjectedType()
+        } ?: KSErrorType
     }
 
     override val origin = Origin.JAVA
 
     override val location: Location = NonExistLocation
 
-    override val element: KSReferenceElement? = null
+    override val element: KSReferenceElement by lazy {
+        KSClassifierReferenceLiteImplForJava.getCached(this)
+    }
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 
