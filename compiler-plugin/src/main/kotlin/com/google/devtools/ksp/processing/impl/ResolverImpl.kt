@@ -282,7 +282,7 @@ class ResolverImpl(
                 val annotationType = it.annotationType
                 val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
                 val simpleName = referencedName?.substringAfterLast('.')
-                (simpleName == null || simpleName == shortName || simpleName in aliasingNames) &&
+                (simpleName == shortName || simpleName in aliasingNames) &&
                     annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
             }
         }
