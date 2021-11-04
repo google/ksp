@@ -64,13 +64,7 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
     }
 
     override val annotationType: KSTypeReference by lazy {
-        val psiClass = psi.nameReferenceElement!!.resolve() as? PsiClass
-        psiClass?.let {
-            (psi.containingFile as? PsiJavaFile)?.let {
-                ResolverImpl.instance.incrementalContext.recordLookup(it, psiClass.qualifiedName!!)
-            }
-        }
-        KSTypeReferenceLiteJavaImpl.getCached(psiClass, this)
+        KSTypeReferenceLiteJavaImpl.getCached(psi, this)
     }
 
     override val arguments: List<KSValueArgument> by lazy {

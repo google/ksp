@@ -92,9 +92,7 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
                 KSTypeReferenceJavaImpl.getCached(psi.returnType!!, this)
             }
             psi.isConstructor -> {
-                psi.containingClass?.let { containingClass ->
-                    KSTypeReferenceLiteJavaImpl.getCached(containingClass, this)
-                }
+                KSTypeReferenceLiteJavaImpl.getCached(psi, this)
             }
             else -> {
                 null
