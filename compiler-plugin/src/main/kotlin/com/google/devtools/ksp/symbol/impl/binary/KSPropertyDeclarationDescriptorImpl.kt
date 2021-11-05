@@ -21,6 +21,7 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.org.objectweb.asm.Opcodes
 
 class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: PropertyDescriptor) :
     KSPropertyDeclaration,
@@ -56,6 +57,14 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     override val modifiers: Set<Modifier> by lazy {
         val modifiers = mutableSetOf<Modifier>()
         modifiers.addAll(descriptor.toKSModifiers())
+
+        if (this.origin == Origin.JAVA_LIB) {
+            if (this.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0)
+                modifiers.add(Modifier.JAVA_TRANSIENT)
+            if (this.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0)
+                modifiers.add(Modifier.JAVA_VOLATILE)
+        }
+
         modifiers
     }
 

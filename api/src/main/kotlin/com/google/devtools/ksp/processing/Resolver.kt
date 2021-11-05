@@ -266,4 +266,10 @@ interface Resolver {
      */
     @KspExperimental
     fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration>
+
+    /**
+     * Returns a set of effective Java modifiers, if declaration is being / was generated to Java bytecode.
+     */
+    @KspExperimental
+    fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier>
 }
