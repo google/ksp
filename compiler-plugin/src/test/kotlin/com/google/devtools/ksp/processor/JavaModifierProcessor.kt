@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -35,12 +36,12 @@ class JavaModifierProcessor : AbstractTestProcessor() {
                 it as KSClassDeclaration
             }
             .forEach {
-                it.superTypes.single().resolve().declaration.accept(ModifierVisitor(), Unit)
+                it.superTypes.single().resolve().declaration.accept(ModifierVisitor(resolver), Unit)
             }
         return emptyList()
     }
 
-    inner class ModifierVisitor : KSTopDownVisitor<Unit, Unit>() {
+    inner class ModifierVisitor(val resolver: Resolver) : KSTopDownVisitor<Unit, Unit>() {
         override fun defaultHandler(node: KSNode, data: Unit) {
         }
 
@@ -57,6 +58,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
             results.add(function.toSignature())
         }
 
+        @OptIn(KspExperimental::class)
         private fun KSDeclaration.toSignature(): String {
             val parent = parentDeclaration
             val id = if (parent == null) {
@@ -64,8 +66,9 @@ class JavaModifierProcessor : AbstractTestProcessor() {
             } else {
                 "${parent.simpleName.asString()}."
             } + simpleName.asString()
-            val modifiersSignature = modifiers.map { it.toString() }.joinToString(" ")
-            return "$id: $modifiersSignature".trim()
+            val modifiersSignature = modifiers.map { it.toString() }.sorted().joinToString(" ")
+            val extras = resolver.effectiveJavaModifiers(this).map { it.toString() }.sorted().joinToString(" ").trim()
+            return "$id: $modifiersSignature".trim() + " : " + extras
         }
     }
 }

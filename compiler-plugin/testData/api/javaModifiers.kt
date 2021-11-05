@@ -17,77 +17,89 @@
 
 // TEST PROCESSOR: JavaModifierProcessor
 // EXPECTED:
-// C: PUBLIC ABSTRACT
-// C.staticStr: PRIVATE
-// C.s1: FINAL JAVA_TRANSIENT
-// C.i1: PROTECTED JAVA_STATIC JAVA_VOLATILE
-// C.NestedC: PUBLIC JAVA_STATIC
-// NestedC.<init>: FINAL PUBLIC
-// C.InnerC: PUBLIC
-// InnerC.<init>: FINAL PUBLIC
-// C.intFun: JAVA_SYNCHRONIZED JAVA_DEFAULT
-// C.foo: ABSTRACT JAVA_STRICT
-// C.<init>: FINAL PUBLIC
-// OuterJavaClass: PUBLIC
-// OuterJavaClass.staticPublicField: PUBLIC JAVA_STATIC
-// OuterJavaClass.staticPackageProtectedField: JAVA_STATIC
-// OuterJavaClass.staticProtectedField: PROTECTED JAVA_STATIC
-// OuterJavaClass.staticPrivateField: PRIVATE JAVA_STATIC
-// OuterJavaClass.InnerJavaClass: PUBLIC
-// InnerJavaClass.<init>: FINAL PUBLIC
-// OuterJavaClass.NestedJavaClass: PUBLIC JAVA_STATIC
-// NestedJavaClass.<init>: FINAL PUBLIC
-// OuterJavaClass.staticPublicMethod: PUBLIC JAVA_STATIC
-// OuterJavaClass.staticPackageProtectedMethod: JAVA_STATIC
-// OuterJavaClass.staticProtectedMethod: PROTECTED JAVA_STATIC
-// OuterJavaClass.staticPrivateMethod: PRIVATE JAVA_STATIC
-// OuterJavaClass.<init>: FINAL PUBLIC
-// OuterKotlinClass: OPEN
-// OuterKotlinClass.InnerKotlinClass: INNER
-// InnerKotlinClass.<init>: FINAL PUBLIC
-// OuterKotlinClass.NestedKotlinClass: OPEN
-// NestedKotlinClass.<init>: FINAL PUBLIC
-// OuterKotlinClass.Companion:
-// Companion.companionMethod:
-// Companion.companionField: CONST
-// Companion.privateCompanionMethod: PRIVATE
-// Companion.privateCompanionField: PRIVATE
-// Companion.jvmStaticCompanionMethod:
-// Companion.jvmStaticCompanionField:
-// Companion.customJvmStaticCompanionMethod:
-// Companion.customJvmStaticCompanionField:
-// Companion.<init>: FINAL PUBLIC
-// OuterKotlinClass.<init>: FINAL PUBLIC
-// DependencyOuterJavaClass: OPEN PUBLIC
-// DependencyOuterJavaClass.DependencyNestedJavaClass: OPEN PUBLIC
-// DependencyNestedJavaClass.<init>: FINAL PUBLIC
-// DependencyOuterJavaClass.DependencyInnerJavaClass: OPEN PUBLIC INNER
-// DependencyInnerJavaClass.<init>: FINAL PUBLIC
-// DependencyOuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC
-// DependencyOuterJavaClass.staticPackageProtectedMethod: JAVA_STATIC
-// DependencyOuterJavaClass.staticProtectedMethod: JAVA_STATIC PROTECTED
-// DependencyOuterJavaClass.staticPrivateMethod: JAVA_STATIC PRIVATE
-// DependencyOuterJavaClass.staticPublicField: JAVA_STATIC FINAL PUBLIC
-// DependencyOuterJavaClass.staticPackageProtectedField: JAVA_STATIC FINAL
-// DependencyOuterJavaClass.staticProtectedField: JAVA_STATIC FINAL PROTECTED
-// DependencyOuterJavaClass.staticPrivateField: JAVA_STATIC FINAL PRIVATE
-// DependencyOuterJavaClass.<init>: FINAL PUBLIC
-// DependencyOuterKotlinClass: OPEN PUBLIC
-// DependencyOuterKotlinClass.Companion: FINAL PUBLIC
-// Companion.companionField: FINAL PUBLIC
-// Companion.customJvmStaticCompanionField: FINAL PUBLIC
-// Companion.jvmStaticCompanionField: FINAL PUBLIC
-// Companion.privateCompanionField: FINAL PUBLIC
-// Companion.companionMethod: FINAL PUBLIC
-// Companion.customJvmStaticCompanionMethod: FINAL PUBLIC
-// Companion.jvmStaticCompanionMethod: FINAL PUBLIC
-// Companion.privateCompanionMethod: FINAL PRIVATE
-// Companion.<init>: FINAL PRIVATE
-// DependencyOuterKotlinClass.DependencyInnerKotlinClass: FINAL PUBLIC INNER
-// DependencyInnerKotlinClass.<init>: FINAL PUBLIC
-// DependencyOuterKotlinClass.DependencyNestedKotlinClass: OPEN PUBLIC
-// DependencyNestedKotlinClass.<init>: FINAL PUBLIC
-// DependencyOuterKotlinClass.<init>: FINAL PUBLIC
+// C: ABSTRACT PUBLIC : ABSTRACT PUBLIC
+// C.staticStr: PRIVATE : PRIVATE
+// C.s1: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
+// C.i1: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
+// C.NestedC: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// NestedC.<init>: FINAL PUBLIC : FINAL PUBLIC
+// C.InnerC: PUBLIC : PUBLIC
+// InnerC.<init>: FINAL PUBLIC : FINAL PUBLIC
+// C.intFun: JAVA_DEFAULT JAVA_SYNCHRONIZED : JAVA_DEFAULT JAVA_SYNCHRONIZED
+// C.foo: ABSTRACT JAVA_STRICT : ABSTRACT JAVA_STRICT
+// C.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterJavaClass: PUBLIC : PUBLIC
+// OuterJavaClass.staticPublicField: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// OuterJavaClass.staticPackageProtectedField: JAVA_STATIC : JAVA_STATIC
+// OuterJavaClass.staticProtectedField: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
+// OuterJavaClass.staticPrivateField: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
+// OuterJavaClass.InnerJavaClass: PUBLIC : PUBLIC
+// InnerJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterJavaClass.NestedJavaClass: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// NestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// OuterJavaClass.staticPackageProtectedMethod: JAVA_STATIC : JAVA_STATIC
+// OuterJavaClass.staticProtectedMethod: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
+// OuterJavaClass.staticPrivateMethod: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
+// OuterJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterKotlinClass: OPEN : PUBLIC
+// OuterKotlinClass.InnerKotlinClass: INNER : FINAL PUBLIC
+// InnerKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterKotlinClass.NestedKotlinClass: OPEN : PUBLIC
+// NestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterKotlinClass.Companion: : FINAL JAVA_STATIC PUBLIC
+// Companion.companionMethod: : FINAL PUBLIC
+// Companion.companionField: CONST : FINAL PUBLIC
+// Companion.privateCompanionMethod: PRIVATE : FINAL PRIVATE
+// Companion.privateCompanionField: PRIVATE : FINAL PRIVATE
+// Companion.jvmStaticCompanionMethod: : FINAL JAVA_STATIC PUBLIC
+// Companion.jvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
+// Companion.customJvmStaticCompanionMethod: : FINAL PUBLIC
+// Companion.customJvmStaticCompanionField: : FINAL PUBLIC
+// Companion.<init>: FINAL PUBLIC : FINAL PUBLIC
+// OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
+// OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
+// OuterKotlinClass.strictfpFun: : FINAL JAVA_STRICT PUBLIC
+// OuterKotlinClass.synchronizedFun: : FINAL JAVA_SYNCHRONIZED PUBLIC
+// OuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
+// DependencyOuterJavaClass.DependencyNestedJavaClass: OPEN PUBLIC : PUBLIC
+// DependencyNestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// DependencyOuterJavaClass.DependencyInnerJavaClass: INNER OPEN PUBLIC : PUBLIC
+// DependencyInnerJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// DependencyOuterJavaClass.synchronizedFun: JAVA_SYNCHRONIZED OPEN : JAVA_SYNCHRONIZED
+// DependencyOuterJavaClass.strictfpFun: JAVA_STRICT OPEN : JAVA_STRICT
+// DependencyOuterJavaClass.transientField: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
+// DependencyOuterJavaClass.volatileField: FINAL JAVA_VOLATILE : FINAL JAVA_VOLATILE
+// DependencyOuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// DependencyOuterJavaClass.staticPackageProtectedMethod: JAVA_STATIC : JAVA_STATIC
+// DependencyOuterJavaClass.staticProtectedMethod: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
+// DependencyOuterJavaClass.staticPrivateMethod: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
+// DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
+// DependencyOuterJavaClass.staticPackageProtectedField: FINAL JAVA_STATIC : FINAL JAVA_STATIC
+// DependencyOuterJavaClass.staticProtectedField: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
+// DependencyOuterJavaClass.staticPrivateField: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
+// DependencyOuterJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
+// DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
+// DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL JAVA_VOLATILE PUBLIC
+// DependencyOuterKotlinClass.strictfpFun: FINAL PUBLIC : FINAL JAVA_STRICT PUBLIC
+// DependencyOuterKotlinClass.synchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
+// DependencyOuterKotlinClass.Companion: FINAL PUBLIC : FINAL PUBLIC
+// Companion.companionField: FINAL PUBLIC : FINAL PUBLIC
+// Companion.customJvmStaticCompanionField: FINAL PUBLIC : FINAL PUBLIC
+// Companion.jvmStaticCompanionField: FINAL PUBLIC : FINAL PUBLIC
+// Companion.privateCompanionField: FINAL PUBLIC : FINAL PUBLIC
+// Companion.companionMethod: FINAL PUBLIC : FINAL PUBLIC
+// Companion.customJvmStaticCompanionMethod: FINAL PUBLIC : FINAL PUBLIC
+// Companion.jvmStaticCompanionMethod: FINAL PUBLIC : FINAL PUBLIC
+// Companion.privateCompanionMethod: FINAL PRIVATE : FINAL PRIVATE
+// Companion.<init>: FINAL PRIVATE : FINAL PRIVATE
+// DependencyOuterKotlinClass.DependencyInnerKotlinClass: FINAL INNER PUBLIC : FINAL PUBLIC
+// DependencyInnerKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// DependencyOuterKotlinClass.DependencyNestedKotlinClass: OPEN PUBLIC : PUBLIC
+// DependencyNestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
+// DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // END
 // MODULE: module1
 // FILE: DependencyOuterJavaClass.java
@@ -102,6 +114,10 @@ public class DependencyOuterJavaClass {
     protected static String staticProtectedField;
     private static void staticPrivateMethod() {}
     private static String staticPrivateField;
+    transient String transientField = "";
+    volatile String volatileField = "";
+    synchronized String synchronizedFun() { return ""; }
+    strictfp String strictfpFun() { return ""; }
 }
 // FILE: DependencyOuterKotlinClass.kt
 typealias DependencyCustomJvmStatic=JvmStatic
@@ -122,6 +138,18 @@ open class DependencyOuterKotlinClass {
         @DependencyCustomJvmStatic
         val customJvmStaticCompanionField:String = ""
     }
+
+    @Transient
+    val transientProperty: String = ""
+
+    @Volatile
+    var volatileProperty: String = ""
+
+    @Strictfp
+    fun strictfpFun(): String = ""
+
+    @Synchronized
+    fun synchronizedFun(): String = ""
 }
 // MODULE: main(module1)
 // FILE: a.kt
@@ -201,4 +229,16 @@ open class OuterKotlinClass {
         @CustomJvmStatic
         val customJvmStaticCompanionField:String = ""
     }
+
+    @Transient
+    val transientProperty: String = ""
+
+    @Volatile
+    var volatileProperty: String = ""
+
+    @Strictfp
+    fun strictfpFun(): String = ""
+
+    @Synchronized
+    fun synchronizedFun(): String = ""
 }
