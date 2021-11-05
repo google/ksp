@@ -41,10 +41,14 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaField
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethodBase
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
+import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
@@ -61,6 +65,11 @@ import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
+import org.jetbrains.org.objectweb.asm.ClassReader
+import org.jetbrains.org.objectweb.asm.ClassVisitor
+import org.jetbrains.org.objectweb.asm.FieldVisitor
+import org.jetbrains.org.objectweb.asm.MethodVisitor
+import org.jetbrains.org.objectweb.asm.Opcodes
 import java.util.*
 import kotlin.Comparator
 import kotlin.collections.ArrayDeque
@@ -494,29 +503,53 @@ internal fun PropertyDescriptor.hasBackingFieldWithBinaryClassSupport(): Boolean
     }
 }
 
+internal data class BinaryClassInfo(
+    val fieldAccFlags: Map<String, Int>,
+    val methodAccFlags: Map<String, Int>
+)
+
 /**
  * Lookup cache for field names names for deserialized classes.
  * To check if a field has backing field, we need to look for binary field names, hence they are cached here.
  */
-internal object BinaryFieldsCache : KSObjectCache<ClassId, Set<Name>>() {
+internal object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
     fun getCached(
         kotlinJvmBinaryClass: KotlinJvmBinaryClass,
     ) = cache.getOrPut(kotlinJvmBinaryClass.classId) {
-        val visitor = PropNamesVisitor()
-        kotlinJvmBinaryClass.visitMembers(visitor, null)
-        visitor.propNames
-    }
+        val virtualFileContent = kotlinJvmBinaryClass.safeAs<VirtualFileKotlinClass>()?.file?.contentsToByteArray()
+        val fieldAccFlags = mutableMapOf<String, Int>()
+        val methodAccFlags = mutableMapOf<String, Int>()
+        ClassReader(virtualFileContent).accept(
+            object : ClassVisitor(Opcodes.API_VERSION) {
+                override fun visitField(
+                    access: Int,
+                    name: String?,
+                    descriptor: String?,
+                    signature: String?,
+                    value: Any?
+                ): FieldVisitor? {
+                    if (name != null) {
+                        fieldAccFlags.put(name, access)
+                    }
+                    return null
+                }
 
-    private class PropNamesVisitor : KotlinJvmBinaryClass.MemberVisitor {
-        val propNames = mutableSetOf<Name>()
-        override fun visitField(name: Name, desc: String, initializer: Any?): KotlinJvmBinaryClass.AnnotationVisitor? {
-            propNames.add(name)
-            return null
-        }
-
-        override fun visitMethod(name: Name, desc: String): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
-            return null
-        }
+                override fun visitMethod(
+                    access: Int,
+                    name: String?,
+                    descriptor: String?,
+                    signature: String?,
+                    exceptions: Array<out String>?
+                ): MethodVisitor? {
+                    if (name != null) {
+                        methodAccFlags.put(name + descriptor, access)
+                    }
+                    return null
+                }
+            },
+            ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+        )
+        BinaryClassInfo(fieldAccFlags, methodAccFlags)
     }
 }
 
@@ -533,7 +566,7 @@ private fun DeserializedPropertyDescriptor.hasBackingFieldInBinaryClass(): Boole
     } else {
         this.getContainingKotlinJvmBinaryClass()
     } ?: return false
-    return BinaryFieldsCache.getCached(kotlinJvmBinaryClass).contains(name)
+    return BinaryClassInfoCache.getCached(kotlinJvmBinaryClass).fieldAccFlags.containsKey(name.asString())
 }
 
 // from: https://github.com/JetBrains/kotlin/blob/92d200e093c693b3c06e53a39e0b0973b84c7ec5/plugins/kotlin-serialization/kotlin-serialization-compiler/src/org/jetbrains/kotlinx/serialization/compiler/resolve/SerializableProperty.kt#L45
