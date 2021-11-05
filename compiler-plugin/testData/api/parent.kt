@@ -1,5 +1,9 @@
 // TEST PROCESSOR: ParentProcessor
 // EXPECTED:
+// parent of File: Bnno.kt: null
+// parent of Bnno: File: Bnno.kt
+// parent of Bnno: synthetic constructor for Bnno
+// parent of synthetic constructor for Bnno: Bnno
 // parent of File: a.kt: null
 // parent of Anno: File: a.kt
 // parent of Anno: synthetic constructor for Anno
@@ -82,6 +86,10 @@
 // parent of Anno: Anno
 // parent of Anno: @Anno
 // parent of @Anno: B
+// parent of p: Bnno
+// parent of p.Bnno: Bnno
+// parent of Bnno: @Bnno
+// parent of @Bnno: B
 // parent of B: File: B.java
 // parent of T: T
 // parent of T: t
@@ -126,8 +134,14 @@ class topClass: ITF {
     get() = "1"
 }
 
+// FILE: Bnno.kt
+package p
+
+annotation class Bnno
+
 // FILE: B.java
 @Anno
+@p.Bnno
 public class B<T> implements ITF {
     private T t;
     public int foo(T t, int i) {
