@@ -88,6 +88,21 @@ private val jvmModifierMap = mapOf(
     JvmModifier.VOLATILE to Modifier.JAVA_VOLATILE
 )
 
+internal val javaModifiers = setOf(
+    Modifier.ABSTRACT,
+    Modifier.FINAL,
+    Modifier.JAVA_DEFAULT,
+    Modifier.JAVA_NATIVE,
+    Modifier.JAVA_STATIC,
+    Modifier.JAVA_STRICT,
+    Modifier.JAVA_SYNCHRONIZED,
+    Modifier.JAVA_TRANSIENT,
+    Modifier.JAVA_VOLATILE,
+    Modifier.PRIVATE,
+    Modifier.PROTECTED,
+    Modifier.PUBLIC,
+)
+
 private val modifierMap = mapOf(
     KtTokens.PUBLIC_KEYWORD to Modifier.PUBLIC,
     KtTokens.PRIVATE_KEYWORD to Modifier.PRIVATE,
@@ -766,4 +781,43 @@ internal val KSDeclarationContainer.declarationsInSourceOrder: Sequence<KSDeclar
 
         return (declarations as? Sequence<KSDeclarationDescriptorImpl>)?.sortedWith(declarationOrdering.comparator)
             ?: declarations
+    }
+
+internal val KSPropertyDeclaration.jvmAccessFlag: Int
+    get() = when (origin) {
+        Origin.KOTLIN_LIB -> {
+            val descriptor = (this as KSPropertyDeclarationDescriptorImpl).descriptor
+            val kotlinBinaryJavaClass = descriptor.getContainingKotlinJvmBinaryClass()
+            kotlinBinaryJavaClass?.let {
+                BinaryClassInfoCache.getCached(it).fieldAccFlags.get(this.simpleName.asString()) ?: 0
+            } ?: 0
+        }
+        Origin.JAVA_LIB -> {
+            val descriptor = (this as KSPropertyDeclarationDescriptorImpl).descriptor
+            descriptor.source.safeAs<JavaSourceElement>()?.javaElement.safeAs<BinaryJavaField>()?.access ?: 0
+        }
+        else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
+    }
+
+internal val KSFunctionDeclaration.jvmAccessFlag: Int
+    get() = when (origin) {
+        Origin.KOTLIN_LIB -> {
+            val jvmDesc = ResolverImpl.instance.mapToJvmSignatureInternal(this)
+            val descriptor = (this as KSFunctionDeclarationDescriptorImpl).descriptor
+            val kotlinBinaryJavaClass = descriptor.getContainingKotlinJvmBinaryClass()
+            kotlinBinaryJavaClass?.let {
+                BinaryClassInfoCache.getCached(it).methodAccFlags.get(this.simpleName.asString() + jvmDesc) ?: 0
+            } ?: 0
+        }
+        Origin.JAVA_LIB -> {
+            val descriptor = (this as KSFunctionDeclarationDescriptorImpl).descriptor
+            descriptor.source.safeAs<JavaSourceElement>()?.javaElement.safeAs<BinaryJavaMethodBase>()?.access ?: 0
+        }
+        else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
+    }
+
+internal fun KSAnnotated.hasAnnotation(fqn: String): Boolean =
+    annotations.any {
+        fqn.endsWith(it.shortName.asString()) &&
+            it.annotationType.resolve().declaration.qualifiedName?.asString() == fqn
     }

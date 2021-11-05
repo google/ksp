@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.impl.AnonymousFunctionDescriptor
 import org.jetbrains.kotlin.load.java.isFromJava
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.org.objectweb.asm.Opcodes
 
 class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: FunctionDescriptor) :
     KSFunctionDeclaration,
@@ -77,6 +78,14 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         val modifiers = mutableSetOf<Modifier>()
         modifiers.addAll(descriptor.toKSModifiers())
         modifiers.addAll(descriptor.toFunctionKSModifiers())
+
+        if (this.origin == Origin.JAVA_LIB) {
+            if (this.jvmAccessFlag and Opcodes.ACC_STRICT != 0)
+                modifiers.add(Modifier.JAVA_STRICT)
+            if (this.jvmAccessFlag and Opcodes.ACC_SYNCHRONIZED != 0)
+                modifiers.add(Modifier.JAVA_SYNCHRONIZED)
+        }
+
         modifiers
     }
 
