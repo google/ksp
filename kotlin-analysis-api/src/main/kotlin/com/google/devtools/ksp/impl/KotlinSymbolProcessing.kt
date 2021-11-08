@@ -29,6 +29,8 @@ import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.analyseWithReadAction
 import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider
+import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.PackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
@@ -177,8 +179,8 @@ fun main() {
     val ktFile = factory.trySetupPsiForFile(virtualFile, KotlinLanguage.INSTANCE, true, false) as KtFile
     registerComponents(project, env, listOf(ktFile))
     analyseWithReadAction(ktFile) {
-        val mainRef = ktFile.mainReference
-        val reference = findSomeReference(ktFile)
-        reference?.resolveToSymbol()
+        val fileSymbol = ktFile.getFileSymbol()
+        val members = fileSymbol.getFileScope().getAllSymbols()
+        members.filterIsInstance<KtFunctionSymbol>()
     }
 }
