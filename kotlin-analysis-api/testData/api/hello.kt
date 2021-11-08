@@ -10,3 +10,7 @@ class Foo() {
         return 3
     }
 }
+
+val topProp = 1
+
+fun topFun() = "Fun"

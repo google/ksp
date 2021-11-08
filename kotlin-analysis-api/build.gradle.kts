@@ -53,7 +53,6 @@ dependencies {
     }
 
     implementation(project(":api"))
-
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {

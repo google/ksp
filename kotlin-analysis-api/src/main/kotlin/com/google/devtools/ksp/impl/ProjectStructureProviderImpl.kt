@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
 
 class ProjectStructureProviderImpl : ProjectStructureProvider() {
     override fun getKtModuleForKtElement(element: PsiElement): KtModule {
-        return object: KtSourceModule {
+        return object : KtSourceModule {
             override val analyzerServices: PlatformDependentAnalyzerServices
                 get() = JvmPlatformAnalyzerServices
             override val contentScope: GlobalSearchScope
