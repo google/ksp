@@ -788,6 +788,7 @@ internal val KSPropertyDeclaration.jvmAccessFlag: Int
         Origin.KOTLIN_LIB -> {
             val descriptor = (this as KSPropertyDeclarationDescriptorImpl).descriptor
             val kotlinBinaryJavaClass = descriptor.getContainingKotlinJvmBinaryClass()
+            // 0 if no backing field
             kotlinBinaryJavaClass?.let {
                 BinaryClassInfoCache.getCached(it).fieldAccFlags.get(this.simpleName.asString()) ?: 0
             } ?: 0
@@ -804,6 +805,7 @@ internal val KSFunctionDeclaration.jvmAccessFlag: Int
         Origin.KOTLIN_LIB -> {
             val jvmDesc = ResolverImpl.instance.mapToJvmSignatureInternal(this)
             val descriptor = (this as KSFunctionDeclarationDescriptorImpl).descriptor
+            // Companion.<init> doesn't have containing KotlinJvmBinaryClass.
             val kotlinBinaryJavaClass = descriptor.getContainingKotlinJvmBinaryClass()
             kotlinBinaryJavaClass?.let {
                 BinaryClassInfoCache.getCached(it).methodAccFlags.get(this.simpleName.asString() + jvmDesc) ?: 0
@@ -811,6 +813,7 @@ internal val KSFunctionDeclaration.jvmAccessFlag: Int
         }
         Origin.JAVA_LIB -> {
             val descriptor = (this as KSFunctionDeclarationDescriptorImpl).descriptor
+            // Some functions, like `equals` in builtin types, doesn't have source.
             descriptor.source.safeAs<JavaSourceElement>()?.javaElement.safeAs<BinaryJavaMethodBase>()?.access ?: 0
         }
         else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
