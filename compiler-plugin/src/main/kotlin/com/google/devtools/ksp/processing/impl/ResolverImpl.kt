@@ -44,6 +44,7 @@ import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
+import org.jetbrains.kotlin.codegen.state.updateArgumentModeFromAnnotations
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
@@ -74,8 +75,11 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethodBase
+import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
+import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
+import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
@@ -100,11 +104,13 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.types.checker.SimpleClassicTypeSystemContext
 import org.jetbrains.kotlin.types.expressions.DoubleColonExpressionResolver
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import org.jetbrains.org.objectweb.asm.ClassReader
 import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
@@ -1175,6 +1181,107 @@ class ResolverImpl(
             else -> Unit
         }
         return modifiers
+    }
+
+    private enum class RefPosition {
+        PARAMETER_TYPE,
+        RETURN_TYPE,
+        SUPER_TYPE
+    }
+
+    // TODO: Strict mode for catching unhandled cases.
+    private fun findRefPosition(ref: KSTypeReference): RefPosition = when (val parent = ref.parent) {
+        is KSCallableReference -> when (ref) {
+            parent.returnType -> RefPosition.RETURN_TYPE
+            else -> RefPosition.PARAMETER_TYPE
+        }
+        is KSFunctionDeclaration -> when (ref) {
+            parent.returnType -> RefPosition.RETURN_TYPE
+            else -> RefPosition.PARAMETER_TYPE
+        }
+        is KSPropertyGetter -> RefPosition.RETURN_TYPE
+        is KSPropertyDeclaration -> when (ref) {
+            parent.type -> RefPosition.RETURN_TYPE
+            else -> RefPosition.PARAMETER_TYPE
+        }
+        is KSClassDeclaration -> RefPosition.SUPER_TYPE
+        // is KSTypeArgument -> RefPosition.PARAMETER_TYPE
+        // is KSAnnotation -> RefPosition.PARAMETER_TYPE
+        // is KSTypeAlias -> RefPosition.PARAMETER_TYPE
+        // is KSValueParameter -> RefPosition.PARAMETER_TYPE
+        // is KSTypeParameter -> RefPosition.PARAMETER_TYPE
+        else -> RefPosition.PARAMETER_TYPE
+    }
+
+    private fun KSTypeReference.isReturnTypeOfAnnotationMethod(): Boolean {
+        var candidate = this.parent
+        while (candidate !is KSClassDeclaration && candidate != null)
+            candidate = candidate.parent
+        return candidate.safeAs<KSClassDeclaration>()?.classKind == ClassKind.ANNOTATION_CLASS
+    }
+
+    // Convert type arguments for Java wildcard, recursively.
+    private fun KotlinType.toWildcard(mode: TypeMappingMode): KotlinType? {
+        val parameters = constructor.parameters
+        val arguments = arguments
+        val argMode = mode.updateArgumentModeFromAnnotations(this, SimpleClassicTypeSystemContext)
+
+        val wildcardArguments = parameters.zip(arguments).map { (parameter, argument) ->
+            if (!argument.isStarProjection &&
+                parameter.variance != argument.projectionKind &&
+                parameter.variance != org.jetbrains.kotlin.types.Variance.INVARIANT &&
+                argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
+            ) {
+                // conflicting variances
+                // TODO: error message
+                return null
+            }
+
+            val variance = KotlinTypeMapper.getVarianceForWildcard(parameter, argument, argMode)
+            val genericMode = argMode.toGenericArgumentMode(
+                getEffectiveVariance(parameter.variance, argument.projectionKind)
+            )
+            TypeProjectionImpl(variance, argument.type.toWildcard(genericMode) ?: return null)
+        }
+
+        return replace(wildcardArguments)
+    }
+
+    @KspExperimental
+    override fun getJavaWildcard(ref: KSTypeReference): KSTypeReference {
+        val type = ref.resolve()
+        if (type.isError)
+            return ref
+
+        val position = findRefPosition(ref)
+        val kotlinType = (type as KSTypeImpl).kotlinType
+
+        val typeSystem = SimpleClassicTypeSystemContext
+        val typeMappingMode = when (position) {
+            RefPosition.PARAMETER_TYPE -> typeSystem.getOptimalModeForValueParameter(kotlinType)
+            RefPosition.RETURN_TYPE ->
+                typeSystem.getOptimalModeForReturnType(kotlinType, ref.isReturnTypeOfAnnotationMethod())
+            RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
+        }
+
+        val parameters = kotlinType.constructor.parameters
+        val arguments = kotlinType.arguments
+
+        parameters.zip(arguments).forEach { (parameter, argument) ->
+            if (position == RefPosition.SUPER_TYPE &&
+                argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
+            ) {
+                // Type projection isn't allowed in immediate arguments to supertypes.
+                // TODO: error message
+                return KSTypeReferenceSyntheticImpl.getCached(KSErrorType, null)
+            }
+        }
+
+        val wildcardType = kotlinType.toWildcard(typeMappingMode)?.let {
+            getKSTypeCached(it)
+        } ?: KSErrorType
+
+        return KSTypeReferenceSyntheticImpl.getCached(wildcardType, null)
     }
 }
 

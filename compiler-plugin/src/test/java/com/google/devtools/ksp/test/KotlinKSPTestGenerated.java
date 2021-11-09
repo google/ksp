@@ -157,6 +157,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/docString.kt");
     }
 
+    @TestMetadata("equivalentJavaWildcards.kt")
+    public void testEquivalentJavaWildcards() throws Exception {
+        runTest("testData/api/equivalentJavaWildcards.kt");
+    }
+
     @TestMetadata("errorTypes.kt")
     public void testErrorTypes() throws Exception {
         runTest("testData/api/errorTypes.kt");

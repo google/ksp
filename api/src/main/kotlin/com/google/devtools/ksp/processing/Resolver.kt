@@ -273,4 +273,13 @@ interface Resolver {
      */
     @KspExperimental
     fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier>
+
+    /**
+     * Compute the corresponding Java wildcard, from the given reference.
+     *
+     * @param reference the reference to the type usage
+     * @return an equivalent type reference from the Java wildcard's point of view
+     */
+    @KspExperimental
+    fun getJavaWildcard(reference: KSTypeReference): KSTypeReference
 }
