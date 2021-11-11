@@ -381,7 +381,7 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
             }
 
             @Override
-            public TestModule createModule(@NotNull String name, @NotNull List<String> dependencies, @NotNull List<String> friends, @NotNull List<Integer> abiVersions) {
+            public TestModule createModule(@NotNull String name, @NotNull List<String> dependencies, @NotNull List<String> friends) {
                 return new TestModule(name, dependencies, friends);
             }
         });
