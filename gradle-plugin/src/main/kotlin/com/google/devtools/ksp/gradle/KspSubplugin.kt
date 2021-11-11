@@ -449,9 +449,9 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
                     viewConfig.attributes.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
                 }.files
             ).disallowChanges()
-            classpathSnapshotProperties.useClasspathSnapshot.value(true).disallowChanges()
+            useClasspathSnapshot.value(true).disallowChanges()
         } else {
-            classpathSnapshotProperties.useClasspathSnapshot.value(false).disallowChanges()
+            useClasspathSnapshot.value(false).disallowChanges()
         }
     }
 

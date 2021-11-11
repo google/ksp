@@ -36,7 +36,6 @@ The form of the test itself is flexible as long as the logic is being covered.
 Here are some [sample test processors](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/processor) for your reference.
 
 #### Steps for writing a test
-* KSP needs to be built with JDK 11+, because of some test dependencies.
 * Create a test processor under the sample processor folder.
 it should be extending [AbstractTestProcessor](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/processor/AbstractTestProcessor.kt)
 * Write your logic by overriding corresponding functions. 
