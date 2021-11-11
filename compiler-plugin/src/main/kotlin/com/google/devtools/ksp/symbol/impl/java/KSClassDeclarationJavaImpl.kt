@@ -23,6 +23,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
 import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
@@ -142,11 +143,15 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return getKSTypeCached(descriptor!!.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        return descriptor?.let {
+            getKSTypeCached(it.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        } ?: KSErrorType
     }
 
     override fun asStarProjectedType(): KSType {
-        return getKSTypeCached(descriptor!!.defaultType.replaceArgumentsWithStarProjections())
+        return descriptor?.let {
+            getKSTypeCached(it.defaultType.replaceArgumentsWithStarProjections())
+        } ?: KSErrorType
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
