@@ -311,6 +311,11 @@ class ResolverImpl(
                 file.declarations.forEach { it.accept(this, data) }
             }
 
+            override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
+                if (typeAlias.annotations.any())
+                    symbols.add(typeAlias)
+            }
+
             override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
                 visitAnnotated(classDeclaration, data)
                 classDeclaration.typeParameters.forEach { it.accept(this, data) }
