@@ -11,6 +11,7 @@
 // param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Flux:KSTypeAlias
 // ==== Anno in depth ====
 // Foo:KSClassDeclaration
 // propertyFoo:KSPropertyDeclaration
@@ -23,6 +24,7 @@
 // param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Flux:KSTypeAlias
 // ==== Bnno superficial====
 // File: Foo.kt:KSFile
 // <init>:KSFunctionDeclaration
@@ -44,6 +46,7 @@
 // param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Flux:KSTypeAlias
 // ==== A1 in depth ====
 // Foo:KSClassDeclaration
 // propertyFoo:KSPropertyDeclaration
@@ -56,6 +59,7 @@
 // param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Flux:KSTypeAlias
 // ==== A2 superficial====
 // Foo:KSClassDeclaration
 // propertyFoo:KSPropertyDeclaration
@@ -67,6 +71,7 @@
 // param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Flux:KSTypeAlias
 // ==== A2 in depth ====
 // Foo:KSClassDeclaration
 // propertyFoo:KSPropertyDeclaration
@@ -79,6 +84,7 @@
 // param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Flux:KSTypeAlias
 // ==== Cnno in depth ====
 // <set-?>:KSValueParameter
 // constructorParameterFoo:KSValueParameter
@@ -121,3 +127,6 @@ class Bar
 
 @A2
 class Baz
+
+@Anno
+typealias Flux = String
