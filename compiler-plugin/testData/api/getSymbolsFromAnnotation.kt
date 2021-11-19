@@ -2,25 +2,25 @@
 // EXPECTED:
 // ==== Anno superficial====
 // Foo:KSClassDeclaration
-// propertyFoo:KSPropertyDeclaration
-// functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
-// constructorParameterFoo:KSPropertyDeclaration
 // <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
 // param:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // ==== Anno in depth ====
 // Foo:KSClassDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
 // propertyFoo:KSPropertyDeclaration
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
 // local:KSPropertyDeclaration
-// constructorParameterFoo:KSPropertyDeclaration
-// <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // ==== Bnno superficial====
@@ -35,55 +35,55 @@
 // p2:KSValueParameter
 // ==== A1 superficial====
 // Foo:KSClassDeclaration
-// propertyFoo:KSPropertyDeclaration
-// functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
-// constructorParameterFoo:KSPropertyDeclaration
 // <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
 // param:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // ==== A1 in depth ====
 // Foo:KSClassDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
 // propertyFoo:KSPropertyDeclaration
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
 // local:KSPropertyDeclaration
-// constructorParameterFoo:KSPropertyDeclaration
-// <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // ==== A2 superficial====
 // Foo:KSClassDeclaration
-// propertyFoo:KSPropertyDeclaration
-// functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
-// constructorParameterFoo:KSPropertyDeclaration
 // <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
 // param:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
+// propertyFoo:KSPropertyDeclaration
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // ==== A2 in depth ====
 // Foo:KSClassDeclaration
+// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSValueParameter
+// param:KSValueParameter
+// constructorParameterFoo:KSPropertyDeclaration
 // propertyFoo:KSPropertyDeclaration
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
 // local:KSPropertyDeclaration
-// constructorParameterFoo:KSPropertyDeclaration
-// <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // ==== Cnno in depth ====
-// <set-?>:KSValueParameter
 // constructorParameterFoo:KSValueParameter
-// x:KSPropertyDeclaration
+// <set-?>:KSValueParameter
 // x:KSValueParameter
+// x:KSPropertyDeclaration
 // END
 //FILE: annotations.kt
 annotation class Anno
