@@ -21,6 +21,16 @@ class VersionCheckIT {
     }
 
     @Test
+    fun testVersionOK() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        val result = gradleRunner.withArguments(
+            "-Dkotlin.compiler.execution.strategy=in-process", "clean", "build"
+        ).build()
+        Assert.assertFalse(result.output.contains("is too new for kotlin"))
+        Assert.assertFalse(result.output.contains("is too old for kotlin"))
+    }
+
+    @Test
     fun testMuteVersionCheck() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val result = gradleRunner.withArguments(
