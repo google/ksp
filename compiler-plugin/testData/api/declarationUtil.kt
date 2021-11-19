@@ -20,13 +20,13 @@
 // EXPECTED:
 // Cls: true: false: false: false: false: false
 // Cls / <init>: false: false: false: false: true: false
+// Cls.b: false: false: false: false: true: true
+// Cls / <init>: false: false: false: false: true: false
 // Cls / <init> / aaa: false: true: false: false: false: false
 // Cls.prop: false: false: false: false: true: true
 // Cls.protectedProp: false: false: false: true: false: true
 // Cls.abstractITFFun: false: false: false: false: true: true
 // Cls.pri: false: false: true: false: false: false
-// Cls.b: false: false: false: false: true: true
-// Cls / <init>: false: false: false: false: true: false
 // ITF: false: false: false: false: true: true
 // ITF.prop: false: false: false: false: true: true
 // ITF.protectedProp: false: false: false: true: false: true
