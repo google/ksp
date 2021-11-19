@@ -67,12 +67,12 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
             ?.filter { it.isVar || it.isVal }
             ?.map { KSPropertyDeclarationParameterImpl.getCached((it as KSValueParameterImpl).ktParameter) }
             ?: emptySequence()
-        var result = ktClassOrObject.declarations.asSequence().getKSDeclarations().plus(propertiesFromConstructor)
+        var result = propertiesFromConstructor.plus(ktClassOrObject.declarations.asSequence().getKSDeclarations())
         primaryConstructor?.let { primaryConstructor: KSFunctionDeclaration ->
             // if primary constructor is from source, it won't show up in declarations
             // hence add it as well.
             if (primaryConstructor.origin == Origin.KOTLIN) {
-                result = result.plus(primaryConstructor)
+                result = sequenceOf(primaryConstructor).plus(result)
             }
         }
         if (classKind != ClassKind.INTERFACE) {

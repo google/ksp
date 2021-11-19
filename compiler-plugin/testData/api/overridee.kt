@@ -19,8 +19,8 @@
 // TEST PROCESSOR: OverrideeProcessor
 // EXPECTED:
 // NoOverride:
-// NoOverride.prop -> null
 // NoOverride.propInParam -> null
+// NoOverride.prop -> null
 // NoOverride.func(param:Int) -> null
 // Subject:
 // Companion.companionMethod() -> null
