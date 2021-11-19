@@ -40,10 +40,10 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
-import org.gradle.util.internal.VersionNumber
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.cli.common.arguments.*
+import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
 import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
@@ -145,8 +145,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
         val project = kotlinCompilation.target.project
-        val kspVersion = VersionNumber.parse(KSP_KOTLIN_BASE_VERSION)
-        val kotlinVersion = VersionNumber.parse(project.getKotlinPluginVersion())
+        val kspVersion = ApiVersion.parse(KSP_KOTLIN_BASE_VERSION)!!
+        val kotlinVersion = ApiVersion.parse(project.getKotlinPluginVersion())!!
 
         // Check version and show warning by default.
         val noVersionCheck = project.findProperty("ksp.version.check")?.toString()?.toBoolean() == false
