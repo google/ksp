@@ -11,11 +11,12 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
+import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 
 class KSTypeReferenceSyntheticImpl(val ksType: KSType, override val parent: KSNode?) : KSTypeReference {
-    companion object : KSObjectCache<Pair<KSType, KSNode?>, KSTypeReferenceSyntheticImpl>() {
+    companion object : KSObjectCache<Pair<IdKey<KSType>, KSNode?>, KSTypeReferenceSyntheticImpl>() {
         fun getCached(ksType: KSType, parent: KSNode?) = KSTypeReferenceSyntheticImpl.cache
-            .getOrPut(Pair(ksType, parent)) { KSTypeReferenceSyntheticImpl(ksType, parent) }
+            .getOrPut(Pair(IdKey(ksType), parent)) { KSTypeReferenceSyntheticImpl(ksType, parent) }
     }
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
