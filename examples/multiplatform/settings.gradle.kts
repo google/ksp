@@ -11,7 +11,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "playground"
+rootProject.name = "multiplatform"
 
 include(":workload")
 include(":test-processor")
