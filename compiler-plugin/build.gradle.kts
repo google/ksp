@@ -50,8 +50,6 @@ dependencies {
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:test-infrastructure-utils:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:tests-compiler-utils:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:tests-mutes:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:tests-common:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")

@@ -95,6 +95,7 @@ import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
+import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
@@ -456,7 +457,7 @@ class ResolverImpl(
         return expression?.let {
             if (it is KtClassLiteralExpression && it.receiverExpression != null) {
                 val parent = KtStubbedPsiUtil.getPsiOrStubParent(it, KtPrimaryConstructor::class.java, false)
-                val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(parent)
+                val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(parent!!)
                 val result = qualifiedExpressionResolver
                     .resolveDescriptorForDoubleColonLHS(it.receiverExpression!!, scope, bindingTrace, false)
                 val classifier = result.classifierDescriptor ?: return null
@@ -464,7 +465,7 @@ class ResolverImpl(
                 val possiblyBareType = resolveSession.typeResolver
                     .resolveTypeForClassifier(typeResolutionContext, classifier, result, it, Annotations.EMPTY)
                 var actualType = if (possiblyBareType.isBare)
-                    possiblyBareType.bareTypeConstructor.declarationDescriptor.defaultType
+                    possiblyBareType.bareTypeConstructor.declarationDescriptor!!.defaultType
                 else possiblyBareType.actualType
                 var arrayDimension = 0
                 while (KotlinBuiltIns.isArray(actualType)) {
@@ -1293,7 +1294,7 @@ fun DeclarationDescriptor.findExpectsInKSDeclaration(): Sequence<KSDeclaration> 
 
 // TODO: cross module resolution
 fun DeclarationDescriptor.findActualsInKSDeclaration(): Sequence<KSDeclaration> =
-    findActuals().asSequence().map {
+    findActuals(this.module).asSequence().map {
         it.toKSDeclaration()
     }
 
