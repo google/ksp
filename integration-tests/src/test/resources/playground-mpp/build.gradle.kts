@@ -3,7 +3,7 @@ plugins {
 }
 
 val testRepo: String by project
-subprojects {
+allprojects {
     repositories {
         maven(testRepo)
         mavenCentral()
