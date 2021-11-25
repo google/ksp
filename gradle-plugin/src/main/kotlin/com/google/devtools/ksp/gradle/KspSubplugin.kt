@@ -42,6 +42,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.gradle.workers.WorkerExecutor
 import org.jetbrains.kotlin.cli.common.arguments.*
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.*
@@ -66,7 +67,6 @@ import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.nio.file.Paths
-import java.util.*
 import java.util.concurrent.Callable
 import javax.inject.Inject
 import kotlin.reflect.KProperty1
@@ -418,7 +418,9 @@ interface KspTask : Task {
 }
 
 @CacheableTask
-abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
+abstract class KspTaskJvm @Inject constructor(
+    workerExecutor: WorkerExecutor
+) : KotlinCompile(KotlinJvmOptionsImpl(), workerExecutor), KspTask {
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
     @get:InputFiles
@@ -578,6 +580,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         args: K2JVMCompilerArguments,
         sourceRoots: SourceRoots,
         inputChanges: InputChanges,
+        taskOutputsBackup: TaskOutputsBackup?
     ) {
         val changedFiles = getChangedFiles(inputChanges, incrementalProps)
         if (isKspIncremental) {
@@ -596,7 +599,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
             clearIncCache()
         }
         args.addChangedFiles(changedFiles)
-        super.callCompilerAsync(args, sourceRoots, inputChanges)
+        super.callCompilerAsync(args, sourceRoots, inputChanges, taskOutputsBackup)
     }
 
     override fun skipCondition(): Boolean = false
@@ -605,7 +608,8 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
 @CacheableTask
 abstract class KspTaskJS @Inject constructor(
     objectFactory: ObjectFactory,
-) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory), KspTask {
+    workerExecutor: WorkerExecutor
+) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory, workerExecutor), KspTask {
     private val backendSelectionArgs = listOf(
         "-Xir-only",
         "-Xir-produce-js",
@@ -671,6 +675,7 @@ abstract class KspTaskJS @Inject constructor(
         args: K2JSCompilerArguments,
         sourceRoots: SourceRoots,
         inputChanges: InputChanges,
+        taskOutputsBackup: TaskOutputsBackup?
     ) {
         val changedFiles = getChangedFiles(inputChanges, incrementalProps)
         if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
@@ -678,7 +683,7 @@ abstract class KspTaskJS @Inject constructor(
         } else {
             args.addChangedFiles(changedFiles)
         }
-        super.callCompilerAsync(args, sourceRoots, inputChanges)
+        super.callCompilerAsync(args, sourceRoots, inputChanges, taskOutputsBackup)
     }
 
     // Overrding an internal function is hacky.
@@ -688,7 +693,9 @@ abstract class KspTaskJS @Inject constructor(
 }
 
 @CacheableTask
-abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl()), KspTask {
+abstract class KspTaskMetadata @Inject constructor(
+    workerExecutor: WorkerExecutor
+) : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl(), workerExecutor), KspTask {
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
@@ -747,6 +754,7 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         args: K2MetadataCompilerArguments,
         sourceRoots: SourceRoots,
         inputChanges: InputChanges,
+        taskOutputsBackup: TaskOutputsBackup?
     ) {
         val changedFiles = getChangedFiles(inputChanges, incrementalProps)
         if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
@@ -754,7 +762,7 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         } else {
             args.addChangedFiles(changedFiles)
         }
-        super.callCompilerAsync(args, sourceRoots, inputChanges)
+        super.callCompilerAsync(args, sourceRoots, inputChanges, taskOutputsBackup)
     }
 }
 
@@ -762,16 +770,21 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
 abstract class KspTaskNative @Inject constructor(
     injected: KotlinNativeCompilationData<*>,
 ) : KotlinNativeCompile(injected), KspTask {
-    override fun buildCompilerArgs(): List<String> {
-        val kspOptions = options.get().flatMap { listOf("-P", it.toArg()) }
-        return super.buildCompilerArgs() + kspOptions
-    }
+    override val additionalCompilerOptions: Provider<Collection<String>>
+        get() {
+            return project.provider {
+                val kspOptions = options.get().flatMap { listOf("-P", it.toArg()) }
+                super.additionalCompilerOptions.get() + kspOptions
+            }
+        }
 
-    override fun buildCommonArgs(defaultsOnly: Boolean): List<String> {
-        if (blockOtherCompilerPlugins)
-            compilerPluginClasspath = overridePluginClasspath.get()
-        return super.buildCommonArgs(defaultsOnly)
-    }
+    override var compilerPluginClasspath: FileCollection? = null
+        get() {
+            if (blockOtherCompilerPlugins) {
+                field = overridePluginClasspath.get()
+            }
+            return field
+        }
 
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
