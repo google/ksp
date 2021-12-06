@@ -130,6 +130,7 @@ abstract class AbstractKotlinKSPTest : KotlinBaseTest<AbstractKotlinKSPTest.KspT
         if (testProcessor != null) {
             val logger = MessageCollectorBasedKSPLogger(
                 PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false),
+                PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false),
                 false
             )
             val analysisExtension =

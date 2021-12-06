@@ -28,6 +28,7 @@ import java.io.StringWriter
 
 class MessageCollectorBasedKSPLogger(
     private val messageCollector: MessageCollector,
+    private val wrappedMessageCollector: MessageCollector,
     private val allWarningsAsErrors: Boolean
 ) : KSPLogger {
 
@@ -38,6 +39,10 @@ class MessageCollectorBasedKSPLogger(
     data class Event(val severity: CompilerMessageSeverity, val message: String)
 
     val recordedEvents = mutableListOf<Event>()
+
+    private val reportToCompilerSeverity = setOf(CompilerMessageSeverity.ERROR, CompilerMessageSeverity.EXCEPTION)
+
+    private var reportedToCompiler = false
 
     private fun convertMessage(message: String, symbol: KSNode?): String =
         when (val location = symbol?.location) {
@@ -70,6 +75,10 @@ class MessageCollectorBasedKSPLogger(
 
     fun reportAll() {
         for (event in recordedEvents) {
+            if (!reportedToCompiler && event.severity in reportToCompilerSeverity) {
+                reportedToCompiler = true
+                wrappedMessageCollector.report(event.severity, "Error occurred in KSP, check log for detail")
+            }
             messageCollector.report(event.severity, event.message)
         }
     }
