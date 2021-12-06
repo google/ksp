@@ -90,6 +90,19 @@ class KMPImplementedIT {
     }
 
     @Test
+    fun testJsFailWarning() {
+        File(project.root, "workload-js/build.gradle.kts")
+            .appendText("\nksp {\n  allWarningsAsErrors = true\n}\n")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-js:build"
+        ).buildAndFail()
+    }
+
+    @Test
     fun testAndroidNative() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 

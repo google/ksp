@@ -90,7 +90,11 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         }?.build() ?: return
         val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
             ?: throw IllegalStateException("ksp: message collector not found!")
-        val logger = MessageCollectorBasedKSPLogger(messageCollector, options.allWarningsAsErrors)
+        val wrappedMessageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
+            ?: throw IllegalStateException("ksp: message collector not found!")
+        val logger = MessageCollectorBasedKSPLogger(
+            messageCollector, wrappedMessageCollector, options.allWarningsAsErrors
+        )
         if (options.processingClasspath.isNotEmpty()) {
             if (options.withCompilation && options.incremental) {
                 throw IllegalStateException("ksp: `incremental` is incompatible with `withCompilation`.")
