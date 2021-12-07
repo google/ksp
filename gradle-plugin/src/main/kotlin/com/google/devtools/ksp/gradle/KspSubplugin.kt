@@ -256,9 +256,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
             kspTask.source.filter { !kspOutputDir.isParentOf(it) }
 
-            // Don't support binary generation for K/N yet.
+            // Don't support binary generation for non-JVM platforms yet.
             // FIXME: figure out how to add user generated libraries.
-            if (kspTask !is KspTaskNative) {
+            if (kspTask is KspTaskJvm) {
                 kotlinCompilation.output.classesDirs.from(classOutputDir)
             }
         }
