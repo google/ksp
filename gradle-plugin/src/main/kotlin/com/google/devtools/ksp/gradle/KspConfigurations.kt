@@ -57,7 +57,20 @@ class KspConfigurations(private val project: Project) {
         val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
         val isDefault = sourceSet.name == compilation.defaultSourceSetName
         // Note: on single-platform, target name is conveniently set to "".
-        val name = if (isMain && isDefault) compilation.target.name else sourceSet.name
+        val name = if (isMain && isDefault) {
+            // For js(IR), js(LEGACY), the target "js" is created.
+            //
+            // When js(BOTH) is used, target "jsLegacy" and "jsIr" are created.
+            // Both targets share the same source set. Therefore configurations other than main compilation
+            // are shared. E.g., "kspJsTest".
+            // For simplicity and consistency, let's not distinguish them.
+            when (val targetName = compilation.target.name) {
+                "jsLegacy", "jsIr" -> "js"
+                else -> targetName
+            }
+        } else {
+            sourceSet.name
+        }
         return configurationNameOf(PREFIX, name)
     }
 
