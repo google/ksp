@@ -57,9 +57,16 @@ class KMPImplementedIT {
         )
 
         verify(
-            "workload/build/libs/workload-js-1.0-SNAPSHOT.jar",
+            "workload/build/libs/workload-jslegacy-1.0-SNAPSHOT.jar",
             listOf(
-                "playground-workload.js"
+                "playground-workload-js-legacy.js"
+            )
+        )
+
+        verify(
+            "workload/build/libs/workload-jsir-1.0-SNAPSHOT.klib",
+            listOf(
+                "default/ir/types.knt"
             )
         )
 
