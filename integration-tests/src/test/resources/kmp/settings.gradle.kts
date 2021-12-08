@@ -16,4 +16,8 @@ pluginManagement {
 rootProject.name = "playground"
 
 include(":workload")
+include(":workload-jvm")
+include(":workload-js")
+include(":workload-linuxX64")
+include(":workload-androidNative")
 include(":test-processor")
