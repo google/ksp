@@ -32,16 +32,129 @@ class KMPImplementedIT {
     }
 
     @Test
-    fun testAll() {
+    fun testJvm() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        // KotlinNative doesn't support configuration cache yet.
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
             "clean",
-            "build"
+            ":workload-jvm:build"
         ).build().let {
-            verifyAll(it)
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-jvm:build")?.outcome)
+            verify(
+                "workload-jvm/build/libs/workload-jvm-jvm-1.0-SNAPSHOT.jar",
+                listOf(
+                    "com/example/Foo.class"
+                )
+            )
+            verify(
+                "workload-jvm/build/libs/workload-jvm-metadata-1.0-SNAPSHOT.jar",
+                listOf(
+                    "com/example/Foo.kotlin_metadata"
+                )
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+        }
+    }
+
+    @Test
+    fun testJs() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-js:build"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-js:build")?.outcome)
+            verify(
+                "workload-js/build/libs/workload-js-jslegacy-1.0-SNAPSHOT.jar",
+                listOf(
+                    "playground-workload-js-js-legacy.js"
+                )
+            )
+            verify(
+                "workload-js/build/libs/workload-js-jsir-1.0-SNAPSHOT.klib",
+                listOf(
+                    "default/ir/types.knt"
+                )
+            )
+            verify(
+                "workload-js/build/libs/workload-js-metadata-1.0-SNAPSHOT.jar",
+                listOf(
+                    "com/example/Foo.kotlin_metadata"
+                )
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+        }
+    }
+
+    @Test
+    fun testAndroidNative() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-androidNative:build"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-androidNative:build")?.outcome)
+            verify(
+                "workload-androidNative/build/libs/workload-androidNative-metadata-1.0-SNAPSHOT.jar",
+                listOf(
+                    "com/example/Foo.kotlin_metadata"
+                )
+            )
+            verifyKexe(
+                "workload-androidNative/build/bin/androidNativeX64/debugExecutable/workload-androidNative.so"
+            )
+            verifyKexe(
+                "workload-androidNative/build/bin/androidNativeX64/releaseExecutable/workload-androidNative.so"
+            )
+            verifyKexe(
+                "workload-androidNative/build/bin/androidNativeArm64/debugExecutable/workload-androidNative.so"
+            )
+            verifyKexe(
+                "workload-androidNative/build/bin/androidNativeArm64/releaseExecutable/workload-androidNative.so"
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+        }
+    }
+
+    @Test
+    fun testLinuxX64() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-linuxX64:build"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-linuxX64:build")?.outcome)
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-linuxX64:kspTestKotlinLinuxX64")?.outcome)
+            verify(
+                "workload-linuxX64/build/libs/workload-linuxX64-metadata-1.0-SNAPSHOT.jar",
+                listOf(
+                    "com/example/Foo.kotlin_metadata"
+                )
+            )
+            verifyKexe("workload-linuxX64/build/bin/linuxX64/debugExecutable/workload-linuxX64.kexe")
+            verifyKexe("workload-linuxX64/build/bin/linuxX64/releaseExecutable/workload-linuxX64.kexe")
+
+            // TODO: Enable after CI's Xcode version catches up.
+            // Assert.assertTrue(
+            //     result.task(":workload-linuxX64:kspKotlinIosArm64")?.outcome == TaskOutcome.SUCCESS ||
+            //         result.task(":workload-linuxX64:kspKotlinIosArm64")?.outcome == TaskOutcome.SKIPPED
+            // )
+            // Assert.assertTrue(
+            //     result.task(":workload-linuxX64:kspKotlinMacosX64")?.outcome == TaskOutcome.SUCCESS ||
+            //         result.task(":workload-linuxX64:kspKotlinMacosX64")?.outcome == TaskOutcome.SKIPPED
+            // )
+            Assert.assertTrue(
+                it.task(":workload-linuxX64:kspKotlinMingwX64")?.outcome == TaskOutcome.SUCCESS ||
+                    it.task(":workload-linuxX64:kspKotlinMingwX64")?.outcome == TaskOutcome.SKIPPED
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
         }
     }
 
