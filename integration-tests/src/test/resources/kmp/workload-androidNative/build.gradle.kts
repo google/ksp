@@ -20,7 +20,11 @@ kotlin {
         }
     }
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":annotations"))
+            }
+        }
         val androidNativeX64Main by getting
         val androidNativeArm64Main by getting
     }
