@@ -33,7 +33,11 @@ kotlin {
     // macosX64()
     mingwX64()
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":annotations"))
+            }
+        }
         val linuxX64Main by getting
         val linuxX64Test by getting
         val androidNativeX64Main by getting

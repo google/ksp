@@ -10,7 +10,11 @@ kotlin {
         withJava()
     }
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":annotations"))
+            }
+        }
     }
 }
 

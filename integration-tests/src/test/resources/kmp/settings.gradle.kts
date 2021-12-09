@@ -15,6 +15,7 @@ pluginManagement {
 
 rootProject.name = "playground"
 
+include(":annotations")
 include(":workload")
 include(":workload-jvm")
 include(":workload-js")
