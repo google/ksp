@@ -599,12 +599,22 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
 abstract class KspTaskJS @Inject constructor(
     objectFactory: ObjectFactory,
 ) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory), KspTask {
+    private val backendSelectionArgs = listOf(
+        "-Xir-only",
+        "-Xir-produce-js",
+        "-Xir-produce-klib-dir",
+        "-Xir-produce-klib-file"
+    )
+
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
         Configurator<KspTaskJS>(kotlinCompilation).configure(this)
         kotlinCompile as Kotlin2JsCompile
+        kotlinOptions.freeCompilerArgs = kotlinCompile.kotlinOptions.freeCompilerArgs.filter {
+            it in backendSelectionArgs
+        }
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
             providerFactory.provider {
@@ -643,6 +653,7 @@ abstract class KspTaskJS @Inject constructor(
         }
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
+        kotlinOptions.copyFreeCompilerArgsToArgs(args)
     }
 
     // Overrding an internal function is hacky.
@@ -661,6 +672,11 @@ abstract class KspTaskJS @Inject constructor(
         }
         super.callCompilerAsync(args, sourceRoots, inputChanges)
     }
+
+    // Overrding an internal function is hacky.
+    // TODO: Ask upstream to open it.
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    fun `isIncrementalCompilationEnabled$kotlin_gradle_plugin`(): Boolean = false
 }
 
 @CacheableTask
