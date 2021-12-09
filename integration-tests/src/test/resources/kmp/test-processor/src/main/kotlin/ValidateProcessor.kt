@@ -12,7 +12,7 @@ class ValidateProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger)
         invoked = true
 
         val toValidate = resolver.getSymbolsWithAnnotation("com.example.MyAnnotation")
-        if (!toValidate.all { it.validate() }) {
+        if (toValidate.firstOrNull() == null || !toValidate.all { it.validate() }) {
             logger.error("not ok")
         }
         return emptyList()
