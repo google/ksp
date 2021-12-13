@@ -41,7 +41,6 @@ kotlin {
 }
 
 dependencies {
-    /*
     add("kspMetadata", project(":test-processor"))
     add("kspJvm", project(":test-processor"))
     add("kspJvmTest", project(":test-processor"))
@@ -55,8 +54,7 @@ dependencies {
     add("kspLinuxX64Test", project(":test-processor"))
     add("kspMingwX64", project(":test-processor"))
     add("kspMingwX64Test", project(":test-processor"))
-    */
-    // FIXME: The universal "ksp" configuration has performance issue and is deprecated on multiplatform.
-    //        Replace it with the above after 1.0.1.
-    ksp(project(":test-processor"))
+
+    // The universal "ksp" configuration has performance issue and is deprecated on multiplatform since 1.0.1
+    // ksp(project(":test-processor"))
 }
