@@ -17,13 +17,13 @@
 
 package com.google.devtools.ksp.symbol.impl.synthetic
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSPropertySetter
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSValueParameterDescriptorImpl
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
