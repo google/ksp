@@ -40,6 +40,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     implementation(project(":api"))
+    implementation(project(":util"))
 
     // workaround: IntelliJ doesn't resolve packed classes from included builds.
     if (kotlinProjectPath != null) {
@@ -59,6 +60,7 @@ dependencies {
     testImplementation("junit:junit:$junitVersion")
 
     testImplementation(project(":api"))
+    testImplementation(project(":util"))
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
     libsForTesting(kotlin("test", kotlinBaseVersion))

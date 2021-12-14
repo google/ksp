@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 
 class KSDynamicReferenceImpl private constructor(override val parent: KSNode?) : KSDynamicReference {
     companion object : KSObjectCache<KSTypeReference, KSDynamicReferenceImpl>() {
