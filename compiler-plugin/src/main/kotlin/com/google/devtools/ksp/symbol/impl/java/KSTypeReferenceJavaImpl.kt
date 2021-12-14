@@ -18,6 +18,8 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
@@ -29,12 +31,10 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSClassifierReferenceDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
-import com.google.devtools.ksp.symbol.impl.memoized
 import com.google.devtools.ksp.symbol.impl.toLocation
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClassType

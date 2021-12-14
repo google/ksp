@@ -1,12 +1,12 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiMethod
 

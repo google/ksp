@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -12,7 +13,6 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.binary.KSAnnotationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
