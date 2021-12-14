@@ -18,7 +18,6 @@
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.visitor.KSDefaultVisitor

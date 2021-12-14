@@ -17,10 +17,10 @@
 
 package com.google.devtools.ksp.symbol.impl.synthetic
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 
 class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) :

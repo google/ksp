@@ -16,12 +16,12 @@
  */
 package com.google.devtools.ksp.symbol.impl
 
+import com.google.devtools.ksp.BinaryClassInfoCache
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.MemoizedSequence
+import com.google.devtools.ksp.findPsi
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
@@ -32,14 +32,10 @@ import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
-import com.intellij.lang.jvm.JvmModifier
-import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.light.LightMethod
 import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.descriptors.*
-import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
@@ -49,200 +45,19 @@ import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaField
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethodBase
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
-import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.siblings
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
-import org.jetbrains.kotlin.resolve.descriptorUtil.isCompanionObject
-import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
-import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
-import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.StarProjectionImpl
 import org.jetbrains.kotlin.types.TypeProjectionImpl
 import org.jetbrains.kotlin.types.replace
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
-import org.jetbrains.org.objectweb.asm.ClassReader
-import org.jetbrains.org.objectweb.asm.ClassVisitor
-import org.jetbrains.org.objectweb.asm.FieldVisitor
-import org.jetbrains.org.objectweb.asm.MethodVisitor
-import org.jetbrains.org.objectweb.asm.Opcodes
 import java.util.*
 import kotlin.Comparator
 import kotlin.collections.ArrayDeque
-
-private val jvmModifierMap = mapOf(
-    JvmModifier.PUBLIC to Modifier.PUBLIC,
-    JvmModifier.PRIVATE to Modifier.PRIVATE,
-    JvmModifier.ABSTRACT to Modifier.ABSTRACT,
-    JvmModifier.FINAL to Modifier.FINAL,
-    JvmModifier.PROTECTED to Modifier.PROTECTED,
-    JvmModifier.STATIC to Modifier.JAVA_STATIC,
-    JvmModifier.STRICTFP to Modifier.JAVA_STRICT,
-    JvmModifier.NATIVE to Modifier.JAVA_NATIVE,
-    JvmModifier.SYNCHRONIZED to Modifier.JAVA_SYNCHRONIZED,
-    JvmModifier.TRANSIENT to Modifier.JAVA_TRANSIENT,
-    JvmModifier.VOLATILE to Modifier.JAVA_VOLATILE
-)
-
-internal val javaModifiers = setOf(
-    Modifier.ABSTRACT,
-    Modifier.FINAL,
-    Modifier.JAVA_DEFAULT,
-    Modifier.JAVA_NATIVE,
-    Modifier.JAVA_STATIC,
-    Modifier.JAVA_STRICT,
-    Modifier.JAVA_SYNCHRONIZED,
-    Modifier.JAVA_TRANSIENT,
-    Modifier.JAVA_VOLATILE,
-    Modifier.PRIVATE,
-    Modifier.PROTECTED,
-    Modifier.PUBLIC,
-)
-
-private val modifierMap = mapOf(
-    KtTokens.PUBLIC_KEYWORD to Modifier.PUBLIC,
-    KtTokens.PRIVATE_KEYWORD to Modifier.PRIVATE,
-    KtTokens.INTERNAL_KEYWORD to Modifier.INTERNAL,
-    KtTokens.PROTECTED_KEYWORD to Modifier.PROTECTED,
-    KtTokens.IN_KEYWORD to Modifier.IN,
-    KtTokens.OUT_KEYWORD to Modifier.OUT,
-    KtTokens.OVERRIDE_KEYWORD to Modifier.OVERRIDE,
-    KtTokens.LATEINIT_KEYWORD to Modifier.LATEINIT,
-    KtTokens.ENUM_KEYWORD to Modifier.ENUM,
-    KtTokens.SEALED_KEYWORD to Modifier.SEALED,
-    KtTokens.ANNOTATION_KEYWORD to Modifier.ANNOTATION,
-    KtTokens.DATA_KEYWORD to Modifier.DATA,
-    KtTokens.INNER_KEYWORD to Modifier.INNER,
-    KtTokens.FUN_KEYWORD to Modifier.FUN,
-    KtTokens.VALUE_KEYWORD to Modifier.VALUE,
-    KtTokens.SUSPEND_KEYWORD to Modifier.SUSPEND,
-    KtTokens.TAILREC_KEYWORD to Modifier.TAILREC,
-    KtTokens.OPERATOR_KEYWORD to Modifier.OPERATOR,
-    KtTokens.INFIX_KEYWORD to Modifier.INFIX,
-    KtTokens.INLINE_KEYWORD to Modifier.INLINE,
-    KtTokens.EXTERNAL_KEYWORD to Modifier.EXTERNAL,
-    KtTokens.ABSTRACT_KEYWORD to Modifier.ABSTRACT,
-    KtTokens.FINAL_KEYWORD to Modifier.FINAL,
-    KtTokens.OPEN_KEYWORD to Modifier.OPEN,
-    KtTokens.VARARG_KEYWORD to Modifier.VARARG,
-    KtTokens.NOINLINE_KEYWORD to Modifier.NOINLINE,
-    KtTokens.CROSSINLINE_KEYWORD to Modifier.CROSSINLINE,
-    KtTokens.REIFIED_KEYWORD to Modifier.REIFIED,
-    KtTokens.EXPECT_KEYWORD to Modifier.EXPECT,
-    KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL,
-    KtTokens.CONST_KEYWORD to Modifier.CONST
-)
-
-fun KtModifierList?.toKSModifiers(): Set<Modifier> {
-    if (this == null)
-        return emptySet()
-    val modifiers = mutableSetOf<Modifier>()
-    modifiers.addAll(
-        modifierMap.entries
-            .filter { hasModifier(it.key) }
-            .map { it.value }
-    )
-    return modifiers
-}
-
-fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
-    val modifierList = this.modifierList
-    return modifierList.toKSModifiers()
-}
-
-fun PsiModifierListOwner.toKSModifiers(): Set<Modifier> {
-    val modifiers = mutableSetOf<Modifier>()
-    modifiers.addAll(
-        jvmModifierMap.entries.filter { this.hasModifier(it.key) }
-            .map { it.value }
-            .toSet()
-    )
-    if (this.modifierList?.hasExplicitModifier("default") == true) {
-        modifiers.add(Modifier.JAVA_DEFAULT)
-    }
-    return modifiers
-}
-
-fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
-    val modifiers = mutableSetOf<Modifier>()
-    if (this.isActual) {
-        modifiers.add(Modifier.ACTUAL)
-    }
-    if (this.isExpect) {
-        modifiers.add(Modifier.EXPECT)
-    }
-    if (this.isExternal) {
-        modifiers.add(Modifier.EXTERNAL)
-    }
-    // we are not checking for JVM_STATIC annotation here intentionally
-    // see: https://github.com/google/ksp/issues/378
-    val isStatic = (this.containingDeclaration as? ClassDescriptor)?.let { containingClass ->
-        containingClass.staticScope.getContributedDescriptors(
-            nameFilter = {
-                it == this.name
-            }
-        ).any {
-            it == this
-        }
-    } ?: false
-    if (isStatic) {
-        modifiers.add(Modifier.JAVA_STATIC)
-    }
-    when (this.modality) {
-        Modality.SEALED -> modifiers.add(Modifier.SEALED)
-        Modality.FINAL -> modifiers.add(Modifier.FINAL)
-        Modality.OPEN -> {
-            if (!isStatic && this.visibility != DescriptorVisibilities.PRIVATE) {
-                // private methods still show up as OPEN
-                modifiers.add(Modifier.OPEN)
-            }
-        }
-        Modality.ABSTRACT -> modifiers.add(Modifier.ABSTRACT)
-    }
-    when (this.visibility) {
-        DescriptorVisibilities.PUBLIC -> modifiers.add(Modifier.PUBLIC)
-        DescriptorVisibilities.PROTECTED,
-        JavaDescriptorVisibilities.PROTECTED_AND_PACKAGE,
-        JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY,
-        -> modifiers.add(Modifier.PROTECTED)
-        DescriptorVisibilities.PRIVATE, DescriptorVisibilities.LOCAL -> modifiers.add(Modifier.PRIVATE)
-        DescriptorVisibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
-        // Since there is no modifier for package-private, use No modifier to tell if a symbol from binary is package private.
-        JavaDescriptorVisibilities.PACKAGE_VISIBILITY, JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY -> Unit
-        else -> throw IllegalStateException("unhandled visibility: ${this.visibility}")
-    }
-
-    return modifiers
-}
-
-fun FunctionDescriptor.toFunctionKSModifiers(): Set<Modifier> {
-    val modifiers = mutableSetOf<Modifier>()
-    if (this.isSuspend) {
-        modifiers.add(Modifier.SUSPEND)
-    }
-    if (this.isTailrec) {
-        modifiers.add(Modifier.TAILREC)
-    }
-    if (this.isInline) {
-        modifiers.add(Modifier.INLINE)
-    }
-    if (this.isInfix) {
-        modifiers.add(Modifier.INFIX)
-    }
-    if (this.isOperator) {
-        modifiers.add(Modifier.OPERATOR)
-    }
-    if (this.overriddenDescriptors.isNotEmpty()) {
-        modifiers.add(Modifier.OVERRIDE)
-    }
-
-    return modifiers
-}
 
 fun PsiElement.findParentAnnotated(): KSAnnotated? {
     var parent = when (this) {
@@ -285,29 +100,6 @@ fun PsiElement.toLocation(): Location {
     return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
 }
 
-fun Project.findLocationString(file: PsiFile, offset: Int): String {
-    val psiDocumentManager = PsiDocumentManager.getInstance(this)
-    val document = psiDocumentManager.getDocument(file) ?: return "<unknown>"
-    val lineNumber = document.getLineNumber(offset)
-    val offsetInLine = offset - document.getLineStartOffset(lineNumber)
-    return "${file.virtualFile.path}: (${lineNumber + 1}, ${offsetInLine + 1})"
-}
-
-private fun parseDocString(raw: String): String? {
-    val t1 = raw.trim()
-    if (!t1.startsWith("/**") || !t1.endsWith("*/"))
-        return null
-    val lineSep = t1.findAnyOf(listOf("\r\n", "\n", "\r"))?.second ?: ""
-    return t1.trim('/').trim('*').lines().joinToString(lineSep) {
-        it.trimStart().trimStart('*')
-    }
-}
-
-fun PsiElement.getDocString(): String? =
-    this.firstChild.siblings().firstOrNull { it is PsiComment }?.let {
-        parseDocString(it.text)
-    }
-
 // TODO: handle local functions/classes correctly
 fun Sequence<KtElement>.getKSDeclarations(): Sequence<KSDeclaration> =
     this.mapNotNull {
@@ -319,20 +111,6 @@ fun Sequence<KtElement>.getKSDeclarations(): Sequence<KSDeclaration> =
             else -> null
         }
     }
-
-fun KtClassOrObject.getClassType(): ClassKind {
-    return when (this) {
-        is KtObjectDeclaration -> ClassKind.OBJECT
-        is KtEnumEntry -> ClassKind.ENUM_ENTRY
-        is KtClass -> when {
-            this.isEnum() -> ClassKind.ENUM_CLASS
-            this.isInterface() -> ClassKind.INTERFACE
-            this.isAnnotation() -> ClassKind.ANNOTATION_CLASS
-            else -> ClassKind.CLASS
-        }
-        else -> throw IllegalStateException("Unexpected psi type ${this.javaClass}, $ExceptionMessage")
-    }
-}
 
 fun List<PsiElement>.getKSJavaDeclarations() =
     this.mapNotNull {
@@ -413,12 +191,6 @@ internal fun PropertyDescriptor.toKSPropertyDeclaration(): KSPropertyDeclaration
     }
 }
 
-internal fun DeclarationDescriptor.findPsi(): PsiElement? {
-    // For synthetic members.
-    if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
-    return (this as? DeclarationDescriptorWithSource)?.source?.getPsi()
-}
-
 /**
  * @see KSFunctionDeclaration.findOverridee / [KSPropertyDeclaration.findOverridee] for docs.
  */
@@ -462,14 +234,6 @@ internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): C
     }
 }
 
-internal inline fun <reified T> PsiElement.findParentOfType(): T? {
-    var parent = this.parent
-    while (parent != null && parent !is T) {
-        parent = parent.parent
-    }
-    return parent as? T
-}
-
 internal fun getInstanceForCurrentRound(node: KSNode): KSNode? {
     when (node.origin) {
         Origin.KOTLIN_LIB, Origin.JAVA_LIB -> return null
@@ -510,99 +274,6 @@ internal fun getInstanceForCurrentRound(node: KSNode): KSNode? {
 }
 
 internal fun KSAnnotated.getInstanceForCurrentRound(): KSAnnotated? = getInstanceForCurrentRound(this) as? KSAnnotated
-
-internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
-
-/**
- * Custom check for backing fields of descriptors that support properties coming from .class files.
- * The compiler API always returns true for them even when they don't have backing fields.
- */
-internal fun PropertyDescriptor.hasBackingFieldWithBinaryClassSupport(): Boolean {
-    // partially take from https://github.com/JetBrains/kotlin/blob/master/compiler/light-classes/src/org/jetbrains/kotlin/asJava/classes/ultraLightMembersCreator.kt#L104
-    return when {
-        extensionReceiverParameter != null -> false // extension properties do not have backing fields
-        compileTimeInitializer != null -> true // compile time initialization requires backing field
-        isLateInit -> true // lateinit requires property, faster than parsing class declaration
-        modality == Modality.ABSTRACT -> false // abstract means false, faster than parsing class declaration
-        this is DeserializedPropertyDescriptor -> this.hasBackingFieldInBinaryClass() // kotlin class, check binary
-        this.source is KotlinSourceElement -> this.declaresDefaultValue // kotlin source
-        else -> true // Java source or class
-    }
-}
-
-internal data class BinaryClassInfo(
-    val fieldAccFlags: Map<String, Int>,
-    val methodAccFlags: Map<String, Int>
-)
-
-/**
- * Lookup cache for field names names for deserialized classes.
- * To check if a field has backing field, we need to look for binary field names, hence they are cached here.
- */
-internal object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
-    fun getCached(
-        kotlinJvmBinaryClass: KotlinJvmBinaryClass,
-    ) = cache.getOrPut(kotlinJvmBinaryClass.classId) {
-        val virtualFileContent = kotlinJvmBinaryClass.safeAs<VirtualFileKotlinClass>()?.file?.contentsToByteArray()
-        val fieldAccFlags = mutableMapOf<String, Int>()
-        val methodAccFlags = mutableMapOf<String, Int>()
-        ClassReader(virtualFileContent).accept(
-            object : ClassVisitor(Opcodes.API_VERSION) {
-                override fun visitField(
-                    access: Int,
-                    name: String?,
-                    descriptor: String?,
-                    signature: String?,
-                    value: Any?
-                ): FieldVisitor? {
-                    if (name != null) {
-                        fieldAccFlags.put(name, access)
-                    }
-                    return null
-                }
-
-                override fun visitMethod(
-                    access: Int,
-                    name: String?,
-                    descriptor: String?,
-                    signature: String?,
-                    exceptions: Array<out String>?
-                ): MethodVisitor? {
-                    if (name != null) {
-                        methodAccFlags.put(name + descriptor, access)
-                    }
-                    return null
-                }
-            },
-            ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-        )
-        BinaryClassInfo(fieldAccFlags, methodAccFlags)
-    }
-}
-
-/**
- * Workaround for backingField in deserialized descriptors.
- * They always return non-null for backing field even when they don't have a backing field.
- */
-private fun DeserializedPropertyDescriptor.hasBackingFieldInBinaryClass(): Boolean {
-    val kotlinJvmBinaryClass = if (containingDeclaration.isCompanionObject()) {
-        // Companion objects have backing fields in containing classes.
-        // https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-fields
-        val container = containingDeclaration.containingDeclaration as? DeserializedClassDescriptor
-        container?.source?.safeAs<KotlinJvmBinarySourceElement>()?.binaryClass
-    } else {
-        this.getContainingKotlinJvmBinaryClass()
-    } ?: return false
-    return BinaryClassInfoCache.getCached(kotlinJvmBinaryClass).fieldAccFlags.containsKey(name.asString())
-}
-
-// from: https://github.com/JetBrains/kotlin/blob/92d200e093c693b3c06e53a39e0b0973b84c7ec5/plugins/kotlin-serialization/kotlin-serialization-compiler/src/org/jetbrains/kotlinx/serialization/compiler/resolve/SerializableProperty.kt#L45
-private val PropertyDescriptor.declaresDefaultValue: Boolean
-    get() = when (val declaration = this.source.getPsi()) {
-        is KtDeclarationWithInitializer -> declaration.initializer != null
-        is KtParameter -> declaration.defaultValue != null
-        else -> false
-    }
 
 /**
  * Helper class to read the order of fields/methods in a .class file compiled from Kotlin.
@@ -829,10 +500,4 @@ internal val KSFunctionDeclaration.jvmAccessFlag: Int
             descriptor.source.safeAs<JavaSourceElement>()?.javaElement.safeAs<BinaryJavaMethodBase>()?.access ?: 0
         }
         else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
-    }
-
-internal fun KSAnnotated.hasAnnotation(fqn: String): Boolean =
-    annotations.any {
-        fqn.endsWith(it.shortName.asString()) &&
-            it.annotationType.resolve().declaration.qualifiedName?.asString() == fqn
     }
