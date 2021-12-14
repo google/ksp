@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.symbol.impl
+package com.google.devtools.ksp
 
 class KSObjectCacheManager {
     companion object {

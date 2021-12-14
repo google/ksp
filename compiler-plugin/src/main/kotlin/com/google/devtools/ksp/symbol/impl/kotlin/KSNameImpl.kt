@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.impl.KSObjectCache
 
 class KSNameImpl private constructor(val name: String) : KSName {
     companion object : KSObjectCache<String, KSNameImpl>() {

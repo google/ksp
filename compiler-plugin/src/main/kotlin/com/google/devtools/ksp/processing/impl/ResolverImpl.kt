@@ -27,11 +27,8 @@ import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
-import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
-import com.google.devtools.ksp.symbol.impl.hasAnnotation
 import com.google.devtools.ksp.symbol.impl.java.*
-import com.google.devtools.ksp.symbol.impl.javaModifiers
 import com.google.devtools.ksp.symbol.impl.jvmAccessFlag
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.resolveContainingClass
