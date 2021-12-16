@@ -66,7 +66,7 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
         this.modifiers.contains(Modifier.ABSTRACT) ||
             (
                 (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE &&
-                    !this.modifiers.contains(Modifier.JAVA_DEFAULT)
+                    !this.modifiers.contains(Modifier.JAVA_DEFAULT) && functionKind != FunctionKind.STATIC
                 )
     }
 
