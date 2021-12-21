@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
+import org.jetbrains.kotlin.resolve.BindingContext
 
 class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) :
     KSPropertyDeclaration,
@@ -59,8 +60,18 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
         ktProperty.isVar
     }
 
-    override val hasBackingField: Boolean
-        get() = ktProperty.initializer != null || ktProperty.hasModifier(KtTokens.LATEINIT_KEYWORD)
+    override val hasBackingField: Boolean by lazy {
+        // taken from: https://github.com/JetBrains/kotlin/blob/master/compiler/light-classes/src/org/jetbrains/kotlin/asJava/classes/ultraLightMembersCreator.kt#L104
+        when {
+            ktProperty.initializer != null -> true
+            ktProperty.hasModifier(KtTokens.LATEINIT_KEYWORD) -> true
+            else -> {
+                val context = ResolverImpl.instance.bindingTrace.bindingContext
+                val descriptor = ResolverImpl.instance.resolveDeclaration(ktProperty)
+                descriptor is PropertyDescriptor && context[BindingContext.BACKING_FIELD_REQUIRED, descriptor] == true
+            }
+        }
+    }
 
     override val getter: KSPropertyGetter? by lazy {
         ktProperty.getter?.let {

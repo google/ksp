@@ -509,9 +509,12 @@ internal fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
  * The compiler API always returns true for them even when they don't have backing fields.
  */
 internal fun PropertyDescriptor.hasBackingFieldWithBinaryClassSupport(): Boolean {
+    // partially take from https://github.com/JetBrains/kotlin/blob/master/compiler/light-classes/src/org/jetbrains/kotlin/asJava/classes/ultraLightMembersCreator.kt#L104
     return when {
         extensionReceiverParameter != null -> false // extension properties do not have backing fields
         compileTimeInitializer != null -> true // compile time initialization requires backing field
+        isLateInit -> true // lateinit requires property, faster than parsing class declaration
+        modality == Modality.ABSTRACT -> false // abstract means false, faster than parsing class declaration
         this is DeserializedPropertyDescriptor -> this.hasBackingFieldInBinaryClass() // kotlin class, check binary
         this.source is KotlinSourceElement -> this.declaresDefaultValue // kotlin source
         else -> true // Java source or class
