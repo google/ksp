@@ -34,6 +34,7 @@
 // lib.ChildClass.lateinit_var_3: true
 // lib.ChildClass.overriddenBaseProp_willBeBacked: true
 // lib.ChildClass.overriddenBaseProp_wontBeBacked: false
+// lib.ConstructorSetProp.propSetInConstructor: true
 // lib.DataClass.value_Param: true
 // lib.DataClass.variable_Param: true
 // lib.JavaClass.javaField: true
@@ -82,6 +83,7 @@
 // main.ChildClass.lateinit_var_3: true
 // main.ChildClass.overriddenBaseProp_willBeBacked: true
 // main.ChildClass.overriddenBaseProp_wontBeBacked: false
+// main.ConstructorSetProp.propSetInConstructor: true
 // main.DataClass.value_Param: true
 // main.DataClass.variable_Param: true
 // main.JavaClass.javaField: true
@@ -215,6 +217,13 @@ class ChildClass: BaseClass(), MyInterface {
     override lateinit var lateinit_var_3: String
 }
 
+class ConstructorSetProp {
+    private val propSetInConstructor: Boolean
+    constructor(propSetInConstructor: Boolean) {
+        this.propSetInConstructor = propSetInConstructor
+    }
+}
+
 // FILE: lib/JavaClass.java
 package lib;
 public class JavaClass {
@@ -328,6 +337,13 @@ class ChildClass: BaseClass(), MyInterface {
         set(v: String) = Unit
     override var lateinit_var_2: String = ""
     override lateinit var lateinit_var_3: String
+}
+
+class ConstructorSetProp {
+    private val propSetInConstructor: Boolean
+    constructor(propSetInConstructor: Boolean) {
+        this.propSetInConstructor = propSetInConstructor
+    }
 }
 
 // FILE: main/JavaClass.java
