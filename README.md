@@ -98,7 +98,7 @@ functions, properties, and so on.
 KSP expects an implementation of the `SymbolProcessorProvider` interface to instantiate `SymbolProcessor`:
 
 ```kotlin
-interface SymbolProcessorProvider {
+fun interface SymbolProcessorProvider {
     fun create(environment: SymbolProcessorEnvironment): SymbolProcessor
 }
 ```
