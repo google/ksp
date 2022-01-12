@@ -47,12 +47,6 @@ class KMPImplementedIT {
                     "com/example/Foo.class"
                 )
             )
-            verify(
-                "workload-jvm/build/libs/workload-jvm-metadata-1.0-SNAPSHOT.jar",
-                listOf(
-                    "com/example/Foo.kotlin_metadata"
-                )
-            )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JVM"))
         }
@@ -94,12 +88,6 @@ class KMPImplementedIT {
                 "workload-js/build/libs/workload-js-jsir-1.0-SNAPSHOT.klib",
                 listOf(
                     "default/ir/types.knt"
-                )
-            )
-            verify(
-                "workload-js/build/libs/workload-js-metadata-1.0-SNAPSHOT.jar",
-                listOf(
-                    "com/example/Foo.kotlin_metadata"
                 )
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
@@ -146,12 +134,6 @@ class KMPImplementedIT {
             ":workload-androidNative:build"
         ).build().let {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-androidNative:build")?.outcome)
-            verify(
-                "workload-androidNative/build/libs/workload-androidNative-metadata-1.0-SNAPSHOT.jar",
-                listOf(
-                    "com/example/Foo.kotlin_metadata"
-                )
-            )
             verifyKexe(
                 "workload-androidNative/build/bin/androidNativeX64/debugExecutable/workload-androidNative.so"
             )
@@ -180,12 +162,6 @@ class KMPImplementedIT {
         ).build().let {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-linuxX64:build")?.outcome)
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-linuxX64:kspTestKotlinLinuxX64")?.outcome)
-            verify(
-                "workload-linuxX64/build/libs/workload-linuxX64-metadata-1.0-SNAPSHOT.jar",
-                listOf(
-                    "com/example/Foo.kotlin_metadata"
-                )
-            )
             verifyKexe("workload-linuxX64/build/bin/linuxX64/debugExecutable/workload-linuxX64.kexe")
             verifyKexe("workload-linuxX64/build/bin/linuxX64/releaseExecutable/workload-linuxX64.kexe")
 
@@ -246,13 +222,6 @@ class KMPImplementedIT {
             "workload/build/libs/workload-jsir-1.0-SNAPSHOT.klib",
             listOf(
                 "default/ir/types.knt"
-            )
-        )
-
-        verify(
-            "workload/build/libs/workload-metadata-1.0-SNAPSHOT.jar",
-            listOf(
-                "com/example/Foo.kotlin_metadata"
             )
         )
 
