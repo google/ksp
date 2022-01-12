@@ -2,10 +2,11 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import java.util.jar.*
 
+@Ignore
 class VersionCheckIT {
     @Rule
     @JvmField

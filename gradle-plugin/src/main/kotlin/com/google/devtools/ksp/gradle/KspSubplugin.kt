@@ -51,6 +51,7 @@ import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
@@ -188,6 +189,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         if (nonEmptyKspConfigurations.isEmpty()) {
             return project.provider { emptyList() }
         }
+        if (kotlinCompileProvider.name == "compileKotlinMetadata") {
+            return project.provider { emptyList() }
+        }
 
         val target = kotlinCompilation.target.name
         val sourceSetName = kotlinCompilation.defaultSourceSetName
@@ -265,6 +269,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             } else {
                 kotlinCompilation.allKotlinSourceSets.forEach { sourceSet -> kspTask.source(sourceSet.kotlin) }
+                if (kotlinCompilation is KotlinCommonCompilation) {
+                    kspTask.source(kotlinCompilation.defaultSourceSet.kotlin)
+                }
             }
             kspTask.source.filter { !kspOutputDir.isParentOf(it) }
 
@@ -749,6 +756,7 @@ abstract class KspTaskMetadata @Inject constructor(
         args.classpath = classpathList.joinToString(File.pathSeparator)
         args.friendPaths = friendPaths.files.map { it.absolutePath }.toTypedArray()
         args.refinesPaths = refinesMetadataPaths.map { it.absolutePath }.toTypedArray()
+        args.expectActualLinker = true
         args.useFir = false
     }
 
