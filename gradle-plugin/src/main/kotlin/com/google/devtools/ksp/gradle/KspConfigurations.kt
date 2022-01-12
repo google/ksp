@@ -5,6 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 
 /**
@@ -55,7 +56,7 @@ class KspConfigurations(private val project: Project) {
 
     private fun getKotlinConfigurationName(compilation: KotlinCompilation<*>, sourceSet: KotlinSourceSet): String {
         val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
-        val isDefault = sourceSet.name == compilation.defaultSourceSetName
+        val isDefault = sourceSet.name == compilation.defaultSourceSetName && compilation !is KotlinCommonCompilation
         // Note: on single-platform, target name is conveniently set to "".
         val name = if (isMain && isDefault) {
             // For js(IR), js(LEGACY), the target "js" is created.
@@ -68,6 +69,8 @@ class KspConfigurations(private val project: Project) {
                 "jsLegacy", "jsIr" -> "js"
                 else -> targetName
             }
+        } else if (compilation is KotlinCommonCompilation) {
+            sourceSet.name + compilation.target.name.capitalize()
         } else {
             sourceSet.name
         }
@@ -148,6 +151,9 @@ class KspConfigurations(private val project: Project) {
      */
     fun find(compilation: KotlinCompilation<*>): Set<Configuration> {
         val results = mutableListOf<String>()
+        if (compilation is KotlinCommonCompilation) {
+            results.add(getKotlinConfigurationName(compilation, compilation.defaultSourceSet))
+        }
         compilation.kotlinSourceSets.mapTo(results) {
             getKotlinConfigurationName(compilation, it)
         }
