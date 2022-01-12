@@ -30,7 +30,7 @@ kotlin {
 }
 
 dependencies {
-    add("kspMetadata", project(":test-processor"))
+    add("kspCommonMainMetadata", project(":test-processor"))
     add("kspJvm", project(":test-processor"))
     add("kspJvmTest", project(":test-processor"))
     add("kspLinuxX64", project(":test-processor"))
