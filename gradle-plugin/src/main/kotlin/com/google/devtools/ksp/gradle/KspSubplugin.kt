@@ -567,6 +567,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         args.addPluginOptions(options.get())
         args.destinationAsFile = destination
         args.allowNoSourceFiles = true
+        args.useFir = false
     }
 
     // Overrding an internal function is hacky.
@@ -658,6 +659,7 @@ abstract class KspTaskJS @Inject constructor(
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
         kotlinOptions.copyFreeCompilerArgsToArgs(args)
+        args.useFir = false
     }
 
     // Overrding an internal function is hacky.
@@ -732,6 +734,7 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         args.classpath = classpathList.joinToString(File.pathSeparator)
         args.friendPaths = friendPaths.files.map { it.absolutePath }.toTypedArray()
         args.refinesPaths = refinesMetadataPaths.map { it.absolutePath }.toTypedArray()
+        args.useFir = false
     }
 
     // Overrding an internal function is hacky.
