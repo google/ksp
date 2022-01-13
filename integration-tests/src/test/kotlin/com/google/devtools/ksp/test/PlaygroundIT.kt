@@ -131,4 +131,17 @@ class PlaygroundIT {
             Assert.assertTrue(result.output.contains("kotlin.io.FileAlreadyExistsException"))
         }
     }
+
+    // Test -Xuse-fir for compilation; KSP still uses FE1.0
+    @Test
+    fun testFirPreview() {
+        val gradleProperties = File(project.root, "gradle.properties")
+        gradleProperties.appendText("\nkotlin.useFir=true")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("clean", "build") { result ->
+            Assert.assertTrue(result.output.contains("This build uses in-dev FIR"))
+            Assert.assertTrue(result.output.contains("-Xuse-fir"))
+        }
+        project.restore(gradleProperties.path)
+    }
 }
