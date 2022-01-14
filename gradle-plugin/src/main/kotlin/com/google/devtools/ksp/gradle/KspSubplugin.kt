@@ -79,28 +79,28 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
 
         @JvmStatic
-        fun getKspOutputDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "generated/ksp/$sourceSetName")
+        fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
+            File(project.project.buildDir, "generated/ksp/$target/$sourceSetName")
 
         @JvmStatic
-        fun getKspClassOutputDir(project: Project, sourceSetName: String) =
-            File(getKspOutputDir(project, sourceSetName), "classes")
+        fun getKspClassOutputDir(project: Project, sourceSetName: String, target: String) =
+            File(getKspOutputDir(project, sourceSetName, target), "classes")
 
         @JvmStatic
-        fun getKspJavaOutputDir(project: Project, sourceSetName: String) =
-            File(getKspOutputDir(project, sourceSetName), "java")
+        fun getKspJavaOutputDir(project: Project, sourceSetName: String, target: String) =
+            File(getKspOutputDir(project, sourceSetName, target), "java")
 
         @JvmStatic
-        fun getKspKotlinOutputDir(project: Project, sourceSetName: String) =
-            File(getKspOutputDir(project, sourceSetName), "kotlin")
+        fun getKspKotlinOutputDir(project: Project, sourceSetName: String, target: String) =
+            File(getKspOutputDir(project, sourceSetName, target), "kotlin")
 
         @JvmStatic
-        fun getKspResourceOutputDir(project: Project, sourceSetName: String) =
-            File(getKspOutputDir(project, sourceSetName), "resources")
+        fun getKspResourceOutputDir(project: Project, sourceSetName: String, target: String) =
+            File(getKspOutputDir(project, sourceSetName, target), "resources")
 
         @JvmStatic
-        fun getKspCachesDir(project: Project, sourceSetName: String) =
-            File(project.project.buildDir, "kspCaches/$sourceSetName")
+        fun getKspCachesDir(project: Project, sourceSetName: String, target: String) =
+            File(project.project.buildDir, "kspCaches/$target/$sourceSetName")
 
         @JvmStatic
         private fun getSubpluginOptions(
@@ -108,16 +108,20 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspExtension: KspExtension,
             classpath: Configuration,
             sourceSetName: String,
+            target: String,
             isIncremental: Boolean,
             allWarningsAsErrors: Boolean,
         ): List<SubpluginOption> {
             val options = mutableListOf<SubpluginOption>()
-            options += SubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName).path)
-            options += SubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName).path)
-            options += SubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName).path)
-            options += SubpluginOption("resourceOutputDir", getKspResourceOutputDir(project, sourceSetName).path)
-            options += SubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName).path)
-            options += SubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName).path)
+            options += SubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
+            options += SubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName, target).path)
+            options += SubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName, target).path)
+            options += SubpluginOption(
+                "resourceOutputDir",
+                getKspResourceOutputDir(project, sourceSetName, target).path
+            )
+            options += SubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName, target).path)
+            options += SubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName, target).path)
             options += SubpluginOption("incremental", isIncremental.toString())
             options += SubpluginOption(
                 "incrementalLog",
@@ -179,12 +183,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             return project.provider { emptyList() }
         }
 
+        val target = kotlinCompilation.target.name
         val sourceSetName = kotlinCompilation.defaultSourceSetName
-        val classOutputDir = getKspClassOutputDir(project, sourceSetName)
-        val javaOutputDir = getKspJavaOutputDir(project, sourceSetName)
-        val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName)
-        val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName)
-        val kspOutputDir = getKspOutputDir(project, sourceSetName)
+        val classOutputDir = getKspClassOutputDir(project, sourceSetName, target)
+        val javaOutputDir = getKspJavaOutputDir(project, sourceSetName, target)
+        val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName, target)
+        val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName, target)
+        val kspOutputDir = getKspOutputDir(project, sourceSetName, target)
 
         if (javaCompile != null) {
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
@@ -212,6 +217,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspExtension,
                         processorClasspath,
                         sourceSetName,
+                        target,
                         isIncremental,
                         kspExtension.allWarningsAsErrors
                     )
@@ -220,7 +226,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.destination = kspOutputDir
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
-            kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName)).disallowChanges()
+            kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName, target)).disallowChanges()
 
             if (kspExtension.blockOtherCompilerPlugins) {
                 // FIXME: ask upstream to provide an API to make this not implementation-dependent.
