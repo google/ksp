@@ -167,7 +167,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 options.resourceOutputDir,
                 options.projectBaseDir,
                 anyChangesWildcard,
-                ksFiles
+                ksFiles,
+                options.incremental
             )
             processors = providers.mapNotNull { provider ->
                 var processor: SymbolProcessor? = null
