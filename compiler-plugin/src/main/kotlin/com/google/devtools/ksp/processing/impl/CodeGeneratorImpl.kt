@@ -33,7 +33,8 @@ class CodeGeneratorImpl(
     private val resourcesDir: File,
     private val projectBase: File,
     private val anyChangesWildcard: KSFile,
-    private val allSources: List<KSFile>
+    private val allSources: List<KSFile>,
+    private val isIncremental: Boolean
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
     private val fileOutputStreamMap = mutableMapOf<String, FileOutputStream>()
@@ -112,6 +113,9 @@ class CodeGeneratorImpl(
     }
 
     private fun associate(sources: List<KSFile>, outputPath: String) {
+        if (!isIncremental)
+            return
+
         val output = File(outputPath).relativeTo(projectBase)
         sources.forEach { source ->
             sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
