@@ -53,5 +53,7 @@ $KOTLINC \
         -P $KSP_PLUGIN_OPT:kspOutputDir=./out \
         -P $KSP_PLUGIN_OPT:cachesDir=./out \
         -P $KSP_PLUGIN_OPT:incremental=false \
+        -P $KSP_PLUGIN_OPT:apoption=key1=value1 \
+        -P $KSP_PLUGIN_OPT:apoption=key2=value2 \
         $*
 ```
