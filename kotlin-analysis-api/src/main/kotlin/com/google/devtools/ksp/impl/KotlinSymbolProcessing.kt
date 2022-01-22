@@ -30,11 +30,13 @@ import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.analyseWithReadAction
 import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.PackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
 import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProvider
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticModificationTrackerFactory
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticPackageProvider
 import org.jetbrains.kotlin.analysis.providers.*
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
@@ -64,7 +66,7 @@ fun registerComponents(project: MockProject, environment: KotlinCoreEnvironment,
 
     project.picoContainer.registerComponentInstance(
         KotlinModificationTrackerFactory::class.qualifiedName,
-        KotlinOutOfBlockModificationTrackerFactoryImpl()
+        KotlinStaticModificationTrackerFactory()
     )
 
     RegisterComponentService.registerFirIdeResolveStateService(project)
@@ -73,7 +75,10 @@ fun registerComponents(project: MockProject, environment: KotlinCoreEnvironment,
         KotlinDeclarationProviderFactory::class.qualifiedName,
         object : KotlinDeclarationProviderFactory() {
             override fun createDeclarationProvider(searchScope: GlobalSearchScope): KotlinDeclarationProvider {
-                return DeclarationProviderImpl(searchScope, ktFiles.filter { searchScope.contains(it.virtualFile) })
+                return KotlinStaticDeclarationProvider(
+                    searchScope,
+                    ktFiles.filter { searchScope.contains(it.virtualFile) }
+                )
             }
         }
     )
@@ -82,7 +87,10 @@ fun registerComponents(project: MockProject, environment: KotlinCoreEnvironment,
         KotlinPackageProviderFactory::class.qualifiedName,
         object : KotlinPackageProviderFactory() {
             override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
-                return KotlinPackageProviderImpl(searchScope, ktFiles.filter { searchScope.contains(it.virtualFile) })
+                return KotlinStaticPackageProvider(
+                    searchScope,
+                    ktFiles.filter { searchScope.contains(it.virtualFile) }
+                )
             }
         }
     )
