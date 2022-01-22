@@ -9,18 +9,19 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtTypeAndAnnotations
+import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.types.KtType
 
-class KSTypeReferenceImpl(private val ktTypeAndAnnotations: KtTypeAndAnnotations) : KSTypeReference {
+class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
     override val element: KSReferenceElement?
         get() = TODO("Not yet implemented")
 
     override fun resolve(): KSType {
-        return KSTypeImpl(ktTypeAndAnnotations.type)
+        return KSTypeImpl(ktType)
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeAndAnnotations.annotations.map { KSAnnotationImpl(it) }.asSequence()
+        ktType.annotations.map { KSAnnotationImpl(it) }.asSequence()
     }
     override val origin: Origin = Origin.KOTLIN
 
