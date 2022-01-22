@@ -27,7 +27,7 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
     override val extensionReceiver: KSTypeReference?
         get() = TODO("Not yet implemented")
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl(ktPropertySymbol.annotatedType)
+        KSTypeReferenceImpl(ktPropertySymbol.returnType)
     }
     override val isMutable: Boolean by lazy {
         !ktPropertySymbol.isVal
@@ -53,7 +53,7 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
     override val qualifiedName: KSName?
         get() = TODO("Not yet implemented")
     override val typeParameters: List<KSTypeParameter> by lazy {
-        ktPropertySymbol.type
+        ktPropertySymbol.typeParameters.map { KSTypeParameterImpl(it) }
     }
     override val packageName: KSName
         get() = TODO("Not yet implemented")
