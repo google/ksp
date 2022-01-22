@@ -16,6 +16,7 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
@@ -43,7 +44,7 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
     }
     override val returnType: KSTypeReference? by lazy {
         analyzeWithSymbolAsContext(ktFunctionSymbol) {
-            KSTypeReferenceImpl(ktFunctionSymbol.annotatedType)
+            KSTypeReferenceImpl(ktFunctionSymbol.returnType)
         }
     }
     override val parameters: List<KSValueParameter> by lazy {
