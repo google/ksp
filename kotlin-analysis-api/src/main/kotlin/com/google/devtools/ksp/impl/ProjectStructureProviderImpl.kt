@@ -9,8 +9,6 @@ import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.jvm.JdkPlatform
-import org.jetbrains.kotlin.platform.jvm.JvmPlatform
-import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.resolve.PlatformDependentAnalyzerServices
 import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
 
@@ -35,7 +33,6 @@ class ProjectStructureProviderImpl : ProjectStructureProvider() {
                 get() = TargetPlatform(setOf(JdkPlatform(JvmTarget.DEFAULT)))
             override val project: Project
                 get() = element.project
-
         }
     }
 }
