@@ -8,13 +8,14 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
+import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 
 class KSValueParameterImpl(private val ktValueParameterSymbol: KtValueParameterSymbol) : KSValueParameter {
     override val name: KSName?
         get() = TODO("Not yet implemented")
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl(ktValueParameterSymbol.annotatedType)
+        KSTypeReferenceImpl(ktValueParameterSymbol.returnType)
     }
 
     override val isVararg: Boolean by lazy {
