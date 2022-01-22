@@ -48,9 +48,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisAPIVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisAPIVersion") {
-        isTransitive = false
-    }
 
     implementation(project(":api"))
 }
