@@ -47,9 +47,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.idea.references.*
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.serialization.deserialization.ClassData
 import java.io.File
 
 @OptIn(InvalidWayOfUsingAnalysisSession::class)
@@ -104,19 +102,7 @@ fun registerComponents(project: MockProject, environment: KotlinCoreEnvironment,
         PackagePartProviderFactory::class.qualifiedName,
         object : PackagePartProviderFactory() {
             override fun createPackagePartProviderForLibrary(scope: GlobalSearchScope): PackagePartProvider {
-                return object : PackagePartProvider {
-                    override fun findPackageParts(packageFqName: String): List<String> {
-                        return emptyList()
-                    }
-
-                    override fun getAllOptionalAnnotationClasses(): List<ClassData> {
-                        return emptyList()
-                    }
-
-                    override fun getAnnotationsOnBinaryModule(moduleName: String): List<ClassId> {
-                        return emptyList()
-                    }
-                }
+                return environment.createPackagePartProvider(scope)
             }
         }
     )
