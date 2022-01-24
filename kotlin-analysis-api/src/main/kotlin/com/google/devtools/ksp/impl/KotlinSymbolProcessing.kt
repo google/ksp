@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.PackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
+import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
 import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProvider
 import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticModificationTrackerFactory
