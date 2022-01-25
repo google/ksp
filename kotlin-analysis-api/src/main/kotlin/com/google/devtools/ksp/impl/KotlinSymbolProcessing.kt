@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.analyseWithReadAction
 import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider
+import org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.PackagePartProviderFactory
@@ -47,6 +48,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.idea.references.*
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
+import org.jetbrains.kotlin.psi.KotlinReferenceProvidersService
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 
@@ -109,6 +111,9 @@ fun registerComponents(project: MockProject, environment: KotlinCoreEnvironment,
 
     val application = ApplicationManager.getApplication() as MockApplication
     KotlinCoreEnvironment.underApplicationLock {
+        application.registerService(
+            KotlinReferenceProvidersService::class.java, HLApiReferenceProviderService::class.java
+        )
         application.registerService(
             KotlinReferenceProviderContributor::class.java, KotlinFirReferenceContributor::class.java
         )
