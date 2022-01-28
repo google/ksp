@@ -15,6 +15,7 @@ val packedJars by configurations.creating
 
 dependencies {
     packedJars(project(":compiler-plugin")) { isTransitive = false }
+    packedJars(project(":util")) { isTransitive = false }
 }
 
 tasks.withType<ShadowJar>() {
