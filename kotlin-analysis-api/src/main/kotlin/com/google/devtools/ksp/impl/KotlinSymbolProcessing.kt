@@ -21,9 +21,9 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.PackagePartP
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProvider
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProviderFactory
 import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticModificationTrackerFactory
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticPackageProvider
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticPackageProviderFactory
 import org.jetbrains.kotlin.analysis.providers.*
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
@@ -59,26 +59,12 @@ fun registerComponents(project: MockProject, environment: KotlinCoreEnvironment,
 
     project.picoContainer.registerComponentInstance(
         KotlinDeclarationProviderFactory::class.qualifiedName,
-        object : KotlinDeclarationProviderFactory() {
-            override fun createDeclarationProvider(searchScope: GlobalSearchScope): KotlinDeclarationProvider {
-                return KotlinStaticDeclarationProvider(
-                    searchScope,
-                    ktFiles.filter { searchScope.contains(it.virtualFile) }
-                )
-            }
-        }
+        KotlinStaticDeclarationProviderFactory(ktFiles)
     )
 
     project.picoContainer.registerComponentInstance(
         KotlinPackageProviderFactory::class.qualifiedName,
-        object : KotlinPackageProviderFactory() {
-            override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
-                return KotlinStaticPackageProvider(
-                    searchScope,
-                    ktFiles.filter { searchScope.contains(it.virtualFile) }
-                )
-            }
-        }
+        KotlinStaticPackageProviderFactory(ktFiles)
     )
 
     project.picoContainer.registerComponentInstance(
