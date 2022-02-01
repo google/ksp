@@ -26,7 +26,7 @@ fun ModuleDependency.includeJars(vararg names: String) {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", analysisAPIVersion))
     implementation("org.jetbrains.kotlin:kotlin-compiler:$analysisAPIVersion")
 
