@@ -35,6 +35,7 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticIm
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
+import com.intellij.psi.impl.light.LightMethod
 import com.intellij.psi.impl.source.PsiClassImpl
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -244,7 +245,11 @@ fun FunctionDescriptor.toFunctionKSModifiers(): Set<Modifier> {
 }
 
 fun PsiElement.findParentAnnotated(): KSAnnotated? {
-    var parent = this.parent
+    var parent = when (this) {
+        // Unfortunately, LightMethod doesn't implement parent.
+        is LightMethod -> this.containingClass
+        else -> this.parent
+    }
 
     while (parent != null && parent !is KtDeclaration && parent !is KtFile && parent !is PsiClass &&
         parent !is PsiMethod && parent !is PsiJavaFile && parent !is KtTypeAlias

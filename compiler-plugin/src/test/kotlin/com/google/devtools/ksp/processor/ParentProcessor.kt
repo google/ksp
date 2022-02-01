@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSNode
@@ -16,6 +17,9 @@ class ParentProcessor : AbstractTestProcessor() {
         val collector = AllSymbolProcessor()
         val nodes = mutableSetOf<KSNode>()
         resolver.getAllFiles().forEach { it.accept(collector, nodes) }
+        for (e in listOf("YUV", "HSV")) {
+            resolver.getClassDeclarationByName(e)!!.accept(collector, nodes)
+        }
         nodes.forEach {
             result.add("parent of $it: ${it.parent}")
         }

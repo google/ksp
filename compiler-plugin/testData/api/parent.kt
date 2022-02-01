@@ -77,6 +77,21 @@
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass
 // parent of synthetic constructor for topClass: topClass
+// parent of CMYK: File: a.kt
+// parent of C: CMYK
+// parent of C: synthetic constructor for C
+// parent of synthetic constructor for C: C
+// parent of M: CMYK
+// parent of M: synthetic constructor for M
+// parent of synthetic constructor for M: M
+// parent of Y: CMYK
+// parent of Y: synthetic constructor for Y
+// parent of synthetic constructor for Y: Y
+// parent of K: CMYK
+// parent of K: synthetic constructor for K
+// parent of synthetic constructor for K: K
+// parent of CMYK: synthetic constructor for CMYK
+// parent of synthetic constructor for CMYK: CMYK
 // parent of File: B.java: null
 // parent of Object: Object
 // parent of Object: B
@@ -105,7 +120,105 @@
 // parent of foo: B
 // parent of B<*>: synthetic constructor for B
 // parent of synthetic constructor for B: B
+// parent of RGB: RGB
+// parent of RGB: INVARIANT RGB
+// parent of INVARIANT RGB: Enum<RGB>
+// parent of Enum<RGB>: Enum<RGB>
+// parent of Enum<RGB>: RGB
+// parent of RGB: File: B.java
+// parent of R: RGB
+// parent of G: RGB
+// parent of B: RGB
+// parent of RGB: RGB
+// parent of RGB: INVARIANT RGB
+// parent of INVARIANT RGB: Array<(RGB..RGB?)>
+// parent of Array<(RGB..RGB?)>: Array<(RGB..RGB?)>
+// parent of Array<(RGB..RGB?)>: values
+// parent of values: RGB
+// parent of java: String
+// parent of lang: String
+// parent of String: String
+// parent of String: name
+// parent of name: valueOf
+// parent of RGB: RGB
+// parent of RGB: valueOf
+// parent of valueOf: RGB
+// parent of RGB: synthetic constructor for RGB
+// parent of synthetic constructor for RGB: RGB
+// parent of YUV: YUV
+// parent of YUV: INVARIANT YUV
+// parent of INVARIANT YUV: Enum<YUV>
+// parent of Enum<YUV>: Enum<YUV>
+// parent of Enum<YUV>: YUV
+// parent of YUV: null
+// parent of YUV: YUV
+// parent of YUV: Y
+// parent of Y: YUV
+// parent of YUV: YUV
+// parent of YUV: U
+// parent of U: YUV
+// parent of YUV: YUV
+// parent of YUV: V
+// parent of V: YUV
+// parent of String: String
+// parent of String: value
+// parent of value: valueOf
+// parent of YUV: YUV
+// parent of YUV: valueOf
+// parent of valueOf: YUV
+// parent of YUV: YUV
+// parent of YUV: INVARIANT YUV
+// parent of INVARIANT YUV: Array<YUV>
+// parent of Array<YUV>: Array<YUV>
+// parent of Array<YUV>: values
+// parent of values: YUV
+// parent of YUV: YUV
+// parent of YUV: <init>
+// parent of <init>: YUV
+// parent of HSV: HSV
+// parent of HSV: INVARIANT HSV
+// parent of INVARIANT HSV: Enum<(HSV..HSV?)>
+// parent of Enum<(HSV..HSV?)>: Enum<(HSV..HSV?)>
+// parent of Enum<(HSV..HSV?)>: HSV
+// parent of HSV: null
+// parent of HSV: HSV
+// parent of HSV: H
+// parent of H: HSV
+// parent of HSV: HSV
+// parent of HSV: S
+// parent of S: HSV
+// parent of HSV: HSV
+// parent of HSV: V
+// parent of V: HSV
+// parent of String: String
+// parent of String: value
+// parent of value: valueOf
+// parent of HSV: HSV
+// parent of HSV: valueOf
+// parent of valueOf: HSV
+// parent of HSV: HSV
+// parent of HSV: INVARIANT HSV
+// parent of INVARIANT HSV: Array<HSV>
+// parent of Array<HSV>: Array<HSV>
+// parent of Array<HSV>: values
+// parent of values: HSV
+// parent of HSV: HSV
+// parent of HSV: <init>
+// parent of <init>: HSV
 // END
+
+// MODULE: lib
+// FILE: YUV.kt
+enum class YUV {
+    Y, U, V
+}
+
+// FILE: HSV.java
+enum HSV {
+    H, S, V
+}
+
+// MODULE: main(lib)
 
 // FILE: a.kt
 annotation class Anno
@@ -134,6 +247,10 @@ class topClass: ITF {
     get() = "1"
 }
 
+enum class CMYK {
+    C, M, Y, K
+}
+
 // FILE: Bnno.kt
 package p
 
@@ -147,4 +264,8 @@ public class B<T> implements ITF {
     public int foo(T t, int i) {
         return 1;
     }
+}
+
+enum RGB {
+    R, G, B
 }
