@@ -22,6 +22,9 @@ jobs:
         ref: 1.0.3-release
 
     - name: merge commits from main to release branch
+      env:
+        # space separated hashs
+        DONT_PICK: 42ef4e0b1696ddbcabbb188d7761c8692ca9f988
       run: |
         # Cherry pick new changes from main, except for version bumps.
         # A commit is a version bump IFF it touches third_party/prebuilt/repo
@@ -31,7 +34,7 @@ jobs:
         CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
         PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
         VERSION_BUMPS=$(git log --pretty=%H $MERGE_BASE..origin/main third_party/prebuilt/repo)
-        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS") <(echo "$CANDIDATES") | tac)
+        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | tac)
         if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
 
     - name: Setup Java 9
