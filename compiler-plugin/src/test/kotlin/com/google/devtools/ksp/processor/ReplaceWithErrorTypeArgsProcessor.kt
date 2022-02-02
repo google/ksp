@@ -51,10 +51,11 @@ open class ReplaceWithErrorTypeArgsProcessor : AbstractTestProcessor() {
         val yargs = y.type.element!!.typeArguments
 
         for (decl in decls) {
-            results.add(decl.asStarProjectedType().replace(xargs).toString())
-            results.add(decl.asStarProjectedType().replace(yargs).toString())
-            results.add(decl.asType(xargs).toString())
-            results.add(decl.asType(yargs).toString())
+            val declName = decl.qualifiedName!!.asString()
+            results.add("$declName.star.replace($xargs): ${decl.asStarProjectedType().replace(xargs)}")
+            results.add("$declName.star.replace($yargs): ${decl.asStarProjectedType().replace(yargs)}")
+            results.add("$declName.asType($xargs): ${decl.asType(xargs)}")
+            results.add("$declName.asType($yargs): ${decl.asType(yargs)}")
         }
         return emptyList()
     }
