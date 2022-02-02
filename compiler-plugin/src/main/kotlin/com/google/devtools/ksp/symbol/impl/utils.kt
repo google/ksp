@@ -353,10 +353,13 @@ fun org.jetbrains.kotlin.types.Variance.toKSVariance(): Variance {
     }
 }
 
-fun KSTypeReference.toKotlinType() = (resolve() as KSTypeImpl).kotlinType
+private fun KSTypeReference.toKotlinType() = (resolve() as? KSTypeImpl)?.kotlinType
 
-internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>): KotlinType =
-    replace(
+// returns null if error
+internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>): KotlinType? {
+    if (this.arguments.size != newArguments.size)
+        return null
+    return replace(
         newArguments.mapIndexed { index, ksTypeArgument ->
             val variance = when (ksTypeArgument.variance) {
                 Variance.INVARIANT -> org.jetbrains.kotlin.types.Variance.INVARIANT
@@ -371,11 +374,12 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
                 else -> throw IllegalStateException(
                     "Unexpected psi for type argument: ${ksTypeArgument.javaClass}, $ExceptionMessage"
                 )
-            }.toKotlinType()
+            }.toKotlinType() ?: return null
 
             TypeProjectionImpl(variance, type)
         }
     )
+}
 
 internal fun FunctionDescriptor.toKSDeclaration(): KSDeclaration {
     if (this.kind != CallableMemberDescriptor.Kind.DECLARATION)

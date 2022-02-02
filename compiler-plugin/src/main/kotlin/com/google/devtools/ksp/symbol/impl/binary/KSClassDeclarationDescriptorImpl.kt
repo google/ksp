@@ -24,6 +24,7 @@ import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
@@ -145,7 +146,9 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType =
-        getKSTypeCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        descriptor.defaultType.replaceTypeArguments(typeArguments)?.let {
+            getKSTypeCached(it, typeArguments)
+        } ?: KSErrorType
 
     override fun asStarProjectedType(): KSType {
         return getKSTypeCached(descriptor.defaultType.replaceArgumentsWithStarProjections())
