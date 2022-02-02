@@ -4,6 +4,7 @@ description = "Kotlin Symbol Processing API"
 
 val signingKey: String? by project
 val signingPassword: String? by project
+val kotlinBaseVersion: String by project
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
