@@ -18,70 +18,70 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: ReplaceWithErrorTypeArgsProcessor
 // EXPECTED:
-// KS<Int, String>
-// <ERROR TYPE>
-// KS<Int, String>
-// <ERROR TYPE>
-// KL<Int, String>
-// <ERROR TYPE>
-// KL<Int, String>
-// <ERROR TYPE>
-// JS<Int, String>
-// <ERROR TYPE>
-// JS<Int, String>
-// <ERROR TYPE>
-// JL<Int, String>
-// <ERROR TYPE>
-// JL<Int, String>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
-// <ERROR TYPE>
+// KS.star.replace([INVARIANT Int, INVARIANT String]): KS<Int, String>
+// KS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KS.asType([INVARIANT Int, INVARIANT String]): KS<Int, String>
+// KS.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KL.star.replace([INVARIANT Int, INVARIANT String]): KL<Int, String>
+// KL.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KL.asType([INVARIANT Int, INVARIANT String]): KL<Int, String>
+// KL.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JS.star.replace([INVARIANT Int, INVARIANT String]): JS<Int, String>
+// JS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JS.asType([INVARIANT Int, INVARIANT String]): JS<Int, String>
+// JS.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JL.star.replace([INVARIANT Int, INVARIANT String]): JL<Int, String>
+// JL.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JL.asType([INVARIANT Int, INVARIANT String]): JL<Int, String>
+// JL.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KS1.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KS1.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KS1.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KS1.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KL1.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KL1.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KL1.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KL1.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JS1.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JS1.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JS1.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JS1.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JL1.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JL1.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JL1.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JL1.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JSE.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JSE.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JSE.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JSE.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JSE.E.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JSE.E.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JSE.E.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JSE.E.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JLE.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JLE.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JLE.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JLE.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JLE.E.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JLE.E.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// JLE.E.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// JLE.E.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KSE.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KSE.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KSE.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KSE.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KSE.E.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KSE.E.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KSE.E.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KSE.E.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KLE.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KLE.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KLE.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KLE.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KLE.E.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KLE.E.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
+// KLE.E.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
+// KLE.E.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
 // END
 
 // MODULE: lib
