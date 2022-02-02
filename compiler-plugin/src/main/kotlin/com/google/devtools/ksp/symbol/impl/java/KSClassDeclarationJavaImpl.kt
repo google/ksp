@@ -144,7 +144,9 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
         return descriptor?.let {
-            getKSTypeCached(it.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+            it.defaultType.replaceTypeArguments(typeArguments)?.let {
+                getKSTypeCached(it, typeArguments)
+            }
         } ?: KSErrorType
     }
 

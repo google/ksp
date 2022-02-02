@@ -22,13 +22,13 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
 import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.intellij.psi.PsiEnumConstant
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 
 class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumConstant) :
     KSClassDeclaration,
@@ -92,12 +92,15 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
+    // Enum can't have type parameters.
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return getKSTypeCached(descriptor!!.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        if (typeArguments.isNotEmpty())
+            return KSErrorType
+        return asStarProjectedType()
     }
 
     override fun asStarProjectedType(): KSType {
-        return getKSTypeCached(descriptor!!.defaultType.replaceArgumentsWithStarProjections())
+        return getKSTypeCached(descriptor!!.defaultType)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
