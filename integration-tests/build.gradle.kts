@@ -19,4 +19,5 @@ tasks.named<Test>("test") {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
+    dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
 }
