@@ -321,6 +321,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/referenceElement.kt");
     }
 
+    @TestMetadata("replaceWithErrorTypeArgs.kt")
+    public void testReplaceWithErrorTypeArgs() throws Exception {
+        runTest("testData/api/replaceWithErrorTypeArgs.kt");
+    }
+
     @TestMetadata("resolveJavaType.kt")
     public void testResolveJavaType() throws Exception {
         runTest("testData/api/resolveJavaType.kt");
