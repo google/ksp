@@ -16,10 +16,11 @@ pluginManagement {
 
 include("api")
 include("gradle-plugin")
+include("common-util")
 include("compiler-plugin")
 include("symbol-processing")
+include("symbol-processing-cmdline")
 include("integration-tests")
-include("util")
 
 val kotlinProjectPath: String? by settings
 if (kotlinProjectPath != null) {
