@@ -108,7 +108,9 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return getKSTypeCached(descriptor.defaultType.replaceTypeArguments(typeArguments), typeArguments)
+        return descriptor.defaultType.replaceTypeArguments(typeArguments)?.let {
+            getKSTypeCached(it, typeArguments)
+        } ?: KSErrorType
     }
 
     override fun asStarProjectedType(): KSType {
