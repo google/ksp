@@ -3,7 +3,11 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 import java.io.OutputStreamWriter
 
-class TestProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger) : SymbolProcessor {
+class TestProcessor(
+    val codeGenerator: CodeGenerator,
+    val logger: KSPLogger,
+    val env: SymbolProcessorEnvironment
+) : SymbolProcessor {
     var invoked = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -13,6 +17,12 @@ class TestProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger) : S
             return emptyList()
         }
         invoked = true
+
+        logger.warn("language version: ${env.kotlinVersion}")
+        logger.warn("api version: ${env.apiVersion}")
+        logger.warn("compiler version: ${env.compilerVersion}")
+        val platforms = env.platforms.map { it.toString() }
+        logger.warn("platforms: $platforms")
 
         codeGenerator.createNewFile(Dependencies(false), "", "Foo", "kt").use { output ->
             OutputStreamWriter(output).use { writer ->
@@ -47,6 +57,6 @@ class ClassVisitor : KSTopDownVisitor<OutputStreamWriter, Unit>() {
 
 class TestProcessorProvider : SymbolProcessorProvider {
     override fun create(env: SymbolProcessorEnvironment): SymbolProcessor {
-        return TestProcessor(env.codeGenerator, env.logger)
+        return TestProcessor(env.codeGenerator, env.logger, env)
     }
 }

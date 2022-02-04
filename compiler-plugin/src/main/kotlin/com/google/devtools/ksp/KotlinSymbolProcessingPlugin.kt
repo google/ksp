@@ -28,9 +28,14 @@ import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
+import org.jetbrains.kotlin.config.KotlinCompilerVersion
+import org.jetbrains.kotlin.config.LanguageVersion
+import org.jetbrains.kotlin.config.languageVersionSettings
+import org.jetbrains.kotlin.config.toKotlinVersion
 import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 import java.io.File
 
@@ -87,6 +92,9 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
         val options = configuration[KSP_OPTIONS]?.apply {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
+            languageVersion = configuration.languageVersionSettings.languageVersion.toKotlinVersion()
+            apiVersion = configuration.languageVersionSettings.apiVersion.toKotlinVersion()
+            compilerVersion = KotlinCompilerVersion.getVersion().toKotlinVersion()
         }?.build() ?: return
         val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
             ?: throw IllegalStateException("ksp: message collector not found!")
@@ -264,6 +272,10 @@ class KspOptions(
     val allWarningsAsErrors: Boolean,
     val withCompilation: Boolean,
     val changedClasses: List<String>,
+
+    val languageVersion: KotlinVersion,
+    val apiVersion: KotlinVersion,
+    val compilerVersion: KotlinVersion,
 ) {
     class Builder {
         var projectBaseDir: File? = null
@@ -291,6 +303,10 @@ class KspOptions(
         var withCompilation: Boolean = false
         var changedClasses: MutableList<String> = mutableListOf()
 
+        var languageVersion: KotlinVersion = LanguageVersion.LATEST_STABLE.toKotlinVersion()
+        var apiVersion: KotlinVersion = ApiVersion.LATEST_STABLE.toKotlinVersion()
+        var compilerVersion: KotlinVersion = KotlinVersion.CURRENT
+
         fun build(): KspOptions {
             return KspOptions(
                 projectBaseDir!!, compileClasspath, javaSourceRoots,
@@ -300,8 +316,25 @@ class KspOptions(
                 resourceOutputDir!!,
                 processingClasspath, processors, processingOptions,
                 knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog,
-                allWarningsAsErrors, withCompilation, changedClasses
+                allWarningsAsErrors, withCompilation, changedClasses,
+                languageVersion, apiVersion, compilerVersion
             )
         }
     }
 }
+
+private fun String?.toKotlinVersion(): KotlinVersion {
+    if (this == null)
+        return KotlinVersion.CURRENT
+
+    return split('-').first().split('.').map { it.toInt() }.let {
+        when (it.size) {
+            1 -> KotlinVersion(it[0], 0, 0)
+            2 -> KotlinVersion(it[0], it[1], 0)
+            3 -> KotlinVersion(it[0], it[1], it[2])
+            else -> KotlinVersion.CURRENT
+        }
+    }
+}
+
+internal fun ApiVersion.toKotlinVersion(): KotlinVersion = version.canonical.toKotlinVersion()

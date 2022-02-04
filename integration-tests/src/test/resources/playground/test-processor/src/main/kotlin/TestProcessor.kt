@@ -269,6 +269,10 @@ class TestProcessorProvider2 : SymbolProcessorProvider {
     ): SymbolProcessor {
         return TestProcessor().apply {
             init(env.options, env.kotlinVersion, env.codeGenerator, env.logger)
+
+            env.logger.warn("language version: ${env.kotlinVersion}")
+            env.logger.warn("api version: ${env.apiVersion}")
+            env.logger.warn("compiler version: ${env.compilerVersion}")
         }
     }
 }
