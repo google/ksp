@@ -185,6 +185,12 @@ class ResolverImpl(
         val visitor = object : KSVisitorVoid() {
             override fun visitFile(file: KSFile, data: Unit) {
                 file.declarations.forEach { it.accept(this, data) }
+
+                // TODO: evaluate with benchmarks: cost of getContainingFile v.s. name collision
+                // Import aliases are file-scoped. `aliasingNamesByFile` could be faster
+                file.safeAs<KSFileImpl>()?.file?.importDirectives?.forEach {
+                    it.aliasName?.let { aliasingNames.add(it) }
+                }
             }
 
             override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
