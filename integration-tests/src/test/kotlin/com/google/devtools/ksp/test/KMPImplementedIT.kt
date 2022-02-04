@@ -54,6 +54,7 @@ class KMPImplementedIT {
                 )
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JVM"))
         }
     }
 
@@ -86,6 +87,7 @@ class KMPImplementedIT {
                 )
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JS"))
         }
     }
 
@@ -131,6 +133,7 @@ class KMPImplementedIT {
                 "workload-androidNative/build/bin/androidNativeArm64/releaseExecutable/workload-androidNative.so"
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
         }
     }
 
@@ -168,6 +171,7 @@ class KMPImplementedIT {
                     it.task(":workload-linuxX64:kspKotlinMingwX64")?.outcome == TaskOutcome.SKIPPED
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
         }
     }
 
@@ -225,6 +229,9 @@ class KMPImplementedIT {
         )
 
         Assert.assertFalse(result.output.contains("kotlin scripting plugin:"))
+        Assert.assertTrue(result.output.contains("w: [ksp] platforms: [JVM"))
+        Assert.assertTrue(result.output.contains("w: [ksp] platforms: [JS"))
+        Assert.assertTrue(result.output.contains("w: [ksp] platforms: [Native"))
     }
 
     @Test

@@ -18,14 +18,27 @@
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.PlatformInfo
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.processing.impl.JsPlatformInfoImpl
+import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.KSPCompilationError
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
+import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.intellij.openapi.project.Project
@@ -39,6 +52,11 @@ import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
+import org.jetbrains.kotlin.platform.isCommon
+import org.jetbrains.kotlin.platform.js.JsPlatform
+import org.jetbrains.kotlin.platform.jvm.JdkPlatform
+import org.jetbrains.kotlin.platform.konan.NativePlatform
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
@@ -174,9 +192,12 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                     processor = provider.create(
                         SymbolProcessorEnvironment(
                             options.processingOptions,
-                            KotlinVersion.CURRENT,
+                            options.languageVersion,
                             codeGenerator,
-                            logger
+                            logger,
+                            options.apiVersion,
+                            options.compilerVersion,
+                            findTargetInfos(module)
                         )
                     )
                 }?.let { analysisResult -> return@doAnalysis analysisResult }
@@ -350,3 +371,14 @@ internal class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(base
     override val fileName: String
         get() = "<NoSourceFile for $fqn is a virtual file; DO NOT USE.>"
 }
+
+fun findTargetInfos(module: ModuleDescriptor): List<PlatformInfo> =
+    module.platform?.componentPlatforms?.map { platform ->
+        when (platform) {
+            is JdkPlatform -> JvmPlatformInfoImpl(platform.platformName, platform.targetVersion.toString())
+            is JsPlatform -> JsPlatformInfoImpl(platform.platformName)
+            is NativePlatform -> NativePlatformInfoImpl(platform.platformName, platform.targetName)
+            // Unknown platform; toString() may be more informative than platformName
+            else -> UnknownPlatformInfoImpl(platform.toString())
+        }
+    } ?: emptyList()
