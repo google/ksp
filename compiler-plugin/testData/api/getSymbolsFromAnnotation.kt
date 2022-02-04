@@ -11,6 +11,7 @@
 // p1:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
 // Flux:KSTypeAlias
 // ==== Anno in depth ====
 // Foo:KSClassDeclaration
@@ -24,6 +25,7 @@
 // local:KSPropertyDeclaration
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
 // Flux:KSTypeAlias
 // ==== Bnno superficial====
 // File: Foo.kt:KSFile
@@ -46,6 +48,7 @@
 // p1:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
 // Flux:KSTypeAlias
 // ==== A1 in depth ====
 // Foo:KSClassDeclaration
@@ -59,6 +62,7 @@
 // local:KSPropertyDeclaration
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
 // Flux:KSTypeAlias
 // ==== A2 superficial====
 // Foo:KSClassDeclaration
@@ -71,6 +75,7 @@
 // p1:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
 // Flux:KSTypeAlias
 // ==== A2 in depth ====
 // Foo:KSClassDeclaration
@@ -84,6 +89,7 @@
 // local:KSPropertyDeclaration
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
 // Flux:KSTypeAlias
 // ==== Cnno in depth ====
 // constructorParameterFoo:KSValueParameter
@@ -100,6 +106,9 @@ typealias A2 = A1
 
 //FILE: Foo.kt
 @file:Bnno
+
+import Anno
+import Anno as A3
 
 @Anno
 class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, @Anno param: Int){
@@ -127,6 +136,9 @@ class Bar
 
 @A2
 class Baz
+
+@A3
+class Burp
 
 @Anno
 typealias Flux = String
