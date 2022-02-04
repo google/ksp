@@ -24,7 +24,7 @@ class TemporaryTestProject(projectName: String, baseProject: String? = null) : T
         gradleProperties.appendText("\ntestRepo=$testRepo")
         gradleProperties.appendText("\norg.gradle.unsafe.configuration-cache=true")
         // Uncomment this to debug compiler and compiler plugin.
-        // gradleProperties.appendText("\nkotlin.compiler.execution.strategy=in-process")
+        // gradleProperties.appendText("\nsystemProp.kotlin.compiler.execution.strategy=in-process")
     }
 
     fun restore(file: String) {
