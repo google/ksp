@@ -46,6 +46,11 @@ class VisibilityProcessor : AbstractTestProcessor() {
         val javaClass = resolver.getClassDeclarationByName("JavaClass")!!
         val kotlinClass = resolver.getClassDeclarationByName("KotlinClass")!!
         val kotlinSubClass = resolver.getClassDeclarationByName("KotlinSubClass")!!
+        val javaLibEnum = resolver.getClassDeclarationByName("LibEnumJava")!!
+        val kotlinLibEnum = resolver.getClassDeclarationByName("LibEnum")!!
+        val javaEnum = resolver.getClassDeclarationByName("Enum")!!
+        val kotlinEnum = resolver.getClassDeclarationByName("KtEnum")!!
+        val kotlinEnumWithVal = resolver.getClassDeclarationByName("KtEnumWithVal")!!
         javaClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                 "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
@@ -57,6 +62,21 @@ class VisibilityProcessor : AbstractTestProcessor() {
         kotlinSubClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                 "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+        }.forEach { results.add(it) }
+        javaLibEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
+            "${javaLibEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+        }.forEach { results.add(it) }
+        kotlinLibEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
+            "${kotlinLibEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+        }.forEach { results.add(it) }
+        javaEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
+            "${javaEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+        }.forEach { results.add(it) }
+        kotlinEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
+            "${kotlinEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+        }.forEach { results.add(it) }
+        kotlinEnumWithVal.declarations.filterIsInstance<KSFunctionDeclaration>().map {
+            "${kotlinEnumWithVal.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
         }.forEach { results.add(it) }
         return emptyList()
     }
