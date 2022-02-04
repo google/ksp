@@ -19,23 +19,7 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.FunctionKind
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSFunction
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeParameter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSValueParameter
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Modifier
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 
@@ -99,6 +83,9 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) :
     }
 
     override val modifiers: Set<Modifier> by lazy {
+        if (ksClassDeclaration.classKind == ClassKind.ENUM_CLASS) {
+            return@lazy setOf(Modifier.FINAL, Modifier.PRIVATE)
+        }
         // add public if parent class is public
         if (ksClassDeclaration.isPublic()) {
             setOf(Modifier.FINAL, Modifier.PUBLIC)

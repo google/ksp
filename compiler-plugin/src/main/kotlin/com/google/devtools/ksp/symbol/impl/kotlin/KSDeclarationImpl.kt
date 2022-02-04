@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.containingFile
+import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
@@ -50,7 +51,13 @@ abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) : KSDeclarati
         // we do not check for JVM_STATIC here intentionally as it actually means static in parent class,
         // not in this class.
         // see: https://github.com/google/ksp/issues/378
-        ktDeclaration.toKSModifiers()
+        if (this is KSFunctionDeclaration && this.isConstructor() &&
+            (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.ENUM_CLASS
+        ) {
+            setOf(Modifier.FINAL, Modifier.PRIVATE)
+        } else {
+            ktDeclaration.toKSModifiers()
+        }
     }
 
     override val containingFile: KSFile? by lazy {
