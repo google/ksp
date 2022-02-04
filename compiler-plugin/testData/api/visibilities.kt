@@ -26,6 +26,17 @@
 // x: INTERNAL,visible in A, B, D: false, false, false
 // y: PROTECTED,visible in A, B, D: true, false, true
 // y: PUBLIC,visible in A, B, D: true, true, true
+// LibEnumJava: valueOf: PUBLIC
+// LibEnumJava: values: PUBLIC
+// LibEnumJava: <init>: PRIVATE
+// LibEnum: valueOf: PUBLIC
+// LibEnum: values: PUBLIC
+// LibEnum: <init>: PRIVATE
+// Enum: <init>: PRIVATE
+// Enum: values: PUBLIC
+// Enum: valueOf: PUBLIC
+// KtEnum: <init>: PRIVATE
+// KtEnumWithVal: <init>: PRIVATE
 // END
 
 // MODULE: lib
@@ -34,10 +45,23 @@ public class JavaClass {
     int javaPackageField;
 }
 
+// FILE: LibEnumJava.java
+public enum LibEnumJava {
+    R(0),G(1),B(2);
+    private final int v;
+    LibEnumJava(int v) {
+        this.v = v;
+    }
+}
+
 // FILE: lib.kt
 open class KotlinClass {
     open internal val x: Int = 0
     open protected val y: Int = 0
+}
+
+enum class LibEnum(val value: Int) {
+    A(0), B(1), C(2);
 }
 
 // MODULE: main(lib)
@@ -55,6 +79,14 @@ class D {}
 
 class KotlinSubClass : KotlinClass() {
     public override val y = 1
+}
+
+enum class KtEnum {
+    A,B,C
+}
+
+enum class KtEnumWithVal(val a: Int) {
+    A(0), B(1), C(2)
 }
 
 // FILE: C.java
@@ -76,6 +108,14 @@ class C {
     }
 }
 
+// FILE: Enum.java
+public enum Enum {
+    Y,U,V;
+    private final int v;
+    Enum(int v) {
+        this.v = v;
+    }
+}
 // FILE: b.kt
 package somePackage
 
