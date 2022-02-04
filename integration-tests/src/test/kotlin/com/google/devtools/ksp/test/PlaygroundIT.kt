@@ -144,4 +144,23 @@ class PlaygroundIT {
         }
         project.restore(gradleProperties.path)
     }
+
+    @Test
+    fun testVersions() {
+        val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
+        val buildFile = File(project.root, "workload/build.gradle.kts")
+        buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
+        buildFile.appendText("\n    kotlinOptions.apiVersion = \"1.5\"")
+        buildFile.appendText("\n    kotlinOptions.languageVersion = \"1.5\"")
+        buildFile.appendText("\n}")
+
+        val kotlinVersion = System.getProperty("kotlinVersion").split('-').first()
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("clean", "build") { result ->
+            Assert.assertTrue(result.output.contains("language version: 1.5"))
+            Assert.assertTrue(result.output.contains("api version: 1.5"))
+            Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
+        }
+        project.restore(buildFile.path)
+    }
 }
