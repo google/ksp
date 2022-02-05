@@ -1,5 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
+evaluationDependsOn(":common-util")
+evaluationDependsOn(":compiler-plugin")
+
 val kotlinBaseVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
@@ -30,12 +33,7 @@ tasks {
     publish {
         dependsOn(shadowJar)
         dependsOn(project(":compiler-plugin").tasks["dokkaJavadocJar"])
-    }
-
-    val sourcesJar by creating(Jar::class) {
-        archiveClassifier.set("sources")
-        from(project(":compiler-plugin").sourceSets.main.get().allSource)
-        from(project(":common-util").sourceSets.main.get().allSource)
+        dependsOn(project(":compiler-plugin").tasks["sourcesJar"])
     }
 }
 
@@ -43,8 +41,8 @@ publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
-            artifact(tasks["sourcesJar"])
             artifact(project(":compiler-plugin").tasks["dokkaJavadocJar"])
+            artifact(project(":compiler-plugin").tasks["sourcesJar"])
             artifact(tasks["shadowJar"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing")
