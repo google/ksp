@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+evaluationDependsOn(":common-util")
+
 description = "Kotlin Symbol Processor"
 
 val kotlinProjectPath: String? by project
@@ -22,6 +24,14 @@ plugins {
 
 intellij {
     version = intellijVersion
+}
+
+tasks {
+    val sourcesJar by creating(Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+        from(project(":common-util").sourceSets.main.get().allSource)
+    }
 }
 
 fun ModuleDependency.includeJars(vararg names: String) {
@@ -138,5 +148,6 @@ repositories {
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
     dependsOn(tasks.dokkaJavadoc)
     from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    from(project(":common-util").tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
 }
