@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+evaluationDependsOn(":api")
+
 description = "Kotlin Symbol Processing Util"
 
 val kotlinBaseVersion: String by project
@@ -23,13 +25,6 @@ dependencies {
     implementation(kotlin("stdlib", kotlinBaseVersion))
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     implementation(project(":api"))
-}
-
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        archiveClassifier.set("sources")
-        from(sourceSets.main.get().allSource)
-    }
 }
 
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
