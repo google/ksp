@@ -231,22 +231,27 @@ class IncrementalContext(
         }
     }
 
-    private fun updateLookupCache(dirtyFiles: Collection<File>, removedOutputs: List<File>) {
-        symbolLookupCache.update(
-            symbolLookupTracker, dirtyFiles,
-            options.knownRemoved + removedOutputs.map {
-                it.absoluteFile
-            }
-        )
+    private val removedOutputsKey = File("<This is a virtual key for removed outputs; DO NOT USE>")
+
+    private fun updateFromRemovedOutputs() {
+        val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: return
+
+        symbolLookupCache.removeLookupsFrom(removedOutputs.asSequence())
+        classLookupCache.removeLookupsFrom(removedOutputs.asSequence())
+        removedOutputs.forEach {
+            symbolsMap.remove(it)
+            sealedMap.remove(it)
+        }
+
+        sourceToOutputsMap.remove(removedOutputsKey)
+    }
+
+    private fun updateLookupCache(dirtyFiles: Collection<File>) {
+        symbolLookupCache.update(symbolLookupTracker, dirtyFiles, options.knownRemoved)
         symbolLookupCache.flush(false)
         symbolLookupCache.close()
 
-        classLookupCache.update(
-            classLookupTracker, dirtyFiles,
-            options.knownRemoved + removedOutputs.map {
-                it.absoluteFile
-            }
-        )
+        classLookupCache.update(classLookupTracker, dirtyFiles, options.knownRemoved)
         classLookupCache.flush(false)
         classLookupCache.close()
     }
@@ -272,8 +277,9 @@ class IncrementalContext(
 
         logDirtyFilesByCP(dirtyFilesByCP)
 
+        val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: emptyList()
         // Add previously defined symbols in removed and modified files
-        (modified + removed + dirtyFilesByCP).forEach { file ->
+        (modified + removed + dirtyFilesByCP + removedOutputs).forEach { file ->
             symbolsMap[file]?.let {
                 changedSyms.addAll(it)
             }
@@ -289,7 +295,9 @@ class IncrementalContext(
             invalidator.invalidate(it)
         }
 
-        return invalidator.visitedFiles
+        // visited files are from lookup cache which may contain outputs.
+        val sources = ksFiles.map { it.relativeFile }
+        return invalidator.visitedFiles.filterTo(mutableSetOf()) { it in sources }
     }
 
     // Propagate dirtiness by source-output maps.
@@ -299,7 +307,7 @@ class IncrementalContext(
     ): Set<File> {
         val outputToSources = mutableMapOf<File, MutableSet<File>>()
         sourceToOutputs.keys.forEach { source ->
-            if (source != anyChangesWildcard) {
+            if (source != anyChangesWildcard && source != removedOutputsKey) {
                 sourceToOutputs[source]!!.forEach { output ->
                     outputToSources.getOrPut(output) { mutableSetOf() }.add(source)
                 }
@@ -444,6 +452,8 @@ class IncrementalContext(
                 calcDirtySetByOutputs(sourceToOutputsMap, dirtyFilesByDeps + removed)
             }
 
+            updateFromRemovedOutputs()
+
             logDirtyFilesByOutputs(dirtyFilesByOutputs)
             logDirtyFiles(ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }, ksFiles)
             return ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }
@@ -472,6 +482,7 @@ class IncrementalContext(
         removedOutputs.forEach {
             sourceToOutputsMap.remove(it)
         }
+        sourceToOutputsMap[removedOutputsKey] = removedOutputs
 
         // Update source-to-outputs map from those reprocessed.
         sourceToOutputs.forEach { src, outs ->
@@ -538,7 +549,7 @@ class IncrementalContext(
         val oldOutputs = dirtyFiles.flatMap { sourceToOutputsMap[it] ?: emptyList() }.distinct()
         val removedOutputs = oldOutputs.filterNot { it in outputs }
         updateSourceToOutputs(dirtyFiles, outputs, sourceToOutputs, removedOutputs)
-        updateLookupCache(dirtyFiles, removedOutputs)
+        updateLookupCache(dirtyFiles)
 
         // Update symbolsMap
         fun <K : Comparable<K>, V> update(m: PersistentMap<K, Collection<V>>, u: MultiMap<K, V>) {
@@ -557,10 +568,10 @@ class IncrementalContext(
 
         if (!rebuild) {
             update(sealedMap, updatedSealed)
-            remove(sealedMap, removed + removedOutputs)
+            remove(sealedMap, removed)
 
             update(symbolsMap, updatedSymbols)
-            remove(symbolsMap, removed + removedOutputs)
+            remove(symbolsMap, removed)
         } else {
             symbolsMap.clean()
             update(symbolsMap, updatedSymbols)
@@ -612,7 +623,7 @@ class IncrementalContext(
 
         val cleanOutputs = mutableSetOf<File>()
         sourceToOutputsMap.keys.forEach { source ->
-            if (source !in dirtyFilePaths && source != anyChangesWildcard)
+            if (source !in dirtyFilePaths && source != anyChangesWildcard && source != removedOutputsKey)
                 cleanOutputs.addAll(sourceToOutputsMap[source]!!)
         }
         sourceToOutputsMap.close()
@@ -794,7 +805,7 @@ internal class DepInvalidator(
         if (file in visitedFiles)
             return
         visitedFiles.add(file)
-        symbolsMap[file]!!.forEach {
+        symbolsMap[file]?.forEach {
             invalidate(it)
         }
     }
