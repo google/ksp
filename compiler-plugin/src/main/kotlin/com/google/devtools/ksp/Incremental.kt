@@ -256,135 +256,6 @@ class IncrementalContext(
         classLookupCache.close()
     }
 
-    private fun calcDirtySetByDeps(ksFiles: List<KSFile>): Set<File> {
-        val changedSyms = mutableSetOf<LookupSymbol>()
-
-        // Parse and add newly defined symbols in modified files.
-        ksFiles.filter { it.relativeFile in modified }.forEach { file ->
-            file.accept(symbolCollector) {
-                updatedSymbols.putValue(file.relativeFile, it)
-                changedSyms.add(it)
-            }
-        }
-
-        // Calculate dirty files by dirty classes in CP.
-        val dirtyFilesByCP = options.changedClasses.flatMap { fqn ->
-            val name = fqn.substringAfterLast('.')
-            val scope = fqn.substringBeforeLast('.', "<anonymous>")
-            classLookupCache.get(LookupSymbol(name, scope)).map { File(it) } +
-                symbolLookupCache.get(LookupSymbol(name, scope)).map { File(it) }
-        }.toSet()
-
-        logDirtyFilesByCP(dirtyFilesByCP)
-
-        val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: emptyList()
-        // Add previously defined symbols in removed and modified files
-        (modified + removed + dirtyFilesByCP + removedOutputs).forEach { file ->
-            symbolsMap[file]?.let {
-                changedSyms.addAll(it)
-            }
-        }
-
-        // Invalidate all sealed classes / interfaces on which `getSealedSubclasses` was invoked.
-        // FIXME: find a better solution to deal with typealias without resolution.
-        changedSyms.addAll(sealedMap.keys.flatMap { sealedMap[it]!! })
-
-        // For each changed symbol, either changed, modified or removed, invalidate files that looked them up, recursively.
-        val invalidator = DepInvalidator(symbolLookupCache, symbolsMap, modified + dirtyFilesByCP)
-        changedSyms.forEach {
-            invalidator.invalidate(it)
-        }
-
-        // visited files are from lookup cache which may contain outputs.
-        val sources = ksFiles.map { it.relativeFile }
-        return invalidator.visitedFiles.filterTo(mutableSetOf()) { it in sources }
-    }
-
-    // Propagate dirtiness by source-output maps.
-    private fun calcDirtySetByOutputs(
-        sourceToOutputs: FileToFilesMap,
-        initialSet: Set<File>,
-    ): Set<File> {
-        val outputToSources = mutableMapOf<File, MutableSet<File>>()
-        sourceToOutputs.keys.forEach { source ->
-            if (source != anyChangesWildcard && source != removedOutputsKey) {
-                sourceToOutputs[source]!!.forEach { output ->
-                    outputToSources.getOrPut(output) { mutableSetOf() }.add(source)
-                }
-            }
-        }
-        val visited = mutableSetOf<File>()
-        fun visit(dirty: File) {
-            if (dirty in visited)
-                return
-
-            visited.add(dirty)
-            sourceToOutputs[dirty]?.forEach {
-                outputToSources[it]?.forEach {
-                    visit(it)
-                }
-            }
-        }
-
-        val cpSet = options.changedClasses.map { fqn ->
-            NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
-        }.toSet()
-        (initialSet + cpSet).forEach {
-            visit(it)
-        }
-
-        return visited
-    }
-
-    private fun logDirtyFilesByCP(dirtyFiles: Collection<File>) {
-        if (!options.incrementalLog)
-            return
-
-        val logFile = File(logsDir, "kspDirtySetByCP.log")
-        logFile.appendText("=== Build $buildTime ===\n")
-        logFile.appendText("CP_changes: ${options.changedClasses}\n")
-        dirtyFiles.forEach { logFile.appendText("  ${it}\n") }
-        logFile.appendText("\n")
-    }
-
-    private fun logDirtyFilesByDeps(dirtyFiles: Collection<File>) {
-        if (!options.incrementalLog)
-            return
-
-        val logFile = File(logsDir, "kspDirtySetByDeps.log")
-        logFile.appendText("=== Build $buildTime ===\n")
-        logFile.appendText("Modified\n")
-        modified.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Removed\n")
-        removed.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Dirty\n")
-        dirtyFiles.forEach { logFile.appendText("  ${it}\n") }
-        logFile.appendText("\n")
-    }
-
-    private fun logDirtyFilesByOutputs(dirtyFiles: Collection<File>) {
-        if (!options.incrementalLog)
-            return
-
-        val allOutputs = mutableSetOf<File>()
-        val validOutputs = mutableSetOf<File>()
-        sourceToOutputsMap.keys.forEach { source ->
-            val outputs = sourceToOutputsMap[source]!!
-            if (source !in removed)
-                validOutputs.addAll(outputs)
-            allOutputs.addAll(outputs)
-        }
-        val outputsToRemove = allOutputs - validOutputs
-
-        val logFile = File(logsDir, "kspDirtySetByOutputs.log")
-        logFile.appendText("=== Build $buildTime ===\n")
-        logFile.appendText("Dirty sources\n")
-        dirtyFiles.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Outputs to remove\n")
-        outputsToRemove.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("\n")
-    }
-
     private fun logSourceToOutputs(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         if (!options.incrementalLog)
             return
@@ -417,7 +288,14 @@ class IncrementalContext(
         logFile.appendText("\n")
     }
 
-    private fun logDirtyFiles(files: List<KSFile>, allFiles: List<KSFile>) {
+    private fun logDirtyFiles(
+        files: Collection<KSFile>,
+        allFiles: Collection<KSFile>,
+        removedOutputs: Collection<File> = emptyList(),
+        dirtyFilesByCP: Collection<File> = emptyList(),
+        dirtyFilesByNewSyms: Collection<File> = emptyList(),
+        dirtyFilesBySealed: Collection<File> = emptyList(),
+    ) {
         if (!options.incrementalLog)
             return
 
@@ -425,6 +303,20 @@ class IncrementalContext(
         logFile.appendText("=== Build $buildTime ===\n")
         logFile.appendText("All Files\n")
         allFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
+        logFile.appendText("Modified\n")
+        modified.forEach { logFile.appendText("  $it\n") }
+        logFile.appendText("Removed\n")
+        removed.forEach { logFile.appendText("  $it\n") }
+        logFile.appendText("Disappeared Outputs\n")
+        removedOutputs.forEach { logFile.appendText("  $it\n") }
+        logFile.appendText("Affected By CP\n")
+        dirtyFilesByCP.forEach { logFile.appendText("  $it\n") }
+        logFile.appendText("Affected By new syms\n")
+        dirtyFilesByNewSyms.forEach { logFile.appendText("  $it\n") }
+        logFile.appendText("Affected By sealed\n")
+        dirtyFilesBySealed.forEach { logFile.appendText("  $it\n") }
+        logFile.appendText("CP changes\n")
+        options.changedClasses.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("Dirty:\n")
         files.forEach {
             logFile.appendText("  ${it.relativeFile}\n")
@@ -439,29 +331,79 @@ class IncrementalContext(
             return ksFiles
         }
 
-        if (!rebuild) {
-            val dirtyFilesByDeps = calcDirtySetByDeps(ksFiles)
-
-            logDirtyFilesByDeps(dirtyFilesByDeps)
-
-            // modified can be seen as removed + new. Therefore the following check doesn't work:
-            //   if (modified.any { it !in sourceToOutputsMap.keys }) ...
-            val dirtyFilesByOutputs = if (modified.isNotEmpty()) {
-                calcDirtySetByOutputs(sourceToOutputsMap, dirtyFilesByDeps + removed + anyChangesWildcard)
-            } else {
-                calcDirtySetByOutputs(sourceToOutputsMap, dirtyFilesByDeps + removed)
-            }
-
-            updateFromRemovedOutputs()
-
-            logDirtyFilesByOutputs(dirtyFilesByOutputs)
-            logDirtyFiles(ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }, ksFiles)
-            return ksFiles.filter { it.relativeFile in dirtyFilesByOutputs }
-        } else {
+        if (rebuild) {
             collectDefinedSymbols(ksFiles)
             logDirtyFiles(ksFiles, ksFiles)
             return ksFiles
         }
+
+        val newSyms = mutableSetOf<LookupSymbol>()
+
+        // Parse and add newly defined symbols in modified files.
+        ksFiles.filter { it.relativeFile in modified }.forEach { file ->
+            file.accept(symbolCollector) {
+                updatedSymbols.putValue(file.relativeFile, it)
+                newSyms.add(it)
+            }
+        }
+
+        val dirtyFilesByNewSyms = newSyms.flatMap {
+            symbolLookupCache.get(it).map { File(it) }
+        }
+
+        val dirtyFilesBySealed = sealedMap.keys.flatMap { sealedMap[it]!! }.flatMap {
+            symbolLookupCache.get(it).map { File(it) }
+        }
+
+        // Calculate dirty files by dirty classes in CP.
+        val dirtyFilesByCP = options.changedClasses.flatMap { fqn ->
+            val name = fqn.substringAfterLast('.')
+            val scope = fqn.substringBeforeLast('.', "<anonymous>")
+            classLookupCache.get(LookupSymbol(name, scope)).map { File(it) } +
+                symbolLookupCache.get(LookupSymbol(name, scope)).map { File(it) }
+        }.toSet()
+
+        // output files that exist in CURR~2 but not in CURR~1
+        val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: emptyList()
+
+        val noSourceFiles = options.changedClasses.map { fqn ->
+            NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
+        }.toSet()
+
+        val initialSet = mutableSetOf<File>()
+        initialSet.addAll(modified)
+        initialSet.addAll(removed)
+        initialSet.addAll(removedOutputs)
+        initialSet.addAll(dirtyFilesByCP)
+        initialSet.addAll(dirtyFilesByNewSyms)
+        initialSet.addAll(dirtyFilesBySealed)
+        initialSet.addAll(noSourceFiles)
+
+        // modified can be seen as removed + new. Therefore the following check doesn't work:
+        //   if (modified.any { it !in sourceToOutputsMap.keys }) ...
+        if (modified.isNotEmpty() || options.changedClasses.isNotEmpty()) {
+            initialSet.add(anyChangesWildcard)
+        }
+
+        val dirtyFiles = DirtinessPropagator(
+            symbolLookupCache,
+            symbolsMap,
+            sourceToOutputsMap,
+            anyChangesWildcard,
+            removedOutputsKey
+        ).propagate(initialSet)
+
+        updateFromRemovedOutputs()
+
+        logDirtyFiles(
+            ksFiles.filter { it.relativeFile in dirtyFiles },
+            ksFiles,
+            removedOutputs,
+            dirtyFilesByCP,
+            dirtyFilesByNewSyms,
+            dirtyFilesBySealed
+        )
+        return ksFiles.filter { it.relativeFile in dirtyFiles }
     }
 
     private fun updateSourceToOutputs(
@@ -784,29 +726,60 @@ class IncrementalContext(
     }
 }
 
-internal class DepInvalidator(
+internal class DirtinessPropagator(
     private val lookupCache: LookupStorage,
     private val symbolsMap: FileToSymbolsMap,
-    changedFiles: Collection<File>,
+    private val sourceToOutputs: FileToFilesMap,
+    private val anyChangesWildcard: File,
+    private val removedOutputsKey: File
 ) {
+    private val visitedFiles = mutableSetOf<File>()
     private val visitedSyms = mutableSetOf<LookupSymbol>()
-    val visitedFiles = mutableSetOf<File>().apply { addAll(changedFiles) }
 
-    fun invalidate(sym: LookupSymbol) {
-        if (sym in visitedSyms)
-            return
-        visitedSyms.add(sym)
-        lookupCache.get(sym).forEach {
-            invalidate(File(it))
+    private val outputToSources = mutableMapOf<File, MutableSet<File>>().apply {
+        sourceToOutputs.keys.forEach { source ->
+            if (source != anyChangesWildcard && source != removedOutputsKey) {
+                sourceToOutputs[source]!!.forEach { output ->
+                    getOrPut(output) { mutableSetOf() }.add(source)
+                }
+            }
         }
     }
 
-    private fun invalidate(file: File) {
+    private fun visit(sym: LookupSymbol) {
+        if (sym in visitedSyms)
+            return
+        visitedSyms.add(sym)
+
+        lookupCache.get(sym).forEach {
+            visit(File(it))
+        }
+    }
+
+    private fun visit(file: File) {
         if (file in visitedFiles)
             return
         visitedFiles.add(file)
+
+        // Propagate by dependencies
         symbolsMap[file]?.forEach {
-            invalidate(it)
+            visit(it)
         }
+
+        // Propagate by input-output relations
+        // Given (..., I, ...) -> O:
+        // 1) if I is dirty, then O is dirty.
+        // 2) if O is dirty, then O must be regenerated, which requires all of its inputs to be reprocessed.
+        sourceToOutputs[file]?.forEach {
+            visit(it)
+        }
+        outputToSources[file]?.forEach {
+            visit(it)
+        }
+    }
+
+    fun propagate(initialSet: Collection<File>): Set<File> {
+        initialSet.forEach { visit(it) }
+        return visitedFiles
     }
 }
