@@ -88,6 +88,7 @@ import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.resolve.constants.EnumValue
 import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
@@ -475,6 +476,20 @@ class ResolverImpl(
                     arrayDimension += 1
                 }
                 KClassValue(actualType.constructor.declarationDescriptor.classId!!, arrayDimension)
+            } else if (it is KtDotQualifiedExpression) {
+                val parent = KtStubbedPsiUtil.getPsiOrStubParent(it, KtPrimaryConstructor::class.java, false)
+                val scope = resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(parent!!)
+                val result = qualifiedExpressionResolver
+                    .resolveDescriptorForDoubleColonLHS(it.receiverExpression!!, scope, bindingTrace, false)
+                val classifier = result.classifierDescriptor ?: return null
+                val enumDescriptor = (classifier as? ClassDescriptor)?.unsubstitutedMemberScope
+                    ?.getContributedDescriptors { name ->
+                        name.asString() == (it.selectorExpression as? KtNameReferenceExpression)?.text
+                    }?.singleOrNull { it is ClassDescriptor } as? DeclarationDescriptor
+                enumDescriptor?.let {
+                    val enumClassId = (enumDescriptor.containingDeclaration as ClassDescriptor).classId ?: return null
+                    EnumValue(enumClassId, enumDescriptor.name)
+                }
             } else {
                 constantExpressionEvaluator.evaluateExpression(it, bindingTrace)?.toConstantValue(expectedType)
             }
