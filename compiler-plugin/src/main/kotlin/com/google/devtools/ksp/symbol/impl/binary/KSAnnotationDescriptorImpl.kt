@@ -22,12 +22,14 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.findPsi
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMethod
 import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
@@ -296,8 +298,13 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
         } else {
             KSErrorType
         }
-        is PsiAnnotationMethod -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
-            .computeConstantExpression((psi).defaultValue)
+        is PsiAnnotationMethod -> {
+            when (psi.defaultValue) {
+                is PsiAnnotation -> KSAnnotationJavaImpl.getCached(psi.defaultValue as PsiAnnotation)
+                else -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
+                    .computeConstantExpression((psi).defaultValue)
+            }
+        }
         else -> throw IllegalStateException("Unexpected psi ${psi.javaClass}, $ExceptionMessage")
     }
 }
