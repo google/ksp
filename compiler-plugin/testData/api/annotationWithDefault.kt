@@ -18,14 +18,14 @@
 // TEST PROCESSOR: AnnotationDefaultValueProcessor
 // EXPECTED:
 // KotlinAnnotation -> a:debugKt,b:default,kClassValue:Array<Array<InnerObj>>
-// JavaAnnotation -> debug:debug,withDefaultValue:OK
+// JavaAnnotation -> debug:debug,withDefaultValue:OK,nested:@Nested
 // JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
 // KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default,kotlinEnumVal:VALUE_1
 // KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib,kClassValue:OtherKotlinAnnotation
 // JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:JavaAnnotationWithDefaults.LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotation -> a:debugJava,b:default,kClassValue:Array<Array<InnerObj>>
-// JavaAnnotation -> debug:debugJava2,withDefaultValue:OK
+// JavaAnnotation -> debug:debugJava2,withDefaultValue:OK,nested:@Nested
 // JavaAnnotation2 -> y:y-java,x:x-java,z:z-default
 // KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default,kotlinEnumVal:VALUE_1
 // END
@@ -118,6 +118,10 @@ enum class KotlinEnum {
 public @interface JavaAnnotation {
     String debug();
     String withDefaultValue()  default "OK";
+    @interface Nested {
+        String nestedX() default "nested";
+    }
+    Nested nested() default @Nested();
 }
 
 // FILE: JavaAnnotation2.java
