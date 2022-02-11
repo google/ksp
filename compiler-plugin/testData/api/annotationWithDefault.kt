@@ -20,14 +20,14 @@
 // KotlinAnnotation -> a:debugKt,b:default,kClassValue:Array<Array<InnerObj>>
 // JavaAnnotation -> debug:debug,withDefaultValue:OK
 // JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
-// KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
+// KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default,kotlinEnumVal:VALUE_1
 // KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib,kClassValue:OtherKotlinAnnotation
 // JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:JavaAnnotationWithDefaults.LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotation -> a:debugJava,b:default,kClassValue:Array<Array<InnerObj>>
 // JavaAnnotation -> debug:debugJava2,withDefaultValue:OK
 // JavaAnnotation2 -> y:y-java,x:x-java,z:z-default
-// KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default
+// KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default,kotlinEnumVal:VALUE_1
 // END
 // MODULE: lib
 // FILE: Default.kt
@@ -90,11 +90,12 @@ annotation class KotlinAnnotationWithDefaults(
 )
 // MODULE: main(lib)
 // FILE: a.kt
+import test.KotlinEnum
 
 annotation class KotlinAnnotation(val a: String, val b:String = "default", val kClassValue: kotlin.reflect.KClass<*> = Array<Array<InnerObj>>::class) {
     object InnerObj
 }
-annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", val z:String = "z-default")
+annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", val z:String = "z-default", val kotlinEnumVal: KotlinEnum = KotlinEnum.VALUE_1)
 
 @KotlinAnnotation("debugKt")
 @JavaAnnotation("debug")
@@ -104,6 +105,14 @@ annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", va
 @JavaAnnotationWithDefaults
 @KotlinAnnotationWithDefaults
 class A
+
+// FILE: test.kt
+package test
+
+enum class KotlinEnum {
+    VALUE_1,
+    VALUE2
+}
 
 // FILE: JavaAnnotation.java
 public @interface JavaAnnotation {
