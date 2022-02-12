@@ -18,76 +18,145 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: EquivalentJavaWildcardProcessor
 // EXPECTED:
-// <init> : A1 -> A1
-// <init> : A<T1, T2> -> A<T1, T2>
-// <init> : C1 -> C1
-// <init> : C2 -> C2
-// <init> : C3 -> C3
-// <init> : C4 -> C4
 // <init> : X -> X
-// <init> : Y -> Y
-// @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
-// @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
-// @JvmWildcard : JvmWildcard -> JvmWildcard
-// C1 : A<X, X> -> A<X, X>
-// C2 : A<Any, Y> -> A<Any, Y>
-// C3 : B<X> -> B<X>
-// C4 : B<A<X, out Y>> -> B<A<in X, out Y>>
 // Y : X -> X
-// a1 : A<in X, out X> -> A<in X, out X>
-// a1 : A<in X, out X> -> A<in X, out X>
-// a1.getter() : A<in X, out X> -> A<in X, out X>
-// a2 : A<Any, Y> -> A<Any, Y>
-// a2 : A<Any, Y> -> A<Any, Y>
-// a2.getter() : A<Any, Y> -> A<in Any, out Y>
-// a3 : A<*, *> -> A<out Any?, out Any?>
-// a3 : A<*, *> -> A<out Any?, out Any?>
-// a3.getter() : A<*, *> -> A<out Any?, out Any?>
-// a4 : B<X> -> B<X>
-// a4 : B<X> -> B<X>
-// a4.getter() : B<X> -> B<X>
-// a5 : B<in X> -> B<in X>
-// a5 : B<in X> -> B<in X>
-// a5.getter() : B<in X> -> B<in X>
-// a6 : B<out X> -> B<out X>
-// a6 : B<out X> -> B<out X>
-// a6.getter() : B<out X> -> B<out X>
-// a7 : B<*> -> B<out Any?>
-// a7 : B<*> -> B<out Any?>
-// a7.getter() : B<*> -> B<out Any?>
+// <init> : Y -> Y
+// <init> : A<T1, T2> -> A<T1, T2>
+// synthetic constructor for B : B<*> -> B<out Any?>
 // bar1 : [@kotlin.jvm.JvmSuppressWildcards] A<X, X> -> [@kotlin.jvm.JvmSuppressWildcards] A<X, X>
+// - INVARIANT X : X -> X
+// - INVARIANT X : X -> X
+// - @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
 // bar2 : [@kotlin.jvm.JvmSuppressWildcards] A<X, X> -> [@kotlin.jvm.JvmSuppressWildcards] A<in X, out X>
+// - INVARIANT X : X -> X
+// - INVARIANT X : X -> X
+// - @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
 // bar3 : [@kotlin.jvm.JvmWildcard] A<X, X> -> [@kotlin.jvm.JvmWildcard] A<in X, out X>
-// foo : Unit -> Unit
+// - INVARIANT X : X -> X
+// - INVARIANT X : X -> X
+// - @JvmWildcard : JvmWildcard -> JvmWildcard
 // p1 : A<in X, out X> -> A<X, X>
+// - CONTRAVARIANT X : X -> X
+// - COVARIANT X : X -> X
 // p1.getter() : A<in X, out X> -> A<X, X>
+// - CONTRAVARIANT X : X -> X
+// - COVARIANT X : X -> X
 // p2 : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
 // p2.getter() : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
 // p3 : A<*, *> -> A<Any?, Any?>
 // p3.getter() : A<*, *> -> A<Any?, Any?>
+// - STAR Any : Any? -> Any?
+// - STAR Any : Any? -> Any?
 // p4 : B<X> -> B<X>
+// - INVARIANT X : X -> X
 // p4.getter() : B<X> -> B<X>
+// - INVARIANT X : X -> X
 // p5 : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
 // p5.getter() : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
 // p6 : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
 // p6.getter() : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
 // p7 : B<*> -> B<out Any?>
 // p7.getter() : B<*> -> B<out Any?>
-// r1 : A<X, X> -> A<X, X>
-// r2 : A<Any, Y> -> A<Any, Y>
-// r3 : A<*, *> -> A<Any?, Any?>
-// r4 : B<X> -> B<X>
-// r5 : B<in X> -> B<in X>
-// r6 : B<out X> -> B<out X>
-// r7 : B<*> -> B<out Any?>
-// synthetic constructor for B : B<*> -> B<out Any?>
+// - STAR Any : Any? -> Any?
 // v1 : A<X, X> -> A<in X, out X>
+// - INVARIANT X : X -> X
+// - INVARIANT X : X -> X
 // v2 : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
 // v3 : A<*, *> -> A<out Any?, out Any?>
 // v4 : B<X> -> B<X>
+// - INVARIANT X : X -> X
 // v5 : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
 // v6 : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
 // v7 : B<*> -> B<out Any?>
+// foo : Unit -> Unit
+// r1 : A<X, X> -> A<X, X>
+// - INVARIANT X : X -> X
+// - INVARIANT X : X -> X
+// r2 : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
+// r3 : A<*, *> -> A<Any?, Any?>
+// r4 : B<X> -> B<X>
+// - INVARIANT X : X -> X
+// r5 : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
+// r6 : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
+// r7 : B<*> -> B<out Any?>
+// C1 : A<X, X> -> A<X, X>
+// - INVARIANT X : X -> X
+// - INVARIANT X : X -> X
+// <init> : C1 -> C1
+// C2 : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
+// <init> : C2 -> C2
+// C3 : B<X> -> B<X>
+// - INVARIANT X : X -> X
+// <init> : C3 -> C3
+// C4 : B<A<X, out Y>> -> B<A<in X, out Y>>
+// - INVARIANT A : A<X, out Y> -> A<in X, Y>
+// - - INVARIANT X : X -> X
+// - - COVARIANT Y : Y -> Y
+// <init> : C4 -> C4
+// a1 : A<in X, out X> -> A<in X, out X>
+// - CONTRAVARIANT X : X -> X
+// - COVARIANT X : X -> X
+// a2 : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
+// a3 : A<*, *> -> A<out Any?, out Any?>
+// a4 : B<X> -> B<X>
+// - INVARIANT X : X -> X
+// a5 : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
+// a6 : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
+// a7 : B<*> -> B<out Any?>
+// <init> : A1 -> A1
+// a1 : A<in X, out X> -> A<in X, out X>
+// - CONTRAVARIANT X : X -> X
+// - COVARIANT X : X -> X
+// a1.getter() : A<in X, out X> -> A<in X, out X>
+// - CONTRAVARIANT X : X -> X
+// - COVARIANT X : X -> X
+// a2 : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
+// a2.getter() : A<Any, Y> -> A<in Any, out Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
+// a3 : A<*, *> -> A<out Any?, out Any?>
+// a3.getter() : A<*, *> -> A<out Any?, out Any?>
+// - STAR Any : Any? -> Any?
+// - STAR Any : Any? -> Any?
+// a4 : B<X> -> B<X>
+// - INVARIANT X : X -> X
+// a4.getter() : B<X> -> B<X>
+// - INVARIANT X : X -> X
+// a5 : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
+// a5.getter() : B<in X> -> B<in X>
+// - CONTRAVARIANT X : X -> X
+// a6 : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
+// a6.getter() : B<out X> -> B<out X>
+// - COVARIANT X : X -> X
+// a7 : B<*> -> B<out Any?>
+// a7.getter() : B<*> -> B<out Any?>
+// - STAR Any : Any? -> Any?
 // END
 
 open class X()
