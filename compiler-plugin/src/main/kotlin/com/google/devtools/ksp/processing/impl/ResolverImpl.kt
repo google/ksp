@@ -1207,6 +1207,30 @@ class ResolverImpl(
         SUPER_TYPE
     }
 
+    // Search in self and parents for the first type reference that is not part of a type argument.
+    private fun KSTypeReference.findOuterMostRef(): Pair<KSTypeReference, List<Int>> {
+        fun KSNode.findParentRef(): KSTypeReference? {
+            var parent = parent
+            while (parent != null && parent !is KSTypeReference)
+                parent = parent.parent
+            return parent as? KSTypeReference
+        }
+
+        val fallback = Pair<KSTypeReference, List<Int>>(this, emptyList())
+        val indexes = mutableListOf<Int>()
+        var candidate: KSTypeReference = this
+        // KSTypeArgument's parent can be either KSReferenceElement or KSType.
+        while (candidate.parent is KSTypeArgument) {
+            // If the parent is a KSType, it's a synthetic reference.
+            // Do nothing and reply on the fallback behavior.
+            val referenceElement = candidate.parent!!.parent.safeAs<KSReferenceElement>() ?: return fallback
+            indexes.add(referenceElement.typeArguments.indexOf(candidate.parent))
+            // In case the program isn't properly structured, fallback.
+            candidate = referenceElement.findParentRef() ?: return fallback
+        }
+        return Pair(candidate, indexes)
+    }
+
     // TODO: Strict mode for catching unhandled cases.
     private fun findRefPosition(ref: KSTypeReference): RefPosition = when (val parent = ref.parent) {
         is KSCallableReference -> when (ref) {
@@ -1265,11 +1289,17 @@ class ResolverImpl(
         return replace(wildcardArguments)
     }
 
+    // Type arguments need to be resolved recursively in a top-down manner. So we find and resolve the outer most
+    // reference that contains this argument. Then locate and return the argument.
     @KspExperimental
-    override fun getJavaWildcard(ref: KSTypeReference): KSTypeReference {
+    override fun getJavaWildcard(reference: KSTypeReference): KSTypeReference {
+        // If the outer-most reference cannot be found, e.g., when this reference is nested in KSType.arguments,
+        // fallback to PARAMETER_TYPE effectively.
+        val (ref, indexes) = reference.findOuterMostRef()
+
         val type = ref.resolve()
         if (type.isError)
-            return ref
+            return reference
 
         val position = findRefPosition(ref)
         val kotlinType = (type as KSTypeImpl).kotlinType
@@ -1296,7 +1326,11 @@ class ResolverImpl(
         }
 
         val wildcardType = kotlinType.toWildcard(typeMappingMode)?.let {
-            getKSTypeCached(it)
+            var candidate: KotlinType = it
+            for (i in indexes.reversed()) {
+                candidate = candidate.arguments[i].type
+            }
+            getKSTypeCached(candidate)
         } ?: KSErrorType
 
         return KSTypeReferenceSyntheticImpl.getCached(wildcardType, null)

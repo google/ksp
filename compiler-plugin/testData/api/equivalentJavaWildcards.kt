@@ -107,7 +107,7 @@
 // - INVARIANT X : X -> X
 // <init> : C3 -> C3
 // C4 : B<A<X, out Y>> -> B<A<in X, out Y>>
-// - INVARIANT A : A<X, out Y> -> A<in X, Y>
+// - INVARIANT A : A<X, out Y> -> A<in X, out Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // <init> : C4 -> C4
