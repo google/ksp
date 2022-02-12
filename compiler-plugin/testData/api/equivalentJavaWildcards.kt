@@ -66,6 +66,14 @@
 // p7 : B<*> -> B<out Any?>
 // p7.getter() : B<*> -> B<out Any?>
 // - STAR Any : Any? -> Any?
+// p8 : B<A<X, out Y>> -> B<A<X, Y>>
+// - INVARIANT A : A<X, out Y> -> A<X, Y>
+// - - INVARIANT X : X -> X
+// - - COVARIANT Y : Y -> Y
+// p8.getter() : B<A<X, out Y>> -> B<A<X, Y>>
+// - INVARIANT A<X, out Y> : A<X, out Y> -> A<in X, Y>
+// - - INVARIANT X : X -> X
+// - - COVARIANT Y : Y -> Y
 // v1 : A<X, X> -> A<in X, out X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
@@ -80,6 +88,10 @@
 // v6 : B<out X> -> B<out X>
 // - COVARIANT X : X -> X
 // v7 : B<*> -> B<out Any?>
+// v8 : B<A<X, out Y>> -> B<A<X, Y>>
+// - INVARIANT A : A<X, out Y> -> A<X, Y>
+// - - INVARIANT X : X -> X
+// - - COVARIANT Y : Y -> Y
 // foo : Unit -> Unit
 // r1 : A<X, X> -> A<X, X>
 // - INVARIANT X : X -> X
@@ -95,6 +107,10 @@
 // r6 : B<out X> -> B<out X>
 // - COVARIANT X : X -> X
 // r7 : B<*> -> B<out Any?>
+// r8 : B<A<X, out Y>> -> B<A<X, Y>>
+// - INVARIANT A : A<X, out Y> -> A<X, Y>
+// - - INVARIANT X : X -> X
+// - - COVARIANT Y : Y -> Y
 // C1 : A<X, X> -> A<X, X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
@@ -111,52 +127,6 @@
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // <init> : C4 -> C4
-// a1 : A<in X, out X> -> A<in X, out X>
-// - CONTRAVARIANT X : X -> X
-// - COVARIANT X : X -> X
-// a2 : A<Any, Y> -> A<Any, Y>
-// - INVARIANT Any : Any -> Any
-// - INVARIANT Y : Y -> Y
-// a3 : A<*, *> -> A<out Any?, out Any?>
-// a4 : B<X> -> B<X>
-// - INVARIANT X : X -> X
-// a5 : B<in X> -> B<in X>
-// - CONTRAVARIANT X : X -> X
-// a6 : B<out X> -> B<out X>
-// - COVARIANT X : X -> X
-// a7 : B<*> -> B<out Any?>
-// <init> : A1 -> A1
-// a1 : A<in X, out X> -> A<in X, out X>
-// - CONTRAVARIANT X : X -> X
-// - COVARIANT X : X -> X
-// a1.getter() : A<in X, out X> -> A<in X, out X>
-// - CONTRAVARIANT X : X -> X
-// - COVARIANT X : X -> X
-// a2 : A<Any, Y> -> A<Any, Y>
-// - INVARIANT Any : Any -> Any
-// - INVARIANT Y : Y -> Y
-// a2.getter() : A<Any, Y> -> A<in Any, out Y>
-// - INVARIANT Any : Any -> Any
-// - INVARIANT Y : Y -> Y
-// a3 : A<*, *> -> A<out Any?, out Any?>
-// a3.getter() : A<*, *> -> A<out Any?, out Any?>
-// - STAR Any : Any? -> Any?
-// - STAR Any : Any? -> Any?
-// a4 : B<X> -> B<X>
-// - INVARIANT X : X -> X
-// a4.getter() : B<X> -> B<X>
-// - INVARIANT X : X -> X
-// a5 : B<in X> -> B<in X>
-// - CONTRAVARIANT X : X -> X
-// a5.getter() : B<in X> -> B<in X>
-// - CONTRAVARIANT X : X -> X
-// a6 : B<out X> -> B<out X>
-// - COVARIANT X : X -> X
-// a6.getter() : B<out X> -> B<out X>
-// - COVARIANT X : X -> X
-// a7 : B<*> -> B<out Any?>
-// a7.getter() : B<*> -> B<out Any?>
-// - STAR Any : Any? -> Any?
 // END
 
 open class X()
@@ -169,18 +139,31 @@ open class B<T>
 // @JvmSuppressWildcards(false)
 // fun bar(): A<X, X> = TODO()
 
+// A<X, X>
 fun bar1(): @JvmSuppressWildcards(true) A<X, X> = TODO()
+// A<? super X, ? extends X>
 fun bar2(): @JvmSuppressWildcards(false) A<X, X> = TODO()
+// FIXME: A<X, X>
 fun bar3(): @JvmWildcard A<X, X> = TODO()
 
+// A<X, X>
 val p1: A<in X, out X> = TODO()
+// A<java.lang.Object, Y>
 val p2: A<Any, Y> = TODO()
+// A<?, ?>
 val p3: A<*, *> = TODO()
+// B<X>
 val p4: B<X> = TODO()
+// B<? super X>
 val p5: B<in X> = TODO()
+// B<? extends X>
 val p6: B<out X> = TODO()
+// B<?>
 val p7: B<*> = TODO()
+// B<A<X, Y>>
+val p8: B<A<X, out Y>>
 
+// void foo(A<? super X, ? extends X>, A<java.lang.Object, Y>, A<?, ?>, B<X>, B<? super X>, B<? extends X>, B<?>, B<A<X, Y>>);
 fun foo(
     v1: A<X, X>,
     v2: A<Any, Y>,
@@ -189,27 +172,31 @@ fun foo(
     v5: B<in X>,
     v6: B<out X>,
     v7: B<*>,
+    v8: B<A<X, out Y>>,
 ): Unit = Unit
 
+// A<X, X>
 fun r1(): A<X, X> = TODO()
+// A<java.lang.Object, Y>
 fun r2(): A<Any, Y> = TODO()
+// A<?, ?>
 fun r3(): A<*, *> = TODO()
+// B<X>
 fun r4(): B<X> = TODO()
+// B<? super X>
 fun r5(): B<in X> = TODO()
+// B<? extends X>
 fun r6(): B<out X> = TODO()
+// B<?>
 fun r7(): B<*> = TODO()
+// B<A<X, Y>>
+fun r8(): B<A<X, out Y>> = TODO()
 
+// extends A<X, X>
 class C1() : A<X, X>()
+// A<java.lang.Object, Y>
 class C2() : A<Any, Y>()
+// B<X>
 class C3() : B<X>()
+// B<A<? super X, ? extends Y>>
 class C4() : B<A<X, out Y>>()
-
-annotation class A1(
-    val a1: A<in X, out X>,
-    val a2: A<Any, Y>,
-    val a3: A<*, *>,
-    val a4: B<X>,
-    val a5: B<in X>,
-    val a6: B<out X>,
-    val a7: B<*>
-)
