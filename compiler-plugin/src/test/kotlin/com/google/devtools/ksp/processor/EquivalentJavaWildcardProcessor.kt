@@ -29,7 +29,7 @@ open class EquivalentJavaWildcardProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getNewFiles().forEach {
             resolver.getNewFiles().forEach {
-                it.accept(RefVisitor(results, resolver), Unit)
+                it.accept(RefVisitor(results, resolver), "")
             }
         }
 
@@ -37,32 +37,28 @@ open class EquivalentJavaWildcardProcessor : AbstractTestProcessor() {
     }
 
     override fun toResult(): List<String> {
-        return results.sorted()
+        return results
     }
 
     private class RefVisitor(
         val results: MutableList<String>,
         val resolver: Resolver
-    ) : KSTopDownVisitor<Unit, Unit>() {
-        override fun defaultHandler(node: KSNode, data: Unit) = Unit
-
-        override fun visitTypeArgument(typeArgument: KSTypeArgument, data: Unit) {
-            // Do nothing; Otherwise it'd be too verbose.
-        }
+    ) : KSTopDownVisitor<String, Unit>() {
+        override fun defaultHandler(node: KSNode, data: String) = Unit
 
         private fun KSTypeReference.pretty(): String {
             return resolve().toString()
         }
 
         @OptIn(KspExperimental::class)
-        override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {
-            super.visitTypeReference(typeReference, data)
+        override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             val wildcard = resolver.getJavaWildcard(typeReference)
             results.add(
-                typeReference.parent.toString() +
+                data + typeReference.parent.toString() +
                     " : " + typeReference.pretty() +
                     " -> " + wildcard.pretty()
             )
+            super.visitTypeReference(typeReference, data + "- ")
         }
     }
 }
