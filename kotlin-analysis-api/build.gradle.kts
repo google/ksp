@@ -2,7 +2,7 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 
 val intellijVersion: String by project
 val junitVersion: String by project
-val analysisAPIVersion = "1.6.20-dev-7317"
+val analysisAPIVersion = "1.7.0-dev-961"
 val libsForTesting by configurations.creating
 
 plugins {
