@@ -241,6 +241,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/javaTypes2.kt");
     }
 
+    @TestMetadata("javaWildcards2.kt")
+    public void testJavaWildcards2() throws Exception {
+        runTest("testData/api/javaWildcards2.kt");
+    }
+
     @TestMetadata("libOrigins.kt")
     public void testLibOrigins() throws Exception {
         runTest("testData/api/libOrigins.kt");

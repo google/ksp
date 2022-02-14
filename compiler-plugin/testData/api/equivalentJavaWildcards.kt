@@ -31,7 +31,7 @@
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
 // - @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
-// bar3 : [@kotlin.jvm.JvmWildcard] A<X, X> -> [@kotlin.jvm.JvmWildcard] A<in X, out X>
+// bar3 : [@kotlin.jvm.JvmWildcard] A<X, X> -> [@kotlin.jvm.JvmWildcard] A<X, X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
 // - @JvmWildcard : JvmWildcard -> JvmWildcard
@@ -143,7 +143,7 @@ open class B<T>
 fun bar1(): @JvmSuppressWildcards(true) A<X, X> = TODO()
 // A<? super X, ? extends X>
 fun bar2(): @JvmSuppressWildcards(false) A<X, X> = TODO()
-// FIXME: A<X, X>
+// A<X, X>
 fun bar3(): @JvmWildcard A<X, X> = TODO()
 
 // A<X, X>
