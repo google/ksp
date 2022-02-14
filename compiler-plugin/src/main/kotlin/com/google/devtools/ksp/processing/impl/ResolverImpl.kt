@@ -40,8 +40,9 @@ import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
+import org.jetbrains.kotlin.codegen.state.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
+import org.jetbrains.kotlin.codegen.state.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
-import org.jetbrains.kotlin.codegen.state.updateArgumentModeFromAnnotations
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
@@ -83,6 +84,7 @@ import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.annotations.argumentValue
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
@@ -284,6 +286,14 @@ class ResolverImpl(
         }
     }
 
+    internal fun checkAnnotation(annotation: KSAnnotation, ksName: KSName, shortName: String): Boolean {
+        val annotationType = annotation.annotationType
+        val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
+        val simpleName = referencedName?.substringAfterLast('.')
+        return (simpleName == shortName || simpleName in aliasingNames) &&
+            annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
+    }
+
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
         // If annotationName is a typealias, resolve to underlying type.
         val realAnnotationName =
@@ -293,18 +303,14 @@ class ResolverImpl(
         val ksName = KSNameImpl.getCached(realAnnotationName)
         val shortName = ksName.getShortName()
 
-        fun checkAnnotation(annotated: KSAnnotated): Boolean {
+        fun checkAnnotated(annotated: KSAnnotated): Boolean {
             return annotated.annotations.any {
-                val annotationType = it.annotationType
-                val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
-                val simpleName = referencedName?.substringAfterLast('.')
-                (simpleName == shortName || simpleName in aliasingNames) &&
-                    annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
+                checkAnnotation(it, ksName, shortName)
             }
         }
 
         val allAnnotated = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
-        return allAnnotated.asSequence().filter { checkAnnotation(it) }
+        return allAnnotated.asSequence().filter(::checkAnnotated)
     }
 
     private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
@@ -1267,7 +1273,6 @@ class ResolverImpl(
     private fun KotlinType.toWildcard(mode: TypeMappingMode): KotlinType? {
         val parameters = constructor.parameters
         val arguments = arguments
-        val argMode = mode.updateArgumentModeFromAnnotations(this, SimpleClassicTypeSystemContext)
 
         val wildcardArguments = parameters.zip(arguments).map { (parameter, argument) ->
             if (!argument.isStarProjection &&
@@ -1280,6 +1285,7 @@ class ResolverImpl(
                 return null
             }
 
+            val argMode = mode.updateFromAnnotations(argument.type)
             val variance = KotlinTypeMapper.getVarianceForWildcard(parameter, argument, argMode)
             val genericMode = argMode.toGenericArgumentMode(
                 getEffectiveVariance(parameter.variance, argument.projectionKind)
@@ -1288,6 +1294,68 @@ class ResolverImpl(
         }
 
         return replace(wildcardArguments)
+    }
+
+    private val JVM_SUPPRESS_WILDCARDS_NAME = KSNameImpl.getCached("kotlin.jvm.JvmSuppressWildcards")
+    private val JVM_SUPPRESS_WILDCARDS_SHORT = "JvmSuppressWildcards"
+    private fun KSTypeReference.findJvmSuppressWildcards(): Boolean? {
+        var candidate: KSNode? = this
+
+        while (candidate != null) {
+            if ((candidate is KSTypeReference || candidate is KSDeclaration)) {
+                (candidate as KSAnnotated).annotations.firstOrNull {
+                    checkAnnotation(it, JVM_SUPPRESS_WILDCARDS_NAME, JVM_SUPPRESS_WILDCARDS_SHORT)
+                }?.arguments?.firstOrNull()?.value.safeAs<Boolean>()?.let {
+                    // KSAnnotated.getAnnotationsByType is handy but it uses reflection.
+                    return it
+                }
+            }
+            candidate = candidate.parent
+        }
+
+        return null
+    }
+
+    private fun TypeMappingMode.updateFromAnnotations(
+        type: KotlinType
+    ): TypeMappingMode {
+        type.annotations.findAnnotation(JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME)
+            ?.argumentValue("suppress")?.value.safeAs<Boolean>()?.let {
+                return this.suppressJvmWildcards(it)
+            }
+
+        if (type.annotations.hasAnnotation(JVM_WILDCARD_ANNOTATION_FQ_NAME)) {
+            return TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
+                skipDeclarationSiteWildcards = false,
+                isForAnnotationParameter = isForAnnotationParameter,
+                fallbackMode = this,
+                needInlineClassWrapping = needInlineClassWrapping,
+                mapTypeAliases = mapTypeAliases
+            )
+        }
+
+        return this
+    }
+
+    private fun TypeMappingMode.suppressJvmWildcards(
+        suppress: Boolean
+    ): TypeMappingMode {
+        return TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
+            skipDeclarationSiteWildcards = suppress,
+            isForAnnotationParameter = isForAnnotationParameter,
+            needInlineClassWrapping = needInlineClassWrapping,
+            mapTypeAliases = mapTypeAliases
+        )
+    }
+
+    private fun TypeMappingMode.updateFromParents(
+        ref: KSTypeReference
+    ): TypeMappingMode {
+        ref.findJvmSuppressWildcards()?.let {
+            return this.suppressJvmWildcards(it)
+        }
+
+        return this
     }
 
     // Type arguments need to be resolved recursively in a top-down manner. So we find and resolve the outer most
@@ -1311,7 +1379,7 @@ class ResolverImpl(
             RefPosition.RETURN_TYPE ->
                 typeSystem.getOptimalModeForReturnType(kotlinType, ref.isReturnTypeOfAnnotationMethod())
             RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
-        }
+        }.updateFromParents(ref)
 
         val parameters = kotlinType.constructor.parameters
         val arguments = kotlinType.arguments
