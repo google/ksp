@@ -124,6 +124,15 @@ interface Resolver {
     fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean
 
     /**
+     * @param overrider the candidate overriding declaration being checked.
+     * @param overridee the candidate overridden declaration being checked.
+     * @param containingClass the containing class of candidate overriding and overridden declaration being checked.
+     * @return boolean value indicating whether [overrider] overrides [overridee]
+     * Calling [overrides] is expensive and should be avoided if possible.
+     */
+    fun overrides(overrider: KSDeclaration, overridee: KSDeclaration, containingClass: KSClassDeclaration): Boolean
+
+    /**
      * Returns the jvm name of the given function.
      * This function might fail due to resolution error, in case of error, null is returned.
      * Resolution error could be caused by bad code that could not be resolved by compiler, or KSP bugs.

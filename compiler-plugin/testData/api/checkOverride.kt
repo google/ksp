@@ -42,6 +42,9 @@
 // MyInterface2ImplWithType.receiveList overrides MyInterface2.receiveList: true
 // MyInterface2ImplWithType.receiveList overrides MyInterface2ImplWithoutType.receiveList: true
 // JavaDifferentReturnType.foo overrides JavaList.foo: true
+// Base.f1 overrides MyInterface3.f1: true
+// Base.prop overrides MyInterface3.prop: true
+// JBase.getProp overrides MyInterface3.prop: true
 // END
 // FILE: a.kt
 
@@ -111,6 +114,34 @@ interface MyInterface2ImplWithoutType<T> : MyInterface2<T> {
 
 interface MyInterface2ImplWithType : MyInterface2ImplWithoutType<EnumType> {
     override fun receiveList(argsInParent : List<EnumType>):Unit
+}
+
+interface MyInterface3 {
+    fun f1()
+    val prop: String
+}
+
+open class Base {
+    val prop: String = ""
+    fun f1() {
+    }
+}
+
+class BaseOverride: MyInterface3, Base() {
+    fun f2() {}
+}
+
+// FILE: JBaseOverride.java
+public class JBaseOverride extends JBase implements MyInterface3 {
+
+}
+
+// FILE: JBase.java
+
+public class JBase {
+    public String getProp() {
+        return "JBase";
+    }
 }
 
 // FILE: JavaList.java
