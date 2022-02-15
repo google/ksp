@@ -53,6 +53,22 @@ class KMPImplementedIT {
     }
 
     @Test
+    fun testJvmErrorLog() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload-jvm/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"process\") }\n")
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-jvm:build"
+        ).buildAndFail().let {
+            val errors = it.output.split("\n").filter { it.startsWith("e: [ksp]") }
+            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+        }
+        project.restore("workload-jvm/build.gradle.kts")
+    }
+
+    @Test
     fun testJs() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
@@ -77,6 +93,22 @@ class KMPImplementedIT {
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JS"))
         }
+    }
+
+    @Test
+    fun testJsErrorLog() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload-js/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"process\") }\n")
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-js:build"
+        ).buildAndFail().let {
+            val errors = it.output.split("\n").filter { it.startsWith("e: [ksp]") }
+            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+        }
+        project.restore("workload-js/build.gradle.kts")
     }
 
     @Test
@@ -149,6 +181,23 @@ class KMPImplementedIT {
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
         }
+    }
+
+    @Test
+    fun testLinuxX64ErrorLog() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload-linuxX64/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"process\") }\n")
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-linuxX64:build"
+        ).buildAndFail().let {
+            val errors = it.output.split("\n").filter { it.startsWith("e: [ksp]") }
+            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+        }
+        project.restore("workload-js/build.gradle.kts")
     }
 
     private fun verifyAll(result: BuildResult) {
