@@ -28,6 +28,10 @@ class ErrorProcessor : SymbolProcessor {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        if (exception == "createTwice") {
+            codeGenerator.createNewFile(Dependencies.ALL_FILES, "create", "Twice").write("".toByteArray())
+            return emptyList()
+        }
         if (exception == "process") {
             throw Exception("Test Exception in process")
         }
