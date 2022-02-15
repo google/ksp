@@ -95,6 +95,7 @@ import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
+import org.jetbrains.kotlin.resolve.descriptorUtil.propertyIfAccessor
 import org.jetbrains.kotlin.resolve.lazy.DeclarationScopeProvider
 import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
@@ -460,6 +461,58 @@ class ResolverImpl(
         incrementalContext.recordLookupForDeclaration(overridee)
 
         return OverridingUtil.overrides(subDescriptor, superDescriptor, true, true)
+    }
+
+    // check if the candidate is overridden from the original declaration.
+    private fun isOriginal(original: KSDeclaration, candidate: KSDeclaration): Boolean {
+        incrementalContext.recordLookupForDeclaration(original)
+        incrementalContext.recordLookupForDeclaration(candidate)
+        val originalDescriptor = when (original) {
+            is KSPropertyDeclaration -> resolvePropertyDeclaration(original)
+            is KSFunctionDeclaration -> resolveFunctionDeclaration(original)?.propertyIfAccessor
+            else -> return false
+        }
+
+        val candidateDescriptors = when (candidate) {
+            is KSPropertyDeclaration -> resolvePropertyDeclaration(candidate)?.overriddenDescriptors
+            is KSFunctionDeclaration -> resolveFunctionDeclaration(candidate)?.overriddenDescriptors
+            else -> return false
+        }
+        return candidateDescriptors?.any { it == originalDescriptor } ?: false
+    }
+
+    override fun overrides(
+        overrider: KSDeclaration,
+        overridee: KSDeclaration,
+        containingClass: KSClassDeclaration
+    ): Boolean {
+        incrementalContext.recordLookupForDeclaration(containingClass)
+        return when (overrider) {
+            is KSPropertyDeclaration -> containingClass.getAllProperties().singleOrNull {
+                it.simpleName.asString() == overrider.simpleName.asString() && isOriginal(overrider, it)
+            }?.let { overrides(it, overridee) } ?: false
+            is KSFunctionDeclaration -> {
+                val candidates = containingClass.getAllFunctions().filter {
+                    it.simpleName.asString() == overridee.simpleName.asString()
+                }
+                if (overrider.simpleName.asString().startsWith("get") ||
+                    overrider.simpleName.asString().startsWith("set")
+                ) {
+                    candidates.plus(
+                        containingClass.getAllProperties().filter {
+                            val overriderName = overrider.simpleName.asString().substring(3)
+                                .replaceFirstChar { it.lowercase() }
+                            it.simpleName.asString() == overriderName ||
+                                it.simpleName.asString().replaceFirstChar { it.lowercase() } == overriderName
+                        }
+                        // TODO: It is currently not possible to do the overridden descriptor optimization for java overrides.
+                    ).any { overrides(it, overridee) }
+                } else {
+                    candidates.singleOrNull { isOriginal(overrider, it) }?.let { overrides(it, overridee) } ?: false
+                }
+            }
+            else -> false
+        }
     }
 
     fun evaluateConstant(expression: KtExpression?, expectedType: KotlinType): ConstantValue<*>? {
