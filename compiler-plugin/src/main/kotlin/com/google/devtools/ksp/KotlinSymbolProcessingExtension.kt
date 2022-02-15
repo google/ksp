@@ -52,8 +52,6 @@ import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
-import org.jetbrains.kotlin.platform.isCommon
 import org.jetbrains.kotlin.platform.js.JsPlatform
 import org.jetbrains.kotlin.platform.jvm.JdkPlatform
 import org.jetbrains.kotlin.platform.konan.NativePlatform
@@ -61,7 +59,6 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -272,16 +269,6 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             else
                 AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
         } else {
-            // Temporary workaround for metadata task class path issue.
-            if (module.platform.isCommon()) {
-                module.allDependencyModules.filter { it != module.builtIns.builtInsModule }.forEach {
-                    it.safeAs<ModuleDescriptorImpl>()?.let {
-                        val field = it.javaClass.getDeclaredField("packageFragmentProviderForModuleContent")
-                        field.isAccessible = true
-                        field.set(it, null)
-                    }
-                }
-            }
             AnalysisResult.RetryWithAdditionalRoots(
                 BindingContext.EMPTY,
                 module,
