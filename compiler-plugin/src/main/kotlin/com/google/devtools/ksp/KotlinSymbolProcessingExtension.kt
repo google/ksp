@@ -106,6 +106,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
 
     companion object {
         private const val KSP_PACKAGE_NAME = "com.google.devtools.ksp"
+        private const val KOTLIN_PACKAGE_NAME = "org.jetbrains.kotlin"
         private const val MULTI_ROUND_THRESHOLD = 100
     }
 
@@ -149,7 +150,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
         var newFiles = ksFiles.filter { it.filePath in newFileNames }
 
-        handleException(project) {
+        handleException(module, project) {
             if (!initialized) {
                 incrementalContext = IncrementalContext(
                     options, componentProvider,
@@ -186,7 +187,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             )
             processors = providers.mapNotNull { provider ->
                 var processor: SymbolProcessor? = null
-                handleException(project) {
+                handleException(module, project) {
                     processor = provider.create(
                         SymbolProcessorEnvironment(
                             options.processingOptions,
@@ -208,7 +209,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         }
         if (!logger.hasError()) {
             processors.forEach processing@{ processor ->
-                handleException(project) {
+                handleException(module, project) {
                     deferredSymbols[processor] =
                         processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
                 }?.let { return it }
@@ -231,14 +232,14 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         if (logger.hasError()) {
             finished = true
             processors.forEach { processor ->
-                handleException(project) {
+                handleException(module, project) {
                     processor.onError()
                 }?.let { return it }
             }
         } else {
             if (finished) {
                 processors.forEach { processor ->
-                    handleException(project) {
+                    handleException(module, project) {
                         processor.finish()
                     }?.let { return it }
                 }
@@ -264,10 +265,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             logger.reportAll()
         }
         return if (finished && !options.withCompilation) {
-            if (logger.hasError())
-                AnalysisResult.compilationError(BindingContext.EMPTY)
-            else
-                AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+            AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
         } else {
             AnalysisResult.RetryWithAdditionalRoots(
                 BindingContext.EMPTY,
@@ -300,26 +298,43 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         }
     }
 
-    private fun handleException(project: Project, call: () -> Unit): AnalysisResult? {
+    private fun handleException(module: ModuleDescriptor, project: Project, call: () -> Unit): AnalysisResult? {
         try {
             call()
         } catch (e: Exception) {
-            // Throws KSP exceptions
+            fun Exception.logToError() {
+                val sw = StringWriter()
+                printStackTrace(PrintWriter(sw))
+                logger.error(sw.toString())
+            }
+
+            fun Exception.isNotRecoverable(): Boolean =
+                stackTrace.first().className.let {
+                    // TODO: convert non-critical exceptions thrown by KSP to recoverable errors.
+                    it.startsWith(KSP_PACKAGE_NAME) || it.startsWith(KOTLIN_PACKAGE_NAME)
+                }
+
+            // Returning non-null here allows
+            // 1. subsequent processing of other processors in current round.
+            // 2. processor.onError() be called.
+            //
+            // In other words, returning non-null let current round finish.
             when {
                 e is KSPCompilationError -> {
                     logger.error("${project.findLocationString(e.file, e.offset)}: ${e.message}")
                     logger.reportAll()
-                    return AnalysisResult.compilationError(BindingContext.EMPTY)
+                    return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
                 }
 
-                e.stackTrace.first().className.startsWith(KSP_PACKAGE_NAME) -> {
-                    return AnalysisResult.internalError(BindingContext.EMPTY, e)
+                e.isNotRecoverable() -> {
+                    e.logToError()
+                    logger.reportAll()
+                    return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
                 }
 
+                // Let this round finish.
                 else -> {
-                    val sw = StringWriter()
-                    e.printStackTrace(PrintWriter(sw))
-                    logger.error(sw.toString())
+                    e.logToError()
                 }
             }
         }
