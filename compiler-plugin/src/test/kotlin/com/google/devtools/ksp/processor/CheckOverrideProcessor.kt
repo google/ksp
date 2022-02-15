@@ -30,10 +30,11 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        fun checkOverride(overrider: KSDeclaration, overridee: KSDeclaration) {
+        fun checkOverride(overrider: KSDeclaration, overridee: KSDeclaration, containing: KSClassDeclaration? = null) {
             results.add(
                 "${overrider.qualifiedName?.asString()} overrides ${overridee.qualifiedName?.asString()}: " +
-                    "${resolver.overrides(overrider, overridee)}"
+                    "${containing?.let { resolver.overrides(overrider, overridee, containing) }
+                        ?: resolver.overrides(overrider, overridee)}"
             )
         }
         val javaList = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaList"))
@@ -96,6 +97,19 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val diffGetX = JavaDifferentReturnTypes.getDeclaredFunctions()
             .first { it.simpleName.asString() == "foo" }
         checkOverride(diffGetX, fooFunJava)
+        val base = resolver.getClassDeclarationByName("Base")!!
+        val baseF1 = base.declarations.filter { it.simpleName.asString() == "f1" }.single()
+        val baseProp = base.declarations.filter { it.simpleName.asString() == "prop" }.single()
+        val myInterface3 = resolver.getClassDeclarationByName("MyInterface3")!!
+        val myInterfaceF1 = myInterface3.declarations.filter { it.simpleName.asString() == "f1" }.single()
+        val myInterfaceProp = myInterface3.declarations.filter { it.simpleName.asString() == "prop" }.single()
+        val baseOverride = resolver.getClassDeclarationByName("BaseOverride")!!
+        checkOverride(baseF1, myInterfaceF1, baseOverride)
+        checkOverride(baseProp, myInterfaceProp, baseOverride)
+        val jbase = resolver.getClassDeclarationByName("JBase")!!
+        val jBaseOverride = resolver.getClassDeclarationByName("JBaseOverride")!!
+        val jbaseProp = jbase.declarations.single { it.simpleName.asString() == "getProp" }
+        checkOverride(jbaseProp, myInterfaceProp, jBaseOverride)
         return emptyList()
     }
 }
