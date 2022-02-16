@@ -148,7 +148,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
-        var newFiles = ksFiles.filter { it.filePath in newFileNames }
+        lateinit var newFiles: List<KSFile>
 
         handleException(module, project) {
             if (!initialized) {
@@ -160,6 +160,15 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
                 newFiles = dirtyFiles.toList()
             } else {
+                newFiles = ksFiles.filter {
+                    when (it) {
+                        is KSFileImpl -> it.file
+                        is KSFileJavaImpl -> it.psi
+                        else -> null
+                    }?.virtualFile?.let { virtualFile ->
+                        virtualFile.canonicalPath ?: virtualFile.path
+                    } in newFileNames
+                }
                 incrementalContext.registerGeneratedFiles(newFiles)
             }
         }?.let { return@doAnalysis it }
