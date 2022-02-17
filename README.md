@@ -191,6 +191,7 @@ The table below includes a list of popular libraries on Android and their variou
 |Lyricist|[Officially supported](https://github.com/adrielcafe/lyricist)|   |
 |Lich SavedState|[Officially supported](https://github.com/line/lich/tree/master/savedstate)|   |
 |gRPC Dekorator|[Officially supported](https://github.com/mottljan/grpc-dekorator)|   |
+|EasyAdapter|[Officially supported](https://github.com/AmrDeveloper/EasyAdapter)|   |
 |Auto Factory|Not yet supported|[Link](https://github.com/google/auto/issues/982)|
 |Dagger|Not yet supported|[Link](https://github.com/google/dagger/issues/2349)|
 |Hilt|Not yet supported|[Link](https://issuetracker.google.com/179057202)|
