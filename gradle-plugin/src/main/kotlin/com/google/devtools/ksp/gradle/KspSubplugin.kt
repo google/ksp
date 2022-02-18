@@ -582,7 +582,6 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
         args: K2JVMCompilerArguments,
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
-        taskOutputsBackup: TaskOutputsBackup?,
     ) {
         if (isKspIncremental) {
             if (isIntermoduleIncremental) {
@@ -600,7 +599,7 @@ abstract class KspTaskJvm : KotlinCompile(KotlinJvmOptionsImpl()), KspTask {
             clearIncCache()
         }
         args.addChangedFiles(changedFiles)
-        super.callCompilerAsync(args, sourceRoots, changedFiles, taskOutputsBackup)
+        super.callCompilerAsync(args, sourceRoots, changedFiles)
     }
 
     override fun skipCondition(): Boolean = false
@@ -675,14 +674,13 @@ abstract class KspTaskJS @Inject constructor(
         args: K2JSCompilerArguments,
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
-        taskOutputsBackup: TaskOutputsBackup?,
     ) {
         if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
             clearIncCache()
         } else {
             args.addChangedFiles(changedFiles)
         }
-        super.callCompilerAsync(args, sourceRoots, changedFiles, taskOutputsBackup)
+        super.callCompilerAsync(args, sourceRoots, changedFiles)
     }
 
     // Overrding an internal function is hacky.
@@ -751,14 +749,13 @@ abstract class KspTaskMetadata : KotlinCompileCommon(KotlinMultiplatformCommonOp
         args: K2MetadataCompilerArguments,
         sourceRoots: SourceRoots,
         changedFiles: ChangedFiles,
-        taskOutputsBackup: TaskOutputsBackup?,
     ) {
         if (!isKspIncremental || changedFiles.hasNonSourceChange()) {
             clearIncCache()
         } else {
             args.addChangedFiles(changedFiles)
         }
-        super.callCompilerAsync(args, sourceRoots, changedFiles, taskOutputsBackup)
+        super.callCompilerAsync(args, sourceRoots, changedFiles)
     }
 }
 
