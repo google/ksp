@@ -10,8 +10,8 @@ pluginManagement {
     }["kotlinBaseVersion"] as String
     resolutionStrategy {
         eachPlugin {
-            if ( requested.id.id == "org.jetbrains.kotlin.jvm" ) {
-                useModule( "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion" )
+            if (requested.id.id == "org.jetbrains.kotlin.jvm") {
+                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
             }
         }
     }
