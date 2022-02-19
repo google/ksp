@@ -7,8 +7,8 @@ pluginManagement {
     val kotlinBaseVersion: String by settings
     resolutionStrategy {
         eachPlugin {
-            if ( requested.id.id == "org.jetbrains.kotlin.jvm" ) {
-                useModule( "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion" )
+            if (requested.id.id == "org.jetbrains.kotlin.jvm") {
+                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
             }
         }
     }
@@ -27,7 +27,7 @@ val kotlinProjectPath: String? by settings
 if (kotlinProjectPath != null) {
     includeBuild(kotlinProjectPath!!) {
         dependencySubstitution {
-            substitute(module("org.jetbrains.kotlin:kotlin-compiler")).with(project(":include:kotlin-compiler"))
+            substitute(module("org.jetbrains.kotlin:kotlin-compiler")).using(project(":include:kotlin-compiler"))
         }
     }
 }
