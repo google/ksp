@@ -13,7 +13,6 @@ pluginManagement {
         maven(testRepo)
         gradlePluginPortal()
         google()
-        jcenter()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
     }
