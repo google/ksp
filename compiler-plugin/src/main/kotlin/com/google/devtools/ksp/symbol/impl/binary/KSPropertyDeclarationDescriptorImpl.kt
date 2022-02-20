@@ -61,6 +61,9 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     override val modifiers: Set<Modifier> by lazy {
         val modifiers = mutableSetOf<Modifier>()
         modifiers.addAll(descriptor.toKSModifiers())
+        if (descriptor.isConst) {
+            modifiers.add(Modifier.CONST)
+        }
 
         if (this.origin == Origin.JAVA_LIB) {
             if (this.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0)
