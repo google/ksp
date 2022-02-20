@@ -121,6 +121,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/companion.kt");
     }
 
+    @TestMetadata("constProperties.kt")
+    public void testConstProperties() throws Exception {
+        runTest("testData/api/constProperties.kt");
+    }
+
     @TestMetadata("constructorDeclarations.kt")
     public void testConstructorDeclarations() throws Exception {
         runTest("testData/api/constructorDeclarations.kt");
