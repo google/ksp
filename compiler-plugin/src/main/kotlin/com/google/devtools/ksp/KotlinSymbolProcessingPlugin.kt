@@ -79,6 +79,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
         KspCliOption.ALL_WARNINGS_AS_ERRORS_OPTION -> allWarningsAsErrors = value.toBoolean()
         KspCliOption.WITH_COMPILATION_OPTION -> withCompilation = value.toBoolean()
         KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
+        KspCliOption.RETURN_OK_ON_ERROR_OPTION -> returnOkOnError = value.toBoolean()
     }
 }
 
@@ -244,7 +245,15 @@ enum class KspCliOption(
         "canonical / dot-separated names of dirty classes in classpath",
         false,
         false
-    );
+    ),
+
+    RETURN_OK_ON_ERROR_OPTION(
+        "returnOkOnError",
+        "<returnOkOnError>",
+        "Return OK even if there are errors",
+        false,
+        false
+    ),
 }
 
 class KspOptions(
@@ -271,6 +280,7 @@ class KspOptions(
     val incrementalLog: Boolean,
     val allWarningsAsErrors: Boolean,
     val withCompilation: Boolean,
+    val returnOkOnError: Boolean,
     val changedClasses: List<String>,
 
     val languageVersion: KotlinVersion,
@@ -301,6 +311,8 @@ class KspOptions(
         var incrementalLog: Boolean = false
         var allWarningsAsErrors: Boolean = false
         var withCompilation: Boolean = false
+        // Default is false. It can be turned on to workaround KT-30172.
+        var returnOkOnError: Boolean = false
         var changedClasses: MutableList<String> = mutableListOf()
 
         var languageVersion: KotlinVersion = LanguageVersion.LATEST_STABLE.toKotlinVersion()
@@ -316,7 +328,7 @@ class KspOptions(
                 resourceOutputDir!!,
                 processingClasspath, processors, processingOptions,
                 knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog,
-                allWarningsAsErrors, withCompilation, changedClasses,
+                allWarningsAsErrors, withCompilation, returnOkOnError, changedClasses,
                 languageVersion, apiVersion, compilerVersion
             )
         }
