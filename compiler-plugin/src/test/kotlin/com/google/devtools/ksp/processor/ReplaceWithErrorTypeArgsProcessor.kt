@@ -56,6 +56,7 @@ open class ReplaceWithErrorTypeArgsProcessor : AbstractTestProcessor() {
             results.add("$declName.star.replace($yargs): ${decl.asStarProjectedType().replace(yargs)}")
             results.add("$declName.asType($xargs): ${decl.asType(xargs)}")
             results.add("$declName.asType($yargs): ${decl.asType(yargs)}")
+            results.add("$declName.asType(emptyList()): ${decl.asType(emptyList())}")
         }
         return emptyList()
     }
