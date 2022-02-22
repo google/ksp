@@ -90,4 +90,24 @@ class OnErrorIT {
         }
         project.restore("workload/build.gradle.kts")
     }
+
+    @Test
+    fun testCreateTwiceNotOkOnError() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+
+        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
+        File(project.root, "gradle.properties").appendText("\nksp.return.ok.on.error=false")
+        gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
+            val errors = result.output.split("\n").filter { it.startsWith("e: [ksp]") }
+
+            Assert.assertTrue(
+                errors.any {
+                    it.startsWith("e: [ksp] kotlin.io.FileAlreadyExistsException:")
+                }
+            )
+
+            Assert.assertTrue(result.output.contains("e: java.lang.IllegalStateException: Should not be called!"))
+        }
+        project.restore("workload/build.gradle.kts")
+    }
 }

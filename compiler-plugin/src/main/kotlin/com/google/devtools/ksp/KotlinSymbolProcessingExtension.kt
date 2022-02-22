@@ -277,7 +277,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             logger.reportAll()
         }
         return if (finished && !options.withCompilation) {
-            AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+            if (!options.returnOkOnError && logger.hasError()) {
+                AnalysisResult.compilationError(BindingContext.EMPTY)
+            } else {
+                AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+            }
         } else {
             // Temporary workaround for metadata task class path issue.
             if (module.platform.isCommon()) {
@@ -345,13 +349,21 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 e is KSPCompilationError -> {
                     logger.error("${project.findLocationString(e.file, e.offset)}: ${e.message}")
                     logger.reportAll()
-                    return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+                    return if (options.returnOkOnError) {
+                        AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+                    } else {
+                        AnalysisResult.compilationError(BindingContext.EMPTY)
+                    }
                 }
 
                 e.isNotRecoverable() -> {
                     e.logToError()
                     logger.reportAll()
-                    return AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+                    return if (options.returnOkOnError) {
+                        AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
+                    } else {
+                        AnalysisResult.internalError(BindingContext.EMPTY, e)
+                    }
                 }
 
                 // Let this round finish.
