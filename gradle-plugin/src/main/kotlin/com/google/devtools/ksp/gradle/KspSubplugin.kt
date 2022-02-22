@@ -130,6 +130,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             options += SubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
             options += SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
             options += FilesSubpluginOption("apclasspath", classpath.toList())
+            // Turn this on by default to work KT-30172 around. It is off by default in the ccompiler plugin.
+            options += SubpluginOption(
+                "returnOkOnError",
+                project.findProperty("ksp.return.ok.on.error")?.toString() ?: "true"
+            )
 
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
