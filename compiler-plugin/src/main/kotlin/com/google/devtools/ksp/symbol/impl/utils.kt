@@ -135,7 +135,7 @@ private fun KSTypeReference.toKotlinType() = (resolve() as? KSTypeImpl)?.kotlinT
 
 // returns null if error
 internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>): KotlinType? {
-    if (this.arguments.size != newArguments.size)
+    if (newArguments.isNotEmpty() && this.arguments.size != newArguments.size)
         return null
     return replace(
         newArguments.mapIndexed { index, ksTypeArgument ->
