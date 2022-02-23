@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.configureMetalava
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processing API"
@@ -52,3 +53,5 @@ signing {
     isRequired = hasProperty("signingKey") && !gradle.taskGraph.hasTask("publishToMavenLocal")
     sign(extensions.getByType<PublishingExtension>().publications)
 }
+
+configureMetalava()

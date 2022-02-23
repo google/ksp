@@ -1,0 +1,716 @@
+// Signature format: 2.0
+package com.google.devtools.ksp {
+
+  @com.google.devtools.ksp.KspExperimental public final class KSTypeNotPresentException {
+    ctor public KSTypeNotPresentException(@NonNull com.google.devtools.ksp.symbol.KSType ksType, @NonNull Throwable cause);
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getKsType();
+    property @NonNull public final com.google.devtools.ksp.symbol.KSType ksType;
+  }
+
+  @com.google.devtools.ksp.KspExperimental public final class KSTypesNotPresentException {
+    ctor public KSTypesNotPresentException(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSType> ksTypes, @NonNull Throwable cause);
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSType> getKsTypes();
+    property @NonNull public final java.util.List<com.google.devtools.ksp.symbol.KSType> ksTypes;
+  }
+
+  @kotlin.annotation.Retention(AnnotationRetention.BINARY) public interface KspExperimental {
+  }
+
+  public final class UtilsKt {
+    method @Nullable public static com.google.devtools.ksp.symbol.KSClassDeclaration closestClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method @NonNull public static com.google.devtools.ksp.symbol.KSClassDeclaration findActualType(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias);
+    method public static error.NonExistentClass getAllSuperTypes(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
+    method @com.google.devtools.ksp.KspExperimental public static <T extends > error.NonExistentClass getAnnotationsByType(@NonNull com.google.devtools.ksp.symbol.KSAnnotated, @NonNull kotlin.reflect.KClass<T> annotationKClass);
+    method @Nullable public static com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name);
+    method public static inline <reified T> com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver);
+    method public static error.NonExistentClass getConstructors(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
+    method @Nullable public static com.google.devtools.ksp.symbol.KSFile getContainingFile(@NonNull com.google.devtools.ksp.symbol.KSNode);
+    method public static error.NonExistentClass getDeclaredFunctions(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
+    method public static error.NonExistentClass getDeclaredProperties(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
+    method public static error.NonExistentClass getFunctionDeclarationsByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name, boolean includeTopLevel = false);
+    method @NonNull public static java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> getInnerArguments(@NonNull com.google.devtools.ksp.symbol.KSType);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getJavaClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull com.google.devtools.ksp.symbol.KSName name);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getJavaClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getKotlinClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull com.google.devtools.ksp.symbol.KSName name);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getKotlinClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name);
+    method @Nullable public static com.google.devtools.ksp.symbol.KSType getOuterType(@NonNull com.google.devtools.ksp.symbol.KSType);
+    method @Nullable public static com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name, boolean includeTopLevel = false);
+    method @NonNull public static com.google.devtools.ksp.symbol.Visibility getVisibility(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isAbstract(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
+    method public static boolean isAbstract(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration);
+    method @com.google.devtools.ksp.KspExperimental public static <T extends > boolean isAnnotationPresent(@NonNull com.google.devtools.ksp.symbol.KSAnnotated, @NonNull kotlin.reflect.KClass<T> annotationKClass);
+    method public static boolean isConstructor(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration);
+    method public static boolean isInternal(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isJavaPackagePrivate(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isLocal(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isOpen(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isPrivate(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isProtected(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isPublic(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
+    method public static boolean isVisibleFrom(@NonNull com.google.devtools.ksp.symbol.KSDeclaration, @NonNull com.google.devtools.ksp.symbol.KSDeclaration other);
+    method public static boolean validate(@NonNull com.google.devtools.ksp.symbol.KSNode, @NonNull kotlin.jvm.functions.Function2<? super com.google.devtools.ksp.symbol.KSNode,? super com.google.devtools.ksp.symbol.KSNode,java.lang.Boolean> predicate = { _, _ -> return true });
+    field @NonNull public static final String ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new";
+  }
+
+}
+
+package com.google.devtools.ksp.processing {
+
+  public interface CodeGenerator {
+    method public void associate(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method public void associateWithClasses(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSClassDeclaration> classes, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method public error.NonExistentClass createNewFile(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method @NonNull public java.util.Collection<error.NonExistentClass> getGeneratedFile();
+    property @NonNull public abstract java.util.Collection<error.NonExistentClass> generatedFile;
+  }
+
+  public final class Dependencies {
+    ctor public Dependencies(boolean aggregating, @NonNull com.google.devtools.ksp.symbol.KSFile... sources);
+    method public boolean getAggregating();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSFile> getOriginatingFiles();
+    method public boolean isAllSources();
+    property public final boolean aggregating;
+    property public final boolean isAllSources;
+    property @NonNull public final java.util.List<com.google.devtools.ksp.symbol.KSFile> originatingFiles;
+    field @NonNull public static final com.google.devtools.ksp.processing.Dependencies.Companion Companion;
+  }
+
+  public static final class Dependencies.Companion {
+    method @NonNull public com.google.devtools.ksp.processing.Dependencies getALL_FILES();
+    property @NonNull public final com.google.devtools.ksp.processing.Dependencies ALL_FILES;
+  }
+
+  public interface JsPlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
+  }
+
+  public interface JvmPlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
+    method @NonNull public String getJvmTarget();
+    property @NonNull public abstract String jvmTarget;
+  }
+
+  public interface KSBuiltIns {
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getAnnotationType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getAnyType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getArrayType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getBooleanType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getByteType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getCharType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getDoubleType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getFloatType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getIntType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getIterableType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getLongType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getNothingType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getNumberType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getShortType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getStringType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType getUnitType();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType annotationType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType anyType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType arrayType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType booleanType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType byteType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType charType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType doubleType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType floatType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType intType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType iterableType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType longType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType nothingType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType numberType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType shortType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType stringType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSType unitType;
+  }
+
+  public interface KSPLogger {
+    method public void error(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
+    method public void exception(@NonNull Throwable e);
+    method public void info(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
+    method public void logging(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
+    method public void warn(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
+  }
+
+  public interface NativePlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
+    method @NonNull public String getTargetName();
+    property @NonNull public abstract String targetName;
+  }
+
+  public interface PlatformInfo {
+    method @NonNull public String getPlatformName();
+    property @NonNull public abstract String platformName;
+  }
+
+  public interface Resolver {
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference createKSTypeReferenceFromKSType(@NonNull com.google.devtools.ksp.symbol.KSType type);
+    method @NonNull @com.google.devtools.ksp.KspExperimental public java.util.Set<com.google.devtools.ksp.symbol.Modifier> effectiveJavaModifiers(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration);
+    method public error.NonExistentClass getAllFiles();
+    method @NonNull public com.google.devtools.ksp.processing.KSBuiltIns getBuiltIns();
+    method @Nullable public com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(@NonNull com.google.devtools.ksp.symbol.KSName name);
+    method @com.google.devtools.ksp.KspExperimental public error.NonExistentClass getDeclarationsFromPackage(@NonNull String packageName);
+    method @com.google.devtools.ksp.KspExperimental public error.NonExistentClass getDeclarationsInSourceOrder(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer container);
+    method public error.NonExistentClass getFunctionDeclarationsByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel = false);
+    method @NonNull @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSTypeReference getJavaWildcard(@NonNull com.google.devtools.ksp.symbol.KSTypeReference reference);
+    method @com.google.devtools.ksp.KspExperimental public error.NonExistentClass getJvmCheckedException(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function);
+    method @com.google.devtools.ksp.KspExperimental public error.NonExistentClass getJvmCheckedException(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public String getJvmName(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration declaration);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public String getJvmName(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor);
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getKSNameFromString(@NonNull String name);
+    method public error.NonExistentClass getNewFiles();
+    method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration declaration);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration declaration);
+    method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel = false);
+    method public error.NonExistentClass getSymbolsWithAnnotation(@NonNull String annotationName, boolean inDepth = false);
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeArgument getTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeRef, @NonNull com.google.devtools.ksp.symbol.Variance variance);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName mapJavaNameToKotlin(@NonNull com.google.devtools.ksp.symbol.KSName javaName);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName mapKotlinNameToJava(@NonNull com.google.devtools.ksp.symbol.KSName kotlinName);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public String mapToJvmSignature(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration);
+    method public boolean overrides(@NonNull com.google.devtools.ksp.symbol.KSDeclaration overrider, @NonNull com.google.devtools.ksp.symbol.KSDeclaration overridee);
+    method public boolean overrides(@NonNull com.google.devtools.ksp.symbol.KSDeclaration overrider, @NonNull com.google.devtools.ksp.symbol.KSDeclaration overridee, @NonNull com.google.devtools.ksp.symbol.KSClassDeclaration containingClass);
+    property @NonNull public abstract com.google.devtools.ksp.processing.KSBuiltIns builtIns;
+  }
+
+  public interface SymbolProcessor {
+    method public default void finish();
+    method public default void onError();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSAnnotated> process(@NonNull com.google.devtools.ksp.processing.Resolver resolver);
+  }
+
+  public final class SymbolProcessorEnvironment {
+    ctor public SymbolProcessorEnvironment(@NonNull java.util.Map<java.lang.String,java.lang.String> options, @NonNull error.NonExistentClass kotlinVersion, @NonNull com.google.devtools.ksp.processing.CodeGenerator codeGenerator, @NonNull com.google.devtools.ksp.processing.KSPLogger logger, @NonNull error.NonExistentClass apiVersion, @NonNull error.NonExistentClass compilerVersion, @NonNull java.util.List<? extends com.google.devtools.ksp.processing.PlatformInfo> platforms);
+    ctor public SymbolProcessorEnvironment(@NonNull java.util.Map<java.lang.String,java.lang.String> options, @NonNull error.NonExistentClass kotlinVersion, @NonNull com.google.devtools.ksp.processing.CodeGenerator codeGenerator, @NonNull com.google.devtools.ksp.processing.KSPLogger logger);
+    method public error.NonExistentClass getApiVersion();
+    method @NonNull public com.google.devtools.ksp.processing.CodeGenerator getCodeGenerator();
+    method public error.NonExistentClass getCompilerVersion();
+    method public error.NonExistentClass getKotlinVersion();
+    method @NonNull public com.google.devtools.ksp.processing.KSPLogger getLogger();
+    method @NonNull public java.util.Map<java.lang.String,java.lang.String> getOptions();
+    method @NonNull public java.util.List<com.google.devtools.ksp.processing.PlatformInfo> getPlatforms();
+    property public final error.NonExistentClass apiVersion;
+    property @NonNull public final com.google.devtools.ksp.processing.CodeGenerator codeGenerator;
+    property public final error.NonExistentClass compilerVersion;
+    property public final error.NonExistentClass kotlinVersion;
+    property @NonNull public final com.google.devtools.ksp.processing.KSPLogger logger;
+    property @NonNull public final java.util.Map<java.lang.String,java.lang.String> options;
+    property @NonNull public final java.util.List<com.google.devtools.ksp.processing.PlatformInfo> platforms;
+  }
+
+  public fun interface SymbolProcessorProvider {
+    method @NonNull public com.google.devtools.ksp.processing.SymbolProcessor create(@NonNull com.google.devtools.ksp.processing.SymbolProcessorEnvironment environment);
+  }
+
+  public interface UnknownPlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
+  }
+
+}
+
+package com.google.devtools.ksp.symbol {
+
+  public enum AnnotationUseSiteTarget {
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget DELEGATE;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget FIELD;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget FILE;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget GET;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget PARAM;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget PROPERTY;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget RECEIVER;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget SET;
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget SETPARAM;
+  }
+
+  public enum ClassKind {
+    method public final String getType();
+    property public final String type;
+    enum_constant public static final com.google.devtools.ksp.symbol.ClassKind ANNOTATION_CLASS;
+    enum_constant public static final com.google.devtools.ksp.symbol.ClassKind CLASS;
+    enum_constant public static final com.google.devtools.ksp.symbol.ClassKind ENUM_CLASS;
+    enum_constant public static final com.google.devtools.ksp.symbol.ClassKind ENUM_ENTRY;
+    enum_constant public static final com.google.devtools.ksp.symbol.ClassKind INTERFACE;
+    enum_constant public static final com.google.devtools.ksp.symbol.ClassKind OBJECT;
+  }
+
+  public final class FileLocation extends com.google.devtools.ksp.symbol.Location {
+    ctor public FileLocation(@NonNull String filePath, int lineNumber);
+    method @NonNull public String component1();
+    method public int component2();
+    method @NonNull public com.google.devtools.ksp.symbol.FileLocation copy(@NonNull String filePath, int lineNumber);
+    method public boolean equals(@Nullable Object other);
+    method @NonNull public String getFilePath();
+    method public int getLineNumber();
+    method public int hashCode();
+    method @NonNull public String toString();
+    property @NonNull public final String filePath;
+    property public final int lineNumber;
+  }
+
+  public enum FunctionKind {
+    enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind ANONYMOUS;
+    enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind LAMBDA;
+    enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind MEMBER;
+    enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind STATIC;
+    enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind TOP_LEVEL;
+  }
+
+  public interface KSAnnotated extends com.google.devtools.ksp.symbol.KSNode {
+    method public error.NonExistentClass getAnnotations();
+    property public abstract error.NonExistentClass annotations;
+  }
+
+  public interface KSAnnotation extends com.google.devtools.ksp.symbol.KSNode {
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getAnnotationType();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueArgument> getArguments();
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getShortName();
+    method @Nullable public com.google.devtools.ksp.symbol.AnnotationUseSiteTarget getUseSiteTarget();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference annotationType;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSValueArgument> arguments;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSName shortName;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.AnnotationUseSiteTarget useSiteTarget;
+  }
+
+  public interface KSCallableReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
+    method public default <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, @Nullable D data);
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> getFunctionParameters();
+    method @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getReceiverType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getReturnType();
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> functionParameters;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference receiverType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference returnType;
+  }
+
+  public interface KSClassDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration com.google.devtools.ksp.symbol.KSDeclarationContainer {
+    method @NonNull public com.google.devtools.ksp.symbol.KSType asStarProjectedType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType asType(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSTypeArgument> typeArguments);
+    method public error.NonExistentClass getAllFunctions();
+    method public error.NonExistentClass getAllProperties();
+    method @NonNull public com.google.devtools.ksp.symbol.ClassKind getClassKind();
+    method @Nullable public com.google.devtools.ksp.symbol.KSFunctionDeclaration getPrimaryConstructor();
+    method public error.NonExistentClass getSealedSubclasses();
+    method public error.NonExistentClass getSuperTypes();
+    method public boolean isCompanionObject();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.ClassKind classKind;
+    property public abstract boolean isCompanionObject;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSFunctionDeclaration primaryConstructor;
+    property public abstract error.NonExistentClass superTypes;
+  }
+
+  public interface KSClassifierReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
+    method public default <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, @Nullable D data);
+    method @Nullable public com.google.devtools.ksp.symbol.KSClassifierReference getQualifier();
+    method @NonNull public String referencedName();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSClassifierReference qualifier;
+  }
+
+  public interface KSDeclaration extends com.google.devtools.ksp.symbol.KSModifierListOwner com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSExpectActual {
+    method @Nullable public com.google.devtools.ksp.symbol.KSFile getContainingFile();
+    method @Nullable public String getDocString();
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getPackageName();
+    method @Nullable public com.google.devtools.ksp.symbol.KSDeclaration getParentDeclaration();
+    method @Nullable public com.google.devtools.ksp.symbol.KSName getQualifiedName();
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getSimpleName();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSTypeParameter> getTypeParameters();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSFile containingFile;
+    property @Nullable public abstract String docString;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSName packageName;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSDeclaration parentDeclaration;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSName qualifiedName;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSName simpleName;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeParameter> typeParameters;
+  }
+
+  public interface KSDeclarationContainer extends com.google.devtools.ksp.symbol.KSNode {
+    method public error.NonExistentClass getDeclarations();
+    property public abstract error.NonExistentClass declarations;
+  }
+
+  public interface KSDynamicReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
+  }
+
+  public interface KSExpectActual {
+    method public error.NonExistentClass findActuals();
+    method public error.NonExistentClass findExpects();
+    method public boolean isActual();
+    method public boolean isExpect();
+    property public abstract boolean isActual;
+    property public abstract boolean isExpect;
+  }
+
+  public interface KSFile extends com.google.devtools.ksp.symbol.KSDeclarationContainer com.google.devtools.ksp.symbol.KSAnnotated {
+    method @NonNull public String getFileName();
+    method @NonNull public String getFilePath();
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getPackageName();
+    property @NonNull public abstract String fileName;
+    property @NonNull public abstract String filePath;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSName packageName;
+  }
+
+  public interface KSFunction {
+    method @Nullable public com.google.devtools.ksp.symbol.KSType getExtensionReceiverType();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSType> getParameterTypes();
+    method @Nullable public com.google.devtools.ksp.symbol.KSType getReturnType();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSTypeParameter> getTypeParameters();
+    method public boolean isError();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSType extensionReceiverType;
+    property public abstract boolean isError;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSType> parameterTypes;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSType returnType;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeParameter> typeParameters;
+  }
+
+  public interface KSFunctionDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration com.google.devtools.ksp.symbol.KSDeclarationContainer {
+    method @NonNull public com.google.devtools.ksp.symbol.KSFunction asMemberOf(@NonNull com.google.devtools.ksp.symbol.KSType containing);
+    method @Nullable public com.google.devtools.ksp.symbol.KSDeclaration findOverridee();
+    method @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getExtensionReceiver();
+    method @NonNull public com.google.devtools.ksp.symbol.FunctionKind getFunctionKind();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> getParameters();
+    method @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getReturnType();
+    method public boolean isAbstract();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference extensionReceiver;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.FunctionKind functionKind;
+    property public abstract boolean isAbstract;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> parameters;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference returnType;
+  }
+
+  public interface KSModifierListOwner extends com.google.devtools.ksp.symbol.KSNode {
+    method @NonNull public java.util.Set<com.google.devtools.ksp.symbol.Modifier> getModifiers();
+    property @NonNull public abstract java.util.Set<com.google.devtools.ksp.symbol.Modifier> modifiers;
+  }
+
+  public interface KSName {
+    method @NonNull public String asString();
+    method @NonNull public String getQualifier();
+    method @NonNull public String getShortName();
+  }
+
+  public interface KSNode {
+    method public <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, @Nullable D data);
+    method @NonNull public com.google.devtools.ksp.symbol.Location getLocation();
+    method @NonNull public com.google.devtools.ksp.symbol.Origin getOrigin();
+    method @Nullable public com.google.devtools.ksp.symbol.KSNode getParent();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.Location location;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.Origin origin;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSNode parent;
+  }
+
+  public interface KSParenthesizedReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
+    method @NonNull public com.google.devtools.ksp.symbol.KSReferenceElement getElement();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSReferenceElement element;
+  }
+
+  public interface KSPropertyAccessor extends com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
+    method @NonNull public com.google.devtools.ksp.symbol.KSPropertyDeclaration getReceiver();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSPropertyDeclaration receiver;
+  }
+
+  public interface KSPropertyDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration {
+    method @NonNull public com.google.devtools.ksp.symbol.KSType asMemberOf(@NonNull com.google.devtools.ksp.symbol.KSType containing);
+    method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration findOverridee();
+    method @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getExtensionReceiver();
+    method @Nullable public com.google.devtools.ksp.symbol.KSPropertyGetter getGetter();
+    method public boolean getHasBackingField();
+    method @Nullable public com.google.devtools.ksp.symbol.KSPropertySetter getSetter();
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    method public boolean isDelegated();
+    method public boolean isMutable();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference extensionReceiver;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSPropertyGetter getter;
+    property public abstract boolean hasBackingField;
+    property public abstract boolean isMutable;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSPropertySetter setter;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+  }
+
+  public interface KSPropertyGetter extends com.google.devtools.ksp.symbol.KSPropertyAccessor {
+    method @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getReturnType();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference returnType;
+  }
+
+  public interface KSPropertySetter extends com.google.devtools.ksp.symbol.KSPropertyAccessor {
+    method @NonNull public com.google.devtools.ksp.symbol.KSValueParameter getParameter();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSValueParameter parameter;
+  }
+
+  public interface KSReferenceElement extends com.google.devtools.ksp.symbol.KSNode {
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> getTypeArguments();
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> typeArguments;
+  }
+
+  public interface KSType {
+    method public error.NonExistentClass getAnnotations();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> getArguments();
+    method @NonNull public com.google.devtools.ksp.symbol.KSDeclaration getDeclaration();
+    method @NonNull public com.google.devtools.ksp.symbol.Nullability getNullability();
+    method public boolean isAssignableFrom(@NonNull com.google.devtools.ksp.symbol.KSType that);
+    method public boolean isCovarianceFlexible();
+    method public boolean isError();
+    method public boolean isFunctionType();
+    method public boolean isMarkedNullable();
+    method public boolean isMutabilityFlexible();
+    method public boolean isSuspendFunctionType();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType makeNotNullable();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType makeNullable();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType replace(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSTypeArgument> arguments);
+    method @NonNull public com.google.devtools.ksp.symbol.KSType starProjection();
+    property public abstract error.NonExistentClass annotations;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> arguments;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSDeclaration declaration;
+    property public abstract boolean isError;
+    property public abstract boolean isFunctionType;
+    property public abstract boolean isMarkedNullable;
+    property public abstract boolean isSuspendFunctionType;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.Nullability nullability;
+  }
+
+  public interface KSTypeAlias extends com.google.devtools.ksp.symbol.KSDeclaration {
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getName();
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSName name;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+  }
+
+  public interface KSTypeArgument extends com.google.devtools.ksp.symbol.KSAnnotated {
+    method @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    method @NonNull public com.google.devtools.ksp.symbol.Variance getVariance();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.Variance variance;
+  }
+
+  public interface KSTypeParameter extends com.google.devtools.ksp.symbol.KSDeclaration {
+    method public error.NonExistentClass getBounds();
+    method @NonNull public com.google.devtools.ksp.symbol.KSName getName();
+    method @NonNull public com.google.devtools.ksp.symbol.Variance getVariance();
+    method public boolean isReified();
+    property public abstract error.NonExistentClass bounds;
+    property public abstract boolean isReified;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSName name;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.Variance variance;
+  }
+
+  public interface KSTypeReference extends com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
+    method @Nullable public com.google.devtools.ksp.symbol.KSReferenceElement getElement();
+    method @NonNull public com.google.devtools.ksp.symbol.KSType resolve();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSReferenceElement element;
+  }
+
+  public interface KSValueArgument extends com.google.devtools.ksp.symbol.KSAnnotated {
+    method @Nullable public com.google.devtools.ksp.symbol.KSName getName();
+    method @Nullable public Object getValue();
+    method public boolean isSpread();
+    property public abstract boolean isSpread;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSName name;
+    property @Nullable public abstract Object value;
+  }
+
+  public interface KSValueParameter extends com.google.devtools.ksp.symbol.KSAnnotated {
+    method public boolean getHasDefault();
+    method @Nullable public com.google.devtools.ksp.symbol.KSName getName();
+    method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    method public boolean isCrossInline();
+    method public boolean isNoInline();
+    method public boolean isVal();
+    method public boolean isVar();
+    method public boolean isVararg();
+    property public abstract boolean hasDefault;
+    property public abstract boolean isCrossInline;
+    property public abstract boolean isNoInline;
+    property public abstract boolean isVal;
+    property public abstract boolean isVar;
+    property public abstract boolean isVararg;
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSName name;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+  }
+
+  public interface KSVisitor<D, R> {
+    method public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @Nullable D data);
+    method public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @Nullable D data);
+    method public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, @Nullable D data);
+    method public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @Nullable D data);
+    method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @Nullable D data);
+    method public R visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable D data);
+    method public R visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable D data);
+    method public R visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, @Nullable D data);
+    method public R visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, @Nullable D data);
+    method public R visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @Nullable D data);
+    method public R visitModifierListOwner(@NonNull com.google.devtools.ksp.symbol.KSModifierListOwner modifierListOwner, @Nullable D data);
+    method public R visitNode(@NonNull com.google.devtools.ksp.symbol.KSNode node, @Nullable D data);
+    method public R visitParenthesizedReference(@NonNull com.google.devtools.ksp.symbol.KSParenthesizedReference reference, @Nullable D data);
+    method public R visitPropertyAccessor(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor, @Nullable D data);
+    method public R visitPropertyDeclaration(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration property, @Nullable D data);
+    method public R visitPropertyGetter(@NonNull com.google.devtools.ksp.symbol.KSPropertyGetter getter, @Nullable D data);
+    method public R visitPropertySetter(@NonNull com.google.devtools.ksp.symbol.KSPropertySetter setter, @Nullable D data);
+    method public R visitReferenceElement(@NonNull com.google.devtools.ksp.symbol.KSReferenceElement element, @Nullable D data);
+    method public R visitTypeAlias(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias typeAlias, @Nullable D data);
+    method public R visitTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeArgument typeArgument, @Nullable D data);
+    method public R visitTypeParameter(@NonNull com.google.devtools.ksp.symbol.KSTypeParameter typeParameter, @Nullable D data);
+    method public R visitTypeReference(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeReference, @Nullable D data);
+    method public R visitValueArgument(@NonNull com.google.devtools.ksp.symbol.KSValueArgument valueArgument, @Nullable D data);
+    method public R visitValueParameter(@NonNull com.google.devtools.ksp.symbol.KSValueParameter valueParameter, @Nullable D data);
+  }
+
+  public class KSVisitorVoid implements com.google.devtools.ksp.symbol.KSVisitor<kotlin.Unit,kotlin.Unit> {
+    ctor public KSVisitorVoid();
+    method public void visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @NonNull kotlin.Unit data);
+    method public void visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @NonNull kotlin.Unit data);
+    method public void visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, @NonNull kotlin.Unit data);
+    method public void visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @NonNull kotlin.Unit data);
+    method public void visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @NonNull kotlin.Unit data);
+    method public void visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @NonNull kotlin.Unit data);
+    method public void visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @NonNull kotlin.Unit data);
+    method public void visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, @NonNull kotlin.Unit data);
+    method public void visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, @NonNull kotlin.Unit data);
+    method public void visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @NonNull kotlin.Unit data);
+    method public void visitModifierListOwner(@NonNull com.google.devtools.ksp.symbol.KSModifierListOwner modifierListOwner, @NonNull kotlin.Unit data);
+    method public void visitNode(@NonNull com.google.devtools.ksp.symbol.KSNode node, @NonNull kotlin.Unit data);
+    method public void visitParenthesizedReference(@NonNull com.google.devtools.ksp.symbol.KSParenthesizedReference reference, @NonNull kotlin.Unit data);
+    method public void visitPropertyAccessor(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor, @NonNull kotlin.Unit data);
+    method public void visitPropertyDeclaration(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration property, @NonNull kotlin.Unit data);
+    method public void visitPropertyGetter(@NonNull com.google.devtools.ksp.symbol.KSPropertyGetter getter, @NonNull kotlin.Unit data);
+    method public void visitPropertySetter(@NonNull com.google.devtools.ksp.symbol.KSPropertySetter setter, @NonNull kotlin.Unit data);
+    method public void visitReferenceElement(@NonNull com.google.devtools.ksp.symbol.KSReferenceElement element, @NonNull kotlin.Unit data);
+    method public void visitTypeAlias(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias typeAlias, @NonNull kotlin.Unit data);
+    method public void visitTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeArgument typeArgument, @NonNull kotlin.Unit data);
+    method public void visitTypeParameter(@NonNull com.google.devtools.ksp.symbol.KSTypeParameter typeParameter, @NonNull kotlin.Unit data);
+    method public void visitTypeReference(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeReference, @NonNull kotlin.Unit data);
+    method public void visitValueArgument(@NonNull com.google.devtools.ksp.symbol.KSValueArgument valueArgument, @NonNull kotlin.Unit data);
+    method public void visitValueParameter(@NonNull com.google.devtools.ksp.symbol.KSValueParameter valueParameter, @NonNull kotlin.Unit data);
+  }
+
+  public abstract sealed class Location {
+  }
+
+  public enum Modifier {
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier ABSTRACT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier ACTUAL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier ANNOTATION;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier CONST;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier CROSSINLINE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier DATA;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier ENUM;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier EXPECT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier EXTERNAL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier FINAL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier FUN;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier IN;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier INFIX;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier INLINE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier INNER;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier INTERNAL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_DEFAULT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_NATIVE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_STATIC;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_STRICT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_SYNCHRONIZED;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_TRANSIENT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier JAVA_VOLATILE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier LATEINIT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier NOINLINE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier OPEN;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier OPERATOR;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier OUT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier OVERRIDE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier PRIVATE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier PROTECTED;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier PUBLIC;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier REIFIED;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier SEALED;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier SUSPEND;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier TAILREC;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier VALUE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Modifier VARARG;
+  }
+
+  public final class NonExistLocation extends com.google.devtools.ksp.symbol.Location {
+    field @NonNull public static final com.google.devtools.ksp.symbol.NonExistLocation INSTANCE;
+  }
+
+  public enum Nullability {
+    enum_constant public static final com.google.devtools.ksp.symbol.Nullability NOT_NULL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Nullability NULLABLE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Nullability PLATFORM;
+  }
+
+  public enum Origin {
+    enum_constant public static final com.google.devtools.ksp.symbol.Origin JAVA;
+    enum_constant public static final com.google.devtools.ksp.symbol.Origin JAVA_LIB;
+    enum_constant public static final com.google.devtools.ksp.symbol.Origin KOTLIN;
+    enum_constant public static final com.google.devtools.ksp.symbol.Origin KOTLIN_LIB;
+    enum_constant public static final com.google.devtools.ksp.symbol.Origin SYNTHETIC;
+  }
+
+  public enum Variance {
+    method public final String getLabel();
+    property public final String label;
+    enum_constant public static final com.google.devtools.ksp.symbol.Variance CONTRAVARIANT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Variance COVARIANT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Variance INVARIANT;
+    enum_constant public static final com.google.devtools.ksp.symbol.Variance STAR;
+  }
+
+  public enum Visibility {
+    enum_constant public static final com.google.devtools.ksp.symbol.Visibility INTERNAL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Visibility JAVA_PACKAGE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Visibility LOCAL;
+    enum_constant public static final com.google.devtools.ksp.symbol.Visibility PRIVATE;
+    enum_constant public static final com.google.devtools.ksp.symbol.Visibility PROTECTED;
+    enum_constant public static final com.google.devtools.ksp.symbol.Visibility PUBLIC;
+  }
+
+}
+
+package com.google.devtools.ksp.visitor {
+
+  public abstract class KSDefaultVisitor<D, R> extends com.google.devtools.ksp.visitor.KSEmptyVisitor<D,R> {
+    ctor public KSDefaultVisitor();
+  }
+
+  public abstract class KSEmptyVisitor<D, R> implements com.google.devtools.ksp.symbol.KSVisitor<D,R> {
+    ctor public KSEmptyVisitor();
+    method public abstract R defaultHandler(@NonNull com.google.devtools.ksp.symbol.KSNode node, @Nullable D data);
+    method public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @Nullable D data);
+    method public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @Nullable D data);
+    method public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, @Nullable D data);
+    method public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @Nullable D data);
+    method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @Nullable D data);
+    method public R visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable D data);
+    method public R visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable D data);
+    method public R visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, @Nullable D data);
+    method public R visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, @Nullable D data);
+    method public R visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @Nullable D data);
+    method public R visitModifierListOwner(@NonNull com.google.devtools.ksp.symbol.KSModifierListOwner modifierListOwner, @Nullable D data);
+    method public R visitNode(@NonNull com.google.devtools.ksp.symbol.KSNode node, @Nullable D data);
+    method public R visitParenthesizedReference(@NonNull com.google.devtools.ksp.symbol.KSParenthesizedReference reference, @Nullable D data);
+    method public R visitPropertyAccessor(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor, @Nullable D data);
+    method public R visitPropertyDeclaration(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration property, @Nullable D data);
+    method public R visitPropertyGetter(@NonNull com.google.devtools.ksp.symbol.KSPropertyGetter getter, @Nullable D data);
+    method public R visitPropertySetter(@NonNull com.google.devtools.ksp.symbol.KSPropertySetter setter, @Nullable D data);
+    method public R visitReferenceElement(@NonNull com.google.devtools.ksp.symbol.KSReferenceElement element, @Nullable D data);
+    method public R visitTypeAlias(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias typeAlias, @Nullable D data);
+    method public R visitTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeArgument typeArgument, @Nullable D data);
+    method public R visitTypeParameter(@NonNull com.google.devtools.ksp.symbol.KSTypeParameter typeParameter, @Nullable D data);
+    method public R visitTypeReference(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeReference, @Nullable D data);
+    method public R visitValueArgument(@NonNull com.google.devtools.ksp.symbol.KSValueArgument valueArgument, @Nullable D data);
+    method public R visitValueParameter(@NonNull com.google.devtools.ksp.symbol.KSValueParameter valueParameter, @Nullable D data);
+  }
+
+  public abstract class KSTopDownVisitor<D, R> extends com.google.devtools.ksp.visitor.KSDefaultVisitor<D,R> {
+    ctor public KSTopDownVisitor();
+  }
+
+  public class KSValidateVisitor extends com.google.devtools.ksp.visitor.KSDefaultVisitor<com.google.devtools.ksp.symbol.KSNode,java.lang.Boolean> {
+    ctor public KSValidateVisitor(@NonNull kotlin.jvm.functions.Function2<? super com.google.devtools.ksp.symbol.KSNode,? super com.google.devtools.ksp.symbol.KSNode,java.lang.Boolean> predicate);
+    method @NonNull public Boolean defaultHandler(@NonNull com.google.devtools.ksp.symbol.KSNode node, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitPropertyDeclaration(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration property, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitTypeParameter(@NonNull com.google.devtools.ksp.symbol.KSTypeParameter typeParameter, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitTypeReference(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeReference, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitValueArgument(@NonNull com.google.devtools.ksp.symbol.KSValueArgument valueArgument, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitValueParameter(@NonNull com.google.devtools.ksp.symbol.KSValueParameter valueParameter, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+  }
+
+}
+
