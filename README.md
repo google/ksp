@@ -184,7 +184,7 @@ The table below includes a list of popular libraries on Android and their variou
 
 |Library|Status|Tracking issue for KSP|
 |---|---|---|
-|Room|[Experimentally supported](https://developer.android.com/jetpack/androidx/releases/room#2.3.0-beta02)|   |
+|Room|[Officially supported](https://developer.android.com/jetpack/androidx/releases/room#2.4.0)|   |
 |Moshi|[Officially supported](https://github.com/square/moshi)|   |
 |RxHttp|[Officially supported](https://github.com/liujingxing/rxhttp)|   |
 |Kotshi|[Officially supported](https://github.com/ansman/kotshi)|   |
