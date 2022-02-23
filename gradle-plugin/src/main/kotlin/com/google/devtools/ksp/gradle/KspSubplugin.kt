@@ -38,6 +38,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.gradle.work.Incremental
@@ -142,6 +143,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
             }
+            kspExtension.commandLineArgumentProviders.forEach {
+                options += SubpluginOption("apoption", it.asArguments().joinToString(""))
+            }
             return options
         }
     }
@@ -234,6 +238,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     )
                 }
             )
+            kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
             kspTask.destination = kspOutputDir
             kspTask.kspOutputDir.value(kspOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
@@ -404,6 +409,9 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
 interface KspTask : Task {
     @get:Internal
     val options: ListProperty<SubpluginOption>
+
+    @get:Nested
+    val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
     @get:OutputDirectory
     var destination: File

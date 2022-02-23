@@ -121,10 +121,14 @@ class KspIntegrationTestRule(
     }
 
     private fun addAndroidBoilerplate() {
+        testProject.writeAndroidGradlePropertiesFile()
         testProject.appModule.buildFileAdditions.add(
             """
             android {
-                compileSdkVersion="android-29"
+                compileSdkVersion(31)
+                defaultConfig {
+                    minSdkVersion(24)
+                }
             }
             """.trimIndent()
         )

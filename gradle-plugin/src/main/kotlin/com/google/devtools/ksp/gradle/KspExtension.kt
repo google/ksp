@@ -18,9 +18,11 @@
 package com.google.devtools.ksp.gradle
 
 import org.gradle.api.GradleException
+import org.gradle.process.CommandLineArgumentProvider
 
 open class KspExtension {
     internal val apOptions = mutableMapOf<String, String>()
+    internal val commandLineArgumentProviders = mutableListOf<CommandLineArgumentProvider>()
 
     open val arguments: Map<String, String> get() = apOptions.toMap()
 
@@ -29,6 +31,10 @@ open class KspExtension {
             throw GradleException("'=' is not allowed in custom option's name.")
         }
         apOptions.put(k, v)
+    }
+
+    open fun arg(arg: CommandLineArgumentProvider) {
+        commandLineArgumentProviders.add(arg)
     }
 
     open var blockOtherCompilerPlugins: Boolean = false
