@@ -57,6 +57,10 @@ jobs:
     - name: lint
       run: ./gradlew ktlint
 
+    # Check API compatibility
+    - name: API compatibility check
+      run: ./gradlew :api:checkApi
+
     # Run tests
     - name: test
       run: ./gradlew --stacktrace --info test -PcompilerTestEnabled=true
