@@ -69,6 +69,10 @@ jobs:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
+    # Check API compatibility
+    - name: API compatibility check
+      run: ./gradlew :api:checkApi
+
     # Run ksp generated tests
     - name: test
       run: ./gradlew --stacktrace --info test -PcompilerTestEnabled=true
