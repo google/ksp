@@ -44,7 +44,7 @@ class ProcessorClasspathConfigurationsTest {
             """
                 $kspConfigs.all {
                     // Make sure ksp configs are not empty.
-                    project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.4.2")
                 }
                 tasks.register("testConfigurations") {
                     // Resolve all tasks to trigger classpath config creation
@@ -71,7 +71,7 @@ class ProcessorClasspathConfigurationsTest {
             """
                 $kspConfigs.all {
                     // Make sure ksp configs are not empty.
-                    project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.4.2")
                 }
                 tasks.register("testConfigurations") {
                     // Resolve all tasks to trigger classpath config creation
@@ -105,7 +105,7 @@ class ProcessorClasspathConfigurationsTest {
             """
                 $kspConfigs.matching { it.name != "ksp" }.all {
                     // Make sure ksp configs are not empty.
-                    project.dependencies.add(name, "androidx.room:room-compiler:2.3.0")
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.4.2")
                 }
                 tasks.register("testConfigurations") {
                     // Resolve all tasks to trigger classpath config creation

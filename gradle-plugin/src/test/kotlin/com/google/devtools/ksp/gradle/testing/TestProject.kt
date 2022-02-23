@@ -71,6 +71,13 @@ class TestProject(
         rootDir.resolve("settings.gradle.kts").writeText(contents)
     }
 
+    fun writeAndroidGradlePropertiesFile() {
+        val contents = """
+            android.useAndroidX=true
+        """.trimIndent()
+        rootDir.resolve("gradle.properties").writeText(contents)
+    }
+
     private fun writeBuildFile() {
         val rootBuildFile = buildString {
             appendln("plugins {")
