@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
 import com.google.devtools.ksp.gradle.processor.TestSymbolProcessorProvider
+import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.artifact
 import com.google.devtools.ksp.gradle.testing.DependencyDeclaration.Companion.module
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -26,6 +27,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -114,5 +116,90 @@ class GradleCompilationTest {
             .withArguments("app:assemble")
             .forwardOutput()
             .build()
+    }
+
+    @Test
+    fun testCommandLineArgumentProvider() {
+        testRule.setupAppAsAndroidApp()
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+        testRule.appModule.addSource(
+            "Entity.kt",
+            """
+            import androidx.room.Entity
+            import androidx.room.PrimaryKey
+            import androidx.room.ColumnInfo
+            
+            @Entity
+            data class User(
+                @PrimaryKey val uid: Int,
+                @ColumnInfo(name = "first_name") val firstName: String?,
+                @ColumnInfo(name = "last_name") val lastName: String?
+            )
+            """.trimIndent()
+        )
+        testRule.appModule.addSource(
+            "UserDao.kt",
+            """
+            import androidx.room.Dao
+            import androidx.room.Query
+            
+            @Dao
+            interface UserDao {
+                @Query("SELECT * FROM User")
+                fun getAll(): List<User>
+            }
+            """.trimIndent()
+        )
+        testRule.appModule.addSource(
+            "Database.kt",
+            """
+            import androidx.room.Database
+            import androidx.room.RoomDatabase
+            
+            @Database(entities = [User::class], version = 1)
+            abstract class Database : RoomDatabase() {
+                abstract fun userDao(): UserDao
+            }
+            """.trimIndent()
+        )
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
+                artifact(configuration = "implementation", "androidx.room:room-runtime:2.4.2")
+            )
+        )
+        testRule.appModule.buildFileAdditions.add(
+            """
+                ksp {
+                    arg(Provider(project.layout.projectDirectory.dir("schemas").asFile))
+                }
+                class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
+
+                    @OutputDirectory
+                    val outputDir = roomOutputDir
+
+                    override fun asArguments(): Iterable<String> {
+                        return listOf(
+                            "room.schemaLocation=${'$'}{outputDir.path}"
+                        )
+                    }
+                }
+                tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach { 
+                    doFirst {
+                        options.get().forEach { option ->
+                            println("${'$'}{option.key}=${'$'}{option.value}")
+                        }
+                    }
+                }
+                
+            """.trimIndent()
+        )
+        val result = testRule.runner().withArguments(":app:assembleDebug").build()
+        assertThat(result.output)
+            .contains("apoption=room.schemaLocation=/private${testRule.appModule.moduleRoot}/schemas")
+        val schemasFolder = testRule.appModule.moduleRoot.resolve("schemas")
+        assertThat(result.task(":app:kspDebugKotlin")!!.outcome).isEquivalentAccordingToCompareTo(TaskOutcome.SUCCESS)
+        assertThat(schemasFolder.exists()).isTrue()
+        assertThat(schemasFolder.resolve("Database/1.json").exists()).isTrue()
     }
 }

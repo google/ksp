@@ -141,7 +141,7 @@ class SourceSetConfigurationsTest {
                     }
                 }
                 dependencies {
-                    add("kspJvmParent", "androidx.room:room-compiler:2.3.0")
+                    add("kspJvmParent", "androidx.room:room-compiler:2.4.2")
                 }
                 tasks.register("checkConfigurations") {
                     doLast {
