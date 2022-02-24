@@ -236,7 +236,7 @@ internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): C
 
 internal fun getInstanceForCurrentRound(node: KSNode): KSNode? {
     return when (node.origin) {
-        Origin.KOTLIN_LIB, Origin.JAVA_LIB -> return null
+        Origin.KOTLIN_LIB, Origin.JAVA_LIB -> null
         else -> when (node) {
             is KSClassDeclarationImpl -> KSClassDeclarationImpl.getCached(node.ktClassOrObject)
             is KSFileImpl -> KSFileImpl.getCached(node.file)
