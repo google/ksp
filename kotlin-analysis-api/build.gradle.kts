@@ -2,7 +2,7 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 
 val intellijVersion: String by project
 val junitVersion: String by project
-val analysisAPIVersion = "1.6.20-dev-7317"
+val analysisAPIVersion = "1.7.0-dev-1984"
 val libsForTesting by configurations.creating
 
 plugins {
@@ -43,6 +43,12 @@ dependencies {
         isTransitive = false
     }
     implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:symbol-light-classes-for-ide:$analysisAPIVersion") {
+        isTransitive = false
+    }
+    implementation("org.jetbrains.kotlin:analysis-api-standalone-for-ide:$analysisAPIVersion") {
         isTransitive = false
     }
     implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisAPIVersion") {
