@@ -54,6 +54,8 @@ fun Project.configureMetalava() {
 private fun JavaExec.configureCommonMetalavaArgs(
     project: Project
 ) {
+    val jdkHome = org.gradle.internal.jvm.Jvm.current().getJavaHome().absolutePath
+    val compileClasspath = project.getCompileClasspath()
     val apiFiles = project.fileTree(project.projectDir).also {
         it.include("**/*.kt")
         it.include("**/*.java")
@@ -65,9 +67,14 @@ private fun JavaExec.configureCommonMetalavaArgs(
     classpath = project.getMetalavaConfiguration()
     main = "com.android.tools.metalava.Driver"
     args = listOf(
+        "--jdk-home", jdkHome,
+        "--classpath", compileClasspath,
         "--source-files",
     ) + apiFiles.files.map { it.absolutePath }
 }
+
+private fun Project.getCompileClasspath(): String =
+    configurations.findByName("compileClasspath")!!.files.map { it.absolutePath }.joinToString(":")
 
 private fun Project.getMetalavaConfiguration(): Configuration {
     return configurations.findByName("metalava") ?: configurations.create("metalava") {
