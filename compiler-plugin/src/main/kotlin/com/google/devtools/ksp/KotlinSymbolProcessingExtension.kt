@@ -214,6 +214,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 }
                 processor?.also { deferredSymbols[it] = mutableListOf() }
             }
+            /* Kotlin compiler expects a source dir to exist, but processors might not generate Kotlin source.
+               Create it during initialization just in case. */
+            options.kotlinOutputDir.mkdirs()
             initialized = true
         }
         if (!logger.hasError()) {
