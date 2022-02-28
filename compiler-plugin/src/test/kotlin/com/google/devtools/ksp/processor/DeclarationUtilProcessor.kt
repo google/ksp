@@ -52,9 +52,16 @@ class DeclarationCollector : KSTopDownVisitor<MutableCollection<String>, Unit>()
 
     override fun visitDeclaration(declaration: KSDeclaration, data: MutableCollection<String>) {
         data.add(
-            "${declaration.toSignature()}: ${declaration.isInternal()}: ${declaration.isLocal()}: " +
-                "${declaration.isPrivate()}: ${declaration.isProtected()}: ${declaration.isPublic()}: " +
-                "${declaration.isOpen()}"
+            "${declaration.toSignature()}: " + listOf(
+                "internal" to declaration.isInternal(),
+                "local" to declaration.isLocal(),
+                "private" to declaration.isPrivate(),
+                "protected" to declaration.isProtected(),
+                "public" to declaration.isPublic(),
+                "open" to declaration.isOpen()
+            ).filter { it.second }.joinToString(" ") {
+                it.first
+            }
         )
     }
 }
