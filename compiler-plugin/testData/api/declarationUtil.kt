@@ -18,22 +18,33 @@
 // TEST PROCESSOR: DeclarationUtilProcessor
 // FORMAT: <name>: isInternal: isLocal: isPrivate: isProtected: isPublic: isOpen
 // EXPECTED:
-// Cls: true: false: false: false: false: false
-// Cls / <init>: false: false: false: false: true: false
-// Cls.b: false: false: false: false: true: true
-// Cls / <init>: false: false: false: false: true: false
-// Cls / <init> / aaa: false: true: false: false: false: false
-// Cls.prop: false: false: false: false: true: true
-// Cls.protectedProp: false: false: false: true: false: true
-// Cls.abstractITFFun: false: false: false: false: true: true
-// Cls.pri: false: false: true: false: false: false
-// ITF: false: false: false: false: true: true
-// ITF.prop: false: false: false: false: true: true
-// ITF.protectedProp: false: false: false: true: false: true
-// ITF.b: false: false: false: false: true: true
-// ITF.abstractITFFun: false: false: false: false: true: true
-// ITF.nonAbstractITFFun: false: false: false: false: true: true
-// ITF.nonAbstractITFFun / aa: false: true: false: false: false: false
+// Cls: internal
+// Cls / <init>: public
+// Cls.b: public open
+// Cls / <init>: public
+// Cls / <init> / aaa: local
+// Cls.prop: public open
+// Cls.protectedProp: protected open
+// Cls.abstractITFFun: public open
+// Cls.pri: private
+// ITF: public open
+// ITF.prop: public open
+// ITF.protectedProp: protected open
+// ITF.b: public open
+// ITF.abstractITFFun: public open
+// ITF.nonAbstractITFFun: public open
+// ITF.nonAbstractITFFun / aa: local
+// NestedClassSubjects: public open
+// NestedClassSubjects.NestedDataClass: public
+// NestedClassSubjects.NestedDataClass / <init>: public
+// NestedClassSubjects.NestedDataClass.field: public
+// NestedClassSubjects.NestedFinalClass: public
+// NestedClassSubjects.NestedFinalClass / <init>: public
+// NestedClassSubjects.NestedFinalClass.field: public
+// NestedClassSubjects.NestedOpenClass: public open
+// NestedClassSubjects.NestedOpenClass / <init>: public
+// NestedClassSubjects.NestedOpenClass.field: public
+// NestedClassSubjects.NestedInterface: public open
 // END
 // FILE: a.kt
 internal class Cls(override val b: Int) : ITF {
@@ -65,4 +76,17 @@ interface ITF {
         val aa = "local"
         return 1
     }
+}
+
+interface NestedClassSubjects {
+    data class NestedDataClass(
+        val field: String,
+    )
+    class NestedFinalClass(
+        val field: String,
+    )
+    open class NestedOpenClass(
+        val field: String,
+    )
+    interface NestedInterface
 }

@@ -215,7 +215,7 @@ fun KSDeclaration.isOpen() = !this.isLocal() &&
             this.modifiers.contains(Modifier.OVERRIDE) ||
             this.modifiers.contains(Modifier.ABSTRACT) ||
             this.modifiers.contains(Modifier.OPEN) ||
-            (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
+            (this !is KSClassDeclaration && (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE) ||
             (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA)
         )
 
