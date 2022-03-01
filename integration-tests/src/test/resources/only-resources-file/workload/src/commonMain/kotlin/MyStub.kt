@@ -1,2 +1,1 @@
-class MyStub {
-}
+class MyStub
