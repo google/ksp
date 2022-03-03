@@ -197,3 +197,4 @@ The table below includes a list of popular libraries on Android and their variou
 |Hilt|Not yet supported|[Link](https://issuetracker.google.com/179057202)|
 |Glide|Not yet supported|[Link](https://github.com/bumptech/glide/issues/4492)|
 |DeeplinkDispatch|[Supported via airbnb/DeepLinkDispatch#323](https://github.com/airbnb/DeepLinkDispatch/pull/323)| |
+|Databinding|Not yet supported|[Link](https://issuetracker.google.com/issues/173030256)|
