@@ -12,5 +12,5 @@ kotlin {
 }
 
 dependencies {
-    add("kspCommonMainMetadata", project(":test-processor"))
+    add("kspMetadata", project(":test-processor"))
 }
