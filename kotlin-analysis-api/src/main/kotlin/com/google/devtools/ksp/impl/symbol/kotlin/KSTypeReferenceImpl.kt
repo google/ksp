@@ -23,10 +23,12 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktType.annotations.map { KSAnnotationImpl(it) }.asSequence()
     }
+
     override val origin: Origin = Origin.KOTLIN
 
     override val location: Location
         get() = TODO("Not yet implemented")
+
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 
