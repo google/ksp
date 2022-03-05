@@ -1,6 +1,3 @@
-package test
-annotation class Anno
-
 @Anno
 class Foo() {
     val k = "123"
