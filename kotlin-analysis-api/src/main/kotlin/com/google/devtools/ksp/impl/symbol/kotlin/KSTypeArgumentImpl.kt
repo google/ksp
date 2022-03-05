@@ -27,10 +27,13 @@ class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeArgument) : KSTypeArg
         }
     }
 
-    override val type: KSTypeReference?
-        get() = TODO("Not yet implemented")
-    override val annotations: Sequence<KSAnnotation>
-        get() = TODO("Not yet implemented")
+    override val type: KSTypeReference? by lazy {
+        ktTypeArgument.type?.let { KSTypeReferenceImpl(it) }
+    }
+
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        TODO()
+    }
     override val origin: Origin = Origin.KOTLIN
     override val location: Location
         get() = TODO("Not yet implemented")
