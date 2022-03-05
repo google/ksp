@@ -1,26 +1,12 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeArgument
-import com.google.devtools.ksp.symbol.KSTypeParameter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Modifier
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.getDocString
+import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
 class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) : KSClassDeclaration {
     override val classKind: ClassKind
@@ -38,15 +24,19 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
         }
     }
 
-    override val isCompanionObject: Boolean
-        get() = TODO("Not yet implemented")
+    override val isCompanionObject: Boolean by lazy {
+        (ktNamedClassOrObjectSymbol.psi as? KtObjectDeclaration)?.isCompanion() ?: false
+    }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         TODO("Not yet implemented")
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        TODO("Not yet implemented")
+        return analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
+            ktNamedClassOrObjectSymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
+            .map { KSFunctionDeclarationImpl(it) }
+        }
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
@@ -64,26 +54,42 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
         TODO("Not yet implemented")
     }
 
-    override val simpleName: KSName
-        get() = TODO("Not yet implemented")
-    override val qualifiedName: KSName?
-        get() = TODO("Not yet implemented")
-    override val typeParameters: List<KSTypeParameter>
-        get() = TODO("Not yet implemented")
-    override val packageName: KSName
-        get() = TODO("Not yet implemented")
-    override val parentDeclaration: KSDeclaration?
-        get() = TODO("Not yet implemented")
-    override val containingFile: KSFile?
-        get() = TODO("Not yet implemented")
-    override val docString: String?
-        get() = TODO("Not yet implemented")
-    override val modifiers: Set<Modifier>
-        get() = TODO("Not yet implemented")
-    override val origin: Origin
-        get() = TODO("Not yet implemented")
-    override val location: Location
-        get() = TODO("Not yet implemented")
+    override val simpleName: KSName by lazy {
+        KSNameImpl(ktNamedClassOrObjectSymbol.name.asString())
+    }
+
+    override val qualifiedName: KSName? by lazy {
+        (ktNamedClassOrObjectSymbol.psi as? KtClassOrObject)?.fqName?.asString()?.let { KSNameImpl(it) }
+    }
+
+    override val typeParameters: List<KSTypeParameter> by lazy {
+        ktNamedClassOrObjectSymbol.typeParameters.map { KSTypeParameterImpl(it) }
+    }
+
+    override val packageName: KSName by lazy {
+        this.containingFile?.packageName ?: KSNameImpl("")
+    }
+
+    override val parentDeclaration: KSDeclaration? by lazy {
+        TODO()
+    }
+    override val containingFile: KSFile? by lazy {
+        ktNamedClassOrObjectSymbol.toContainingFile()
+    }
+    override val docString: String? by lazy {
+        ktNamedClassOrObjectSymbol.psi?.getDocString()
+    }
+
+    override val modifiers: Set<Modifier> by lazy {
+        (ktNamedClassOrObjectSymbol.psi as? KtClassOrObject)?.toKSModifiers() ?: emptySet()
+    }
+    override val origin: Origin by lazy {
+        mapAAOrigin(ktNamedClassOrObjectSymbol.origin)
+    }
+
+    override val location: Location by lazy {
+        ktNamedClassOrObjectSymbol.psi?.toLocation() ?: NonExistLocation
+    }
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 
