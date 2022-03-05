@@ -13,24 +13,15 @@ import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
 import org.jetbrains.kotlin.analysis.api.analyseWithReadAction
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.idea.references.*
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
-import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
-
-fun findSomeReference(ktFile: KtFile): KtReference? {
-    for (i in 1..300) {
-        val reference = ktFile.findReferenceAt(i)
-        if (reference != null && reference is KtReference)
-            return reference
-    }
-
-    return null
-}
+import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
+import java.nio.file.Files
 
 private fun convertFilesToKtFiles(project: Project, files: List<File>): List<KtFile> {
     val fs = StandardFileSystems.local()
@@ -44,7 +35,8 @@ private fun convertFilesToKtFiles(project: Project, files: List<File>): List<KtF
     return ktFiles
 }
 
-fun main() {
+fun main(args: Array<String>) {
+    val kotlinSourceRoots = args.toList().map { File(it) }
     val compilerConfiguration = CompilerConfiguration()
     compilerConfiguration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
     val env = KotlinCoreEnvironment.createForProduction(
@@ -55,11 +47,15 @@ fun main() {
     val application = ApplicationManager.getApplication() as MockApplication
     configureApplicationEnvironment(application)
 
-    val file = File("testData/api/hello.kt").absoluteFile
-    compilerConfiguration.addJavaSourceRoot(file)
+    val files = kotlinSourceRoots
+        .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
+        .flatMap { root -> root.walk().filter { it.isFile && it.extension == "kt" }.toList() }
+        .sortedBy { Files.isSymbolicLink(it.toPath()) } // This time is for .java files
+        .distinctBy { it.canonicalPath }
+    compilerConfiguration.addKotlinSourceRoots(files.map { it.absolutePath })
 
     val project = env.project as MockProject
-    val ktFiles = convertFilesToKtFiles(project, listOf(file))
+    val ktFiles = convertFilesToKtFiles(project, files)
     configureProjectEnvironment(
         project,
         compilerConfiguration,
@@ -67,6 +63,7 @@ fun main() {
         env::createPackagePartProvider,
         env.projectEnvironment.environment.jarFileSystem as CoreJarFileSystem
     )
+    val kspCoreEnvironment = KSPCoreEnvironment(project)
 
     for (ktFile in ktFiles) {
         analyseWithReadAction(ktFile) {

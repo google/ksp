@@ -56,6 +56,7 @@ dependencies {
     }
 
     implementation(project(":api"))
+    implementation(project(":common-util"))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
