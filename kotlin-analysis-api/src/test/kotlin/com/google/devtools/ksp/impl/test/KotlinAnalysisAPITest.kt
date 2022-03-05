@@ -7,6 +7,6 @@ class KotlinAnalysisAPITest {
 
     @Test
     fun testHello() {
-        main()
+        main(arrayOf("testData/api"))
     }
 }
