@@ -1,35 +1,28 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.symbol.FunctionKind
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSFunction
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeParameter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSValueParameter
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Modifier
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtAnnotatedSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymbol) : KSFunctionDeclaration {
-    override val functionKind: FunctionKind
-        get() = TODO("Not yet implemented")
+    override val functionKind: FunctionKind by lazy {
+        when (ktFunctionSymbol.symbolKind) {
+            KtSymbolKind.CLASS_MEMBER -> FunctionKind.MEMBER
+            KtSymbolKind.TOP_LEVEL -> FunctionKind.TOP_LEVEL
+            KtSymbolKind.SAM_CONSTRUCTOR -> FunctionKind.LAMBDA
+            else -> throw IllegalStateException("Unexpected symbol kind ${ktFunctionSymbol.symbolKind}")
+        }
+    }
     override val isAbstract: Boolean by lazy {
         (ktFunctionSymbol as? KtFunctionSymbol)?.modality == Modality.ABSTRACT
     }
@@ -66,8 +59,9 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
             KSNameImpl("<init>")
         }
     }
-    override val qualifiedName: KSName?
-        get() = TODO("Not yet implemented")
+    override val qualifiedName: KSName? by lazy {
+        (ktFunctionSymbol.psi as? KtFunction)?.fqName?.asString()?.let { KSNameImpl(it) }
+    }
     override val typeParameters: List<KSTypeParameter> by lazy {
         (ktFunctionSymbol as? KtFunctionSymbol)?.typeParameters?.map { KSTypeParameterImpl(it) } ?: emptyList()
     }
@@ -77,16 +71,25 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
     override val parentDeclaration: KSDeclaration?
         get() = TODO("Not yet implemented")
     override val containingFile: KSFile? by lazy {
-        (ktFunctionSymbol.psi?.containingFile as? KtFile)?.let { KSFileSymbolImpl(it) }
+        (ktFunctionSymbol.psi?.containingFile as? KtFile)?.let { KSFileImpl(it) }
     }
-    override val docString: String?
-        get() = TODO("Not yet implemented")
-    override val modifiers: Set<Modifier>
-        get() = TODO("Not yet implemented")
-    override val origin: Origin
-        get() = TODO("Not yet implemented")
-    override val location: Location
-        get() = TODO("Not yet implemented")
+
+    override val docString: String? by lazy {
+        ktFunctionSymbol.toDocString()
+    }
+
+    override val modifiers: Set<Modifier> by lazy {
+        ktFunctionSymbol.psi?.safeAs<KtFunction>()?.toKSModifiers() ?: emptySet()
+    }
+
+    override val origin: Origin by lazy {
+        mapAAOrigin(ktFunctionSymbol.origin)
+    }
+
+    override val location: Location by lazy {
+        ktFunctionSymbol.psi?.toLocation() ?: NonExistLocation
+    }
+
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 

@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.psi.KtFile
 
-class KSFileSymbolImpl(private val ktFile: KtFile) : KSFile {
+class KSFileImpl(private val ktFile: KtFile) : KSFile {
     override val packageName: KSName by lazy {
         KSNameImpl(ktFile.packageFqName.asString())
     }
@@ -39,8 +39,9 @@ class KSFileSymbolImpl(private val ktFile: KtFile) : KSFile {
     }
     override val origin: Origin = Origin.KOTLIN
 
-    override val location: Location
-        get() = TODO("Not yet implemented")
+    override val location: Location by lazy {
+        ktFile.toLocation()
+    }
 
     override val parent: KSNode? = null
 
