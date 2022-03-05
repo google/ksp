@@ -1,15 +1,8 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSValueArgument
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 
 class KSAnnotationImpl(private val annotationApplication: KtAnnotationApplication) : KSAnnotation {
     override val annotationType: KSTypeReference
@@ -19,12 +12,28 @@ class KSAnnotationImpl(private val annotationApplication: KtAnnotationApplicatio
     }
     override val shortName: KSName
         get() = TODO("Not yet implemented")
-    override val useSiteTarget: AnnotationUseSiteTarget?
-        get() = TODO("Not yet implemented")
+    override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
+        when (annotationApplication.useSiteTarget) {
+            null -> null
+            FILE -> AnnotationUseSiteTarget.FILE
+            PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+            FIELD -> AnnotationUseSiteTarget.FIELD
+            PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+            PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+            RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+            CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+            SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+            PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+
+        }
+    }
+
     override val origin: Origin = Origin.KOTLIN
 
-    override val location: Location
-        get() = TODO("Not yet implemented")
+    override val location: Location by lazy {
+        annotationApplication.psi?.toLocation() ?: NonExistLocation
+    }
+
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 

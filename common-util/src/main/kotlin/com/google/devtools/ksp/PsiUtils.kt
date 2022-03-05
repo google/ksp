@@ -1,7 +1,6 @@
 package com.google.devtools.ksp
 
-import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.*
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
