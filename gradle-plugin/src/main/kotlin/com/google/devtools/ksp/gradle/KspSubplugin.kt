@@ -144,7 +144,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
             }
             kspExtension.commandLineArgumentProviders.forEach {
-                options += SubpluginOption("apoption", it.asArguments().joinToString(""))
+                val argument = it.asArguments().joinToString("")
+                if (!argument.matches(Regex("/S=/S"))) {
+                    throw IllegalArgumentException("KSP apoption does not match /S=/S: $argument")
+                }
+                options += SubpluginOption("apoption", argument)
             }
             return options
         }
