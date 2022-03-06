@@ -202,4 +202,30 @@ class GradleCompilationTest {
         assertThat(schemasFolder.exists()).isTrue()
         assertThat(schemasFolder.resolve("Database/1.json").exists()).isTrue()
     }
+
+    @Test
+    fun invalidArguments() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add("""
+            ksp {
+                arg(Provider())
+            }
+            class Provider() : CommandLineArgumentProvider {
+                override fun asArguments(): Iterable<String> {
+                    return listOf(
+                        "invalid"
+                    )
+                }
+            }
+        """.trimIndent())
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2")
+            )
+        )
+
+        val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
+        assertThat(result.output).contains("KSP apoption does not match /S=/S: invalid")
+    }
 }
