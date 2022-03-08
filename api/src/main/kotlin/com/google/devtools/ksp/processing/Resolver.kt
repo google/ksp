@@ -291,4 +291,13 @@ interface Resolver {
      */
     @KspExperimental
     fun getJavaWildcard(reference: KSTypeReference): KSTypeReference
+
+    /**
+     * Tests a type if it was declared as legacy "raw" type in Java - a type with its type arguments fully omitted.
+     *
+     * @param type a type to check.
+     * @return True if the type is a "raw" type.
+     */
+    @KspExperimental
+    fun isJavaRawType(type: KSType): Boolean
 }
