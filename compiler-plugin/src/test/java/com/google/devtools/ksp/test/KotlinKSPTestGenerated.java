@@ -301,6 +301,11 @@ public class KotlinKSPTestGenerated extends AbstractKotlinKSPTest {
         runTest("testData/api/platformDeclaration.kt");
     }
 
+    @TestMetadata("rawTypes.kt")
+    public void testRawTypes() throws Exception {
+        runTest("testData/api/rawTypes.kt");
+    }
+
     @TestMetadata("recordJavaAnnotationTypes.kt")
     public void testRecordJavaAnnotationTypes() throws Exception {
         runTest("testData/api/recordJavaAnnotationTypes.kt");
