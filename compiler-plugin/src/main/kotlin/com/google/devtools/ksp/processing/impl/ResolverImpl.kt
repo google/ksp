@@ -1457,6 +1457,11 @@ class ResolverImpl(
 
         return KSTypeReferenceSyntheticImpl.getCached(wildcardType, null)
     }
+
+    @KspExperimental
+    override fun isJavaRawType(type: KSType): Boolean {
+        return type is KSTypeImpl && type.kotlinType is RawType
+    }
 }
 
 // TODO: cross module resolution
