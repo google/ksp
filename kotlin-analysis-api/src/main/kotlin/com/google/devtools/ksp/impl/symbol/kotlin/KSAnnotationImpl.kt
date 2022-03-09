@@ -24,7 +24,6 @@ class KSAnnotationImpl(private val annotationApplication: KtAnnotationApplicatio
             CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
             SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
             PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-
         }
     }
 
