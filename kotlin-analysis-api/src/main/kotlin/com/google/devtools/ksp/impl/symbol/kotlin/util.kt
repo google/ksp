@@ -20,7 +20,8 @@ internal val ktSymbolOriginToOrigin = mapOf(
 )
 
 internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
-    return ktSymbolOriginToOrigin[ktSymbolOrigin] ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
+    return ktSymbolOriginToOrigin[ktSymbolOrigin]
+        ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
 }
 
 internal fun PsiElement.toLocation(): Location {

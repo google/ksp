@@ -35,7 +35,7 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
         return analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
             ktNamedClassOrObjectSymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
-            .map { KSFunctionDeclarationImpl(it) }
+                .map { KSFunctionDeclarationImpl(it) }
         }
     }
 
