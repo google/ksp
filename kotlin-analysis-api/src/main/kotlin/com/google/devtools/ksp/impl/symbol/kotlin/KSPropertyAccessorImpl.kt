@@ -6,11 +6,13 @@ import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-abstract class KSPropertyAccessorImpl(private val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol, override val receiver: KSPropertyDeclaration) : KSPropertyAccessor {
+abstract class KSPropertyAccessorImpl(
+    private val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
+    override val receiver: KSPropertyDeclaration
+) : KSPropertyAccessor {
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessorSymbol.annotations.asSequence().map { KSAnnotationImpl(it) }
     }
@@ -31,8 +33,10 @@ abstract class KSPropertyAccessorImpl(private val ktPropertyAccessorSymbol: KtPr
         get() = TODO("Not yet implemented")
 }
 
-class KSPropertySetterImpl(owner: KSPropertyDeclaration, private val setter: KtPropertySetterSymbol
-): KSPropertySetter, KSPropertyAccessorImpl(setter, owner) {
+class KSPropertySetterImpl(
+    owner: KSPropertyDeclaration,
+    private val setter: KtPropertySetterSymbol
+) : KSPropertySetter, KSPropertyAccessorImpl(setter, owner) {
     override val parameter: KSValueParameter by lazy {
         KSValueParameterImpl(setter.parameter)
     }
@@ -42,8 +46,10 @@ class KSPropertySetterImpl(owner: KSPropertyDeclaration, private val setter: KtP
     }
 }
 
-class KSPropertyGetterImpl(owner: KSPropertyDeclaration, getter: KtPropertyGetterSymbol
-): KSPropertyGetter, KSPropertyAccessorImpl(getter, owner) {
+class KSPropertyGetterImpl(
+    owner: KSPropertyDeclaration,
+    getter: KtPropertyGetterSymbol
+) : KSPropertyGetter, KSPropertyAccessorImpl(getter, owner) {
     override val returnType: KSTypeReference? by lazy {
         KSTypeReferenceImpl(getter.returnType)
     }

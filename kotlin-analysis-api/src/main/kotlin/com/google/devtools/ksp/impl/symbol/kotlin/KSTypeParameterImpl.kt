@@ -17,7 +17,6 @@ class KSTypeParameterImpl(private val ktTypeParameterSymbol: KtTypeParameterSymb
             org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.CONTRAVARIANT
             org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
         }
-
     }
 
     override val isReified: Boolean = ktTypeParameterSymbol.isReified
