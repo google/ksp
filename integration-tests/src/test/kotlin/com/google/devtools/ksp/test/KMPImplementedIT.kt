@@ -137,16 +137,16 @@ class KMPImplementedIT {
         ).build().let {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-androidNative:build")?.outcome)
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeX64/debugExecutable/workload-androidNative.so"
+                "workload-androidNative/build/bin/androidNativeX64/debugExecutable/workload-androidNative.kexe"
             )
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeX64/releaseExecutable/workload-androidNative.so"
+                "workload-androidNative/build/bin/androidNativeX64/releaseExecutable/workload-androidNative.kexe"
             )
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeArm64/debugExecutable/workload-androidNative.so"
+                "workload-androidNative/build/bin/androidNativeArm64/debugExecutable/workload-androidNative.kexe"
             )
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeArm64/releaseExecutable/workload-androidNative.so"
+                "workload-androidNative/build/bin/androidNativeArm64/releaseExecutable/workload-androidNative.kexe"
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
@@ -246,10 +246,10 @@ class KMPImplementedIT {
 
         verifyKexe("workload/build/bin/linuxX64/debugExecutable/workload.kexe")
         verifyKexe("workload/build/bin/linuxX64/releaseExecutable/workload.kexe")
-        verifyKexe("workload/build/bin/androidNativeX64/debugExecutable/workload.so")
-        verifyKexe("workload/build/bin/androidNativeX64/releaseExecutable/workload.so")
-        verifyKexe("workload/build/bin/androidNativeArm64/debugExecutable/workload.so")
-        verifyKexe("workload/build/bin/androidNativeArm64/releaseExecutable/workload.so")
+        verifyKexe("workload/build/bin/androidNativeX64/debugExecutable/workload.kexe")
+        verifyKexe("workload/build/bin/androidNativeX64/releaseExecutable/workload.kexe")
+        verifyKexe("workload/build/bin/androidNativeArm64/debugExecutable/workload.kexe")
+        verifyKexe("workload/build/bin/androidNativeArm64/releaseExecutable/workload.kexe")
 
         // TODO: Enable after CI's Xcode version catches up.
         // Assert.assertTrue(
