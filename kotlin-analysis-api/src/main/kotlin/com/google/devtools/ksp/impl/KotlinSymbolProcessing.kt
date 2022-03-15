@@ -58,7 +58,6 @@ fun main(args: Array<String>) {
     configureProjectEnvironment(
         project,
         compilerConfiguration,
-        ktFiles,
         env::createPackagePartProvider,
         env.projectEnvironment.environment.jarFileSystem as CoreJarFileSystem
     )

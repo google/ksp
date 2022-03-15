@@ -105,8 +105,6 @@ class OnErrorIT {
                     it.startsWith("e: [ksp] kotlin.io.FileAlreadyExistsException:")
                 }
             )
-
-            Assert.assertTrue(result.output.contains("e: java.lang.IllegalStateException: Should not be called!"))
         }
         project.restore("workload/build.gradle.kts")
     }
