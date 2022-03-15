@@ -262,7 +262,8 @@ internal fun getInstanceForCurrentRound(node: KSNode): KSNode? {
             is KSValueParameterJavaImpl -> KSValueParameterJavaImpl.getCached(node.psi)
             is KSPropertyGetterSyntheticImpl -> KSPropertyGetterSyntheticImpl.getCached(node.ksPropertyDeclaration)
             is KSPropertySetterSyntheticImpl -> KSPropertySetterSyntheticImpl.getCached(node.ksPropertyDeclaration)
-            is KSValueParameterSyntheticImpl -> KSPropertySetterImpl.getCached(node.owner as KtPropertyAccessor).parameter
+            is KSValueParameterSyntheticImpl ->
+                KSPropertySetterImpl.getCached(node.owner as KtPropertyAccessor).parameter
             is KSAnnotationJavaImpl -> KSAnnotationJavaImpl.getCached(node.psi)
             is KSAnnotationImpl -> KSAnnotationImpl.getCached(node.ktAnnotationEntry)
             is KSClassifierReferenceJavaImpl -> KSClassifierReferenceJavaImpl.getCached(node.psi, node.parent)
