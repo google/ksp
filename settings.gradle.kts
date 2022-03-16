@@ -17,6 +17,7 @@ pluginManagement {
 include("api")
 include("gradle-plugin")
 include("common-util")
+include("test-utils")
 include("compiler-plugin")
 include("symbol-processing")
 include("symbol-processing-cmdline")
