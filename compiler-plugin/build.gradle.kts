@@ -7,8 +7,6 @@ description = "Kotlin Symbol Processing"
 val kotlinProjectPath: String? by project
 val intellijVersion: String by project
 val kotlinBaseVersion: String by project
-val junitVersion: String by project
-val compilerTestEnabled: String by project
 
 val libsForTesting by configurations.creating
 
@@ -61,16 +59,16 @@ dependencies {
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:test-infrastructure-utils:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:tests-compiler-utils:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:tests-mutes:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:tests-common:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
-    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:5.8.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:1.8.2")
 
     testImplementation(project(":api"))
     testImplementation(project(":common-util"))
+    testImplementation(project(":test-utils"))
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
     libsForTesting(kotlin("test", kotlinBaseVersion))
@@ -78,9 +76,6 @@ dependencies {
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
-    onlyIf {
-        compilerTestEnabled.toBoolean()
-    }
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
     val escaped = Regex.escape(kotlinBaseVersion)
@@ -94,11 +89,10 @@ val Project.testSourceSet: SourceSet
     get() = javaPluginConvention().testSourceSet
 
 tasks.test {
-    onlyIf {
-        compilerTestEnabled.toBoolean()
-    }
     dependsOn("CopyLibsForTesting")
     maxHeapSize = "2g"
+
+    useJUnitPlatform()
 
     systemProperty("idea.is.unit.test", "true")
     systemProperty("idea.home.path", buildDir)
@@ -139,9 +133,6 @@ repositories {
                 ivyDescriptor()
             }
         }
-    }
-    flatDir {
-        dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
     maven("https://www.jetbrains.com/intellij-repository/snapshots")
