@@ -57,6 +57,25 @@ dependencies {
 
     implementation(project(":api"))
     implementation(project(":common-util"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:5.8.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:1.8.2")
+
+    testImplementation(project(":test-utils"))
+    testImplementation(project(":compiler-plugin"))
+    testImplementation(project(":api"))
+    testImplementation(project(":common-util"))
+
+    testImplementation(kotlin("stdlib", analysisAPIVersion))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$analysisAPIVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$analysisAPIVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$analysisAPIVersion")
+
+    libsForTesting(kotlin("stdlib", analysisAPIVersion))
+    libsForTesting(kotlin("test", analysisAPIVersion))
+    libsForTesting(kotlin("script-runtime", analysisAPIVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
@@ -79,6 +98,8 @@ val Project.testSourceSet: SourceSet
 tasks.test {
     dependsOn("CopyLibsForTesting")
     maxHeapSize = "2g"
+
+    useJUnitPlatform()
 
     systemProperty("idea.is.unit.test", "true")
     systemProperty("idea.home.path", buildDir)
