@@ -60,7 +60,6 @@ it should be extending [AbstractTestProcessor](compiler-plugin/src/test/kotlin/c
             * E.g. ```// FILE: a.kt``` will result in a file named ```a.kt``` at run time.
 * Add new test to [test suite](compiler-plugin/src/test/java/com/google/devtools/ksp/test/KotlinKSPTestGenerated.java)
 * Run generated tests with ```:compiler-plugin:test``` gradle task.
-    * Make sure you run test with `-PcompilerTestEnabled` as Gradle argument. Alternatively, you can also set `compilerTestEnabled=false` in `gradle.properties` in project root.
     * This will execute all tests in KSP test suite. To run your test only, specify the test name with 
     ```--tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.<name of your generated test>"```
     * Make sure your change is not breaking any existing test as well :).
