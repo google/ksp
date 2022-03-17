@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 import java.nio.file.Files
 
-private fun convertFilesToKtFiles(project: Project, files: List<File>): List<KtFile> {
+internal fun convertFilesToKtFiles(project: Project, files: List<File>): List<KtFile> {
     val fs = StandardFileSystems.local()
     val psiManager = PsiManager.getInstance(project)
     val ktFiles = mutableListOf<KtFile>()
