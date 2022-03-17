@@ -716,7 +716,7 @@ class IncrementalContext(
     }
 
     // Debugging and testing only.
-    internal fun dumpLookupRecords(): Map<String, List<String>> {
+    fun dumpLookupRecords(): Map<String, List<String>> {
         val map = mutableMapOf<String, List<String>>()
         (symbolLookupTracker as LookupTrackerImpl).lookups.entrySet().forEach { e ->
             val key = "${e.key.scope}.${e.key.name}"

@@ -23,6 +23,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
 
     implementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+
+    implementation(project(":api"))
+    implementation(project(":compiler-plugin"))
 }
 
 repositories {
