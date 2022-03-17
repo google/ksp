@@ -63,7 +63,7 @@ jobs:
 
     # Run tests
     - name: test
-      run: ./gradlew --stacktrace --info test -PcompilerTestEnabled=true
+      run: ./gradlew --stacktrace --info test
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v2
