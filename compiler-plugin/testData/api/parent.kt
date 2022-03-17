@@ -1,9 +1,5 @@
 // TEST PROCESSOR: ParentProcessor
 // EXPECTED:
-// parent of File: Bnno.kt: null
-// parent of Bnno: File: Bnno.kt
-// parent of Bnno: synthetic constructor for Bnno
-// parent of synthetic constructor for Bnno: Bnno
 // parent of File: a.kt: null
 // parent of Anno: File: a.kt
 // parent of Anno: synthetic constructor for Anno
@@ -92,6 +88,10 @@
 // parent of synthetic constructor for K: K
 // parent of CMYK: synthetic constructor for CMYK
 // parent of synthetic constructor for CMYK: CMYK
+// parent of File: Bnno.kt: null
+// parent of Bnno: File: Bnno.kt
+// parent of Bnno: synthetic constructor for Bnno
+// parent of synthetic constructor for Bnno: Bnno
 // parent of File: B.java: null
 // parent of Object: Object
 // parent of Object: B
