@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.testutils
 
+import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -51,6 +52,7 @@ import org.jetbrains.kotlin.test.services.isKtFile
 import org.jetbrains.kotlin.test.services.javaFiles
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInfo
 import java.io.File
@@ -102,7 +104,12 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 
     open fun configureTest(builder: TestConfigurationBuilder) = Unit
 
-    abstract fun runTest(testServices: TestServices, mainModule: TestModule, libModules: List<TestModule>)
+    abstract fun runTest(
+        testServices: TestServices,
+        mainModule: TestModule,
+        libModules: List<TestModule>,
+        testProcessor: AbstractTestProcessor,
+    ): List<String>
 
     private val configure: TestConfigurationBuilder.() -> Unit = {
         globalDefaults {
@@ -201,6 +208,24 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(mainModule)
         compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
 
-        runTest(testServices, mainModule, libModules)
+        val contents = mainModule.files.first().originalFile.readLines()
+
+        val testProcessorName = contents
+            .filter { it.startsWith(TEST_PROCESSOR) }
+            .single()
+            .substringAfter(TEST_PROCESSOR)
+            .trim()
+        val testProcessor: AbstractTestProcessor =
+            Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
+                .getDeclaredConstructor().newInstance() as AbstractTestProcessor
+
+        val expectedResults = contents
+            .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
+            .drop(1)
+            .takeWhile { !it.startsWith("// END") }
+            .map { it.substring(3).trim() }
+
+        val results = runTest(testServices, mainModule, libModules, testProcessor)
+        Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
     }
 }
