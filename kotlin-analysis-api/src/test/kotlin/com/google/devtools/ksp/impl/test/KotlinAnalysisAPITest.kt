@@ -1,7 +1,7 @@
 package com.google.devtools.ksp.impl.test
 
 import com.google.devtools.ksp.impl.main
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class KotlinAnalysisAPITest {
 
