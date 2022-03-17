@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
 
-internal class DualLookupTracker : LookupTracker {
+class DualLookupTracker : LookupTracker {
     val symbolTracker = LookupTrackerImpl(LookupTracker.DO_NOTHING)
     val classTracker = LookupTrackerImpl(LookupTracker.DO_NOTHING)
 
