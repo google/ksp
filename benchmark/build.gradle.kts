@@ -14,18 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pluginManagement {
-    val kotlinVersion: String by settings
-    val kspVersion: String by settings
-    plugins {
-        id("com.google.devtools.ksp") version kspVersion
-        kotlin("jvm") version kotlinVersion
-    }
-    repositories {
-        gradlePluginPortal()
+import org.gradle.jvm.tasks.Jar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+plugins {
+    kotlin("jvm") version "1.6.10"
+    application
+}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("compiler"))
+}
+application {
+    applicationName = "BenchRunner"
+    group = "com.google.devtools.ksp"
+    mainClassName = "com.google.devtools.ksp.BenchRunner"
+}
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
+tasks.withType<Jar> {
+    manifest {
+        attributes(mapOf("Main-Class" to application.mainClassName))
     }
 }
-
-rootProject.name = "exhaustive-processor"
-
-include(":processor")

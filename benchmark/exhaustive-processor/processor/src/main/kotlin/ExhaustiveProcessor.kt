@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Google LLC
+ * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import com.google.devtools.ksp.isLocal
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Resolver
@@ -12,15 +28,15 @@ class ExhaustiveProcessor(
     val codeGenerator: CodeGenerator,
     val options: Map<String, String>
 ) : SymbolProcessor {
-    val file = File("/Users/jiaxiang/code/exhaustive-log")
+    val file: File? = null
     override fun finish() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        file.writeText("")
+        file?.writeText("")
         val visitor = ExhaustiveVisitor()
         resolver.getAllFiles().forEach { it.accept(visitor, Unit) }
-        file.appendText(visitor.collectedNodes.joinToString("\n"))
+        file?.appendText(visitor.collectedNodes.joinToString("\n"))
         return emptyList()
     }
 
@@ -28,7 +44,7 @@ class ExhaustiveProcessor(
         val collectedNodes = mutableListOf<String>()
 
         override fun defaultHandler(node: KSNode, data: Unit) {
-            file.appendText("--- visiting ${node.location} ---\n")
+            file?.appendText("--- visiting ${node.location} ---\n")
         }
 
         override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
@@ -36,6 +52,7 @@ class ExhaustiveProcessor(
         }
 
         override fun visitAnnotation(annotation: KSAnnotation, data: Unit) {
+            file?.appendText("ANNO: ${annotation.shortName}")
             annotation.shortName
             annotation.useSiteTarget
             super.visitAnnotation(annotation, data)
