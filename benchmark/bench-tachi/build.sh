@@ -1,3 +1,4 @@
+#!/bin/bash
 /*
  * Copyright 2022 Google LLC
  * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
@@ -14,18 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pluginManagement {
-    val kotlinVersion: String by settings
-    val kspVersion: String by settings
-    plugins {
-        id("com.google.devtools.ksp") version kspVersion
-        kotlin("jvm") version kotlinVersion
-    }
-    repositories {
-        gradlePluginPortal()
-    }
-}
 
-rootProject.name = "exhaustive-processor"
-
-include(":processor")
+set -e
+SCRIPT_DIR=$(dirname "$(realpath $0)")
+ROOT=$SCRIPT_DIR/../..
+cd $SCRIPT_DIR
+git clone https://github.com/inorichi/tachiyomi.git
+cd tachiyomi
+git checkout 938339690eecdfe309d83264b6a89aff3c767687
+git apply $SCRIPT_DIR/tachi.patch
+./gradlew :app:copyDepsDevDebug
+mkdir -p $SCRIPT_DIR/lib && cp app/build/output/devDebug/lib/* $SCRIPT_DIR/lib

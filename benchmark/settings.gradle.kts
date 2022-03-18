@@ -14,18 +14,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pluginManagement {
-    val kotlinVersion: String by settings
-    val kspVersion: String by settings
-    plugins {
-        id("com.google.devtools.ksp") version kspVersion
-        kotlin("jvm") version kotlinVersion
-    }
-    repositories {
-        gradlePluginPortal()
-    }
-}
-
-rootProject.name = "exhaustive-processor"
-
-include(":processor")
+rootProject.name = "benchmark"

@@ -1,3 +1,4 @@
+#!/bin/bash
 /*
  * Copyright 2022 Google LLC
  * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
@@ -14,18 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pluginManagement {
-    val kotlinVersion: String by settings
-    val kspVersion: String by settings
-    plugins {
-        id("com.google.devtools.ksp") version kspVersion
-        kotlin("jvm") version kotlinVersion
-    }
-    repositories {
-        gradlePluginPortal()
-    }
-}
 
-rootProject.name = "exhaustive-processor"
-
-include(":processor")
+set -e
+SCRIPT_DIR=$(dirname "$(realpath $0)")
+BENCHMARK=$1
+ROOT=$SCRIPT_DIR/..
+cd $SCRIPT_DIR
+rm -rf runner/out runner/processor-1.0-SNAPSHOT.jar
+./gradlew :jar
+cd $SCRIPT_DIR/exhaustive-processor
+./gradlew build
+cp processor/build/libs/processor-1.0-SNAPSHOT.jar ../runner/
+cd $SCRIPT_DIR/$BENCHMARK
+./build.sh
+cd $ROOT
+./gradlew -PkspVersion=2.0.255 clean publishAllPublicationsToTestRepository
+cp -a build/repos/test/. $ROOT/benchmark/runner

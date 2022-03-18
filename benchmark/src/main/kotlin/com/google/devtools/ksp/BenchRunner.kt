@@ -14,18 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pluginManagement {
-    val kotlinVersion: String by settings
-    val kspVersion: String by settings
-    plugins {
-        id("com.google.devtools.ksp") version kspVersion
-        kotlin("jvm") version kotlinVersion
+package com.google.devtools.ksp
+
+import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
+import kotlin.system.measureNanoTime
+
+fun main(args: Array<String>) {
+    val runs = 10
+    val warmup = 10
+    val benchName = "Tachiyomi"
+    val cold = measureNanoTime{
+        K2JVMCompiler.main(args)
+    } / 1000000L
+    for (i in 1..warmup) {
+        K2JVMCompiler.main(args)
     }
-    repositories {
-        gradlePluginPortal()
-    }
+    val hot = (1..runs).map { measureNanoTime{K2JVMCompiler.main(args)} / 1000000L }
+    println("$benchName.Cold(RunTimeRaw): $cold ms")
+    println("$benchName.Hot(RunTimeRaw): ${hot.minOrNull()!!} ms")
 }
-
-rootProject.name = "exhaustive-processor"
-
-include(":processor")
