@@ -1,0 +1,55 @@
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index c7d59c166..f8941dbfa 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -137,6 +137,7 @@ android {
+ }
+ 
+ dependencies {
++    implementation("org.jetbrains.kotlin:kotlin-compiler:1.7.0-dev-2437")
+     implementation(kotlin("reflect", version = BuildPluginsVersion.KOTLIN))
+ 
+     val coroutinesVersion = "1.6.0"
+@@ -350,3 +351,29 @@ fun runCommand(command: String): String {
+     }
+     return String(byteOut.toByteArray()).trim()
+ }
++android.applicationVariants.all {
++    task("copyDeps${name.capitalize()}") {
++        outputs.upToDateWhen { false }
++        doLast {
++            compileConfiguration.forEach {
++                val src = it.absolutePath
++                val jar = if (src.endsWith(".aar")) {
++                    zipTree(src).files.single { it.name == "classes.jar" }
++                } else src
++                val dest = "$buildDir/output/${this@all.name}/lib/"
++                copy {
++                    from(jar)
++                    into(dest)
++                    rename { fileName ->
++                        if (fileName == "classes.jar") {
++                            it.name.dropLastWhile { it != '.' } + "jar"
++                        } else if (fileName.contains("-dev-")) {
++                            fileName.replace("-1.7.0-dev-2437", "")
++                        }
++                        else fileName
++                    }
++                }
++            }
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/build.gradle.kts b/build.gradle.kts
+index c5607aa82..e274b0455 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -10,6 +10,7 @@ allprojects {
+     repositories {
+         mavenCentral()
+         google()
++        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+         maven { setUrl("https://www.jitpack.io") }
+     }
+ }
