@@ -31,13 +31,7 @@ import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
@@ -364,49 +358,6 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         }
         return null
     }
-}
-
-internal abstract class KSVirtualFile(val baseDir: File, val name: String) : KSFile {
-    override val annotations: Sequence<KSAnnotation>
-        get() = throw Exception("$name should not be used.")
-
-    override val declarations: Sequence<KSDeclaration>
-        get() = throw Exception("$name should not be used.")
-
-    override val fileName: String
-        get() = "<$name is a virtual file; DO NOT USE.>"
-
-    override val filePath: String
-        get() = File(baseDir, fileName).path
-
-    override val packageName: KSName
-        get() = throw Exception("$name should not be used.")
-
-    override val origin: Origin
-        get() = throw Exception("$name should not be used.")
-
-    override val location: Location
-        get() = throw Exception("$name should not be used.")
-
-    override val parent: KSNode?
-        get() = throw Exception("$name should not be used.")
-
-    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        throw Exception("$name should not be used.")
-    }
-}
-
-/**
- * Used when an output potentially depends on new information.
- */
-internal class AnyChanges(baseDir: File) : KSVirtualFile(baseDir, "AnyChanges")
-
-/**
- * Used for classes from classpath, i.e., classes without source files.
- */
-internal class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, "NoSourceFile") {
-    override val fileName: String
-        get() = "<NoSourceFile for $fqn is a virtual file; DO NOT USE.>"
 }
 
 fun findTargetInfos(module: ModuleDescriptor): List<PlatformInfo> =

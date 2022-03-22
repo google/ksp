@@ -44,7 +44,7 @@ class CodeGeneratorImpl(
     val sourceToOutputs: MutableMap<File, MutableSet<File>> = mutableMapOf()
 
     // This function will also clear `fileOutputStreamMap` which will change the result of `generatedFile`
-    internal fun closeFiles() {
+    fun closeFiles() {
         fileOutputStreamMap.keys.forEach {
             fileOutputStreamMap[it]!!.close()
         }
