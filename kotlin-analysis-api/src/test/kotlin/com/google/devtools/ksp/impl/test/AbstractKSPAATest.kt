@@ -18,8 +18,9 @@
 package com.google.devtools.ksp.impl.test
 
 import com.google.devtools.ksp.DualLookupTracker
-import com.google.devtools.ksp.impl.ResolverAAImpl
-import com.google.devtools.ksp.impl.convertFilesToKtFiles
+import com.google.devtools.ksp.KspOptions
+import com.google.devtools.ksp.impl.CommandLineKSPLogger
+import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.testutils.AbstractKSPTest
 import com.intellij.mock.MockApplication
@@ -29,6 +30,7 @@ import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
 import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
+import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
@@ -40,6 +42,7 @@ import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.isKtFile
 import org.jetbrains.kotlin.test.services.javaFiles
 import java.io.File
+import java.nio.file.Files
 
 abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     val TestModule.kotlinSrc
@@ -85,7 +88,12 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         val kotlinSourceFiles = mainModule.files.filter { it.isKtFile }.map {
             File(mainModule.kotlinSrc, it.relativePath)
         }
-        val ktFiles = convertFilesToKtFiles(kotlinCoreEnvironment.project, kotlinSourceFiles)
+        val ktFiles = kotlinSourceFiles
+            .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
+            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "kt" }.toList() }
+            .sortedBy { Files.isSymbolicLink(it.toPath()) }
+            .distinctBy { it.canonicalPath }
+        compilerConfiguration.addKotlinSourceRoots(ktFiles.map { it.absolutePath })
 
         configureProjectEnvironment(
             kotlinCoreEnvironment.project as MockProject,
@@ -94,8 +102,22 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             kotlinCoreEnvironment.projectEnvironment.environment.jarFileSystem as CoreJarFileSystem
         )
 
-        val resolver = ResolverAAImpl(ktFiles)
-        testProcessor.process(resolver)
+        val testRoot = mainModule.testRoot
+
+        val kspOptions = KspOptions.Builder().apply {
+            if (!mainModule.javaFiles.isEmpty()) {
+                javaSourceRoots.add(mainModule.javaDir)
+            }
+            classOutputDir = File(testRoot, "kspTest/classes/main")
+            javaOutputDir = File(testRoot, "kspTest/src/main/java")
+            kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
+            resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
+            projectBaseDir = testRoot
+            cachesDir = File(testRoot, "kspTest/kspCaches")
+            kspOutputDir = File(testRoot, "kspTest")
+        }.build()
+        val ksp = KotlinSymbolProcessing(compilerConfiguration, kspOptions, CommandLineKSPLogger(), testProcessor)
+        ksp.execute()
 
         return testProcessor.toResult()
     }
