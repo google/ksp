@@ -50,8 +50,11 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
 
     fun TestModule.writeKtFiles() {
         kotlinSrc.mkdirs()
-        files.filter { it.isKtFile }.forEach {
-            File(kotlinSrc, it.relativePath).writeText(it.originalContent)
+        files.filter { it.isKtFile }.forEach { file ->
+            File(kotlinSrc, file.relativePath).let {
+                it.parentFile.mkdirs()
+                it.writeText(file.originalContent)
+            }
         }
     }
 
