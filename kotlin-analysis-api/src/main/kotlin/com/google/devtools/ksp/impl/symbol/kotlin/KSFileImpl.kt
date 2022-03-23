@@ -25,11 +25,12 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
-import org.jetbrains.kotlin.analysis.api.analyseWithReadAction
+import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.psi.KtFile
 
 class KSFileImpl(private val ktFile: KtFile) : KSFile {
@@ -43,7 +44,7 @@ class KSFileImpl(private val ktFile: KtFile) : KSFile {
         ktFile.virtualFilePath
     }
     override val declarations: Sequence<KSDeclaration> by lazy {
-        analyseWithReadAction(ktFile) {
+        analyseWithCustomToken(ktFile, AlwaysAccessibleValidityTokenFactory) {
             ktFile.getFileSymbol().getFileScope().getAllSymbols().map {
                 when (it) {
                     is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
@@ -67,7 +68,7 @@ class KSFileImpl(private val ktFile: KtFile) : KSFile {
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        analyseWithReadAction(ktFile) {
+        analyseWithCustomToken(ktFile, AlwaysAccessibleValidityTokenFactory) {
             ktFile.getFileSymbol().annotations.map { KSAnnotationImpl(it) }.asSequence()
         }
     }

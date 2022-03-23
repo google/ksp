@@ -2,6 +2,7 @@
 // TEST PROCESSOR: HelloWorldProcessor
 // EXPECTED:
 // Foo.kt
+// Foo
 // END
 // MODULE: lib
 // FILE: Bar.kt
