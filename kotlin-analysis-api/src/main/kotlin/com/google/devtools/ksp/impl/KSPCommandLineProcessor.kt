@@ -18,40 +18,36 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.KspOptions
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
+import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import java.io.File
-import java.nio.file.Files
+import java.net.URLClassLoader
 
-class KSPCommandLineProcessor(val args: Array<String>) {
-    val compilerConfiguration = CompilerConfiguration()
-    // TODO: support KSP options
-    val sources = args.toList()
-    lateinit var kspOptions: KspOptions
+class KSPCommandLineProcessor(val compilerConfiguration: CompilerConfiguration) {
+    private val kspOptionsBuilder = KspOptions.Builder()
 
-    val ktFiles = sources
-        .map { File(it) }
-        .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
-        .flatMap { root -> root.walk().filter { it.isFile && it.extension == "kt" }.toList() }
-        .sortedBy { Files.isSymbolicLink(it.toPath()) }
-        .distinctBy { it.canonicalPath }
+    val kspOptions: KspOptions
+        get() = kspOptionsBuilder.build()
 
-    val javaFiles = sources
-        .map { File(it) }
-        .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
-        .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
-        .sortedBy { Files.isSymbolicLink(it.toPath()) }
-        .distinctBy { it.canonicalPath }
+    lateinit var providers: List<SymbolProcessorProvider>
 
-    init {
-        compilerConfiguration.addKotlinSourceRoots(ktFiles.map { it.absolutePath })
-        compilerConfiguration.addJavaSourceRoots(javaFiles)
+    fun processArgs(args: Array<String>) {
+        // TODO: support KSP options
+        val sources = args.toList()
+        compilerConfiguration.addKotlinSourceRoots(sources)
+        compilerConfiguration.addJavaSourceRoots(sources.map { File(it) })
         compilerConfiguration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
+        val processingClasspath = kspOptionsBuilder.processingClasspath
+        val classLoader = URLClassLoader(
+            processingClasspath.map { it.toURI().toURL() }.toTypedArray(),
+            javaClass.classLoader
+        )
 
-        val kspOptionsBuilder = KspOptions.Builder()
-        kspOptions = kspOptionsBuilder.build()
+        providers = ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader)
     }
 }
