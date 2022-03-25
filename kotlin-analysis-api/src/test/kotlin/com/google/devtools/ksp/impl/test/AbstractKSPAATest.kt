@@ -77,13 +77,6 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         val application = ApplicationManager.getApplication() as MockApplication
         configureApplicationEnvironment(application)
 
-        // TODO: other platforms
-        val kotlinCoreEnvironment = KotlinCoreEnvironment.createForTests(
-            disposable,
-            compilerConfiguration,
-            EnvironmentConfigFiles.JVM_CONFIG_FILES
-        )
-
         // Some underlying service needs files backed by local fs.
         // Therefore, this doesn't work:
         //  val ktFiles = mainModule.loadKtFiles(kotlinCoreEnvironment.project)
@@ -91,12 +84,16 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         val kotlinSourceFiles = mainModule.files.filter { it.isKtFile }.map {
             File(mainModule.kotlinSrc, it.relativePath)
         }
-        val ktFiles = kotlinSourceFiles
+        val ktSourceRoots = kotlinSourceFiles
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
-            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "kt" }.toList() }
-            .sortedBy { Files.isSymbolicLink(it.toPath()) }
             .distinctBy { it.canonicalPath }
-        compilerConfiguration.addKotlinSourceRoots(ktFiles.map { it.absolutePath })
+        compilerConfiguration.addKotlinSourceRoots(ktSourceRoots.map { it.absolutePath })
+        // TODO: other platforms
+        val kotlinCoreEnvironment = KotlinCoreEnvironment.createForTests(
+            disposable,
+            compilerConfiguration,
+            EnvironmentConfigFiles.JVM_CONFIG_FILES
+        )
 
         configureProjectEnvironment(
             kotlinCoreEnvironment.project as MockProject,
@@ -119,9 +116,15 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             cachesDir = File(testRoot, "kspTest/kspCaches")
             kspOutputDir = File(testRoot, "kspTest")
         }.build()
-        val ksp = KotlinSymbolProcessing(compilerConfiguration, kspOptions, CommandLineKSPLogger(), testProcessor)
+        val ksp = KotlinSymbolProcessing(
+            compilerConfiguration,
+            kspOptions,
+            CommandLineKSPLogger(),
+            kotlinCoreEnvironment,
+            listOf(testProcessor)
+        )
+        ksp.prepare()
         ksp.execute()
-
         return testProcessor.toResult()
     }
 }

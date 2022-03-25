@@ -9,9 +9,9 @@ class HelloWorldProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val fooKt = resolver.getAllFiles().single()
         results.add(fooKt.fileName)
-        val bar = resolver.getAllFiles().single { it.fileName == "Foo.kt" }
+        val foo = resolver.getAllFiles().single { it.fileName == "Foo.kt" }
             .declarations.single { it.simpleName.asString() == "Foo" }
-        results.add(bar.simpleName.asString())
+        results.add(foo.simpleName.asString())
         return emptyList()
     }
 
