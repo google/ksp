@@ -215,6 +215,7 @@ fun KSDeclaration.isOpen() = !this.isLocal() &&
             this.modifiers.contains(Modifier.OVERRIDE) ||
             this.modifiers.contains(Modifier.ABSTRACT) ||
             this.modifiers.contains(Modifier.OPEN) ||
+            this.modifiers.contains(Modifier.SEALED) ||
             (
                 this !is KSClassDeclaration &&
                     (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
