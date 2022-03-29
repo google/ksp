@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
+
 val testRepo: String by project
 
 plugins {
@@ -24,11 +26,11 @@ ksp {
     arg("option2", "value2")
 }
 
-val compileKotlin: AbstractCompile by tasks
+val compileKotlin: AbstractKotlinCompileTool<*> by tasks
 tasks.register<Copy>("copyG") {
     from("G.kt")
     into(File(buildDir, "generatedSources").apply { mkdirs() })
 }.let {
     // Magic. `map` creates a provider to propagate task dependency.
-    compileKotlin.source(it.map { it.destinationDir })
+    compileKotlin.setSource(it.map { it.destinationDir })
 }
