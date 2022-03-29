@@ -46,9 +46,9 @@
 // NestedClassSubjects.NestedOpenClass.field: public
 // NestedClassSubjects.NestedInterface: public open
 // SealedBase: public open
-// SealedBase.<init>: public
+// SealedBase / <init>: public
 // SealedImpl: public
-// SealedImpl.<init>: public
+// SealedImpl / <init>: public
 // END
 // FILE: a.kt
 internal class Cls(override val b: Int) : ITF {

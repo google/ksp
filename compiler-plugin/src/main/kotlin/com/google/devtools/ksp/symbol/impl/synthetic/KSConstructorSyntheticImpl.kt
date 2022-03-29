@@ -42,9 +42,7 @@ class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) :
 
     override val functionKind: FunctionKind = FunctionKind.MEMBER
 
-    override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached(ksClassDeclaration.qualifiedName?.asString()?.plus(".<init>") ?: "")
-    }
+    override val qualifiedName: KSName? = null
 
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached("<init>")
