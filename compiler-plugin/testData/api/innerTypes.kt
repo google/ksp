@@ -30,7 +30,7 @@
 // C5<Float, Double>: [C1.C4.C5<INVARIANT Float>, C1.C4<INVARIANT Double>]
 // END
 
-@file:Suppress("Byte", "Int", "Short", "Double", "Float", "Suppress")
+@file:Suppress("Byte", "Int", "Short", "Double", "Float", "Suppress", "Any")
 
 class C1<T1> {
     inner class C2<T2> {
