@@ -28,6 +28,7 @@ import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
 import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
 import com.google.devtools.ksp.symbol.impl.binary.sealedSubclassesSequence
 import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
@@ -102,7 +103,18 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        ktClassOrObject.superTypeListEntries.asSequence().map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
+        val resolver = ResolverImpl.instance
+        ktClassOrObject.superTypeListEntries
+            .asSequence()
+            .map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
+            .ifEmpty {
+                sequenceOf(
+                    KSTypeReferenceSyntheticImpl.getCached(
+                        resolver.builtIns.anyType,
+                        this
+                    )
+                )
+            }
             .memoized()
     }
 

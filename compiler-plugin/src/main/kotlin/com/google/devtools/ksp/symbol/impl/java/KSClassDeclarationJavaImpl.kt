@@ -138,7 +138,14 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        psi.superTypes.asSequence().map { KSTypeReferenceJavaImpl.getCached(it, this) }.memoized()
+        val adjusted = if (!psi.isInterface && psi.superTypes.size > 1) {
+            psi.superTypes.filterNot {
+                it.className == "Object" && it.canonicalText == "java.lang.Object"
+            }
+        } else {
+            psi.superTypes.toList()
+        }
+        adjusted.asSequence().map { KSTypeReferenceJavaImpl.getCached(it, this) }.memoized()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
