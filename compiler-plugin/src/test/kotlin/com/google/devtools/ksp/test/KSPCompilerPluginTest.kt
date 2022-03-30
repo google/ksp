@@ -407,6 +407,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/signatureMapper.kt")
     }
 
+    @TestMetadata("superTypes.kt")
+    @Test
+    fun testSuperTypes() {
+        runTest("testData/api/superTypes.kt")
+    }
+
     @TestMetadata("throwList.kt")
     @Test
     fun testThrowList() {
