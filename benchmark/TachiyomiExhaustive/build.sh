@@ -13,16 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
 set -e
 SCRIPT_DIR=$(dirname "$(realpath $0)")
-ROOT=$SCRIPT_DIR/..
+ROOT=$SCRIPT_DIR/../..
 cd $SCRIPT_DIR
-rm -rf runner/out runner/processor-1.0-SNAPSHOT.jar
-./gradlew :jar
-cd $SCRIPT_DIR/exhaustive-processor
-./gradlew build
-cp processor/build/libs/processor-1.0-SNAPSHOT.jar ../runner/
-cd $ROOT
-./gradlew -PkspVersion=2.0.255 clean publishAllPublicationsToTestRepository
-cp -a build/repos/test/. $ROOT/benchmark/runner
+git clone https://github.com/inorichi/tachiyomi.git
+cd tachiyomi
+git checkout 938339690eecdfe309d83264b6a89aff3c767687
+git apply $SCRIPT_DIR/tachi.patch
+./gradlew :app:copyDepsDevDebug
+mkdir -p $SCRIPT_DIR/lib && cp app/build/output/devDebug/lib/* $SCRIPT_DIR/lib
