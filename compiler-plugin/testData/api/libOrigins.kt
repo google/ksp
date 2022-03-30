@@ -180,6 +180,7 @@
 // reference: Any: KOTLIN_LIB
 // reference: Any: KOTLIN_LIB
 // reference: Any: KOTLIN_LIB
+// reference: Any: SYNTHETIC
 // reference: ArrayList<(T2..T2?)>: JAVA_LIB
 // reference: Byte: JAVA_LIB
 // reference: Byte: JAVA_LIB
