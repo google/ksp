@@ -18,10 +18,13 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: EquivalentJavaWildcardProcessor
 // EXPECTED:
+// X : Any -> Any
 // <init> : X -> X
 // Y : X -> X
 // <init> : Y -> Y
+// A : Any -> Any
 // <init> : A<T1, T2> -> A<T1, T2>
+// B : Any -> Any
 // synthetic constructor for B : B<*> -> B<out Any?>
 // bar1 : [@kotlin.jvm.JvmSuppressWildcards] A<X, X> -> [@kotlin.jvm.JvmSuppressWildcards] A<X, X>
 // - INVARIANT X : X -> X
