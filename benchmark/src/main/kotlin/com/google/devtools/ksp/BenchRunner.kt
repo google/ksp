@@ -20,16 +20,17 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import kotlin.system.measureNanoTime
 
 fun main(args: Array<String>) {
-    val runs = 10
-    val warmup = 10
-    val benchName = "Tachiyomi"
+    val runs = 3
+    val warmup = 3
+    val benchName = args[0]
+    val compilerArgs = args.drop(1).toTypedArray()
     val cold = measureNanoTime{
-        K2JVMCompiler.main(args)
+        K2JVMCompiler.main(compilerArgs)
     } / 1000000L
     for (i in 1..warmup) {
-        K2JVMCompiler.main(args)
+        K2JVMCompiler.main(compilerArgs)
     }
-    val hot = (1..runs).map { measureNanoTime{K2JVMCompiler.main(args)} / 1000000L }
+    val hot = (1..runs).map { measureNanoTime{K2JVMCompiler.main(compilerArgs)} / 1000000L }
     println("$benchName.Cold(RunTimeRaw): $cold ms")
     println("$benchName.Hot(RunTimeRaw): ${hot.minOrNull()!!} ms")
 }
