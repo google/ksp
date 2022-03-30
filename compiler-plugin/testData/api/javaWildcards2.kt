@@ -18,7 +18,9 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: JavaWildcard2Processor
 // EXPECTED:
+// MyEnum : Any
 // <init> : MyEnum
+// VarianceSubjectSuppressed : Any
 // starList : List<Any?>
 // typeArgList : List<R>
 // numberList : List<Number>

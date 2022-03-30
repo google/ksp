@@ -1,6 +1,7 @@
 // TEST PROCESSOR: ParentProcessor
 // EXPECTED:
 // parent of File: a.kt: null
+// parent of Any: Anno
 // parent of Anno: File: a.kt
 // parent of Anno: synthetic constructor for Anno
 // parent of synthetic constructor for Anno: Anno
@@ -36,6 +37,7 @@
 // parent of Anno: @Anno
 // parent of @Anno: topFun
 // parent of topFun: File: a.kt
+// parent of Any: ITF
 // parent of ITF: File: a.kt
 // parent of ITF: ITF
 // parent of ITF: topClass
@@ -48,6 +50,7 @@
 // parent of i: memberFun
 // parent of Int: memberFun
 // parent of memberFun: topClass
+// parent of Any: InnerClass
 // parent of P: InnerClass
 // parent of InnerClass: topClass
 // parent of P: P
@@ -73,28 +76,32 @@
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass
 // parent of synthetic constructor for topClass: topClass
+// parent of Any: CMYK
 // parent of CMYK: File: a.kt
+// parent of Any: C
 // parent of C: CMYK
 // parent of C: synthetic constructor for C
 // parent of synthetic constructor for C: C
+// parent of Any: M
 // parent of M: CMYK
 // parent of M: synthetic constructor for M
 // parent of synthetic constructor for M: M
+// parent of Any: Y
 // parent of Y: CMYK
 // parent of Y: synthetic constructor for Y
 // parent of synthetic constructor for Y: Y
+// parent of Any: K
 // parent of K: CMYK
 // parent of K: synthetic constructor for K
 // parent of synthetic constructor for K: K
 // parent of CMYK: synthetic constructor for CMYK
 // parent of synthetic constructor for CMYK: CMYK
 // parent of File: Bnno.kt: null
+// parent of Any: Bnno
 // parent of Bnno: File: Bnno.kt
 // parent of Bnno: synthetic constructor for Bnno
 // parent of synthetic constructor for Bnno: Bnno
 // parent of File: B.java: null
-// parent of Object: Object
-// parent of Object: B
 // parent of ITF: ITF
 // parent of ITF: B
 // parent of T: B
