@@ -26,15 +26,14 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
+import com.google.devtools.ksp.symbol.impl.convertKotlinType
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import org.jetbrains.kotlin.builtins.isFunctionType
 import org.jetbrains.kotlin.builtins.isKFunctionType
 import org.jetbrains.kotlin.builtins.isKSuspendFunctionType
 import org.jetbrains.kotlin.builtins.isSuspendFunctionType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.getAbbreviation
-import org.jetbrains.kotlin.types.isError
+import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.TypeNullability
 import org.jetbrains.kotlin.types.typeUtil.isSubtypeOf
 import org.jetbrains.kotlin.types.typeUtil.makeNotNullable
@@ -75,9 +74,10 @@ class KSTypeImpl private constructor(
     }
 
     override fun isAssignableFrom(that: KSType): Boolean {
-        val subType = (that as? KSTypeImpl)?.kotlinType ?: return false
+        val subType = (that as? KSTypeImpl)?.kotlinType?.convertKotlinType() ?: return false
         ResolverImpl.instance.incrementalContext.recordLookupWithSupertypes(subType)
-        return subType.isSubtypeOf(kotlinType)
+        val thisType = (this as? KSTypeImpl)?.kotlinType?.convertKotlinType() ?: return false
+        return subType.isSubtypeOf(thisType)
     }
 
     // TODO: find a better way to reuse the logic in [DescriptorRendererImpl.renderFlexibleType].

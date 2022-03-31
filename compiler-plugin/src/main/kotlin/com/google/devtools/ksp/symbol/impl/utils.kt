@@ -22,6 +22,7 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.findPsi
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSDeclarationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSFunctionDeclarationDescriptorImpl
@@ -35,8 +36,10 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticIm
 import com.intellij.psi.*
 import com.intellij.psi.impl.light.LightMethod
 import com.intellij.psi.impl.source.PsiClassImpl
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMapper
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassConstructorDescriptor
+import org.jetbrains.kotlin.load.java.descriptors.JavaClassDescriptor
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
@@ -48,12 +51,10 @@ import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.StarProjectionImpl
-import org.jetbrains.kotlin.types.TypeProjectionImpl
-import org.jetbrains.kotlin.types.replace
+import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.util.*
 import kotlin.Comparator
@@ -502,3 +503,28 @@ internal val KSFunctionDeclaration.jvmAccessFlag: Int
         }
         else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
     }
+
+// Compiler subtype checking does not convert Java types to Kotlin types, while getting super types
+// from a java type does the conversion, therefore resulting in subtype checking for Java types to fail.
+// Check if candidate super type is a Java type, convert to Kotlin type for subtype checking.
+internal fun KotlinType.convertKotlinType(): KotlinType {
+    val declarationDescriptor = this.constructor.declarationDescriptor
+    val base = if (declarationDescriptor is JavaClassDescriptor) {
+        JavaToKotlinClassMapper
+            .mapJavaToKotlin(declarationDescriptor.fqNameSafe, ResolverImpl.instance.module.builtIns)
+            ?.defaultType
+            ?.replace(this.arguments)
+            ?: this
+    } else this
+    val newarguments =
+        base.arguments.map { if (it !is StarProjectionImpl) it.replaceType(it.type.convertKotlinType()) else it }
+    val upperBound = if (base.unwrap() is FlexibleType) {
+        (base.unwrap() as FlexibleType).upperBound.arguments
+            .map { if (it !is StarProjectionImpl) it.replaceType(it.type.convertKotlinType()) else it }
+    } else newarguments
+    return base.replace(
+        newarguments,
+        annotations,
+        upperBound
+    )
+}
