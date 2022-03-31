@@ -15,12 +15,33 @@
 # limitations under the License.
 
 set -e
+
+SCRIPT_DIR=$(dirname "$(realpath $0)")
 BENCHMARK_DIR=$1
 PREFIX=$2
 
-SCRIPT_DIR=$(dirname "$(realpath $0)")
+if [ -z $PREFIX ]
+then
+  PREFIX=..
+fi
+
+JAVA_ARG=$3
+
+if [ -z $JAVA_ARG ]
+then
+  JAVA=java
+else
+  JAVA=$(realpath $SCRIPT_DIR/$JAVA_ARG)
+fi
+
+BENCHMARK_DATA_DIR=$(realpath $SCRIPT_DIR/$PREFIX/$BENCHMARK_DIR)
+
+echo Running benchmark: $BENCHMARK_DIR
+echo With benchmark data directory: $BENCHMARK_DATA_DIR
+echo Using java: $JAVA
+
 cd $SCRIPT_DIR
-CP=../build/libs/benchmark.jar:$(echo $SCRIPT_DIR/$PREFIX/$BENCHMARK_DIR/lib/*.jar | tr ' ' ':')
+CP=../build/libs/benchmark.jar:$(echo $BENCHMARK_DATA_DIR/lib/*.jar | tr ' ' ':')
 KSP_PLUGIN_ID=com.google.devtools.ksp.symbol-processing
 KSP_PLUGIN_OPT=plugin:$KSP_PLUGIN_ID
 
@@ -30,7 +51,7 @@ KSP_API_JAR=./com/google/devtools/ksp/symbol-processing-api/2.0.255/symbol-proce
 AP=processor-1.0-SNAPSHOT.jar
 
 mkdir -p out
-find $SCRIPT_DIR/$PREFIX/$BENCHMARK_DIR -name "*.kt" | xargs java -cp $CP com.google.devtools.ksp.BenchRunnerKt $BENCHMARK_DIR\
+find $BENCHMARK_DATA_DIR -name "*.kt" | xargs $JAVA -cp $CP com.google.devtools.ksp.BenchRunnerKt $BENCHMARK_DIR\
         -kotlin-home . \
         -Xplugin=$KSP_PLUGIN_JAR \
         -Xplugin=$KSP_API_JAR \
