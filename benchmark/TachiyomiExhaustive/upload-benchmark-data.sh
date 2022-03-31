@@ -17,12 +17,14 @@
 
 set -e
 SCRIPT_DIR=$(dirname "$(realpath $0)")
-ROOT=$SCRIPT_DIR/../..
 cd $SCRIPT_DIR
-rm -rf tachiyomi
-git clone https://github.com/inorichi/tachiyomi.git
-cd tachiyomi
-git checkout 938339690eecdfe309d83264b6a89aff3c767687
-git apply $SCRIPT_DIR/tachi.patch
-./gradlew :app:copyDepsDevDebug
-mkdir -p $SCRIPT_DIR/lib && cp app/build/output/devDebug/lib/* $SCRIPT_DIR/lib
+TEMP_DIR=$(mktemp -d)
+BUNDLE=$TEMP_DIR/tachiyomi-exhaustive.tar.gz
+tar cfz $BUNDLE tachiyomi lib
+BUNDLE_HASH_AND_NAME=$(sha256sum $BUNDLE)
+BUNDLE_HASH=$(echo $BUNDLE_HASH_AND_NAME | cut -d " " -f 1)
+BUNDLE_UPLOAD_LOCATION=gs://r8-deps/ksp-bench/$BUNDLE_HASH.tar.gz
+BUNDLE_DOWNLOAD_LOCATION=http://storage.googleapis.com/r8-deps/ksp-bench/$BUNDLE_HASH.tar.gz
+echo Uploading to: $BUNDLE_UPLOAD_LOCATION
+gsutil.py cp -a public-read $BUNDLE $BUNDLE_UPLOAD_LOCATION
+echo Available for download at: $BUNDLE_DOWNLOAD_LOCATION
