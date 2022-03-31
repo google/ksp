@@ -257,6 +257,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/javaModifiers.kt")
     }
 
+    @TestMetadata("javaSubtype.kt")
+    @Test
+    fun testJavaSubtype() {
+        runTest("testData/api/javaSubtype.kt")
+    }
+
     @TestMetadata("javaToKotlinMapper.kt")
     @Test
     fun testJavaToKotlinMapper() {
