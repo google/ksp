@@ -786,6 +786,14 @@ abstract class KspTaskNative @Inject constructor(
     // new / changed / removed files.
     // Long term solution: contribute to upstream to support incremental compilation.
     // Short term workaround: declare a @TaskAction function and call super.compile().
+    // Use a name that gets sorted in the front just in case. `_$` is lower, but it might be too hacky.
+    @TaskAction
+    fun _0() {
+        options.get().single { it.key == "kspOutputDir" }.value.let {
+            File(it).deleteRecursively()
+        }
+        super.compile()
+    }
 }
 
 // This forces rebuild.
