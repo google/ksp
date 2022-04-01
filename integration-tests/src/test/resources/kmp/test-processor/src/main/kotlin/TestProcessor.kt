@@ -37,6 +37,15 @@ class TestProcessor(
                 writer.write("}\n")
             }
         }
+
+        allFiles.forEach {
+            val fn = it.replace(".", "_dot_")
+            codeGenerator.createNewFile(Dependencies(false), "", fn, "kt").use { output ->
+                OutputStreamWriter(output).use { writer ->
+                    writer.write("// empty\n")
+                }
+            }
+        }
         return emptyList()
     }
 }
