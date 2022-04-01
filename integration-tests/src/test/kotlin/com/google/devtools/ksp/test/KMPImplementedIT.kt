@@ -154,6 +154,7 @@ class KMPImplementedIT {
     @Test
     fun testLinuxX64() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        val genDir = File(project.root, "workload-linuxX64/build/generated/ksp/linuxX64/linuxX64Main/kotlin")
 
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
@@ -180,6 +181,21 @@ class KMPImplementedIT {
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
+            Assert.assertTrue(File(genDir, "Main_dot_kt.kt").exists())
+            Assert.assertTrue(File(genDir, "ToBeRemoved_dot_kt.kt").exists())
+        }
+
+        File(project.root, "workload-linuxX64/src/linuxX64Main/kotlin/ToBeRemoved.kt").delete()
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            ":workload-linuxX64:build"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-linuxX64:build")?.outcome)
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-linuxX64:kspTestKotlinLinuxX64")?.outcome)
+            verifyKexe("workload-linuxX64/build/bin/linuxX64/debugExecutable/workload-linuxX64.kexe")
+            verifyKexe("workload-linuxX64/build/bin/linuxX64/releaseExecutable/workload-linuxX64.kexe")
+            Assert.assertTrue(File(genDir, "Main_dot_kt.kt").exists())
+            Assert.assertFalse(File(genDir, "ToBeRemoved_dot_kt.kt").exists())
         }
     }
 
