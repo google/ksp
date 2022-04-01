@@ -34,6 +34,7 @@ jobs:
         d961b62f71147bfd148d8648bfdf566525a401e7
         fbb02bfeafdb69b876bc6c0bd433fd1ebf4c8150
         80f75d5333d15961c9fb95fe47040a2fcf28c16c
+        d6f2b6eef0b466a35fc4b8e1e14ee8ef05cf03e6
         EOF
         )
         git config --global user.email "kotlin-symbol-processing@google.com"
