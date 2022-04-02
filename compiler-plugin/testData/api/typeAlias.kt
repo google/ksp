@@ -22,6 +22,13 @@
 // A = String
 // B = String
 // C = A = String
+// Int
+// List<Int>
+// ListOfInt = List<Int>
+// ListOfInt = List<Int>
+// ListOfInt_B = ListOfInt = List<Int>
+// ListOfInt_B = ListOfInt = List<Int>
+// ListOfInt_C = ListOfInt_B = ListOfInt = List<Int>
 // String
 // String
 // String
@@ -30,7 +37,13 @@
 typealias A = String
 typealias B = String
 typealias C = A
+typealias ListOfInt = List<Int>
+typealias ListOfInt_B = ListOfInt
+typealias ListOfInt_C = ListOfInt_B
 val a: A = ""
 val b: B = ""
 val c: C = ""
 val d: String = ""
+val listOfInt: ListOfInt = TODO()
+val listOfInt_B: ListOfInt_B = TODO()
+val listOfInt_C: ListOfInt_C = TODO()
