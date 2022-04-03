@@ -22,45 +22,51 @@ import com.google.devtools.ksp.symbol.*
 
 open class TypeAliasProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollectorNoAccessor()
     val types = mutableListOf<KSType>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val files = resolver.getNewFiles()
-
-        files.forEach {
-            it.accept(typeCollector, types)
-        }
-
-        val sortedTypes = types.sortedBy { it.declaration.simpleName.asString() }
         val byFinalSignature = mutableMapOf<String, MutableList<KSType>>()
-        for (i in sortedTypes) {
-            val r = mutableListOf<String>()
-            var a: KSType? = i
-            while(a != null) {
-                r.add(a.toSignature())
-                a = (a.declaration as? KSTypeAlias)?.type?.resolve()
-            }
-            results.add(r.joinToString(" = "))
-            byFinalSignature.getOrPut(r.last()) {
-                mutableListOf()
-            }.add(i)
-        }
-        byFinalSignature.forEach { (signature, sameTypeAliases) ->
-            for (i in sameTypeAliases) {
-                for (j in sameTypeAliases) {
-                    assert(i == j) {
-                        "$i and $j both map to $signature, equals should return true"
-                    }
+        resolver.getNewFiles().flatMap { file ->
+            file.declarations.filterIsInstance<KSPropertyDeclaration>().map { prop ->
+                buildString {
+                    append(prop.simpleName.asString())
+                    append(" : ")
+                    val propType = prop.type.resolve()
+                    val signatures = propType.typeAliasSignatures()
+                    append(signatures.joinToString(" = "))
+                    byFinalSignature.getOrPut(signatures.last()) {
+                        mutableListOf()
+                    }.add(propType)
                 }
             }
-            assert(sameTypeAliases.map { it.hashCode() }.distinct().size == 1) {
-                "different hashcodes for members of $signature"
+        }.forEach(results::add)
+        byFinalSignature.forEach { (signature, sameTypeAliases) ->
+            // exclude List<T> case from the test because they lose a type argument when resolving aliases, so they
+            // are not the same anymore as we traverse the declarations.
+            if (signature != "List<T>") {
+                for (i in sameTypeAliases) {
+                    for (j in sameTypeAliases) {
+                        assert(i == j) {
+                            "$i and $j both map to $signature, equals should return true"
+                        }
+                    }
+                }
+                assert(sameTypeAliases.map { it.hashCode() }.distinct().size == 1) {
+                    "different hashcodes for members of $signature"
+                }
             }
         }
-
-
         return emptyList()
+    }
+
+    private fun KSType.typeAliasSignatures(): List<String> {
+        var self: KSType? = this
+        return buildList {
+            while (self != null) {
+                add(self!!.toSignature())
+                self = (self?.declaration as? KSTypeAlias)?.type?.resolve()
+            }
+        }
     }
 
     private fun KSType.toSignature(): String = buildString {
