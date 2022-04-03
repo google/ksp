@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.builtins.isKSuspendFunctionType
 import org.jetbrains.kotlin.builtins.isSuspendFunctionType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.getAbbreviatedType
 import org.jetbrains.kotlin.types.getAbbreviation
 import org.jetbrains.kotlin.types.isError
 import org.jetbrains.kotlin.types.typeUtil.TypeNullability
@@ -71,7 +72,9 @@ class KSTypeImpl private constructor(
 
     // TODO: fix calls to getKSTypeCached and use ksTypeArguments when available.
     override val arguments: List<KSTypeArgument> by lazy {
-        kotlinType.arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, Origin.SYNTHETIC, null) }
+        (kotlinType.getAbbreviation() ?: kotlinType).arguments.map {
+            KSTypeArgumentDescriptorImpl.getCached(it, Origin.SYNTHETIC, null)
+        }
     }
 
     override fun isAssignableFrom(that: KSType): Boolean {
