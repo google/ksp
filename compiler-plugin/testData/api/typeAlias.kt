@@ -18,20 +18,17 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: TypeAliasProcessor
 // EXPECTED:
-// A = String
-// A = String
-// B = String
-// C = A = String
-// Int
-// List<Int>
-// ListOfInt = List<Int>
-// ListOfInt = List<Int>
-// ListOfInt_B = ListOfInt = List<Int>
-// ListOfInt_B = ListOfInt = List<Int>
-// ListOfInt_C = ListOfInt_B = ListOfInt = List<Int>
-// String
-// String
-// String
+// a : A = String
+// b : B = String
+// c : C = A = String
+// d : String
+// listOfInt : ListOfInt = List<Int>
+// listOfInt_B : ListOfInt_B = ListOfInt = List<Int>
+// listOfInt_C : ListOfInt_C = ListOfInt_B = ListOfInt = List<Int>
+// myList : MyList<Long> = List<T>
+// myList_B : List<Number>
+// myList_String : MyList_String = MyList<String> = List<T>
+// myList_b_String : MyList_B_String = MyList_B<String> = MyList<R> = List<T>
 // END
 
 typealias A = String
@@ -40,6 +37,11 @@ typealias C = A
 typealias ListOfInt = List<Int>
 typealias ListOfInt_B = ListOfInt
 typealias ListOfInt_C = ListOfInt_B
+typealias MyList<T> = List<T>
+typealias MyList_B<R> = MyList<R>
+typealias MyList_String = MyList<String>
+typealias MyList_B_String = MyList_B<String>
+
 val a: A = ""
 val b: B = ""
 val c: C = ""
@@ -47,3 +49,7 @@ val d: String = ""
 val listOfInt: ListOfInt = TODO()
 val listOfInt_B: ListOfInt_B = TODO()
 val listOfInt_C: ListOfInt_C = TODO()
+val myList: MyList<Long> = TODO()
+val myList_B: List<Number> = TODO()
+val myList_String: MyList_String = TODO()
+val myList_b_String: MyList_B_String = TODO()
