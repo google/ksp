@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.testConfiguration
 import org.jetbrains.kotlin.test.compileJavaFiles
+import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.LanguageSettingsDirectives
 import org.jetbrains.kotlin.test.model.DependencyKind
@@ -130,7 +131,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             +JvmEnvironmentConfigurationDirectives.FULL_JDK
             // SourceFileProviderImpl doesn't group files by module. Let's load them manually.
             +JvmEnvironmentConfigurationDirectives.SKIP_JAVA_SOURCES
-            +JvmEnvironmentConfigurationDirectives.WITH_STDLIB
+            +ConfigurationDirectives.WITH_STDLIB
             +LanguageSettingsDirectives.ALLOW_KOTLIN_PACKAGE
         }
 
