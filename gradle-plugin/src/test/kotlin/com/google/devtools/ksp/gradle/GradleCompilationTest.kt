@@ -207,7 +207,8 @@ class GradleCompilationTest {
     fun invalidArguments() {
         testRule.setupAppAsJvmApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
-        testRule.appModule.buildFileAdditions.add("""
+        testRule.appModule.buildFileAdditions.add(
+            """
             ksp {
                 arg(Provider())
             }
@@ -218,7 +219,8 @@ class GradleCompilationTest {
                     )
                 }
             }
-        """.trimIndent())
+            """.trimIndent()
+        )
         testRule.appModule.dependencies.addAll(
             listOf(
                 artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2")
@@ -226,6 +228,6 @@ class GradleCompilationTest {
         )
 
         val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
-        assertThat(result.output).contains("KSP apoption does not match /S=/S: invalid")
+        assertThat(result.output).contains("KSP apoption does not match \\S+=\\S+: invalid")
     }
 }
