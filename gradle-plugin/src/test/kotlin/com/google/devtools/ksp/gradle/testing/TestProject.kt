@@ -74,6 +74,7 @@ class TestProject(
     fun writeAndroidGradlePropertiesFile() {
         val contents = """
             android.useAndroidX=true
+            org.gradle.jvmargs=-Xmx2048M -XX:MaxMetaspaceSize=512m
         """.trimIndent()
         rootDir.resolve("gradle.properties").writeText(contents)
     }
