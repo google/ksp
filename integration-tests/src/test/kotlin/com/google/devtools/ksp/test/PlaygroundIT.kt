@@ -14,10 +14,17 @@ class PlaygroundIT {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground")
 
-    private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) {
+    private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
+        buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
+
+    private fun GradleRunner.buildAndCheckOutcome(
+        vararg args: String,
+        outcome: TaskOutcome,
+        extraCheck: (BuildResult) -> Unit = {}
+    ) {
         val result = this.withArguments(*args).build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+        Assert.assertEquals(outcome, result.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
         Assert.assertTrue(artifact.exists())
@@ -67,7 +74,10 @@ class PlaygroundIT {
         File(project.root, "workload/build.gradle.kts")
             .appendText("\nksp {\n  allowSourcesFromOtherPlugins = true\n}\n")
         gradleRunner.buildAndCheck("clean", "build") { checkGBuilder() }
-        gradleRunner.buildAndCheck("clean", "build") { checkGBuilder() }
+        gradleRunner.buildAndCheckOutcome("build", "--info", outcome = TaskOutcome.UP_TO_DATE) {
+            Assert.assertEquals(TaskOutcome.UP_TO_DATE, it.task(":workload:kspKotlin")?.outcome)
+            checkGBuilder()
+        }
         project.restore("workload/build.gradle.kts")
     }
 
