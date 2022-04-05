@@ -66,6 +66,7 @@ import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.io.File
 import java.nio.file.Paths
 import java.util.concurrent.Callable
@@ -234,6 +235,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             )
             kspTask.destination = kspOutputDir
+            kspTask.kspOutputDir.value(kspOutputDir)
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
             kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName, target)).disallowChanges()
@@ -259,7 +261,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 classOutputDir,
                 resourceOutputDir
             )
+
             if (kspExtension.allowSourcesFromOtherPlugins) {
+                val deps = kotlinCompileTask.dependsOn.filterNot {
+                    it.safeAs<TaskProvider<*>>()?.name == kspTaskName ||
+                        it.safeAs<Task>()?.name == kspTaskName
+                }
+                kspTask.dependsOn(deps)
                 kspTask.source(kotlinCompileTask.source)
                 if (kotlinCompileTask is AbstractKotlinCompile<*>) {
                     val sourceRoots = kotlinCompileTask.getSourceRoots()
@@ -273,7 +281,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     kspTask.source(kotlinCompilation.defaultSourceSet.kotlin)
                 }
             }
-            kspTask.source.filter { !kspOutputDir.isParentOf(it) }
 
             // Don't support binary generation for non-JVM platforms yet.
             // FIXME: figure out how to add user generated libraries.
@@ -423,6 +430,9 @@ interface KspTask : Task {
     @get:Input
     var isKspIncremental: Boolean
 
+    @get:Internal
+    val kspOutputDir: Property<File>
+
     fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
@@ -438,6 +448,14 @@ abstract class KspTaskJvm @Inject constructor(
     @get:InputFiles
     @get:Incremental
     abstract val classpathStructure: ConfigurableFileCollection
+
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @InputFiles
+    @SkipWhenEmpty
+    @IgnoreEmptyDirectories
+    override fun getSource() = super.getSource().filter {
+        !kspOutputDir.get().isParentOf(it)
+    }.asFileTree
 
     @get:Input
     var isIntermoduleIncremental: Boolean = false
@@ -629,6 +647,14 @@ abstract class KspTaskJS @Inject constructor(
         "-Xir-produce-klib-file"
     )
 
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @InputFiles
+    @SkipWhenEmpty
+    @IgnoreEmptyDirectories
+    override fun getSource() = super.getSource().filter {
+        !kspOutputDir.get().isParentOf(it)
+    }.asFileTree
+
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
@@ -722,6 +748,14 @@ abstract class KspTaskMetadata @Inject constructor(
         )
     }
 
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @InputFiles
+    @SkipWhenEmpty
+    @IgnoreEmptyDirectories
+    override fun getSource() = super.getSource().filter {
+        !kspOutputDir.get().isParentOf(it)
+    }.asFileTree
+
     @get:Internal
     internal abstract val compileKotlinArgumentsContributor:
         Property<CompilerArgumentsContributor<K2MetadataCompilerArguments>>
@@ -790,6 +824,14 @@ abstract class KspTaskNative @Inject constructor(
                 super.additionalCompilerOptions.get() + kspOptions
             }
         }
+
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @InputFiles
+    @SkipWhenEmpty
+    @IgnoreEmptyDirectories
+    override fun getSource() = super.getSource().filter {
+        !kspOutputDir.get().isParentOf(it)
+    }.asFileTree
 
     override var compilerPluginClasspath: FileCollection? = null
         get() {
