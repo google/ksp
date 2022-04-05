@@ -25,7 +25,7 @@ import java.io.OutputStream
  *
  * Files created by [CodeGenerator] are considered in incremental processing.
  * Kotlin and Java files will be compiled together with other source files in the module.
- * Files created without using this API, will not participate in incremental processing nor subsequent compilations.
+ * Files created without using this API will not participate in incremental processing nor subsequent compilations.
  */
 interface CodeGenerator {
     /**
@@ -38,7 +38,7 @@ interface CodeGenerator {
      *   * [Resolver.getClassDeclarationByName]
      *
      * Instead of requiring processors to specify all source files which are relevant in generating the given output,
-     * KSP traces dependencies automatically and only need to know those sources that only processors know what they
+     * KSP traces dependencies automatically and only needs to know those sources that only processors know what they
      * are for. If a [KSFile] is indirectly obtained through other [KSNode]s, it hasn't to be specified for the given
      * output, even if its contents contribute to the generation of the output.
      *
@@ -109,8 +109,8 @@ class Dependencies private constructor(
     /**
      * Create a [Dependencies] to associate with an output.
      *
-     * @param aggregating whether the output should be invalidated on a new source file or a change in any of the existing files.
-     *                           Namely, whenever there are new information.
+     * @param aggregating whether the output should be invalidated by a new source file or a change in any of the existing files.
+     *                           Namely, whenever there is new information.
      * @param sources Sources for this output to depend on.
      */
     constructor(aggregating: Boolean, vararg sources: KSFile) : this(false, aggregating, sources.toList())
@@ -119,8 +119,8 @@ class Dependencies private constructor(
         /**
          * A short-hand to all source files.
          *
-         * Associating an output to [ALL_SOURCES] essentially disables incremental processing, as a tiniest change will clobber all files.
-         * This shouldn not be used in processors which care about processing speed.
+         * Associating an output to [ALL_SOURCES] essentially disables incremental processing, as the tiniest change will clobber all files.
+         * This should not be used in processors which care about processing speed.
          */
         val ALL_FILES = Dependencies(true, true, emptyList())
     }

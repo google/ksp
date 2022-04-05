@@ -27,8 +27,7 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
     val classKind: ClassKind
 
     /**
-     * Primary constructor of a class,
-     * Secondary constructors can be obtained by filtering [declarations].
+     * Primary constructor of a class, secondary constructors can be obtained by filtering [declarations].
      */
     val primaryConstructor: KSFunctionDeclaration?
 
@@ -45,21 +44,21 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
 
     /**
      * @return a sequence of sealed subclasses of this class, if any.
-     * Calling [getSealedSubclasses] requires type resolution therefore is expensive and should be avoided if possible.
+     * Calling [getSealedSubclasses] requires type resolution which is expensive and should be avoided if possible.
      */
     fun getSealedSubclasses(): Sequence<KSClassDeclaration>
 
     /**
      * Get all member functions of a class declaration, including declared and inherited.
      * @return Sequence of function declarations from the class members.
-     * Calling [getAllFunctions] requires type resolution therefore is expensive and should be avoided if possible.
+     * Calling [getAllFunctions] requires type resolution which is expensive and should be avoided if possible.
      */
     fun getAllFunctions(): Sequence<KSFunctionDeclaration>
 
     /**
      * Get all member properties of a class declaration, including declared and inherited.
      * @return Sequence of properties declarations from the class members.
-     * Calling [getAllProperties] requires type resolution therefore is expensive and should be avoided if possible.
+     * Calling [getAllProperties] requires type resolution which is expensive and should be avoided if possible.
      */
     fun getAllProperties(): Sequence<KSPropertyDeclaration>
 
