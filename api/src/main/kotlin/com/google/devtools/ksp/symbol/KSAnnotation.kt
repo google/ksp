@@ -21,7 +21,7 @@ package com.google.devtools.ksp.symbol
  */
 interface KSAnnotation : KSNode {
     /**
-     * Reference to type of the annotation class declaration.
+     * Reference to the type of the annotation class declaration.
      */
     val annotationType: KSTypeReference
 
