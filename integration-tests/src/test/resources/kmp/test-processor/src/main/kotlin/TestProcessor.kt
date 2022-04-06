@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
@@ -23,6 +24,8 @@ class TestProcessor(
         logger.warn("compiler version: ${env.compilerVersion}")
         val platforms = env.platforms.map { it.toString() }
         logger.warn("platforms: $platforms")
+        val list = resolver.getClassDeclarationByName("kotlin.collections.List")
+        logger.warn("List has superTypes: ${list!!.superTypes.count() > 0}")
 
         codeGenerator.createNewFile(Dependencies(false), "", "Foo", "kt").use { output ->
             OutputStreamWriter(output).use { writer ->
