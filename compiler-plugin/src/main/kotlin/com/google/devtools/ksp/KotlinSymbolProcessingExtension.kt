@@ -232,7 +232,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         }
         // Post processing.
         newFileNames = codeGenerator.generatedFile.filter { it.extension == "kt" || it.extension == "java" }
-            .map { it.canonicalPath }.toSet()
+            .map { it.canonicalPath.replace(File.separatorChar, '/') }.toSet()
         if (codeGenerator.generatedFile.isEmpty()) {
             finished = true
         }
