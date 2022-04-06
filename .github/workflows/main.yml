@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
@@ -26,6 +26,7 @@ jobs:
         java-package: jdk
         architecture: x64
     - name: set JDK_9 environment variable for kotlin compiler
+      shell: bash
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
       run: echo ::set-env name=JDK_9::$(echo $JAVA_HOME)
@@ -55,14 +56,17 @@ jobs:
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
     # Run ktlint
     - name: lint
+      if: matrix.os == 'ubuntu-latest'
       run: ./gradlew ktlint
 
     # Check API compatibility
     - name: API compatibility check
+      if: matrix.os == 'ubuntu-latest'
       run: ./gradlew :api:checkApi
 
     # Run tests
     - name: test
+      shell: bash
       run: ./gradlew --stacktrace --info test
     - name: Upload test results
       if: always()
