@@ -49,6 +49,7 @@ class KMPImplementedIT {
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JVM"))
+            Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
         }
     }
 
@@ -92,6 +93,7 @@ class KMPImplementedIT {
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JS"))
+            Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
         }
     }
 
@@ -181,6 +183,7 @@ class KMPImplementedIT {
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
+            Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
             Assert.assertTrue(File(genDir, "Main_dot_kt.kt").exists())
             Assert.assertTrue(File(genDir, "ToBeRemoved_dot_kt.kt").exists())
         }
