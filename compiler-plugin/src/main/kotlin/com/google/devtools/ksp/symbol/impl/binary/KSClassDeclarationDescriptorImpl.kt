@@ -17,10 +17,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import com.google.devtools.ksp.ExceptionMessage
-import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.findPsi
-import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
@@ -32,7 +29,6 @@ import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
-import com.google.devtools.ksp.toKSModifiers
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.descriptors.*
@@ -86,12 +82,11 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     private val javaSerializableType = ResolverImpl.instance.javaSerializableType
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        if (javaSerializableType == null)
-            return@lazy emptySequence()
 
-        descriptor.defaultType.constructor.supertypes.asSequence().map {
+        descriptor.defaultType.constructor.supertypes.asSequence().map { kotlinType ->
             KSTypeReferenceDescriptorImpl.getCached(
-                if (it === mockSerializableType) javaSerializableType else it,
+                javaSerializableType?.let { if (kotlinType === mockSerializableType) it else kotlinType }
+                    ?: kotlinType,
                 origin,
                 this
             )
