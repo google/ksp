@@ -23,6 +23,7 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class AndroidIncrementalIT {
     @Rule
@@ -53,7 +54,7 @@ class AndroidIncrementalIT {
             ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(
-                setOf("workload/src/main/java/com/example/A.kt"),
+                setOf("workload/src/main/java/com/example/A.kt".replace('/', File.separatorChar)),
                 BuildResultFixture(result).compiledKotlinSources,
             )
         }

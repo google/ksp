@@ -58,7 +58,7 @@ class IncrementalCPIT {
             File(project.root, src).appendText("\n{ val v$i = ${i++} }\n")
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
             }
         }
@@ -67,7 +67,7 @@ class IncrementalCPIT {
             File(project.root, src).appendText("\n\nclass C${i++}\n")
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 // Non-signature changes should not affect anything.
                 Assert.assertEquals(emptyMessage, dirties)
             }
