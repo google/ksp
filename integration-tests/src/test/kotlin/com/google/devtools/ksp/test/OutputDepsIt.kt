@@ -114,7 +114,7 @@ class OutputDepsIt {
             Thread.sleep(1000)
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
 
                 val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
@@ -144,8 +144,9 @@ class OutputDepsIt {
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
-                val outputs = outputRoot.walk().filter { it.isFile() }.map { it.toRelativeString(outputRoot) }
-                    .toList().sorted()
+                val outputs = outputRoot.walk().filter { it.isFile() }.map {
+                    it.toRelativeString(outputRoot).replace(File.separatorChar, '/')
+                }.toList().sorted()
                 Assert.assertEquals(expectedDirties, outputs)
             }
         }
