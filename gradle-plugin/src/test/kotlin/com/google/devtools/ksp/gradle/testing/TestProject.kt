@@ -36,12 +36,11 @@ class TestProject(
             )
         )
         // add gradle-plugin test classpath as a dependency to be able to load processors.
-        it.dependencies.add(
-            DependencyDeclaration.files(
-                "implementation",
-                testConfig.processorClasspath
+        testConfig.processorClasspath.split(File.pathSeparatorChar).forEach { path ->
+            it.dependencies.add(
+                DependencyDeclaration.files("implementation", path.replace(File.separatorChar, '/'))
             )
-        )
+        }
     }
 
     val appModule = TestModule(
@@ -61,7 +60,7 @@ class TestProject(
                 include("app")
                 pluginManagement {
                     repositories {
-                        maven("${testConfig.mavenRepoDir}")
+                        maven("${testConfig.mavenRepoPath}")
                         gradlePluginPortal()
                         google()
                         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
@@ -90,7 +89,7 @@ class TestProject(
             appendln(
                 """
             repositories {
-                maven("${testConfig.mavenRepoDir}")
+                maven("${testConfig.mavenRepoPath}")
                 mavenCentral()
                 maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
                 google()
@@ -104,7 +103,7 @@ class TestProject(
             }
             subprojects {
                 repositories {
-                    maven("${testConfig.mavenRepoDir}")
+                    maven("${testConfig.mavenRepoPath}")
                     mavenCentral()
                     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
                     google()
