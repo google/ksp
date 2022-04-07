@@ -8,11 +8,9 @@ on:
 
 jobs:
   build-and-test:
-    strategy:
-      fail-fast: false
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - name: Setup Java 9
@@ -49,6 +47,21 @@ jobs:
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+    # Run tests
+    - name: test
+      shell: bash
+      run: ./gradlew --stacktrace --info test
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-reports-${{ runner.os }}
+        path: |
+          compiler-plugin/build/reports
+          integration-tests/build/reports
+          gradle-plugin/build/reports
+          common-util/build/reports
 
     # Build KSP artifacts
     - name: build
