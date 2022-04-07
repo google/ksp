@@ -28,6 +28,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -120,6 +121,8 @@ class GradleCompilationTest {
 
     @Test
     fun testCommandLineArgumentProvider() {
+        // FIXME
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         testRule.setupAppAsAndroidApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
         testRule.appModule.addSource(
