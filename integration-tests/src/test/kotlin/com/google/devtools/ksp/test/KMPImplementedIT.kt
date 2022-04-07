@@ -63,7 +63,7 @@ class KMPImplementedIT {
             "clean",
             ":workload-jvm:build"
         ).buildAndFail().let {
-            val errors = it.output.split("\n").filter { it.startsWith("e: [ksp]") }
+            val errors = it.output.lines().filter { it.startsWith("e: [ksp]") }
             Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
         }
         project.restore("workload-jvm/build.gradle.kts")
@@ -107,7 +107,7 @@ class KMPImplementedIT {
             "clean",
             ":workload-js:build"
         ).buildAndFail().let {
-            val errors = it.output.split("\n").filter { it.startsWith("e: [ksp]") }
+            val errors = it.output.lines().filter { it.startsWith("e: [ksp]") }
             Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
         }
         project.restore("workload-js/build.gradle.kts")
@@ -213,7 +213,7 @@ class KMPImplementedIT {
             "clean",
             ":workload-linuxX64:build"
         ).buildAndFail().let {
-            val errors = it.output.split("\n").filter { it.startsWith("e: [ksp]") }
+            val errors = it.output.lines().filter { it.startsWith("e: [ksp]") }
             Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
         }
         project.restore("workload-js/build.gradle.kts")

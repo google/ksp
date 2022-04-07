@@ -102,7 +102,7 @@ class IncrementalIT {
             File(project.root, src).appendText("\n\n")
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
             }
         }
@@ -151,7 +151,7 @@ class IncrementalIT {
             }
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
             }
         }
@@ -183,7 +183,7 @@ class IncrementalIT {
             // in: "workload/src/main/kotlin/p1/K2.kt"
             // out:                         "p1/K2.kt"
             val expectedOutputs = notChanged.map() {
-                srcs[it].split("/").subList(4, 6).joinToString("/") + ".log"
+                srcs[it].split("/").subList(4, 6).joinToString(File.separator) + ".log"
             }.sorted()
 
             gradleRunner.withArguments(":workload:kspKotlin").build().let { result ->
@@ -214,7 +214,7 @@ class IncrementalIT {
         fun buildAndCheck() {
             gradleRunner.withArguments("assemble").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(dirties, expectedDirties)
             }
             val incrementalArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
@@ -249,7 +249,7 @@ class IncrementalIT {
             gradleRunner.withArguments("build").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 Assert.assertEquals(TaskOutcome.NO_SOURCE, result.task(":workload:kspTestKotlin")?.outcome)
-                val dirties = result.output.split("\n").filter { it.startsWith("w: [ksp]") }.toSet()
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(dirties, expectedDirties)
             }
             val incrementalArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))

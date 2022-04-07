@@ -18,7 +18,7 @@ class BuildCacheIT {
 
     @Test
     fun testBuildCache() {
-        val buildCacheDir = File(project1.root, "build-cache").absolutePath
+        val buildCacheDir = File(project1.root, "build-cache").absolutePath.replace(File.separatorChar, '/')
         File(project1.root, "gradle.properties").appendText("\nbuildCacheDir=$buildCacheDir")
         File(project2.root, "gradle.properties").appendText("\nbuildCacheDir=$buildCacheDir")
 
