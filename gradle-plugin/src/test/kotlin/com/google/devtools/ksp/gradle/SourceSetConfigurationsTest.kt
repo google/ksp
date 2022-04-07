@@ -30,6 +30,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 class SourceSetConfigurationsTest {
     @Rule
@@ -200,6 +201,8 @@ class SourceSetConfigurationsTest {
             val variantName: String,
             val path: String
         )
+
+        fun String.normalizePath() = replace(File.separatorChar, '/')
         // parse output to get variant names and sources
         // variant name -> list of sources
         val variantSources = mutableListOf<SourceFolder>()
@@ -213,7 +216,7 @@ class SourceSetConfigurationsTest {
                     variantSources.add(
                         SourceFolder(
                             variantName = currentVariantName,
-                            path = line
+                            path = line.normalizePath()
                         )
                     )
                 }
@@ -222,7 +225,7 @@ class SourceSetConfigurationsTest {
                     variantSources.add(
                         SourceFolder(
                             variantName = currentVariantName,
-                            path = line
+                            path = line.normalizePath()
                         )
                     )
                 }
