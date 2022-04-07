@@ -3,6 +3,7 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -14,6 +15,8 @@ class JavaOnlyIT {
 
     @Test
     fun testJavaOnly() {
+        // FIXME: `clean` fails to delete files on windows.
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("assemble").build().let { result ->

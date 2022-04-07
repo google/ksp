@@ -4,6 +4,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -41,6 +42,8 @@ class PlaygroundIT {
 
     @Test
     fun testPlayground() {
+        // FIXME: `clean` fails to delete files on windows.
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build")
         gradleRunner.buildAndCheck("clean", "build")
@@ -50,6 +53,8 @@ class PlaygroundIT {
     // Or use a project that depends on a builtin plugin like all-open and see if the build fails
     @Test
     fun testBlockOtherCompilerPlugins() {
+        // FIXME: `clean` fails to delete files on windows.
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/build.gradle.kts")
