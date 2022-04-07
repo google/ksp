@@ -58,6 +58,8 @@ data class TestConfig(
         kspProjectProperties["agpBaseVersion"] as String
     }
 
+    val mavenRepoPath = mavenRepoDir.path.replace(File.separatorChar, '/')
+
     companion object {
         /**
          * Loads the test configuration from resources.
