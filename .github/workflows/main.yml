@@ -70,7 +70,11 @@ jobs:
       run: ./gradlew --stacktrace --info test
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: test-reports
-        path: compiler-plugin/build/reports
+        name: test-reports-${{ matrix.os }}
+        path: |
+          compiler-plugin/build/reports
+          integration-tests/build/reports
+          gradle-plugin/build/reports
+          common-util/build/reports
