@@ -19,6 +19,8 @@ package com.google.devtools.ksp.test
 
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
@@ -203,6 +205,7 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/functionTypes.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
@@ -353,30 +356,35 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/rawTypes.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaAnnotationTypes.kt")
     @Test
     fun testRecordJavaAnnotationTypes() {
         runTest("testData/api/recordJavaAnnotationTypes.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaAsMemberOf.kt")
     @Test
     fun testRecordJavaAsMemberOf() {
         runTest("testData/api/recordJavaAsMemberOf.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaGetAllMembers.kt")
     @Test
     fun testRecordJavaGetAllMembers() {
         runTest("testData/api/recordJavaGetAllMembers.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaOverrides.kt")
     @Test
     fun testRecordJavaOverrides() {
         runTest("testData/api/recordJavaOverrides.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {
@@ -401,6 +409,7 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/resolveJavaType.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("sealedClass.kt")
     @Test
     fun testSealedClass() {
