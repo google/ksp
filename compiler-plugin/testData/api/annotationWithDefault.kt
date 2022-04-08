@@ -17,17 +17,17 @@
 
 // TEST PROCESSOR: AnnotationDefaultValueProcessor
 // EXPECTED:
-// KotlinAnnotation -> a:debugKt,b:default,kClassValue:Array<Array<InnerObj>>,topLevelProp:foo,companionProp:companion
-// JavaAnnotation -> debug:debug,withDefaultValue:OK,nested:@Nested
-// JavaAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default
-// KotlinAnnotation2 -> y:y-kotlin,x:x-kotlin,z:z-default,kotlinEnumVal:VALUE_1
-// KotlinAnnotationLib -> a:debugLibKt,b:defaultInLib,kClassValue:OtherKotlinAnnotation,topLevelProp:bar
-// JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:JavaAnnotationWithDefaults.LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
-// KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
-// KotlinAnnotation -> a:debugKt,b:default,kClassValue:Array<Array<InnerObj>>,topLevelProp:foo,companionProp:companion
-// JavaAnnotation -> debug:debugJava2,withDefaultValue:OK,nested:@Nested
-// JavaAnnotation2 -> y:y-java,x:x-java,z:z-default
-// KotlinAnnotation2 -> y:y-java,x:x-java,z:z-default,kotlinEnumVal:VALUE_1
+// KotlinAnnotation -> a:debugKt:false,b:default:true,kClassValue:Array<Array<InnerObj>>:true,topLevelProp:foo:true,companionProp:companion:true
+// JavaAnnotation -> debug:debug:false,withDefaultValue:OK:true,nested:@Nested:true
+// JavaAnnotation2 -> y:y-kotlin:false,x:x-kotlin:false,z:z-default:true
+// KotlinAnnotation2 -> y:y-kotlin:false,x:x-kotlin:false,z:z-default:true,kotlinEnumVal:VALUE_1:true
+// KotlinAnnotationLib -> a:debugLibKt:false,b:defaultInLib:true,kClassValue:OtherKotlinAnnotation:true,topLevelProp:bar:true
+// JavaAnnotationWithDefaults -> stringVal:foo:true,stringArrayVal:[x, y]:true,typeVal:HashMap<*, *>:true,typeArrayVal:[LinkedHashMap<*, *>]:true,intVal:3:true,intArrayVal:[1, 3, 5]:true,enumVal:JavaEnum.DEFAULT:true,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2]:true,localEnumVal:JavaAnnotationWithDefaults.LocalEnum.LOCAL1:true,otherAnnotationVal:@OtherAnnotation:true,otherAnnotationArrayVal:[@OtherAnnotation]:true,kotlinAnnotationLibVal:@OtherKotlinAnnotation:true
+// KotlinAnnotationWithDefaults -> stringVal:foo:false,stringArrayVal:[x, y]:true,typeVal:HashMap<*, *>:true,typeArrayVal:[LinkedHashMap<*, *>]:true,intVal:3:true,intArrayVal:[1, 3, 5]:true,enumVal:JavaEnum.DEFAULT:true,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2]:true,otherAnnotationVal:@OtherAnnotation:true,otherAnnotationArrayVal:[@OtherAnnotation]:true,kotlinAnnotationLibVal:@OtherKotlinAnnotation:true
+// KotlinAnnotation -> a:debugKt:false,b:default:true,kClassValue:Array<Array<InnerObj>>:true,topLevelProp:foo:true,companionProp:companion:true
+// JavaAnnotation -> debug:debugJava2:false,withDefaultValue:OK:true,nested:@Nested:true
+// JavaAnnotation2 -> y:y-java:false,x:x-java:false,z:z-default:true
+// KotlinAnnotation2 -> y:y-java:false,x:x-java:false,z:z-default:true,kotlinEnumVal:VALUE_1:true
 // END
 // MODULE: lib
 // FILE: Default.kt
@@ -116,7 +116,7 @@ annotation class KotlinAnnotation2(val x: String, val y:String = "y-default", va
 @KotlinAnnotation2(y="y-kotlin", x="x-kotlin")
 @KotlinAnnotationLib("debugLibKt")
 @JavaAnnotationWithDefaults
-@KotlinAnnotationWithDefaults
+@KotlinAnnotationWithDefaults(stringVal="foo") //set the value to the same as the default
 class A
 
 // FILE: test.kt
