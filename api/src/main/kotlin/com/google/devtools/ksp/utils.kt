@@ -515,3 +515,5 @@ private fun List<KSType>.asClasses() = try {
 } catch (e: Exception) {
     throw KSTypesNotPresentException(this, e)
 }
+
+fun KSValueArgument.isDefault() = origin == Origin.SYNTHETIC

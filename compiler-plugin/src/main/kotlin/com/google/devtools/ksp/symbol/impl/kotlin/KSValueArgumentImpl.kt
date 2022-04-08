@@ -30,14 +30,16 @@ import com.google.devtools.ksp.symbol.Origin
 class KSValueArgumentLiteImpl private constructor(
     override val name: KSName,
     override val value: Any?,
-    override val parent: KSNode?
+    override val parent: KSNode?,
+    override val origin: Origin
 ) : KSValueArgumentImpl() {
     companion object : KSObjectCache<Triple<KSName, Any?, KSNode>, KSValueArgumentLiteImpl>() {
-        fun getCached(name: KSName, value: Any?, parent: KSNode) = cache
-            .getOrPut(Triple(name, value, parent)) { KSValueArgumentLiteImpl(name, value, parent) }
-    }
 
-    override val origin = Origin.KOTLIN
+        fun getCached(name: KSName, value: Any?, parent: KSNode, origin: Origin = Origin.KOTLIN) = cache
+            .getOrPut(Triple(name, value, parent)) {
+                KSValueArgumentLiteImpl(name, value, parent, origin)
+            }
+    }
 
     override val location: Location = NonExistLocation
 

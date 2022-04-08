@@ -165,7 +165,8 @@ fun ClassConstructorDescriptor.getAbsentDefaultArguments(
             KSValueArgumentLiteImpl.getCached(
                 KSNameImpl.getCached(param.name.asString()),
                 param.getDefaultValue(ownerAnnotation),
-                ownerAnnotation
+                ownerAnnotation,
+                Origin.SYNTHETIC
             )
         }
 }

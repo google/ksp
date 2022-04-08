@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.isDefault
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -40,7 +41,7 @@ class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
         classDeclaration.annotations.forEach { annotation ->
             result.add(
                 "${annotation.shortName.asString()} -> ${annotation.arguments.map{
-                    "${it.name?.asString()}:${it.value}"
+                    "${it.name?.asString()}:${it.value}:${it.isDefault()}"
                 }.joinToString(",")}"
             )
         }
