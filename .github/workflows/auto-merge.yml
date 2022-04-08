@@ -26,15 +26,10 @@ jobs:
         # Cherry pick new changes from main, except for version bumps.
         # A commit is a version bump IFF it touches third_party/prebuilt/repo
         DONT_PICK=$(cat <<EOF
-        42ef4e0b1696ddbcabbb188d7761c8692ca9f988
-        6bb81cbc304a006b05e0fb4b6d46ec2d94d73357
-        e74a18cf092877c3a73c2c58f5fc36cc1b6e33b3
         35e1556f6f329714a9d730ea4a7743317535ce1a
         2ed353a57eb379a3b8fa6401cbf3a7abe3da7e8b
         d961b62f71147bfd148d8648bfdf566525a401e7
         fbb02bfeafdb69b876bc6c0bd433fd1ebf4c8150
-        80f75d5333d15961c9fb95fe47040a2fcf28c16c
-        d6f2b6eef0b466a35fc4b8e1e14ee8ef05cf03e6
         EOF
         )
         git config --global user.email "kotlin-symbol-processing@google.com"
