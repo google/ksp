@@ -40,7 +40,7 @@ class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
         classDeclaration.annotations.forEach { annotation ->
             result.add(
                 "${annotation.shortName.asString()} -> ${annotation.arguments.map{
-                    "${it.name?.asString()}:${it.value}"
+                    "${it.name?.asString()}:${it.value}:${it.isDefault}"
                 }.joinToString(",")}"
             )
         }

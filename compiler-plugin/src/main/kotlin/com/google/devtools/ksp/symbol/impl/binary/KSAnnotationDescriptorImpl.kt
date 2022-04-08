@@ -144,7 +144,8 @@ fun AnnotationDescriptor.createKSValueArguments(ownerAnnotation: KSAnnotation): 
         KSValueArgumentLiteImpl.getCached(
             KSNameImpl.getCached(name.asString()),
             constantValue.toValue(ownerAnnotation),
-            ownerAnnotation
+            ownerAnnotation,
+            false
         )
     }
     val presentValueArgumentNames = presentValueArguments.map { it.name.asString() }
@@ -165,7 +166,8 @@ fun ClassConstructorDescriptor.getAbsentDefaultArguments(
             KSValueArgumentLiteImpl.getCached(
                 KSNameImpl.getCached(param.name.asString()),
                 param.getDefaultValue(ownerAnnotation),
-                ownerAnnotation
+                ownerAnnotation,
+                true
             )
         }
 }

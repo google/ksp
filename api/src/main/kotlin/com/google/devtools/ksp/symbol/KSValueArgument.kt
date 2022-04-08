@@ -38,4 +38,9 @@ interface KSValueArgument : KSAnnotated {
      * The value of the argument.
      */
     val value: Any?
+
+    /**
+     * True if the value was not specified explicitly
+     */
+    val isDefault: Boolean
 }
