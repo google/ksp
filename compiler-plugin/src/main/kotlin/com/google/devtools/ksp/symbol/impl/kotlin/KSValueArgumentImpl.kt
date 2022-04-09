@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.common.base.Objects
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
@@ -27,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
+import java.util.Objects
 
 class KSValueArgumentLiteImpl private constructor(
     override val name: KSName,
@@ -36,7 +36,7 @@ class KSValueArgumentLiteImpl private constructor(
 ) : KSValueArgumentImpl() {
     companion object : KSObjectCache<Int, KSValueArgumentLiteImpl>() {
         private fun getKey(name: KSName, value: Any?, parent: KSNode, isDefault: Boolean): Int {
-            return Objects.hashCode(name, value, parent, isDefault)
+            return Objects.hash(name, value, parent, isDefault)
         }
         fun getCached(name: KSName, value: Any?, parent: KSNode, isDefault: Boolean) = cache
             .getOrPut(getKey(name, value, parent, isDefault)) {
