@@ -366,7 +366,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
             when (val result = argument.value ?: method.defaultValue) {
                 is Proxy -> result
                 is List<*> -> {
-                    val value = { result.asArray(method) }
+                    val value = { result.asArray(method, clazz) }
                     cache.getOrPut(Pair(method.returnType, result), value)
                 }
                 else -> {
@@ -382,7 +382,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                         method.returnType.name == "java.lang.Class" -> {
                             cache.getOrPut(Pair(method.returnType, result)) {
                                 when (result) {
-                                    is KSType -> result.asClass()
+                                    is KSType -> result.asClass(clazz)
                                     // Handles com.intellij.psi.impl.source.PsiImmediateClassType using reflection
                                     // since api doesn't contain a reference to this
                                     else -> Class.forName(
@@ -434,7 +434,7 @@ private fun KSAnnotation.asAnnotation(
 
 @KspExperimental
 @Suppress("UNCHECKED_CAST")
-private fun List<*>.asArray(method: Method) =
+private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
     when (method.returnType.componentType.name) {
         "boolean" -> (this as List<Boolean>).toBooleanArray()
         "byte" -> (this as List<Byte>).toByteArray()
@@ -444,7 +444,7 @@ private fun List<*>.asArray(method: Method) =
         "float" -> (this as List<Float>).toFloatArray()
         "int" -> (this as List<Int>).toIntArray()
         "long" -> (this as List<Long>).toLongArray()
-        "java.lang.Class" -> (this as List<KSType>).asClasses().toTypedArray()
+        "java.lang.Class" -> (this as List<KSType>).asClasses(proxyClass).toTypedArray()
         "java.lang.String" -> (this as List<String>).toTypedArray()
         else -> { // arrays of enums or annotations
             when {
@@ -503,15 +503,15 @@ class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) : RuntimeE
 class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) : RuntimeException(cause)
 
 @KspExperimental
-private fun KSType.asClass() = try {
-    Class.forName(this.declaration.qualifiedName!!.asString())
+private fun KSType.asClass(proxyClass: Class<*>) = try {
+    Class.forName(this.declaration.qualifiedName!!.asString(), true, proxyClass.classLoader)
 } catch (e: Exception) {
     throw KSTypeNotPresentException(this, e)
 }
 
 @KspExperimental
-private fun List<KSType>.asClasses() = try {
-    this.map(KSType::asClass)
+private fun List<KSType>.asClasses(proxyClass: Class<*>) = try {
+    this.map { type -> type.asClass(proxyClass) }
 } catch (e: Exception) {
     throw KSTypesNotPresentException(this, e)
 }
