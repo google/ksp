@@ -46,6 +46,7 @@ import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.load.java.components.FilesByFacadeFqNameIndexer
 import org.jetbrains.kotlin.platform.js.JsPlatform
 import org.jetbrains.kotlin.platform.jvm.JdkPlatform
 import org.jetbrains.kotlin.platform.konan.NativePlatform
@@ -145,6 +146,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         lateinit var newFiles: List<KSFile>
 
         handleException(module, project) {
+            val fileClassProcessor = FilesByFacadeFqNameIndexer(bindingTrace)
             if (!initialized) {
                 incrementalContext = IncrementalContext(
                     options, componentProvider,
@@ -153,6 +155,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
                 cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
                 newFiles = dirtyFiles.toList()
+                files.forEach { fileClassProcessor.preprocessFile(it) }
             } else {
                 newFiles = ksFiles.filter {
                     when (it) {
@@ -164,6 +167,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                     } in newFileNames
                 }
                 incrementalContext.registerGeneratedFiles(newFiles)
+                newFiles.filterIsInstance<KSFileImpl>().forEach { fileClassProcessor.preprocessFile(it.file) }
             }
         }?.let { return@doAnalysis it }
 
