@@ -39,7 +39,14 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
+import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
@@ -64,7 +71,34 @@ class ResolverAAImpl(
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
-        TODO("Not yet implemented")
+        fun findClass(name: KSName): KtSymbolWithMembers? {
+            if (name.asString() == "") {
+                return null
+            }
+            val parent = name.getQualifier()
+            val simpleName = name.getShortName()
+            val classId = ClassId(FqName(parent), Name.identifier(simpleName))
+            analyzeWithSymbolAsContext(ktFiles.first()) {
+                classId.getCorrespondingToplevelClassOrObjectSymbol() as? KtNamedClassOrObjectSymbol
+            }?.let { return it }
+            return findClass(KSNameImpl(name.getQualifier())).safeAs<KtNamedClassOrObjectSymbol>()?.let {
+                analyzeWithSymbolAsContext(ktFiles.first()) {
+                    (
+                        it.getStaticMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
+                            ?: it.getMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
+                        ).safeAs<KtNamedClassOrObjectSymbol>()
+                        ?: it.getStaticMemberScope().getCallableSymbols { it.asString() == simpleName }.singleOrNull()
+                            .safeAs<KtEnumEntrySymbol>()
+                }
+            }
+        }
+        return findClass(name)?.let {
+            when (it) {
+                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
+                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl(it)
+                else -> throw IllegalStateException()
+            }
+        }
     }
 
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
@@ -103,7 +137,7 @@ class ResolverAAImpl(
     }
 
     override fun getKSNameFromString(name: String): KSName {
-        TODO("Not yet implemented")
+        return KSNameImpl(name)
     }
 
     // FIXME: correct implementation after incremental is ready.
