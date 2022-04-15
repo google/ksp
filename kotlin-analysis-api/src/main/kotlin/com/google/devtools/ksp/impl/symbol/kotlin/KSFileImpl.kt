@@ -25,27 +25,38 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
-import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.psi.KtFile
 
-class KSFileImpl(private val ktFile: KtFile) : KSFile {
+class KSFileImpl(private val ktFileSymbol: KtFileSymbol) : KSFile {
+    private val psi: PsiFile
+        get() = ktFileSymbol.psi as PsiFile
+
     override val packageName: KSName by lazy {
-        KSNameImpl(ktFile.packageFqName.asString())
+        when (psi) {
+            is KtFile -> KSNameImpl((psi as KtFile).packageFqName.asString())
+            is PsiJavaFile -> KSNameImpl((psi as PsiJavaFile).packageName)
+            else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
+        }
     }
+
     override val fileName: String by lazy {
-        ktFile.name
+        psi.name
     }
+
     override val filePath: String by lazy {
-        ktFile.virtualFilePath
+        psi.virtualFile.path
     }
+
     override val declarations: Sequence<KSDeclaration> by lazy {
-        analyseWithCustomToken(ktFile, AlwaysAccessibleValidityTokenFactory) {
-            ktFile.getFileSymbol().getFileScope().getAllSymbols().map {
+        analyzeWithSymbolAsContext(ktFileSymbol) {
+            ktFileSymbol.getFileScope().getAllSymbols().map {
                 when (it) {
                     is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
                     is KtFunctionSymbol -> KSFunctionDeclarationImpl(it)
@@ -55,10 +66,11 @@ class KSFileImpl(private val ktFile: KtFile) : KSFile {
             }
         }
     }
+
     override val origin: Origin = Origin.KOTLIN
 
     override val location: Location by lazy {
-        ktFile.toLocation()
+        ktFileSymbol.psi.toLocation()
     }
 
     override val parent: KSNode? = null
@@ -68,8 +80,8 @@ class KSFileImpl(private val ktFile: KtFile) : KSFile {
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        analyseWithCustomToken(ktFile, AlwaysAccessibleValidityTokenFactory) {
-            ktFile.getFileSymbol().annotations.map { KSAnnotationImpl(it) }.asSequence()
+        analyzeWithSymbolAsContext(ktFileSymbol) {
+            ktFileSymbol.annotations.map { KSAnnotationImpl(it) }.asSequence()
         }
     }
 }

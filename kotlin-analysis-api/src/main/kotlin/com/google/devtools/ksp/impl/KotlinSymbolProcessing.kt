@@ -29,8 +29,10 @@ import com.intellij.mock.MockProject
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
+import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
 import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
+import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -52,7 +54,9 @@ class KotlinSymbolProcessing(
     lateinit var processors: List<SymbolProcessor>
 
     fun prepare() {
-        val ksFiles = ktFiles.map { KSFileImpl(it) }
+        val ksFiles = ktFiles.map {
+            analyseWithCustomToken(it, AlwaysAccessibleValidityTokenFactory) { KSFileImpl(it.getFileSymbol()) }
+        }
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         codeGenerator = CodeGeneratorImpl(
             options.classOutputDir,
@@ -83,7 +87,12 @@ class KotlinSymbolProcessing(
     }
 
     fun execute() {
-        val resolver = ResolverAAImpl(ktFiles)
+        // TODO: support no kotlin source input.
+        val resolver = ResolverAAImpl(
+            ktFiles.map {
+                analyseWithCustomToken(it, AlwaysAccessibleValidityTokenFactory) { it.getFileSymbol() }
+            },
+        )
         processors.forEach { it.process(resolver) }
     }
 }
