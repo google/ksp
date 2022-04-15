@@ -4,6 +4,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -33,6 +34,7 @@ class KMPImplementedIT {
 
     @Test
     fun testJvm() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
@@ -55,6 +57,7 @@ class KMPImplementedIT {
 
     @Test
     fun testJvmErrorLog() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload-jvm/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"process\") }\n")
@@ -71,6 +74,7 @@ class KMPImplementedIT {
 
     @Test
     fun testJs() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
@@ -99,6 +103,7 @@ class KMPImplementedIT {
 
     @Test
     fun testJsErrorLog() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload-js/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"process\") }\n")
@@ -128,6 +133,7 @@ class KMPImplementedIT {
 
     @Test
     fun testAndroidNative() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
@@ -155,6 +161,7 @@ class KMPImplementedIT {
 
     @Test
     fun testLinuxX64() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val genDir = File(project.root, "workload-linuxX64/build/generated/ksp/linuxX64/linuxX64Main/kotlin")
 
@@ -204,6 +211,7 @@ class KMPImplementedIT {
 
     @Test
     fun testLinuxX64ErrorLog() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload-linuxX64/build.gradle.kts")
@@ -273,6 +281,7 @@ class KMPImplementedIT {
 
     @Test
     fun testMainConfiguration() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val buildScript = File(project.root, "workload/build.gradle.kts")
