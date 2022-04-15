@@ -21,8 +21,11 @@ import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
+import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.psi.KtElement
 
 internal val ktSymbolOriginToOrigin = mapOf(
@@ -41,7 +44,10 @@ internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
         ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
 }
 
-internal fun PsiElement.toLocation(): Location {
+internal fun PsiElement?.toLocation(): Location {
+    if (this == null) {
+        return NonExistLocation
+    }
     val file = this.containingFile
     val document = KSPCoreEnvironment.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
     return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
@@ -49,9 +55,18 @@ internal fun PsiElement.toLocation(): Location {
 
 internal fun KtSymbol.toContainingFile(): KSFile? {
     return when (val psi = this.psi) {
-        is KtElement -> KSFileImpl(psi.containingKtFile)
+        is KtElement -> analyseWithCustomToken(psi, AlwaysAccessibleValidityTokenFactory) {
+            KSFileImpl(psi.containingKtFile.getFileSymbol())
+        }
         else -> null
     }
 }
 
 internal fun KtSymbol.toDocString(): String? = this.psi?.getDocString()
+
+internal inline fun <R> analyzeWithSymbolAsContext(
+    contextSymbol: KtSymbol,
+    action: KtAnalysisSession.() -> R
+): R {
+    return analyseWithCustomToken(contextSymbol.psi as KtElement, AlwaysAccessibleValidityTokenFactory, action)
+}

@@ -18,7 +18,11 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.analyzeWithSymbolAsContext
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -35,12 +39,15 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
-import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
-    val ktFiles: List<KtFile>
+    val ktFiles: List<KtFileSymbol>
 ) : Resolver {
+    private val ksFiles by lazy {
+        ktFiles.map { KSFileImpl(it) }
+    }
     override val builtIns: KSBuiltIns
         get() = TODO("Not yet implemented")
 
@@ -53,7 +60,7 @@ class ResolverAAImpl(
     }
 
     override fun getAllFiles(): Sequence<KSFile> {
-        return ktFiles.asSequence().map { KSFileImpl(it) }
+        return ksFiles.asSequence()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -99,8 +106,9 @@ class ResolverAAImpl(
         TODO("Not yet implemented")
     }
 
+    // FIXME: correct implementation after incremental is ready.
     override fun getNewFiles(): Sequence<KSFile> {
-        TODO("Not yet implemented")
+        return getAllFiles().asSequence()
     }
 
     override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
