@@ -30,8 +30,8 @@ import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.types.KtType
 
 class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
-    override val element: KSReferenceElement?
-        get() = TODO("Not yet implemented")
+    // FIXME: return correct reference element.
+    override val element: KSReferenceElement? = null
 
     override fun resolve(): KSType {
         return KSTypeImpl(ktType)

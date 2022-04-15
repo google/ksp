@@ -23,7 +23,6 @@ import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
@@ -77,7 +76,7 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
         get() = TODO("Not yet implemented")
 
     override val containingFile: KSFile? by lazy {
-        (ktPropertySymbol.psi?.containingFile as? KtFile)?.let { KSFileImpl(it) }
+        ktPropertySymbol.toContainingFile()
     }
     override val docString: String? by lazy {
         ktPropertySymbol.psi?.getDocString()
@@ -98,7 +97,7 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
     override val parent: KSNode? by lazy {
         analyzeWithSymbolAsContext(ktPropertySymbol) {
             ktPropertySymbol.getContainingSymbol()?.let { KSClassDeclarationImpl(it as KtNamedClassOrObjectSymbol) }
-                ?: KSFileImpl(ktPropertySymbol.psi!!.containingFile as KtFile)
+                ?: ktPropertySymbol.toContainingFile()
         }
     }
 
