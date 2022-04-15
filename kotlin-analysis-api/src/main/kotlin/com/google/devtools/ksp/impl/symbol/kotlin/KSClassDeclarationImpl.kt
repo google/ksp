@@ -26,8 +26,16 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
 class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) : KSClassDeclaration {
-    override val classKind: ClassKind
-        get() = TODO("Not yet implemented")
+    override val classKind: ClassKind by lazy {
+        when (ktNamedClassOrObjectSymbol.classKind) {
+            KtClassKind.CLASS -> ClassKind.CLASS
+            KtClassKind.ENUM_CLASS -> ClassKind.ENUM_CLASS
+            KtClassKind.ANNOTATION_CLASS -> ClassKind.ANNOTATION_CLASS
+            KtClassKind.INTERFACE -> ClassKind.INTERFACE
+            KtClassKind.COMPANION_OBJECT, KtClassKind.ANONYMOUS_OBJECT, KtClassKind.OBJECT -> ClassKind.OBJECT
+            KtClassKind.ENUM_ENTRY -> ClassKind.ENUM_ENTRY
+        }
+    }
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
             ktNamedClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
@@ -76,7 +84,7 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
     }
 
     override val qualifiedName: KSName? by lazy {
-        (ktNamedClassOrObjectSymbol.psi as? KtClassOrObject)?.fqName?.asString()?.let { KSNameImpl(it) }
+        ktNamedClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl(it) }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
@@ -133,15 +141,6 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
     }
 
     override val declarations: Sequence<KSDeclaration> by lazy {
-        analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
-            ktNamedClassOrObjectSymbol.getDeclaredMemberScope().getAllSymbols().map {
-                when (it) {
-                    is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
-                    is KtFunctionSymbol -> KSFunctionDeclarationImpl(it)
-                    is KtPropertySymbol -> KSPropertyDeclarationImpl(it)
-                    else -> throw IllegalStateException()
-                }
-            }
-        }
+        ktNamedClassOrObjectSymbol.declarations()
     }
 }
