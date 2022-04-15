@@ -23,8 +23,15 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
+import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KtAnnotatedSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.psi.KtElement
 
@@ -69,4 +76,22 @@ internal inline fun <R> analyzeWithSymbolAsContext(
     action: KtAnalysisSession.() -> R
 ): R {
     return analyseWithCustomToken(contextSymbol.psi as KtElement, AlwaysAccessibleValidityTokenFactory, action)
+}
+
+internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
+    return analyzeWithSymbolAsContext(this) {
+        this@declarations.getDeclaredMemberScope().getAllSymbols().map {
+            when (it) {
+                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
+                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl(it)
+                is KtPropertySymbol -> KSPropertyDeclarationImpl(it)
+                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl(it)
+                else -> throw IllegalStateException()
+            }
+        }
+    }
+}
+
+internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
+    return this.annotations.asSequence().map { KSAnnotationImpl(it) }
 }

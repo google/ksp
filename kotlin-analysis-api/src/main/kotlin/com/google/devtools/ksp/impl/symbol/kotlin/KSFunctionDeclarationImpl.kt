@@ -19,15 +19,11 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
-import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
-import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
-import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtAnnotatedSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
@@ -40,9 +36,11 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
             else -> throw IllegalStateException("Unexpected symbol kind ${ktFunctionSymbol.symbolKind}")
         }
     }
+
     override val isAbstract: Boolean by lazy {
         (ktFunctionSymbol as? KtFunctionSymbol)?.modality == Modality.ABSTRACT
     }
+
     override val extensionReceiver: KSTypeReference? by lazy {
         analyzeWithSymbolAsContext(ktFunctionSymbol) {
             if (!ktFunctionSymbol.isExtension) {
@@ -52,6 +50,7 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
             }
         }
     }
+
     override val returnType: KSTypeReference? by lazy {
         analyzeWithSymbolAsContext(ktFunctionSymbol) {
             KSTypeReferenceImpl(ktFunctionSymbol.returnType)
@@ -76,9 +75,11 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
             KSNameImpl("<init>")
         }
     }
+
     override val qualifiedName: KSName? by lazy {
         (ktFunctionSymbol.psi as? KtFunction)?.fqName?.asString()?.let { KSNameImpl(it) }
     }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
         (ktFunctionSymbol as? KtFunctionSymbol)?.typeParameters?.map { KSTypeParameterImpl(it) } ?: emptyList()
     }
@@ -88,7 +89,7 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
     override val parentDeclaration: KSDeclaration?
         get() = TODO("Not yet implemented")
     override val containingFile: KSFile? by lazy {
-        (ktFunctionSymbol.psi?.containingFile as? KtFile)?.let { KSFileImpl(it) }
+        ktFunctionSymbol.toContainingFile()
     }
 
     override val docString: String? by lazy {
@@ -117,8 +118,10 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
     override val annotations: Sequence<KSAnnotation> by lazy {
         (ktFunctionSymbol as KtAnnotatedSymbol).annotations.asSequence().map { KSAnnotationImpl(it) }
     }
+
     override val isActual: Boolean
         get() = TODO("Not yet implemented")
+
     override val isExpect: Boolean
         get() = TODO("Not yet implemented")
 
@@ -130,15 +133,6 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
         TODO("Not yet implemented")
     }
 
-    override val declarations: Sequence<KSDeclaration>
-        get() = TODO("Not yet implemented")
-}
-
-@OptIn(InvalidWayOfUsingAnalysisSession::class)
-internal inline fun <R> analyzeWithSymbolAsContext(
-    contextSymbol: KtSymbol,
-    action: KtAnalysisSession.() -> R
-): R {
-    return KtAnalysisSessionProvider
-        .getInstance(contextSymbol.psi!!.project).analyzeWithSymbolAsContext(contextSymbol, action)
+    // TODO: Implement with PSI
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 }
