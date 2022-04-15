@@ -26,25 +26,20 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import java.util.Objects
 
 class KSValueArgumentLiteImpl private constructor(
     override val name: KSName,
     override val value: Any?,
     override val parent: KSNode?,
-    override val isDefault: Boolean
+    override val origin: Origin
 ) : KSValueArgumentImpl() {
-    companion object : KSObjectCache<Int, KSValueArgumentLiteImpl>() {
-        private fun getKey(name: KSName, value: Any?, parent: KSNode, isDefault: Boolean): Int {
-            return Objects.hash(name, value, parent, isDefault)
-        }
-        fun getCached(name: KSName, value: Any?, parent: KSNode, isDefault: Boolean) = cache
-            .getOrPut(getKey(name, value, parent, isDefault)) {
-                KSValueArgumentLiteImpl(name, value, parent, isDefault)
+    companion object : KSObjectCache<Triple<KSName, Any?, KSNode>, KSValueArgumentLiteImpl>() {
+
+        fun getCached(name: KSName, value: Any?, parent: KSNode, origin: Origin = Origin.KOTLIN) = cache
+            .getOrPut(Triple(name, value, parent)) {
+                KSValueArgumentLiteImpl(name, value, parent, origin)
             }
     }
-
-    override val origin = Origin.KOTLIN
 
     override val location: Location = NonExistLocation
 

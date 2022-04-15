@@ -25,7 +25,6 @@ class KSValueArgumentImpl(private val namedAnnotationValue: KtNamedAnnotationVal
         KSNameImpl(namedAnnotationValue.name.asString())
     }
     override val isSpread: Boolean = false
-    override val isDefault: Boolean = false
     override val value: Any = namedAnnotationValue.expression
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()

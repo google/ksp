@@ -42,8 +42,6 @@ class KSValueArgumentJavaImpl private constructor(
 
     override val isSpread: Boolean = false
 
-    override val isDefault: Boolean = false
-
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override fun toString(): String {
