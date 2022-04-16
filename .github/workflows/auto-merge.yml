@@ -10,9 +10,11 @@ jobs:
   build-and-test:
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
 
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
     # Checkout
@@ -26,15 +28,10 @@ jobs:
         # Cherry pick new changes from main, except for version bumps.
         # A commit is a version bump IFF it touches third_party/prebuilt/repo
         DONT_PICK=$(cat <<EOF
-        42ef4e0b1696ddbcabbb188d7761c8692ca9f988
-        6bb81cbc304a006b05e0fb4b6d46ec2d94d73357
-        e74a18cf092877c3a73c2c58f5fc36cc1b6e33b3
         35e1556f6f329714a9d730ea4a7743317535ce1a
         2ed353a57eb379a3b8fa6401cbf3a7abe3da7e8b
         d961b62f71147bfd148d8648bfdf566525a401e7
         fbb02bfeafdb69b876bc6c0bd433fd1ebf4c8150
-        80f75d5333d15961c9fb95fe47040a2fcf28c16c
-        d6f2b6eef0b466a35fc4b8e1e14ee8ef05cf03e6
         EOF
         )
         git config --global user.email "kotlin-symbol-processing@google.com"
@@ -42,8 +39,8 @@ jobs:
         MERGE_BASE=$(git merge-base HEAD origin/main)
         CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
         PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
-        VERSION_BUMPS=$(git log --pretty=%H --grep UPDATE_KOTLIN_VERSION)
-        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | tac)
+        VERSION_BUMPS=$(git log origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
+        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
         echo Picking $TO_PICK
         if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
 
@@ -86,6 +83,7 @@ jobs:
     # Run ksp generated tests
     - name: test
       run: ./gradlew --stacktrace --info test
+
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v3
@@ -97,6 +95,38 @@ jobs:
           gradle-plugin/build/reports
           common-util/build/reports
 
-    - name: push to release branch
-      run: git push origin
+  pick-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: 1.0.6-release
+
+      - name: merge commits from main to release branch
+        run: |
+          # Cherry pick new changes from main, except for version bumps.
+          # A commit is a version bump IFF it touches third_party/prebuilt/repo
+          DONT_PICK=$(cat <<EOF
+          35e1556f6f329714a9d730ea4a7743317535ce1a
+          2ed353a57eb379a3b8fa6401cbf3a7abe3da7e8b
+          d961b62f71147bfd148d8648bfdf566525a401e7
+          fbb02bfeafdb69b876bc6c0bd433fd1ebf4c8150
+          EOF
+          )
+          git config --global user.email "kotlin-symbol-processing@google.com"
+          git config --global user.name "KSP Auto Pick"
+          MERGE_BASE=$(git merge-base HEAD origin/main)
+          CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
+          PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
+          VERSION_BUMPS=$(git log origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
+          TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | tac)
+          echo Picking $TO_PICK
+          if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
+
+      - name: push to release branch
+        run: git push origin
 
