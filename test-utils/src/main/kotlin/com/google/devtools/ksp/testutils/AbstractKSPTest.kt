@@ -40,16 +40,10 @@ import org.jetbrains.kotlin.test.model.FrontendKind
 import org.jetbrains.kotlin.test.model.ResultingArtifact
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerTest
-import org.jetbrains.kotlin.test.services.JUnit5Assertions
-import org.jetbrains.kotlin.test.services.KotlinTestInfo
-import org.jetbrains.kotlin.test.services.TemporaryDirectoryManager
-import org.jetbrains.kotlin.test.services.TestServices
-import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
+import org.jetbrains.kotlin.test.services.*
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.impl.TemporaryDirectoryManagerImpl
-import org.jetbrains.kotlin.test.services.isKtFile
-import org.jetbrains.kotlin.test.services.javaFiles
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
