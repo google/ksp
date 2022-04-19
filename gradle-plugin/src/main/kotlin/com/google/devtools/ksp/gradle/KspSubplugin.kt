@@ -59,8 +59,8 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinNativeCompilationData
 import org.jetbrains.kotlin.gradle.tasks.*
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile.Configurator
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.configuration.AbstractKotlinCompileConfig
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.incremental.isJavaFile
@@ -72,6 +72,29 @@ import java.nio.file.Paths
 import java.util.concurrent.Callable
 import javax.inject.Inject
 import kotlin.reflect.KProperty1
+
+@Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<*>> {
+    constructor(compilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) : super(compilation) {
+        configureTask { task ->
+            if (task is KspTaskJvm) {
+                // Assign moduleName different from kotlin compilation to
+                // work around https://github.com/google/ksp/issues/647
+                // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
+                task.moduleName.value(kotlinCompile.moduleName.map { "$it-ksp" })
+            }
+            if (task is KspTaskJS) {
+                val libraryCacheService = project.rootProject.gradle.sharedServices.registerIfAbsent(
+                    "${Kotlin2JsCompile.LibraryFilterCachingService::class.java.canonicalName}" +
+                        "_${Kotlin2JsCompile.LibraryFilterCachingService::class.java.classLoader.hashCode()}",
+                    Kotlin2JsCompile.LibraryFilterCachingService::class.java
+                ) {}
+                task.libraryCache.set(libraryCacheService).also { task.libraryCache.disallowChanges() }
+                task.pluginClasspath.setFrom(objectFactory.fileCollection())
+            }
+        }
+    }
+}
 
 class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) :
     KotlinCompilerPluginSupportPlugin {
@@ -338,7 +361,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
             else -> return project.provider { emptyList() }
         }
-
+        kotlinCompileTask.safeAs<AbstractKotlinCompile<*>>()?.let {
+            Configurator(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask as AbstractKotlinCompile<*>)
+                .execute(kspTaskProvider as TaskProvider<AbstractKotlinCompile<*>>)
+        }
         kotlinCompileProvider.configure { kotlinCompile ->
             kotlinCompile.dependsOn(kspTaskProvider)
             kotlinCompile.setSource(kotlinOutputDir, javaOutputDir)
@@ -463,10 +489,6 @@ abstract class KspTaskJvm @Inject constructor(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
-        Configurator<KspTaskJvm>(kotlinCompilation).configure(this)
-        // Assign moduleName different from kotlin compilation to work around https://github.com/google/ksp/issues/647
-        // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
-        this.moduleName.set(kotlinCompile.moduleName.map { "$it-ksp" })
         kotlinCompile as KotlinCompile
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
@@ -608,7 +630,7 @@ abstract class KspTaskJvm @Inject constructor(
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `callCompilerAsync$kotlin_gradle_plugin`(
+    fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JVMCompilerArguments,
         kotlinSources: Set<File>,
         inputChanges: InputChanges,
@@ -678,7 +700,6 @@ abstract class KspTaskJS @Inject constructor(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
-        Configurator<KspTaskJS>(kotlinCompilation).configure(this)
         kotlinCompile as Kotlin2JsCompile
         kotlinOptions.freeCompilerArgs = kotlinCompile.kotlinOptions.freeCompilerArgs.filter {
             it in backendSelectionArgs
@@ -728,7 +749,7 @@ abstract class KspTaskJS @Inject constructor(
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `callCompilerAsync$kotlin_gradle_plugin`(
+    fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JSCompilerArguments,
         kotlinSources: Set<File>,
         inputChanges: InputChanges,
@@ -745,8 +766,9 @@ abstract class KspTaskJS @Inject constructor(
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
+    @Internal
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `isIncrementalCompilationEnabled$kotlin_gradle_plugin`(): Boolean = false
+    fun `isIncrementalCompilationEnabled$kotlin_gradle_plugin_common`(): Boolean = false
 
     @get:InputFiles
     @get:SkipWhenEmpty
@@ -766,7 +788,6 @@ abstract class KspTaskMetadata @Inject constructor(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
-        Configurator<KspTaskMetadata>(kotlinCompilation).configure(this)
         kotlinCompile as KotlinCompileCommon
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
@@ -817,7 +838,7 @@ abstract class KspTaskMetadata @Inject constructor(
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `callCompilerAsync$kotlin_gradle_plugin`(
+    fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2MetadataCompilerArguments,
         kotlinSources: Set<File>,
         inputChanges: InputChanges,
