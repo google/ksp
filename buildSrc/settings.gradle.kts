@@ -8,11 +8,7 @@ pluginManagement {
             props.load(it)
         }
     }["kotlinBaseVersion"] as String
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "org.jetbrains.kotlin.jvm") {
-                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
-            }
-        }
+    plugins {
+        id("org.jetbrains.kotlin.jvm") version kotlinBaseVersion
     }
 }

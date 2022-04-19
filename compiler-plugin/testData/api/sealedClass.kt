@@ -17,7 +17,7 @@
 
 // TEST PROCESSOR: SealedClassProcessor
 // EXPECTED:
-// Expr : [Const, Sum, NotANumber]
+// Expr : [Const, NotANumber, Sum]
 // Const : []
 // Sum : []
 // NotANumber : []
