@@ -146,7 +146,7 @@ public @interface JavaAnnotation2 {
 
 // FILE: JavaAnnotated.java
 
-@KotlinAnnotation("debugJava")
+@KotlinAnnotation(ConstKt.DebugKt)
 @JavaAnnotation("debugJava2")
 @JavaAnnotation2(y="y-java", x="x-java")
 @KotlinAnnotation2(y="y-java", x="x-java")
