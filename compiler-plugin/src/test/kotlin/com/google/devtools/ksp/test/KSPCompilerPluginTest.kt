@@ -85,6 +85,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/annotationWithDefault.kt")
     }
 
+    @TestMetadata("annotationWithDefaultValues.kt")
+    @Test
+    fun testAnnotationWithDefaultValues() {
+        runTest("testData/api/annotationWithDefaultValues.kt")
+    }
+
     @TestMetadata("annotationWithJavaTypeValue.kt")
     @Test
     fun testAnnotationWithJavaTypeValue() {

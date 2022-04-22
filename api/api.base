@@ -40,6 +40,7 @@ package com.google.devtools.ksp {
     method public static boolean isAbstract(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration);
     method @com.google.devtools.ksp.KspExperimental public static <T extends java.lang.annotation.Annotation> boolean isAnnotationPresent(@NonNull com.google.devtools.ksp.symbol.KSAnnotated, @NonNull kotlin.reflect.KClass<T> annotationKClass);
     method public static boolean isConstructor(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration);
+    method public static boolean isDefault(@NonNull com.google.devtools.ksp.symbol.KSValueArgument);
     method public static boolean isInternal(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
     method public static boolean isJavaPackagePrivate(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
     method public static boolean isLocal(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
@@ -257,10 +258,12 @@ package com.google.devtools.ksp.symbol {
   public interface KSAnnotation extends com.google.devtools.ksp.symbol.KSNode {
     method @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getAnnotationType();
     method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueArgument> getArguments();
+    method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueArgument> getDefaultArguments();
     method @NonNull public com.google.devtools.ksp.symbol.KSName getShortName();
     method @Nullable public com.google.devtools.ksp.symbol.AnnotationUseSiteTarget getUseSiteTarget();
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference annotationType;
     property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSValueArgument> arguments;
+    property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSValueArgument> defaultArguments;
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSName shortName;
     property @Nullable public abstract com.google.devtools.ksp.symbol.AnnotationUseSiteTarget useSiteTarget;
   }
