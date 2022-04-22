@@ -88,6 +88,10 @@ class KSAnnotationDescriptorImpl private constructor(
         descriptor.createKSValueArguments(this)
     }
 
+    override val defaultArguments: List<KSValueArgument> by lazy {
+        descriptor.getDefaultArguments(this)
+    }
+
     override val shortName: KSName by lazy {
         KSNameImpl.getCached(descriptor.fqName!!.shortName().asString())
     }
@@ -148,11 +152,22 @@ fun AnnotationDescriptor.createKSValueArguments(ownerAnnotation: KSAnnotation): 
         )
     }
     val presentValueArgumentNames = presentValueArguments.map { it.name.asString() }
-    val argumentsFromDefault = (this.type.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()
-        ?.let { argumentsFromDefault ->
-            argumentsFromDefault.getAbsentDefaultArguments(presentValueArgumentNames, ownerAnnotation)
-        } ?: emptyList()
+    val argumentsFromDefault = this.type.getDefaultConstructorArguments(presentValueArgumentNames, ownerAnnotation)
     return presentValueArguments.plus(argumentsFromDefault)
+}
+
+internal fun AnnotationDescriptor.getDefaultArguments(ownerAnnotation: KSAnnotation): List<KSValueArgument> {
+    return this.type.getDefaultConstructorArguments(emptyList(), ownerAnnotation)
+}
+
+internal fun KotlinType.getDefaultConstructorArguments(
+    excludeNames: List<String>,
+    ownerAnnotation: KSAnnotation
+): List<KSValueArgument> {
+    return (this.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()
+        ?.let { argumentsFromDefault ->
+            argumentsFromDefault.getAbsentDefaultArguments(excludeNames, ownerAnnotation)
+        } ?: emptyList()
 }
 
 fun ClassConstructorDescriptor.getAbsentDefaultArguments(

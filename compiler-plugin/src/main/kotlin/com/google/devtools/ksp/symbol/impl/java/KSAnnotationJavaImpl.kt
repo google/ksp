@@ -22,6 +22,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
+import com.google.devtools.ksp.symbol.impl.binary.getDefaultConstructorArguments
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSTypeImpl
@@ -95,6 +96,11 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             it.getAbsentDefaultArguments(presentValueArgumentNames, this)
         } ?: emptyList()
         presentValueArguments.plus(argumentsFromDefault)
+    }
+
+    override val defaultArguments: List<KSValueArgument> by lazy {
+        val kotlinType = (annotationType.resolve() as? KSTypeImpl)?.kotlinType
+        kotlinType?.getDefaultConstructorArguments(emptyList(), this) ?: emptyList()
     }
 
     /*
