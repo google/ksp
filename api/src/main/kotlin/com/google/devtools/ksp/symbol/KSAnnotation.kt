@@ -33,6 +33,11 @@ interface KSAnnotation : KSNode {
     val arguments: List<KSValueArgument>
 
     /**
+     * The default values of the annotation members
+     */
+    val defaultArguments: List<KSValueArgument>
+
+    /**
      * Short name for this annotation, equivalent to the simple name of the declaration of the annotation class.
      */
     val shortName: KSName

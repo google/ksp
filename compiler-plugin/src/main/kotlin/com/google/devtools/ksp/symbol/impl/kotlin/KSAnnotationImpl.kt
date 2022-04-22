@@ -21,6 +21,7 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.binary.createKSValueArguments
+import com.google.devtools.ksp.symbol.impl.binary.getDefaultArguments
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
@@ -79,6 +80,10 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
 
     override val arguments: List<KSValueArgument> by lazy {
         resolved?.createKSValueArguments(this) ?: emptyList()
+    }
+
+    override val defaultArguments: List<KSValueArgument> by lazy {
+        resolved?.getDefaultArguments(this) ?: emptyList()
     }
 
     override val shortName: KSName by lazy {

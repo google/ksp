@@ -27,6 +27,8 @@ class KSAnnotationImpl(private val annotationApplication: KtAnnotationApplicatio
     override val arguments: List<KSValueArgument> by lazy {
         annotationApplication.arguments.map { KSValueArgumentImpl(it) }
     }
+    override val defaultArguments: List<KSValueArgument>
+        get() = TODO("Not yet implemented")
     override val shortName: KSName
         get() = TODO("Not yet implemented")
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
