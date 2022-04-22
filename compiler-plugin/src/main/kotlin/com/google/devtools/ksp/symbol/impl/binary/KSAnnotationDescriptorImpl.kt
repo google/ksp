@@ -156,11 +156,11 @@ fun AnnotationDescriptor.createKSValueArguments(ownerAnnotation: KSAnnotation): 
     return presentValueArguments.plus(argumentsFromDefault)
 }
 
-fun AnnotationDescriptor.getDefaultArguments(ownerAnnotation: KSAnnotation): List<KSValueArgument> {
+internal fun AnnotationDescriptor.getDefaultArguments(ownerAnnotation: KSAnnotation): List<KSValueArgument> {
     return this.type.getDefaultConstructorArguments(emptyList(), ownerAnnotation)
 }
 
-fun KotlinType.getDefaultConstructorArguments(
+internal fun KotlinType.getDefaultConstructorArguments(
     excludeNames: List<String>,
     ownerAnnotation: KSAnnotation
 ): List<KSValueArgument> {
