@@ -28,6 +28,10 @@ information on using pull requests.
 This project follows
 [Google's Open Source Community Guidelines](https://opensource.google/conduct/).
 
+## API verification
+
+For changes that involves API changes(new API, API signature change), please also update [api.base](./api/api.base) file. You can monitor api change with `./gradlew :api:apiCheck`, and`./gradlew :api:updateApi` to generate new api signature.
+
 ## Testing
 For incoming PRs, we would like to request changes covered by tests for good practice.
 We do end-to-end test for KSP, which means you need to write a lightweight processor to be loaded with KSP for testing.
