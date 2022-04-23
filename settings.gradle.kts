@@ -5,12 +5,8 @@ pluginManagement {
         maven("https://www.jetbrains.com/intellij-repository/snapshots")
     }
     val kotlinBaseVersion: String by settings
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "org.jetbrains.kotlin.jvm") {
-                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
-            }
-        }
+    plugins {
+        id("org.jetbrains.kotlin.jvm") version kotlinBaseVersion
     }
 }
 
