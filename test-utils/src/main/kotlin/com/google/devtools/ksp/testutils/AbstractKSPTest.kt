@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.test.ExecutionListenerBasedDisposableProvider
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.testConfiguration
 import org.jetbrains.kotlin.test.compileJavaFiles
@@ -40,16 +41,10 @@ import org.jetbrains.kotlin.test.model.FrontendKind
 import org.jetbrains.kotlin.test.model.ResultingArtifact
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerTest
-import org.jetbrains.kotlin.test.services.JUnit5Assertions
-import org.jetbrains.kotlin.test.services.KotlinTestInfo
-import org.jetbrains.kotlin.test.services.TemporaryDirectoryManager
-import org.jetbrains.kotlin.test.services.TestServices
-import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
+import org.jetbrains.kotlin.test.services.*
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.impl.TemporaryDirectoryManagerImpl
-import org.jetbrains.kotlin.test.services.isKtFile
-import org.jetbrains.kotlin.test.services.javaFiles
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
@@ -123,6 +118,8 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         )
         assertions = JUnit5Assertions
         useAdditionalService<TemporaryDirectoryManager>(::TemporaryDirectoryManagerImpl)
+        useAdditionalService<ApplicationDisposableProvider> { ExecutionListenerBasedDisposableProvider() }
+        useAdditionalService<KotlinStandardLibrariesPathProvider> { StandardLibrariesPathProviderForKotlinProject }
 
         useDirectives(*AbstractKotlinCompilerTest.defaultDirectiveContainers.toTypedArray())
         useDirectives(JvmEnvironmentConfigurationDirectives)

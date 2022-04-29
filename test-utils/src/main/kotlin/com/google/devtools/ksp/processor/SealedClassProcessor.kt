@@ -31,7 +31,7 @@ class SealedClassProcessor : AbstractTestProcessor() {
         resolver.getNewFiles().forEach { f ->
             f.declarations.forEach {
                 if (it is KSClassDeclaration) {
-                    val subs = it.getSealedSubclasses().map { it.simpleName.asString() }.toList()
+                    val subs = it.getSealedSubclasses().map { it.simpleName.asString() }.toList().sorted()
                     result.add("${it.simpleName.asString()} : $subs")
                 }
             }
