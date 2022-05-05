@@ -21,7 +21,9 @@ import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
+import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
@@ -71,11 +73,14 @@ internal fun KtSymbol.toContainingFile(): KSFile? {
 
 internal fun KtSymbol.toDocString(): String? = this.psi?.getDocString()
 
+// TODO: migrate to analyzeWithKtModule once it's available.
+@OptIn(InvalidWayOfUsingAnalysisSession::class)
 internal inline fun <R> analyzeWithSymbolAsContext(
     contextSymbol: KtSymbol,
     action: KtAnalysisSession.() -> R
 ): R {
-    return analyseWithCustomToken(contextSymbol.psi as KtElement, AlwaysAccessibleValidityTokenFactory, action)
+    return KtAnalysisSessionProvider.getInstance(KSPCoreEnvironment.instance.project)
+        .analyzeWithSymbolAsContext(contextSymbol, action)
 }
 
 internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
