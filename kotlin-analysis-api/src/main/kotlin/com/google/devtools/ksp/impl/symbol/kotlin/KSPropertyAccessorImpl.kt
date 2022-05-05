@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
@@ -31,7 +32,7 @@ abstract class KSPropertyAccessorImpl(
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor {
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktPropertyAccessorSymbol.annotations.asSequence().map { KSAnnotationImpl(it) }
+        ktPropertyAccessorSymbol.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val location: Location by lazy {
@@ -50,12 +51,17 @@ abstract class KSPropertyAccessorImpl(
         get() = TODO("Not yet implemented")
 }
 
-class KSPropertySetterImpl(
+class KSPropertySetterImpl private constructor(
     owner: KSPropertyDeclaration,
-    private val setter: KtPropertySetterSymbol
+    setter: KtPropertySetterSymbol
 ) : KSPropertySetter, KSPropertyAccessorImpl(setter, owner) {
+    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KtPropertySetterSymbol>, KSPropertySetterImpl>() {
+        fun getCached(owner: KSPropertyDeclaration, setter: KtPropertySetterSymbol) =
+            cache.getOrPut(Pair(owner, setter)) { KSPropertySetterImpl(owner, setter) }
+    }
+
     override val parameter: KSValueParameter by lazy {
-        KSValueParameterImpl(setter.parameter)
+        KSValueParameterImpl.getCached(setter.parameter)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
@@ -63,10 +69,15 @@ class KSPropertySetterImpl(
     }
 }
 
-class KSPropertyGetterImpl(
+class KSPropertyGetterImpl private constructor(
     owner: KSPropertyDeclaration,
     getter: KtPropertyGetterSymbol
 ) : KSPropertyGetter, KSPropertyAccessorImpl(getter, owner) {
+    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KtPropertyGetterSymbol>, KSPropertyGetterImpl>() {
+        fun getCached(owner: KSPropertyDeclaration, getter: KtPropertyGetterSymbol) =
+            cache.getOrPut(Pair(owner, getter)) { KSPropertyGetterImpl(owner, getter) }
+    }
+
     override val returnType: KSTypeReference? by lazy {
         KSTypeReferenceImpl(getter.returnType)
     }

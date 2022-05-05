@@ -38,7 +38,7 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktType.annotations.map { KSAnnotationImpl(it) }.asSequence()
+        ktType.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
     }
 
     override val origin: Origin = Origin.KOTLIN

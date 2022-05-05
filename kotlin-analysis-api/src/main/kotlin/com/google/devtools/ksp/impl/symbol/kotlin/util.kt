@@ -65,7 +65,7 @@ internal fun PsiElement?.toLocation(): Location {
 internal fun KtSymbol.toContainingFile(): KSFile? {
     return when (val psi = this.psi) {
         is KtElement -> analyseWithCustomToken(psi, AlwaysAccessibleValidityTokenFactory) {
-            KSFileImpl(psi.containingKtFile.getFileSymbol())
+            KSFileImpl.getCached(psi.containingKtFile.getFileSymbol())
         }
         else -> null
     }
@@ -87,10 +87,10 @@ internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
     return analyzeWithSymbolAsContext(this) {
         this@declarations.getDeclaredMemberScope().getAllSymbols().map {
             when (it) {
-                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
-                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl(it)
-                is KtPropertySymbol -> KSPropertyDeclarationImpl(it)
-                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl(it)
+                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
+                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(it)
+                is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
+                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
                 else -> throw IllegalStateException()
             }
         }
@@ -98,5 +98,5 @@ internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
 }
 
 internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
-    return this.annotations.asSequence().map { KSAnnotationImpl(it) }
+    return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
 }

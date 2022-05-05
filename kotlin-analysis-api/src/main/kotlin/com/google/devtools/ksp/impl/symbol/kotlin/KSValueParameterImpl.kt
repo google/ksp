@@ -17,13 +17,21 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 
-class KSValueParameterImpl(private val ktValueParameterSymbol: KtValueParameterSymbol) : KSValueParameter {
+class KSValueParameterImpl private constructor(
+    private val ktValueParameterSymbol: KtValueParameterSymbol
+) : KSValueParameter {
+    companion object : KSObjectCache<KtValueParameterSymbol, KSValueParameterImpl>() {
+        fun getCached(ktValueParameterSymbol: KtValueParameterSymbol) =
+            cache.getOrPut(ktValueParameterSymbol) { KSValueParameterImpl(ktValueParameterSymbol) }
+    }
+
     override val name: KSName? by lazy {
-        KSNameImpl(ktValueParameterSymbol.name.asString())
+        KSNameImpl.getCached(ktValueParameterSymbol.name.asString())
     }
 
     override val type: KSTypeReference by lazy {
@@ -33,19 +41,25 @@ class KSValueParameterImpl(private val ktValueParameterSymbol: KtValueParameterS
     override val isVararg: Boolean by lazy {
         ktValueParameterSymbol.isVararg
     }
+
     override val isNoInline: Boolean
         get() = TODO("Not yet implemented")
+
     override val isCrossInline: Boolean
         get() = TODO("Not yet implemented")
+
     override val isVal: Boolean
         get() = TODO("Not yet implemented")
+
     override val isVar: Boolean
         get() = TODO("Not yet implemented")
+
     override val hasDefault: Boolean by lazy {
         ktValueParameterSymbol.hasDefaultValue
     }
+
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktValueParameterSymbol.annotations.asSequence().map { KSAnnotationImpl(it) }
+        ktValueParameterSymbol.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
     override val origin: Origin by lazy {
         mapAAOrigin(ktValueParameterSymbol.origin)

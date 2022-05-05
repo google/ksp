@@ -17,20 +17,30 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 
-class KSAnnotationImpl(private val annotationApplication: KtAnnotationApplication) : KSAnnotation {
+class KSAnnotationImpl private constructor(private val annotationApplication: KtAnnotationApplication) : KSAnnotation {
+    companion object : KSObjectCache<KtAnnotationApplication, KSAnnotationImpl>() {
+        fun getCached(annotationApplication: KtAnnotationApplication) =
+            cache.getOrPut(annotationApplication) { KSAnnotationImpl(annotationApplication) }
+    }
+
     override val annotationType: KSTypeReference
         get() = TODO("Not yet implemented")
+
     override val arguments: List<KSValueArgument> by lazy {
-        annotationApplication.arguments.map { KSValueArgumentImpl(it) }
+        annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it) }
     }
+
     override val defaultArguments: List<KSValueArgument>
         get() = TODO("Not yet implemented")
+
     override val shortName: KSName
         get() = TODO("Not yet implemented")
+
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
         when (annotationApplication.useSiteTarget) {
             null -> null

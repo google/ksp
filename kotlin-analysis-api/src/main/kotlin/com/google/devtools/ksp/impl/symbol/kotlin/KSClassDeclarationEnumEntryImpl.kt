@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -22,7 +23,14 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSClassDeclarationEnumEntryImpl(private val ktEnumEntrySymbol: KtEnumEntrySymbol) : KSClassDeclaration {
+class KSClassDeclarationEnumEntryImpl private constructor(
+    private val ktEnumEntrySymbol: KtEnumEntrySymbol
+) : KSClassDeclaration {
+    companion object : KSObjectCache<KtEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
+        fun getCached(ktEnumEntrySymbol: KtEnumEntrySymbol) =
+            cache.getOrPut(ktEnumEntrySymbol) { KSClassDeclarationEnumEntryImpl(ktEnumEntrySymbol) }
+    }
+
     override val classKind: ClassKind = ClassKind.ENUM_ENTRY
 
     override val primaryConstructor: KSFunctionDeclaration? = null
@@ -39,7 +47,7 @@ class KSClassDeclarationEnumEntryImpl(private val ktEnumEntrySymbol: KtEnumEntry
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
         return analyzeWithSymbolAsContext(ktEnumEntrySymbol) {
             ktEnumEntrySymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
-                .map { KSFunctionDeclarationImpl(it) }
+                .map { KSFunctionDeclarationImpl.getCached(it) }
         }
     }
 
@@ -56,12 +64,12 @@ class KSClassDeclarationEnumEntryImpl(private val ktEnumEntrySymbol: KtEnumEntry
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl(ktEnumEntrySymbol.name.asString())
+        KSNameImpl.getCached(ktEnumEntrySymbol.name.asString())
     }
 
     override val qualifiedName: KSName? by lazy {
         ktEnumEntrySymbol.containingEnumClassIdIfNonLocal?.let {
-            KSNameImpl("${it.asFqNameString()}.${simpleName.asString()}")
+            KSNameImpl.getCached("${it.asFqNameString()}.${simpleName.asString()}")
         }
     }
 
@@ -74,13 +82,14 @@ class KSClassDeclarationEnumEntryImpl(private val ktEnumEntrySymbol: KtEnumEntry
     override val parentDeclaration: KSDeclaration? by lazy {
         analyzeWithSymbolAsContext(ktEnumEntrySymbol) {
             ktEnumEntrySymbol.getContainingSymbol()
-                .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl(it) }
+                .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl.getCached(it) }
         }
     }
 
     override val containingFile: KSFile? by lazy {
         ktEnumEntrySymbol.toContainingFile()
     }
+
     override val docString: String?
         get() = TODO("Not yet implemented")
 
@@ -97,7 +106,7 @@ class KSClassDeclarationEnumEntryImpl(private val ktEnumEntrySymbol: KtEnumEntry
     override val parent: KSNode? by lazy {
         analyzeWithSymbolAsContext(ktEnumEntrySymbol) {
             ktEnumEntrySymbol.getContainingSymbol()
-                .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl(it) }
+                .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl.getCached(it) }
         }
     }
 
@@ -109,6 +118,7 @@ class KSClassDeclarationEnumEntryImpl(private val ktEnumEntrySymbol: KtEnumEntry
 
     override val isActual: Boolean
         get() = TODO("Not yet implemented")
+
     override val isExpect: Boolean
         get() = TODO("Not yet implemented")
 

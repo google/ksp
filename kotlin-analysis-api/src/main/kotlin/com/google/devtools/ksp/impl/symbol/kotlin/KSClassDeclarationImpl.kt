@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
@@ -25,7 +26,14 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
-class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) : KSClassDeclaration {
+class KSClassDeclarationImpl private constructor(
+    private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol
+) : KSClassDeclaration {
+    companion object : KSObjectCache<KtNamedClassOrObjectSymbol, KSClassDeclarationImpl>() {
+        fun getCached(ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) =
+            cache.getOrPut(ktNamedClassOrObjectSymbol) { KSClassDeclarationImpl(ktNamedClassOrObjectSymbol) }
+    }
+
     override val classKind: ClassKind by lazy {
         when (ktNamedClassOrObjectSymbol.classKind) {
             KtClassKind.CLASS -> ClassKind.CLASS
@@ -36,13 +44,15 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
             KtClassKind.ENUM_ENTRY -> ClassKind.ENUM_ENTRY
         }
     }
+
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
             ktNamedClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
-                KSFunctionDeclarationImpl(it)
+                KSFunctionDeclarationImpl.getCached(it)
             }
         }
     }
+
     override val superTypes: Sequence<KSTypeReference> by lazy {
         analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
             ktNamedClassOrObjectSymbol.superTypes.map { KSTypeReferenceImpl(it) }.asSequence()
@@ -60,14 +70,14 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
         return analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
             ktNamedClassOrObjectSymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
-                .map { KSFunctionDeclarationImpl(it) }
+                .map { KSFunctionDeclarationImpl.getCached(it) }
         }
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
         return analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
             ktNamedClassOrObjectSymbol.getMemberScope().getAllSymbols().filterIsInstance<KtPropertySymbol>()
-                .map { KSPropertyDeclarationImpl(it) }
+                .map { KSPropertyDeclarationImpl.getCached(it) }
         }
     }
 
@@ -80,19 +90,19 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl(ktNamedClassOrObjectSymbol.name.asString())
+        KSNameImpl.getCached(ktNamedClassOrObjectSymbol.name.asString())
     }
 
     override val qualifiedName: KSName? by lazy {
-        ktNamedClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl(it) }
+        ktNamedClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
-        ktNamedClassOrObjectSymbol.typeParameters.map { KSTypeParameterImpl(it) }
+        ktNamedClassOrObjectSymbol.typeParameters.map { KSTypeParameterImpl.getCached(it) }
     }
 
     override val packageName: KSName by lazy {
-        this.containingFile?.packageName ?: KSNameImpl("")
+        this.containingFile?.packageName ?: KSNameImpl.getCached("")
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {
@@ -124,11 +134,12 @@ class KSClassDeclarationImpl(private val ktNamedClassOrObjectSymbol: KtNamedClas
 
     override val annotations: Sequence<KSAnnotation> by lazy {
         analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
-            ktNamedClassOrObjectSymbol.annotations.map { KSAnnotationImpl(it) }.asSequence()
+            ktNamedClassOrObjectSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
         }
     }
     override val isActual: Boolean
         get() = TODO("Not yet implemented")
+
     override val isExpect: Boolean
         get() = TODO("Not yet implemented")
 
