@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -34,14 +35,18 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.psi.KtFile
 
-class KSFileImpl(private val ktFileSymbol: KtFileSymbol) : KSFile {
+class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : KSFile {
+    companion object : KSObjectCache<KtFileSymbol, KSFileImpl>() {
+        fun getCached(ktFileSymbol: KtFileSymbol) = cache.getOrPut(ktFileSymbol) { KSFileImpl(ktFileSymbol) }
+    }
+
     private val psi: PsiFile
         get() = ktFileSymbol.psi as PsiFile
 
     override val packageName: KSName by lazy {
         when (psi) {
-            is KtFile -> KSNameImpl((psi as KtFile).packageFqName.asString())
-            is PsiJavaFile -> KSNameImpl((psi as PsiJavaFile).packageName)
+            is KtFile -> KSNameImpl.getCached((psi as KtFile).packageFqName.asString())
+            is PsiJavaFile -> KSNameImpl.getCached((psi as PsiJavaFile).packageName)
             else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
         }
     }
@@ -58,9 +63,9 @@ class KSFileImpl(private val ktFileSymbol: KtFileSymbol) : KSFile {
         analyzeWithSymbolAsContext(ktFileSymbol) {
             ktFileSymbol.getFileScope().getAllSymbols().map {
                 when (it) {
-                    is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
-                    is KtFunctionSymbol -> KSFunctionDeclarationImpl(it)
-                    is KtPropertySymbol -> KSPropertyDeclarationImpl(it)
+                    is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
+                    is KtFunctionSymbol -> KSFunctionDeclarationImpl.getCached(it)
+                    is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
                     else -> throw IllegalStateException("Unhandled ")
                 }
             }
@@ -81,7 +86,7 @@ class KSFileImpl(private val ktFileSymbol: KtFileSymbol) : KSFile {
 
     override val annotations: Sequence<KSAnnotation> by lazy {
         analyzeWithSymbolAsContext(ktFileSymbol) {
-            ktFileSymbol.annotations.map { KSAnnotationImpl(it) }.asSequence()
+            ktFileSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
         }
     }
 }

@@ -17,15 +17,23 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSTypeParameterImpl(private val ktTypeParameterSymbol: KtTypeParameterSymbol) : KSTypeParameter {
+class KSTypeParameterImpl private constructor(
+    private val ktTypeParameterSymbol: KtTypeParameterSymbol
+) : KSTypeParameter {
+    companion object : KSObjectCache<KtTypeParameterSymbol, KSTypeParameterImpl>() {
+        fun getCached(ktTypeParameterSymbol: KtTypeParameterSymbol) =
+            cache.getOrPut(ktTypeParameterSymbol) { KSTypeParameterImpl(ktTypeParameterSymbol) }
+    }
+
     override val name: KSName by lazy {
-        KSNameImpl(ktTypeParameterSymbol.name.asString())
+        KSNameImpl.getCached(ktTypeParameterSymbol.name.asString())
     }
 
     override val variance: Variance by lazy {
@@ -43,15 +51,15 @@ class KSTypeParameterImpl(private val ktTypeParameterSymbol: KtTypeParameterSymb
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl(ktTypeParameterSymbol.name.asString())
+        KSNameImpl.getCached(ktTypeParameterSymbol.name.asString())
     }
     override val qualifiedName: KSName? by lazy {
-        KSNameImpl(ktTypeParameterSymbol.psi?.safeAs<KtTypeParameter>()?.fqName?.asString() ?: "")
+        KSNameImpl.getCached(ktTypeParameterSymbol.psi?.safeAs<KtTypeParameter>()?.fqName?.asString() ?: "")
     }
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
     override val packageName: KSName by lazy {
-        KSNameImpl(this.containingFile?.packageName?.asString() ?: "")
+        KSNameImpl.getCached(this.containingFile?.packageName?.asString() ?: "")
     }
     override val parentDeclaration: KSDeclaration?
         get() = TODO("Not yet implemented")

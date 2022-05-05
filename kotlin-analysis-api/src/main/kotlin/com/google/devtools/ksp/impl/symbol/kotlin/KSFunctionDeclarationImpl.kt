@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
@@ -27,7 +28,14 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymbol) : KSFunctionDeclaration {
+class KSFunctionDeclarationImpl private constructor(
+    private val ktFunctionSymbol: KtFunctionLikeSymbol
+) : KSFunctionDeclaration {
+    companion object : KSObjectCache<KtFunctionLikeSymbol, KSFunctionDeclarationImpl>() {
+        fun getCached(ktFunctionSymbol: KtFunctionLikeSymbol) =
+            cache.getOrPut(ktFunctionSymbol) { KSFunctionDeclarationImpl(ktFunctionSymbol) }
+    }
+
     override val functionKind: FunctionKind by lazy {
         when (ktFunctionSymbol.symbolKind) {
             KtSymbolKind.CLASS_MEMBER -> FunctionKind.MEMBER
@@ -56,8 +64,9 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
             KSTypeReferenceImpl(ktFunctionSymbol.returnType)
         }
     }
+
     override val parameters: List<KSValueParameter> by lazy {
-        ktFunctionSymbol.valueParameters.map { KSValueParameterImpl(it) }
+        ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it) }
     }
 
     override fun findOverridee(): KSDeclaration? {
@@ -70,24 +79,29 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
 
     override val simpleName: KSName by lazy {
         if (ktFunctionSymbol is KtFunctionSymbol) {
-            KSNameImpl(ktFunctionSymbol.name.asString())
+            KSNameImpl.getCached(ktFunctionSymbol.name.asString())
         } else {
-            KSNameImpl("<init>")
+            KSNameImpl.getCached("<init>")
         }
     }
 
     override val qualifiedName: KSName? by lazy {
-        (ktFunctionSymbol.psi as? KtFunction)?.fqName?.asString()?.let { KSNameImpl(it) }
+        (ktFunctionSymbol.psi as? KtFunction)?.fqName?.asString()?.let { KSNameImpl.getCached(it) }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
-        (ktFunctionSymbol as? KtFunctionSymbol)?.typeParameters?.map { KSTypeParameterImpl(it) } ?: emptyList()
+        (ktFunctionSymbol as? KtFunctionSymbol)?.typeParameters?.map {
+            KSTypeParameterImpl.getCached(it)
+        } ?: emptyList()
     }
+
     override val packageName: KSName by lazy {
-        containingFile?.packageName ?: KSNameImpl("")
+        containingFile?.packageName ?: KSNameImpl.getCached("")
     }
+
     override val parentDeclaration: KSDeclaration?
         get() = TODO("Not yet implemented")
+
     override val containingFile: KSFile? by lazy {
         ktFunctionSymbol.toContainingFile()
     }
@@ -116,7 +130,7 @@ class KSFunctionDeclarationImpl(private val ktFunctionSymbol: KtFunctionLikeSymb
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        (ktFunctionSymbol as KtAnnotatedSymbol).annotations.asSequence().map { KSAnnotationImpl(it) }
+        (ktFunctionSymbol as KtAnnotatedSymbol).annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val isActual: Boolean

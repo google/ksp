@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
@@ -26,23 +27,34 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) : KSPropertyDeclaration {
-    override val getter: KSPropertyGetter? by lazy {
-        ktPropertySymbol.getter?.let { KSPropertyGetterImpl(this, it) }
+class KSPropertyDeclarationImpl private constructor(
+    private val ktPropertySymbol: KtPropertySymbol
+) : KSPropertyDeclaration {
+    companion object : KSObjectCache<KtPropertySymbol, KSPropertyDeclarationImpl>() {
+        fun getCached(ktPropertySymbol: KtPropertySymbol) =
+            cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
     }
+
+    override val getter: KSPropertyGetter? by lazy {
+        ktPropertySymbol.getter?.let { KSPropertyGetterImpl.getCached(this, it) }
+    }
+
     override val setter: KSPropertySetter? by lazy {
-        ktPropertySymbol.setter?.let { KSPropertySetterImpl(this, it) }
+        ktPropertySymbol.setter?.let { KSPropertySetterImpl.getCached(this, it) }
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
         ktPropertySymbol.receiverType?.let { KSTypeReferenceImpl(it) }
     }
+
     override val type: KSTypeReference by lazy {
         KSTypeReferenceImpl(ktPropertySymbol.returnType)
     }
+
     override val isMutable: Boolean by lazy {
         !ktPropertySymbol.isVal
     }
+
     override val hasBackingField: Boolean by lazy {
         ktPropertySymbol.hasBackingField
     }
@@ -60,24 +72,28 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl(ktPropertySymbol.name.asString())
+        KSNameImpl.getCached(ktPropertySymbol.name.asString())
     }
 
     override val qualifiedName: KSName? by lazy {
-        (ktPropertySymbol.psi as? KtProperty)?.fqName?.asString()?.let { KSNameImpl(it) }
+        (ktPropertySymbol.psi as? KtProperty)?.fqName?.asString()?.let { KSNameImpl.getCached(it) }
     }
+
     override val typeParameters: List<KSTypeParameter> by lazy {
-        ktPropertySymbol.typeParameters.map { KSTypeParameterImpl(it) }
+        ktPropertySymbol.typeParameters.map { KSTypeParameterImpl.getCached(it) }
     }
+
     override val packageName: KSName by lazy {
-        KSNameImpl(this.containingFile?.packageName?.asString() ?: "")
+        KSNameImpl.getCached(this.containingFile?.packageName?.asString() ?: "")
     }
+
     override val parentDeclaration: KSDeclaration?
         get() = TODO("Not yet implemented")
 
     override val containingFile: KSFile? by lazy {
         ktPropertySymbol.toContainingFile()
     }
+
     override val docString: String? by lazy {
         ktPropertySymbol.psi?.getDocString()
     }
@@ -96,8 +112,9 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
 
     override val parent: KSNode? by lazy {
         analyzeWithSymbolAsContext(ktPropertySymbol) {
-            ktPropertySymbol.getContainingSymbol()?.let { KSClassDeclarationImpl(it as KtNamedClassOrObjectSymbol) }
-                ?: ktPropertySymbol.toContainingFile()
+            ktPropertySymbol.getContainingSymbol()?.let {
+                KSClassDeclarationImpl.getCached(it as KtNamedClassOrObjectSymbol)
+            } ?: ktPropertySymbol.toContainingFile()
         }
     }
 
@@ -106,11 +123,12 @@ class KSPropertyDeclarationImpl(private val ktPropertySymbol: KtPropertySymbol) 
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktPropertySymbol.annotations.asSequence().map { KSAnnotationImpl(it) }
+        ktPropertySymbol.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
     }
 
     override val isActual: Boolean
         get() = TODO("Not yet implemented")
+
     override val isExpect: Boolean
         get() = TODO("Not yet implemented")
 

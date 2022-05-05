@@ -17,14 +17,24 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 
-class KSValueArgumentImpl(private val namedAnnotationValue: KtNamedAnnotationValue) : KSValueArgument {
-    override val name: KSName? by lazy {
-        KSNameImpl(namedAnnotationValue.name.asString())
+class KSValueArgumentImpl private constructor(
+    private val namedAnnotationValue: KtNamedAnnotationValue
+) : KSValueArgument {
+    companion object : KSObjectCache<KtNamedAnnotationValue, KSValueArgumentImpl>() {
+        fun getCached(namedAnnotationValue: KtNamedAnnotationValue) =
+            cache.getOrPut(namedAnnotationValue) { KSValueArgumentImpl(namedAnnotationValue) }
     }
+
+    override val name: KSName? by lazy {
+        KSNameImpl.getCached(namedAnnotationValue.name.asString())
+    }
+
     override val isSpread: Boolean = false
+
     override val value: Any = namedAnnotationValue.expression
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
@@ -34,6 +44,7 @@ class KSValueArgumentImpl(private val namedAnnotationValue: KtNamedAnnotationVal
     override val location: Location by lazy {
         namedAnnotationValue.expression.sourcePsi?.toLocation() ?: NonExistLocation
     }
+
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 

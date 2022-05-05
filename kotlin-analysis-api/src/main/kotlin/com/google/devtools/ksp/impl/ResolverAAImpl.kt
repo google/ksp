@@ -53,7 +53,7 @@ class ResolverAAImpl(
     val ktFiles: List<KtFileSymbol>
 ) : Resolver {
     private val ksFiles by lazy {
-        ktFiles.map { KSFileImpl(it) }
+        ktFiles.map { KSFileImpl.getCached(it) }
     }
     override val builtIns: KSBuiltIns
         get() = TODO("Not yet implemented")
@@ -81,7 +81,7 @@ class ResolverAAImpl(
             analyzeWithSymbolAsContext(ktFiles.first()) {
                 classId.getCorrespondingToplevelClassOrObjectSymbol() as? KtNamedClassOrObjectSymbol
             }?.let { return it }
-            return findClass(KSNameImpl(name.getQualifier())).safeAs<KtNamedClassOrObjectSymbol>()?.let {
+            return findClass(KSNameImpl.getCached(name.getQualifier())).safeAs<KtNamedClassOrObjectSymbol>()?.let {
                 analyzeWithSymbolAsContext(ktFiles.first()) {
                     (
                         it.getStaticMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
@@ -94,8 +94,8 @@ class ResolverAAImpl(
         }
         return findClass(name)?.let {
             when (it) {
-                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl(it)
-                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl(it)
+                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
+                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
                 else -> throw IllegalStateException()
             }
         }
@@ -137,7 +137,7 @@ class ResolverAAImpl(
     }
 
     override fun getKSNameFromString(name: String): KSName {
-        return KSNameImpl(name)
+        return KSNameImpl.getCached(name)
     }
 
     // FIXME: correct implementation after incremental is ready.

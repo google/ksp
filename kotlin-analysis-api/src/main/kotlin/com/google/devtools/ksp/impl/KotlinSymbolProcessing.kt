@@ -54,8 +54,10 @@ class KotlinSymbolProcessing(
     lateinit var processors: List<SymbolProcessor>
 
     fun prepare() {
-        val ksFiles = ktFiles.map {
-            analyseWithCustomToken(it, AlwaysAccessibleValidityTokenFactory) { KSFileImpl(it.getFileSymbol()) }
+        val ksFiles = ktFiles.map { file ->
+            analyseWithCustomToken(file, AlwaysAccessibleValidityTokenFactory) {
+                KSFileImpl.getCached(file.getFileSymbol())
+            }
         }
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         codeGenerator = CodeGeneratorImpl(
