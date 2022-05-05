@@ -99,8 +99,9 @@ class KSFunctionDeclarationImpl private constructor(
         containingFile?.packageName ?: KSNameImpl.getCached("")
     }
 
-    override val parentDeclaration: KSDeclaration?
-        get() = TODO("Not yet implemented")
+    override val parentDeclaration: KSDeclaration? by lazy {
+        ktFunctionSymbol.getContainingKSSymbol() as? KSDeclaration
+    }
 
     override val containingFile: KSFile? by lazy {
         ktFunctionSymbol.toContainingFile()
@@ -149,4 +150,14 @@ class KSFunctionDeclarationImpl private constructor(
 
     // TODO: Implement with PSI
     override val declarations: Sequence<KSDeclaration> = emptySequence()
+
+    override fun toString(): String {
+        // TODO: fix origin for implicit Java constructor in AA
+        // TODO: should we change the toString() behavior for synthetic constructors?
+        return if (origin == Origin.SYNTHETIC || (origin == Origin.JAVA && ktFunctionSymbol.psi == null)) {
+            "synthetic constructor for ${this.parentDeclaration}"
+        } else {
+            this.simpleName.asString()
+        }
+    }
 }

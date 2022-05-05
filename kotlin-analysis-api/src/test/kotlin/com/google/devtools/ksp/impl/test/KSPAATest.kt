@@ -22,10 +22,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class KSPAATest : AbstractKSPAATest() {
-    @Test
-    fun testHelloWorld() {
-        runTest("testData/helloWorld.kt")
-    }
 
     @Disabled
     @TestMetadata("annotatedUtil.kt")
@@ -194,7 +190,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/declarationUtil.kt")
     }
 
-    @Disabled
     @TestMetadata("declared.kt")
     @Test
     fun testDeclared() {
