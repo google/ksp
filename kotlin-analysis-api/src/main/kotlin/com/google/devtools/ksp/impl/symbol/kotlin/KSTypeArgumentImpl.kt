@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeArgument
@@ -29,7 +30,12 @@ import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 
-class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeArgument) : KSTypeArgument {
+class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeArgument) : KSTypeArgument {
+    companion object : KSObjectCache<KtTypeArgument, KSTypeArgumentImpl>() {
+        fun getCached(ktTypeArgument: KtTypeArgument) =
+            cache.getOrPut(ktTypeArgument) { KSTypeArgumentImpl(ktTypeArgument) }
+    }
+
     override val variance: Variance by lazy {
         when (ktTypeArgument) {
             is KtStarProjectionTypeArgument -> Variance.STAR
@@ -52,8 +58,10 @@ class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeArgument) : KSTypeArg
         TODO()
     }
     override val origin: Origin = Origin.KOTLIN
+
     override val location: Location
         get() = TODO("Not yet implemented")
+
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 
