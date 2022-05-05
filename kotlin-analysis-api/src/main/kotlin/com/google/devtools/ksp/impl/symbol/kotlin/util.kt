@@ -45,7 +45,9 @@ internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.DELEGATED to Origin.SYNTHETIC,
     KtSymbolOrigin.PROPERTY_BACKING_FIELD to Origin.KOTLIN,
     KtSymbolOrigin.JAVA_SYNTHETIC_PROPERTY to Origin.SYNTHETIC,
-    KtSymbolOrigin.INTERSECTION_OVERRIDE to Origin.KOTLIN
+    KtSymbolOrigin.INTERSECTION_OVERRIDE to Origin.KOTLIN,
+    // TODO: distinguish between kotlin library and java library.
+    KtSymbolOrigin.LIBRARY to Origin.JAVA_LIB
 )
 
 internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
@@ -99,4 +101,14 @@ internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
 
 internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
     return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
+}
+
+internal fun KtSymbol.getContainingKSSymbol(): KSAnnotated? {
+    return analyzeWithSymbolAsContext(this) {
+        when (val containingSymbol = this@getContainingKSSymbol.getContainingSymbol()) {
+            is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(containingSymbol)
+            is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(containingSymbol)
+            else -> null
+        }
+    }
 }

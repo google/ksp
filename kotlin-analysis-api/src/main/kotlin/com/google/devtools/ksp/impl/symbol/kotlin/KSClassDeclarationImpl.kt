@@ -137,6 +137,7 @@ class KSClassDeclarationImpl private constructor(
             ktNamedClassOrObjectSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
         }
     }
+
     override val isActual: Boolean
         get() = TODO("Not yet implemented")
 
@@ -153,5 +154,9 @@ class KSClassDeclarationImpl private constructor(
 
     override val declarations: Sequence<KSDeclaration> by lazy {
         ktNamedClassOrObjectSymbol.declarations()
+    }
+
+    override fun toString(): String {
+        return simpleName.asString()
     }
 }
