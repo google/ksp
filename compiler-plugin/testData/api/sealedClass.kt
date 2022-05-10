@@ -17,13 +17,25 @@
 
 // TEST PROCESSOR: SealedClassProcessor
 // EXPECTED:
-// Expr : [Const, NotANumber, Sum]
+// from lib
+// [Const: KOTLIN_LIB, NotANumber: KOTLIN_LIB, Sum: KOTLIN_LIB]
+// from source
+// Expr : [Const: KOTLIN, NotANumber: KOTLIN, Sum: KOTLIN]
 // Const : []
 // Sum : []
 // NotANumber : []
 // END
 
-//FILE: sealed.kt
+// MODULE: lib
+// FILE: lib.kt
+package lib
+sealed class Expr
+data class Const(val number: Double) : Expr()
+data class Sum(val e1: Expr, val e2: Expr) : Expr()
+object NotANumber : Expr()
+
+// MODULE: main(lib)
+// FILE: sealed.kt
 sealed class Expr
 data class Const(val number: Double) : Expr()
 data class Sum(val e1: Expr, val e2: Expr) : Expr()

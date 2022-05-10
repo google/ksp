@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
@@ -28,10 +29,22 @@ class SealedClassProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        result.add("from lib")
+        resolver.getClassDeclarationByName("lib.Expr")!!.let {
+            result.add(
+                it.getSealedSubclasses().map { sub ->
+                    "${sub.simpleName.asString()}: ${sub.origin}"
+                }.toList().sorted().toString()
+            )
+        }
+
+        result.add("from source")
         resolver.getNewFiles().forEach { f ->
             f.declarations.forEach {
                 if (it is KSClassDeclaration) {
-                    val subs = it.getSealedSubclasses().map { it.simpleName.asString() }.toList().sorted()
+                    val subs = it.getSealedSubclasses().map { sub ->
+                        "${sub.simpleName.asString()}: ${sub.origin}"
+                    }.toList().sorted()
                     result.add("${it.simpleName.asString()} : $subs")
                 }
             }
