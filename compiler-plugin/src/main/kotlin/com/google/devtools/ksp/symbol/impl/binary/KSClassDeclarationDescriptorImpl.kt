@@ -23,15 +23,12 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
 import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
-import com.google.devtools.ksp.symbol.impl.kotlin.KSFunctionDeclarationImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSPropertyDeclarationParameterImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
+import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
@@ -189,5 +186,10 @@ internal fun ClassDescriptor.sealedSubclassesSequence(): Sequence<KSClassDeclara
     // TODO record incremental subclass lookups in Kotlin 1.5.x?
     return sealedSubclasses
         .asSequence()
-        .map { KSClassDeclarationDescriptorImpl.getCached(it) }
+        .map { sealedSubClass ->
+            when (val psi = sealedSubClass.findPsi()) {
+                is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
+                else -> KSClassDeclarationDescriptorImpl.getCached(sealedSubClass)
+            }
+        }
 }
