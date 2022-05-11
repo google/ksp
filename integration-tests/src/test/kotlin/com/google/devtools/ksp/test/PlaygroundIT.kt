@@ -5,6 +5,7 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Assume
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -147,15 +148,17 @@ class PlaygroundIT {
         }
     }
 
+    // Disabled for now: ERROR: K2 does not support plugins yet, so please remove -Xuse-k2 flag
     // Test -Xuse-fir for compilation; KSP still uses FE1.0
+    @Ignore
     @Test
     fun testFirPreview() {
         val gradleProperties = File(project.root, "gradle.properties")
-        gradleProperties.appendText("\nkotlin.useFir=true")
+        gradleProperties.appendText("\nkotlin.useK2=true")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("This build uses in-dev FIR"))
-            Assert.assertTrue(result.output.contains("-Xuse-fir"))
+            Assert.assertTrue(result.output.contains("This build uses experimental K2 compiler"))
+            Assert.assertTrue(result.output.contains("-Xuse-k2"))
         }
         project.restore(gradleProperties.path)
     }

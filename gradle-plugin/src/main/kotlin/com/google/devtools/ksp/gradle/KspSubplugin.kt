@@ -78,10 +78,10 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
     constructor(compilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) : super(compilation) {
         configureTask { task ->
             if (task is KspTaskJvm) {
-                // Assign moduleName different from kotlin compilation to
+                // Assign ownModuleName different from kotlin compilation to
                 // work around https://github.com/google/ksp/issues/647
                 // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
-                task.moduleName.value(kotlinCompile.moduleName.map { "$it-ksp" })
+                task.ownModuleName.value(kotlinCompile.ownModuleName.map { "$it-ksp" })
             }
             if (task is KspTaskJS) {
                 val libraryCacheService = project.rootProject.gradle.sharedServices.registerIfAbsent(
@@ -626,13 +626,13 @@ abstract class KspTaskJvm @Inject constructor(
         args.addPluginOptions(options.get())
         args.destinationAsFile = destination
         args.allowNoSourceFiles = true
-        args.useFir = false
+        args.useK2 = false
     }
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `callCompilerAsync$kotlin_gradle_plugin`(
+    fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JVMCompilerArguments,
         kotlinSources: Set<File>,
         inputChanges: InputChanges,
@@ -745,13 +745,13 @@ abstract class KspTaskJS @Inject constructor(
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
         kotlinOptions.copyFreeCompilerArgsToArgs(args)
-        args.useFir = false
+        args.useK2 = false
     }
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `callCompilerAsync$kotlin_gradle_plugin`(
+    fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JSCompilerArguments,
         kotlinSources: Set<File>,
         inputChanges: InputChanges,
@@ -769,7 +769,7 @@ abstract class KspTaskJS @Inject constructor(
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `isIncrementalCompilationEnabled$kotlin_gradle_plugin`(): Boolean = false
+    fun `isIncrementalCompilationEnabled$kotlin_gradle_plugin_common`(): Boolean = false
 
     @get:InputFiles
     @get:SkipWhenEmpty
@@ -833,13 +833,13 @@ abstract class KspTaskMetadata @Inject constructor(
         args.friendPaths = friendPaths.files.map { it.absolutePath }.toTypedArray()
         args.refinesPaths = refinesMetadataPaths.map { it.absolutePath }.toTypedArray()
         args.expectActualLinker = true
-        args.useFir = false
+        args.useK2 = false
     }
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
-    fun `callCompilerAsync$kotlin_gradle_plugin`(
+    fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2MetadataCompilerArguments,
         kotlinSources: Set<File>,
         inputChanges: InputChanges,
