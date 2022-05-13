@@ -21,6 +21,7 @@ import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
@@ -69,6 +70,7 @@ internal fun KtSymbol.toContainingFile(): KSFile? {
         is KtElement -> analyseWithCustomToken(psi, AlwaysAccessibleValidityTokenFactory) {
             KSFileImpl.getCached(psi.containingKtFile.getFileSymbol())
         }
+        is PsiElement -> KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
         else -> null
     }
 }
@@ -103,7 +105,7 @@ internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
     return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
 }
 
-internal fun KtSymbol.getContainingKSSymbol(): KSAnnotated? {
+internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
     return analyzeWithSymbolAsContext(this) {
         when (val containingSymbol = this@getContainingKSSymbol.getContainingSymbol()) {
             is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(containingSymbol)
