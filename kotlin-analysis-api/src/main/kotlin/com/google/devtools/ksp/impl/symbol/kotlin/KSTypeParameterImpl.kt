@@ -90,10 +90,13 @@ class KSTypeParameterImpl private constructor(
         return visitor.visitTypeParameter(this, data)
     }
 
+    // TODO: fix in upstream
     override val annotations: Sequence<KSAnnotation>
-        get() = TODO("Not yet implemented")
+        get() = emptySequence()
+
     override val isActual: Boolean
         get() = TODO("Not yet implemented")
+
     override val isExpect: Boolean
         get() = TODO("Not yet implemented")
 

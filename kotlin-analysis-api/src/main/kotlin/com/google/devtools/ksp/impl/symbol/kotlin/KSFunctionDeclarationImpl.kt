@@ -86,7 +86,7 @@ class KSFunctionDeclarationImpl private constructor(
     }
 
     override val qualifiedName: KSName? by lazy {
-        (ktFunctionSymbol.psi as? KtFunction)?.fqName?.asString()?.let { KSNameImpl.getCached(it) }
+        KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
@@ -100,7 +100,7 @@ class KSFunctionDeclarationImpl private constructor(
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {
-        ktFunctionSymbol.getContainingKSSymbol() as? KSDeclaration
+        ktFunctionSymbol.getContainingKSSymbol()
     }
 
     override val containingFile: KSFile? by lazy {
