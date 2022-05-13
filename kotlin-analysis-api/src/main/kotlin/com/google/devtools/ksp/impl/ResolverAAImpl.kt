@@ -21,6 +21,7 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyzeWithSymbolAsContext
 import com.google.devtools.ksp.processing.KSBuiltIns
@@ -39,6 +40,9 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
+import com.intellij.psi.PsiJavaFile
+import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
@@ -50,11 +54,17 @@ import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
-    val ktFiles: List<KtFileSymbol>
+    val ktFiles: List<KtFileSymbol>,
+    val javaFiles: List<PsiJavaFile>
 ) : Resolver {
-    private val ksFiles by lazy {
-        ktFiles.map { KSFileImpl.getCached(it) }
+    companion object {
+        lateinit var instance: ResolverAAImpl
     }
+
+    private val ksFiles by lazy {
+        ktFiles.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
+    }
+
     override val builtIns: KSBuiltIns
         get() = TODO("Not yet implemented")
 

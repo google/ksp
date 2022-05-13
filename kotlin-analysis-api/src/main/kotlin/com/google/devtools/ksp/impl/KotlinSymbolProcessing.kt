@@ -28,14 +28,20 @@ import com.intellij.mock.MockApplication
 import com.intellij.mock.MockProject
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiManager
 import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
 import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
 import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import java.nio.file.Files
 
 class KotlinSymbolProcessing(
     val compilerConfiguration: CompilerConfiguration,
@@ -50,6 +56,7 @@ class KotlinSymbolProcessing(
     var finished = false
     val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
     val ktFiles = env.getSourceFiles()
+    val javaFiles = compilerConfiguration.javaSourceRoots
     lateinit var codeGenerator: CodeGeneratorImpl
     lateinit var processors: List<SymbolProcessor>
 
@@ -90,11 +97,21 @@ class KotlinSymbolProcessing(
 
     fun execute() {
         // TODO: support no kotlin source input.
+        val psiManager = PsiManager.getInstance(project)
+        val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+        val javaSourceRoots = options.javaSourceRoots
+        val javaFiles = javaSourceRoots.sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
+            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
+            .sortedBy { java.nio.file.Files.isSymbolicLink(it.toPath()) } // This time is for .java files
+            .distinctBy { it.canonicalPath }
+            .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
         val resolver = ResolverAAImpl(
             ktFiles.map {
                 analyseWithCustomToken(it, AlwaysAccessibleValidityTokenFactory) { it.getFileSymbol() }
             },
+            javaFiles
         )
+        ResolverAAImpl.instance = resolver
         processors.forEach { it.process(resolver) }
     }
 }
