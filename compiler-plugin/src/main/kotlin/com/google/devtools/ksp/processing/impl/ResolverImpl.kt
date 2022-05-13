@@ -33,6 +33,7 @@ import com.google.devtools.ksp.symbol.impl.jvmAccessFlag
 import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.resolveContainingClass
 import com.google.devtools.ksp.symbol.impl.synthetic.*
+import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -316,71 +317,13 @@ class ResolverImpl(
     }
 
     private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
-        val symbols = arrayListOf<KSAnnotated>()
-
-        // TODO: Make visitor a generator
-        val visitor = object : KSVisitorVoid() {
-            override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
-                if (annotated.annotations.any())
-                    symbols.add(annotated)
-            }
-
-            override fun visitFile(file: KSFile, data: Unit) {
-                visitAnnotated(file, data)
-                file.declarations.forEach { it.accept(this, data) }
-            }
-
-            override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
-                if (typeAlias.annotations.any())
-                    symbols.add(typeAlias)
-            }
-
-            override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-                visitAnnotated(classDeclaration, data)
-                classDeclaration.typeParameters.forEach { it.accept(this, data) }
-                classDeclaration.declarations.forEach { it.accept(this, data) }
-            }
-
-            override fun visitPropertyGetter(getter: KSPropertyGetter, data: Unit) {
-                visitAnnotated(getter, data)
-            }
-
-            override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {
-                setter.parameter.accept(this, data)
-                visitAnnotated(setter, data)
-            }
-
-            override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
-                visitAnnotated(function, data)
-                function.typeParameters.forEach { it.accept(this, data) }
-                function.parameters.forEach { it.accept(this, data) }
-                if (inDepth) {
-                    function.declarations.forEach { it.accept(this, data) }
-                }
-            }
-
-            override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
-                visitAnnotated(property, data)
-                property.typeParameters.forEach { it.accept(this, data) }
-                property.getter?.accept(this, data)
-                property.setter?.accept(this, data)
-            }
-
-            override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {
-                visitAnnotated(typeParameter, data)
-                super.visitTypeParameter(typeParameter, data)
-            }
-
-            override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-                visitAnnotated(valueParameter, data)
-            }
-        }
+        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
 
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
         }
 
-        return symbols
+        return visitor.symbols
     }
 
     private val deferredSymbolsUpdated: Collection<KSAnnotated> by lazy {
