@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSReferenceElement
@@ -30,11 +31,14 @@ import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.types.KtType
 
 class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
+    companion object : KSObjectCache<KtType, KSTypeReference>() {
+        fun getCached(type: KtType): KSTypeReference = cache.getOrPut(type) { KSTypeReferenceImpl(type) }
+    }
     // FIXME: return correct reference element.
     override val element: KSReferenceElement? = null
 
     override fun resolve(): KSType {
-        return KSTypeImpl(ktType)
+        return KSTypeImpl.getCached(ktType)
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {

@@ -42,7 +42,6 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.psi.PsiJavaFile
-import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
@@ -167,8 +166,19 @@ class ResolverAAImpl(
         TODO("Not yet implemented")
     }
 
+    // TODO: optimization and type alias handling.
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        TODO("Not yet implemented")
+        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
+
+        for (file in getNewFiles()) {
+            file.accept(visitor, Unit)
+        }
+
+        return visitor.symbols.asSequence().filter {
+            it.annotations.any {
+                it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+            }
+        }
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {

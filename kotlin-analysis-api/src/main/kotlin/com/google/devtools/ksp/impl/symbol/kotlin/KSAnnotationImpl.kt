@@ -18,8 +18,10 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
+import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 
 class KSAnnotationImpl private constructor(private val annotationApplication: KtAnnotationApplication) : KSAnnotation {
@@ -28,8 +30,11 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
             cache.getOrPut(annotationApplication) { KSAnnotationImpl(annotationApplication) }
     }
 
-    override val annotationType: KSTypeReference
-        get() = TODO("Not yet implemented")
+    override val annotationType: KSTypeReference by lazy {
+        analyzeWithSymbolAsContext(ResolverAAImpl.instance.ktFiles.first()) {
+            KSTypeReferenceImpl.getCached(buildClassType(annotationApplication.classId!!))
+        }
+    }
 
     override val arguments: List<KSValueArgument> by lazy {
         annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it) }

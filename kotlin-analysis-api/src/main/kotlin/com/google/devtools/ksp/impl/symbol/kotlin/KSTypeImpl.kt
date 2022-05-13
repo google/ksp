@@ -17,17 +17,35 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
+import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
+import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
+import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
 
-class KSTypeImpl(private val type: KtType) : KSType {
-    override val declaration: KSDeclaration
-        get() = TODO("Not yet implemented")
+class KSTypeImpl private constructor(private val type: KtType) : KSType {
+    companion object : KSObjectCache<KtType, KSTypeImpl>() {
+        fun getCached(type: KtType): KSTypeImpl = cache.getOrPut(type) { KSTypeImpl(type) }
+    }
+
+    override val declaration: KSDeclaration by lazy {
+        // TODO: replace with analyze with KtModule once ready in upstream.
+        analyzeWithSymbolAsContext(ResolverAAImpl.instance.ktFiles.first()) {
+            KSClassDeclarationImpl.getCached(
+                (type as KtNonErrorClassType).classId
+                    .getCorrespondingToplevelClassOrObjectSymbol() as KtNamedClassOrObjectSymbol
+            )
+        }
+    }
+
     override val nullability: Nullability by lazy {
         if (type.nullability == KtTypeNullability.NON_NULLABLE) {
             Nullability.NOT_NULL
@@ -35,8 +53,10 @@ class KSTypeImpl(private val type: KtType) : KSType {
             Nullability.NULLABLE
         }
     }
+
     override val arguments: List<KSTypeArgument>
         get() = TODO("Not yet implemented")
+
     override val annotations: Sequence<KSAnnotation>
         get() = TODO("Not yet implemented")
 
@@ -69,11 +89,14 @@ class KSTypeImpl(private val type: KtType) : KSType {
     }
 
     override val isMarkedNullable: Boolean
-        get() = TODO("Not yet implemented")
+        get() = type.nullability == KtTypeNullability.NULLABLE
+
     override val isError: Boolean
-        get() = TODO("Not yet implemented")
+        get() = type is KtClassErrorType
+
     override val isFunctionType: Boolean
-        get() = TODO("Not yet implemented")
+        get() = type is KtFunctionalType
+
     override val isSuspendFunctionType: Boolean
-        get() = TODO("Not yet implemented")
+        get() = type is KtFunctionalType && type.isSuspend
 }
