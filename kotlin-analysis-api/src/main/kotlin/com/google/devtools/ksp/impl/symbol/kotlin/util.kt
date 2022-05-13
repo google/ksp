@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
@@ -95,6 +96,7 @@ internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
                 is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(it)
                 is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
                 is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
+                is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(it)
                 else -> throw IllegalStateException()
             }
         }
