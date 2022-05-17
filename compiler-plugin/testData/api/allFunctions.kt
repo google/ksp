@@ -75,6 +75,28 @@
 // equals(kotlin.Any): kotlin.Boolean
 // hashCode(): kotlin.Int
 // toString(): kotlin.String
+// class: Sub
+// equals(kotlin.Any): kotlin.Boolean
+// foo(kotlin.String ...): kotlin.Unit
+// hashCode(): kotlin.Int
+// toString(): kotlin.String
+// class: SubAbstract
+// <init>(): SubAbstract
+// equals(kotlin.Any): kotlin.Boolean
+// foo(kotlin.String ...): kotlin.Unit
+// hashCode(): kotlin.Int
+// toString(): kotlin.String
+// class: Super
+// equals(kotlin.Any): kotlin.Boolean
+// foo(kotlin.String ...): kotlin.Unit
+// hashCode(): kotlin.Int
+// toString(): kotlin.String
+// class: SuperAbstract
+// <init>(): SuperAbstract
+// equals(kotlin.Any): kotlin.Boolean
+// foo(kotlin.String ...): kotlin.Unit
+// hashCode(): kotlin.Int
+// toString(): kotlin.String
 // END
 // FILE: a.kt
 abstract class Foo : C(), List<out Number> {
@@ -94,6 +116,20 @@ abstract class Foo : C(), List<out Number> {
 data class Data(val a: String) {
     override fun equals(other: Any?): Boolean {
         return false
+    }
+}
+
+interface Super {
+    fun foo(vararg values: String)
+}
+
+interface Sub : Super
+
+class SubAbstract: SuperAbstract()
+
+abstract class SuperAbstract {
+    fun foo(vararg values: String) {
+
     }
 }
 

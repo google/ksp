@@ -58,7 +58,12 @@ class KSValueParameterDescriptorImpl private constructor(
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, this)
+        // Descriptor wraps vararg with Array<>, to align with the actual behavior in source.
+        if (isVararg) {
+            KSTypeReferenceDescriptorImpl.getCached(descriptor.varargElementType!!, origin, this)
+        } else {
+            KSTypeReferenceDescriptorImpl.getCached(descriptor.type, origin, this)
+        }
     }
 
     override val hasDefault: Boolean = descriptor.hasDefaultValue()
