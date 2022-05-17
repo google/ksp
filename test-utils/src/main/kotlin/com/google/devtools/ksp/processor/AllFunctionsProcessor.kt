@@ -50,6 +50,9 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
                         if (it.hasDefault) {
                             append("(hasDefault)")
                         }
+                        if (it.isVararg) {
+                            append(" ...")
+                        }
                     }
                 }.joinToString(",")})" +
                 ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString() ?: ""}"
