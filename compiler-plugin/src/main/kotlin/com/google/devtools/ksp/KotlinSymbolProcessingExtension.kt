@@ -76,6 +76,14 @@ class KotlinSymbolProcessingExtension(
 
                 ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader)
             }
+            if (providers.isEmpty()) {
+                logger.error("No providers found in processor classpath.")
+            } else {
+                logger.info(
+                    "loaded provider(s): " +
+                        "${providers.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.javaClass.name }}"
+                )
+            }
         }
         return providers
     }
@@ -126,6 +134,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         if (rounds > MULTI_ROUND_THRESHOLD) {
             logger.warn("Current processing rounds exceeds 100, check processors for potential infinite rounds")
         }
+        logger.logging("round $rounds of processing")
         val psiManager = PsiManager.getInstance(project)
         if (initialized) {
             psiManager.dropPsiCaches()
