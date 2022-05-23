@@ -60,7 +60,7 @@ class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : K
     }
 
     override val declarations: Sequence<KSDeclaration> by lazy {
-        analyzeWithSymbolAsContext(ktFileSymbol) {
+        analyze {
             ktFileSymbol.getFileScope().getAllSymbols().map {
                 when (it) {
                     is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
@@ -85,7 +85,7 @@ class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : K
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        analyzeWithSymbolAsContext(ktFileSymbol) {
+        analyze {
             ktFileSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
         }
     }
