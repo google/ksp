@@ -46,7 +46,7 @@ class KSClassDeclarationImpl private constructor(
     }
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
-        analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
+        analyze {
             ktNamedClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
                 KSFunctionDeclarationImpl.getCached(it)
             }
@@ -54,7 +54,7 @@ class KSClassDeclarationImpl private constructor(
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
+        analyze {
             ktNamedClassOrObjectSymbol.superTypes.map { KSTypeReferenceImpl(it) }.asSequence()
         }
     }
@@ -68,14 +68,14 @@ class KSClassDeclarationImpl private constructor(
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
+        return analyze {
             ktNamedClassOrObjectSymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
                 .map { KSFunctionDeclarationImpl.getCached(it) }
         }
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        return analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
+        return analyze {
             ktNamedClassOrObjectSymbol.getMemberScope().getAllSymbols().filterIsInstance<KtPropertySymbol>()
                 .map { KSPropertyDeclarationImpl.getCached(it) }
         }
@@ -133,7 +133,7 @@ class KSClassDeclarationImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        analyzeWithSymbolAsContext(ktNamedClassOrObjectSymbol) {
+        analyze {
             ktNamedClassOrObjectSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
         }
     }

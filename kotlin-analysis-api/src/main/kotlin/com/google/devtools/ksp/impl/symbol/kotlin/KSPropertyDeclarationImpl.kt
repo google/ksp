@@ -111,7 +111,7 @@ class KSPropertyDeclarationImpl private constructor(
     }
 
     override val parent: KSNode? by lazy {
-        analyzeWithSymbolAsContext(ktPropertySymbol) {
+        analyze {
             ktPropertySymbol.getContainingSymbol()?.let {
                 KSClassDeclarationImpl.getCached(it as KtNamedClassOrObjectSymbol)
             } ?: ktPropertySymbol.toContainingFile()

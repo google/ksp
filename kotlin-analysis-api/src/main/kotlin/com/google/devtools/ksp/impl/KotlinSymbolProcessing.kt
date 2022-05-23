@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl
 import com.google.devtools.ksp.AnyChanges
 import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
@@ -30,13 +31,11 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
-import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
 import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
 import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
-import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
+import org.jetbrains.kotlin.analysis.project.structure.getKtModule
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
@@ -61,10 +60,10 @@ class KotlinSymbolProcessing(
     lateinit var processors: List<SymbolProcessor>
 
     fun prepare() {
+        // TODO: support no Kotlin source mode.
+        ResolverAAImpl.ktModule = ktFiles.first().getKtModule()
         val ksFiles = ktFiles.map { file ->
-            analyseWithCustomToken(file, AlwaysAccessibleValidityTokenFactory) {
-                KSFileImpl.getCached(file.getFileSymbol())
-            }
+            analyze { KSFileImpl.getCached(file.getFileSymbol()) }
         }
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         codeGenerator = CodeGeneratorImpl(
@@ -107,7 +106,7 @@ class KotlinSymbolProcessing(
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
         val resolver = ResolverAAImpl(
             ktFiles.map {
-                analyseWithCustomToken(it, AlwaysAccessibleValidityTokenFactory) { it.getFileSymbol() }
+                analyze { it.getFileSymbol() }
             },
             javaFiles
         )
@@ -134,8 +133,7 @@ fun main(args: Array<String>) {
     configureProjectEnvironment(
         kotlinCoreEnvironment.project as MockProject,
         compilerConfiguration,
-        kotlinCoreEnvironment::createPackagePartProvider,
-        kotlinCoreEnvironment.projectEnvironment.environment.jarFileSystem as CoreJarFileSystem
+        kotlinCoreEnvironment::createPackagePartProvider
     )
 
     val kotlinSymbolProcessing = KotlinSymbolProcessing(

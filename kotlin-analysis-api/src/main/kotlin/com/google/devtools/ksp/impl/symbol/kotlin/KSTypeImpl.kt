@@ -18,7 +18,6 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -37,8 +36,7 @@ class KSTypeImpl private constructor(private val type: KtType) : KSType {
     }
 
     override val declaration: KSDeclaration by lazy {
-        // TODO: replace with analyze with KtModule once ready in upstream.
-        analyzeWithSymbolAsContext(ResolverAAImpl.instance.ktFiles.first()) {
+        analyze {
             KSClassDeclarationImpl.getCached(
                 (type as KtNonErrorClassType).classId
                     .getCorrespondingToplevelClassOrObjectSymbol() as KtNamedClassOrObjectSymbol

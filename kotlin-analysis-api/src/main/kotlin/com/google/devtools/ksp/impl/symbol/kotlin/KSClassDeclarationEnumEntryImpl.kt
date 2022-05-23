@@ -45,7 +45,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return analyzeWithSymbolAsContext(ktEnumEntrySymbol) {
+        return analyze {
             ktEnumEntrySymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
                 .map { KSFunctionDeclarationImpl.getCached(it) }
         }
@@ -80,7 +80,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {
-        analyzeWithSymbolAsContext(ktEnumEntrySymbol) {
+        analyze {
             ktEnumEntrySymbol.getContainingSymbol()
                 .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl.getCached(it) }
         }
@@ -104,7 +104,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(
     }
 
     override val parent: KSNode? by lazy {
-        analyzeWithSymbolAsContext(ktEnumEntrySymbol) {
+        analyze {
             ktEnumEntrySymbol.getContainingSymbol()
                 .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl.getCached(it) }
         }
