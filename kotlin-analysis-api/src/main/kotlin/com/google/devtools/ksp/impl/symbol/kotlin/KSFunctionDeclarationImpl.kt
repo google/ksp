@@ -50,7 +50,7 @@ class KSFunctionDeclarationImpl private constructor(
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
-        analyzeWithSymbolAsContext(ktFunctionSymbol) {
+        analyze {
             if (!ktFunctionSymbol.isExtension) {
                 null
             } else {
@@ -60,7 +60,7 @@ class KSFunctionDeclarationImpl private constructor(
     }
 
     override val returnType: KSTypeReference? by lazy {
-        analyzeWithSymbolAsContext(ktFunctionSymbol) {
+        analyze {
             KSTypeReferenceImpl(ktFunctionSymbol.returnType)
         }
     }

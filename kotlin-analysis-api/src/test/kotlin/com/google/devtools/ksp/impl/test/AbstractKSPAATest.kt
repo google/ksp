@@ -26,7 +26,6 @@ import com.google.devtools.ksp.testutils.AbstractKSPTest
 import com.intellij.mock.MockApplication
 import com.intellij.mock.MockProject
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
 import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
@@ -99,7 +98,6 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             kotlinCoreEnvironment.project as MockProject,
             compilerConfiguration,
             kotlinCoreEnvironment::createPackagePartProvider,
-            kotlinCoreEnvironment.projectEnvironment.environment.jarFileSystem as CoreJarFileSystem
         )
 
         val testRoot = mainModule.testRoot

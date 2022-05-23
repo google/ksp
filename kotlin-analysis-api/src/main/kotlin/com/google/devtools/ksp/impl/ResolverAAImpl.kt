@@ -23,7 +23,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.analyzeWithSymbolAsContext
+import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -46,6 +46,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
+import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -58,6 +59,7 @@ class ResolverAAImpl(
 ) : Resolver {
     companion object {
         lateinit var instance: ResolverAAImpl
+        lateinit var ktModule: KtModule
     }
 
     private val ksFiles by lazy {
@@ -87,11 +89,11 @@ class ResolverAAImpl(
             val parent = name.getQualifier()
             val simpleName = name.getShortName()
             val classId = ClassId(FqName(parent), Name.identifier(simpleName))
-            analyzeWithSymbolAsContext(ktFiles.first()) {
+            analyze {
                 classId.getCorrespondingToplevelClassOrObjectSymbol() as? KtNamedClassOrObjectSymbol
             }?.let { return it }
             return findClass(KSNameImpl.getCached(name.getQualifier())).safeAs<KtNamedClassOrObjectSymbol>()?.let {
-                analyzeWithSymbolAsContext(ktFiles.first()) {
+                analyze {
                     (
                         it.getStaticMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
                             ?: it.getMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()

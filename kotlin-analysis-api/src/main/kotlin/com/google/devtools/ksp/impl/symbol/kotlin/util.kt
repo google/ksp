@@ -19,14 +19,14 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
-import org.jetbrains.kotlin.analysis.api.InvalidWayOfUsingAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
-import org.jetbrains.kotlin.analysis.api.KtAnalysisSessionProvider
-import org.jetbrains.kotlin.analysis.api.analyseWithCustomToken
+import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
@@ -36,7 +36,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtAnnotatedSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
-import org.jetbrains.kotlin.analysis.api.tokens.AlwaysAccessibleValidityTokenFactory
 import org.jetbrains.kotlin.psi.KtElement
 
 internal val ktSymbolOriginToOrigin = mapOf(
@@ -68,7 +67,7 @@ internal fun PsiElement?.toLocation(): Location {
 
 internal fun KtSymbol.toContainingFile(): KSFile? {
     return when (val psi = this.psi) {
-        is KtElement -> analyseWithCustomToken(psi, AlwaysAccessibleValidityTokenFactory) {
+        is KtElement -> analyze {
             KSFileImpl.getCached(psi.containingKtFile.getFileSymbol())
         }
         is PsiElement -> KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
@@ -78,18 +77,12 @@ internal fun KtSymbol.toContainingFile(): KSFile? {
 
 internal fun KtSymbol.toDocString(): String? = this.psi?.getDocString()
 
-// TODO: migrate to analyzeWithKtModule once it's available.
-@OptIn(InvalidWayOfUsingAnalysisSession::class)
-internal inline fun <R> analyzeWithSymbolAsContext(
-    contextSymbol: KtSymbol,
-    action: KtAnalysisSession.() -> R
-): R {
-    return KtAnalysisSessionProvider.getInstance(KSPCoreEnvironment.instance.project)
-        .analyzeWithSymbolAsContext(contextSymbol, action)
+internal inline fun <R> analyze(crossinline action: KtAnalysisSession.() -> R): R {
+    return analyze(ResolverAAImpl.ktModule, KtAlwaysAccessibleLifetimeTokenFactory, action)
 }
 
 internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
-    return analyzeWithSymbolAsContext(this) {
+    return analyze {
         this@declarations.getDeclaredMemberScope().getAllSymbols().map {
             when (it) {
                 is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
@@ -108,7 +101,7 @@ internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
 }
 
 internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
-    return analyzeWithSymbolAsContext(this) {
+    return analyze {
         when (val containingSymbol = this@getContainingKSSymbol.getContainingSymbol()) {
             is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(containingSymbol)
             is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(containingSymbol)
