@@ -18,7 +18,6 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
@@ -31,7 +30,7 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
     }
 
     override val annotationType: KSTypeReference by lazy {
-        analyzeWithSymbolAsContext(ResolverAAImpl.instance.ktFiles.first()) {
+        analyze {
             KSTypeReferenceImpl.getCached(buildClassType(annotationApplication.classId!!))
         }
     }
