@@ -25,6 +25,9 @@
 // getVoid: ()Ljava/lang/Void;
 // LJavaClass;
 // <init>: ()V
+// LJavaAnno;
+// intParam: I
+// <init>: (I)V
 // END
 
 // FILE: Cls.kt
@@ -42,4 +45,9 @@ interface JavaIntefaceWithVoid {
 // FILE: JavaClass.java
 class JavaClass {
     JavaClass() {}
+}
+
+// FILE: JavaAnno.java
+@interface JavaAnno {
+    int intParam();
 }

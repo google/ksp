@@ -28,6 +28,8 @@ import com.google.devtools.ksp.toKSModifiers
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
     KSFunctionDeclaration,
@@ -53,7 +55,7 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
 
     override fun findOverridee(): KSDeclaration? {
         val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
-        return descriptor?.findClosestOverridee()?.toKSDeclaration()
+        return descriptor.safeAs<FunctionDescriptor>()?.findClosestOverridee()?.toKSDeclaration()
     }
 
     override val declarations: Sequence<KSDeclaration> = emptySequence()

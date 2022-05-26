@@ -31,7 +31,7 @@ class MapSignatureProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        listOf("Cls", "JavaIntefaceWithVoid", "JavaClass")
+        listOf("Cls", "JavaIntefaceWithVoid", "JavaClass", "JavaAnno")
             .map { className ->
                 resolver.getClassDeclarationByName(className)!!
             }.forEach { subject ->
