@@ -85,6 +85,10 @@
 // JavaAccessorImpl.getX() -> KtInterfaceWithProperty.x
 // JavaAccessorImpl.getY() -> KtInterfaceWithProperty.y
 // JavaAccessorImpl.setY(value:Int) -> KtInterfaceWithProperty.y
+// JavaAnno:
+// JavaAnno.intParam() -> null
+// JavaAnnos:
+// JavaAnnos.value() -> null
 // END
 // MODULE: lib
 // FILE: lib.kt
@@ -294,4 +298,15 @@ class JavaAccessorImpl implements KtInterfaceWithProperty {
     }
     public void setY(int value) {
     }
+}
+
+// FILE: JavaAnno.java
+@java.lang.annotation.Repeatable(JavaAnnos.class)
+public @interface JavaAnno {
+    int intParam();
+}
+
+// FILE: JavaAnnos.java
+public @interface JavaAnnos {
+    JavaAnno[] value();
 }
