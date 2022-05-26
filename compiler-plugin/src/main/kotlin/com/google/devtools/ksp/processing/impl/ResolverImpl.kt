@@ -352,7 +352,11 @@ class ResolverImpl(
     internal fun mapToJvmSignatureInternal(declaration: KSDeclaration): String? = when (declaration) {
         is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor }
         is KSFunctionDeclaration -> resolveFunctionDeclaration(declaration)?.let {
-            typeMapper.mapAsmMethod(it).descriptor
+            when (it) {
+                is FunctionDescriptor -> typeMapper.mapAsmMethod(it).descriptor
+                is PropertyDescriptor -> typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
+                else -> throw IllegalStateException("Unexpected descriptor type for declaration: $declaration")
+            }
         }
         is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)?.let {
             typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
@@ -414,7 +418,8 @@ class ResolverImpl(
         incrementalContext.recordLookupForDeclaration(candidate)
         val originalDescriptor = when (original) {
             is KSPropertyDeclaration -> resolvePropertyDeclaration(original)
-            is KSFunctionDeclaration -> resolveFunctionDeclaration(original)?.propertyIfAccessor
+            is KSFunctionDeclaration ->
+                resolveFunctionDeclaration(original).safeAs<FunctionDescriptor>()?.propertyIfAccessor
             else -> return false
         }
 
@@ -557,7 +562,7 @@ class ResolverImpl(
         } as ClassDescriptor?
     }
 
-    fun resolveFunctionDeclaration(function: KSFunctionDeclaration): FunctionDescriptor? {
+    fun resolveFunctionDeclaration(function: KSFunctionDeclaration): CallableDescriptor? {
         return when (function) {
             is KSFunctionDeclarationImpl -> resolveDeclaration(function.ktFunction)
             is KSFunctionDeclarationDescriptorImpl -> function.descriptor
@@ -581,7 +586,7 @@ class ResolverImpl(
                 resolved?.unsubstitutedPrimaryConstructor ?: resolved?.constructors?.singleOrNull()
             }
             else -> throw IllegalStateException("unexpected class: ${function.javaClass}")
-        } as FunctionDescriptor?
+        } as? CallableDescriptor
     }
 
     fun resolvePropertyDeclaration(property: KSPropertyDeclaration): PropertyDescriptor? {
@@ -807,9 +812,9 @@ class ResolverImpl(
     override fun getJvmName(declaration: KSFunctionDeclaration): String? {
         // function names might be mangled if they receive inline class parameters or they are internal
         val descriptor = resolveFunctionDeclaration(declaration)
-        return descriptor?.let {
+        return descriptor.safeAs<FunctionDescriptor>()?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
-            typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
+            typeMapper.mapFunctionName(it, OwnerKind.IMPLEMENTATION)
         }
     }
 
