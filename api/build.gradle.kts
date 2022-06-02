@@ -8,7 +8,7 @@ val signingPassword: String? by project
 val kotlinBaseVersion: String by project
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
+    kotlinOptions.freeCompilerArgs += "-Xjvm-default=all-compatibility"
 }
 
 plugins {
