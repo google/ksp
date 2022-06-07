@@ -189,6 +189,13 @@ enum class KspCliOption(
         false
     ),
 
+    PROCESSOR_NAME_OPTION(
+        "processorNames",
+        "<processorNames>",
+        "only executes following processor(s)",
+        false
+    ),
+
     KNOWN_MODIFIED_OPTION(
         "knownModified",
         "<knownModified>",
@@ -259,6 +266,7 @@ fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when
     KspCliOption.PROCESSOR_CLASSPATH_OPTION -> processingClasspath += value.split(File.pathSeparator).map {
         File(it)
     }
+    KspCliOption.PROCESSOR_NAME_OPTION -> processors += value.split(File.pathSeparator)
     KspCliOption.CLASS_OUTPUT_DIR_OPTION -> classOutputDir = File(value)
     KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
     KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
