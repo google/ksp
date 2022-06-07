@@ -74,7 +74,9 @@ class KotlinSymbolProcessingExtension(
                 val classLoader =
                     URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
 
-                ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader)
+                ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader).filter {
+                    options.processors.isEmpty() || it.javaClass.name in options.processors
+                }
             }
             if (providers.isEmpty()) {
                 logger.error("No providers found in processor classpath.")
