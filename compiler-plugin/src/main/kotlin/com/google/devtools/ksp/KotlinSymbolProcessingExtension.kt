@@ -172,7 +172,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         is KSFileJavaImpl -> it.psi
                         else -> null
                     }?.virtualFile?.let { virtualFile ->
-                        File(virtualFile.path).canonicalPath
+                        if (System.getProperty("os.name").startsWith("windows", ignoreCase = true)) {
+                            virtualFile.canonicalPath ?: virtualFile.path
+                        } else {
+                            File(virtualFile.path).canonicalPath
+                        }
                     } in newFileNames
                 }
                 incrementalContext.registerGeneratedFiles(newFiles)
