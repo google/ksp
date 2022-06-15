@@ -176,12 +176,21 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
     }
 
+    private var multiplatformEnabled: Boolean = false
+
     private lateinit var kspConfigurations: KspConfigurations
 
     override fun apply(target: Project) {
-        target.extensions.create("ksp", KspExtension::class.java)
-        kspConfigurations = KspConfigurations(target)
-        registry.register(KspModelBuilder())
+        multiplatformEnabled =
+            target.findProperty("ksp.multiplatform.enabled")?.let { it.toString().toBoolean() } ?: false
+        if (multiplatformEnabled) {
+            target.logger.warn("[ksp] Enabling the 'ksp' multiplatform extension (supports Kotlin build scripts only)")
+            target.extensions.create("ksp", KspMultiplatformExtension::class.java)
+        } else {
+            target.extensions.create("ksp", KspExtension::class.java)
+        }
+        kspConfigurations = KspConfigurations(target, multiplatformEnabled)
+        registry.register(KspModelBuilder(multiplatformEnabled))
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
@@ -214,7 +223,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
             project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
         val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
-        val kspExtension = project.extensions.getByType(KspExtension::class.java)
+        val kspExtension =
+            if (multiplatformEnabled) {
+                project.extensions.getByType(KspMultiplatformExtension::class.java).kspExtension
+            } else {
+                project.extensions.getByType(KspExtension::class.java)
+            }
         val compilationKspConfigurations =
             kspConfigurations.find(kotlinCompilation).filter { it.allDependencies.isNotEmpty() }
         if (compilationKspConfigurations.isEmpty()) {

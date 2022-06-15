@@ -171,6 +171,7 @@ class SourceSetConfigurationsTest {
                 }
             """.trimIndent(),
             withAndroid = false,
+            enableMultiplatformExtension = true,
         )
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(

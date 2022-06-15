@@ -112,7 +112,10 @@ class KspIntegrationTestRule(
     fun setupAppAsMultiplatformApp(
         targets: String,
         withAndroid: Boolean = true,
+        enableMultiplatformExtension: Boolean = false
     ) {
+        if (enableMultiplatformExtension)
+            testProject.appendGradleProperties("ksp.multiplatform.enabled=true")
         testProject.appModule.plugins.addAll(
             listOfNotNull(
                 if (withAndroid) {

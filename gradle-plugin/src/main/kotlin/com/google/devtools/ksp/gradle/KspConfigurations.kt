@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 /**
  * Creates and retrieves ksp-related configurations.
  */
-class KspConfigurations(private val project: Project) {
+class KspConfigurations(private val project: Project, multiplatformEnabled: Boolean) {
     companion object {
         private const val PREFIX = "ksp"
     }
@@ -23,7 +23,11 @@ class KspConfigurations(private val project: Project) {
     // The "ksp" configuration, applied to every compilations.
     private val configurationForAll = project.configurations.create(PREFIX)
 
-    private val kspExtension: KspExtension = project.extensions.getByType(KspExtension::class.java)
+    private val kspMultiplatformExtension: KspMultiplatformExtension? =
+        if (multiplatformEnabled) project.extensions.getByType(KspMultiplatformExtension::class.java) else null
+
+    private val kspExtension: KspExtension =
+        kspMultiplatformExtension?.kspExtension ?: project.extensions.getByType(KspExtension::class.java)
 
     private val resolvedSourceSetOptions = mutableMapOf<KotlinSourceSet, SourceSetOptions>()
     private val compilationsConfiguredOrSkipped = mutableSetOf<KotlinCompilation<*>>()
@@ -198,20 +202,22 @@ class KspConfigurations(private val project: Project) {
      */
     internal fun resolvedSourceSetOptions(kotlinCompilation: KotlinCompilation<*>): SourceSetOptions =
         resolvedSourceSetOptions.computeIfAbsent(kotlinCompilation.defaultSourceSet) { compilationSourceSet ->
-            val result = SourceSetOptions().inheritFrom(
-                kspExtension.sourceSetOptions(compilationSourceSet),
-                initializationMode = true
-            )
+            kspMultiplatformExtension?.let { kspMultiplatformExtension ->
+                val result = SourceSetOptions().inheritFrom(
+                    kspMultiplatformExtension.sourceSetOptions(compilationSourceSet),
+                    initializationMode = true
+                )
 
-            kotlinCompilation.parentSourceSetsBottomUp()
-                .map { kspExtension.sourceSetOptions(it) }
-                .takeWhile { it.inheritable }
-                .forEach { parentOptions ->
-                    result.inheritFrom(parentOptions)
-                }
+                kotlinCompilation.parentSourceSetsBottomUp()
+                    .map { kspMultiplatformExtension.sourceSetOptions(it) }
+                    .takeWhile { it.inheritable }
+                    .forEach { parentOptions ->
+                        result.inheritFrom(parentOptions)
+                    }
 
-            // Finally, complete missing options with global options (which are always inheritable).
-            result.inheritFrom(kspExtension.globalSourceSetOptions())
+                // Finally, complete missing options with global options (which are always inheritable).
+                result.inheritFrom(kspMultiplatformExtension.globalSourceSetOptions())
+            } ?: kspExtension.globalSourceSetOptions()
         }
 }
 
