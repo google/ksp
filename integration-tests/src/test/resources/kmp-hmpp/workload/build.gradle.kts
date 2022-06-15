@@ -3,6 +3,7 @@
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 
 plugins {
     kotlin("multiplatform")
@@ -85,8 +86,11 @@ tasks {
                 log("* target `${target.targetName}`")
                 target.compilations.forEach { compilation ->
                     val commonMark =
-                        if (compilation is org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation) " [common]" else ""
-                    log("  * compilation `${compilation.name}`$commonMark, default sourceSet: `${compilation.defaultSourceSet.name}`")
+                        if (compilation is KotlinCommonCompilation) " [common]" else ""
+                    log(
+                        "  * compilation `${compilation.name}`$commonMark," +
+                            " default sourceSet: `${compilation.defaultSourceSet.name}`"
+                    )
                     compilation.allKotlinSourceSets.forEach {
                         val dependencies =
                             if (it.dependsOn.isEmpty()) "" else ", depends on ${it.dependsOn.asStableText()}"
@@ -107,12 +111,11 @@ tasks {
                 log("* target `${target.targetName}`")
                 target.compilations.forEach { compilation ->
                     val commonMark =
-                        if (compilation is org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation) " [common]" else ""
+                        if (compilation is KotlinCommonCompilation) " [common]" else ""
                     log(
                         "  * compilation `${compilation.name}`$commonMark," +
-                            " ordered source sets: ${
-                                compilation.defaultSourceSet.allDependencies().joinToString { "`${it.name}`" }
-                            }"
+                            " ordered source sets: " +
+                            compilation.defaultSourceSet.allDependencies().joinToString { "`${it.name}`" }
                     )
                 }
             }
@@ -120,7 +123,10 @@ tasks {
             log("\nKSP configurations:\n")
             project.configurations.forEach { config ->
                 if (config.name.startsWith("ksp")) {
-                    log("* `${config.name}`, artifacts: ${config.allArtifacts.map { it.name }}, dependencies: ${config.dependencies.map { it.name }}")
+                    log(
+                        "* `${config.name}`, artifacts: ${config.allArtifacts.map { it.name }}," +
+                            " dependencies: ${config.dependencies.map { it.name }}"
+                    )
                 }
             }
 
@@ -130,13 +136,13 @@ tasks {
                 if (selection == null || selection.any { task.name.startsWith(it) }) {
                     log(
                         "* `${task.name}` depends on [${
-                            task.dependsOn.asStableText {
-                                when {
-                                    "ksp" in this -> Regex("""[^\w](ksp\w+)""").find(this)?.groupValues?.get(1)
-                                    startsWith("`compile") -> this
-                                    else -> null
-                                }
+                        task.dependsOn.asStableText {
+                            when {
+                                "ksp" in this -> Regex("""[^\w](ksp\w+)""").find(this)?.groupValues?.get(1)
+                                startsWith("`compile") -> this
+                                else -> null
                             }
+                        }
                         }]"
                     )
                 }

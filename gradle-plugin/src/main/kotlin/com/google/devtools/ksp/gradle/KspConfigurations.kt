@@ -215,7 +215,6 @@ class KspConfigurations(private val project: Project) {
         }
 }
 
-
 internal fun KotlinSourceSet.bottomUpDependencies(): Sequence<KotlinSourceSet> = sequence {
     yield(this@bottomUpDependencies)
     dependsOn.forEach {
@@ -223,12 +222,10 @@ internal fun KotlinSourceSet.bottomUpDependencies(): Sequence<KotlinSourceSet> =
     }
 }
 
-
 internal fun KotlinCompilation<*>.parentSourceSetsBottomUp(): Sequence<KotlinSourceSet> =
     defaultSourceSet.bottomUpDependencies()
-        .drop(1)  // exclude the compilation source set
-        .distinct()  // avoid repetitions if multiple parents are present
-
+        .drop(1) // exclude the compilation source set
+        .distinct() // avoid repetitions if multiple parents are present
 
 internal fun lowerCamelCased(vararg parts: String): String {
     return parts.joinToString("") { part ->

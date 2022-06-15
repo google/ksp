@@ -517,8 +517,7 @@ abstract class KspTaskJvm @Inject constructor(
         )
 
         isIntermoduleIncremental =
-            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) &&
-                isKspIncremental
+            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) && isKspIncremental
         if (isIntermoduleIncremental) {
             val classStructureIfIncremental = project.configurations.detachedConfiguration(
                 project.dependencies.create(project.files(project.provider { kotlinCompile.libraries }))

@@ -40,14 +40,15 @@ class TestProcessor(
             val outputSourceSet = codeGenerator.generatedFile.first().toString().sourceSetBelow("ksp")
 
             OutputStreamWriter(output).use { writer ->
-                writer.write("""
-                    package com.example
-                    
-                    object ${currentFileBaseName}For${outputSourceSet.replaceFirstChar { it.uppercaseChar() }} {
-                        const val allFiles = "$allFileNamesSorted"
-                        const val options = "$options"
-                        const val outputSourceSet = "$outputSourceSet"
-                    }
+                writer.write(
+                    """
+                        package com.example
+                        
+                        object ${currentFileBaseName}For${outputSourceSet.replaceFirstChar { it.uppercaseChar() }} {
+                            const val allFiles = "$allFileNamesSorted"
+                            const val options = "$options"
+                            const val outputSourceSet = "$outputSourceSet"
+                        }
                     
                     """.trimIndent()
                 )

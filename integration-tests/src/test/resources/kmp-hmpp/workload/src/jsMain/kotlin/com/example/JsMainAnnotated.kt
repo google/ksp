@@ -4,4 +4,3 @@ package com.example
 class JsMainAnnotated {
     val allFiles = JsMainAnnotatedForJsMain.allFiles
 }
-

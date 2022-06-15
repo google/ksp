@@ -4,4 +4,3 @@ package com.example
 class CommonMainAnnotated {
     val allFiles = CommonMainAnnotatedForCommonMain.allFiles
 }
-
