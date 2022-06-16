@@ -33,7 +33,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : KSFile {
     companion object : KSObjectCache<KtFileSymbol, KSFileImpl>() {
@@ -66,7 +68,8 @@ class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : K
                     is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
                     is KtFunctionSymbol -> KSFunctionDeclarationImpl.getCached(it)
                     is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
-                    else -> throw IllegalStateException("Unhandled ")
+                    is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(it)
+                    else -> throw IllegalStateException("Unhandled ${it.javaClass}")
                 }
             }
         }
