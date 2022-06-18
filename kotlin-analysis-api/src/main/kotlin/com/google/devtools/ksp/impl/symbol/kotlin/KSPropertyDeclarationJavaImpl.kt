@@ -100,9 +100,8 @@ class KSPropertyDeclarationJavaImpl private constructor(
         return visitor.visitPropertyDeclaration(this, data)
     }
 
-    // FIXME: fix in upstream.
     override val annotations: Sequence<KSAnnotation>
-        get() = emptySequence()
+        get() = ktJavaFieldSymbol.annotations()
 
     override val isActual: Boolean
         get() = false

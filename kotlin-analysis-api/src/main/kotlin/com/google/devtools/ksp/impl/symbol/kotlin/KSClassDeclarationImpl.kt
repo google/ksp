@@ -68,17 +68,11 @@ class KSClassDeclarationImpl private constructor(
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return analyze {
-            ktNamedClassOrObjectSymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
-                .map { KSFunctionDeclarationImpl.getCached(it) }
-        }
+        return this.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        return analyze {
-            ktNamedClassOrObjectSymbol.getMemberScope().getAllSymbols().filterIsInstance<KtPropertySymbol>()
-                .map { KSPropertyDeclarationImpl.getCached(it) }
-        }
+        return this.getAllProperties()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
