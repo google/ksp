@@ -96,6 +96,32 @@ internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
     }
 }
 
+internal fun KtSymbolWithMembers.getAllProperties(): Sequence<KSPropertyDeclaration> {
+    return analyze {
+        this@getAllProperties.getMemberScope().getCallableSymbols()
+            .mapNotNull { callableSymbol ->
+                when (callableSymbol) {
+                    is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(callableSymbol)
+                    is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(callableSymbol)
+                    else -> null
+                }
+            }
+    }
+}
+
+internal fun KtSymbolWithMembers.getAllFunctions(): Sequence<KSFunctionDeclaration> {
+    return analyze {
+        this@getAllFunctions.getMemberScope().getCallableSymbols()
+            .mapNotNull { callableSymbol ->
+                // TODO: replace with single safe cast if no more implementations of KSFunctionDeclaration is added.
+                when (callableSymbol) {
+                    is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(callableSymbol)
+                    else -> null
+                }
+            }
+    }
+}
+
 internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
     return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
 }

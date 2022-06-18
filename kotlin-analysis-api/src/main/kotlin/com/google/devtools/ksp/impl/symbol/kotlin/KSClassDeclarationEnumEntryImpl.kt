@@ -21,6 +21,7 @@ import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSClassDeclarationEnumEntryImpl private constructor(
@@ -36,7 +37,11 @@ class KSClassDeclarationEnumEntryImpl private constructor(
     override val primaryConstructor: KSFunctionDeclaration? = null
 
     // TODO: Fix when type information is available in upstream.
-    override val superTypes: Sequence<KSTypeReference> = emptySequence()
+    override val superTypes: Sequence<KSTypeReference> by lazy {
+        analyze {
+            ktEnumEntrySymbol.returnType.getDirectSuperTypes().asSequence().map { KSTypeReferenceImpl.getCached(it) }
+        }
+    }
 
     override val isCompanionObject: Boolean = false
 
@@ -45,14 +50,11 @@ class KSClassDeclarationEnumEntryImpl private constructor(
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return analyze {
-            ktEnumEntrySymbol.getMemberScope().getCallableSymbols().filterIsInstance<KtFunctionLikeSymbol>()
-                .map { KSFunctionDeclarationImpl.getCached(it) }
-        }
+        return this.ktEnumEntrySymbol.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        TODO("Not yet implemented")
+        return this.ktEnumEntrySymbol.getAllProperties()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
