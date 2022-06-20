@@ -233,10 +233,6 @@ internal fun KotlinCompilation<*>.parentSourceSetsBottomUp(): Sequence<KotlinSou
         .drop(1) // exclude the compilation source set
         .distinct() // avoid repetitions if multiple parents are present
 
-internal fun KotlinCompilation<*>.allSourceSetsBottomUp(): Sequence<KotlinSourceSet> =
-    defaultSourceSet.bottomUpDependencies()
-        .distinct() // avoid repetitions if multiple parents are present
-
 internal fun lowerCamelCased(vararg parts: String): String {
     return parts.joinToString("") { part ->
         part.replaceFirstChar { it.uppercase() }

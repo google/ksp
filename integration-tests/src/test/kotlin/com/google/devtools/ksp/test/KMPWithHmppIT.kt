@@ -89,7 +89,6 @@ class KMPWithHmppIT {
     @Test
     fun testCustomSourceSetHierarchyDependencies() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val subprojectName = "workload"
 
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
@@ -156,21 +155,21 @@ class KMPWithHmppIT {
                         
                         Tasks [compile, ksp] and their ksp/compile dependencies:
                         
-                        * `compileClientMainKotlinMetadata` depends on [kspClientMainKotlinMetadata, kspCommonMainKotlinMetadata]
+                        * `compileClientMainKotlinMetadata` depends on [kspClientMainKotlinMetadata]
                         * `compileCommonMainKotlinMetadata` depends on [kspCommonMainKotlinMetadata]
                         * `compileJava` depends on []
-                        * `compileKotlinJs` depends on [kspClientMainKotlinMetadata, kspCommonMainKotlinMetadata, kspKotlinJs]
-                        * `compileKotlinJvm` depends on [kspClientMainKotlinMetadata, kspCommonMainKotlinMetadata, kspKotlinJvm]
+                        * `compileKotlinJs` depends on [kspKotlinJs]
+                        * `compileKotlinJvm` depends on [kspKotlinJvm]
                         * `compileKotlinMetadata` depends on []
                         * `compileTestDevelopmentExecutableKotlinJs` depends on [`compileTestKotlinJs`]
                         * `compileTestJava` depends on []
                         * `compileTestKotlinJs` depends on []
                         * `compileTestKotlinJvm` depends on [kspTestKotlinJvm]
                         * `compileTestProductionExecutableKotlinJs` depends on [`compileTestKotlinJs`]
-                        * `kspClientMainKotlinMetadata` depends on [kspClientMainKotlinMetadataProcessorClasspath, kspCommonMainKotlinMetadata]
+                        * `kspClientMainKotlinMetadata` depends on [kspClientMainKotlinMetadataProcessorClasspath]
                         * `kspCommonMainKotlinMetadata` depends on [kspCommonMainKotlinMetadataProcessorClasspath]
-                        * `kspKotlinJs` depends on [kspClientMainKotlinMetadata, kspCommonMainKotlinMetadata, kspKotlinJsProcessorClasspath]
-                        * `kspKotlinJvm` depends on [kspClientMainKotlinMetadata, kspCommonMainKotlinMetadata, kspKotlinJvmProcessorClasspath]
+                        * `kspKotlinJs` depends on [kspKotlinJsProcessorClasspath]
+                        * `kspKotlinJvm` depends on [kspKotlinJvmProcessorClasspath]
                         * `kspTestKotlinJvm` depends on [kspTestKotlinJvmProcessorClasspath]
 
                     """.trimIndent() in relevantOutput
