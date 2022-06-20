@@ -19,24 +19,30 @@ class TestProcessor(
         substringAfter("/$startDirectoryName/").substringBefore("/kotlin/").substringAfterLast('/')
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        val allFileNamesSorted =
+            resolver.getAllFiles().map { "${it.filePath.sourceSetBelow("src")}:${it.fileName}" }.toList().sorted()
+        val newFileNamesSorted =
+            resolver.getNewFiles().map { "${it.filePath.sourceSetBelow("src")}:${it.fileName}" }.toList().sorted()
+        logger.warn("all files: $allFileNamesSorted")
+        logger.warn("new files: $newFileNamesSorted")
+
         if (invoked) {
             return emptyList()
         }
         invoked = true
 
-        val allFileNames = resolver.getAllFiles().map { it.fileName }.toList()
-        val allFileNamesSorted = allFileNames.sorted()
-        val currentFileName = allFileNames.last()
-        val currentFileBaseName = currentFileName.removeSuffix(".kt")
-        logger.warn("current file: $currentFileName")
-        logger.warn("all files: $allFileNamesSorted")
         environment.options.toSortedMap().forEach { (key, value) ->
             logger.warn("option: '$key' -> '$value'")
         }
 
         val options = environment.options.toSortedMap().map { (key, value) -> "'$key' -> '$value'" }
 
-        codeGenerator.createNewFile(Dependencies(false), "", "${currentFileBaseName}Generated", "kt").use { output ->
+        codeGenerator.createNewFile(
+            Dependencies(aggregating = true, *resolver.getAllFiles().toList().toTypedArray()),
+            "com.example",
+            "Generated",
+            "kt"
+        ).use { output ->
             val outputSourceSet = codeGenerator.generatedFile.first().toString().sourceSetBelow("ksp")
 
             OutputStreamWriter(output).use { writer ->
@@ -44,8 +50,9 @@ class TestProcessor(
                     """
                         package com.example
                         
-                        object ${currentFileBaseName}For${outputSourceSet.replaceFirstChar { it.uppercaseChar() }} {
+                        object GeneratedFor${outputSourceSet.replaceFirstChar { it.uppercaseChar() }} {
                             const val allFiles = "$allFileNamesSorted"
+                            const val newFiles = "$newFileNamesSorted"
                             const val options = "$options"
                             const val outputSourceSet = "$outputSourceSet"
                         }

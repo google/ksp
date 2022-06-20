@@ -2,5 +2,5 @@ package com.example
 
 @MyAnnotation
 class JvmTestAnnotated {
-    val allFiles = JvmTestAnnotatedForJvmTest.allFiles
+    val allFiles = GeneratedForJvmTest.allFiles
 }

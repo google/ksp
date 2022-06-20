@@ -13,59 +13,69 @@ class KMPWithHmppIT {
     @Test
     fun testCustomSourceSetHierarchyBuild() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val subprojectName = "workload"
 
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
             "clean",
-            ":$subprojectName:assemble",
-            ":$subprojectName:testClasses",
+            ":workload:assemble",
+            ":workload:testClasses",
         )
+            // .withDebug(true)
             .build()
             .let { result ->
                 val output: String = result.output
                 val relevantOutput =
-                    output.lines().filter { it.startsWith("> Task :$subprojectName:ksp") || it.startsWith("w: [ksp] ") }
+                    output.lines().filter { it.startsWith("> Task :workload:ksp") || it.startsWith("w: [ksp] ") }
                         .joinToString("\n")
 
                 listOf(
                     """
-                        > Task :$subprojectName:kspCommonMainKotlinMetadata
-                        w: [ksp] current file: CommonMainAnnotated.kt
-                        w: [ksp] all files: [CommonMainAnnotated.kt]
+                        > Task :workload:kspCommonMainKotlinMetadata
+                        w: [ksp] all files: [commonMain:CommonMainAnnotated.kt]
+                        w: [ksp] new files: [commonMain:CommonMainAnnotated.kt]
                         w: [ksp] option: 'a' -> 'a_commonMain'
                         w: [ksp] option: 'b' -> 'b_global'
                         w: [ksp] option: 'c' -> 'c_commonMain'
-                        > Task :$subprojectName:kspClientMainKotlinMetadata
-                        w: [ksp] current file: ClientMainAnnotated.kt
-                        w: [ksp] all files: [ClientMainAnnotated.kt]
+                        w: [ksp] all files: [commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt]
+                        w: [ksp] new files: [commonMain:Generated.kt]
+                        > Task :workload:kspClientMainKotlinMetadata
+                        w: [ksp] all files: [clientMain:ClientMainAnnotated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt]
+                        w: [ksp] new files: [clientMain:ClientMainAnnotated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt]
                         w: [ksp] option: 'a' -> 'a_clientMain'
                         w: [ksp] option: 'b' -> 'b_global'
                         w: [ksp] option: 'c' -> 'c_commonMain'
                         w: [ksp] option: 'd' -> 'd_clientMain'
+                        w: [ksp] all files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt]
+                        w: [ksp] new files: [clientMain:Generated.kt]
                     """,
                     """
-                        > Task :$subprojectName:kspKotlinJvm
-                        w: [ksp] current file: JvmMainAnnotated.kt
-                        w: [ksp] all files: [ClientMainAnnotated.kt, ClientMainAnnotatedGenerated.kt, CommonMainAnnotated.kt, CommonMainAnnotatedGenerated.kt, JvmMainAnnotated.kt]
+                        > Task :workload:kspKotlinJvm
+                        w: [ksp] all files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt, jvmMain:JvmMainAnnotated.kt]
+                        w: [ksp] new files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt, jvmMain:JvmMainAnnotated.kt]
                         w: [ksp] option: 'a' -> 'a_commonMain'
                         w: [ksp] option: 'b' -> 'b_global'
                         w: [ksp] option: 'c' -> 'c_commonMain'
+                        w: [ksp] all files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt, jvmMain:Generated.kt, jvmMain:JvmMainAnnotated.kt]
+                        w: [ksp] new files: [jvmMain:Generated.kt]
                     """,
                     """
-                        > Task :$subprojectName:kspKotlinJs
-                        w: [ksp] current file: JsMainAnnotated.kt
-                        w: [ksp] all files: [ClientMainAnnotated.kt, ClientMainAnnotatedGenerated.kt, CommonMainAnnotated.kt, CommonMainAnnotatedGenerated.kt, JsMainAnnotated.kt]
+                        > Task :workload:kspKotlinJs
+                        w: [ksp] all files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt, jsMain:JsMainAnnotated.kt]
+                        w: [ksp] new files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt, jsMain:JsMainAnnotated.kt]
                         w: [ksp] option: 'a' -> 'a_commonMain'
                         w: [ksp] option: 'b' -> 'b_global'
                         w: [ksp] option: 'c' -> 'c_commonMain'
+                        w: [ksp] all files: [clientMain:ClientMainAnnotated.kt, clientMain:Generated.kt, commonMain:CommonMainAnnotated.kt, commonMain:Generated.kt, jsMain:Generated.kt, jsMain:JsMainAnnotated.kt]
+                        w: [ksp] new files: [jsMain:Generated.kt]
                     """,
                     """
-                        > Task :$subprojectName:kspTestKotlinJvm
-                        w: [ksp] current file: JvmTestAnnotated.kt
-                        w: [ksp] all files: [CommonTestAnnotated.kt, JvmTestAnnotated.kt]
+                        > Task :workload:kspTestKotlinJvm
+                        w: [ksp] all files: [commonTest:CommonTestAnnotated.kt, jvmTest:JvmTestAnnotated.kt]
+                        w: [ksp] new files: [commonTest:CommonTestAnnotated.kt, jvmTest:JvmTestAnnotated.kt]
                         w: [ksp] option: 'a' -> 'a_global'
                         w: [ksp] option: 'b' -> 'b_global'
+                        w: [ksp] all files: [commonTest:CommonTestAnnotated.kt, jvmTest:Generated.kt, jvmTest:JvmTestAnnotated.kt]
+                        w: [ksp] new files: [jvmTest:Generated.kt]
                     """,
                 ).forEach {
                     Assert.assertTrue(it.trimIndent() in relevantOutput)
@@ -84,7 +94,7 @@ class KMPWithHmppIT {
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
             "clean",
-            ":$subprojectName:showMe",
+            ":workload:showMe",
         )
             .build()
             .let { result ->

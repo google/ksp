@@ -2,5 +2,5 @@ package com.example
 
 @MyAnnotation
 class ClientMainAnnotated {
-    val allFiles = ClientMainAnnotatedForClientMain.allFiles
+    val allFiles = GeneratedForClientMain.allFiles
 }
