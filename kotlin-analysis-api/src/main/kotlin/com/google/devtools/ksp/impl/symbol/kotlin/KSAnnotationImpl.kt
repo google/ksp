@@ -42,8 +42,9 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
     override val defaultArguments: List<KSValueArgument>
         get() = TODO("Not yet implemented")
 
-    override val shortName: KSName
-        get() = TODO("Not yet implemented")
+    override val shortName: KSName by lazy {
+        KSNameImpl.getCached(annotationApplication.classId!!.shortClassName.asString())
+    }
 
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
         when (annotationApplication.useSiteTarget) {
@@ -71,5 +72,9 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
+    }
+
+    override fun toString(): String {
+        return "@${shortName.asString()}"
     }
 }
