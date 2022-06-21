@@ -53,7 +53,7 @@ abstract class KSPropertyAccessorImpl(
 class KSPropertySetterImpl private constructor(
     owner: KSPropertyDeclaration,
     setter: KtPropertySetterSymbol
-) : KSPropertySetter, KSPropertyAccessorImpl(setter, owner) {
+) : KSPropertyAccessorImpl(setter, owner), KSPropertySetter {
     companion object : KSObjectCache<Pair<KSPropertyDeclaration, KtPropertySetterSymbol>, KSPropertySetterImpl>() {
         fun getCached(owner: KSPropertyDeclaration, setter: KtPropertySetterSymbol) =
             cache.getOrPut(Pair(owner, setter)) { KSPropertySetterImpl(owner, setter) }
@@ -66,12 +66,16 @@ class KSPropertySetterImpl private constructor(
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertySetter(this, data)
     }
+
+    override fun toString(): String {
+        return "$receiver.setter()"
+    }
 }
 
 class KSPropertyGetterImpl private constructor(
     owner: KSPropertyDeclaration,
     getter: KtPropertyGetterSymbol
-) : KSPropertyGetter, KSPropertyAccessorImpl(getter, owner) {
+) : KSPropertyAccessorImpl(getter, owner), KSPropertyGetter {
     companion object : KSObjectCache<Pair<KSPropertyDeclaration, KtPropertyGetterSymbol>, KSPropertyGetterImpl>() {
         fun getCached(owner: KSPropertyDeclaration, getter: KtPropertyGetterSymbol) =
             cache.getOrPut(Pair(owner, getter)) { KSPropertyGetterImpl(owner, getter) }
@@ -83,5 +87,9 @@ class KSPropertyGetterImpl private constructor(
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyGetter(this, data)
+    }
+
+    override fun toString(): String {
+        return "$receiver.getter()"
     }
 }
