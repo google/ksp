@@ -58,4 +58,8 @@ class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile 
     }
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
+
+    override fun toString(): String {
+        return "File: ${this.fileName}"
+    }
 }

@@ -19,7 +19,6 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 
 class KSValueParameterImpl private constructor(
@@ -59,7 +58,7 @@ class KSValueParameterImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktValueParameterSymbol.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
+        ktValueParameterSymbol.annotations()
     }
     override val origin: Origin by lazy {
         mapAAOrigin(ktValueParameterSymbol.origin)

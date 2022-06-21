@@ -55,8 +55,9 @@ class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeA
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        TODO()
+        ktTypeArgument.type?.annotations() ?: emptySequence()
     }
+
     override val origin: Origin = Origin.KOTLIN
 
     override val location: Location

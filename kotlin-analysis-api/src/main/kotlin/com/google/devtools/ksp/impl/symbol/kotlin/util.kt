@@ -25,6 +25,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.analyze
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
@@ -34,7 +35,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtAnnotatedSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.psi.KtElement
 
@@ -122,7 +122,7 @@ internal fun KtSymbolWithMembers.getAllFunctions(): Sequence<KSFunctionDeclarati
     }
 }
 
-internal fun KtAnnotatedSymbol.annotations(): Sequence<KSAnnotation> {
+internal fun KtAnnotated.annotations(): Sequence<KSAnnotation> {
     return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
 }
 

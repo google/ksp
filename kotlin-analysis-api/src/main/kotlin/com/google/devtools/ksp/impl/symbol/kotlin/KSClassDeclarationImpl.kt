@@ -18,20 +18,21 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.toKSModifiers
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.*
-import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
-class KSClassDeclarationImpl private constructor(
-    private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol
-) : KSClassDeclaration {
+class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) :
+    KSClassDeclaration,
+    AbstractKSDeclarationImpl(ktNamedClassOrObjectSymbol),
+    KSExpectActual by KSExpectActualImpl(ktNamedClassOrObjectSymbol) {
     companion object : KSObjectCache<KtNamedClassOrObjectSymbol, KSClassDeclarationImpl>() {
         fun getCached(ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) =
             cache.getOrPut(ktNamedClassOrObjectSymbol) { KSClassDeclarationImpl(ktNamedClassOrObjectSymbol) }
+    }
+
+    override val qualifiedName: KSName? by lazy {
+        ktNamedClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
     }
 
     override val classKind: ClassKind by lazy {
@@ -68,11 +69,11 @@ class KSClassDeclarationImpl private constructor(
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return this.getAllFunctions()
+        return ktNamedClassOrObjectSymbol.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        return this.getAllProperties()
+        return ktNamedClassOrObjectSymbol.getAllProperties()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
@@ -83,74 +84,11 @@ class KSClassDeclarationImpl private constructor(
         TODO("Not yet implemented")
     }
 
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktNamedClassOrObjectSymbol.name.asString())
-    }
-
-    override val qualifiedName: KSName? by lazy {
-        ktNamedClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktNamedClassOrObjectSymbol.typeParameters.map { KSTypeParameterImpl.getCached(it) }
-    }
-
-    override val packageName: KSName by lazy {
-        this.containingFile?.packageName ?: KSNameImpl.getCached("")
-    }
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        TODO()
-    }
-    override val containingFile: KSFile? by lazy {
-        ktNamedClassOrObjectSymbol.toContainingFile()
-    }
-    override val docString: String? by lazy {
-        ktNamedClassOrObjectSymbol.psi?.getDocString()
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        (ktNamedClassOrObjectSymbol.psi as? KtClassOrObject)?.toKSModifiers() ?: emptySet()
-    }
-    override val origin: Origin by lazy {
-        mapAAOrigin(ktNamedClassOrObjectSymbol.origin)
-    }
-
-    override val location: Location by lazy {
-        ktNamedClassOrObjectSymbol.psi?.toLocation() ?: NonExistLocation
-    }
-    override val parent: KSNode?
-        get() = TODO("Not yet implemented")
-
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
-        analyze {
-            ktNamedClassOrObjectSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
-        }
-    }
-
-    override val isActual: Boolean
-        get() = TODO("Not yet implemented")
-
-    override val isExpect: Boolean
-        get() = TODO("Not yet implemented")
-
-    override fun findActuals(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
-    }
-
-    override fun findExpects(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
-    }
-
     override val declarations: Sequence<KSDeclaration> by lazy {
         ktNamedClassOrObjectSymbol.declarations()
-    }
-
-    override fun toString(): String {
-        return simpleName.asString()
     }
 }

@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSName
@@ -19,27 +20,30 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSClassDeclarationEnumEntryImpl private constructor(
-    private val ktEnumEntrySymbol: KtEnumEntrySymbol
-) : KSClassDeclaration {
+class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntrySymbol: KtEnumEntrySymbol) :
+    KSClassDeclaration,
+    AbstractKSDeclarationImpl(ktEnumEntrySymbol),
+    KSExpectActual by KSExpectActualImpl(ktEnumEntrySymbol) {
     companion object : KSObjectCache<KtEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
         fun getCached(ktEnumEntrySymbol: KtEnumEntrySymbol) =
             cache.getOrPut(ktEnumEntrySymbol) { KSClassDeclarationEnumEntryImpl(ktEnumEntrySymbol) }
+    }
+
+    override val qualifiedName: KSName? by lazy {
+        KSNameImpl.getCached("${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}")
     }
 
     override val classKind: ClassKind = ClassKind.ENUM_ENTRY
 
     override val primaryConstructor: KSFunctionDeclaration? = null
 
-    // TODO: Fix when type information is available in upstream.
     override val superTypes: Sequence<KSTypeReference> by lazy {
         analyze {
-            ktEnumEntrySymbol.returnType.getDirectSuperTypes().asSequence().map { KSTypeReferenceImpl.getCached(it) }
+            this@KSClassDeclarationEnumEntryImpl.ktEnumEntrySymbol.returnType
+                .getDirectSuperTypes().asSequence().map { KSTypeReferenceImpl.getCached(it) }
         }
     }
 
@@ -50,11 +54,11 @@ class KSClassDeclarationEnumEntryImpl private constructor(
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return this.ktEnumEntrySymbol.getAllFunctions()
+        return ktEnumEntrySymbol.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        return this.ktEnumEntrySymbol.getAllProperties()
+        return ktEnumEntrySymbol.getAllProperties()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
@@ -63,16 +67,6 @@ class KSClassDeclarationEnumEntryImpl private constructor(
 
     override fun asStarProjectedType(): KSType {
         TODO("Not yet implemented")
-    }
-
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktEnumEntrySymbol.name.asString())
-    }
-
-    override val qualifiedName: KSName? by lazy {
-        ktEnumEntrySymbol.containingEnumClassIdIfNonLocal?.let {
-            KSNameImpl.getCached("${it.asFqNameString()}.${simpleName.asString()}")
-        }
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
