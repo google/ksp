@@ -18,18 +18,13 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.toKSModifiers
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSPropertyDeclarationImpl private constructor(
-    private val ktPropertySymbol: KtPropertySymbol
-) : KSPropertyDeclaration {
+class KSPropertyDeclarationImpl private constructor(private val ktPropertySymbol: KtPropertySymbol) :
+    KSPropertyDeclaration,
+    AbstractKSDeclarationImpl(ktPropertySymbol),
+    KSExpectActual by KSExpectActualImpl(ktPropertySymbol) {
     companion object : KSObjectCache<KtPropertySymbol, KSPropertyDeclarationImpl>() {
         fun getCached(ktPropertySymbol: KtPropertySymbol) =
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
@@ -71,72 +66,11 @@ class KSPropertyDeclarationImpl private constructor(
         TODO("Not yet implemented")
     }
 
-    override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktPropertySymbol.name.asString())
-    }
-
     override val qualifiedName: KSName? by lazy {
-        (ktPropertySymbol.psi as? KtProperty)?.fqName?.asString()?.let { KSNameImpl.getCached(it) }
-    }
-
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        ktPropertySymbol.typeParameters.map { KSTypeParameterImpl.getCached(it) }
-    }
-
-    override val packageName: KSName by lazy {
-        KSNameImpl.getCached(this.containingFile?.packageName?.asString() ?: "")
-    }
-
-    override val parentDeclaration: KSDeclaration?
-        get() = TODO("Not yet implemented")
-
-    override val containingFile: KSFile? by lazy {
-        ktPropertySymbol.toContainingFile()
-    }
-
-    override val docString: String? by lazy {
-        ktPropertySymbol.psi?.getDocString()
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktPropertySymbol.psi?.safeAs<KtProperty>()?.toKSModifiers() ?: emptySet()
-    }
-
-    override val origin: Origin by lazy {
-        mapAAOrigin(ktPropertySymbol.origin)
-    }
-
-    override val location: Location by lazy {
-        ktPropertySymbol.psi?.toLocation() ?: NonExistLocation
-    }
-
-    override val parent: KSNode? by lazy {
-        analyze {
-            ktPropertySymbol.getContainingSymbol()?.let {
-                KSClassDeclarationImpl.getCached(it as KtNamedClassOrObjectSymbol)
-            } ?: ktPropertySymbol.toContainingFile()
-        }
+        KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
-    }
-
-    override val annotations: Sequence<KSAnnotation> by lazy {
-        ktPropertySymbol.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val isActual: Boolean
-        get() = TODO("Not yet implemented")
-
-    override val isExpect: Boolean
-        get() = TODO("Not yet implemented")
-
-    override fun findActuals(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
-    }
-
-    override fun findExpects(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
     }
 }

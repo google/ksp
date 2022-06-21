@@ -28,14 +28,12 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : KSFile {
     companion object : KSObjectCache<KtFileSymbol, KSFileImpl>() {
@@ -88,8 +86,10 @@ class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : K
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        analyze {
-            ktFileSymbol.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
-        }
+        ktFileSymbol.annotations()
+    }
+
+    override fun toString(): String {
+        return "File: ${this.fileName}"
     }
 }

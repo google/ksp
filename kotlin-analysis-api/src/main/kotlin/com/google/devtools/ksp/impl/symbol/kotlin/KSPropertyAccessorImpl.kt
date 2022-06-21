@@ -20,7 +20,6 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
@@ -32,7 +31,7 @@ abstract class KSPropertyAccessorImpl(
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor {
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktPropertyAccessorSymbol.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
+        ktPropertyAccessorSymbol.annotations()
     }
 
     override val location: Location by lazy {

@@ -27,7 +27,6 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.types.KtType
 
 class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
@@ -42,7 +41,7 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktType.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
+        ktType.annotations()
     }
 
     override val origin: Origin = Origin.KOTLIN

@@ -30,7 +30,7 @@ import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
 
-class KSTypeImpl private constructor(private val type: KtType) : KSType {
+class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     companion object : KSObjectCache<KtType, KSTypeImpl>() {
         fun getCached(type: KtType): KSTypeImpl = cache.getOrPut(type) { KSTypeImpl(type) }
     }
