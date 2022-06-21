@@ -97,4 +97,8 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
 
     override val isSuspendFunctionType: Boolean
         get() = type is KtFunctionalType && type.isSuspend
+
+    override fun toString(): String {
+        return type.toString()
+    }
 }

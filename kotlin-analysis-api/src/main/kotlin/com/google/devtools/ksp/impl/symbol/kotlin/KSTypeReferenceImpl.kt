@@ -58,4 +58,8 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
 
     override val modifiers: Set<Modifier>
         get() = TODO("Not yet implemented")
+
+    override fun toString(): String {
+        return ktType.toString()
+    }
 }

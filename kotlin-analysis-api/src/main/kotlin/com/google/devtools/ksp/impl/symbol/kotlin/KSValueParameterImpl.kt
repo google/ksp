@@ -73,4 +73,8 @@ class KSValueParameterImpl private constructor(
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitValueParameter(this, data)
     }
+
+    override fun toString(): String {
+        return name?.asString() ?: "_"
+    }
 }
