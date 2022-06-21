@@ -19,18 +19,14 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.toKSModifiers
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.*
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtAnnotatedSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
-class KSFunctionDeclarationImpl private constructor(
-    private val ktFunctionSymbol: KtFunctionLikeSymbol
-) : KSFunctionDeclaration {
+class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol: KtFunctionLikeSymbol) :
+    KSFunctionDeclaration,
+    AbstractKSDeclarationImpl(ktFunctionSymbol),
+    KSExpectActual by KSExpectActualImpl(ktFunctionSymbol) {
     companion object : KSObjectCache<KtFunctionLikeSymbol, KSFunctionDeclarationImpl>() {
         fun getCached(ktFunctionSymbol: KtFunctionLikeSymbol) =
             cache.getOrPut(ktFunctionSymbol) { KSFunctionDeclarationImpl(ktFunctionSymbol) }
@@ -89,63 +85,8 @@ class KSFunctionDeclarationImpl private constructor(
         KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
     }
 
-    override val typeParameters: List<KSTypeParameter> by lazy {
-        (ktFunctionSymbol as? KtFunctionSymbol)?.typeParameters?.map {
-            KSTypeParameterImpl.getCached(it)
-        } ?: emptyList()
-    }
-
-    override val packageName: KSName by lazy {
-        containingFile?.packageName ?: KSNameImpl.getCached("")
-    }
-
-    override val parentDeclaration: KSDeclaration? by lazy {
-        ktFunctionSymbol.getContainingKSSymbol()
-    }
-
-    override val containingFile: KSFile? by lazy {
-        ktFunctionSymbol.toContainingFile()
-    }
-
-    override val docString: String? by lazy {
-        ktFunctionSymbol.toDocString()
-    }
-
-    override val modifiers: Set<Modifier> by lazy {
-        ktFunctionSymbol.psi?.safeAs<KtFunction>()?.toKSModifiers() ?: emptySet()
-    }
-
-    override val origin: Origin by lazy {
-        mapAAOrigin(ktFunctionSymbol.origin)
-    }
-
-    override val location: Location by lazy {
-        ktFunctionSymbol.psi?.toLocation() ?: NonExistLocation
-    }
-
-    override val parent: KSNode?
-        get() = TODO("Not yet implemented")
-
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitFunctionDeclaration(this, data)
-    }
-
-    override val annotations: Sequence<KSAnnotation> by lazy {
-        (ktFunctionSymbol as KtAnnotatedSymbol).annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
-    }
-
-    override val isActual: Boolean
-        get() = TODO("Not yet implemented")
-
-    override val isExpect: Boolean
-        get() = TODO("Not yet implemented")
-
-    override fun findActuals(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
-    }
-
-    override fun findExpects(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
     }
 
     // TODO: Implement with PSI
