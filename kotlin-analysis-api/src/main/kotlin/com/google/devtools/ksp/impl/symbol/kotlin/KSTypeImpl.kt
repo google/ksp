@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
 import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     companion object : KSObjectCache<KtType, KSTypeImpl>() {
@@ -37,10 +38,13 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
 
     override val declaration: KSDeclaration by lazy {
         analyze {
-            KSClassDeclarationImpl.getCached(
-                (type as KtNonErrorClassType).classId
-                    .getCorrespondingToplevelClassOrObjectSymbol() as KtNamedClassOrObjectSymbol
-            )
+            when (type) {
+                is KtNonErrorClassType ->
+                    type.classId.getCorrespondingToplevelClassOrObjectSymbol().safeAs<KtNamedClassOrObjectSymbol>()
+                        ?.let { KSClassDeclarationImpl.getCached(it) } ?: KSErrorTypeClassDeclaration
+                is KtClassErrorType -> KSErrorTypeClassDeclaration
+                else -> throw IllegalStateException("Unexpected KtType: $type")
+            }
         }
     }
 
@@ -52,14 +56,20 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         }
     }
 
-    override val arguments: List<KSTypeArgument>
-        get() = TODO("Not yet implemented")
+    override val arguments: List<KSTypeArgument> by lazy {
+        type.safeAs<KtNonErrorClassType>()?.typeArguments?.map { KSTypeArgumentImpl.getCached(it) } ?: emptyList()
+    }
 
     override val annotations: Sequence<KSAnnotation>
         get() = TODO("Not yet implemented")
 
     override fun isAssignableFrom(that: KSType): Boolean {
-        TODO("Not yet implemented")
+        if (that.isError || this.isError) {
+            return false
+        }
+        return analyze {
+            that.safeAs<KSTypeImpl>()?.type?.isSubTypeOf(type) == true
+        }
     }
 
     override fun isMutabilityFlexible(): Boolean {

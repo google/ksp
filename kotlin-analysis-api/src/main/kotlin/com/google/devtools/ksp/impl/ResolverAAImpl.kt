@@ -23,6 +23,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
@@ -66,8 +67,28 @@ class ResolverAAImpl(
         ktFiles.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
     }
 
-    override val builtIns: KSBuiltIns
-        get() = TODO("Not yet implemented")
+    // TODO: fix in upstream for builtin types.
+    override val builtIns: KSBuiltIns by lazy {
+        val builtIns = analyze { analysisSession.builtinTypes }
+        object : KSBuiltIns {
+            override val anyType: KSType by lazy { KSTypeImpl.getCached(builtIns.ANY) }
+            override val nothingType: KSType by lazy { KSTypeImpl.getCached(builtIns.NOTHING) }
+            override val unitType: KSType by lazy { KSTypeImpl.getCached(builtIns.UNIT) }
+            override val numberType: KSType by lazy { TODO() }
+            override val byteType: KSType by lazy { KSTypeImpl.getCached(builtIns.BYTE) }
+            override val shortType: KSType by lazy { KSTypeImpl.getCached(builtIns.SHORT) }
+            override val intType: KSType by lazy { KSTypeImpl.getCached(builtIns.INT) }
+            override val longType: KSType by lazy { KSTypeImpl.getCached(builtIns.LONG) }
+            override val floatType: KSType by lazy { KSTypeImpl.getCached(builtIns.FLOAT) }
+            override val doubleType: KSType by lazy { KSTypeImpl.getCached(builtIns.DOUBLE) }
+            override val charType: KSType by lazy { KSTypeImpl.getCached(builtIns.CHAR) }
+            override val booleanType: KSType by lazy { KSTypeImpl.getCached(builtIns.BOOLEAN) }
+            override val stringType: KSType by lazy { KSTypeImpl.getCached(builtIns.STRING) }
+            override val iterableType: KSType by lazy { TODO() }
+            override val annotationType: KSType by lazy { TODO() }
+            override val arrayType: KSType by lazy { TODO() }
+        }
+    }
 
     override fun createKSTypeReferenceFromKSType(type: KSType): KSTypeReference {
         TODO("Not yet implemented")
