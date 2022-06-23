@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 
 class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
@@ -37,7 +38,16 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
     override val element: KSReferenceElement? = null
 
     override fun resolve(): KSType {
-        return KSTypeImpl.getCached(ktType)
+        // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
+        return if (
+            analyze {
+                (ktType is KtNonErrorClassType) && ktType.classId.getCorrespondingToplevelClassOrObjectSymbol() == null
+            }
+        ) {
+            KSErrorType
+        } else {
+            KSTypeImpl.getCached(ktType)
+        }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
