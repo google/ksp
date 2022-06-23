@@ -210,7 +210,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/equivalentJavaWildcards.kt")
     }
 
-    @Disabled
     @TestMetadata("errorTypes.kt")
     @Test
     fun testErrorTypes() {

@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
@@ -81,7 +82,9 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
     }
 
     override fun asStarProjectedType(): KSType {
-        TODO("Not yet implemented")
+        return analyze {
+            KSTypeImpl.getCached(analysisSession.buildClassType(ktNamedClassOrObjectSymbol))
+        }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
