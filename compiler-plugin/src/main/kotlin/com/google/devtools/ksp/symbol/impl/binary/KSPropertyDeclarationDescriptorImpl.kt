@@ -64,6 +64,9 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
         if (descriptor.isConst) {
             modifiers.add(Modifier.CONST)
         }
+        if (descriptor.isLateInit) {
+            modifiers.add(Modifier.LATEINIT)
+        }
 
         if (this.origin == Origin.JAVA_LIB) {
             if (this.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0)
