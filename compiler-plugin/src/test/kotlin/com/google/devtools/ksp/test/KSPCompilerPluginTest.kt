@@ -296,6 +296,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/javaWildcards2.kt")
     }
 
+    @TestMetadata("lateinitProperties.kt")
+    @Test
+    fun testLateinitProperties() {
+        runTest("testData/api/lateinitProperties.kt")
+    }
+
     @TestMetadata("libOrigins.kt")
     @Test
     fun testLibOrigins() {

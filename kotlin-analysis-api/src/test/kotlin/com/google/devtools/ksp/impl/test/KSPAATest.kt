@@ -322,6 +322,13 @@ class KSPAATest : AbstractKSPAATest() {
     }
 
     @Disabled
+    @TestMetadata("lateinitProperties.kt")
+    @Test
+    fun testLateinitProperties() {
+        runTest("../compiler-plugin/testData/api/lateinitProperties.kt")
+    }
+
+    @Disabled
     @TestMetadata("libOrigins.kt")
     @Test
     fun testLibOrigins() {
