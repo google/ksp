@@ -1407,7 +1407,7 @@ class ResolverImpl(
 
     @KspExperimental
     override fun isJavaRawType(type: KSType): Boolean {
-        return type is KSTypeImpl && type.kotlinType is RawType
+        return type is KSTypeImpl && type.kotlinType.unwrap() is RawType
     }
 }
 
