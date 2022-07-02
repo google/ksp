@@ -507,9 +507,11 @@ internal val KSFunctionDeclaration.jvmAccessFlag: Int
 // Compiler subtype checking does not convert Java types to Kotlin types, while getting super types
 // from a java type does the conversion, therefore resulting in subtype checking for Java types to fail.
 // Check if candidate super type is a Java type, convert to Kotlin type for subtype checking.
+// Also, if the type is a generic deserialized type, that actually represents a function type,
+// a conversion is also required to yield a type with a correctly recognised descriptor.
 internal fun KotlinType.convertKotlinType(): KotlinType {
     val declarationDescriptor = this.constructor.declarationDescriptor
-    val base = if (declarationDescriptor is JavaClassDescriptor) {
+    val base = if (declarationDescriptor?.shouldMapToKotlinForAssignabilityCheck() == true) {
         JavaToKotlinClassMapper
             .mapJavaToKotlin(declarationDescriptor.fqNameSafe, ResolverImpl.instance.module.builtIns)
             ?.defaultType
@@ -527,4 +529,17 @@ internal fun KotlinType.convertKotlinType(): KotlinType {
         annotations,
         upperBound
     )
+}
+
+private fun ClassifierDescriptor.shouldMapToKotlinForAssignabilityCheck(): Boolean {
+    return when (this) {
+        is JavaClassDescriptor -> true // All java types need to be mapped to kotlin
+        is DeserializedDescriptor -> {
+            // If this is a generic deserialized type descriptor, which actually is a kotlin function type.
+            // This may be the case if the client explicitly mapped a kotlin function type to the JVM one.
+            // Such types need to be remapped to be represented by a correct function class descriptor.
+            fqNameSafe.parent().asString() == "kotlin.jvm.functions"
+        }
+        else -> false
+    }
 }

@@ -18,8 +18,10 @@ class JavaSubtypeProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val javaCollection = resolver.getJavaClassByName("kotlin.collections.Collection")!!.asStarProjectedType()
         val javaSet = resolver.getJavaClassByName("kotlin.collections.Set")!!.asStarProjectedType()
+        val ktFunctionJava = resolver.getJavaClassByName("kotlin.jvm.functions.Function0")!!.asStarProjectedType()
         val ktCollection = resolver.getClassDeclarationByName("kotlin.collections.Collection")!!.asStarProjectedType()
         val ktSet = resolver.getClassDeclarationByName("kotlin.collections.Set")!!.asStarProjectedType()
+        val ktFunction = resolver.getClassDeclarationByName("kotlin.jvm.functions.Function0")!!.asStarProjectedType()
         val javaCollectionRef = resolver.createKSTypeReferenceFromKSType(javaCollection)
         val ktCollectionRef = resolver.createKSTypeReferenceFromKSType(ktCollection)
         val javaSetRef = resolver.createKSTypeReferenceFromKSType(javaSet)
@@ -47,6 +49,7 @@ class JavaSubtypeProcessor : AbstractTestProcessor() {
         )
         val javaStrCollection = javaCollection.replace(listOf(strRef))
         val javaStrSet = javaSet.replace(listOf(strRef))
+        val kotlinFunctionImplementorJava = resolver.getClassDeclarationByName("IntSupplier")!!.asStarProjectedType()
         isOk = isOk && javaCollection.isAssignableFrom(javaSet)
         isOk = isOk && javaCollection.isAssignableFrom(javaStrCollection)
         isOk = isOk && !javaStrCollection.isAssignableFrom(javaCollection)
@@ -67,6 +70,9 @@ class JavaSubtypeProcessor : AbstractTestProcessor() {
         isOk = isOk && javaCollectionOfKtSet.isAssignableFrom(ktCollectionOfJavaSet)
         isOk = isOk && ktCollectionOfJavaCollection.isAssignableFrom(javaSetOfKtCollection)
         isOk = isOk && !javaSetOfKtCollection.isAssignableFrom(ktCollectionOfJavaCollection)
+        isOk = isOk && ktFunction.isAssignableFrom(kotlinFunctionImplementorJava)
+        isOk = isOk && ktFunctionJava.isAssignableFrom(ktFunction) && ktFunction.isAssignableFrom(ktFunctionJava)
+        isOk = isOk && ktFunctionJava.isAssignableFrom(kotlinFunctionImplementorJava)
         return emptyList()
     }
 }
