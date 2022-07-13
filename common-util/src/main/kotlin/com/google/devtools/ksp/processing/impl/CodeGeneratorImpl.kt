@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.FileType
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
@@ -54,13 +55,25 @@ class CodeGeneratorImpl(
     fun pathOf(packageName: String, fileName: String, extensionName: String): String {
         val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
         val extension = if (extensionName != "") ".$extensionName" else ""
-        val typeRoot = when (extensionName) {
-            "class" -> classDir
-            "java" -> javaDir
-            "kt" -> kotlinDir
-            else -> resourcesDir
-        }.path
-        return "$typeRoot$separator$packageDirs$fileName$extension"
+        return "$packageDirs$fileName$extension"
+    }
+
+    fun extensionToType(extensionName: String): FileType {
+        return when (extensionName) {
+            "class" -> FileType.CLASS
+            "java" -> FileType.JAVA_SOURCE
+            "kt" -> FileType.KOTLIN_SOURCE
+            else -> FileType.RESOURCE
+        }
+    }
+
+    fun baseDirOf(fileType: FileType): File {
+        return when (fileType) {
+            FileType.CLASS -> classDir
+            FileType.JAVA_SOURCE -> javaDir
+            FileType.KOTLIN_SOURCE-> kotlinDir
+            FileType.RESOURCE -> resourcesDir
+        }
     }
 
     override fun createNewFile(
@@ -69,8 +82,15 @@ class CodeGeneratorImpl(
         fileName: String,
         extensionName: String
     ): OutputStream {
-        val path = pathOf(packageName, fileName, extensionName)
-        val file = File(path)
+        return createNewFile(dependencies, pathOf(packageName, fileName, extensionName), extensionToType(extensionName))
+    }
+
+    override fun createNewFile(
+        dependencies: Dependencies,
+        path: String,
+        fileType: FileType
+    ): OutputStream {
+        val file = File(baseDirOf(fileType), path)
         if (path in fileMap) {
             throw FileAlreadyExistsException(file)
         }
@@ -89,14 +109,17 @@ class CodeGeneratorImpl(
                 dependencies.originatingFiles
             }
         }
-        associate(sources, path)
+        associate(sources, file)
         fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
         return fileOutputStreamMap[path]!!
     }
 
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
-        val path = pathOf(packageName, fileName, extensionName)
-        associate(sources, path)
+        associate(sources, pathOf(packageName, fileName, extensionName), extensionToType(extensionName))
+    }
+
+    override fun associate(sources: List<KSFile>, path: String, fileType: FileType) {
+        associate(sources, File(baseDirOf(fileType), path))
     }
 
     override fun associateWithClasses(
@@ -109,14 +132,14 @@ class CodeGeneratorImpl(
         val files = classes.map {
             it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
         }
-        associate(files, path)
+        associate(files, File(path))
     }
 
-    private fun associate(sources: List<KSFile>, outputPath: String) {
+    private fun associate(sources: List<KSFile>, outputPath: File) {
         if (!isIncremental)
             return
 
-        val output = File(outputPath).relativeTo(projectBase)
+        val output = outputPath.relativeTo(projectBase)
         sources.forEach { source ->
             sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
         }
