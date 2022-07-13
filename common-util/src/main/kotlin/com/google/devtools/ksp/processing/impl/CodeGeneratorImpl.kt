@@ -71,7 +71,7 @@ class CodeGeneratorImpl(
         return when (fileType) {
             FileType.CLASS -> classDir
             FileType.JAVA_SOURCE -> javaDir
-            FileType.KOTLIN_SOURCE-> kotlinDir
+            FileType.KOTLIN_SOURCE -> kotlinDir
             FileType.RESOURCE -> resourcesDir
         }
     }
