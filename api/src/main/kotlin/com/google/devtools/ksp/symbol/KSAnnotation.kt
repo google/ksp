@@ -46,9 +46,4 @@ interface KSAnnotation : KSNode {
      * Use site target of the annotation. Could be null if no annotation use site target is specified.
      */
     val useSiteTarget: AnnotationUseSiteTarget?
-
-    /**
-     * Returns the fully qualified name of the annotation, if available
-     */
-    fun resolveQualifiedName(): KSName?
 }
