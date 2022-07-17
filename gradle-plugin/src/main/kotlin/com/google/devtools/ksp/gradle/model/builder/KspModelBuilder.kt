@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.gradle.model.builder
 
 import com.google.devtools.ksp.gradle.KspExtension
+import com.google.devtools.ksp.gradle.KspMultiplatformExtension
 import com.google.devtools.ksp.gradle.model.Ksp
 import com.google.devtools.ksp.gradle.model.impl.KspImpl
 import org.gradle.api.Project
@@ -27,7 +28,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder
  * [ToolingModelBuilder] for [Ksp] models.
  * This model builder is registered for Kotlin All Open sub-plugin.
  */
-class KspModelBuilder : ToolingModelBuilder {
+class KspModelBuilder(private val multiplatformEnabled: Boolean = false) : ToolingModelBuilder {
 
     override fun canBuild(modelName: String): Boolean {
         return modelName == Ksp::class.java.name
@@ -35,7 +36,12 @@ class KspModelBuilder : ToolingModelBuilder {
 
     override fun buildAll(modelName: String, project: Project): Any? {
         if (modelName == Ksp::class.java.name) {
-            val extension = project.extensions.getByType(KspExtension::class.java)
+            val extension =
+                if (multiplatformEnabled) {
+                    project.extensions.getByType(KspMultiplatformExtension::class.java).kspExtension
+                } else {
+                    project.extensions.getByType(KspExtension::class.java)
+                }
             return KspImpl(project.name)
         }
         return null

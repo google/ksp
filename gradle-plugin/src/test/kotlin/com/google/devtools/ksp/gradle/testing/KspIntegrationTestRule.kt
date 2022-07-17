@@ -26,7 +26,8 @@ import kotlin.reflect.KClass
 /**
  * JUnit test rule to setup a [TestProject] which contains a KSP processor module and an
  * application. The application can either be an android app or jvm app.
- * Test must call [setupAppAsAndroidApp] or [setupAppAsJvmApp] before using the [runner].
+ * Test must call [setupAppAsAndroidApp] or [setupAppAsJvmApp] or [setupAppAsMultiplatformApp]
+ * before using the [runner].
  */
 class KspIntegrationTestRule(
     private val tmpFolder: TemporaryFolder
@@ -108,20 +109,29 @@ class KspIntegrationTestRule(
     /**
      * Sets up the app module as a multiplatform app with the specified [targets], wrapped in a kotlin { } block.
      */
-    fun setupAppAsMultiplatformApp(targets: String) {
+    fun setupAppAsMultiplatformApp(
+        targets: String,
+        withAndroid: Boolean = true,
+        enableMultiplatformExtension: Boolean = false
+    ) {
+        if (enableMultiplatformExtension)
+            testProject.appendGradleProperties("ksp.multiplatform.enabled=true")
         testProject.appModule.plugins.addAll(
-            listOf(
-                PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
+            listOfNotNull(
+                if (withAndroid) {
+                    PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion)
+                } else null,
                 PluginDeclaration.kotlin("multiplatform", testConfig.kotlinBaseVersion),
                 PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
             )
         )
         testProject.appModule.buildFileAdditions.add(targets)
-        addAndroidBoilerplate()
+        if (withAndroid)
+            addAndroidBoilerplate()
     }
 
     private fun addAndroidBoilerplate() {
-        testProject.writeAndroidGradlePropertiesFile()
+        testProject.appendAndroidGradleProperties()
         testProject.appModule.buildFileAdditions.add(
             """
             android {

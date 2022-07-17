@@ -5,13 +5,12 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 
 /**
  * Creates and retrieves ksp-related configurations.
  */
-class KspConfigurations(private val project: Project) {
+class KspConfigurations(private val project: Project, multiplatformEnabled: Boolean) {
     companion object {
         private const val PREFIX = "ksp"
     }
@@ -24,24 +23,32 @@ class KspConfigurations(private val project: Project) {
     // The "ksp" configuration, applied to every compilations.
     private val configurationForAll = project.configurations.create(PREFIX)
 
-    private fun configurationNameOf(vararg parts: String): String {
-        return parts.joinToString("") {
-            it.replaceFirstChar { it.uppercase() }
-        }.replaceFirstChar { it.lowercase() }
-    }
+    private val kspMultiplatformExtension: KspMultiplatformExtension? =
+        if (multiplatformEnabled) project.extensions.getByType(KspMultiplatformExtension::class.java) else null
 
-    @OptIn(ExperimentalStdlibApi::class)
-    private fun createConfiguration(
-        name: String,
-        readableSetName: String,
-    ): Configuration {
-        // maybeCreate to be future-proof, but we should never have a duplicate with current logic
+    private val kspExtension: KspExtension =
+        kspMultiplatformExtension?.kspExtension ?: project.extensions.getByType(KspExtension::class.java)
+
+    private val resolvedSourceSetOptions = mutableMapOf<KotlinSourceSet, SourceSetOptions>()
+    private val compilationsConfiguredOrSkipped = mutableSetOf<KotlinCompilation<*>>()
+
+    private fun maybeCreateConfiguration(name: String, readableSetName: String): Configuration {
+        // Configurations get created lazily
+        // - when decorating a Kotlin project, and
+        // - when creating a KSP task.
+        // This can occur in any order, depending on when a KSP task is referenced, so it is necessary to
+        // tolerate multiple invocations with idempotence.
         return project.configurations.maybeCreate(name).apply {
             description = "KSP dependencies for the '$readableSetName' source set."
             isCanBeResolved = false // we'll resolve the processor classpath config
             isCanBeConsumed = false
             isVisible = false
         }
+    }
+
+    private fun maybeCreateConfiguration(compilation: KotlinCompilation<*>) {
+        val kspConfigurationName = getKotlinConfigurationName(compilation)
+        maybeCreateConfiguration(name = kspConfigurationName, readableSetName = "KSP $compilation")
     }
 
     private fun getAndroidConfigurationName(target: KotlinTarget, sourceSet: String): String {
@@ -51,41 +58,39 @@ class KspConfigurations(private val project: Project) {
             else -> sourceSet
         }
         // Note: on single-platform, target name is conveniently set to "".
-        return configurationNameOf(PREFIX, target.name, nameWithoutMain)
+        return lowerCamelCased(PREFIX, target.name, nameWithoutMain)
     }
 
-    private fun getKotlinConfigurationName(compilation: KotlinCompilation<*>, sourceSet: KotlinSourceSet): String {
-        val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
-        val isDefault = sourceSet.name == compilation.defaultSourceSetName && compilation !is KotlinCommonCompilation
-        // Note: on single-platform, target name is conveniently set to "".
-        val name = if (isMain && isDefault) {
-            // For js(IR), js(LEGACY), the target "js" is created.
-            //
-            // When js(BOTH) is used, target "jsLegacy" and "jsIr" are created.
-            // Both targets share the same source set. Therefore configurations other than main compilation
-            // are shared. E.g., "kspJsTest".
-            // For simplicity and consistency, let's not distinguish them.
-            when (val targetName = compilation.target.name) {
-                "jsLegacy", "jsIr" -> "js"
-                else -> targetName
+    private fun getKotlinConfigurationName(compilation: KotlinCompilation<*>): String {
+        var targetName = compilation.target.targetName
+
+        when (targetName) {
+            "jsIr", "jsLegacy" -> targetName = "Js"
+            "metadata" -> {
+                // This reversal of target and compilation name is unnecessarily complicated, but retains
+                // backward compatibility for dependency-based configuration via `dependencies { add(...) }`.
+                when (compilation.name) {
+                    KotlinCompilation.MAIN_COMPILATION_NAME, "commonMain" ->
+                        return "${PREFIX}CommonMainMetadata"
+                }
             }
-        } else if (compilation is KotlinCommonCompilation) {
-            sourceSet.name + compilation.target.name.capitalize()
-        } else {
-            sourceSet.name
         }
-        return configurationNameOf(PREFIX, name)
+
+        return if (compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME) {
+            lowerCamelCased(PREFIX, targetName)
+        } else {
+            lowerCamelCased(PREFIX, targetName, compilation.name)
+        }
     }
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
-            // 1.6.0: decorateKotlinProject(project.kotlinExtension)?
-            decorateKotlinProject(project.extensions.getByName("kotlin") as KotlinProjectExtension, project)
+            decorateKotlinProject(project)
         }
     }
 
-    private fun decorateKotlinProject(kotlin: KotlinProjectExtension, project: Project) {
-        when (kotlin) {
+    private fun decorateKotlinProject(project: Project) {
+        when (val kotlin = project.kotlinExtension) {
             is KotlinSingleTargetExtension -> decorateKotlinTarget(kotlin.target)
             is KotlinMultiplatformExtension -> {
                 kotlin.targets.configureEach(::decorateKotlinTarget)
@@ -109,68 +114,127 @@ class KspConfigurations(private val project: Project) {
     }
 
     /**
-     * Decorate the [KotlinSourceSet]s belonging to [target] to create one KSP configuration per source set,
-     * named ksp<SourceSet>. The only exception is the main source set, for which we avoid using the
-     * "main" suffix (so what would be "kspJvmMain" becomes "kspJvm").
+     * Decorate [target]'s source sets (Android) or compilations (non-Android), creating one KSP configuration
+     * per source set or compilation.
      *
      * For Android, we prefer to use AndroidSourceSets from AGP rather than [KotlinSourceSet]s.
      * Even though the Kotlin Plugin does create [KotlinSourceSet]s out of AndroidSourceSets
      * ( https://kotlinlang.org/docs/mpp-configure-compilations.html#compilation-of-the-source-set-hierarchy ),
      * there are slight differences between the two - Kotlin creates some extra sets with unexpected word ordering,
      * and things get worse when you add product flavors. So, we use AGP sets as the source of truth.
+     * Android configurations are named ksp<SourceSet>, stripping a "Main" suffix (so what would be "kspJvmMain"
+     * becomes "kspJvm").
+     *
+     * Non-Android compilations are named ksp<Target><Compilation> except for main compilations, which are
+     * named ksp<Target>.
      */
     private fun decorateKotlinTarget(target: KotlinTarget) {
+        // TODO: Check whether special AGP handling is still necessary.
         if (target.platformType == KotlinPlatformType.androidJvm) {
             AndroidPluginIntegration.forEachAndroidSourceSet(target.project) { sourceSet ->
-                createConfiguration(
+                maybeCreateConfiguration(
                     name = getAndroidConfigurationName(target, sourceSet),
                     readableSetName = "$sourceSet (Android)"
                 )
             }
         } else {
-            target.compilations.configureEach { compilation ->
-                compilation.kotlinSourceSets.forEach { sourceSet ->
-                    createConfiguration(
-                        name = getKotlinConfigurationName(compilation, sourceSet),
-                        readableSetName = sourceSet.name
-                    )
-                }
-            }
+            target.compilations.configureEach(::maybeCreateConfiguration)
         }
     }
 
     /**
-     * Returns the user-facing configurations involved in the given compilation.
-     * We use [KotlinCompilation.kotlinSourceSets], not [KotlinCompilation.allKotlinSourceSets] for a few reasons:
-     * 1) consistency with how we created the configurations. For example, all* can return user-defined sets
-     *    that don't belong to any compilation, like user-defined intermediate source sets (e.g. iosMain).
-     *    These do not currently have their own ksp configuration.
-     * 2) all* can return sets belonging to other [KotlinCompilation]s
-     *
-     * See test: SourceSetConfigurationsTest.configurationsForMultiplatformApp_doesNotCrossCompilationBoundaries
+     * Returns the configurations relevant for [compilation].
      */
     fun find(compilation: KotlinCompilation<*>): Set<Configuration> {
-        val results = mutableListOf<String>()
-        if (compilation is KotlinCommonCompilation) {
-            results.add(getKotlinConfigurationName(compilation, compilation.defaultSourceSet))
-        }
-        compilation.kotlinSourceSets.mapTo(results) {
-            getKotlinConfigurationName(compilation, it)
-        }
+        configureCompilation(compilation)
+
+        val configurationNames = mutableListOf(getKotlinConfigurationName(compilation))
+
+        // TODO: Check whether special AGP handling is still necessary.
         if (compilation.platformType == KotlinPlatformType.androidJvm) {
             compilation as KotlinJvmAndroidCompilation
-            AndroidPluginIntegration.getCompilationSourceSets(compilation).mapTo(results) {
+            AndroidPluginIntegration.getCompilationSourceSets(compilation).mapTo(configurationNames) {
                 getAndroidConfigurationName(compilation.target, it)
             }
         }
 
         // Include the `ksp` configuration, if it exists, for all compilations.
-        if (allowAllTargetConfiguration) {
-            results.add(configurationForAll.name)
+        if (configurationNames.isNotEmpty() && allowAllTargetConfiguration) {
+            configurationNames.add(configurationForAll.name)
         }
 
-        return results.mapNotNull {
-            compilation.target.project.configurations.findByName(it)
+        return configurationNames.mapNotNull {
+            project.configurations.findByName(it)
         }.toSet()
     }
+
+    private fun configureCompilation(compilation: KotlinCompilation<*>) {
+        if (compilation in compilationsConfiguredOrSkipped)
+            return
+
+        compilationsConfiguredOrSkipped.add(compilation)
+
+        val sourceSetOptions = resolvedSourceSetOptions(compilation)
+        if (sourceSetOptions.enabled == true) {
+            sourceSetOptions.processor?.let { processor ->
+                maybeCreateConfiguration(compilation)
+                project.dependencies.add(getKotlinConfigurationName(compilation), processor)
+                compilation.defaultSourceSet.kotlin.srcDir(
+                    KspGradleSubplugin.getKspKotlinOutputDir(
+                        project,
+                        compilation.defaultSourceSet.name,
+                        compilation.target.name
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Returns the source set-dependent options for [kotlinCompilation], with hierarchically resolved inheritance.
+     *
+     * Source set options are put together by following source set dependencies in bottom-up order.
+     * (Inheriting incompatible KSP configurations from multiple parents is discouraged as the
+     * evaluation order in such cases is considered undefined.)
+     *
+     * The result's properties are guaranteed to be non-null, as each of them eventually inherits a non-null value
+     * from global options.
+     */
+    internal fun resolvedSourceSetOptions(kotlinCompilation: KotlinCompilation<*>): SourceSetOptions =
+        resolvedSourceSetOptions.computeIfAbsent(kotlinCompilation.defaultSourceSet) { compilationSourceSet ->
+            kspMultiplatformExtension?.let { kspMultiplatformExtension ->
+                val result = SourceSetOptions().inheritFrom(
+                    kspMultiplatformExtension.sourceSetOptions(compilationSourceSet),
+                    initializationMode = true
+                )
+
+                kotlinCompilation.parentSourceSetsBottomUp()
+                    .map { kspMultiplatformExtension.sourceSetOptions(it) }
+                    .takeWhile { it.inheritable }
+                    .forEach { parentOptions ->
+                        result.inheritFrom(parentOptions)
+                    }
+
+                // Finally, complete missing options with global options (which are always inheritable).
+                result.inheritFrom(kspMultiplatformExtension.globalSourceSetOptions())
+            } ?: kspExtension.globalSourceSetOptions()
+        }
+}
+
+internal fun KotlinSourceSet.bottomUpDependencies(): Sequence<KotlinSourceSet> = sequence {
+    yield(this@bottomUpDependencies)
+    dependsOn.forEach {
+        yieldAll(it.bottomUpDependencies())
+    }
+}
+
+internal fun KotlinCompilation<*>.parentSourceSetsBottomUp(): Sequence<KotlinSourceSet> =
+    defaultSourceSet.bottomUpDependencies()
+        .drop(1) // exclude the compilation source set
+        .distinct() // avoid repetitions if multiple parents are present
+
+internal fun lowerCamelCased(vararg parts: String): String {
+    return parts.joinToString("") { part ->
+        part.replaceFirstChar { it.uppercase() }
+    }.replaceFirstChar { it.lowercase() }
 }

@@ -47,9 +47,12 @@ class TestProject(
         rootDir.resolve("app")
     )
 
+    private val propertiesSections = mutableListOf<String>()
+
     fun writeFiles() {
         writeBuildFile()
         writeSettingsFile()
+        writePropertiesFile()
         appModule.writeBuildFile()
         processorModule.writeBuildFile()
     }
@@ -70,12 +73,19 @@ class TestProject(
         rootDir.resolve("settings.gradle.kts").writeText(contents)
     }
 
-    fun writeAndroidGradlePropertiesFile() {
-        val contents = """
-            android.useAndroidX=true
-            org.gradle.jvmargs=-Xmx2048M -XX:MaxMetaspaceSize=512m
-        """.trimIndent()
-        rootDir.resolve("gradle.properties").writeText(contents)
+    fun appendAndroidGradleProperties() {
+        appendGradleProperties(
+            "android.useAndroidX=true",
+            "org.gradle.jvmargs=-Xmx2048M -XX:MaxMetaspaceSize=512m"
+        )
+    }
+
+    fun appendGradleProperties(vararg content: String) {
+        propertiesSections.add(content.joinToString("\n"))
+    }
+
+    fun writePropertiesFile() {
+        rootDir.resolve("gradle.properties").writeText(propertiesSections.joinToString("\n", postfix = "\n"))
     }
 
     private fun writeBuildFile() {

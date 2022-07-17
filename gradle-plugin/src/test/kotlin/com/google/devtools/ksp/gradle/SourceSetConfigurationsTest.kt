@@ -121,10 +121,9 @@ class SourceSetConfigurationsTest {
     }
 
     @Test
-    fun configurationsForMultiplatformApp_doesNotCrossCompilationBoundaries() {
-        // Adding a ksp dependency on jvmParent should not leak into jvmChild compilation,
-        // even if the source sets depend on each other. This works because we use
-        // KotlinCompilation.kotlinSourceSets instead of KotlinCompilation.allKotlinSourceSets
+    fun configurationsForDependencyConfiguredMultiplatformApp_doesNotCrossCompilationBoundaries() {
+        // Adding a ksp dependency on jvmParent should not leak into its sibling target compilation jvmChild,
+        // even if the source sets depend on each other.
         testRule.setupAppAsMultiplatformApp(
             """
                 kotlin {
@@ -143,6 +142,50 @@ class SourceSetConfigurationsTest {
                 }
                 dependencies {
                     add("kspJvmParent", "androidx.room:room-compiler:2.4.2")
+                }
+                tasks.register("checkConfigurations") {
+                    doLast {
+                        // child has no dependencies, so task is not created.
+                        val parent = tasks.findByName("kspKotlinJvmParent")
+                        val child = tasks.findByName("kspKotlinJvmChild")
+                        require(parent != null)
+                        require(child == null)
+                    }
+                }
+            """.trimIndent()
+        )
+        testRule.runner()
+            .withArguments(":app:checkConfigurations")
+            .build()
+    }
+
+    @Test
+    fun configurationsForSourceSetConfiguredMultiplatformApp_doesNotCrossCompilationBoundaries() {
+        // Adding a ksp processor on a jvmParent source set should not leak into its sibling target compilation
+        // jvmChild, even if the source sets depend on each other.
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin {
+                    jvm("jvmParent") { }
+                    jvm("jvmChild") { }
+                }
+            """.trimIndent(),
+            withAndroid = false,
+            enableMultiplatformExtension = true,
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                kotlin {
+                    sourceSets {
+                        val jvmParentMain by getting {
+                            ksp {
+                                processor("androidx.room:room-compiler:2.4.2")
+                                inheritable = false
+                            }
+                        }
+                        this["jvmChildMain"].dependsOn(jvmParentMain)
+                    }
                 }
                 tasks.register("checkConfigurations") {
                     doLast {
