@@ -64,6 +64,9 @@ import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDesc
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
+import org.jetbrains.kotlin.load.java.structure.JavaClass
+import org.jetbrains.kotlin.load.java.structure.JavaClassifierType
+import org.jetbrains.kotlin.load.java.structure.classId
 import org.jetbrains.kotlin.load.java.structure.impl.JavaArrayTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
@@ -624,6 +627,17 @@ class ResolverImpl(
         }
         // Construct resolver context for the PsiType
         var resolverContext = lazyJavaResolverContext
+        // TODO: fix in compiler.
+        // Temporary work around for https://github.com/google/ksp/issues/1034
+        // Force resolve outer most class for Java nested classes.
+        javaType.safeAs<JavaClassifierType>()?.classifier.safeAs<JavaClass>()?.let {
+            var outerMost = it.outerClass
+            while (outerMost?.outerClass != null) {
+                outerMost = outerMost.outerClass
+            }
+            outerMost?.classId?.let { lazyJavaResolverContext.components.finder.findClass(it) }
+        }
+
         for (e in stack) {
             when (e) {
                 is KSFunctionDeclarationJavaImpl -> {
