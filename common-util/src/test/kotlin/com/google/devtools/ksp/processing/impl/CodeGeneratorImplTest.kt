@@ -3,7 +3,6 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.AnyChanges
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.processing.FileType
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -68,10 +67,10 @@ class CodeGeneratorImplTest {
 
     @Test
     fun testCreatingAFileWithPath() {
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/Test.java", FileType.JAVA_SOURCE)
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/Test.kt", FileType.KOTLIN_SOURCE)
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/Test.class", FileType.CLASS)
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/Test", FileType.RESOURCE)
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/Test", "java")
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/Test")
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/Test", "class")
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/Test", "")
 
         val files = codeGenerator.generatedFile.toList()
         Assert.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
@@ -82,15 +81,25 @@ class CodeGeneratorImplTest {
 
     @Test
     fun testCreatingAFileWithPathAndDots() {
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test.java", FileType.JAVA_SOURCE)
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test.kt", FileType.KOTLIN_SOURCE)
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test.class", FileType.CLASS)
-        codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", FileType.RESOURCE)
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "java")
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test")
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "class")
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "")
 
         val files = codeGenerator.generatedFile.toList()
         Assert.assertEquals(File(baseDir, "java/a/b/c/dir.with.dot/Test.java"), files[0])
         Assert.assertEquals(File(baseDir, "kotlin/a/b/c/dir.with.dot/Test.kt"), files[1])
         Assert.assertEquals(File(baseDir, "classes/a/b/c/dir.with.dot/Test.class"), files[2])
         Assert.assertEquals(File(baseDir, "resources/a/b/c/dir.with.dot/Test"), files[3])
+    }
+
+    @Test
+    fun testCreatingAFileByPathWithInvalidPath() {
+        try {
+            codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "../../b/c/Test", "java")
+            Assert.fail()
+        } catch (e: java.lang.IllegalStateException) {
+            Assert.assertEquals(e.message, "requested path is outside the bounds of the required directory")
+        }
     }
 }

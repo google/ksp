@@ -89,10 +89,10 @@ interface CodeGenerator {
      * @return OutputStream for writing into files.
      * @see [CodeGenerator] for more details.
      */
-    fun createNewFile(
+    fun createNewFileByPath(
         dependencies: Dependencies,
         path: String,
-        fileType: FileType
+        extensionName: String = "kt"
     ): OutputStream
 
     /**
