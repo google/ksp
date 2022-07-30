@@ -179,13 +179,6 @@ class KspConfigurations(private val project: Project, multiplatformEnabled: Bool
             sourceSetOptions.processor?.let { processor ->
                 maybeCreateConfiguration(compilation)
                 project.dependencies.add(getKotlinConfigurationName(compilation), processor)
-                compilation.defaultSourceSet.kotlin.srcDir(
-                    KspGradleSubplugin.getKspKotlinOutputDir(
-                        project,
-                        compilation.defaultSourceSet.name,
-                        compilation.target.name
-                    )
-                )
             }
         }
     }

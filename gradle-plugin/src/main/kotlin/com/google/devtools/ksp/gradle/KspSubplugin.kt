@@ -51,7 +51,6 @@ import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
@@ -177,18 +176,23 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     }
 
     private var multiplatformEnabled: Boolean = false
+    private var sourceSetDependenciesEnabled: Boolean = false
 
     private lateinit var kspConfigurations: KspConfigurations
 
     override fun apply(target: Project) {
-        multiplatformEnabled =
-            target.findProperty("ksp.multiplatform.enabled")?.let { it.toString().toBoolean() } ?: false
+        fun propertyFlag(name: String) = target.findProperty(name)?.let { it.toString().toBoolean() }
+
+        multiplatformEnabled = propertyFlag("ksp.multiplatform.enabled") ?: false
+        sourceSetDependenciesEnabled = propertyFlag("ksp.sourceSetDependencies.enabled") ?: multiplatformEnabled
+
         if (multiplatformEnabled) {
             target.logger.warn("[ksp] Enabling the 'ksp' multiplatform extension (supports Kotlin build scripts only)")
             target.extensions.create("ksp", KspMultiplatformExtension::class.java)
         } else {
             target.extensions.create("ksp", KspExtension::class.java)
         }
+
         kspConfigurations = KspConfigurations(target, multiplatformEnabled)
         registry.register(KspModelBuilder(multiplatformEnabled))
     }
@@ -238,7 +242,24 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             return project.provider { emptyList() }
         }
 
-        val target = kotlinCompilation.target.name
+        if (sourceSetDependenciesEnabled && kspExtension.allowSourcesFromOtherPlugins) {
+            // Source set dependencies are incompatible with task dependencies introduced by
+            // `allowSourcesFromOtherPlugins`, resulting in a dependency cycle.
+            project.logger.warn(
+                "[ksp] Disabling source set dependencies, because they are incompatible with" +
+                    " 'allowSourcesFromOtherPlugins'"
+            )
+            sourceSetDependenciesEnabled = false
+        }
+
+        fun String.singleJsNameIfPossible(): String =
+            if (sourceSetDependenciesEnabled) {
+                replace(Regex("([jJ]s)(Ir|Legacy)"), "$1")
+            } else {
+                this
+            }
+
+        val target = kotlinCompilation.target.name.singleJsNameIfPossible()
         val sourceSetName = kotlinCompilation.defaultSourceSetName
         val classOutputDir = getKspClassOutputDir(project, sourceSetName, target)
         val javaOutputDir = getKspJavaOutputDir(project, sourceSetName, target)
@@ -246,15 +267,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName, target)
         val kspOutputDir = getKspOutputDir(project, sourceSetName, target)
 
-        if (javaCompile != null) {
-            val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
-            generatedJavaSources.include("**/*.java")
-            javaCompile.source(generatedJavaSources)
-            javaCompile.classpath += project.files(classOutputDir)
-        }
-
         assert(kotlinCompileProvider.name.startsWith("compile"))
-        val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
+        val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp").singleJsNameIfPossible()
+
+        if (kspTaskName.endsWith("Js") && project.locateTask<Task>(kspTaskName) != null) {
+            // If Js variants (Ir and Legacy) share a single KSP task, avoid configuring it twice.
+            return project.provider { emptyList() }
+        }
 
         val kotlinCompileTask = kotlinCompileProvider.get()
         val sourceSetOptions = kspConfigurations.resolvedSourceSetOptions(kotlinCompilation)
@@ -318,23 +337,28 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     kspTask.setSource(kotlinCompileTask.javaSources)
                 }
             } else {
-                if (multiplatformEnabled) {
-                    kspTask.source(kotlinCompilation.defaultSourceSet.kotlin)
+                // If source set dependencies are enabled, all Kotlin source sets processed by KSP carry a
+                // `builtBy` dependency on their KSP task. Otherwise the special treatment explained in the
+                // following comments (A) and (B) is not relevant.
 
-                    // Depend on parent source sets and the outputs of parent KSP tasks.
-                    kotlinCompilation.parentSourceSetsBottomUp().forEach { parentSourceSet ->
-                        kspTask.source(parentSourceSet.kotlin)
-                        val parentKspTaskName = lowerCamelCased("ksp", parentSourceSet.name, "KotlinMetadata")
-                        project.locateTask<AbstractKotlinCompileTool<*>>(parentKspTaskName)?.let { parentKspTask ->
-                            kspTask.source(parentKspTask)
-                        }
+                // (A) Use dependency-free input for KSP's own source set to avoid a cyclic dependency on itself
+                // via the `builtBy` dependency, which is carried by the `kotlin` SourceDirectorySet.
+                kspTask.source(kotlinCompilation.defaultSourceSet.kotlin.srcDirTrees)
+
+                // (B) Use regular dependencies (including `builtBy`, if applicable) for the remaining source sets.
+                if (multiplatformEnabled) {
+                    // On multiplatform, `allKotlinSourceSets` for custom source sets will not contain parent
+                    // source sets. TODO: Check with upstream if this is intended or a bug.
+                    kotlinCompilation.parentSourceSetsBottomUp().forEach { sourceSet ->
+                        kspTask.source(sourceSet.kotlin)
                     }
                 } else {
+                    // On Android, climbing upwards from the default source set is insufficient, so we must use
+                    // `allKotlinSourceSets` (which also works for non-Android, non-multiplatform compilations).
                     kotlinCompilation.allKotlinSourceSets.forEach { sourceSet ->
-                        kspTask.setSource(sourceSet.kotlin)
-                    }
-                    if (kotlinCompilation is KotlinCommonCompilation) {
-                        kspTask.setSource(kotlinCompilation.defaultSourceSet.kotlin)
+                        if (sourceSet != kotlinCompilation.defaultSourceSet) {
+                            kspTask.source(sourceSet.kotlin)
+                        }
                     }
                 }
             }
@@ -395,13 +419,33 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 .execute(kspTaskProvider as TaskProvider<AbstractKotlinCompile<*>>)
         }
 
-        kotlinCompileProvider.configure { kotlinCompile ->
-            kotlinCompile.dependsOn(kspTaskProvider)
+        if (sourceSetDependenciesEnabled) {
+            kotlinCompilation.defaultSourceSet.apply {
+                kotlin.srcDir(project.files(kotlinOutputDir).builtBy(kspTaskProvider))
+                resources.srcDir(project.files(resourceOutputDir).builtBy(kspTaskProvider))
+            }
+        }
 
-            kotlinCompile.source(kotlinOutputDir, javaOutputDir)
+        kotlinCompileProvider.configure { kotlinCompile ->
+            if (sourceSetDependenciesEnabled) {
+                kotlinCompile.source(project.files(javaOutputDir).builtBy(kspTaskProvider))
+            } else {
+                kotlinCompile.dependsOn(kspTaskProvider)
+                kotlinCompile.source(kotlinOutputDir, javaOutputDir)
+            }
             when (kotlinCompile) {
                 is AbstractKotlinCompile<*> -> kotlinCompile.libraries.from(project.files(classOutputDir))
                 // is KotlinNativeCompile -> TODO: support binary generation?
+            }
+        }
+
+        if (javaCompile != null) {
+            if (sourceSetDependenciesEnabled) {
+                javaCompile.source(project.fileTree(javaOutputDir).builtBy(kspTaskProvider).include("**/*.java"))
+                javaCompile.classpath += project.files(classOutputDir).builtBy(kspTaskProvider)
+            } else {
+                javaCompile.source(project.fileTree(javaOutputDir).include("**/*.java"))
+                javaCompile.classpath += project.files(classOutputDir)
             }
         }
 
@@ -409,10 +453,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             (kotlinCompilation as? KotlinCompilationWithResources)?.processResourcesTaskName ?: "processResources"
         project.locateTask<ProcessResources>(processResourcesTaskName)?.let { provider ->
             provider.configure { resourcesTask ->
-                resourcesTask.dependsOn(kspTaskProvider)
-                resourcesTask.from(resourceOutputDir)
+                if (sourceSetDependenciesEnabled) {
+                    resourcesTask.from(project.files(resourceOutputDir).builtBy(kspTaskProvider))
+                } else {
+                    resourcesTask.dependsOn(kspTaskProvider)
+                    resourcesTask.from(resourceOutputDir)
+                }
             }
         }
+
         if (kotlinCompilation is KotlinJvmAndroidCompilation) {
             AndroidPluginIntegration.registerGeneratedJavaSources(
                 project = project,

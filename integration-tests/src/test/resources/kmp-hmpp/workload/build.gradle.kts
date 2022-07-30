@@ -8,9 +8,14 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 plugins {
     kotlin("multiplatform")
     id("com.google.devtools.ksp")
+    application
 }
 
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("MainKt")
+}
 
 kotlin {
     jvm {
@@ -18,7 +23,8 @@ kotlin {
     }
 
     js(IR) {
-        browser()
+        nodejs()
+        binaries.executable()
     }
 
     sourceSets {
@@ -50,9 +56,18 @@ kotlin {
             dependsOn(clientMain)
         }
 
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+
         val jvmTest by getting {
             ksp {
                 processor(project(":test-processor"))
+            }
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
             }
         }
     }
@@ -64,6 +79,27 @@ ksp {
 }
 
 tasks {
+    val jvmTest by getting(Test::class) {
+        useJUnitPlatform()
+        // Show stdout/stderr and stack traces on console – https://stackoverflow.com/q/65573633/2529022
+        testLogging {
+            events("PASSED", "FAILED", "SKIPPED")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            showStandardStreams = true
+            showStackTraces = true
+        }
+    }
+
+    val jsNodeTest by getting(org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest::class) {
+        // Show stdout/stderr and stack traces on console – https://stackoverflow.com/q/65573633/2529022
+        testLogging {
+            events("PASSED", "FAILED", "SKIPPED")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            showStandardStreams = true
+            showStackTraces = true
+        }
+    }
+
     val showMe by registering {
         doLast {
             fun Any.asText() = when (this) {
