@@ -27,3 +27,10 @@ class A
 public class Container {
     String str;
 }
+
+// FILE: IntSupplier.java
+import kotlin.jvm.functions.Function0;
+
+public class IntSupplier implements Function0<Integer> {
+    @Override public Integer invoke() { return 1; }
+}

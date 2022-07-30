@@ -23,12 +23,16 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
+import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
+import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
 import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
 import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
+import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSTypeImpl private constructor(internal val type: KtType) : KSType {
@@ -61,7 +65,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override val annotations: Sequence<KSAnnotation>
-        get() = TODO("Not yet implemented")
+        get() = type.annotations()
 
     override fun isAssignableFrom(that: KSType): Boolean {
         if (that.isError || this.isError) {
@@ -81,19 +85,46 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        TODO("Not yet implemented")
+        return analyze {
+            analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
+                arguments.forEach { arg ->
+                    val variance = when (arg.variance) {
+                        com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
+                        com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.OUT_VARIANCE
+                        com.google.devtools.ksp.symbol.Variance.COVARIANT -> Variance.IN_VARIANCE
+                        else -> null
+                    }
+                    val argType = arg.type?.resolve()?.safeAs<KSTypeImpl>()?.type
+                    if (argType == null || variance == null) {
+                        argument(KtStarProjectionTypeArgument(type.token))
+                    } else {
+                        argument(KtTypeArgumentWithVariance(argType, variance, type.token))
+                    }
+                }
+            }.let { getCached(it) }
+        }
     }
 
     override fun starProjection(): KSType {
-        TODO("Not yet implemented")
+        return analyze {
+            analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
+                type.typeArguments.forEach {
+                    argument(KtStarProjectionTypeArgument(type.token))
+                }
+            }.let { getCached(it) }
+        }
     }
 
     override fun makeNullable(): KSType {
-        TODO("Not yet implemented")
+        return analyze {
+            getCached(type.withNullability(KtTypeNullability.NULLABLE))
+        }
     }
 
     override fun makeNotNullable(): KSType {
-        TODO("Not yet implemented")
+        return analyze {
+            getCached(type.withNullability(KtTypeNullability.NON_NULLABLE))
+        }
     }
 
     override val isMarkedNullable: Boolean

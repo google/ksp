@@ -23,6 +23,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.KSBuiltIns
@@ -205,7 +206,7 @@ class ResolverAAImpl(
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
-        TODO("Not yet implemented")
+        return KSTypeArgumentLiteImpl.getCached(typeRef, variance)
     }
 
     override fun isJavaRawType(type: KSType): Boolean {
