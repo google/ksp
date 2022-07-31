@@ -60,24 +60,6 @@ class CodeGeneratorImpl(
         return "$packageDirs$fileName$extension"
     }
 
-    fun extensionToType(extensionName: String): FileType {
-        return when (extensionName) {
-            "class" -> FileType.CLASS
-            "java" -> FileType.JAVA_SOURCE
-            "kt" -> FileType.KOTLIN_SOURCE
-            else -> FileType.RESOURCE
-        }
-    }
-
-    fun baseDirOf(fileType: FileType): File {
-        return when (fileType) {
-            FileType.CLASS -> classDir
-            FileType.JAVA_SOURCE -> javaDir
-            FileType.KOTLIN_SOURCE -> kotlinDir
-            FileType.RESOURCE -> resourcesDir
-        }
-    }
-
     override fun createNewFile(
         dependencies: Dependencies,
         packageName: String,
@@ -96,8 +78,9 @@ class CodeGeneratorImpl(
         associate(sources, pathOf(packageName, fileName, extensionName), extensionToType(extensionName))
     }
 
-    override fun associate(sources: List<KSFile>, path: String, fileType: FileType) {
-        associate(sources, File(baseDirOf(fileType), path))
+    override fun associate(sources: List<KSFile>, path: String, extensionName: String) {
+        val extension = if (extensionName != "") ".$extensionName" else ""
+        associate(sources, path + extension, extensionToType(extensionName))
     }
 
     override fun associateWithClasses(
@@ -110,7 +93,25 @@ class CodeGeneratorImpl(
         val files = classes.map {
             it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
         }
-        associate(files, File(path))
+        associate(files, path, extensionToType(extensionName))
+    }
+
+    private fun extensionToType(extensionName: String): FileType {
+        return when (extensionName) {
+            "class" -> FileType.CLASS
+            "java" -> FileType.JAVA_SOURCE
+            "kt" -> FileType.KOTLIN_SOURCE
+            else -> FileType.RESOURCE
+        }
+    }
+
+    private fun baseDirOf(fileType: FileType): File {
+        return when (fileType) {
+            FileType.CLASS -> classDir
+            FileType.JAVA_SOURCE -> javaDir
+            FileType.KOTLIN_SOURCE -> kotlinDir
+            FileType.RESOURCE -> resourcesDir
+        }
     }
 
     private fun createNewFile(dependencies: Dependencies, path: String, fileType: FileType): OutputStream {
@@ -151,6 +152,15 @@ class CodeGeneratorImpl(
         } catch (e: IOException) {
             false
         }
+    }
+
+    private fun associate(sources: List<KSFile>, path: String, fileType: FileType) {
+        val baseDir = baseDirOf(fileType)
+        val file = File(baseDir, path)
+        if (!isWithinBaseDir(baseDir, file)) {
+            throw IllegalStateException("requested path is outside the bounds of the required directory")
+        }
+        associate(sources, file)
     }
 
     private fun associate(sources: List<KSFile>, outputPath: File) {

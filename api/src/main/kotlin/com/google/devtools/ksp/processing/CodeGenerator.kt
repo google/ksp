@@ -117,7 +117,7 @@ interface CodeGenerator {
      * @param fileType determines the target directory where the file should exist
      * @see [CodeGenerator] for more details.
      */
-    fun associate(sources: List<KSFile>, path: String, fileType: FileType)
+    fun associate(sources: List<KSFile>, path: String, extensionName: String = "kt")
 
     /**
      * Associate [classes] to an output file.
