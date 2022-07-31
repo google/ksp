@@ -116,18 +116,19 @@ class CodeGeneratorImpl(
     private fun createNewFile(dependencies: Dependencies, path: String, fileType: FileType): OutputStream {
         val baseDir = baseDirOf(fileType)
         val file = File(baseDir, path)
-        if (path in fileMap) {
-            throw FileAlreadyExistsException(file)
-        }
         if (!isWithinBaseDir(baseDir, file)) {
             throw IllegalStateException("requested path is outside the bounds of the required directory")
+        }
+        val absolutePath = file.absolutePath
+        if (absolutePath in fileMap) {
+            throw FileAlreadyExistsException(file)
         }
         val parentFile = file.parentFile
         if (!parentFile.exists() && !parentFile.mkdirs()) {
             throw IllegalStateException("failed to make parent directories.")
         }
         file.writeText("")
-        fileMap[path] = file
+        fileMap[absolutePath] = file
         val sources = if (dependencies.isAllSources) {
             allSources + anyChangesWildcard
         } else {
@@ -138,8 +139,8 @@ class CodeGeneratorImpl(
             }
         }
         associate(sources, file)
-        fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
-        return fileOutputStreamMap[path]!!
+        fileOutputStreamMap[absolutePath] = fileMap[absolutePath]!!.outputStream()
+        return fileOutputStreamMap[absolutePath]!!
     }
 
     private fun isWithinBaseDir(baseDir: File, file: File): Boolean {
@@ -163,7 +164,7 @@ class CodeGeneratorImpl(
     }
 
     val outputs: Set<File>
-        get() = fileMap.keys.mapTo(mutableSetOf()) { File(it).relativeTo(projectBase) }
+        get() = fileMap.values.toMutableSet()
 
     override val generatedFile: Collection<File>
         get() = fileOutputStreamMap.keys.map { fileMap[it]!! }

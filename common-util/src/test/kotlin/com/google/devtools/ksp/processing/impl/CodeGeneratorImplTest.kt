@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.AnyChanges
-import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import org.junit.Assert
 import org.junit.Before
@@ -11,7 +10,7 @@ import java.nio.file.Files
 
 class CodeGeneratorImplTest {
 
-    lateinit var codeGenerator: CodeGenerator
+    lateinit var codeGenerator: CodeGeneratorImpl
     lateinit var baseDir: File
 
     @Before
@@ -49,6 +48,12 @@ class CodeGeneratorImplTest {
         Assert.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
         Assert.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
         Assert.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
+
+        try {
+            codeGenerator.outputs
+        } catch (e: Exception) {
+            Assert.fail("Failed to get outputs: ${e.message}")
+        }
     }
 
     @Test
@@ -63,6 +68,12 @@ class CodeGeneratorImplTest {
         Assert.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
         Assert.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
         Assert.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
+
+        try {
+            codeGenerator.outputs
+        } catch (e: Exception) {
+            Assert.fail("Failed to get outputs: ${e.message}")
+        }
     }
 
     @Test
@@ -77,6 +88,12 @@ class CodeGeneratorImplTest {
         Assert.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
         Assert.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
         Assert.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
+
+        try {
+            codeGenerator.outputs
+        } catch (e: Exception) {
+            Assert.fail("Failed to get outputs: ${e.message}")
+        }
     }
 
     @Test
@@ -91,6 +108,12 @@ class CodeGeneratorImplTest {
         Assert.assertEquals(File(baseDir, "kotlin/a/b/c/dir.with.dot/Test.kt"), files[1])
         Assert.assertEquals(File(baseDir, "classes/a/b/c/dir.with.dot/Test.class"), files[2])
         Assert.assertEquals(File(baseDir, "resources/a/b/c/dir.with.dot/Test"), files[3])
+
+        try {
+            codeGenerator.outputs
+        } catch (e: Exception) {
+            Assert.fail("Failed to get outputs: ${e.message}")
+        }
     }
 
     @Test
