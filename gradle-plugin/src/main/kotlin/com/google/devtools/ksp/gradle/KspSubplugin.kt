@@ -78,10 +78,10 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
     constructor(compilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) : super(compilation) {
         configureTask { task ->
             if (task is KspTaskJvm) {
-                // Assign ownModuleName different from kotlin compilation to
+                // Assign moduleName different from kotlin compilation to
                 // work around https://github.com/google/ksp/issues/647
                 // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
-                task.ownModuleName.value(kotlinCompile.ownModuleName.map { "$it-ksp" })
+                task.moduleName.value(kotlinCompile.moduleName.map { "$it-ksp" })
             }
             if (task is KspTaskJS) {
                 val libraryCacheService = project.rootProject.gradle.sharedServices.registerIfAbsent(
@@ -624,7 +624,7 @@ abstract class KspTaskJvm @Inject constructor(
         args.addPluginOptions(options.get())
         args.destinationAsFile = destination
         args.allowNoSourceFiles = true
-        args.useK2 = false
+        args.useFir = false
     }
 
     // Overrding an internal function is hacky.
@@ -743,7 +743,7 @@ abstract class KspTaskJS @Inject constructor(
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
         kotlinOptions.copyFreeCompilerArgsToArgs(args)
-        args.useK2 = false
+        args.useFir = false
     }
 
     // Overrding an internal function is hacky.
@@ -832,7 +832,7 @@ abstract class KspTaskMetadata @Inject constructor(
         args.friendPaths = friendPaths.files.map { it.absolutePath }.toTypedArray()
         args.refinesPaths = refinesMetadataPaths.map { it.absolutePath }.toTypedArray()
         args.expectActualLinker = true
-        args.useK2 = false
+        args.useFir = false
     }
 
     // Overrding an internal function is hacky.
