@@ -23,8 +23,8 @@ import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
-import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.util.ServiceLoaderLite
 import java.io.File
 import java.net.URLClassLoader
 

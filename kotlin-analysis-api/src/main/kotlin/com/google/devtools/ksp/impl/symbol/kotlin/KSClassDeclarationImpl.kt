@@ -43,7 +43,6 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
             KtClassKind.ANNOTATION_CLASS -> ClassKind.ANNOTATION_CLASS
             KtClassKind.INTERFACE -> ClassKind.INTERFACE
             KtClassKind.COMPANION_OBJECT, KtClassKind.ANONYMOUS_OBJECT, KtClassKind.OBJECT -> ClassKind.OBJECT
-            KtClassKind.ENUM_ENTRY -> ClassKind.ENUM_ENTRY
         }
     }
 
