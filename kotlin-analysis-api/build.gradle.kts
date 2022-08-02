@@ -2,7 +2,7 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 
 val intellijVersion: String by project
 val junitVersion: String by project
-val analysisAPIVersion = "1.8.0-dev-446"
+val kotlinBaseVersion: String by project
 val libsForTesting by configurations.creating
 
 plugins {
@@ -27,31 +27,31 @@ fun ModuleDependency.includeJars(vararg names: String) {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation(kotlin("stdlib", analysisAPIVersion))
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$analysisAPIVersion")
+    implementation(kotlin("stdlib", kotlinBaseVersion))
+    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
-    implementation("org.jetbrains.kotlin:high-level-api-fir-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:high-level-api-fir-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:high-level-api-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:high-level-api-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:low-level-api-fir-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:low-level-api-fir-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:analysis-api-providers-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:analysis-api-providers-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:symbol-light-classes-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:symbol-light-classes-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:analysis-api-standalone-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:analysis-api-standalone-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
-    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisAPIVersion") {
+    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$kotlinBaseVersion") {
         isTransitive = false
     }
 
@@ -68,20 +68,20 @@ dependencies {
     testImplementation(project(":api"))
     testImplementation(project(":common-util"))
 
-    testImplementation(kotlin("stdlib", analysisAPIVersion))
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$analysisAPIVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$analysisAPIVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$analysisAPIVersion")
+    testImplementation(kotlin("stdlib", kotlinBaseVersion))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
-    libsForTesting(kotlin("stdlib", analysisAPIVersion))
-    libsForTesting(kotlin("test", analysisAPIVersion))
-    libsForTesting(kotlin("script-runtime", analysisAPIVersion))
+    libsForTesting(kotlin("stdlib", kotlinBaseVersion))
+    libsForTesting(kotlin("test", kotlinBaseVersion))
+    libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
-    val escaped = Regex.escape(analysisAPIVersion)
+    val escaped = Regex.escape(kotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
