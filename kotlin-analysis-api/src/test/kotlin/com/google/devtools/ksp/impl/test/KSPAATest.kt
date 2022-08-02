@@ -20,7 +20,10 @@ package com.google.devtools.ksp.impl.test
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
+@Execution(ExecutionMode.SAME_THREAD)
 class KSPAATest : AbstractKSPAATest() {
 
     @Disabled
@@ -37,7 +40,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/javaAnnotatedUtil.kt")
     }
 
-    @Disabled
     @Test
     fun testAbstractFunctions() {
         runTest("../compiler-plugin/testData/api/abstractFunctions.kt")
@@ -134,7 +136,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/classKinds.kt")
     }
 
-    @Disabled
     @TestMetadata("companion.kt")
     @Test
     fun testCompanion() {
