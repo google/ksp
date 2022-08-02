@@ -32,7 +32,7 @@
 // END
 // FILE: a.kt
 class C {
-    val errorAtTop = mutableMapOf<String, NonExistType>()
+    val errorAtTop = mutableMapOf<String, NonExistType, Int>()
     val errorInComponent: Map<String, NonExistType>
 }
 
