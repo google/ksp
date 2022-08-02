@@ -25,19 +25,16 @@ import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.intellij.mock.MockApplication
 import com.intellij.mock.MockProject
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
-import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
-import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
+import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.project.structure.getKtModule
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
+import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import java.nio.file.Files
@@ -46,15 +43,17 @@ class KotlinSymbolProcessing(
     val compilerConfiguration: CompilerConfiguration,
     val options: KspOptions,
     val logger: KSPLogger,
-    val env: KotlinCoreEnvironment,
+    val analysisAPISession: StandaloneAnalysisAPISession,
     val providers: List<SymbolProcessorProvider>
 ) {
-    val project = env.project as MockProject
+    val project = analysisAPISession.project as MockProject
     val kspCoreEnvironment = KSPCoreEnvironment(project)
 
     var finished = false
     val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
-    val ktFiles = env.getSourceFiles()
+    val ktFiles = createSourceFilesFromSourceRoots(
+        compilerConfiguration, project, compilerConfiguration.kotlinSourceRoots
+    ).toSet().toList()
     val javaFiles = compilerConfiguration.javaSourceRoots
     lateinit var codeGenerator: CodeGeneratorImpl
     lateinit var processors: List<SymbolProcessor>
@@ -120,27 +119,15 @@ fun main(args: Array<String>) {
     val commandLineProcessor = KSPCommandLineProcessor(compilerConfiguration)
     val logger = CommandLineKSPLogger()
 
-    val application = ApplicationManager.getApplication() as MockApplication
-    configureApplicationEnvironment(application)
-
-    commandLineProcessor.processArgs(args)
-
-    val kotlinCoreEnvironment = KotlinCoreEnvironment.createForProduction(
-        Disposer.newDisposable(), commandLineProcessor.compilerConfiguration,
-        EnvironmentConfigFiles.JVM_CONFIG_FILES
-    )
-
-    configureProjectEnvironment(
-        kotlinCoreEnvironment.project as MockProject,
-        compilerConfiguration,
-        kotlinCoreEnvironment::createPackagePartProvider
-    )
+    val analysisSession = buildStandaloneAnalysisAPISession {
+        buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
+    }
 
     val kotlinSymbolProcessing = KotlinSymbolProcessing(
         commandLineProcessor.compilerConfiguration,
         commandLineProcessor.kspOptions,
         logger,
-        kotlinCoreEnvironment,
+        analysisSession,
         commandLineProcessor.providers
     )
     kotlinSymbolProcessing.prepare()
