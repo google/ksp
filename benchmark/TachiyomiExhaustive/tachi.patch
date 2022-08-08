@@ -6,7 +6,7 @@ index c7d59c166..f8941dbfa 100644
  }
  
  dependencies {
-+    implementation("org.jetbrains.kotlin:kotlin-compiler:1.7.0-dev-2437")
++    implementation("org.jetbrains.kotlin:kotlin-compiler:1.8.0-dev-1390")
      implementation(kotlin("reflect", version = BuildPluginsVersion.KOTLIN))
  
      val coroutinesVersion = "1.6.0"
@@ -31,7 +31,7 @@ index c7d59c166..f8941dbfa 100644
 +                        if (fileName == "classes.jar") {
 +                            it.name.dropLastWhile { it != '.' } + "jar"
 +                        } else if (fileName.contains("-dev-")) {
-+                            fileName.replace("-1.7.0-dev-2437", "")
++                            fileName.replace("-1.8.0-dev-1390", "")
 +                        }
 +                        else fileName
 +                    }
