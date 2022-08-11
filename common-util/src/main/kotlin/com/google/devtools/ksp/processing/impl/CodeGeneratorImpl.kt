@@ -64,7 +64,11 @@ class CodeGeneratorImpl(
         fileName: String,
         extensionName: String
     ): OutputStream {
-        return createNewFile(dependencies, pathOf(packageName, fileName, extensionName), extensionToDirectory(extensionName))
+        return createNewFile(
+            dependencies,
+            pathOf(packageName, fileName, extensionName),
+            extensionToDirectory(extensionName)
+        )
     }
 
     override fun createNewFileByPath(dependencies: Dependencies, path: String, extensionName: String): OutputStream {
