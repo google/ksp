@@ -23,15 +23,9 @@ import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.testutils.AbstractKSPTest
-import com.intellij.mock.MockApplication
-import com.intellij.mock.MockProject
-import com.intellij.openapi.application.ApplicationManager
-import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
-import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
+import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.test.model.FrontendKinds
@@ -73,9 +67,6 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             compilerConfiguration.addJavaSourceRoot(mainModule.javaDir)
         }
 
-        val application = ApplicationManager.getApplication() as MockApplication
-        configureApplicationEnvironment(application)
-
         // Some underlying service needs files backed by local fs.
         // Therefore, this doesn't work:
         //  val ktFiles = mainModule.loadKtFiles(kotlinCoreEnvironment.project)
@@ -87,18 +78,6 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
             .distinctBy { it.canonicalPath }
         compilerConfiguration.addKotlinSourceRoots(ktSourceRoots.map { it.absolutePath })
-        // TODO: other platforms
-        val kotlinCoreEnvironment = KotlinCoreEnvironment.createForTests(
-            disposable,
-            compilerConfiguration,
-            EnvironmentConfigFiles.JVM_CONFIG_FILES
-        )
-
-        configureProjectEnvironment(
-            kotlinCoreEnvironment.project as MockProject,
-            compilerConfiguration,
-            kotlinCoreEnvironment::createPackagePartProvider,
-        )
 
         val testRoot = mainModule.testRoot
 
@@ -114,11 +93,14 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             cachesDir = File(testRoot, "kspTest/kspCaches")
             kspOutputDir = File(testRoot, "kspTest")
         }.build()
+        val analysisSession = buildStandaloneAnalysisAPISession {
+            buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
+        }
         val ksp = KotlinSymbolProcessing(
             compilerConfiguration,
             kspOptions,
             CommandLineKSPLogger(),
-            kotlinCoreEnvironment,
+            analysisSession,
             listOf(testProcessor)
         )
         ksp.prepare()
