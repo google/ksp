@@ -20,14 +20,12 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.processing.FileType
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
-import java.nio.file.Path
 
 class CodeGeneratorImpl(
     private val classDir: File,
@@ -66,21 +64,21 @@ class CodeGeneratorImpl(
         fileName: String,
         extensionName: String
     ): OutputStream {
-        return createNewFile(dependencies, pathOf(packageName, fileName, extensionName), extensionToType(extensionName))
+        return createNewFile(dependencies, pathOf(packageName, fileName, extensionName), extensionToDirectory(extensionName))
     }
 
     override fun createNewFileByPath(dependencies: Dependencies, path: String, extensionName: String): OutputStream {
         val extension = if (extensionName != "") ".$extensionName" else ""
-        return createNewFile(dependencies, path + extension, extensionToType(extensionName))
+        return createNewFile(dependencies, path + extension, extensionToDirectory(extensionName))
     }
 
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
-        associate(sources, pathOf(packageName, fileName, extensionName), extensionToType(extensionName))
+        associate(sources, pathOf(packageName, fileName, extensionName), extensionToDirectory(extensionName))
     }
 
     override fun associate(sources: List<KSFile>, path: String, extensionName: String) {
         val extension = if (extensionName != "") ".$extensionName" else ""
-        associate(sources, path + extension, extensionToType(extensionName))
+        associate(sources, path + extension, extensionToDirectory(extensionName))
     }
 
     override fun associateWithClasses(
@@ -93,29 +91,19 @@ class CodeGeneratorImpl(
         val files = classes.map {
             it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
         }
-        associate(files, path, extensionToType(extensionName))
+        associate(files, path, extensionToDirectory(extensionName))
     }
 
-    private fun extensionToType(extensionName: String): FileType {
+    private fun extensionToDirectory(extensionName: String): File {
         return when (extensionName) {
-            "class" -> FileType.CLASS
-            "java" -> FileType.JAVA_SOURCE
-            "kt" -> FileType.KOTLIN_SOURCE
-            else -> FileType.RESOURCE
+            "class" -> classDir
+            "java" -> javaDir
+            "kt" -> kotlinDir
+            else -> resourcesDir
         }
     }
 
-    private fun baseDirOf(fileType: FileType): File {
-        return when (fileType) {
-            FileType.CLASS -> classDir
-            FileType.JAVA_SOURCE -> javaDir
-            FileType.KOTLIN_SOURCE -> kotlinDir
-            FileType.RESOURCE -> resourcesDir
-        }
-    }
-
-    private fun createNewFile(dependencies: Dependencies, path: String, fileType: FileType): OutputStream {
-        val baseDir = baseDirOf(fileType)
+    private fun createNewFile(dependencies: Dependencies, path: String, baseDir: File): OutputStream {
         val file = File(baseDir, path)
         if (!isWithinBaseDir(baseDir, file)) {
             throw IllegalStateException("requested path is outside the bounds of the required directory")
@@ -154,8 +142,7 @@ class CodeGeneratorImpl(
         }
     }
 
-    private fun associate(sources: List<KSFile>, path: String, fileType: FileType) {
-        val baseDir = baseDirOf(fileType)
+    private fun associate(sources: List<KSFile>, path: String, baseDir: File) {
         val file = File(baseDir, path)
         if (!isWithinBaseDir(baseDir, file)) {
             throw IllegalStateException("requested path is outside the bounds of the required directory")
