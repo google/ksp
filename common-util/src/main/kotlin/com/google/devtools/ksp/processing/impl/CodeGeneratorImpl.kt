@@ -76,7 +76,7 @@ class CodeGeneratorImpl(
         associate(sources, pathOf(packageName, fileName, extensionName), extensionToDirectory(extensionName))
     }
 
-    override fun associate(sources: List<KSFile>, path: String, extensionName: String) {
+    override fun associateByPath(sources: List<KSFile>, path: String, extensionName: String) {
         val extension = if (extensionName != "") ".$extensionName" else ""
         associate(sources, path + extension, extensionToDirectory(extensionName))
     }
