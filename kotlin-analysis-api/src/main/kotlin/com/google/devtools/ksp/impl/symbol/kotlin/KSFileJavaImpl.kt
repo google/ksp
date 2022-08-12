@@ -18,8 +18,6 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -43,7 +41,9 @@ class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile 
 
     override val declarations: Sequence<KSDeclaration> by lazy {
         psi.classes.asSequence().mapNotNull { psi ->
-            psi.qualifiedName?.let { ResolverAAImpl.instance.getClassDeclarationByName(it) }
+            analyze {
+                psi.getNamedClassSymbol()?.let { KSClassDeclarationImpl.getCached(it) }
+            }
         }
     }
 

@@ -129,7 +129,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/checkOverride.kt")
     }
 
-    @Disabled
     @TestMetadata("classKinds.kt")
     @Test
     fun testClassKinds() {

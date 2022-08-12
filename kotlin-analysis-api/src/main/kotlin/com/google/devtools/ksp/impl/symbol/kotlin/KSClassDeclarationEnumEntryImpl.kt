@@ -40,12 +40,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val primaryConstructor: KSFunctionDeclaration? = null
 
-    override val superTypes: Sequence<KSTypeReference> by lazy {
-        analyze {
-            this@KSClassDeclarationEnumEntryImpl.ktEnumEntrySymbol.returnType
-                .getDirectSuperTypes().asSequence().map { KSTypeReferenceImpl.getCached(it) }
-        }
-    }
+    override val superTypes: Sequence<KSTypeReference> = emptySequence()
 
     override val isCompanionObject: Boolean = false
 
