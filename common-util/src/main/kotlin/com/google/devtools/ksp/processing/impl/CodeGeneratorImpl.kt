@@ -24,6 +24,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.OutputStream
 
 class CodeGeneratorImpl(
@@ -54,13 +55,7 @@ class CodeGeneratorImpl(
     fun pathOf(packageName: String, fileName: String, extensionName: String): String {
         val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
         val extension = if (extensionName != "") ".$extensionName" else ""
-        val typeRoot = when (extensionName) {
-            "class" -> classDir
-            "java" -> javaDir
-            "kt" -> kotlinDir
-            else -> resourcesDir
-        }.path
-        return "$typeRoot$separator$packageDirs$fileName$extension"
+        return "$packageDirs$fileName$extension"
     }
 
     override fun createNewFile(
@@ -69,34 +64,25 @@ class CodeGeneratorImpl(
         fileName: String,
         extensionName: String
     ): OutputStream {
-        val path = pathOf(packageName, fileName, extensionName)
-        val file = File(path)
-        if (path in fileMap) {
-            throw FileAlreadyExistsException(file)
-        }
-        val parentFile = file.parentFile
-        if (!parentFile.exists() && !parentFile.mkdirs()) {
-            throw IllegalStateException("failed to make parent directories.")
-        }
-        file.writeText("")
-        fileMap[path] = file
-        val sources = if (dependencies.isAllSources) {
-            allSources + anyChangesWildcard
-        } else {
-            if (dependencies.aggregating) {
-                dependencies.originatingFiles + anyChangesWildcard
-            } else {
-                dependencies.originatingFiles
-            }
-        }
-        associate(sources, path)
-        fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
-        return fileOutputStreamMap[path]!!
+        return createNewFile(
+            dependencies,
+            pathOf(packageName, fileName, extensionName),
+            extensionToDirectory(extensionName)
+        )
+    }
+
+    override fun createNewFileByPath(dependencies: Dependencies, path: String, extensionName: String): OutputStream {
+        val extension = if (extensionName != "") ".$extensionName" else ""
+        return createNewFile(dependencies, path + extension, extensionToDirectory(extensionName))
     }
 
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
-        val path = pathOf(packageName, fileName, extensionName)
-        associate(sources, path)
+        associate(sources, pathOf(packageName, fileName, extensionName), extensionToDirectory(extensionName))
+    }
+
+    override fun associateByPath(sources: List<KSFile>, path: String, extensionName: String) {
+        val extension = if (extensionName != "") ".$extensionName" else ""
+        associate(sources, path + extension, extensionToDirectory(extensionName))
     }
 
     override fun associateWithClasses(
@@ -109,21 +95,77 @@ class CodeGeneratorImpl(
         val files = classes.map {
             it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
         }
-        associate(files, path)
+        associate(files, path, extensionToDirectory(extensionName))
     }
 
-    private fun associate(sources: List<KSFile>, outputPath: String) {
+    private fun extensionToDirectory(extensionName: String): File {
+        return when (extensionName) {
+            "class" -> classDir
+            "java" -> javaDir
+            "kt" -> kotlinDir
+            else -> resourcesDir
+        }
+    }
+
+    private fun createNewFile(dependencies: Dependencies, path: String, baseDir: File): OutputStream {
+        val file = File(baseDir, path)
+        if (!isWithinBaseDir(baseDir, file)) {
+            throw IllegalStateException("requested path is outside the bounds of the required directory")
+        }
+        val absolutePath = file.absolutePath
+        if (absolutePath in fileMap) {
+            throw FileAlreadyExistsException(file)
+        }
+        val parentFile = file.parentFile
+        if (!parentFile.exists() && !parentFile.mkdirs()) {
+            throw IllegalStateException("failed to make parent directories.")
+        }
+        file.writeText("")
+        fileMap[absolutePath] = file
+        val sources = if (dependencies.isAllSources) {
+            allSources + anyChangesWildcard
+        } else {
+            if (dependencies.aggregating) {
+                dependencies.originatingFiles + anyChangesWildcard
+            } else {
+                dependencies.originatingFiles
+            }
+        }
+        associate(sources, file)
+        fileOutputStreamMap[absolutePath] = fileMap[absolutePath]!!.outputStream()
+        return fileOutputStreamMap[absolutePath]!!
+    }
+
+    private fun isWithinBaseDir(baseDir: File, file: File): Boolean {
+        val base = baseDir.toPath().normalize()
+        return try {
+            val relativePath = file.toPath().normalize()
+            relativePath.startsWith(base)
+        } catch (e: IOException) {
+            false
+        }
+    }
+
+    private fun associate(sources: List<KSFile>, path: String, baseDir: File) {
+        val file = File(baseDir, path)
+        if (!isWithinBaseDir(baseDir, file)) {
+            throw IllegalStateException("requested path is outside the bounds of the required directory")
+        }
+        associate(sources, file)
+    }
+
+    private fun associate(sources: List<KSFile>, outputPath: File) {
         if (!isIncremental)
             return
 
-        val output = File(outputPath).relativeTo(projectBase)
+        val output = outputPath.relativeTo(projectBase)
         sources.forEach { source ->
             sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
         }
     }
 
     val outputs: Set<File>
-        get() = fileMap.keys.mapTo(mutableSetOf()) { File(it).relativeTo(projectBase) }
+        get() = fileMap.values.mapTo(mutableSetOf()) { it.relativeTo(projectBase) }
 
     override val generatedFile: Collection<File>
         get() = fileOutputStreamMap.keys.map { fileMap[it]!! }
