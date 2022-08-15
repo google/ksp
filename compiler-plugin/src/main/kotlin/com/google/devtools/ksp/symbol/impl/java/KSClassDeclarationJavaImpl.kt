@@ -74,7 +74,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
 
     // Could the resolution ever fail?
     private val descriptor: ClassDescriptor? by lazy {
-        ResolverImpl.moduleClassResolver.resolveClass(JavaClassImpl(psi))
+        ResolverImpl.instance.moduleClassResolver.resolveClass(JavaClassImpl(psi))
     }
 
     // TODO in 1.5 + jvmTarget 15, will we return Java permitted types?
