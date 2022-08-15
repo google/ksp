@@ -109,7 +109,6 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.checker.SimpleClassicTypeSystemContext
-import org.jetbrains.kotlin.types.expressions.DoubleColonExpressionResolver
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
@@ -158,27 +157,23 @@ class ResolverImpl(
     }
 
     companion object {
-        lateinit var resolveSession: ResolveSession
-        lateinit var bodyResolver: BodyResolver
-        lateinit var constantExpressionEvaluator: ConstantExpressionEvaluator
-        lateinit var declarationScopeProvider: DeclarationScopeProvider
-        lateinit var topDownAnalyzer: LazyTopDownAnalyzer
         lateinit var instance: ResolverImpl
-        lateinit var annotationResolver: AnnotationResolver
-        lateinit var moduleClassResolver: ModuleClassResolver
-        lateinit var javaTypeResolver: JavaTypeResolver
-        lateinit var lazyJavaResolverContext: LazyJavaResolverContext
-        lateinit var doubleColonExpressionResolver: DoubleColonExpressionResolver
     }
+
+    var resolveSession: ResolveSession
+    var bodyResolver: BodyResolver
+    var constantExpressionEvaluator: ConstantExpressionEvaluator
+    var declarationScopeProvider: DeclarationScopeProvider
+
+    lateinit var moduleClassResolver: ModuleClassResolver
+    lateinit var javaTypeResolver: JavaTypeResolver
+    lateinit var lazyJavaResolverContext: LazyJavaResolverContext
 
     init {
         resolveSession = componentProvider.get()
         bodyResolver = componentProvider.get()
         declarationScopeProvider = componentProvider.get()
-        topDownAnalyzer = componentProvider.get()
         constantExpressionEvaluator = componentProvider.get()
-        doubleColonExpressionResolver = componentProvider.get()
-        annotationResolver = resolveSession.annotationResolver
 
         componentProvider.tryGetService(JavaResolverComponents::class.java)?.let {
             lazyJavaResolverContext = LazyJavaResolverContext(it, TypeParameterResolver.EMPTY) { null }

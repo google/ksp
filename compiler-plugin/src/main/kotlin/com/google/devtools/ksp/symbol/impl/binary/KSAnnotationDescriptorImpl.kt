@@ -250,7 +250,7 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
             }
             is JavaAnnotationAsAnnotationArgument -> {
                 AnnotationValue(
-                    LazyJavaAnnotationDescriptor(ResolverImpl.lazyJavaResolverContext, this.getAnnotation())
+                    LazyJavaAnnotationDescriptor(ResolverImpl.instance.lazyJavaResolverContext, this.getAnnotation())
                 )
             }
             is JavaClassObjectAnnotationArgument -> {
