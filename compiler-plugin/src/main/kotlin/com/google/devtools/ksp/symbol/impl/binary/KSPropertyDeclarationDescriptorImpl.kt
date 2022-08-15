@@ -107,7 +107,7 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override fun findOverridee(): KSPropertyDeclaration? {
-        val propertyDescriptor = ResolverImpl.instance.resolvePropertyDeclaration(this)
+        val propertyDescriptor = ResolverImpl.instance!!.resolvePropertyDeclaration(this)
         return propertyDescriptor?.findClosestOverridee()?.toKSPropertyDeclaration()
     }
 
@@ -120,5 +120,5 @@ class KSPropertyDeclarationDescriptorImpl private constructor(val descriptor: Pr
     }
 
     override fun asMemberOf(containing: KSType): KSType =
-        ResolverImpl.instance.asMemberOf(this, containing)
+        ResolverImpl.instance!!.asMemberOf(this, containing)
 }

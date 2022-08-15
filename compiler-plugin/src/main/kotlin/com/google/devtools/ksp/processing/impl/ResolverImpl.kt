@@ -157,7 +157,7 @@ class ResolverImpl(
     }
 
     companion object {
-        lateinit var instance: ResolverImpl
+        var instance: ResolverImpl? = null
     }
 
     var resolveSession: ResolveSession
@@ -215,6 +215,12 @@ class ResolverImpl(
 
         // FIXME: reuse results from previous rounds and only loop through newKSFiles.
         allKSFiles.forEach { it.accept(visitor, Unit) }
+    }
+
+    // Mitigation for processors with memory leaks
+    // https://github.com/google/ksp/issues/1063
+    fun tearDown() {
+        instance = null
     }
 
     override fun getNewFiles(): Sequence<KSFile> {

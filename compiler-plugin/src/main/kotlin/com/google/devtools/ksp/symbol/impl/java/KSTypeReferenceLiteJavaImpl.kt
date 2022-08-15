@@ -50,7 +50,7 @@ class KSTypeReferenceLiteJavaImpl private constructor(val psiElement: PsiElement
                 val psiClass = psiElement.nameReferenceElement!!.resolve() as? PsiClass
                 psiClass?.let {
                     (psiElement.containingFile as? PsiJavaFile)?.let {
-                        ResolverImpl.instance.incrementalContext.recordLookup(it, psiClass.qualifiedName!!)
+                        ResolverImpl.instance!!.incrementalContext.recordLookup(it, psiClass.qualifiedName!!)
                     }
                     KSClassDeclarationJavaImpl.getCached(psiClass).asStarProjectedType()
                 } ?: KSErrorType

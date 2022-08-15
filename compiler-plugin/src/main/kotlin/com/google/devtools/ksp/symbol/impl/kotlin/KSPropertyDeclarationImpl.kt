@@ -42,7 +42,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     private val propertyDescriptor by lazy {
-        ResolverImpl.instance.resolveDeclaration(ktProperty) as? PropertyDescriptor
+        ResolverImpl.instance!!.resolveDeclaration(ktProperty) as? PropertyDescriptor
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
@@ -67,8 +67,8 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
             ktProperty.initializer != null -> true
             ktProperty.hasModifier(KtTokens.LATEINIT_KEYWORD) -> true
             else -> {
-                val context = ResolverImpl.instance.bindingTrace.bindingContext
-                val descriptor = ResolverImpl.instance.resolveDeclaration(ktProperty)
+                val context = ResolverImpl.instance!!.bindingTrace.bindingContext
+                val descriptor = ResolverImpl.instance!!.resolveDeclaration(ktProperty)
                 descriptor is PropertyDescriptor && context[BindingContext.BACKING_FIELD_REQUIRED, descriptor] == true
             }
         }
@@ -116,7 +116,7 @@ class KSPropertyDeclarationImpl private constructor(val ktProperty: KtProperty) 
     }
 
     override fun asMemberOf(containing: KSType): KSType =
-        ResolverImpl.instance.asMemberOf(this, containing)
+        ResolverImpl.instance!!.asMemberOf(this, containing)
 }
 
 internal fun KtAnnotated.filterUseSiteTargetAnnotations(): Sequence<KtAnnotationEntry> {

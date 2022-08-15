@@ -221,7 +221,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                             findTargetInfos(module)
                         )
                     )
-                }?.let { analysisResult -> return@doAnalysis analysisResult }
+                }?.let { analysisResult ->
+                    resolver.tearDown()
+                    return@doAnalysis analysisResult
+                }
                 if (logger.hasError()) {
                     return@mapNotNull null
                 }
@@ -237,7 +240,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 handleException(module, project) {
                     deferredSymbols[processor] =
                         processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
-                }?.let { return it }
+                }?.let {
+                    resolver.tearDown()
+                    return it
+                }
                 if (logger.hasError()) {
                     return@processing
                 }
@@ -259,14 +265,20 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             processors.forEach { processor ->
                 handleException(module, project) {
                     processor.onError()
-                }?.let { return it }
+                }?.let {
+                    resolver.tearDown()
+                    return it
+                }
             }
         } else {
             if (finished) {
                 processors.forEach { processor ->
                     handleException(module, project) {
                         processor.finish()
-                    }?.let { return it }
+                    }?.let {
+                        resolver.tearDown()
+                        return it
+                    }
                 }
                 if (deferredSymbols.isNotEmpty()) {
                     deferredSymbols.map { entry ->
@@ -289,6 +301,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         if (finished) {
             logger.reportAll()
         }
+        resolver.tearDown()
         return if (finished && !options.withCompilation) {
             if (!options.returnOkOnError && logger.hasError()) {
                 AnalysisResult.compilationError(BindingContext.EMPTY)
