@@ -96,5 +96,5 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) :
     }
 
     override fun asMemberOf(containing: KSType): KSType =
-        ResolverImpl.instance.asMemberOf(this, containing)
+        ResolverImpl.instance!!.asMemberOf(this, containing)
 }

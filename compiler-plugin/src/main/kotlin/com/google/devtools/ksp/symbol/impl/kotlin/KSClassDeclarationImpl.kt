@@ -54,7 +54,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         return if (Modifier.SEALED in modifiers) {
-            ResolverImpl.instance.incrementalContext.recordGetSealedSubclasses(this)
+            ResolverImpl.instance!!.incrementalContext.recordGetSealedSubclasses(this)
             descriptor.sealedSubclassesSequence()
         } else {
             emptySequence()
@@ -103,7 +103,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        val resolver = ResolverImpl.instance
+        val resolver = ResolverImpl.instance!!
         ktClassOrObject.superTypeListEntries
             .asSequence()
             .map { KSTypeReferenceImpl.getCached(it.typeReference!!) }
@@ -119,7 +119,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
     }
 
     private val descriptor: ClassDescriptor by lazy {
-        (ResolverImpl.instance.resolveDeclaration(ktClassOrObject) as ClassDescriptor)
+        (ResolverImpl.instance!!.resolveDeclaration(ktClassOrObject) as ClassDescriptor)
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {

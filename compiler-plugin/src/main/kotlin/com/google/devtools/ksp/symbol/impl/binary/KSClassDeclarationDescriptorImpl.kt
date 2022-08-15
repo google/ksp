@@ -75,8 +75,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     }
 
     // Workaround for https://github.com/google/ksp/issues/195
-    private val mockSerializableType = ResolverImpl.instance.mockSerializableType
-    private val javaSerializableType = ResolverImpl.instance.javaSerializableType
+    private val mockSerializableType = ResolverImpl.instance!!.mockSerializableType
+    private val javaSerializableType = ResolverImpl.instance!!.javaSerializableType
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
 
@@ -155,7 +155,7 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
 }
 
 internal fun ClassDescriptor.getAllFunctions(): Sequence<KSFunctionDeclaration> {
-    ResolverImpl.instance.incrementalContext.recordLookupForGetAllFunctions(this)
+    ResolverImpl.instance!!.incrementalContext.recordLookupForGetAllFunctions(this)
     val functionDescriptors = unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.FUNCTIONS)
         .asSequence()
         .filter { (it as FunctionDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
@@ -169,7 +169,7 @@ internal fun ClassDescriptor.getAllFunctions(): Sequence<KSFunctionDeclaration> 
 }
 
 internal fun ClassDescriptor.getAllProperties(): Sequence<KSPropertyDeclaration> {
-    ResolverImpl.instance.incrementalContext.recordLookupForGetAllProperties(this)
+    ResolverImpl.instance!!.incrementalContext.recordLookupForGetAllProperties(this)
     return unsubstitutedMemberScope.getDescriptorsFiltered(DescriptorKindFilter.VARIABLES).asSequence()
         .filter { (it as PropertyDescriptor).visibility != DescriptorVisibilities.INVISIBLE_FAKE }
         .map {

@@ -109,7 +109,7 @@ class KSAnnotationDescriptorImpl private constructor(
 
 private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
     val ksName = KSNameImpl.getCached(this.asSingleFqName().asString().replace("$", "."))
-    return ResolverImpl.instance.getClassDeclarationByName(ksName)
+    return ResolverImpl.instance!!.getClassDeclarationByName(ksName)
 }
 
 private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProjectedType()
@@ -126,9 +126,9 @@ private fun <T> ConstantValue<T>.toValue(parent: KSNode): Any? = when (this) {
             classValue.value.classId.findKSType()?.let { componentType ->
                 var resultingType = componentType
                 for (i in 1..classValue.arrayDimensions) {
-                    resultingType = ResolverImpl.instance.builtIns.arrayType.replace(
+                    resultingType = ResolverImpl.instance!!.builtIns.arrayType.replace(
                         listOf(
-                            ResolverImpl.instance.getTypeArgument(
+                            ResolverImpl.instance!!.getTypeArgument(
                                 KSTypeReferenceSyntheticImpl.getCached(resultingType, null), Variance.INVARIANT
                             )
                         )
@@ -250,7 +250,7 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
             }
             is JavaAnnotationAsAnnotationArgument -> {
                 AnnotationValue(
-                    LazyJavaAnnotationDescriptor(ResolverImpl.instance.lazyJavaResolverContext, this.getAnnotation())
+                    LazyJavaAnnotationDescriptor(ResolverImpl.instance!!.lazyJavaResolverContext, this.getAnnotation())
                 )
             }
             is JavaClassObjectAnnotationArgument -> {
@@ -310,7 +310,7 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
             }
         }
         is KtParameter -> if (!this.type.isError) {
-            ResolverImpl.instance.evaluateConstant(psi.defaultValue, this.type)?.toValue(ownerAnnotation)
+            ResolverImpl.instance!!.evaluateConstant(psi.defaultValue, this.type)?.toValue(ownerAnnotation)
         } else {
             KSErrorType
         }

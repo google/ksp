@@ -59,6 +59,6 @@ class KSExpectActualImpl(val declaration: KtDeclaration) : KSExpectActual {
     }
 
     private val descriptor: DeclarationDescriptor? by lazy {
-        ResolverImpl.instance.resolveDeclaration(declaration)
+        ResolverImpl.instance!!.resolveDeclaration(declaration)
     }
 }
