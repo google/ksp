@@ -57,7 +57,7 @@ class KSTypeImpl private constructor(
     }
 
     override val declaration: KSDeclaration by lazy {
-        ResolverImpl.instance.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
+        ResolverImpl.instance!!.findDeclaration(kotlinType.getAbbreviation() ?: kotlinType)
     }
 
     override val nullability: Nullability by lazy {
@@ -77,7 +77,7 @@ class KSTypeImpl private constructor(
 
     override fun isAssignableFrom(that: KSType): Boolean {
         val subType = (that as? KSTypeImpl)?.kotlinType?.convertKotlinType() ?: return false
-        ResolverImpl.instance.incrementalContext.recordLookupWithSupertypes(subType)
+        ResolverImpl.instance!!.incrementalContext.recordLookupWithSupertypes(subType)
         val thisType = (this as? KSTypeImpl)?.kotlinType?.convertKotlinType() ?: return false
         return subType.isSubtypeOf(thisType)
     }

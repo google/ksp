@@ -97,7 +97,7 @@ fun PsiElement.findParentDeclaration(): KSDeclaration? {
 
 fun PsiElement.toLocation(): Location {
     val file = this.containingFile
-    val document = ResolverImpl.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
+    val document = ResolverImpl.instance!!.psiDocumentManager.getDocument(file) ?: return NonExistLocation
     return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
 }
 
@@ -205,7 +205,7 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
     // one declared first in the code.
 
     (getOwnerForEffectiveDispatchReceiverParameter() as? ClassDescriptor)?.defaultType?.let {
-        ResolverImpl.instance.incrementalContext.recordLookupWithSupertypes(it)
+        ResolverImpl.instance!!.incrementalContext.recordLookupWithSupertypes(it)
     }
 
     val queue = ArrayDeque<T>()
@@ -213,12 +213,12 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
 
     while (queue.isNotEmpty()) {
         val current = queue.removeFirst()
-        ResolverImpl.instance.incrementalContext.recordLookupForCallableMemberDescriptor(current.original)
+        ResolverImpl.instance!!.incrementalContext.recordLookupForCallableMemberDescriptor(current.original)
         val overriddenDescriptors: Collection<T> = current.original.overriddenDescriptors.filterIsInstance<T>()
         overriddenDescriptors.firstOrNull {
             it.kind != CallableMemberDescriptor.Kind.FAKE_OVERRIDE
         }?.let {
-            ResolverImpl.instance.incrementalContext.recordLookupForCallableMemberDescriptor(it.original)
+            ResolverImpl.instance!!.incrementalContext.recordLookupForCallableMemberDescriptor(it.original)
             return it.original as T?
         }
         // if all methods are fake, add them to the queue
@@ -326,25 +326,25 @@ internal class DeclarationOrdering(
                     // might be a property without backing field. Use method ordering instead
                     decl.getter?.let { getter ->
                         return@getOrPut findMethodOrder(
-                            ResolverImpl.instance.getJvmName(getter).toString()
+                            ResolverImpl.instance!!.getJvmName(getter).toString()
                         ) {
-                            ResolverImpl.instance.mapToJvmSignature(getter)
+                            ResolverImpl.instance!!.mapToJvmSignature(getter)
                         }
                     }
                     decl.setter?.let { setter ->
                         return@getOrPut findMethodOrder(
-                            ResolverImpl.instance.getJvmName(setter).toString()
+                            ResolverImpl.instance!!.getJvmName(setter).toString()
                         ) {
-                            ResolverImpl.instance.mapToJvmSignature(setter)
+                            ResolverImpl.instance!!.mapToJvmSignature(setter)
                         }
                     }
                     orderProvider.next(decl)
                 }
                 is KSFunctionDeclarationDescriptorImpl -> {
                     findMethodOrder(
-                        ResolverImpl.instance.getJvmName(decl).toString()
+                        ResolverImpl.instance!!.getJvmName(decl).toString()
                     ) {
-                        ResolverImpl.instance.mapToJvmSignature(decl).toString()
+                        ResolverImpl.instance!!.mapToJvmSignature(decl).toString()
                     }
                 }
                 else -> orderProvider.nextIgnoreSealed()
@@ -488,7 +488,7 @@ internal val KSPropertyDeclaration.jvmAccessFlag: Int
 internal val KSFunctionDeclaration.jvmAccessFlag: Int
     get() = when (origin) {
         Origin.KOTLIN_LIB -> {
-            val jvmDesc = ResolverImpl.instance.mapToJvmSignatureInternal(this)
+            val jvmDesc = ResolverImpl.instance!!.mapToJvmSignatureInternal(this)
             val descriptor = (this as KSFunctionDeclarationDescriptorImpl).descriptor
             // Companion.<init> doesn't have containing KotlinJvmBinaryClass.
             val kotlinBinaryJavaClass = descriptor.getContainingKotlinJvmBinaryClass()
@@ -513,7 +513,7 @@ internal fun KotlinType.convertKotlinType(): KotlinType {
     val declarationDescriptor = this.constructor.declarationDescriptor
     val base = if (declarationDescriptor?.shouldMapToKotlinForAssignabilityCheck() == true) {
         JavaToKotlinClassMapper
-            .mapJavaToKotlin(declarationDescriptor.fqNameSafe, ResolverImpl.instance.module.builtIns)
+            .mapJavaToKotlin(declarationDescriptor.fqNameSafe, ResolverImpl.instance!!.module.builtIns)
             ?.defaultType
             ?.replace(this.arguments)
             ?: this

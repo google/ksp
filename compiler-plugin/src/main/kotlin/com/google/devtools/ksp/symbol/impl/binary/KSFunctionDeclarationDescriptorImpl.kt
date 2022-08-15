@@ -110,5 +110,5 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     }
 
     override fun asMemberOf(containing: KSType): KSFunction =
-        ResolverImpl.instance.asMemberOf(this, containing)
+        ResolverImpl.instance!!.asMemberOf(this, containing)
 }

@@ -68,15 +68,15 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
     override val element: KSReferenceElement by lazy {
         fun PsiPrimitiveType.toKotlinType(): KotlinType {
             return when (this.name) {
-                "int" -> ResolverImpl.instance.module.builtIns.intType
-                "short" -> ResolverImpl.instance.module.builtIns.shortType
-                "byte" -> ResolverImpl.instance.module.builtIns.byteType
-                "long" -> ResolverImpl.instance.module.builtIns.longType
-                "float" -> ResolverImpl.instance.module.builtIns.floatType
-                "double" -> ResolverImpl.instance.module.builtIns.doubleType
-                "char" -> ResolverImpl.instance.module.builtIns.charType
-                "boolean" -> ResolverImpl.instance.module.builtIns.booleanType
-                "void" -> ResolverImpl.instance.module.builtIns.unitType
+                "int" -> ResolverImpl.instance!!.module.builtIns.intType
+                "short" -> ResolverImpl.instance!!.module.builtIns.shortType
+                "byte" -> ResolverImpl.instance!!.module.builtIns.byteType
+                "long" -> ResolverImpl.instance!!.module.builtIns.longType
+                "float" -> ResolverImpl.instance!!.module.builtIns.floatType
+                "double" -> ResolverImpl.instance!!.module.builtIns.doubleType
+                "char" -> ResolverImpl.instance!!.module.builtIns.charType
+                "boolean" -> ResolverImpl.instance!!.module.builtIns.booleanType
+                "void" -> ResolverImpl.instance!!.module.builtIns.unitType
                 else -> throw IllegalStateException("Unexpected primitive type ${this.name}, $ExceptionMessage")
             }
         }
@@ -91,16 +91,16 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
             is PsiWildcardType -> KSClassifierReferenceJavaImpl.getCached(type.extendsBound as PsiClassType, this)
             is PsiPrimitiveType -> KSClassifierReferenceDescriptorImpl.getCached(type.toKotlinType(), origin, this)
             is PsiArrayType -> {
-                val componentType = ResolverImpl.instance.resolveJavaType(type.componentType, this)
+                val componentType = ResolverImpl.instance!!.resolveJavaType(type.componentType, this)
                 if (type.componentType !is PsiPrimitiveType) {
                     KSClassifierReferenceDescriptorImpl.getCached(
-                        ResolverImpl.instance.module.builtIns.getArrayType(Variance.INVARIANT, componentType),
+                        ResolverImpl.instance!!.module.builtIns.getArrayType(Variance.INVARIANT, componentType),
                         origin,
                         this
                     )
                 } else {
                     KSClassifierReferenceDescriptorImpl.getCached(
-                        ResolverImpl.instance.module.builtIns
+                        ResolverImpl.instance!!.module.builtIns
                             .getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(componentType)!!,
                         origin, this
                     )
@@ -108,14 +108,14 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
             }
             null ->
                 KSClassifierReferenceDescriptorImpl.getCached(
-                    (ResolverImpl.instance.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable(), origin, this
+                    (ResolverImpl.instance!!.builtIns.anyType as KSTypeImpl).kotlinType.makeNullable(), origin, this
                 )
             else -> throw IllegalStateException("Unexpected psi type for ${type.javaClass}, $ExceptionMessage")
         }
     }
 
     override fun resolve(): KSType {
-        val resolvedType = ResolverImpl.instance.resolveUserType(this)
+        val resolvedType = ResolverImpl.instance!!.resolveUserType(this)
         return if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)
             ?.descriptor is NotFoundClasses.MockClassDescriptor
         ) {

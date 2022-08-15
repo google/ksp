@@ -119,16 +119,16 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
     private fun resolveJavaTypeSimple(psiType: PsiType): KSType {
         return when (psiType) {
             is PsiPrimitiveType -> {
-                ResolverImpl.instance.getClassDeclarationByName(psiType.boxedTypeName!!)!!.asStarProjectedType()
+                ResolverImpl.instance!!.getClassDeclarationByName(psiType.boxedTypeName!!)!!.asStarProjectedType()
             }
             is PsiArrayType -> {
                 val componentType = resolveJavaTypeSimple(psiType.componentType)
-                val componentTypeRef = ResolverImpl.instance.createKSTypeReferenceFromKSType(componentType)
-                val typeArgs = listOf(ResolverImpl.instance.getTypeArgument(componentTypeRef, Variance.INVARIANT))
-                ResolverImpl.instance.builtIns.arrayType.replace(typeArgs)
+                val componentTypeRef = ResolverImpl.instance!!.createKSTypeReferenceFromKSType(componentType)
+                val typeArgs = listOf(ResolverImpl.instance!!.getTypeArgument(componentTypeRef, Variance.INVARIANT))
+                ResolverImpl.instance!!.builtIns.arrayType.replace(typeArgs)
             }
             else -> {
-                ResolverImpl.instance.getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType()
+                ResolverImpl.instance!!.getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType()
                     ?: KSErrorType
             }
         }
@@ -160,7 +160,7 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
                 if (containingClass?.classKind == JvmClassKind.ENUM) {
                     // this is an enum entry
                     containingClass.qualifiedName?.let {
-                        ResolverImpl.instance.getClassDeclarationByName(it)
+                        ResolverImpl.instance!!.getClassDeclarationByName(it)
                     }?.declarations?.find {
                         it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
                             it.simpleName.asString() == result.name

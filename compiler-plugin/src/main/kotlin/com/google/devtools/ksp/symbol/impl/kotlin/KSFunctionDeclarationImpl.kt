@@ -43,7 +43,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
     }
 
     override fun findOverridee(): KSDeclaration? {
-        val descriptor = ResolverImpl.instance.resolveFunctionDeclaration(this)
+        val descriptor = ResolverImpl.instance!!.resolveFunctionDeclaration(this)
         return descriptor.safeAs<FunctionDescriptor>()?.findClosestOverridee()?.toKSDeclaration()
     }
 
@@ -108,7 +108,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
             KSTypeReferenceImpl.getCached(ktFunction.typeReference!!)
         } else {
             KSTypeReferenceDeferredImpl.getCached(this) {
-                val desc = ResolverImpl.instance.resolveDeclaration(ktFunction) as FunctionDescriptor
+                val desc = ResolverImpl.instance!!.resolveDeclaration(ktFunction) as FunctionDescriptor
                 getKSTypeCached(desc.returnTypeOrNothing)
             }
         }
@@ -119,5 +119,5 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
     }
 
     override fun asMemberOf(containing: KSType): KSFunction =
-        ResolverImpl.instance.asMemberOf(this, containing)
+        ResolverImpl.instance!!.asMemberOf(this, containing)
 }

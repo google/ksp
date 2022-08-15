@@ -61,11 +61,11 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()
 
     override fun asStarProjectedType(): KSType {
-        return ResolverImpl.instance.builtIns.nothingType
+        return ResolverImpl.instance!!.builtIns.nothingType
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return ResolverImpl.instance.builtIns.nothingType
+        return ResolverImpl.instance!!.builtIns.nothingType
     }
 
     override fun findActuals(): Sequence<KSDeclaration> {

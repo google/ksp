@@ -37,7 +37,7 @@ class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
     }
 
     private val descriptor: PropertyAccessorDescriptor by lazy {
-        ResolverImpl.instance.resolvePropertyDeclaration(ksPropertyDeclaration)!!.getter!!
+        ResolverImpl.instance!!.resolvePropertyDeclaration(ksPropertyDeclaration)!!.getter!!
     }
 
     override val returnType: KSTypeReference? by lazy {
