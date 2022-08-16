@@ -33,11 +33,13 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.process.CommandLineArgumentProvider
+import org.gradle.process.ExecOperations
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.gradle.work.Incremental
@@ -866,8 +868,10 @@ abstract class KspTaskMetadata @Inject constructor(
 @CacheableTask
 abstract class KspTaskNative @Inject constructor(
     compilation: KotlinNativeCompilationData<*>,
-    objectFactory: ObjectFactory
-) : KotlinNativeCompile(compilation, objectFactory), KspTask {
+    objectFactory: ObjectFactory,
+    providerFactory: ProviderFactory,
+    execOperations: ExecOperations
+) : KotlinNativeCompile(compilation, objectFactory, providerFactory, execOperations), KspTask {
     override val additionalCompilerOptions: Provider<Collection<String>>
         get() {
             return project.provider {
