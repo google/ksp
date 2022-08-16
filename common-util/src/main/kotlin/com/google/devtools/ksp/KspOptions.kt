@@ -88,15 +88,29 @@ class KspOptions(
 
         fun build(): KspOptions {
             return KspOptions(
-                projectBaseDir!!, compileClasspath, javaSourceRoots,
-                classOutputDir!!,
-                javaOutputDir!!,
-                kotlinOutputDir!!,
-                resourceOutputDir!!,
-                processingClasspath, processors, processingOptions,
-                knownModified, knownRemoved, cachesDir!!, kspOutputDir!!, incremental, incrementalLog,
-                allWarningsAsErrors, withCompilation, returnOkOnError, changedClasses,
-                languageVersion, apiVersion, compilerVersion
+                requireNotNull(projectBaseDir) { "Error: A non-null projectBaseDir must be provided" },
+                compileClasspath,
+                javaSourceRoots,
+                requireNotNull(classOutputDir) { "Error: A non-null classOutputDir must be provided" },
+                requireNotNull(javaOutputDir) { "Error: A non-null javaOutputDir must be provided" },
+                requireNotNull(kotlinOutputDir) { "Error: A non-null kotlinOutputDir must be provided" },
+                requireNotNull(resourceOutputDir) { "Error: A non-null resourceOutputDir must be provided" },
+                processingClasspath,
+                processors,
+                processingOptions,
+                knownModified,
+                knownRemoved,
+                requireNotNull(cachesDir) { "Error: A non-null cachesDir must be provided" },
+                requireNotNull(kspOutputDir) { "Error: A non-null kspOutputDir must be provided" },
+                incremental,
+                incrementalLog,
+                allWarningsAsErrors,
+                withCompilation,
+                returnOkOnError,
+                changedClasses,
+                languageVersion,
+                apiVersion,
+                compilerVersion,
             )
         }
     }
