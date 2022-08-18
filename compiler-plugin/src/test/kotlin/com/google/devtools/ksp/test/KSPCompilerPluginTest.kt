@@ -38,6 +38,7 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/javaAnnotatedUtil.kt")
     }
 
+    @TestMetadata("abstractFunctions.kt")
     @Test
     fun testAbstractFunctions() {
         runTest("testData/api/abstractFunctions.kt")
