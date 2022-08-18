@@ -40,6 +40,7 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/javaAnnotatedUtil.kt")
     }
 
+    @TestMetadata("abstractFunctions.kt")
     @Test
     fun testAbstractFunctions() {
         runTest("../compiler-plugin/testData/api/abstractFunctions.kt")
