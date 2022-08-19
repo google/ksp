@@ -44,10 +44,22 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/abstractFunctions.kt")
     }
 
-    @TestMetadata("allFunctions.kt")
+    @TestMetadata("allFunctions_java_inherits_kt.kt")
     @Test
-    fun testAllFunctions() {
-        runTest("testData/api/allFunctions.kt")
+    fun testAllFunctions_java_inherits_kt() {
+        runTest("testData/api/allFunctions_java_inherits_kt.kt")
+    }
+
+    @TestMetadata("allFunctions_kotlin.kt")
+    @Test
+    fun testAllFunctions_kotlin() {
+        runTest("testData/api/allFunctions_java_inherits_kt.kt")
+    }
+
+    @TestMetadata("allFunctions_kt_inherits_java.kt")
+    @Test
+    fun testAllFunctions_kt_inherits_java() {
+        runTest("testData/api/allFunctions_kt_inherits_java.kt")
     }
 
     @TestMetadata("annotationInDependencies.kt")
