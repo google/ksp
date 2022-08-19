@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
+import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
 import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
 import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
@@ -40,16 +41,23 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         fun getCached(type: KtType): KSTypeImpl = cache.getOrPut(type) { KSTypeImpl(type) }
     }
 
-    override val declaration: KSDeclaration by lazy {
-        analyze {
-            when (type) {
+    private fun KtType.toDeclaration(): KSDeclaration {
+        return analyze {
+            when (this@toDeclaration) {
                 is KtNonErrorClassType ->
-                    type.classId.getCorrespondingToplevelClassOrObjectSymbol().safeAs<KtNamedClassOrObjectSymbol>()
+                    classId.getCorrespondingToplevelClassOrObjectSymbol()
+                        .safeAs<KtNamedClassOrObjectSymbol>()
                         ?.let { KSClassDeclarationImpl.getCached(it) } ?: KSErrorTypeClassDeclaration
                 is KtClassErrorType -> KSErrorTypeClassDeclaration
-                else -> throw IllegalStateException("Unexpected KtType: $type")
+                is KtFlexibleType ->
+                    type.lowerBoundIfFlexible().toDeclaration()
+                else -> KSErrorTypeClassDeclaration
             }
         }
+    }
+
+    override val declaration: KSDeclaration by lazy {
+        type.toDeclaration()
     }
 
     override val nullability: Nullability by lazy {

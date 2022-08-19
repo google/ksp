@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
+import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
@@ -48,7 +49,8 @@ internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.JAVA_SYNTHETIC_PROPERTY to Origin.SYNTHETIC,
     KtSymbolOrigin.INTERSECTION_OVERRIDE to Origin.KOTLIN,
     // TODO: distinguish between kotlin library and java library.
-    KtSymbolOrigin.LIBRARY to Origin.JAVA_LIB
+    KtSymbolOrigin.LIBRARY to Origin.KOTLIN_LIB,
+    KtSymbolOrigin.SUBSTITUTION_OVERRIDE to Origin.JAVA_LIB
 )
 
 internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
@@ -99,6 +101,10 @@ internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
 internal fun KtSymbolWithMembers.getAllProperties(): Sequence<KSPropertyDeclaration> {
     return analyze {
         this@getAllProperties.getMemberScope().getCallableSymbols()
+            .filter {
+                it.isVisibleInClass(this@getAllProperties as KtClassOrObjectSymbol) ||
+                    it.getContainingSymbol() == this@getAllProperties
+            }
             .mapNotNull { callableSymbol ->
                 when (callableSymbol) {
                     is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(callableSymbol)
@@ -111,7 +117,11 @@ internal fun KtSymbolWithMembers.getAllProperties(): Sequence<KSPropertyDeclarat
 
 internal fun KtSymbolWithMembers.getAllFunctions(): Sequence<KSFunctionDeclaration> {
     return analyze {
-        this@getAllFunctions.getMemberScope().getCallableSymbols()
+        this@getAllFunctions.getMemberScope().let { it.getCallableSymbols() + it.getConstructors() }
+            .filter {
+                it.isVisibleInClass(this@getAllFunctions as KtClassOrObjectSymbol) ||
+                    it.getContainingSymbol() == this@getAllFunctions
+            }
             .mapNotNull { callableSymbol ->
                 // TODO: replace with single safe cast if no more implementations of KSFunctionDeclaration is added.
                 when (callableSymbol) {
