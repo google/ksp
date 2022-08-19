@@ -1,6 +1,6 @@
 /*
- * Copyright 2020 Google LLC
- * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2022 Google LLC
+ * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,6 @@
 // javaPrivateFun(): kotlin.Unit
 // javaStrFun(): kotlin.String
 // toString(): kotlin.String
-// class: Data
-// a
-// <init>(kotlin.String): Data
-// component1(): kotlin.String
-// copy(kotlin.String(hasDefault)): Data
-// equals(kotlin.Any): kotlin.Boolean
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
 // class: Foo
 // aFromC
 // cFromC
@@ -64,39 +56,6 @@
 // subList(kotlin.Int,kotlin.Int): kotlin.collections.List
 // toArray(java.util.function.IntFunction): kotlin.Array
 // toString(): kotlin.String
-// class: JavaImplOfKotlinInterface
-// x
-// <init>(): JavaImplOfKotlinInterface
-// equals(kotlin.Any): kotlin.Boolean
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
-// class: KotlinInterfaceWithProperty
-// x
-// equals(kotlin.Any): kotlin.Boolean
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
-// class: Sub
-// equals(kotlin.Any): kotlin.Boolean
-// foo(kotlin.String ...): kotlin.Unit
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
-// class: SubAbstract
-// <init>(): SubAbstract
-// equals(kotlin.Any): kotlin.Boolean
-// foo(kotlin.String ...): kotlin.Unit
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
-// class: Super
-// equals(kotlin.Any): kotlin.Boolean
-// foo(kotlin.String ...): kotlin.Unit
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
-// class: SuperAbstract
-// <init>(): SuperAbstract
-// equals(kotlin.Any): kotlin.Boolean
-// foo(kotlin.String ...): kotlin.Unit
-// hashCode(): kotlin.Int
-// toString(): kotlin.String
 // END
 // FILE: a.kt
 abstract class Foo : C(), List<out Number> {
@@ -110,26 +69,6 @@ abstract class Foo : C(), List<out Number> {
 
     fun baz(input: String, input2: String? = null, input3: String = ""): Boolean {
         return false
-    }
-}
-
-data class Data(val a: String) {
-    override fun equals(other: Any?): Boolean {
-        return false
-    }
-}
-
-interface Super {
-    fun foo(vararg values: String)
-}
-
-interface Sub : Super
-
-class SubAbstract: SuperAbstract()
-
-abstract class SuperAbstract {
-    fun foo(vararg values: String) {
-
     }
 }
 
@@ -150,19 +89,5 @@ class C {
 
     public String javaStrFun() {
         return "str"
-    }
-}
-
-// FILE: KotlinInterfaceWithProperty.kt
-interface KotlinInterfaceWithProperty {
-    var x:Int
-}
-
-// FILE: JavaImplOfKotlinInterface.java
-class JavaImplOfKotlinInterface implements KotlinInterfaceWithProperty {
-    public int getX() {
-        return 1;
-    }
-    public void setX(int value) {
     }
 }
