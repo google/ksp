@@ -72,7 +72,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/annotationInDependencies.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationOnConstructorParameter.kt")
     @Test
     fun testAnnotationOnConstructorParameter() {
