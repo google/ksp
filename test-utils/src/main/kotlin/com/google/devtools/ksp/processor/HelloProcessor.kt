@@ -32,7 +32,7 @@ class HelloProcessor : AbstractTestProcessor() {
     }
 
     override fun toResult(): List<String> {
-        return results
+        return results.sorted()
     }
 
     inner class HelloVisitor : KSVisitorVoid() {
