@@ -19,14 +19,14 @@
 // TEST PROCESSOR: HelloProcessor
 // EXPECTED:
 // 8
-// test.Foo
-// test.ITF
-// Bar.list
-// Bar.BBB
 // AClass
+// Bar.BBB
+// Bar.list
 // C
 // C.f
 // C.javaFun
+// test.Foo
+// test.ITF
 // END
 //FILE: a.kt
 package test

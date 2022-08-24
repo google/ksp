@@ -263,7 +263,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/getSymbolsFromAnnotation.kt")
     }
 
-    @Disabled
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {
