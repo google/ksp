@@ -22,6 +22,7 @@
 // true
 // END
 //FILE: a.kt
+annotation class Anno
 
 data class Sample(
     @Anno val fullName: String
