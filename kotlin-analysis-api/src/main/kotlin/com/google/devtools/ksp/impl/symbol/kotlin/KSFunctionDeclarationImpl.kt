@@ -22,6 +22,8 @@ import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.psi.KtDeclaration
+import org.jetbrains.kotlin.psi.KtFunction
 
 class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol: KtFunctionLikeSymbol) :
     KSFunctionDeclaration,
@@ -89,8 +91,18 @@ class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol
         return visitor.visitFunctionDeclaration(this, data)
     }
 
-    // TODO: Implement with PSI
-    override val declarations: Sequence<KSDeclaration> = emptySequence()
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        val psi = ktFunctionSymbol.psi as? KtFunction ?: return@lazy emptySequence()
+        if (!psi.hasBlockBody()) {
+            emptySequence()
+        } else {
+            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
+                analyze {
+                    it.getSymbol().toKSDeclaration()
+                }
+            } ?: emptySequence()
+        }
+    }
 
     override fun toString(): String {
         // TODO: fix origin for implicit Java constructor in AA
