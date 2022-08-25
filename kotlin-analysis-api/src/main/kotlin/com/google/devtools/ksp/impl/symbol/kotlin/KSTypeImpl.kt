@@ -26,7 +26,8 @@ import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
 import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
 import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
@@ -44,10 +45,12 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     private fun KtType.toDeclaration(): KSDeclaration {
         return analyze {
             when (this@toDeclaration) {
-                is KtNonErrorClassType ->
-                    classId.getCorrespondingToplevelClassOrObjectSymbol()
-                        .safeAs<KtNamedClassOrObjectSymbol>()
-                        ?.let { KSClassDeclarationImpl.getCached(it) } ?: KSErrorTypeClassDeclaration
+                is KtNonErrorClassType -> {
+                    when (val symbol = this@toDeclaration.classSymbol) {
+                        is KtTypeAliasSymbol -> symbol.expandedType.toDeclaration()
+                        is KtClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                    }
+                }
                 is KtClassErrorType -> KSErrorTypeClassDeclaration
                 is KtFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()

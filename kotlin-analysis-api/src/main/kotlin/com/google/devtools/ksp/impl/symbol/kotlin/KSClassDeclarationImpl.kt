@@ -23,21 +23,21 @@ import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
-class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) :
+class KSClassDeclarationImpl private constructor(private val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
     KSClassDeclaration,
-    AbstractKSDeclarationImpl(ktNamedClassOrObjectSymbol),
-    KSExpectActual by KSExpectActualImpl(ktNamedClassOrObjectSymbol) {
-    companion object : KSObjectCache<KtNamedClassOrObjectSymbol, KSClassDeclarationImpl>() {
-        fun getCached(ktNamedClassOrObjectSymbol: KtNamedClassOrObjectSymbol) =
-            cache.getOrPut(ktNamedClassOrObjectSymbol) { KSClassDeclarationImpl(ktNamedClassOrObjectSymbol) }
+    AbstractKSDeclarationImpl(ktClassOrObjectSymbol),
+    KSExpectActual by KSExpectActualImpl(ktClassOrObjectSymbol) {
+    companion object : KSObjectCache<KtClassOrObjectSymbol, KSClassDeclarationImpl>() {
+        fun getCached(ktClassOrObjectSymbol: KtClassOrObjectSymbol) =
+            cache.getOrPut(ktClassOrObjectSymbol) { KSClassDeclarationImpl(ktClassOrObjectSymbol) }
     }
 
     override val qualifiedName: KSName? by lazy {
-        ktNamedClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
+        ktClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
     }
 
     override val classKind: ClassKind by lazy {
-        when (ktNamedClassOrObjectSymbol.classKind) {
+        when (ktClassOrObjectSymbol.classKind) {
             KtClassKind.CLASS -> ClassKind.CLASS
             KtClassKind.ENUM_CLASS -> ClassKind.ENUM_CLASS
             KtClassKind.ANNOTATION_CLASS -> ClassKind.ANNOTATION_CLASS
@@ -48,7 +48,7 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         analyze {
-            ktNamedClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
+            ktClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
                 KSFunctionDeclarationImpl.getCached(it)
             }
         }
@@ -56,12 +56,12 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
         analyze {
-            ktNamedClassOrObjectSymbol.superTypes.map { KSTypeReferenceImpl(it) }.asSequence()
+            ktClassOrObjectSymbol.superTypes.map { KSTypeReferenceImpl(it) }.asSequence()
         }
     }
 
     override val isCompanionObject: Boolean by lazy {
-        (ktNamedClassOrObjectSymbol.psi as? KtObjectDeclaration)?.isCompanion() ?: false
+        (ktClassOrObjectSymbol.psi as? KtObjectDeclaration)?.isCompanion() ?: false
     }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
@@ -69,11 +69,11 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return ktNamedClassOrObjectSymbol.getAllFunctions()
+        return ktClassOrObjectSymbol.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        return ktNamedClassOrObjectSymbol.getAllProperties()
+        return ktClassOrObjectSymbol.getAllProperties()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
@@ -82,7 +82,7 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
 
     override fun asStarProjectedType(): KSType {
         return analyze {
-            KSTypeImpl.getCached(analysisSession.buildClassType(ktNamedClassOrObjectSymbol))
+            KSTypeImpl.getCached(analysisSession.buildClassType(ktClassOrObjectSymbol))
         }
     }
 
@@ -91,6 +91,6 @@ class KSClassDeclarationImpl private constructor(private val ktNamedClassOrObjec
     }
 
     override val declarations: Sequence<KSDeclaration> by lazy {
-        ktNamedClassOrObjectSymbol.declarations()
+        ktClassOrObjectSymbol.declarations()
     }
 }
