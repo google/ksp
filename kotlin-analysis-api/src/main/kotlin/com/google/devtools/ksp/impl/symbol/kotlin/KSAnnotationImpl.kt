@@ -20,8 +20,14 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
+import org.jetbrains.kotlin.analysis.api.annotations.KtConstantAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.base.KtConstantValue
+import org.jetbrains.kotlin.analysis.api.components.KtConstantEvaluationMode
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.psi.KtParameter
 
 class KSAnnotationImpl private constructor(private val annotationApplication: KtAnnotationApplication) : KSAnnotation {
     companion object : KSObjectCache<KtAnnotationApplication, KSAnnotationImpl>() {
@@ -36,7 +42,26 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it) }
+        val presentArgs = annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it) }
+        val presentNames = presentArgs.mapNotNull { it.name?.asString() }
+        val absentArgs = analyze {
+            annotationApplication.classId?.getCorrespondingToplevelClassOrObjectSymbol()?.let { symbol ->
+                symbol.getMemberScope().getConstructors().singleOrNull()?.let { constructor ->
+                    constructor.valueParameters.filter { valueParameter ->
+                        valueParameter.name.asString() !in presentNames
+                    }.mapNotNull { valueParameterSymbol ->
+                        valueParameterSymbol.getDefaultValue()?.let { constantValue ->
+                            KSValueArgumentImpl.getCached(
+                                KtNamedAnnotationValue(
+                                    valueParameterSymbol.name, KtConstantAnnotationValue(constantValue)
+                                )
+                            )
+                        }
+                    }
+                }
+            } ?: emptyList<KSValueArgument>()
+        }
+        presentArgs + absentArgs
     }
 
     override val defaultArguments: List<KSValueArgument>
@@ -76,5 +101,16 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
 
     override fun toString(): String {
         return "@${shortName.asString()}"
+    }
+}
+
+internal fun KtValueParameterSymbol.getDefaultValue(): KtConstantValue? {
+    return this.psi?.let {
+        when (it) {
+            is KtParameter -> analyze {
+                it.defaultValue?.evaluate(KtConstantEvaluationMode.CONSTANT_EXPRESSION_EVALUATION)
+            }
+            else -> throw IllegalStateException("Unhandled default value type ${it.javaClass}")
+        }
     }
 }

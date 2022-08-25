@@ -86,10 +86,16 @@ class KSPAATest : AbstractKSPAATest() {
     }
 
     @Disabled
-    @TestMetadata("annotationValue.kt")
+    @TestMetadata("annotationValue_java.kt")
     @Test
-    fun testAnnotationValue() {
-        runTest("../compiler-plugin/testData/api/annotationValue.kt")
+    fun testAnnotationValue_java() {
+        runTest("../compiler-plugin/testData/api/annotationValue_java.kt")
+    }
+
+    @TestMetadata("annotationValue_kt.kt")
+    @Test
+    fun testAnnotationValue_kt() {
+        runTest("../compiler-plugin/testData/api/annotationValue_kt.kt")
     }
 
     @Disabled

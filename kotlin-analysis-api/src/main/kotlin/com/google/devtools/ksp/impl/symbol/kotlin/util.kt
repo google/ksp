@@ -30,12 +30,15 @@ import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.psi.KtElement
 
@@ -143,5 +146,21 @@ internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
             is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(containingSymbol)
             else -> null
         }
+    }
+}
+
+internal fun KtSymbol.toKSDeclaration(): KSDeclaration? = this.toKSNode() as? KSDeclaration
+
+internal fun KtSymbol.toKSNode(): KSNode {
+    return when (this) {
+        is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
+        is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(this)
+        is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(this)
+        is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(this)
+        is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(this)
+        is KtFileSymbol -> KSFileImpl.getCached(this)
+        is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
+        is KtTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
+        else -> throw IllegalStateException("Unexpected class for KtSymbol: ${this.javaClass}")
     }
 }

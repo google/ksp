@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
+// defaultInNested
 // Str
 // 42
 // Foo
@@ -29,18 +30,6 @@
 // G
 // ONE
 // 31
-// Str
-// 42
-// Foo
-// File
-// Error type synthetic declaration
-// Array
-// @Foo
-// @Suppress
-// G
-// ONE
-// 31
-// [warning1, warning 2]
 // Throws
 // END
 // FILE: a.kt
@@ -55,7 +44,9 @@ class ThrowsClass {
     }
 }
 
-annotation class Foo(val s: Int)
+annotation class Foo(val s: Int) {
+    annotation class Nested(val nestedDefault:String = "defaultInNested")
+}
 
 annotation class Bar(
     val argStr: String,
@@ -72,28 +63,10 @@ annotation class Bar(
 )
 
 fun Fun() {
+    @Foo.Nested
     @Bar("Str", 40 + 2, Foo::class, java.io.File::class, Local::class, Array<String>::class, Foo(17), Suppress("name1", "name2"), RGB.G, JavaEnum.ONE)
     class Local
 }
-
-// FILE: C.java
-
-@SuppressWarnings({"warning1", "warning 2"})
-class C {
-
-}
-// FILE: JavaAnnotated.java
-@Bar(argStr = "Str",
-    argInt = 40 + 2,
-    argClsUser = Foo.class,
-    argClsLib = java.io.File.class,
-    argClsLocal = Local.class, // intentional error type
-    argClsArray = kotlin.Array.class,
-    argAnnoUser = @Foo(s = 17),
-    argAnnoLib = @Suppress(names = {"name1", "name2"}),
-    argEnum = RGB.G,
-    argJavaNum = JavaEnum.ONE)
-public class JavaAnnotated {}
 
 // FILE: JavaEnum.java
 

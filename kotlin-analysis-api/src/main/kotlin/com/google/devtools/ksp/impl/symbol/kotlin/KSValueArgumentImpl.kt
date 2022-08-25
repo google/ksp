@@ -19,7 +19,15 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtArrayAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtConstantAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtEnumEntryAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtKClassAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 
 class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KtNamedAnnotationValue
@@ -35,7 +43,7 @@ class KSValueArgumentImpl private constructor(
 
     override val isSpread: Boolean = false
 
-    override val value: Any = namedAnnotationValue.expression
+    override val value: Any? = namedAnnotationValue.expression.toValue()
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 
@@ -54,5 +62,36 @@ class KSValueArgumentImpl private constructor(
 
     override fun toString(): String {
         return "${name?.asString() ?: ""}:$value"
+    }
+
+    private fun KtAnnotationValue.toValue(): Any? = when (this) {
+        is KtArrayAnnotationValue -> this.values.map { it.toValue() }
+        is KtAnnotationApplicationValue -> KSAnnotationImpl.getCached(this.annotationValue)
+        is KtEnumEntryAnnotationValue -> this.callableId?.classId?.let {
+            analyze {
+                it.getCorrespondingToplevelClassOrObjectSymbol()?.let {
+                    it.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
+                        it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
+                    }
+                }
+            }
+        } ?: KSErrorType
+        is KtKClassAnnotationValue -> {
+            val classDeclaration = when (this) {
+                is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> analyze {
+                    (this@toValue.classId.getCorrespondingToplevelClassOrObjectSymbol() as? KtNamedClassOrObjectSymbol)
+                        ?.let { KSClassDeclarationImpl.getCached(it) }
+                }
+                is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> analyze {
+                    this@toValue.ktClass.getNamedClassOrObjectSymbol()?.let {
+                        KSClassDeclarationImpl.getCached(it)
+                    }
+                }
+                is KtKClassAnnotationValue.KtErrorClassAnnotationValue -> null
+            }
+            classDeclaration?.asStarProjectedType() ?: KSErrorType
+        }
+        is KtConstantAnnotationValue -> this.constantValue.value
+        is KtUnsupportedAnnotationValue -> null
     }
 }
