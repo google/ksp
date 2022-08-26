@@ -45,9 +45,9 @@ class KSAnnotationImpl private constructor(private val annotationApplication: Kt
         val presentArgs = annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it) }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = analyze {
-            annotationApplication.classId?.getCorrespondingToplevelClassOrObjectSymbol()?.let { symbol ->
-                symbol.getMemberScope().getConstructors().singleOrNull()?.let { constructor ->
-                    constructor.valueParameters.filter { valueParameter ->
+            annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
+                symbol.getMemberScope().getConstructors().singleOrNull()?.let {
+                    it.valueParameters.filter { valueParameter ->
                         valueParameter.name.asString() !in presentNames
                     }.mapNotNull { valueParameterSymbol ->
                         valueParameterSymbol.getDefaultValue()?.let { constantValue ->
