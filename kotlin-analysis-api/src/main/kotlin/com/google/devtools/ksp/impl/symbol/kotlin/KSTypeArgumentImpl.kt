@@ -42,8 +42,8 @@ class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeA
             is KtTypeArgumentWithVariance -> {
                 when (ktTypeArgument.variance) {
                     org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
-                    org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.COVARIANT
-                    org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.CONTRAVARIANT
+                    org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
+                    org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
                     else -> throw IllegalStateException("Unexpected variance")
                 }
             }

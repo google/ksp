@@ -27,7 +27,6 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtEnumEntryAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtKClassAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 
 class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KtNamedAnnotationValue
@@ -69,7 +68,7 @@ class KSValueArgumentImpl private constructor(
         is KtAnnotationApplicationValue -> KSAnnotationImpl.getCached(this.annotationValue)
         is KtEnumEntryAnnotationValue -> this.callableId?.classId?.let {
             analyze {
-                it.getCorrespondingToplevelClassOrObjectSymbol()?.let {
+                it.toKtClassSymbol()?.let {
                     it.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
                         it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
                     }
@@ -79,8 +78,7 @@ class KSValueArgumentImpl private constructor(
         is KtKClassAnnotationValue -> {
             val classDeclaration = when (this) {
                 is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> analyze {
-                    (this@toValue.classId.getCorrespondingToplevelClassOrObjectSymbol() as? KtNamedClassOrObjectSymbol)
-                        ?.let { KSClassDeclarationImpl.getCached(it) }
+                    (this@toValue.classId.toKtClassSymbol())?.let { KSClassDeclarationImpl.getCached(it) }
                 }
                 is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> analyze {
                     this@toValue.ktClass.getNamedClassOrObjectSymbol()?.let {

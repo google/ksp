@@ -26,6 +26,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -112,7 +113,7 @@ class ResolverAAImpl(
             val simpleName = name.getShortName()
             val classId = ClassId(FqName(parent), Name.identifier(simpleName))
             analyze {
-                classId.getCorrespondingToplevelClassOrObjectSymbol() as? KtNamedClassOrObjectSymbol
+                classId.toKtClassSymbol()
             }?.let { return it }
             return findClass(KSNameImpl.getCached(name.getQualifier())).safeAs<KtNamedClassOrObjectSymbol>()?.let {
                 analyze {

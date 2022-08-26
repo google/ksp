@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
 
 internal val ktSymbolOriginToOrigin = mapOf(
@@ -162,5 +163,17 @@ internal fun KtSymbol.toKSNode(): KSNode {
         is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
         is KtTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
         else -> throw IllegalStateException("Unexpected class for KtSymbol: ${this.javaClass}")
+    }
+}
+
+internal fun ClassId.toKtClassSymbol(): KtClassOrObjectSymbol? {
+    return analyze {
+        if (this@toKtClassSymbol.isLocal) {
+            this@toKtClassSymbol.outerClassId?.toKtClassSymbol()?.getDeclaredMemberScope()?.getClassifierSymbols {
+                it.asString() == this@toKtClassSymbol.shortClassName.asString()
+            }?.singleOrNull() as? KtClassOrObjectSymbol
+        } else {
+            this@toKtClassSymbol.getCorrespondingToplevelClassOrObjectSymbol()
+        }
     }
 }

@@ -44,7 +44,7 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
             analyze {
                 ktType is KtClassErrorType || (
                     (ktType is KtNonErrorClassType) &&
-                        ktType.classId.getCorrespondingToplevelClassOrObjectSymbol() == null
+                        ktType.classId.toKtClassSymbol() == null
                     )
             }
         ) {
@@ -74,6 +74,6 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
         get() = TODO("Not yet implemented")
 
     override fun toString(): String {
-        return ktType.toString()
+        return ktType.toString().substringAfterLast('/')
     }
 }
