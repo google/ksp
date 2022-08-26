@@ -373,7 +373,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/multipleModules.kt")
     }
 
-    @Disabled
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
