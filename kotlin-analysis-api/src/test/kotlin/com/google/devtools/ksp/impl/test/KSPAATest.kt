@@ -180,7 +180,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/crossModuleTypeAlias.kt")
     }
 
-    @Disabled
     @TestMetadata("declarationInconsistency.kt")
     @Test
     fun testDeclarationInconsistency() {
