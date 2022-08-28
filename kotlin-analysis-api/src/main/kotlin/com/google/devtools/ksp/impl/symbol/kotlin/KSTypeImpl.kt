@@ -24,7 +24,6 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
-import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
@@ -34,7 +33,6 @@ import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
 import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
-import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSTypeImpl private constructor(internal val type: KtType) : KSType {
@@ -98,20 +96,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override fun replace(arguments: List<KSTypeArgument>): KSType {
         return analyze {
             analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                arguments.forEach { arg ->
-                    val variance = when (arg.variance) {
-                        com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
-                        com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.OUT_VARIANCE
-                        com.google.devtools.ksp.symbol.Variance.COVARIANT -> Variance.IN_VARIANCE
-                        else -> null
-                    }
-                    val argType = arg.type?.resolve()?.safeAs<KSTypeImpl>()?.type
-                    if (argType == null || variance == null) {
-                        argument(KtStarProjectionTypeArgument(type.token))
-                    } else {
-                        argument(KtTypeArgumentWithVariance(argType, variance, type.token))
-                    }
-                }
+                arguments.forEach { arg -> argument(arg.toKtTypeArgument()) }
             }.let { getCached(it) }
         }
     }
