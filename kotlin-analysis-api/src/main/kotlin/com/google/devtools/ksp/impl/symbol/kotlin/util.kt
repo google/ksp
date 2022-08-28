@@ -24,9 +24,13 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
+import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
@@ -42,6 +46,8 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.types.Variance
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.JAVA to Origin.JAVA,
@@ -60,6 +66,23 @@ internal val ktSymbolOriginToOrigin = mapOf(
 internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
     return ktSymbolOriginToOrigin[ktSymbolOrigin]
         ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
+}
+
+internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
+    val variance = when (this.variance) {
+        com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
+        com.google.devtools.ksp.symbol.Variance.COVARIANT -> Variance.OUT_VARIANCE
+        com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.IN_VARIANCE
+        else -> null
+    }
+    val argType = this.type?.resolve()?.safeAs<KSTypeImpl>()?.type
+    // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
+    val alwaysAccessibleLifetimeToken = KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
+    return if (argType == null || variance == null) {
+        KtStarProjectionTypeArgument(alwaysAccessibleLifetimeToken)
+    } else {
+        KtTypeArgumentWithVariance(argType, variance, alwaysAccessibleLifetimeToken)
+    }
 }
 
 internal fun PsiElement?.toLocation(): Location {

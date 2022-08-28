@@ -77,7 +77,11 @@ class KSClassDeclarationImpl private constructor(private val ktClassOrObjectSymb
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        TODO("Not yet implemented")
+        return analyze {
+            analysisSession.buildClassType(ktClassOrObjectSymbol) {
+                typeArguments.forEach { argument(it.toKtTypeArgument()) }
+            }.let { KSTypeImpl.getCached(it) }
+        }
     }
 
     override fun asStarProjectedType(): KSType {
