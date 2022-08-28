@@ -28,6 +28,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
+import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
 import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
 
@@ -71,7 +72,11 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
     }
 
     override val modifiers: Set<Modifier>
-        get() = TODO("Not yet implemented")
+        get() = if (ktType is KtFunctionalType && ktType.isSuspend) {
+            setOf(Modifier.SUSPEND)
+        } else {
+            emptySet()
+        }
 
     override fun toString(): String {
         return ktType.toString().substringAfterLast('/')

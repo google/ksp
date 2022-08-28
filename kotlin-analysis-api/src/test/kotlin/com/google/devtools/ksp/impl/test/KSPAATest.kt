@@ -378,7 +378,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/nestedClassType.kt")
     }
 
-    @Disabled
     @TestMetadata("nullableTypes.kt")
     @Test
     fun testNullableTypes() {
