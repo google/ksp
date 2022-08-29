@@ -136,7 +136,6 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         get() = type is KtFunctionalType && type.isSuspend
 
     override fun toString(): String {
-        // TODO: figure out a better way.
-        return type.toString().substringAfterLast('/')
+        return type.render()
     }
 }

@@ -517,7 +517,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../compiler-plugin/testData/api/typeAliasComparison.kt")
     }
 
-    @Disabled
     @TestMetadata("typeComposure.kt")
     @Test
     fun testTypeComposure() {
