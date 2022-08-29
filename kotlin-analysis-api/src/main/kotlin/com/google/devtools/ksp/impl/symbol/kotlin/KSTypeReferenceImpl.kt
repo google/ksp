@@ -79,6 +79,6 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
         }
 
     override fun toString(): String {
-        return ktType.toString().substringAfterLast('/')
+        return ktType.render()
     }
 }
