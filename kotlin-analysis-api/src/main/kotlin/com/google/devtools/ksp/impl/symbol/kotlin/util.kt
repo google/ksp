@@ -44,6 +44,17 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
+import org.jetbrains.kotlin.analysis.api.types.KtCapturedType
+import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
+import org.jetbrains.kotlin.analysis.api.types.KtDefinitelyNotNullType
+import org.jetbrains.kotlin.analysis.api.types.KtDynamicType
+import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
+import org.jetbrains.kotlin.analysis.api.types.KtIntegerLiteralType
+import org.jetbrains.kotlin.analysis.api.types.KtIntersectionType
+import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
+import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
+import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.types.Variance
@@ -66,6 +77,29 @@ internal val ktSymbolOriginToOrigin = mapOf(
 internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
     return ktSymbolOriginToOrigin[ktSymbolOrigin]
         ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
+}
+
+internal fun KtType.render(): String {
+    return when (this) {
+        is KtNonErrorClassType -> classId.shortClassName.asString() + if (typeArguments.isNotEmpty()) {
+            typeArguments.joinToString(separator = ",", prefix = "<", postfix = ">") {
+                when (it) {
+                    is KtStarProjectionTypeArgument -> "*"
+                    is KtTypeArgumentWithVariance ->
+                        "${it.variance}" + "${if (it.variance != Variance.INVARIANT) " " else ""}${it.type.render()}"
+                }
+            }
+        } else ""
+        is KtClassErrorType -> "<error>"
+        is KtCapturedType -> asStringForDebugging()
+        is KtDefinitelyNotNullType -> original.render() + "!"
+        is KtDynamicType -> "<dynamic type>"
+        is KtFlexibleType -> "${lowerBound.render()}...${upperBound.render()}"
+        is KtIntegerLiteralType -> "ILT: $value"
+        is KtIntersectionType ->
+            this.conjuncts.joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render() }
+        is KtTypeParameterType -> asStringForDebugging()
+    } + if (nullability == KtTypeNullability.NULLABLE) "?" else ""
 }
 
 internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
