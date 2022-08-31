@@ -133,7 +133,7 @@ class ResolverImpl(
     val incrementalContext: IncrementalContext,
     val options: KspOptions,
 ) : Resolver {
-    val psiDocumentManager = PsiDocumentManager.getInstance(project)
+    val psiDocumentManager: PsiDocumentManager = PsiDocumentManager.getInstance(project)
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
 
     /**

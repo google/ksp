@@ -28,5 +28,5 @@ class KSPCoreEnvironment(internal val project: MockProject) {
     init {
         instance = this
     }
-    val psiDocumentManager = PsiDocumentManager.getInstance(project)
+    val psiDocumentManager: PsiDocumentManager = PsiDocumentManager.getInstance(project)
 }
