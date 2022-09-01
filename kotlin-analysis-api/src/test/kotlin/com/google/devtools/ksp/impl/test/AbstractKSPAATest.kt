@@ -25,15 +25,24 @@ import com.google.devtools.ksp.testutils.AbstractKSPTest
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
+import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.test.compileJavaFiles
+import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
+import org.jetbrains.kotlin.test.services.JUnit5Assertions
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.isKtFile
 import org.jetbrains.kotlin.test.services.javaFiles
+import org.jetbrains.kotlin.test.util.KtTestUtil
+import org.jetbrains.kotlin.utils.PathUtil
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
+import java.net.URLClassLoader
 import java.nio.file.Files
 
 abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
@@ -47,6 +56,46 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
                 it.parentFile.mkdirs()
                 it.writeText(file.originalContent)
             }
+        }
+    }
+
+    private fun compileKotlin(sourcesPath: String, outDir: File) {
+        val classpath = mutableListOf<String>()
+        if (File(sourcesPath).isDirectory) {
+            classpath += sourcesPath
+        }
+        classpath += PathUtil.kotlinPathsForDistDirectoryForTests.stdlibPath.path
+
+        val args = mutableListOf(
+            sourcesPath,
+            "-d", outDir.absolutePath,
+            "-no-stdlib",
+            "-classpath", classpath.joinToString(File.pathSeparator)
+        )
+        runJvmCompiler(args)
+    }
+
+    private fun runJvmCompiler(args: List<String>) {
+        val outStream = ByteArrayOutputStream()
+        val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
+        val compiler = compilerClass.newInstance()
+        val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
+        execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
+    }
+
+    override fun compileModule(module: TestModule, testServices: TestServices) {
+        module.writeKtFiles()
+        val javaFiles = module.writeJavaFiles()
+        compileKotlin(module.kotlinSrc.path, module.outDir)
+        val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }
+        val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
+            .joinToString(File.pathSeparator) { it.absolutePath }
+        val options = listOf(
+            "-classpath", classpath,
+            "-d", module.outDir.path
+        )
+        if (javaFiles.isNotEmpty()) {
+            compileJavaFiles(javaFiles, options, assertions = JUnit5Assertions)
         }
     }
 
