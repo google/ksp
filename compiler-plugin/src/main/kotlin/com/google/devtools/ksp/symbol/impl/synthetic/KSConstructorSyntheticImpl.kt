@@ -23,7 +23,7 @@ import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 
-class KSConstructorSyntheticImpl(val ksClassDeclaration: KSClassDeclaration) :
+class KSConstructorSyntheticImpl private constructor(val ksClassDeclaration: KSClassDeclaration) :
     KSFunctionDeclaration,
     KSDeclaration
     by ksClassDeclaration {
