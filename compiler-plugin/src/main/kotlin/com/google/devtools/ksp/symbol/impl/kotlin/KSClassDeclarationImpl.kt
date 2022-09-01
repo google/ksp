@@ -87,7 +87,7 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
             if (hasConstructor) {
                 result.memoized()
             } else {
-                (result + KSConstructorSyntheticImpl(this)).memoized()
+                (result + KSConstructorSyntheticImpl.getCached(this)).memoized()
             }
         } else {
             result.memoized()
