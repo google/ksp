@@ -196,7 +196,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/declarationInconsistency.kt")
     }
 
-    @Disabled
     @TestMetadata("declarationPackageName.kt")
     @Test
     fun testDeclarationPackageName() {

@@ -60,7 +60,8 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val packageName: KSName by lazy {
-        KSNameImpl.getCached(containingFile?.packageName?.asString() ?: "")
+        ((containingFile?.packageName ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName)?.asString() ?: "")
+            .let { KSNameImpl.getCached(it) }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {

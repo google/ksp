@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -167,16 +168,18 @@ internal inline fun <R> analyze(crossinline action: KtAnalysisSession.() -> R): 
 
 internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
     return analyze {
-        this@declarations.getDeclaredMemberScope().getAllSymbols().map {
-            when (it) {
-                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
-                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(it)
-                is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
-                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
-                is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(it)
+        this@declarations.let {
+            it.getDeclaredMemberScope().getAllSymbols() + it.getStaticMemberScope().getAllSymbols()
+        }.distinct().map { symbol ->
+            when (symbol) {
+                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
+                is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
+                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(symbol)
+                is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
                 else -> throw IllegalStateException()
             }
-        }
+        }.memoized()
     }
 }
 
@@ -241,6 +244,7 @@ internal fun KtSymbol.toKSNode(): KSNode {
         is KtFileSymbol -> KSFileImpl.getCached(this)
         is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
         is KtTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
+        is KtLocalVariableSymbol -> KSPropertyDeclarationLocalVariableImpl.getCached(this)
         else -> throw IllegalStateException("Unexpected class for KtSymbol: ${this.javaClass}")
     }
 }
