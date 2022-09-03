@@ -19,6 +19,7 @@ package com.google.devtools.ksp.gradle
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
@@ -65,7 +66,7 @@ object AndroidPluginIntegration {
     fun registerGeneratedJavaSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<KspTaskJvm>,
+        kspTaskProvider: TaskProvider<out Task>,
         javaOutputDir: File,
         classOutputDir: File,
         resourcesOutputDir: FileCollection,
