@@ -129,6 +129,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         if (finished) {
             if (!options.withCompilation)
                 throw IllegalStateException("KSP is re-entered unexpectedly.")
+            if (!options.returnOkOnError && logger.hasError()) {
+                return AnalysisResult.compilationError(BindingContext.EMPTY)
+            }
             return null
         }
 
