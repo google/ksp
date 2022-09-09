@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getFunctionDeclarationsByName
 import com.google.devtools.ksp.getPropertyDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
@@ -13,6 +14,12 @@ class GetByNameProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        val classNames = listOf(
+            "lib1.Foo",
+            "lib1.Foo.FooNested",
+            "source.FooInSource",
+            "source.FooInSource.FooInSourceNested"
+        )
         val funNames = listOf(
             "lib1.Foo.lib1MemberFun",
             "lib1.lib1TopFun",
@@ -28,6 +35,11 @@ class GetByNameProcessor : AbstractTestProcessor() {
             "source.FooInSource.sourceMemberProp",
             "source.propInSource",
         )
+        for (className in classNames) {
+            if (resolver.getClassDeclarationByName(className) == null) {
+                results.add("failed to get $className")
+            }
+        }
         for (funName in funNames) {
             if (resolver.getFunctionDeclarationsByName(funName, true).none()) {
                 results.add("failed to get $funName")

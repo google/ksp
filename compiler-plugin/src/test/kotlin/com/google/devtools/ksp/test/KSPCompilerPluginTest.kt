@@ -230,6 +230,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/functionTypes.kt")
     }
 
+    @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
+    @Test
+    fun testGetAnnotationByTypeWithInnerDefault() {
+        runTest("testData/api/getAnnotationByTypeWithInnerDefault.kt")
+    }
+
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("getPackage.kt")
     @Test
