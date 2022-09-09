@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.impl.binary.KSAnnotationDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeArgumentDescriptorImpl
 import com.google.devtools.ksp.symbol.impl.convertKotlinType
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
@@ -33,6 +34,7 @@ import org.jetbrains.kotlin.builtins.isKFunctionType
 import org.jetbrains.kotlin.builtins.isKSuspendFunctionType
 import org.jetbrains.kotlin.builtins.isSuspendFunctionType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
+import org.jetbrains.kotlin.descriptors.SourceElement
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.TypeNullability
 import org.jetbrains.kotlin.types.typeUtil.isSubtypeOf
@@ -156,6 +158,13 @@ fun getKSTypeCached(
     ) {
         KSErrorType
     } else {
-        KSTypeImpl.getCached(kotlinType, ksTypeArguments, annotations)
+        KSTypeImpl.getCached(
+            kotlinType,
+            ksTypeArguments,
+            annotations + kotlinType.annotations
+                .filter { it.source == SourceElement.NO_SOURCE }
+                .map { KSAnnotationDescriptorImpl.getCached(it, null) }
+                .asSequence()
+        )
     }
 }
