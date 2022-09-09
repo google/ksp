@@ -19,11 +19,10 @@ package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSNode
-import java.io.PrintStream
 
 class CommandLineKSPLogger : KSPLogger {
     // TODO: support logging level.
-    private val messager: PrintStream = System.err
+    private val messager = System.err
     override fun logging(message: String, symbol: KSNode?) {
         messager.println(message)
     }
