@@ -224,6 +224,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("testData/api/functionTypeAlias.kt")
     }
 
+    @TestMetadata("functionTypeAnnotation.kt")
+    @Test
+    fun testFunctionTypeAnnotation() {
+        runTest("testData/api/functionTypeAnnotation.kt")
+    }
+
     @TestMetadata("functionTypes.kt")
     @Test
     fun testFunctionTypes() {

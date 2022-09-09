@@ -23,12 +23,10 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 open class FunctionTypeProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollector()
     val types = mutableSetOf<KSType>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getNewFiles()
-        val ignoredNames = mutableSetOf<String>()
 
         files.forEach {
             it.accept(
