@@ -28,6 +28,8 @@ open class Foo {
     fun overload(a: Int) = "Overload"
     fun overload() = "Overload"
     val lib1MemberProp = 1.0
+
+    class FooNested {}
 }
 
 fun lib1TopFun(): Int {
@@ -61,6 +63,7 @@ package source
 class FooInSource {
     fun sourceMemberFun() = 1
     val sourceMemberProp = 1.0
+    class FooInSourceNested
 }
 
 val propInSource = 1

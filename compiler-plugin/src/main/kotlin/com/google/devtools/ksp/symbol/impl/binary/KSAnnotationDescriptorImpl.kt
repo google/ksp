@@ -20,6 +20,7 @@ package com.google.devtools.ksp.symbol.impl.binary
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.findPsi
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.java.KSAnnotationJavaImpl
@@ -35,6 +36,7 @@ import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.load.java.components.JavaAnnotationDescriptor
@@ -53,7 +55,9 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
 import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.TypeConstructor
 import org.jetbrains.kotlin.types.isError
 import org.jetbrains.kotlin.types.typeUtil.builtIns
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
@@ -160,14 +164,31 @@ internal fun AnnotationDescriptor.getDefaultArguments(ownerAnnotation: KSAnnotat
     return this.type.getDefaultConstructorArguments(emptyList(), ownerAnnotation)
 }
 
+internal fun TypeConstructor.toDeclarationDescriptor(): ClassDescriptor? {
+    if (this.declarationDescriptor !is NotFoundClasses.MockClassDescriptor) {
+        return this.declarationDescriptor as? ClassDescriptor
+    }
+    val fqName = (this.declarationDescriptor as? ClassDescriptor)?.fqNameSafe ?: return null
+    val shortNames = fqName.shortName().asString().split("$")
+    var parent = ResolverImpl.instance!!
+        .getClassDeclarationByName("${fqName.parent().asString()}.${shortNames.first()}")
+    for (i in 1 until shortNames.size) {
+        if (parent == null) {
+            return null
+        }
+        parent = parent.declarations
+            .filterIsInstance<KSClassDeclaration>()
+            .singleOrNull { it.simpleName.asString() == shortNames[i] }
+    }
+    return parent?.let { ResolverImpl.instance!!.resolveClassDeclaration(it) }
+}
+
 internal fun KotlinType.getDefaultConstructorArguments(
     excludeNames: List<String>,
     ownerAnnotation: KSAnnotation
 ): List<KSValueArgument> {
-    return (this.constructor.declarationDescriptor as? ClassDescriptor)?.constructors?.single()
-        ?.let { argumentsFromDefault ->
-            argumentsFromDefault.getAbsentDefaultArguments(excludeNames, ownerAnnotation)
-        } ?: emptyList()
+    return this.constructor.toDeclarationDescriptor()?.constructors?.single()
+        ?.getAbsentDefaultArguments(excludeNames, ownerAnnotation) ?: emptyList()
 }
 
 fun ClassConstructorDescriptor.getAbsentDefaultArguments(
