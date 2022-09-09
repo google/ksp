@@ -234,10 +234,10 @@ fun KSDeclaration.isPrivate() = this.modifiers.contains(Modifier.PRIVATE)
 fun KSDeclaration.isJavaPackagePrivate() = this.getVisibility() == Visibility.JAVA_PACKAGE
 
 fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
-    if (this is KSClassDeclaration) {
-        return this
+    return if (this is KSClassDeclaration) {
+        this
     } else {
-        return this.parentDeclaration?.closestClassDeclaration()
+        this.parentDeclaration?.closestClassDeclaration()
     }
 }
 

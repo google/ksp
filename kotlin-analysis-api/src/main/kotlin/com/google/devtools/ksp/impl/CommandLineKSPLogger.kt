@@ -22,7 +22,7 @@ import com.google.devtools.ksp.symbol.KSNode
 
 class CommandLineKSPLogger : KSPLogger {
     // TODO: support logging level.
-    val messager = System.err
+    private val messager = System.err
     override fun logging(message: String, symbol: KSNode?) {
         messager.println(message)
     }
