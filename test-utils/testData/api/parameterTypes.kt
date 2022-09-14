@@ -17,18 +17,18 @@
 
 // TEST PROCESSOR: ParameterTypeProcessor
 // EXPECTED:
-// <ERROR TYPE>
-// String
-// Int
-// Int
-// <ERROR TYPE>
-// <ERROR TYPE>
+// a: Int
+// b: <ERROR TYPE>
+// c: <ERROR TYPE>
+// errorValue: <ERROR TYPE>
+// v: String
+// value: Int
 // END
 
 class Foo {
     var a: ErrorType
-    set(value) {
-        a = value
+    set(errorValue) {
+        a = errorValue
     }
     var x
         get() = "OK"

@@ -10,7 +10,7 @@ class ParameterTypeProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
-        return result
+        return result.sorted()
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -21,7 +21,7 @@ class ParameterTypeProcessor : AbstractTestProcessor() {
                     }
 
                     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-                        result.add(valueParameter.type.resolve().toString())
+                        result.add("${valueParameter.name?.asString()}: ${valueParameter.type.resolve()}")
                     }
                 },
                 Unit
