@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.impl.test
 
-import com.google.devtools.ksp.DualLookupTracker
 import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
@@ -59,7 +58,6 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     ): List<String> {
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(mainModule)
         compilerConfiguration.put(CommonConfigurationKeys.MODULE_NAME, mainModule.name)
-        compilerConfiguration.put(CommonConfigurationKeys.LOOKUP_TRACKER, DualLookupTracker())
         compilerConfiguration.addKotlinSourceRoot(mainModule.kotlinSrc.absolutePath)
         mainModule.kotlinSrc.mkdirs()
         if (!mainModule.javaFiles.isEmpty()) {
