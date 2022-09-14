@@ -15,16 +15,6 @@ intellij {
     version = intellijVersion
 }
 
-fun ModuleDependency.includeJars(vararg names: String) {
-    names.forEach {
-        artifact {
-            name = it
-            type = "jar"
-            extension = "jar"
-        }
-    }
-}
-
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", kotlinBaseVersion))
@@ -64,7 +54,6 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-suite:1.8.2")
 
     testImplementation(project(":test-utils"))
-    testImplementation(project(":compiler-plugin"))
     testImplementation(project(":api"))
     testImplementation(project(":common-util"))
 
