@@ -56,4 +56,8 @@ object KSErrorType : KSType {
     override val isFunctionType: Boolean = false
 
     override val isSuspendFunctionType: Boolean = false
+
+    override fun toString(): String {
+        return "<ERROR TYPE>"
+    }
 }
