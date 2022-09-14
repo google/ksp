@@ -90,11 +90,11 @@ internal fun KtType.render(): String {
                 }
             }
         } else ""
-        is KtClassErrorType -> "<error>"
+        is KtClassErrorType -> "<ERROR TYPE>"
         is KtCapturedType -> asStringForDebugging()
         is KtDefinitelyNotNullType -> original.render() + "!"
         is KtDynamicType -> "<dynamic type>"
-        is KtFlexibleType -> "${lowerBound.render()}...${upperBound.render()}"
+        is KtFlexibleType -> "(${lowerBound.render()}..${upperBound.render()})"
         is KtIntegerLiteralType -> "ILT: $value"
         is KtIntersectionType ->
             this.conjuncts.joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render() }

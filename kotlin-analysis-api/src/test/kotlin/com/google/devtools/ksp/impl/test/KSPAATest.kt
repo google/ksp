@@ -295,14 +295,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/hello.kt")
     }
 
-    @Disabled
     @TestMetadata("implicitElements.kt")
     @Test
     fun testImplicitElements() {
         runTest("../test-utils/testData/api/implicitElements.kt")
     }
 
-    @Disabled
     @TestMetadata("implicitPropertyAccessors.kt")
     @Test
     fun testImplicitPropertyAccessors() {
@@ -344,7 +342,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaToKotlinMapper.kt")
     }
 
-    @Disabled
     @TestMetadata("javaTypes.kt")
     @Test
     fun testJavaTypes() {
@@ -379,7 +376,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/libOrigins.kt")
     }
 
-    @Disabled
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
@@ -419,7 +415,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/overridee.kt")
     }
 
-    @Disabled
     @TestMetadata("parameterTypes.kt")
     @Test
     fun testParameterTypes() {

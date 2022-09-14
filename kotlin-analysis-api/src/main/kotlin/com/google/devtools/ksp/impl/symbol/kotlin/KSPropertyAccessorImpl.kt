@@ -43,7 +43,12 @@ abstract class KSPropertyAccessorImpl(
     }
 
     override val origin: Origin by lazy {
-        mapAAOrigin(ktPropertyAccessorSymbol.origin)
+        val symbolOrigin = mapAAOrigin(ktPropertyAccessorSymbol.origin)
+        if (symbolOrigin == Origin.KOTLIN && ktPropertyAccessorSymbol.psi == null) {
+            Origin.SYNTHETIC
+        } else {
+            symbolOrigin
+        }
     }
 
     override val parent: KSNode?
