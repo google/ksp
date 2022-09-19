@@ -15,6 +15,12 @@ intellij {
     version = intellijVersion
 }
 
+repositories {
+    mavenCentral()
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+}
+
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", kotlinBaseVersion))
@@ -116,6 +122,7 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
     maven("https://www.jetbrains.com/intellij-repository/releases")
 }

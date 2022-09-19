@@ -2,6 +2,7 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
         maven("https://www.jetbrains.com/intellij-repository/snapshots")
     }
     val kotlinBaseVersion: String by settings
