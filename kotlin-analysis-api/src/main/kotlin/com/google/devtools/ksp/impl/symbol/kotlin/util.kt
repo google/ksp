@@ -28,36 +28,16 @@ import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.analyze
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotated
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
-import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
-import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
-import org.jetbrains.kotlin.analysis.api.types.KtCapturedType
-import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
-import org.jetbrains.kotlin.analysis.api.types.KtDefinitelyNotNullType
-import org.jetbrains.kotlin.analysis.api.types.KtDynamicType
-import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
-import org.jetbrains.kotlin.analysis.api.types.KtIntegerLiteralType
-import org.jetbrains.kotlin.analysis.api.types.KtIntersectionType
-import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
-import org.jetbrains.kotlin.analysis.api.types.KtType
-import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
-import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
+import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.types.Variance
+import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 internal val ktSymbolOriginToOrigin = mapOf(
@@ -232,5 +212,24 @@ internal fun ClassId.toKtClassSymbol(): KtClassOrObjectSymbol? {
         } else {
             this@toKtClassSymbol.getCorrespondingToplevelClassOrObjectSymbol()
         }
+    }
+}
+
+internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
+    return try {
+        when (this) {
+            is KtTypeParameterType -> this.symbol
+            is KtCapturedType -> TODO("fix in upstream")
+            is KtClassErrorType -> null
+            is KtFunctionalType -> classSymbol
+            is KtUsualClassType -> classSymbol
+            is KtDefinitelyNotNullType -> original.classifierSymbol()
+            is KtDynamicType -> null
+            is KtFlexibleType -> lowerBound.classifierSymbol()
+            is KtIntegerLiteralType -> null
+            is KtIntersectionType -> null
+        }
+    } catch (e: KotlinExceptionWithAttachments) {
+        null
     }
 }
