@@ -25,14 +25,8 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
-import org.jetbrains.kotlin.analysis.api.types.KtClassErrorType
-import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
-import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
-import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
-import org.jetbrains.kotlin.analysis.api.types.KtType
-import org.jetbrains.kotlin.analysis.api.types.KtTypeNullability
+import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSTypeImpl private constructor(internal val type: KtType) : KSType {
@@ -45,10 +39,11 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
             when (this@toDeclaration) {
                 is KtNonErrorClassType -> {
                     when (val symbol = this@toDeclaration.classSymbol) {
-                        is KtTypeAliasSymbol -> symbol.expandedType.toDeclaration()
+                        is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
                         is KtClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
                     }
                 }
+                is KtTypeParameterType -> KSTypeParameterImpl.getCached(symbol)
                 is KtClassErrorType -> KSErrorTypeClassDeclaration
                 is KtFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()
@@ -135,7 +130,35 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override val isSuspendFunctionType: Boolean
         get() = type is KtFunctionalType && type.isSuspend
 
+    override fun hashCode(): Int {
+        return type.toAbbreviatedType().hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        fun KtTypeAliasSymbol.toAbbreviatedType(): KtType {
+            val result = this.expandedType
+            if (result.classifierSymbol() is KtTypeAliasSymbol) {
+                return (result.classifierSymbol() as KtTypeAliasSymbol).toAbbreviatedType()
+            }
+            return result
+        }
+
+        if (other !is KSTypeImpl)
+            return false
+        val thisType = type.toAbbreviatedType()
+        val otherType = other.type.toAbbreviatedType()
+        return thisType.equals(otherType)
+    }
+
     override fun toString(): String {
         return type.render()
+    }
+
+    private fun KtType.toAbbreviatedType(): KtType {
+        val symbol = this.classifierSymbol()
+        return when (symbol) {
+            is KtTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
+            else -> this
+        }
     }
 }

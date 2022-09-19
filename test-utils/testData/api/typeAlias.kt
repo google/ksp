@@ -20,7 +20,7 @@
 // EXPECTED:
 // a : A = String
 // b : B = String
-// c : C = A = String
+// c : CC = A = String
 // d : String
 // listOfInt : ListOfInt = List<Int>
 // listOfInt_B : ListOfInt_B = ListOfInt = List<Int>
@@ -33,7 +33,7 @@
 
 typealias A = String
 typealias B = String
-typealias C = A
+typealias CC = A
 typealias ListOfInt = List<Int>
 typealias ListOfInt_B = ListOfInt
 typealias ListOfInt_C = ListOfInt_B
@@ -44,7 +44,7 @@ typealias MyList_B_String = MyList_B<String>
 
 val a: A = ""
 val b: B = ""
-val c: C = ""
+val c: CC = ""
 val d: String = ""
 val listOfInt: ListOfInt = TODO()
 val listOfInt_B: ListOfInt_B = TODO()

@@ -533,7 +533,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/topLevelMembers.kt")
     }
 
-    @Disabled
     @TestMetadata("typeAlias.kt")
     @Test
     fun testTypeAlias() {
