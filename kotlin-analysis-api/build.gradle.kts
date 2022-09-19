@@ -103,6 +103,13 @@ tasks.test {
     environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
     environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
     environment("PROJECT_BUILD_DIR", buildDir)
+
+    // those properties should point to valid jars, they are needed for test environment setup and consumed by EnvironmentBasedStandardLibrariesPathProvider (if one is used as KotlinStandardLibrariesPathProvider)
+    systemProperty("org.jetbrains.kotlin.test.kotlin-stdlib", "NOT_SET")
+    systemProperty("org.jetbrains.kotlin.test.kotlin-script-runtime", "NOT_SET")
+    systemProperty("org.jetbrains.kotlin.test.kotlin-test", "NOT_SET")
+    systemProperty("org.jetbrains.kotlin.test.kotlin-annotations-jvm", "NOT_SET")
+
     testLogging {
         events("passed", "skipped", "failed")
     }

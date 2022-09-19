@@ -1,0 +1,5 @@
+enum class RGB
+class ThrowsClass
+annotation class Foo
+annotation class Bar
+fun Fun()
