@@ -21,7 +21,7 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 
-class KSTypeParameterImpl private constructor(private val ktTypeParameterSymbol: KtTypeParameterSymbol) :
+class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol: KtTypeParameterSymbol) :
     KSTypeParameter,
     AbstractKSDeclarationImpl(ktTypeParameterSymbol),
     KSExpectActual by KSExpectActualImpl(ktTypeParameterSymbol) {
@@ -45,7 +45,9 @@ class KSTypeParameterImpl private constructor(private val ktTypeParameterSymbol:
     override val isReified: Boolean = ktTypeParameterSymbol.isReified
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        ktTypeParameterSymbol.upperBounds.asSequence().map { KSTypeReferenceImpl(it) }
+        ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
+            KSTypeReferenceImpl.getCached(type, this@KSTypeParameterImpl, index)
+        }
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()

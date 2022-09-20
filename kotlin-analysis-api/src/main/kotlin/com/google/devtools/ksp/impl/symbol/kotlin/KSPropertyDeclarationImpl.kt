@@ -39,11 +39,11 @@ class KSPropertyDeclarationImpl private constructor(private val ktPropertySymbol
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
-        ktPropertySymbol.receiverType?.let { KSTypeReferenceImpl(it) }
+        ktPropertySymbol.receiverType?.let { KSTypeReferenceImpl.getCached(it, this@KSPropertyDeclarationImpl) }
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl(ktPropertySymbol.returnType)
+        KSTypeReferenceImpl.getCached(ktPropertySymbol.returnType, this@KSPropertyDeclarationImpl)
     }
 
     override val isMutable: Boolean by lazy {

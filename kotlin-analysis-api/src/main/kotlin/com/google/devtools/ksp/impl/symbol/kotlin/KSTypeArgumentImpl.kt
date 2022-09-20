@@ -51,7 +51,7 @@ class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeA
     }
 
     override val type: KSTypeReference? by lazy {
-        ktTypeArgument.type?.let { KSTypeReferenceImpl(it) }
+        ktTypeArgument.type?.let { KSTypeReferenceImpl.getCached(it, this@KSTypeArgumentImpl) }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {

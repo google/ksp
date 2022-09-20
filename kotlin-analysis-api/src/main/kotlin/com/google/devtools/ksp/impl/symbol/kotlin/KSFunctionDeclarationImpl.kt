@@ -52,14 +52,16 @@ class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol
             if (!ktFunctionSymbol.isExtension) {
                 null
             } else {
-                ktFunctionSymbol.receiverType?.let { KSTypeReferenceImpl(it) }
+                ktFunctionSymbol.receiverType?.let {
+                    KSTypeReferenceImpl.getCached(it, this@KSFunctionDeclarationImpl)
+                }
             }
         }
     }
 
     override val returnType: KSTypeReference? by lazy {
         analyze {
-            KSTypeReferenceImpl(ktFunctionSymbol.returnType)
+            KSTypeReferenceImpl.getCached(ktFunctionSymbol.returnType, this@KSFunctionDeclarationImpl)
         }
     }
 

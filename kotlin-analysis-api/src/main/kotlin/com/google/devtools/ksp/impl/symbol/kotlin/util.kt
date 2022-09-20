@@ -182,6 +182,7 @@ internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
         when (val containingSymbol = this@getContainingKSSymbol.getContainingSymbol()) {
             is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(containingSymbol)
             is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(containingSymbol)
+            is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(containingSymbol)
             else -> null
         }
     }
