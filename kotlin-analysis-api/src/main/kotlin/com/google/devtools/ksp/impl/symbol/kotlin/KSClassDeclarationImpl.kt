@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
-class KSClassDeclarationImpl private constructor(private val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
+class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
     KSClassDeclaration,
     AbstractKSDeclarationImpl(ktClassOrObjectSymbol),
     KSExpectActual by KSExpectActualImpl(ktClassOrObjectSymbol) {
@@ -56,7 +56,9 @@ class KSClassDeclarationImpl private constructor(private val ktClassOrObjectSymb
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
         analyze {
-            ktClassOrObjectSymbol.superTypes.map { KSTypeReferenceImpl(it) }.asSequence()
+            ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
+                KSTypeReferenceImpl.getCached(type, this@KSClassDeclarationImpl, index)
+            }.asSequence()
         }
     }
 

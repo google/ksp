@@ -52,7 +52,7 @@ abstract class KSPropertyAccessorImpl(
     }
 
     override val parent: KSNode?
-        get() = TODO("Not yet implemented")
+        get() = ktPropertyAccessorSymbol.getContainingKSSymbol()
 }
 
 class KSPropertySetterImpl private constructor(
@@ -87,7 +87,7 @@ class KSPropertyGetterImpl private constructor(
     }
 
     override val returnType: KSTypeReference? by lazy {
-        KSTypeReferenceImpl(getter.returnType)
+        KSTypeReferenceImpl.getCached(getter.returnType, this@KSPropertyGetterImpl)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

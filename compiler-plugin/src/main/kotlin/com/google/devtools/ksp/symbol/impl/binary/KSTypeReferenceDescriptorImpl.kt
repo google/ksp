@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
+import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -29,7 +30,6 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.impl.kotlin.IdKeyTriple
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.builtins.isSuspendFunctionTypeOrSubtype
 import org.jetbrains.kotlin.types.AbbreviatedType

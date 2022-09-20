@@ -39,7 +39,7 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KtTypeA
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl.getCached(ktTypeAliasSymbol.expandedType)
+        KSTypeReferenceImpl.getCached(ktTypeAliasSymbol.expandedType, this)
     }
 
     override val simpleName: KSName

@@ -34,7 +34,7 @@ class KSValueParameterImpl private constructor(
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl(ktValueParameterSymbol.returnType)
+        KSTypeReferenceImpl.getCached(ktValueParameterSymbol.returnType, this@KSValueParameterImpl)
     }
 
     override val isVararg: Boolean by lazy {

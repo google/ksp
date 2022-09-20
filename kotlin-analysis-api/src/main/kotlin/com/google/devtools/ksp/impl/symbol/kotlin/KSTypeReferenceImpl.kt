@@ -17,22 +17,26 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSReferenceElement
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Modifier
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiTypeParameter
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.analysis.api.types.*
+import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtTypeParameter
 
-class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
-    companion object : KSObjectCache<KtType, KSTypeReference>() {
-        fun getCached(type: KtType): KSTypeReference = cache.getOrPut(type) { KSTypeReferenceImpl(type) }
+class KSTypeReferenceImpl private constructor(
+    private val ktType: KtType,
+    override val parent: KSNode?,
+    private val index: Int
+) : KSTypeReference {
+    companion object : KSObjectCache<IdKeyTriple<KtType, KSNode?, Int>, KSTypeReference>() {
+        fun getCached(type: KtType, parent: KSNode? = null, index: Int = -1): KSTypeReference =
+            cache.getOrPut(IdKeyTriple(type, parent, index)) { KSTypeReferenceImpl(type, parent, index) }
     }
+
     // FIXME: return correct reference element.
     override val element: KSReferenceElement? = null
 
@@ -53,13 +57,32 @@ class KSTypeReferenceImpl(private val ktType: KtType) : KSTypeReference {
         ktType.annotations()
     }
 
-    override val origin: Origin = Origin.KOTLIN
+    override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
 
-    override val location: Location
-        get() = TODO("Not yet implemented")
-
-    override val parent: KSNode?
-        get() = TODO("Not yet implemented")
+    override val location: Location by lazy {
+        if (index != -1) {
+            parent?.location ?: NonExistLocation
+        } else {
+            when (parent) {
+                is KSClassDeclarationImpl -> {
+                    when (val psi = parent.ktClassOrObjectSymbol.psi) {
+                        is KtClassOrObject -> psi.superTypeListEntries.get(index).toLocation()
+                        is PsiClass -> (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
+                        else -> NonExistLocation
+                    }
+                }
+                is KSTypeParameterImpl -> {
+                    when (val psi = parent.ktTypeParameterSymbol.psi) {
+                        is KtTypeParameter -> parent.location
+                        is PsiTypeParameter -> (psi.extendsListTypes[index] as? PsiClassReferenceType)
+                            ?.reference?.toLocation() ?: NonExistLocation
+                        else -> NonExistLocation
+                    }
+                }
+                else -> NonExistLocation
+            }
+        }
+    }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeReference(this, data)
