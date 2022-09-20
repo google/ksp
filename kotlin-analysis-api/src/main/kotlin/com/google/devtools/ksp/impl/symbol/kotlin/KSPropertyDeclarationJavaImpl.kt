@@ -31,7 +31,7 @@ class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldS
         get() = null
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl.getCached(ktJavaFieldSymbol.returnType)
+        KSTypeReferenceImpl.getCached(ktJavaFieldSymbol.returnType, this@KSPropertyDeclarationJavaImpl)
     }
 
     override val isMutable: Boolean

@@ -11,7 +11,8 @@ import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 
-class KSTypeArgumentLiteImpl(override val type: KSTypeReference, override val variance: Variance) : KSTypeArgument {
+class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeReference, override val variance: Variance) :
+    KSTypeArgument {
     companion object : KSObjectCache<Pair<KSTypeReference, Variance>, KSTypeArgument>() {
         fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) {
             KSTypeArgumentLiteImpl(type, variance)

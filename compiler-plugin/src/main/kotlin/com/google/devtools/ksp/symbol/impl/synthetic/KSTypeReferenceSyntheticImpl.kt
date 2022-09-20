@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.symbol.impl.synthetic
 
+import com.google.devtools.ksp.IdKey
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
@@ -11,7 +12,6 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.impl.kotlin.IdKey
 
 class KSTypeReferenceSyntheticImpl(val ksType: KSType, override val parent: KSNode?) : KSTypeReference {
     companion object : KSObjectCache<Pair<IdKey<KSType>, KSNode?>, KSTypeReferenceSyntheticImpl>() {
