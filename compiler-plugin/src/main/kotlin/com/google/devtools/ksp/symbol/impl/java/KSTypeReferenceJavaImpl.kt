@@ -21,6 +21,7 @@ import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSReferenceElement
@@ -43,6 +44,9 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWildcardType
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
+import org.jetbrains.kotlin.load.java.NOT_NULL_ANNOTATIONS
+import org.jetbrains.kotlin.load.java.NULLABLE_ANNOTATIONS
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.typeUtil.makeNullable
@@ -116,11 +120,22 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
 
     override fun resolve(): KSType {
         val resolvedType = ResolverImpl.instance!!.resolveUserType(this)
-        return if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)
+        val relatedAnnotations = (annotations + ((parent as? KSAnnotated)?.annotations ?: emptySequence()))
+            .mapNotNull {
+                (it.annotationType.resolve() as? KSTypeImpl)?.kotlinType?.constructor?.declarationDescriptor?.fqNameSafe
+            }
+        val resolved = if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)
             ?.descriptor is NotFoundClasses.MockClassDescriptor
         ) {
             KSErrorType
         } else resolvedType
+        val hasNotNull = relatedAnnotations.any { it in NOT_NULL_ANNOTATIONS }
+        val hasNullable = relatedAnnotations.any { it in NULLABLE_ANNOTATIONS }
+        return if (hasNullable && !hasNotNull) {
+            resolved.makeNullable()
+        } else if (!hasNullable && hasNotNull) {
+            resolved.makeNotNullable()
+        } else resolved
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
