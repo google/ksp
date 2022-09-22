@@ -303,6 +303,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/javaModifiers.kt")
     }
 
+    @TestMetadata("javaNonNullTypes.kt")
+    @Test
+    fun testJavaNonNullTypes() {
+        runTest("../test-utils/testData/api/javaNonNullTypes.kt")
+    }
+
     @TestMetadata("javaSubtype.kt")
     @Test
     fun testJavaSubtype() {
