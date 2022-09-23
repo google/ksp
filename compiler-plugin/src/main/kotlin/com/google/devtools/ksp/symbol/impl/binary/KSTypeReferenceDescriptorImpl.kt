@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.kotlin.IdKeyTriple
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import org.jetbrains.kotlin.builtins.isSuspendFunctionTypeOrSubtype
+import org.jetbrains.kotlin.types.AbbreviatedType
 import org.jetbrains.kotlin.types.KotlinType
 
 class KSTypeReferenceDescriptorImpl private constructor(
@@ -46,10 +47,13 @@ class KSTypeReferenceDescriptorImpl private constructor(
             }
     }
 
+    private fun KotlinType.findAlias(): KotlinType =
+        (kotlinType as? AbbreviatedType)?.abbreviation ?: this
+
     override val location: Location = NonExistLocation
 
     override val element: KSReferenceElement by lazy {
-        KSClassifierReferenceDescriptorImpl.getCached(kotlinType, origin, this)
+        KSClassifierReferenceDescriptorImpl.getCached(kotlinType.findAlias(), origin, this)
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
