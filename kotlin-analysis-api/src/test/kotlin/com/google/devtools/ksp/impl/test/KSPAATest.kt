@@ -308,6 +308,13 @@ class KSPAATest : AbstractKSPAATest() {
     }
 
     @Disabled
+    @TestMetadata("inheritedTypeAlias.kt")
+    @Test
+    fun testInheritedTypeAlias() {
+        runTest("../test-utils/testData/api/inheritedTypeAlias.kt")
+    }
+
+    @Disabled
     @TestMetadata("innerTypes.kt")
     @Test
     fun testInnerTypes() {
