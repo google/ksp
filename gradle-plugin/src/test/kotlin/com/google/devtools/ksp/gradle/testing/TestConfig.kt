@@ -41,7 +41,11 @@ data class TestConfig(
     /**
      * The version of KSP.
      */
-    val kspVersion: String
+    val kspVersion: String,
+    /**
+     * The compiler runner; Can be standalone or inherited
+     */
+    val kspCompilerRunner: String
 ) {
     private val kspProjectProperties by lazy {
         Properties().also { props ->
@@ -73,7 +77,8 @@ data class TestConfig(
                 kspProjectDir = File(props.get("kspProjectRootDir") as String),
                 processorClasspath = props.get("processorClasspath") as String,
                 mavenRepoDir = File(props.get("mavenRepoDir") as String),
-                kspVersion = props.get("kspVersion") as String
+                kspVersion = props.get("kspVersion") as String,
+                kspCompilerRunner = props.get("kspCompilerRunner") as String,
             )
         }
     }

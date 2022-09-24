@@ -17,12 +17,14 @@ class TemporaryTestProject(projectName: String, baseProject: String? = null) : T
         val kspVersion = System.getProperty("kspVersion")
         val agpVersion = System.getProperty("agpVersion")
         val testRepo = System.getProperty("testRepo").replace(File.separator, "/")
+        val kspCompilerRunner = System.getProperty("kspCompilerRunner")
         val gradleProperties = File(root, "gradle.properties")
         gradleProperties.appendText("\nkotlinVersion=$kotlinVersion")
         gradleProperties.appendText("\nkspVersion=$kspVersion")
         gradleProperties.appendText("\nagpVersion=$agpVersion")
         gradleProperties.appendText("\ntestRepo=$testRepo")
         gradleProperties.appendText("\norg.gradle.unsafe.configuration-cache=true")
+        gradleProperties.appendText("\nksp.compiler.runner=$kspCompilerRunner")
         // Uncomment this to debug compiler and compiler plugin.
         // gradleProperties.appendText("\nsystemProp.kotlin.compiler.execution.strategy=in-process")
     }
