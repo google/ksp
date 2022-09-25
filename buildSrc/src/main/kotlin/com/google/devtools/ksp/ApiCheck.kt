@@ -65,7 +65,7 @@ private fun JavaExec.configureCommonMetalavaArgs(
     }
     inputs.files(apiFiles)
     classpath = project.getMetalavaConfiguration()
-    main = "com.android.tools.metalava.Driver"
+    mainClass.set("com.android.tools.metalava.Driver")
     args = listOf(
         "--jdk-home", jdkHome,
         "--classpath", compileClasspath,
