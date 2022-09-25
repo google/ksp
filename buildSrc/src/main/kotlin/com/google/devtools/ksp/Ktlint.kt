@@ -34,7 +34,7 @@ fun Project.configureKtlintApplyToIdea() {
         task.description = "Apply ktlint style to idea"
         task.group = "Tooling"
         task.classpath = getKtlintConfiguration()
-        task.main = "com.pinterest.ktlint.Main"
+        task.mainClass.set("com.pinterest.ktlint.Main")
         task.args = listOf(
             "applyToIDEAProject",
             "-y"
@@ -84,7 +84,7 @@ private fun JavaExec.configureCommonKtlintParams(
     val outputFile = project.buildDir.resolve("reports/ktlint/ktlint-checkstyle-report.xml")
     inputs.files(ktlintInputFiles)
     classpath = project.getKtlintConfiguration()
-    main = "com.pinterest.ktlint.Main"
+    mainClass.set("com.pinterest.ktlint.Main")
     outputs.file(outputFile)
     args = listOf(
         "--reporter=plain",
