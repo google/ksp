@@ -356,6 +356,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         // KotlinNativeCompile computes -Xplugin=... from compilerPluginClasspath.
                         kspTask.compilerPluginClasspath = project.configurations.getByName(pluginConfigurationName)
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
+                        kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                     }
                 }
             }
