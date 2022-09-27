@@ -59,7 +59,7 @@ class PlaygroundIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/build.gradle.kts")
-            .appendText("\nksp {\n  blockOtherCompilerPlugins = true\n}\n")
+            .appendText("\nksp {\n  blockOtherCompilerPlugins = false\n}\n")
         gradleRunner.buildAndCheck("clean", "build")
         gradleRunner.buildAndCheck("clean", "build")
         project.restore("workload/build.gradle.kts")
