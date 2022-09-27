@@ -37,7 +37,8 @@ open class KspExtension {
         commandLineArgumentProviders.add(arg)
     }
 
-    open var blockOtherCompilerPlugins: Boolean = false
+    @Deprecated("KSP will stop supporting other compiler plugins in KSP's Gradle tasks after 1.0.8.")
+    open var blockOtherCompilerPlugins: Boolean = true
 
     // Instruct KSP to pickup sources from compile tasks, instead of source sets.
     // Note that it depends on behaviors of other Gradle plugins, that may bring surprises and can be hard to debug.
