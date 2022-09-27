@@ -105,6 +105,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_ARTIFACT_NAME = "symbol-processing"
         const val KSP_ARTIFACT_NAME_NATIVE = "symbol-processing-cmdline"
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
+        const val KSP_API_ID = "symbol-processing-api"
+        const val KSP_COMPILER_PLUGIN_ID = "symbol-processing"
+        const val KSP_GROUP_ID = "com.google.devtools.ksp"
+        const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
 
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
@@ -234,6 +238,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName, target)
         val kspOutputDir = getKspOutputDir(project, sourceSetName, target)
 
+        val kspClasspathCfg = project.configurations.maybeCreate(KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME)
+        project.dependencies.add(
+            KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME,
+            "$KSP_GROUP_ID:$KSP_API_ID:$KSP_VERSION"
+        )
+        project.dependencies.add(
+            KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME,
+
+            "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID:$KSP_VERSION"
+        )
+
         if (javaCompile != null) {
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
@@ -273,14 +288,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName, target)).disallowChanges()
 
             if (kspExtension.blockOtherCompilerPlugins) {
-                // FIXME: ask upstream to provide an API to make this not implementation-dependent.
-                val cfg = project.configurations.getByName(kotlinCompilation.pluginConfigurationName)
-                kspTask.overridePluginClasspath.value(
-                    kspTask.project.provider {
-                        val dep = cfg.dependencies.single { it.name == KSP_ARTIFACT_NAME }
-                        cfg.fileCollection(dep)
-                    }
-                )
+                kspTask.overridePluginClasspath.from(kspClasspathCfg)
             }
             kspTask.isKspIncremental = isIncremental
         }
@@ -450,7 +458,7 @@ interface KspTask : Task {
 
     @get:Optional
     @get:Classpath
-    val overridePluginClasspath: Property<FileCollection>
+    val overridePluginClasspath: ConfigurableFileCollection
 
     @get:Input
     var blockOtherCompilerPlugins: Boolean
@@ -624,7 +632,7 @@ abstract class KspTaskJvm @Inject constructor(
             )
         )
         if (blockOtherCompilerPlugins) {
-            args.blockOtherPlugins(overridePluginClasspath.get())
+            args.blockOtherPlugins(overridePluginClasspath)
         }
         args.addPluginOptions(options.get())
         args.destinationAsFile = destination
@@ -743,7 +751,7 @@ abstract class KspTaskJS @Inject constructor(
             )
         )
         if (blockOtherCompilerPlugins) {
-            args.blockOtherPlugins(overridePluginClasspath.get())
+            args.blockOtherPlugins(overridePluginClasspath)
         }
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
@@ -827,7 +835,7 @@ abstract class KspTaskMetadata @Inject constructor(
             )
         )
         if (blockOtherCompilerPlugins) {
-            args.blockOtherPlugins(overridePluginClasspath.get())
+            args.blockOtherPlugins(overridePluginClasspath)
         }
         args.addPluginOptions(options.get())
         args.destination = destination.canonicalPath
@@ -884,7 +892,7 @@ abstract class KspTaskNative @Inject constructor(
     override var compilerPluginClasspath: FileCollection? = null
         get() {
             if (blockOtherCompilerPlugins) {
-                field = overridePluginClasspath.get()
+                field = overridePluginClasspath
             }
             return field
         }
