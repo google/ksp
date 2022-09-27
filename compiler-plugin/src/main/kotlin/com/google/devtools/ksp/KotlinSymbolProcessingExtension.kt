@@ -205,7 +205,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 options.javaOutputDir,
                 options.kotlinOutputDir,
                 options.resourceOutputDir,
-                options.projectBaseDir,
+                options.buildDir,
                 anyChangesWildcard,
                 ksFiles,
                 options.incremental

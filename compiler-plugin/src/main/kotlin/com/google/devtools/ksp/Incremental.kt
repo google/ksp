@@ -194,6 +194,7 @@ class IncrementalContext(
     private val rebuild = !cachesUpToDateFile.exists()
 
     private val baseDir = options.projectBaseDir
+    private val buildDir = options.buildDir
 
     private val logsDir = File(options.cachesDir, "logs").apply { mkdirs() }
     private val buildTime = Date().time
@@ -219,7 +220,16 @@ class IncrementalContext(
 
     private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
 
-    private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
+    // Ugly, but better than copying the private logics out of stdlib.
+    // TODO: get rid of `relativeTo` if possible.
+    private fun String.toRelativeFile(): File {
+        return try {
+            File(this).relativeTo(baseDir)
+        } catch (e: IllegalArgumentException) {
+            File(this).relativeTo(buildDir)
+        }
+    }
+
     private val KSFile.relativeFile
         get() = filePath.toRelativeFile()
 
@@ -440,7 +450,9 @@ class IncrementalContext(
         val outRoot = options.kspOutputDir
         val bakRoot = File(options.cachesDir, "backups")
 
-        fun File.abs() = File(baseDir, path)
+        // Can I assume output is always in buildDir?
+        fun File.abs() = File(buildDir, path)
+        // Can I assume cachesDir always has a common parent as buildDir?
         fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
 
         // Copy recursively, including last-modified-time of file and its parent dirs.

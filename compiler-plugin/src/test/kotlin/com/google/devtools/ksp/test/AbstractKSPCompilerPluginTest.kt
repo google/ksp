@@ -63,6 +63,7 @@ abstract class AbstractKSPCompilerPluginTest : AbstractKSPTest(FrontendKinds.Cla
                     kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
                     resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
                     projectBaseDir = testRoot
+                    buildDir = testRoot
                     cachesDir = File(testRoot, "kspTest/kspCaches")
                     kspOutputDir = File(testRoot, "kspTest")
                 }.build(),
