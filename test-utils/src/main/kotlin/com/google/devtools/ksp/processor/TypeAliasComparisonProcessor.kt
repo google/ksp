@@ -37,7 +37,9 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
             listOf(this) + ((this.declaration as? KSTypeAlias)?.type?.resolve()?.aliases() ?: emptyList())
 
         val interesting = setOf("Anno", "Bnno")
-        val iRefs = refs.filterNot { it.annotations.all { it.shortName.asString() !in interesting } }
+        val iRefs = refs.filterNot {
+            it.origin != Origin.KOTLIN || it.annotations.all { it.shortName.asString() !in interesting }
+        }
         val types = iRefs.map { it.resolve()!! }.flatMap { it.aliases() }
 
         for (i in types) {
@@ -49,7 +51,7 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
     }
 
     override fun toResult(): List<String> {
-        return results
+        return results.sorted()
     }
 }
 

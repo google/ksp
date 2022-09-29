@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -24,14 +25,17 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationsList
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSTypeImpl private constructor(internal val type: KtType) : KSType {
-    companion object : KSObjectCache<KtType, KSTypeImpl>() {
-        fun getCached(type: KtType): KSTypeImpl = cache.getOrPut(type) { KSTypeImpl(type) }
+    companion object : KSObjectCache<IdKeyPair<KtType, KtAnnotationsList>, KSTypeImpl>() {
+        fun getCached(type: KtType): KSTypeImpl = cache.getOrPut(IdKeyPair(type, type.annotationsList)) {
+            KSTypeImpl(type)
+        }
     }
 
     private fun KtType.toDeclaration(): KSDeclaration {
@@ -135,19 +139,12 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun equals(other: Any?): Boolean {
-        fun KtTypeAliasSymbol.toAbbreviatedType(): KtType {
-            val result = this.expandedType
-            if (result.classifierSymbol() is KtTypeAliasSymbol) {
-                return (result.classifierSymbol() as KtTypeAliasSymbol).toAbbreviatedType()
-            }
-            return result
-        }
-
-        if (other !is KSTypeImpl)
+        if (other !is KSTypeImpl) {
             return false
-        val thisType = type.toAbbreviatedType()
-        val otherType = other.type.toAbbreviatedType()
-        return thisType.equals(otherType)
+        }
+        return analyze {
+            type.isEqualTo(other.type)
+        }
     }
 
     override fun toString(): String {

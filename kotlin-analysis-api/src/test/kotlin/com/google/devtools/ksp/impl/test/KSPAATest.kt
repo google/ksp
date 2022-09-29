@@ -396,6 +396,7 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/multipleModules.kt")
     }
 
+    @Disabled
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
@@ -539,7 +540,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/typeAlias.kt")
     }
 
-    @Disabled
     @TestMetadata("typeAliasComparison.kt")
     @Test
     fun testTypeAliasComparison() {
