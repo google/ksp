@@ -6,6 +6,7 @@ Kotlin Symbol Processing (KSP) is an API that you can use to develop
 lightweight compiler plugins. KSP provides a simplified compiler plugin
 API that leverages the power of Kotlin while keeping the learning curve at
 a minimum. Compared to KAPT, annotation processors that use KSP can run up to 2x faster.
+Check out [google/ksp](https://github.com/google/ksp) for the original.
 
 Most of the documentation of KSP can be found on [kotlinlang.org](https://kotlinlang.org/docs/ksp-overview.html). Here are some handy links:
 
