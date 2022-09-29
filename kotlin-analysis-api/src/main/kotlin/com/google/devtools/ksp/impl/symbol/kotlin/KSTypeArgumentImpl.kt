@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
@@ -30,10 +31,11 @@ import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgument
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 
-class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeArgument) : KSTypeArgument {
-    companion object : KSObjectCache<KtTypeArgument, KSTypeArgumentImpl>() {
-        fun getCached(ktTypeArgument: KtTypeArgument) =
-            cache.getOrPut(ktTypeArgument) { KSTypeArgumentImpl(ktTypeArgument) }
+class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeArgument, override val parent: KSNode?) :
+    KSTypeArgument {
+    companion object : KSObjectCache<IdKeyPair<KtTypeArgument, KSNode?>, KSTypeArgumentImpl>() {
+        fun getCached(ktTypeArgument: KtTypeArgument, parent: KSNode? = null) =
+            cache.getOrPut(IdKeyPair(ktTypeArgument, parent)) { KSTypeArgumentImpl(ktTypeArgument, parent) }
     }
 
     override val variance: Variance by lazy {
@@ -58,12 +60,9 @@ class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeA
         ktTypeArgument.type?.annotations() ?: emptySequence()
     }
 
-    override val origin: Origin = Origin.KOTLIN
+    override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
 
     override val location: Location
-        get() = TODO("Not yet implemented")
-
-    override val parent: KSNode?
         get() = TODO("Not yet implemented")
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
