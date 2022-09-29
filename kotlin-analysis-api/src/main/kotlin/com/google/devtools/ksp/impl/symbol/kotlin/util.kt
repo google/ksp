@@ -59,27 +59,69 @@ internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
         ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
 }
 
-internal fun KtType.render(): String {
+internal fun KtAnnotationApplication.render(): String {
+    return buildString {
+        append("@")
+        if (this@render.useSiteTarget != null) {
+            append(this@render.useSiteTarget!!.renderName + ":")
+        }
+        append(this@render.classId!!.shortClassName.asString())
+        this@render.arguments.forEach {
+            append(it.expression.render())
+        }
+    }
+}
+
+internal fun KtAnnotationValue.render(): String {
     return when (this) {
-        is KtNonErrorClassType -> classId.shortClassName.asString() + if (typeArguments.isNotEmpty()) {
-            typeArguments.joinToString(separator = ",", prefix = "<", postfix = ">") {
-                when (it) {
-                    is KtStarProjectionTypeArgument -> "*"
-                    is KtTypeArgumentWithVariance ->
-                        "${it.variance}" + "${if (it.variance != Variance.INVARIANT) " " else ""}${it.type.render()}"
+        is KtAnnotationApplicationValue -> annotationValue.render()
+        is KtArrayAnnotationValue -> values.joinToString(",", "{", "}") { it.render() }
+        is KtConstantAnnotationValue -> constantValue.renderAsKotlinConstant()
+        is KtEnumEntryAnnotationValue -> callableId.toString()
+        is KtKClassAnnotationValue.KtErrorClassAnnotationValue -> "<Error class>"
+        is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> "$ktClass::class"
+        is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> "$classId::class"
+        is KtUnsupportedAnnotationValue -> throw IllegalStateException("Unsupported annotation value: $this")
+    }
+}
+
+internal fun KtType.render(): String {
+    return buildString {
+        annotations.forEach {
+            append("[${it.render()}] ")
+        }
+        append(
+            when (this@render) {
+                is KtNonErrorClassType -> buildString {
+                    val symbol = this@render.classifierSymbol()
+                    if (symbol is KtTypeAliasSymbol) {
+                        append("[typealias ${symbol.name.asString()}]")
+                    } else {
+                        append(classSymbol.name?.asString())
+                        if (typeArguments.isNotEmpty()) {
+                            typeArguments.joinToString(separator = ",", prefix = "<", postfix = ">") {
+                                when (it) {
+                                    is KtStarProjectionTypeArgument -> "*"
+                                    is KtTypeArgumentWithVariance ->
+                                        "${it.variance}" +
+                                            "${if (it.variance != Variance.INVARIANT) " " else ""}${it.type.render()}"
+                                }
+                            }.also { append(it) }
+                        }
+                    }
                 }
-            }
-        } else ""
-        is KtClassErrorType -> "<ERROR TYPE>"
-        is KtCapturedType -> asStringForDebugging()
-        is KtDefinitelyNotNullType -> original.render() + "!"
-        is KtDynamicType -> "<dynamic type>"
-        is KtFlexibleType -> "(${lowerBound.render()}..${upperBound.render()})"
-        is KtIntegerLiteralType -> "ILT: $value"
-        is KtIntersectionType ->
-            this.conjuncts.joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render() }
-        is KtTypeParameterType -> asStringForDebugging()
-    } + if (nullability == KtTypeNullability.NULLABLE) "?" else ""
+                is KtClassErrorType -> "<ERROR TYPE>"
+                is KtCapturedType -> asStringForDebugging()
+                is KtDefinitelyNotNullType -> original.render() + " & Any"
+                is KtDynamicType -> "<dynamic type>"
+                is KtFlexibleType -> "(${lowerBound.render()}..${upperBound.render()})"
+                is KtIntegerLiteralType -> "ILT: $value"
+                is KtIntersectionType ->
+                    this@render.conjuncts.joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render() }
+                is KtTypeParameterType -> asStringForDebugging()
+            } + if (nullability == KtTypeNullability.NULLABLE) "?" else ""
+        )
+    }
 }
 
 internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
@@ -220,17 +262,23 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
     return try {
         when (this) {
             is KtTypeParameterType -> this.symbol
+            // TODO: upstream is not exposing enough information for captured types.
             is KtCapturedType -> TODO("fix in upstream")
             is KtClassErrorType -> null
             is KtFunctionalType -> classSymbol
             is KtUsualClassType -> classSymbol
             is KtDefinitelyNotNullType -> original.classifierSymbol()
             is KtDynamicType -> null
+            // flexible types have 2 bounds, using lower bound for a safer approximation.
+            // TODO: find a case where lower bound is not appropriate.
             is KtFlexibleType -> lowerBound.classifierSymbol()
             is KtIntegerLiteralType -> null
+            // TODO: KSP does not support intersection type.
             is KtIntersectionType -> null
         }
     } catch (e: KotlinExceptionWithAttachments) {
+        // The implementation for getting symbols from a type throws an excpetion
+        // when it can't find the corresponding class symbol fot the given class ID.
         null
     }
 }

@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
@@ -37,8 +38,24 @@ class KSTypeReferenceImpl private constructor(
             cache.getOrPut(IdKeyTriple(type, parent, index)) { KSTypeReferenceImpl(type, parent, index) }
     }
 
-    // FIXME: return correct reference element.
-    override val element: KSReferenceElement? = null
+    override val element: KSReferenceElement? by lazy {
+        if (parent == null || parent.origin == Origin.SYNTHETIC) {
+            null
+        } else {
+            when (ktType) {
+                is KtFunctionalType -> KSCallableReferenceImpl.getCached(ktType, this@KSTypeReferenceImpl)
+                is KtDynamicType -> KSDynamicReferenceImpl.getCached(this@KSTypeReferenceImpl)
+                is KtUsualClassType -> KSClassifierReferenceImpl.getCached(ktType, this@KSTypeReferenceImpl)
+                is KtFlexibleType -> KSClassifierReferenceImpl.getCached(
+                    ktType.lowerBound as KtUsualClassType,
+                    this@KSTypeReferenceImpl
+                )
+                is KtClassErrorType -> null
+                is KtTypeParameterType -> null
+                else -> throw IllegalStateException("Unexpected type element ${ktType.javaClass}, $ExceptionMessage")
+            }
+        }
+    }
 
     override fun resolve(): KSType {
         // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
