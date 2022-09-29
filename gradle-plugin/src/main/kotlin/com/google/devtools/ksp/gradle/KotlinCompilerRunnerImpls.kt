@@ -51,6 +51,7 @@ import javax.inject.Inject
 internal inline fun <reified T : Any?> ObjectFactory.property() = property(T::class.java)
 internal inline fun <reified T : Any?> ObjectFactory.property(initialValue: T) = property<T>().value(initialValue)
 
+// TODO: All the properties should be configured by KGP
 abstract class KotlinCompilerRunnerImpl @Inject constructor(
     task: Task,
     objectFactory: ObjectFactory,

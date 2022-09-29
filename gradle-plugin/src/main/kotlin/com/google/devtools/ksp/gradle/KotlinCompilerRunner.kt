@@ -35,6 +35,9 @@ import org.jetbrains.kotlin.gradle.utils.newInstance
 import java.io.File
 
 interface KotlinCompilerRunner {
+    // TODO: Remove those properties when getting into KGP.
+    // They should be configured by KGP. For now, they allow KSP to copy the settings from compilation task.
+
     @get:Internal
     val compilerExecutionStrategy: Property<KotlinCompilerExecutionStrategy>
 
@@ -84,6 +87,9 @@ interface KotlinNativeCompilerRunner : KotlinCompilerRunner {
     )
 }
 
+// TODO: Maybe move those functions into proper KGP class when getting into KGP.
+
+// TODO: Remove objectFactory when getting into KGP.
 fun createKotlinJvmCompilerRunner(
     task: Task,
     objectFactory: ObjectFactory,
@@ -91,6 +97,7 @@ fun createKotlinJvmCompilerRunner(
     return objectFactory.newInstance<KotlinJvmCompilerRunnerImpl>(task)
 }
 
+// TODO: Remove objectFactory when getting into KGP.
 fun createKotlinJsCompilerRunner(
     task: Task,
     objectFactory: ObjectFactory,
@@ -98,6 +105,7 @@ fun createKotlinJsCompilerRunner(
     return objectFactory.newInstance<KotlinJsCompilerRunnerImpl>(task)
 }
 
+// TODO: Remove objectFactory when getting into KGP.
 fun createKotlinMetadataCompilerRunner(
     task: Task,
     objectFactory: ObjectFactory,
@@ -105,6 +113,7 @@ fun createKotlinMetadataCompilerRunner(
     return objectFactory.newInstance<KotlinMetadataCompilerRunnerImpl>(task)
 }
 
+// TODO: Remove objectFactory when getting into KGP.
 fun createKotlinNativeCompilerRunner(
     task: Task,
     objectFactory: ObjectFactory,
