@@ -28,10 +28,12 @@ import org.gradle.process.ExecOperations
 import org.gradle.workers.WorkerExecutor
 import org.jetbrains.kotlin.build.report.metrics.BuildMetricsReporter
 import org.jetbrains.kotlin.build.report.metrics.BuildMetricsReporterImpl
+import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
-import org.jetbrains.kotlin.cli.common.arguments.K2NativeCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.isIrBackendEnabled
+import org.jetbrains.kotlin.cli.common.arguments.isPreIrBackendDisabled
 import org.jetbrains.kotlin.compilerRunner.CompilerExecutionSettings
 import org.jetbrains.kotlin.compilerRunner.GradleCompilerEnvironment
 import org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers
@@ -45,6 +47,9 @@ import org.jetbrains.kotlin.gradle.tasks.GradleCompileTaskProvider
 import org.jetbrains.kotlin.gradle.utils.newInstance
 import org.jetbrains.kotlin.gradle.utils.propertyWithNewInstance
 import org.jetbrains.kotlin.konan.target.KonanTarget
+import org.jetbrains.kotlin.library.impl.isKotlinLibrary
+import org.jetbrains.kotlin.utils.JsLibraryUtils
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import javax.inject.Inject
 
@@ -105,6 +110,20 @@ abstract class KotlinCompilerRunnerImpl @Inject constructor(
     }
 }
 
+internal fun CommonCompilerArguments.copyFrom(args: KotlinCompilerArguments) {
+    freeArgs = args.freeArgs
+    verbose = args.verbose
+    allWarningsAsErrors = args.allWarningsAsErrors
+    languageVersion = args.languageVersion
+    apiVersion = args.apiVersion
+    useK2 = args.useK2
+    incrementalCompilation = args.incrementalCompilation
+    pluginOptions = args.pluginOptions.toTypedArray()
+    pluginClasspaths = args.pluginClasspaths.map { it.absolutePath }.toTypedArray()
+    expectActualLinker = args.expectActualLinker
+    multiPlatform = args.multiPlatform
+}
+
 abstract class KotlinJvmCompilerRunnerImpl @Inject constructor(
     task: Task,
     objectFactory: ObjectFactory,
@@ -112,19 +131,35 @@ abstract class KotlinJvmCompilerRunnerImpl @Inject constructor(
 ) : KotlinCompilerRunnerImpl(task, objectFactory, workerExecutor), KotlinJvmCompilerRunner {
 
     override fun runJvmCompilerAsync(
-        args: K2JVMCompilerArguments,
+        args: KotlinJvmCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>
     ) {
         val environment = prepareEnvironment(args.allWarningsAsErrors, outputs)
         val compilerRunner = prepareCompilerRunner()
+        val compilerArgs = K2JVMCompilerArguments().apply {
+            copyFrom(args)
+
+            friendPaths = args.friendPaths.map { it.absolutePath }.toTypedArray()
+            classpath = args.libraries.map { it.absolutePath }.joinToString(File.pathSeparator)
+            destination = args.destination?.absolutePath
+
+            noJdk = args.noJdk
+            noStdlib = args.noStdlib
+            noReflect = args.noReflect
+            moduleName = args.moduleName
+            jvmTarget = args.jvmTarget
+            jdkRelease = args.jdkRelease
+            allowNoSourceFiles = args.allowNoSourceFiles
+            javaSourceRoots = args.javaSourceRoots.map { it.absolutePath }.toTypedArray()
+        }
 
         compilerRunner.runJvmCompilerAsync(
             sourcesToCompile = sources,
             commonSources = commonSources,
             javaPackagePrefix = null,
-            args = args,
+            args = compilerArgs,
             environment = environment,
             jdkHome = defaultKotlinJavaToolchain.get().providedJvm.get().javaHome,
             null
@@ -138,16 +173,52 @@ abstract class KotlinJsCompilerRunnerImpl @Inject constructor(
     workerExecutor: WorkerExecutor
 ) : KotlinCompilerRunnerImpl(task, objectFactory, workerExecutor), KotlinJsCompilerRunner {
 
+    private fun libFilter(args: K2JSCompilerArguments, file: File): Boolean =
+        file.exists() && when {
+            // JS_IR
+            args.isIrBackendEnabled() && args.isPreIrBackendDisabled() ->
+                isKotlinLibrary(file)
+
+            // JS_LEGACY
+            !args.isIrBackendEnabled() && !args.isPreIrBackendDisabled() ->
+                JsLibraryUtils.isKotlinJavascriptLibrary(file)
+
+            // JS_BOTH
+            args.isIrBackendEnabled() && !args.isPreIrBackendDisabled() ->
+                isKotlinLibrary(file) && JsLibraryUtils.isKotlinJavascriptLibrary(file)
+
+            else -> throw IllegalArgumentException("Cannot determine JS backend.")
+        }
+
     override fun runJsCompilerAsync(
-        args: K2JSCompilerArguments,
+        args: KotlinJsCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>
     ) {
         val environment = prepareEnvironment(args.allWarningsAsErrors, outputs)
         val compilerRunner = prepareCompilerRunner()
+        val compilerArgs = K2JSCompilerArguments().apply {
+            copyFrom(args)
 
-        compilerRunner.runJsCompilerAsync(sources, commonSources, args, environment, null)
+            outputFile = args.destination?.absolutePath
+
+            noStdlib = args.noStdlib
+            irOnly = args.irOnly
+            irProduceJs = args.irProduceJs
+            irProduceKlibDir = args.irProduceKlibDir
+            irProduceKlibFile = args.irProduceKlibFile
+            irBuildCache = args.irBuildCache
+            wasm = args.wasm
+            target = args.target
+
+            friendModules = args.friendPaths.filter { libFilter(this, it) }
+                .map { it.absolutePath }.joinToString(File.pathSeparator)
+            libraries = args.libraries.filter { libFilter(this, it) }
+                .map { it.absolutePath }.joinToString(File.pathSeparator)
+        }
+
+        compilerRunner.runJsCompilerAsync(sources, commonSources, compilerArgs, environment, null)
     }
 }
 
@@ -158,15 +229,22 @@ abstract class KotlinMetadataCompilerRunnerImpl @Inject constructor(
 ) : KotlinCompilerRunnerImpl(task, objectFactory, workerExecutor), KotlinMetadataCompilerRunner {
 
     override fun runMetadataCompilerAsync(
-        args: K2MetadataCompilerArguments,
+        args: KotlinMetadataCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>
     ) {
         val environment = prepareEnvironment(args.allWarningsAsErrors, outputs)
         val compilerRunner = prepareCompilerRunner()
+        val compilerArgs = K2MetadataCompilerArguments().apply {
+            copyFrom(args)
 
-        compilerRunner.runMetadataCompilerAsync(sources, commonSources, args, environment)
+            friendPaths = args.friendPaths.map { it.absolutePath }.toTypedArray()
+            classpath = args.libraries.map { it.absolutePath }.joinToString(File.pathSeparator)
+            destination = args.destination?.absolutePath
+        }
+
+        compilerRunner.runMetadataCompilerAsync(sources, commonSources, compilerArgs, environment)
     }
 }
 
@@ -181,7 +259,7 @@ abstract class KotlinNativeCompilerRunnerImpl @Inject constructor(
         .KotlinNativeCompilerRunner.Settings.fromProject(task.project)
 
     override fun runNativeCompilerAsync(
-        args: K2NativeCompilerArguments,
+        args: KotlinNativeCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>,
@@ -195,10 +273,10 @@ abstract class KotlinNativeCompilerRunnerImpl @Inject constructor(
             "-p", "library",
             "-Xmulti-platform"
         )
-        args.libraries?.flatMap { listOf("-l", it) }?.let { buildArgs.addAll(it) }
-        args.friendModules?.let {
+        args.libraries.flatMap { listOf("-l", it.absolutePath) }.let { buildArgs.addAll(it) }
+        args.friendPaths.ifNotEmpty {
             buildArgs.add("-friend-modules")
-            buildArgs.add(it)
+            buildArgs.add(joinToString(File.pathSeparator))
         }
 
         if (args.verbose)
@@ -206,8 +284,8 @@ abstract class KotlinNativeCompilerRunnerImpl @Inject constructor(
         if (args.allWarningsAsErrors)
             buildArgs.add("-Werror")
 
-        args.pluginClasspaths?.map { "-Xplugin=$it" }?.let { buildArgs.addAll(it) }
-        args.pluginOptions?.flatMap { listOf("-P", it) }?.let { buildArgs.addAll(it) }
+        args.pluginClasspaths.map { "-Xplugin=${it.absolutePath}" }.let { buildArgs.addAll(it) }
+        args.pluginOptions.flatMap { listOf("-P", it) }.let { buildArgs.addAll(it) }
 
         args.languageVersion?.let {
             buildArgs.add("-language-version")

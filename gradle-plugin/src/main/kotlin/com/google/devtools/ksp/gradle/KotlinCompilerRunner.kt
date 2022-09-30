@@ -26,10 +26,6 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Internal
-import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
-import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
-import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
-import org.jetbrains.kotlin.cli.common.arguments.K2NativeCompilerArguments
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilerExecutionStrategy
 import org.jetbrains.kotlin.gradle.utils.newInstance
 import java.io.File
@@ -53,7 +49,7 @@ interface KotlinCompilerRunner {
 
 interface KotlinJvmCompilerRunner : KotlinCompilerRunner {
     fun runJvmCompilerAsync(
-        args: K2JVMCompilerArguments,
+        args: KotlinJvmCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>
@@ -62,7 +58,7 @@ interface KotlinJvmCompilerRunner : KotlinCompilerRunner {
 
 interface KotlinJsCompilerRunner : KotlinCompilerRunner {
     fun runJsCompilerAsync(
-        args: K2JSCompilerArguments,
+        args: KotlinJsCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>
@@ -71,7 +67,7 @@ interface KotlinJsCompilerRunner : KotlinCompilerRunner {
 
 interface KotlinMetadataCompilerRunner : KotlinCompilerRunner {
     fun runMetadataCompilerAsync(
-        args: K2MetadataCompilerArguments,
+        args: KotlinMetadataCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>
@@ -80,7 +76,7 @@ interface KotlinMetadataCompilerRunner : KotlinCompilerRunner {
 
 interface KotlinNativeCompilerRunner : KotlinCompilerRunner {
     fun runNativeCompilerAsync(
-        args: K2NativeCompilerArguments,
+        args: KotlinNativeCompilerArguments,
         sources: List<File>,
         commonSources: List<File>,
         outputs: List<File>,
