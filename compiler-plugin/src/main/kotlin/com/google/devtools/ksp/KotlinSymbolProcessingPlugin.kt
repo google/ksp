@@ -70,7 +70,7 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
             languageVersion = configuration.languageVersionSettings.languageVersion.toKotlinVersion()
             apiVersion = configuration.languageVersionSettings.apiVersion.toKotlinVersion()
             compilerVersion = KotlinCompilerVersion.getVersion().toKotlinVersion()
-        }?.build() ?: return
+        }?.build() ?: throw IllegalStateException("ksp: ksp options not found!")
         val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
             ?: throw IllegalStateException("ksp: message collector not found!")
         val wrappedMessageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
