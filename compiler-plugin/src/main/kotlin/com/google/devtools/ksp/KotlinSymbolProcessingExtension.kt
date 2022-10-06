@@ -31,8 +31,14 @@ import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclarationContainer
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.Visibility
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.intellij.openapi.project.Project
@@ -197,6 +203,42 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             },
             newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext, options
         )
+
+        if (!initialized) {
+            // Visit constants so that JavaPsiFacade knows them.
+            // The annotation visitor in ResolverImpl covered newFiles already.
+            // Skip private and local members, which are not visible to Java files.
+            ksFiles.filterIsInstance<KSFileImpl>().filter { it !in dirtyFiles }.forEach {
+                try {
+                    it.accept(
+                        object : KSVisitorVoid() {
+                            private fun visitDeclarationContainer(container: KSDeclarationContainer) {
+                                container.declarations.filterNot {
+                                    it.getVisibility() == Visibility.PRIVATE
+                                }.forEach {
+                                    it.accept(this, Unit)
+                                }
+                            }
+
+                            override fun visitFile(file: KSFile, data: Unit) =
+                                visitDeclarationContainer(file)
+
+                            override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) =
+                                visitDeclarationContainer(classDeclaration)
+
+                            override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+                                if (property.modifiers.contains(Modifier.CONST)) {
+                                    property.getter // force resolution
+                                }
+                            }
+                        },
+                        Unit
+                    )
+                } catch (_: Exception) {
+                    // Do nothing.
+                }
+            }
+        }
 
         val providers = loadProviders()
         if (!initialized) {
