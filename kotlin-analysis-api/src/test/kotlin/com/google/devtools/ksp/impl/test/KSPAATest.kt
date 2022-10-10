@@ -257,7 +257,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/functionTypeAnnotation.kt")
     }
 
-    @Disabled
     @TestMetadata("functionTypes.kt")
     @Test
     fun testFunctionTypes() {
