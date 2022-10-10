@@ -32,6 +32,7 @@ class CodeGeneratorImpl(
     private val javaDir: File,
     private val kotlinDir: File,
     private val resourcesDir: File,
+    private val projectBase: File,
     private val buildDir: File,
     private val anyChangesWildcard: KSFile,
     private val allSources: List<KSFile>,
@@ -154,13 +155,20 @@ class CodeGeneratorImpl(
         associate(sources, file)
     }
 
+    private val File.relativeFile: File
+        get() =
+            if (this.startsWith(buildDir))
+                relativeTo(buildDir)
+            else
+                relativeTo(projectBase)
+
     private fun associate(sources: List<KSFile>, outputPath: File) {
         if (!isIncremental)
             return
 
         val output = outputPath.relativeTo(buildDir)
         sources.forEach { source ->
-            sourceToOutputs.getOrPut(File(source.filePath).relativeTo(buildDir)) { mutableSetOf() }.add(output)
+            sourceToOutputs.getOrPut(File(source.filePath).relativeFile) { mutableSetOf() }.add(output)
         }
     }
 
