@@ -129,7 +129,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         get() = type is KtClassErrorType
 
     override val isFunctionType: Boolean
-        get() = type is KtFunctionalType
+        get() = type is KtFunctionalType && !type.isSuspend
 
     override val isSuspendFunctionType: Boolean
         get() = type is KtFunctionalType && type.isSuspend
