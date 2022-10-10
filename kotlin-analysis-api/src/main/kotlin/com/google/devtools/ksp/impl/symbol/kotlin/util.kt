@@ -99,7 +99,7 @@ internal fun KtType.render(): String {
                     } else {
                         append(classSymbol.name?.asString())
                         if (typeArguments.isNotEmpty()) {
-                            typeArguments.joinToString(separator = ",", prefix = "<", postfix = ">") {
+                            typeArguments.joinToString(separator = ", ", prefix = "<", postfix = ">") {
                                 when (it) {
                                     is KtStarProjectionTypeArgument -> "*"
                                     is KtTypeArgumentWithVariance ->
