@@ -66,6 +66,28 @@ class PlaygroundIT {
     }
 
     @Test
+    fun testArbitraryBuildDir() {
+        Assume.assumeTrue(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("project.buildDir = File(\"D:/build/\")")
+        val result = gradleRunner.withArguments("build").build()
+
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+
+        val artifact = File("D:/build/libs/workload-1.0-SNAPSHOT.jar")
+        Assert.assertTrue(artifact.exists())
+
+        JarFile(artifact).use { jarFile ->
+            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
+            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
+            Assert.assertTrue(jarFile.getEntry("g/G.class").size > 0)
+            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+        }
+    }
+
+    @Test
     fun testAllowSourcesFromOtherPlugins() {
         fun checkGBuilder() {
             val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")

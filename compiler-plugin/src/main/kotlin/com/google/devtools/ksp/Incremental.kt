@@ -230,11 +230,14 @@ class IncrementalContext(
 
     // Ugly, but better than copying the private logics out of stdlib.
     // TODO: get rid of `relativeTo` if possible.
-    private fun String.toRelativeFile(): File =
-        if (this.startsWith(buildDir.path))
+    private fun String.toRelativeFile(): File {
+        val buildDirPrefix = if (buildDir.path.startsWith("/")) buildDir.path else buildDir.path.replace("\\", "/")
+        return if (this.startsWith(buildDirPrefix)) {
             File(this).relativeTo(buildDir)
-        else
+        } else {
             File(this).relativeTo(baseDir)
+        }
+    }
 
     private val KSFile.relativeFile
         get() = filePath.toRelativeFile()

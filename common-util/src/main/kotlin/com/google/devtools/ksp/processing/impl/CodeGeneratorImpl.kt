@@ -156,11 +156,13 @@ class CodeGeneratorImpl(
     }
 
     private val File.relativeFile: File
-        get() =
-            if (this.startsWith(buildDir))
+        get() {
+            val buildDirPrefix = if (buildDir.path.startsWith("/")) buildDir.path else buildDir.path.replace("\\", "/")
+            return if (this.startsWith(buildDirPrefix))
                 relativeTo(buildDir)
             else
                 relativeTo(projectBase)
+        }
 
     private fun associate(sources: List<KSFile>, outputPath: File) {
         if (!isIncremental)
