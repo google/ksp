@@ -39,7 +39,15 @@ abstract class KSPropertyAccessorImpl(
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        ktPropertyAccessorSymbol.psi?.safeAs<KtModifierListOwner>()?.toKSModifiers() ?: emptySet()
+        (ktPropertyAccessorSymbol.psi?.safeAs<KtModifierListOwner>()?.toKSModifiers() ?: emptySet()).let {
+            if (origin == Origin.SYNTHETIC &&
+                (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+            ) {
+                it + Modifier.ABSTRACT
+            } else {
+                it
+            }
+        }
     }
 
     override val origin: Origin by lazy {
