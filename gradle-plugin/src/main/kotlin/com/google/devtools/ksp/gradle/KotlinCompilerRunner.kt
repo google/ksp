@@ -26,6 +26,9 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Internal
+import org.jetbrains.kotlin.gradle.dsl.CompilerCommonOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJvmOptions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilerExecutionStrategy
 import org.jetbrains.kotlin.gradle.utils.newInstance
 import java.io.File
@@ -49,37 +52,50 @@ interface KotlinCompilerRunner {
 
 interface KotlinJvmCompilerRunner : KotlinCompilerRunner {
     fun runJvmCompilerAsync(
-        args: KotlinJvmCompilerArguments,
+        options: CompilerJvmOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File
     )
 }
 
 interface KotlinJsCompilerRunner : KotlinCompilerRunner {
     fun runJsCompilerAsync(
-        args: KotlinJsCompilerArguments,
+        options: CompilerJsOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File
     )
 }
 
 interface KotlinMetadataCompilerRunner : KotlinCompilerRunner {
     fun runMetadataCompilerAsync(
-        args: KotlinMetadataCompilerArguments,
+        options: CompilerCommonOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File
     )
 }
 
 interface KotlinNativeCompilerRunner : KotlinCompilerRunner {
     fun runNativeCompilerAsync(
-        args: KotlinNativeCompilerArguments,
+        options: CompilerCommonOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>,
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File,
+        target: String
     )
 }
 

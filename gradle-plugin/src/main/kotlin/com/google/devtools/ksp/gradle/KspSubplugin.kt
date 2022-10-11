@@ -298,7 +298,7 @@ internal inline fun <reified T : Task> Project.locateTask(name: String): TaskPro
 internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>): TaskProvider<out JavaCompile>? =
     when (compilation) {
         is KotlinJvmAndroidCompilation -> compilation.compileJavaTaskProvider
-        is KotlinWithJavaCompilation -> compilation.compileJavaTaskProvider
+        is KotlinWithJavaCompilation<*, *> -> compilation.compileJavaTaskProvider
         is KotlinJvmCompilation -> compilation.compileJavaTaskProvider // may be null for Kotlin-only JVM target in MPP
         else -> null
     }

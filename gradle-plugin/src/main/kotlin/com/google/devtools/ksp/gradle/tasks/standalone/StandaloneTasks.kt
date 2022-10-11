@@ -19,11 +19,7 @@
 
 package com.google.devtools.ksp.gradle.tasks.standalone
 
-import com.google.devtools.ksp.gradle.KotlinCompilerArguments
-import com.google.devtools.ksp.gradle.KotlinJsCompilerArguments
-import com.google.devtools.ksp.gradle.KotlinJvmCompilerArguments
-import com.google.devtools.ksp.gradle.KotlinMetadataCompilerArguments
-import com.google.devtools.ksp.gradle.KotlinNativeCompilerArguments
+import com.google.devtools.ksp.gradle.CompilerOptionsFactory
 import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.getKspCachesDir
@@ -91,6 +87,11 @@ import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.io.File
 import java.nio.file.Paths
 import javax.inject.Inject
+import org.jetbrains.kotlin.gradle.dsl.CompilerCommonOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerCommonToolOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJvmOptions
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 object StandaloneTasks : KspTaskCreator {
     override fun createKspTask(
@@ -292,7 +293,7 @@ private fun ChangedFiles.hasNonSourceChange(): Boolean {
     }
 }
 
-fun KotlinCompilerArguments.addChangedClasses(changed: KaptClasspathChanges) {
+fun MutableList<String>.addChangedClasses(changed: KaptClasspathChanges) {
     if (changed is KaptClasspathChanges.Known) {
         changed.names.map { it.replace('/', '.').replace('$', '.') }.ifNotEmpty {
             addPluginOptions(listOf(SubpluginOption("changedClasses", joinToString(":"))))
@@ -302,11 +303,11 @@ fun KotlinCompilerArguments.addChangedClasses(changed: KaptClasspathChanges) {
 
 fun SubpluginOption.toArg() = "plugin:${KspGradleSubplugin.KSP_PLUGIN_ID}:$key=$value"
 
-fun KotlinCompilerArguments.addPluginOptions(options: List<SubpluginOption>) {
-    pluginOptions += options.map { it.toArg() }
+fun MutableList<String>.addPluginOptions(options: List<SubpluginOption>) {
+    this.addAll(options.flatMap { listOf("-P", it.toArg()) })
 }
 
-fun KotlinCompilerArguments.addChangedFiles(changedFiles: ChangedFiles) {
+fun MutableList<String>.addChangedFiles(changedFiles: ChangedFiles) {
     if (changedFiles is ChangedFiles.Known) {
         val options = mutableListOf<SubpluginOption>()
         changedFiles.modified.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
@@ -326,17 +327,48 @@ internal fun File.isParentOf(childCandidate: File): Boolean {
     return childCandidatePath.startsWith(parentPath)
 }
 
-private fun KotlinCompilerArguments.fromTask(task: KspTaskStandalone) {
-    useK2 = false
-    incrementalCompilation = false
-    pluginClasspaths = task.pluginClasspath.files.toList()
-    apiVersion = task.kotlinApiVersion.orNull
-    languageVersion = task.kotlinLanguageVersion.orNull
-    verbose = task.verbose.get()
-    multiPlatform = task.multiplatform.get()
-    allWarningsAsErrors = task.allWarningAsErrors.get()
+private fun CompilerCommonToolOptions.from(that: CompilerCommonToolOptions) {
+    // Copy from compilation task
+    allWarningsAsErrors.value(that.allWarningsAsErrors)
+    suppressWarnings.value(that.suppressWarnings)
+    verbose.value(that.verbose)
 
-    addPluginOptions(task.options.get())
+    // NOT COPIED: freeCompilerArgs
+}
+
+private fun CompilerCommonOptions.from(that: CompilerCommonOptions) {
+    // Copy from compilation task
+    (this as CompilerCommonToolOptions).from(that)
+    apiVersion.value(that.apiVersion)
+    languageVersion.value(that.languageVersion)
+
+    // NOT COPIED:
+    useK2.value(false)
+}
+
+private fun CompilerJvmOptions.from(that: CompilerJvmOptions) {
+    // Copy from compilation task
+    (this as CompilerCommonOptions).from(that)
+    javaParameters.value(that.javaParameters)
+    jvmTarget.value(that.jvmTarget)
+    moduleName.value(that.moduleName)
+
+    // NOT COPIED:
+    noJdk.value(true)
+}
+
+private fun CompilerJsOptions.from(that: CompilerJsOptions) {
+    // Copy from compilation task
+    (this as CompilerCommonOptions).from(that)
+    friendModulesDisabled.value(that.friendModulesDisabled)
+    main.value(that.main)
+    metaInfo.value(that.metaInfo)
+    moduleKind.value(that.moduleKind)
+    moduleName.value(that.moduleName)
+    noStdlib.value(that.noStdlib)
+    target.value(that.target)
+
+    // NOT COPIED: outputFile, sourceMap, sourceMapEmbedSources, sourceMapPrefix, typedArrays
 }
 
 @CacheableTask
@@ -345,9 +377,6 @@ abstract class KspTaskJvm @Inject constructor(
 ) : KspTaskStandalone, CompileUsingKotlinDaemon, DefaultTask() {
     @get:Nested
     val compilerRunner = createKotlinJvmCompilerRunner(this, objectFactory)
-
-    @get:Input
-    abstract val moduleName: Property<String>
 
     @get:Input
     var isIntermoduleIncremental: Boolean = false
@@ -370,25 +399,21 @@ abstract class KspTaskJvm @Inject constructor(
             classpathSnapshotProperties.classpathSnapshot
         )
 
-    @get:Internal
-    abstract val noJdk: Property<Boolean>
+    @get:Nested
+    val compilerOptions: CompilerJvmOptions = CompilerOptionsFactory.createCompilerJvmOptions(objectFactory)
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
-        val args = KotlinJvmCompilerArguments().apply {
-            // Common
-            fromTask(this@KspTaskJvm)
+        val freeArgs = mutableListOf(
+            "-Xallow-no-source-files",
+            "-no-stdlib",
+        )
 
-            // JVM
-            noJdk = this@KspTaskJvm.noJdk.get()
-            allowNoSourceFiles = true
-            destination = this@KspTaskJvm.destination
-            noReflect = true
-            noStdlib = true
-            libraries = this@KspTaskJvm.libraries.files.toList()
-            friendPaths = this@KspTaskJvm.friendPaths.files.toList()
-            moduleName = this@KspTaskJvm.moduleName.get()
-        }
+        if (multiplatform.get())
+            freeArgs.add("-Xmulti-platform")
+
+        freeArgs.addAll(pluginClasspath.map { "-Xplugin=${it.absolutePath}" })
+        freeArgs.addPluginOptions(options.get())
 
         // Clean outputs. Backups will be copied back if incremental.
         // TODO: leave outputs untouched and only restore outputs if build fails.
@@ -402,7 +427,7 @@ abstract class KspTaskJvm @Inject constructor(
                 // 1. unknown changes, or
                 // 2. changes in annotation processors.
                 val classpathChanges = findClasspathChanges(changedFiles)
-                args.addChangedClasses(classpathChanges)
+                freeArgs.addChangedClasses(classpathChanges)
             } else {
                 if (changedFiles.hasNonSourceChange()) {
                     clearIncCache()
@@ -411,13 +436,16 @@ abstract class KspTaskJvm @Inject constructor(
         } else {
             clearIncCache()
         }
-        args.addChangedFiles(changedFiles)
+        freeArgs.addChangedFiles(changedFiles)
 
         compilerRunner.runJvmCompilerAsync(
-            args,
+            compilerOptions,
+            freeArgs,
             allSources.files.filter { !destination.isParentOf(it) },
             commonSources.files.filter { !destination.isParentOf(it) },
-            outputs.files.toList()
+            friendPaths.files.toList(),
+            libraries.files.toList(),
+            destination
         )
     }
 
@@ -433,12 +461,12 @@ abstract class KspTaskJvm @Inject constructor(
         compilerRunner.useDaemonFallbackStrategy.set(kotlinCompile.useDaemonFallbackStrategy)
         compilerRunner.kotlinDaemonJvmArguments.set(kotlinCompile.kotlinDaemonJvmArguments)
 
+        kotlinCompile as KotlinCompilationTask<CompilerJvmOptions>
+        compilerOptions.from(kotlinCompile.compilerOptions)
         // Android compilation doesn't include JDK libraries.
         // Copying the settings from KotlinCompilation is complicated and implementation dependent. So let's check
         // for Android explicitly.
-        noJdk.value(kotlinCompilation is KotlinJvmAndroidCompilation)
-
-        moduleName.value(kotlinCompilation.moduleName)
+        compilerOptions.noJdk.value(kotlinCompilation is KotlinJvmAndroidCompilation)
 
         isIntermoduleIncremental =
             (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) && isKspIncremental
@@ -538,6 +566,9 @@ abstract class KspTaskJs @Inject constructor(
     @get:Nested
     val compilerRunner = createKotlinJsCompilerRunner(this, objectFactory)
 
+    @get:Nested
+    val compilerOptions: CompilerJsOptions = CompilerOptionsFactory.createCompilerJsOptions(objectFactory)
+
     @get:Internal
     abstract val freeArgs: ListProperty<String>
 
@@ -550,28 +581,14 @@ abstract class KspTaskJs @Inject constructor(
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
-        val args = KotlinJsCompilerArguments().apply {
-            // Common
-            fromTask(this@KspTaskJs)
+        val freeArgs = mutableListOf<String>()
 
-            // JS
-            destination = this@KspTaskJs.destination
-            noStdlib = true
-            libraries = this@KspTaskJs.libraries.files.toList()
-            friendPaths = this@KspTaskJs.friendPaths.files.toList()
-            destination = File(destination, "dummyOutput.js")
+        if (multiplatform.get())
+            freeArgs.add("-Xmulti-platform")
 
-            this@KspTaskJs.freeArgs.get().forEach {
-                when (it) {
-                    "-Xir-only" -> irOnly = true
-                    "-Xir-produce-js" -> irProduceJs = true
-                    "-Xir-produce-klib-file" -> irProduceKlibFile = true
-                    "-Xir-produce-klib-dir" -> irProduceKlibDir = true
-                    "-Xir-build-cache" -> irBuildCache = true
-                    "-Xwasm" -> wasm = true
-                }
-            }
-        }
+        freeArgs.addAll(pluginClasspath.map { "-Xplugin=${it.absolutePath}" })
+        freeArgs.addPluginOptions(options.get())
+        freeArgs.addAll(this@KspTaskJs.freeArgs.get().filter { it in backendSelectionArgs })
 
         // Clean outputs. Backups will be copied back if incremental.
         // TODO: leave outputs untouched and only restore outputs if build fails.
@@ -586,15 +603,27 @@ abstract class KspTaskJs @Inject constructor(
         } else {
             clearIncCache()
         }
-        args.addChangedFiles(changedFiles)
+        freeArgs.addChangedFiles(changedFiles)
 
         compilerRunner.runJsCompilerAsync(
-            args,
+            compilerOptions,
+            freeArgs,
             allSources.files.toList(),
             commonSources.files.toList(),
-            outputs.files.toList()
+            friendPaths.files.toList(),
+            libraries.files.toList(),
+            destination
         )
     }
+
+    private val backendSelectionArgs = setOf(
+        "-Xir-only",
+        "-Xir-produce-js",
+        "-Xir-produce-klib-file",
+        "-Xir-produce-klib-dir",
+        "-Xir-build-cache",
+        "-Xwasm",
+    )
 
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilation<*>,
@@ -608,7 +637,9 @@ abstract class KspTaskJs @Inject constructor(
         compilerRunner.useDaemonFallbackStrategy.set(kotlinCompile.useDaemonFallbackStrategy)
         compilerRunner.kotlinDaemonJvmArguments.set(kotlinCompile.kotlinDaemonJvmArguments)
 
-        freeArgs.value(kotlinCompilation.kotlinOptions.freeCompilerArgs)
+        kotlinCompile as KotlinCompilationTask<CompilerJsOptions>
+        compilerOptions.from(kotlinCompile.compilerOptions)
+        freeArgs.value(kotlinCompile.compilerOptions.freeCompilerArgs)
     }
 }
 
@@ -626,18 +657,20 @@ abstract class KspTaskMetadata @Inject constructor(
             commonSources,
         )
 
+    @get:Nested
+    val compilerOptions: CompilerCommonOptions = CompilerOptionsFactory.createCompilerCommonOptions(objectFactory)
+
     @TaskAction
     fun execute(inputChanges: InputChanges) {
-        val args = KotlinMetadataCompilerArguments().apply {
-            // Common
-            fromTask(this@KspTaskMetadata)
+        val freeArgs = mutableListOf<String>(
+            "-Xexpect-actual-linker"
+        )
 
-            // Metadata
-            destination = this@KspTaskMetadata.destination
-            libraries = this@KspTaskMetadata.libraries.files.toList()
-            friendPaths = this@KspTaskMetadata.friendPaths.files.toList()
-            expectActualLinker = true
-        }
+        if (multiplatform.get())
+            freeArgs.add("-Xmulti-platform")
+
+        freeArgs.addAll(pluginClasspath.map { "-Xplugin=${it.absolutePath}" })
+        freeArgs.addPluginOptions(options.get())
 
         // Clean outputs. Backups will be copied back if incremental.
         // TODO: leave outputs untouched and only restore outputs if build fails.
@@ -652,13 +685,16 @@ abstract class KspTaskMetadata @Inject constructor(
         } else {
             clearIncCache()
         }
-        args.addChangedFiles(changedFiles)
+        freeArgs.addChangedFiles(changedFiles)
 
         compilerRunner.runMetadataCompilerAsync(
-            args,
-            allSources.files.toList(),
-            commonSources.files.toList(),
-            outputs.files.toList()
+            compilerOptions,
+            freeArgs,
+            allSources.files.filter { !destination.isParentOf(it) },
+            commonSources.files.filter { !destination.isParentOf(it) },
+            friendPaths.files.toList(),
+            libraries.files.toList(),
+            destination
         )
     }
 
@@ -673,6 +709,9 @@ abstract class KspTaskMetadata @Inject constructor(
         compilerRunner.compilerExecutionStrategy.set(kotlinCompile.compilerExecutionStrategy)
         compilerRunner.useDaemonFallbackStrategy.set(kotlinCompile.useDaemonFallbackStrategy)
         compilerRunner.kotlinDaemonJvmArguments.set(kotlinCompile.kotlinDaemonJvmArguments)
+
+        kotlinCompile as KotlinCompilationTask<CompilerCommonOptions>
+        compilerOptions.from(kotlinCompile.compilerOptions)
     }
 }
 
@@ -693,19 +732,20 @@ abstract class KspTaskNative @Inject constructor(
     @get:Input
     abstract val target: Property<String>
 
+    @get:Nested
+    val compilerOptions: CompilerCommonOptions = CompilerOptionsFactory.createCompilerCommonOptions(objectFactory)
+
     @TaskAction
     fun execute(inputChanges: InputChanges) {
-        val args = KotlinNativeCompilerArguments().apply {
-            // Common
-            fromTask(this@KspTaskNative)
+        val freeArgs = mutableListOf<String>(
+            "-Xexpect-actual-linker"
+        )
 
-            // Native
-            destination = this@KspTaskNative.destination
-            libraries = this@KspTaskNative.libraries.files.toList()
-            expectActualLinker = true
-            friendPaths = this@KspTaskNative.friendPaths.files.toList()
-            target = this@KspTaskNative.target.get()
-        }
+        if (multiplatform.get())
+            freeArgs.add("-Xmulti-platform")
+
+        freeArgs.addAll(pluginClasspath.map { "-Xplugin=${it.absolutePath}" })
+        freeArgs.addPluginOptions(options.get())
 
         // Clean outputs. Backups will be copied back if incremental.
         // TODO: leave outputs untouched and only restore outputs if build fails.
@@ -720,13 +760,17 @@ abstract class KspTaskNative @Inject constructor(
         } else {
             clearIncCache()
         }
-        args.addChangedFiles(changedFiles)
+        freeArgs.addChangedFiles(changedFiles)
 
         compilerRunner.runNativeCompilerAsync(
-            args,
-            allSources.toList(),
-            commonSources.toList(),
-            outputs.files.toList(),
+            compilerOptions,
+            freeArgs,
+            allSources.files.filter { !destination.isParentOf(it) },
+            commonSources.files.filter { !destination.isParentOf(it) },
+            friendPaths.files.toList(),
+            libraries.files.toList(),
+            File(destination, "dummy.out"),
+            target.get()
         )
     }
 
@@ -735,6 +779,9 @@ abstract class KspTaskNative @Inject constructor(
         kotlinCompile: KotlinCompileTool,
     ) {
         target.value((kotlinCompile as KotlinNativeCompile).target)
+
+        kotlinCompile as KotlinCompilationTask<CompilerCommonOptions>
+        compilerOptions.from(kotlinCompile.compilerOptions)
     }
 }
 

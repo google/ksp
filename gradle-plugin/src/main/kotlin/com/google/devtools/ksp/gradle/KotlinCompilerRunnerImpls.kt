@@ -28,7 +28,6 @@ import org.gradle.process.ExecOperations
 import org.gradle.workers.WorkerExecutor
 import org.jetbrains.kotlin.build.report.metrics.BuildMetricsReporter
 import org.jetbrains.kotlin.build.report.metrics.BuildMetricsReporterImpl
-import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
@@ -52,6 +51,13 @@ import org.jetbrains.kotlin.utils.JsLibraryUtils
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import javax.inject.Inject
+import org.jetbrains.kotlin.gradle.dsl.CompilerCommonOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerCommonOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.CompilerJvmOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJvmOptionsDefault
+import org.jetbrains.kotlin.gradle.logging.GradleErrorMessageCollector
 
 internal inline fun <reified T : Any?> ObjectFactory.property() = property(T::class.java)
 internal inline fun <reified T : Any?> ObjectFactory.property(initialValue: T) = property<T>().value(initialValue)
@@ -86,9 +92,10 @@ abstract class KotlinCompilerRunnerImpl @Inject constructor(
     @Internal
     internal fun prepareEnvironment(allWarningsAsErrors: Boolean, outputs: List<File>): GradleCompilerEnvironment {
         val messageCollector = GradlePrintingMessageCollector(GradleKotlinLogger(logger), allWarningsAsErrors)
+        val errorMessageCollector = GradleErrorMessageCollector(messageCollector)
         val outputItemCollector = OutputItemsCollectorImpl()
         return GradleCompilerEnvironment(
-            compilerClasspath.files.toList(), messageCollector, outputItemCollector,
+            compilerClasspath.files.toList(), errorMessageCollector, outputItemCollector,
             reportingSettings = ReportingSettings(),
             outputFiles = outputs
         )
@@ -110,49 +117,31 @@ abstract class KotlinCompilerRunnerImpl @Inject constructor(
     }
 }
 
-internal fun CommonCompilerArguments.copyFrom(args: KotlinCompilerArguments) {
-    freeArgs = args.freeArgs
-    verbose = args.verbose
-    allWarningsAsErrors = args.allWarningsAsErrors
-    languageVersion = args.languageVersion
-    apiVersion = args.apiVersion
-    useK2 = args.useK2
-    incrementalCompilation = args.incrementalCompilation
-    pluginOptions = args.pluginOptions.toTypedArray()
-    pluginClasspaths = args.pluginClasspaths.map { it.absolutePath }.toTypedArray()
-    expectActualLinker = args.expectActualLinker
-    multiPlatform = args.multiPlatform
-}
-
 abstract class KotlinJvmCompilerRunnerImpl @Inject constructor(
-    task: Task,
+    private val task: Task,
     objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor
 ) : KotlinCompilerRunnerImpl(task, objectFactory, workerExecutor), KotlinJvmCompilerRunner {
 
     override fun runJvmCompilerAsync(
-        args: KotlinJvmCompilerArguments,
+        options: CompilerJvmOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File
     ) {
-        val environment = prepareEnvironment(args.allWarningsAsErrors, outputs)
+        val environment = prepareEnvironment(options.allWarningsAsErrors.get(), task.outputs.files.toList())
         val compilerRunner = prepareCompilerRunner()
         val compilerArgs = K2JVMCompilerArguments().apply {
-            copyFrom(args)
+            options as CompilerJvmOptionsDefault
+            options.fillCompilerArguments(this)
 
-            friendPaths = args.friendPaths.map { it.absolutePath }.toTypedArray()
-            classpath = args.libraries.map { it.absolutePath }.joinToString(File.pathSeparator)
-            destination = args.destination?.absolutePath
-
-            noJdk = args.noJdk
-            noStdlib = args.noStdlib
-            noReflect = args.noReflect
-            moduleName = args.moduleName
-            jvmTarget = args.jvmTarget
-            jdkRelease = args.jdkRelease
-            allowNoSourceFiles = args.allowNoSourceFiles
-            javaSourceRoots = args.javaSourceRoots.map { it.absolutePath }.toTypedArray()
+            this@apply.friendPaths = friendPaths.map { it.absolutePath }.toTypedArray()
+            this@apply.classpath = libraries.map { it.absolutePath }.joinToString(File.pathSeparator)
+            this@apply.freeArgs = options.freeCompilerArgs.get() + freeArgs
+            this@apply.destination = destination.absolutePath
         }
 
         compilerRunner.runJvmCompilerAsync(
@@ -168,7 +157,7 @@ abstract class KotlinJvmCompilerRunnerImpl @Inject constructor(
 }
 
 abstract class KotlinJsCompilerRunnerImpl @Inject constructor(
-    task: Task,
+    private val task: Task,
     objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor
 ) : KotlinCompilerRunnerImpl(task, objectFactory, workerExecutor), KotlinJsCompilerRunner {
@@ -191,30 +180,33 @@ abstract class KotlinJsCompilerRunnerImpl @Inject constructor(
         }
 
     override fun runJsCompilerAsync(
-        args: KotlinJsCompilerArguments,
+        options: CompilerJsOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File
     ) {
-        val environment = prepareEnvironment(args.allWarningsAsErrors, outputs)
+        val environment = prepareEnvironment(options.allWarningsAsErrors.get(), task.outputs.files.toList())
         val compilerRunner = prepareCompilerRunner()
         val compilerArgs = K2JSCompilerArguments().apply {
-            copyFrom(args)
+            options as CompilerJsOptionsDefault
+            options.fillCompilerArguments(this)
 
-            outputFile = args.destination?.absolutePath
+            this@apply.freeArgs = options.freeCompilerArgs.get() + freeArgs
+            this@apply.outputFile = File(destination, "dummy.js").absolutePath
 
-            noStdlib = args.noStdlib
-            irOnly = args.irOnly
-            irProduceJs = args.irProduceJs
-            irProduceKlibDir = args.irProduceKlibDir
-            irProduceKlibFile = args.irProduceKlibFile
-            irBuildCache = args.irBuildCache
-            wasm = args.wasm
-            target = args.target
+            irOnly = this@apply.freeArgs.contains("-Xir-only")
+            irProduceJs = this@apply.freeArgs.contains("-Xir-produce-js")
+            irProduceKlibDir = this@apply.freeArgs.contains("-Xir-produce-klib-dir")
+            irProduceKlibFile = this@apply.freeArgs.contains("-Xir-produce-klib-file")
+            irBuildCache = this@apply.freeArgs.contains("-Xir-build-cache")
+            wasm = this@apply.freeArgs.contains("-Xwasm")
 
-            friendModules = args.friendPaths.filter { libFilter(this, it) }
+            this@apply.friendModules = friendPaths.filter { libFilter(this, it) }
                 .map { it.absolutePath }.joinToString(File.pathSeparator)
-            libraries = args.libraries.filter { libFilter(this, it) }
+            this@apply.libraries = libraries.filter { libFilter(this, it) }
                 .map { it.absolutePath }.joinToString(File.pathSeparator)
         }
 
@@ -223,25 +215,30 @@ abstract class KotlinJsCompilerRunnerImpl @Inject constructor(
 }
 
 abstract class KotlinMetadataCompilerRunnerImpl @Inject constructor(
-    task: Task,
+    private val task: Task,
     objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor
 ) : KotlinCompilerRunnerImpl(task, objectFactory, workerExecutor), KotlinMetadataCompilerRunner {
 
     override fun runMetadataCompilerAsync(
-        args: KotlinMetadataCompilerArguments,
+        options: CompilerCommonOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File
     ) {
-        val environment = prepareEnvironment(args.allWarningsAsErrors, outputs)
+        val environment = prepareEnvironment(options.allWarningsAsErrors.get(), task.outputs.files.toList())
         val compilerRunner = prepareCompilerRunner()
         val compilerArgs = K2MetadataCompilerArguments().apply {
-            copyFrom(args)
+            options as CompilerCommonOptionsDefault
+            options.fillCompilerArguments(this)
 
-            friendPaths = args.friendPaths.map { it.absolutePath }.toTypedArray()
-            classpath = args.libraries.map { it.absolutePath }.joinToString(File.pathSeparator)
-            destination = args.destination?.absolutePath
+            this@apply.friendPaths = friendPaths.map { it.absolutePath }.toTypedArray()
+            this@apply.classpath = libraries.map { it.absolutePath }.joinToString(File.pathSeparator)
+            this@apply.freeArgs = options.freeCompilerArgs.get() + freeArgs
+            this@apply.destination = destination.absolutePath
         }
 
         compilerRunner.runMetadataCompilerAsync(sources, commonSources, compilerArgs, environment)
@@ -249,7 +246,7 @@ abstract class KotlinMetadataCompilerRunnerImpl @Inject constructor(
 }
 
 abstract class KotlinNativeCompilerRunnerImpl @Inject constructor(
-    task: Task,
+    private val task: Task,
     private val objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor,
     private val execOperations: ExecOperations
@@ -259,45 +256,44 @@ abstract class KotlinNativeCompilerRunnerImpl @Inject constructor(
         .KotlinNativeCompilerRunner.Settings.fromProject(task.project)
 
     override fun runNativeCompilerAsync(
-        args: KotlinNativeCompilerArguments,
+        options: CompilerCommonOptions,
+        freeArgs: List<String>,
         sources: List<File>,
         commonSources: List<File>,
-        outputs: List<File>,
+        friendPaths: List<File>,
+        libraries: List<File>,
+        destination: File,
+        target: String
     ) {
-        val output = File(outputs.first(), "dummy.out")
-
-        val target = KonanTarget.predefinedTargets.get(args.target!!)!!
+        val target = KonanTarget.predefinedTargets.get(target)!!
         val buildArgs: MutableList<String> = mutableListOf(
-            "-o", output.path,
+            "-o", destination.path,
             "-target", target.name,
             "-p", "library",
             "-Xmulti-platform"
         )
-        args.libraries.flatMap { listOf("-l", it.absolutePath) }.let { buildArgs.addAll(it) }
-        args.friendPaths.ifNotEmpty {
+        libraries.flatMap { listOf("-l", it.absolutePath) }.let { buildArgs.addAll(it) }
+        friendPaths.ifNotEmpty {
             buildArgs.add("-friend-modules")
             buildArgs.add(joinToString(File.pathSeparator))
         }
 
-        if (args.verbose)
+        if (options.verbose.get())
             buildArgs.add("-verbose")
-        if (args.allWarningsAsErrors)
+        if (options.allWarningsAsErrors.get())
             buildArgs.add("-Werror")
 
-        args.pluginClasspaths.map { "-Xplugin=${it.absolutePath}" }.let { buildArgs.addAll(it) }
-        args.pluginOptions.flatMap { listOf("-P", it) }.let { buildArgs.addAll(it) }
-
-        args.languageVersion?.let {
+        options.languageVersion.getOrNull()?.let {
             buildArgs.add("-language-version")
-            buildArgs.add(it)
+            buildArgs.add(it.version)
         }
-        args.apiVersion?.let {
+        options.apiVersion.getOrNull()?.let {
             buildArgs.add("-api-version")
-            buildArgs.add(it)
+            buildArgs.add(it.version)
         }
 
         buildArgs.addAll(sources.map { it.absolutePath })
-        buildArgs.addAll(args.freeArgs)
+        buildArgs.addAll(freeArgs)
         buildArgs.addAll(commonSources.map { it.absolutePath })
 
         org.jetbrains.kotlin.compilerRunner.KotlinNativeCompilerRunner(

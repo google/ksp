@@ -55,11 +55,10 @@ import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsOptionsImpl
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptionsImpl
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonOptionsImpl
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.CompilerJvmOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.CompilerMultiplatformCommonOptionsDefault
 import org.jetbrains.kotlin.gradle.dsl.copyFreeCompilerArgsToArgs
-import org.jetbrains.kotlin.gradle.dsl.fillDefaultValues
 import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
 import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
@@ -92,6 +91,9 @@ import java.nio.file.Paths
 import java.util.concurrent.Callable
 import javax.inject.Inject
 import kotlin.reflect.KProperty1
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerJvmOptions
+import org.jetbrains.kotlin.gradle.dsl.CompilerMultiplatformCommonOptions
 
 @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
 internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<*>> {
@@ -263,9 +265,10 @@ interface KspTaskInherited : KspTask {
 
 @CacheableTask
 abstract class KspTaskJvm @Inject constructor(
+    compilerOptions: CompilerJvmOptions,
     workerExecutor: WorkerExecutor,
     objectFactory: ObjectFactory
-) : KotlinCompile(KotlinJvmOptionsImpl(), workerExecutor, objectFactory), KspTaskInherited {
+) : KotlinCompile(compilerOptions, workerExecutor, objectFactory), KspTaskInherited {
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
     @get:InputFiles
@@ -476,9 +479,10 @@ abstract class KspTaskJvm @Inject constructor(
 
 @CacheableTask
 abstract class KspTaskJS @Inject constructor(
+    compilerOptions: CompilerJsOptions,
     @get:Internal val objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor
-) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory, workerExecutor), KspTaskInherited {
+) : Kotlin2JsCompile(compilerOptions, objectFactory, workerExecutor), KspTaskInherited {
     private val backendSelectionArgs = listOf(
         "-Xir-only",
         "-Xir-produce-js",
@@ -519,7 +523,7 @@ abstract class KspTaskJS @Inject constructor(
         ignoreClasspathResolutionErrors: Boolean,
     ) {
         // Start with / copy from kotlinCompile.
-        args.fillDefaultValues()
+        (compilerOptions as CompilerJsOptionsDefault).fillDefaultValues(args)
         compileKotlinArgumentsContributor.get().contributeArguments(
             args,
             compilerArgumentsConfigurationFlags(
@@ -570,9 +574,10 @@ abstract class KspTaskJS @Inject constructor(
 
 @CacheableTask
 abstract class KspTaskMetadata @Inject constructor(
+    compilerOptions: CompilerMultiplatformCommonOptions,
     workerExecutor: WorkerExecutor,
     objectFactory: ObjectFactory
-) : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl(), workerExecutor, objectFactory), KspTaskInherited {
+) : KotlinCompileCommon(compilerOptions, workerExecutor, objectFactory), KspTaskInherited {
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
@@ -603,7 +608,7 @@ abstract class KspTaskMetadata @Inject constructor(
         ignoreClasspathResolutionErrors: Boolean,
     ) {
         // Start with / copy from kotlinCompile.
-        args.apply { fillDefaultValues() }
+        (compilerOptions as CompilerJsOptionsDefault).fillDefaultValues(args)
         compileKotlinArgumentsContributor.get().contributeArguments(
             args,
             compilerArgumentsConfigurationFlags(
