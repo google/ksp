@@ -322,7 +322,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/innerTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("interfaceWithDefault.kt")
     @Test
     fun testInterfaceWithDefault() {
