@@ -1,3 +1,5 @@
+rootProject.name = "ksp"
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
