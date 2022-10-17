@@ -21,6 +21,7 @@ import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.findPsi
 import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.processing.impl.workaroundForNested
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
@@ -229,9 +230,9 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
 
 internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): ClassDescriptor? {
     return if (psiMethod.isConstructor) {
-        resolveClass(JavaConstructorImpl(psiMethod).containingClass)
+        resolveClass(JavaConstructorImpl(psiMethod).containingClass.apply { workaroundForNested() })
     } else {
-        resolveClass(JavaMethodImpl(psiMethod).containingClass)
+        resolveClass(JavaMethodImpl(psiMethod).containingClass.apply { workaroundForNested() })
     }
 }
 
