@@ -21,6 +21,7 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.ResolverImpl
+import com.google.devtools.ksp.processing.impl.workaroundForNested
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
@@ -74,7 +75,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
 
     // Could the resolution ever fail?
     private val descriptor: ClassDescriptor? by lazy {
-        ResolverImpl.instance!!.moduleClassResolver.resolveClass(JavaClassImpl(psi))
+        ResolverImpl.instance!!.moduleClassResolver.resolveClass(JavaClassImpl(psi).apply { workaroundForNested() })
     }
 
     // TODO in 1.5 + jvmTarget 15, will we return Java permitted types?
