@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
+import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.jvmAccessFlag
@@ -1419,6 +1420,12 @@ class ResolverImpl(
     override fun isJavaRawType(type: KSType): Boolean {
         return type is KSTypeImpl && type.kotlinType.unwrap() is RawType
     }
+
+    private val psiJavaFiles = allKSFiles.filterIsInstance<KSFileJavaImpl>().map {
+        Pair(it.psi.virtualFile.path, it.psi)
+    }.toMap()
+
+    internal fun findPsiJavaFile(path: String): PsiFile? = psiJavaFiles.get(path)
 }
 
 // TODO: cross module resolution
