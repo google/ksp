@@ -20,11 +20,7 @@ package com.google.devtools.ksp
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
-import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.MemberDescriptor
@@ -133,12 +129,6 @@ fun org.jetbrains.kotlin.types.Variance.toKSVariance(): Variance {
         org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
         else -> throw IllegalStateException("Unexpected variance value $this, $ExceptionMessage")
     }
-}
-
-fun DeclarationDescriptor.findPsi(): PsiElement? {
-    // For synthetic members.
-    if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
-    return (this as? DeclarationDescriptorWithSource)?.source?.getPsi()
 }
 
 /**
