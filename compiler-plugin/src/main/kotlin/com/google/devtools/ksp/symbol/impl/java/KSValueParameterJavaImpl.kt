@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.PsiKey
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
@@ -26,8 +27,8 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 
 class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
-    companion object : KSObjectCache<PsiParameter, KSValueParameterJavaImpl>() {
-        fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSValueParameterJavaImpl(psi) }
+    companion object : KSObjectCache<PsiKey, KSValueParameterJavaImpl>() {
+        fun getCached(psi: PsiParameter) = cache.getOrPut(PsiKey(psi)) { KSValueParameterJavaImpl(psi) }
     }
 
     override val origin = Origin.JAVA

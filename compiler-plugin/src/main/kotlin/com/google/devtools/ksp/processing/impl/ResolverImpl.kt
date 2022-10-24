@@ -133,6 +133,7 @@ class ResolverImpl(
     val options: KspOptions,
 ) : Resolver {
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
+    val psiManager = PsiManager.getInstance(project)
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
 
     /**
@@ -529,8 +530,8 @@ class ResolverImpl(
                         ?.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.CALLABLES
                         ) {
-                            (it as? PropertyDescriptor)?.getter?.findPsi() == psi ||
-                                (it as? PropertyDescriptor)?.setter?.findPsi() == psi
+                            psiManager.areElementsEquivalent((it as? PropertyDescriptor)?.getter?.findPsi(), psi) ||
+                                psiManager.areElementsEquivalent((it as? PropertyDescriptor)?.setter?.findPsi(), psi)
                         }
                 } else null
                 property ?: moduleClassResolver
@@ -538,7 +539,9 @@ class ResolverImpl(
                         val filter = if (psi is SyntheticElement) {
                             { declaration: DeclarationDescriptor -> declaration.name.asString() == psi.name }
                         } else {
-                            { declaration: DeclarationDescriptor -> declaration.findPsi() == psi }
+                            { declaration: DeclarationDescriptor ->
+                                psiManager.areElementsEquivalent(declaration.findPsi(), psi)
+                            }
                         }
                         containingClass.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
@@ -553,7 +556,7 @@ class ResolverImpl(
                     )
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
-                        filter = { it.findPsi() == psi }
+                        filter = { psiManager.areElementsEquivalent(it.findPsi(), psi) }
                     )
             }
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
@@ -718,7 +721,7 @@ class ResolverImpl(
                         moduleClassResolver.resolveContainingClass(owner)
                             ?.findEnclosedDescriptor(
                                 kindFilter = DescriptorKindFilter.FUNCTIONS,
-                                filter = { it.findPsi() == owner }
+                                filter = { psiManager.areElementsEquivalent(it.findPsi(), owner) }
                             ) as FunctionDescriptor
                     } as DeclarationDescriptor
                     return getKSTypeCached(

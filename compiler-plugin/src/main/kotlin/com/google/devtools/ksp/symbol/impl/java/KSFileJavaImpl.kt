@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.PsiKey
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
@@ -25,8 +26,8 @@ import com.google.devtools.ksp.symbol.impl.toLocation
 import com.intellij.psi.PsiJavaFile
 
 class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile {
-    companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
-        fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
+    companion object : KSObjectCache<PsiKey, KSFileJavaImpl>() {
+        fun getCached(psi: PsiJavaFile) = cache.getOrPut(PsiKey(psi)) { KSFileJavaImpl(psi) }
     }
 
     override val origin = Origin.JAVA

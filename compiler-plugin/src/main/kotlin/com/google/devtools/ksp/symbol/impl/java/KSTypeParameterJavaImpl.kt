@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.PsiKey
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
@@ -31,8 +32,8 @@ class KSTypeParameterJavaImpl private constructor(val psi: PsiTypeParameter) :
     KSTypeParameter,
     KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
-    companion object : KSObjectCache<PsiTypeParameter, KSTypeParameterJavaImpl>() {
-        fun getCached(psi: PsiTypeParameter) = cache.getOrPut(psi) { KSTypeParameterJavaImpl(psi) }
+    companion object : KSObjectCache<PsiKey, KSTypeParameterJavaImpl>() {
+        fun getCached(psi: PsiTypeParameter) = cache.getOrPut(PsiKey(psi)) { KSTypeParameterJavaImpl(psi) }
     }
 
     override val origin = Origin.JAVA

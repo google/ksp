@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.PsiKey
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
@@ -32,8 +33,8 @@ import com.intellij.psi.*
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 
 class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnotation {
-    companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
-        fun getCached(psi: PsiAnnotation) = cache.getOrPut(psi) { KSAnnotationJavaImpl(psi) }
+    companion object : KSObjectCache<PsiKey, KSAnnotationJavaImpl>() {
+        fun getCached(psi: PsiAnnotation) = cache.getOrPut(PsiKey(psi)) { KSAnnotationJavaImpl(psi) }
     }
 
     override val origin = Origin.JAVA

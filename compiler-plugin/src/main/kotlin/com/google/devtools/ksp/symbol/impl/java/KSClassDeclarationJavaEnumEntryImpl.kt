@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.PsiKey
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
@@ -36,8 +37,8 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
     KSClassDeclaration,
     KSDeclarationJavaImpl(psi),
     KSExpectActual by KSExpectActualNoImpl() {
-    companion object : KSObjectCache<PsiEnumConstant, KSClassDeclarationJavaEnumEntryImpl>() {
-        fun getCached(psi: PsiEnumConstant) = cache.getOrPut(psi) { KSClassDeclarationJavaEnumEntryImpl(psi) }
+    companion object : KSObjectCache<PsiKey, KSClassDeclarationJavaEnumEntryImpl>() {
+        fun getCached(psi: PsiEnumConstant) = cache.getOrPut(PsiKey(psi)) { KSClassDeclarationJavaEnumEntryImpl(psi) }
     }
 
     override val origin = Origin.JAVA
