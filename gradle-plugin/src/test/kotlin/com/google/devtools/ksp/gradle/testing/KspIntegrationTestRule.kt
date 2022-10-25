@@ -88,6 +88,7 @@ class KspIntegrationTestRule(
                 PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
             )
         )
+        addKspCompilerRunner()
     }
 
     /**
@@ -103,6 +104,7 @@ class KspIntegrationTestRule(
             )
         )
         addAndroidBoilerplate()
+        addKspCompilerRunner()
     }
 
     /**
@@ -118,6 +120,12 @@ class KspIntegrationTestRule(
         )
         testProject.appModule.buildFileAdditions.add(targets)
         addAndroidBoilerplate()
+        addKspCompilerRunner()
+    }
+
+    private fun addKspCompilerRunner() {
+        val contents = "\nksp.compiler.runner=${testConfig.kspCompilerRunner}\n"
+        testProject.rootDir.resolve("gradle.properties").appendText(contents)
     }
 
     private fun addAndroidBoilerplate() {

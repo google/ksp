@@ -17,6 +17,7 @@ tasks.named<Test>("test") {
     systemProperty("kspVersion", version)
     systemProperty("agpVersion", agpBaseVersion)
     systemProperty("testRepo", File(rootProject.buildDir, "repos/test").absolutePath)
+    systemProperty("kspCompilerRunner", project.properties.getOrDefault("ksp.compiler.runner", "inherited") as String)
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")

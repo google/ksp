@@ -97,9 +97,7 @@ class PlaygroundIT {
     @Test
     fun testBuildCache() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build") {
-            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
-        }
+        gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build")
         gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build") {
             Assert.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
         }

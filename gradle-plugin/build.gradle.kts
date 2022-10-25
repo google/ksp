@@ -24,6 +24,7 @@ plugins {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
+    implementation("org.jetbrains.kotlin:kotlin-compiler-runner:$kotlinBaseVersion")
     compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinBaseVersion")
     // replace AGP dependency w/ gradle-api when we have source registering API available.
     compileOnly("com.android.tools.build:gradle:$agpBaseVersion")
@@ -105,6 +106,7 @@ val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfigurati
     property("mavenRepoDir", File(rootProject.buildDir, "repos/test").absolutePath)
     property("kspProjectRootDir", rootProject.projectDir.absolutePath)
     property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
+    property("kspCompilerRunner", project.properties.getOrDefault("ksp.compiler.runner", "inherited") as String)
 }
 
 java {
