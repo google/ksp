@@ -61,6 +61,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 //
 // Third party libraries:
 //   https://github.com/tschuchortdev/kotlin-compile-testing
+@Suppress("DEPRECATION")
 @ExperimentalCompilerApi
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {

@@ -53,7 +53,6 @@ import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
@@ -115,14 +114,14 @@ class ResolverAAImpl(
             analyze {
                 classId.toKtClassSymbol()
             }?.let { return it }
-            return findClass(KSNameImpl.getCached(name.getQualifier())).safeAs<KtNamedClassOrObjectSymbol>()?.let {
+            return (findClass(KSNameImpl.getCached(name.getQualifier())) as? KtNamedClassOrObjectSymbol)?.let {
                 analyze {
                     (
                         it.getStaticMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
                             ?: it.getMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
-                        ).safeAs<KtNamedClassOrObjectSymbol>()
+                        ) as? KtNamedClassOrObjectSymbol
                         ?: it.getStaticMemberScope().getCallableSymbols { it.asString() == simpleName }.singleOrNull()
-                            .safeAs<KtEnumEntrySymbol>()
+                            as? KtEnumEntrySymbol
                 }
             }
         }

@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 abstract class KSPropertyAccessorImpl(
     private val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
@@ -39,7 +38,7 @@ abstract class KSPropertyAccessorImpl(
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        (ktPropertyAccessorSymbol.psi?.safeAs<KtModifierListOwner>()?.toKSModifiers() ?: emptySet()).let {
+        ((ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()).let {
             if (origin == Origin.SYNTHETIC &&
                 (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
             ) {
