@@ -38,7 +38,6 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.JAVA to Origin.JAVA,
@@ -131,7 +130,7 @@ internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
         com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.IN_VARIANCE
         else -> null
     }
-    val argType = this.type?.resolve()?.safeAs<KSTypeImpl>()?.type
+    val argType = (this.type?.resolve() as? KSTypeImpl)?.type
     // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
     val alwaysAccessibleLifetimeToken = KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
     return if (argType == null || variance == null) {
@@ -253,7 +252,7 @@ internal fun ClassId.toKtClassSymbol(): KtClassOrObjectSymbol? {
                 it.asString() == this@toKtClassSymbol.shortClassName.asString()
             }?.singleOrNull() as? KtClassOrObjectSymbol
         } else {
-            this@toKtClassSymbol.getCorrespondingToplevelClassOrObjectSymbol()
+            getClassOrObjectSymbolByClassId(this@toKtClassSymbol)
         }
     }
 }
