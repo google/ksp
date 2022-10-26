@@ -59,6 +59,7 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 //
 // Third party libraries:
 //   https://github.com/tschuchortdev/kotlin-compile-testing
+@Suppress("DEPRECATION")
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()

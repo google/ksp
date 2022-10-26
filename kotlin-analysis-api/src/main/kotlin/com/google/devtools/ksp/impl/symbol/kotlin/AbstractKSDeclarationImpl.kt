@@ -30,7 +30,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationSymbol) : KSDeclaration {
     override val origin: Origin = mapAAOrigin(ktDeclarationSymbol.origin)
@@ -40,7 +39,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktDeclarationSymbol.safeAs<KtNamedSymbol>()?.name?.asString() ?: "")
+        KSNameImpl.getCached((ktDeclarationSymbol as? KtNamedSymbol)?.name?.asString() ?: "")
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
@@ -48,7 +47,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        ktDeclarationSymbol.psi?.safeAs<KtModifierListOwner>()?.toKSModifiers() ?: emptySet()
+        (ktDeclarationSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()
     }
 
     override val containingFile: KSFile? by lazy {

@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.psi.KtFunctionLiteral
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.calls.inference.returnTypeOrNothing
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) :
     KSFunctionDeclaration,
@@ -44,7 +43,7 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
 
     override fun findOverridee(): KSDeclaration? {
         val descriptor = ResolverImpl.instance!!.resolveFunctionDeclaration(this)
-        return descriptor.safeAs<FunctionDescriptor>()?.findClosestOverridee()?.toKSDeclaration()
+        return (descriptor as? FunctionDescriptor)?.findClosestOverridee()?.toKSDeclaration()
     }
 
     override val simpleName: KSName by lazy {
