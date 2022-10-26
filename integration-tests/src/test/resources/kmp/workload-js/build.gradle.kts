@@ -24,3 +24,7 @@ dependencies {
     add("kspJs", project(":test-processor"))
     add("kspJsTest", project(":test-processor"))
 }
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
+}

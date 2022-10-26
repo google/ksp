@@ -52,23 +52,20 @@ import org.jetbrains.kotlin.gradle.internal.CompilerArgumentsContributor
 import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.*
 import org.jetbrains.kotlin.gradle.plugin.*
-import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
+import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinNativeCompilationData
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.isMainCompilationData
+import org.jetbrains.kotlin.gradle.targets.js.ir.*
 import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.configuration.AbstractKotlinCompileConfig
+import org.jetbrains.kotlin.gradle.utils.klibModuleName
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.destinationAsFile
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.io.File
 import java.nio.file.Paths
 import java.util.concurrent.Callable
@@ -84,6 +81,9 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
                 // work around https://github.com/google/ksp/issues/647
                 // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
                 task.ownModuleName.value(kotlinCompile.ownModuleName.map { "$it-ksp" })
+                (compilation.compilerOptions.options as? KotlinJvmCompilerOptions)?.let {
+                    task.compilerOptions.noJdk.value(it.noJdk)
+                }
             }
             if (task is KspTaskJS) {
                 val libraryCacheService = project.rootProject.gradle.sharedServices.registerIfAbsent(
@@ -91,8 +91,54 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
                         "_${Kotlin2JsCompile.LibraryFilterCachingService::class.java.classLoader.hashCode()}",
                     Kotlin2JsCompile.LibraryFilterCachingService::class.java
                 ) {}
+                task.compilerOptions.moduleName.convention(kotlinCompile.ownModuleName.map { "$it-ksp" })
                 task.libraryCache.set(libraryCacheService).also { task.libraryCache.disallowChanges() }
                 task.pluginClasspath.setFrom(objectFactory.fileCollection())
+                task.outputFileProperty.value(
+                    task.destinationDirectory.flatMap { dir ->
+                        if (task.compilerOptions.outputFile.orNull != null) {
+                            task.compilerOptions.outputFile.map { File(it) }
+                        } else {
+                            task.compilerOptions.moduleName.map { name ->
+                                dir.file(name + compilation.platformType.fileExtension).asFile
+                            }
+                        }
+                    }
+                )
+                task.enhancedFreeCompilerArgs.value(
+                    (kotlinCompile as Kotlin2JsCompile).compilerOptions.freeCompilerArgs.map { freeArgs ->
+                        freeArgs.toMutableList().apply {
+                            commonJsAdditionalCompilerFlags(compilation)
+                        }
+                    }
+                ).disallowChanges()
+            }
+        }
+    }
+
+    // copied from upstream.
+    protected fun MutableList<String>.commonJsAdditionalCompilerFlags(
+        compilation: KotlinCompilationData<*>
+    ) {
+        if (contains(DISABLE_PRE_IR) &&
+            !contains(PRODUCE_UNZIPPED_KLIB) &&
+            !contains(PRODUCE_ZIPPED_KLIB)
+        ) {
+            add(PRODUCE_UNZIPPED_KLIB)
+        }
+
+        if (contains(PRODUCE_JS) ||
+            contains(PRODUCE_UNZIPPED_KLIB) ||
+            contains(PRODUCE_ZIPPED_KLIB)
+        ) {
+            // Configure FQ module name to avoid cyclic dependencies in klib manifests (see KT-36721).
+            val baseName = if (compilation.isMainCompilationData()) {
+                project.name
+            } else {
+                "${project.name}_${compilation.compilationPurpose}"
+            }
+            if (none { it.startsWith(KLIB_MODULE_NAME) }) {
+                add("$KLIB_MODULE_NAME=${project.klibModuleName(baseName)}")
             }
         }
     }
@@ -231,7 +277,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         val target = kotlinCompilation.target.name
-        val sourceSetName = kotlinCompilation.defaultSourceSetName
+        val sourceSetName = kotlinCompilation.defaultSourceSet.name
         val classOutputDir = getKspClassOutputDir(project, sourceSetName, target)
         val javaOutputDir = getKspJavaOutputDir(project, sourceSetName, target)
         val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName, target)
@@ -304,8 +350,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             if (kspExtension.allowSourcesFromOtherPlugins) {
                 val deps = kotlinCompileTask.dependsOn.filterNot {
-                    it.safeAs<TaskProvider<*>>()?.name == kspTaskName ||
-                        it.safeAs<Task>()?.name == kspTaskName
+                    (it as? TaskProvider<*>)?.name == kspTaskName ||
+                        (it as? Task)?.name == kspTaskName
                 }
                 kspTask.dependsOn(deps)
                 kspTask.setSource(kotlinCompileTask.sources)
@@ -367,13 +413,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspTask.compilerPluginClasspath = project.configurations.getByName(pluginConfigurationName)
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
                         kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
+                        val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
+                        kspTask.compilerOptions.freeCompilerArgs.value(
+                            kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
+                        )
                     }
                 }
             }
             else -> return project.provider { emptyList() }
         }
 
-        kotlinCompileTask.safeAs<AbstractKotlinCompile<*>>()?.let {
+        (kotlinCompileTask as? AbstractKotlinCompile<*>)?.let {
             Configurator(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask as AbstractKotlinCompile<*>)
                 .execute(kspTaskProvider as TaskProvider<AbstractKotlinCompile<*>>)
         }
@@ -441,7 +491,7 @@ internal inline fun <reified T : Task> Project.locateTask(name: String): TaskPro
 internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>): TaskProvider<out JavaCompile>? =
     when (compilation) {
         is KotlinJvmAndroidCompilation -> compilation.compileJavaTaskProvider
-        is KotlinWithJavaCompilation -> compilation.compileJavaTaskProvider
+        is KotlinWithJavaCompilation<*, *> -> compilation.compileJavaTaskProvider
         is KotlinJvmCompilation -> compilation.compileJavaTaskProvider // may be null for Kotlin-only JVM target in MPP
         else -> null
     }
@@ -488,7 +538,12 @@ interface KspTask : Task {
 abstract class KspTaskJvm @Inject constructor(
     workerExecutor: WorkerExecutor,
     objectFactory: ObjectFactory
-) : KotlinCompile(KotlinJvmOptionsImpl(), workerExecutor, objectFactory), KspTask {
+) : KotlinCompile(
+        objectFactory.newInstance(KotlinJvmCompilerOptionsDefault::class.java),
+        workerExecutor,
+        objectFactory
+    ),
+    KspTask {
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
     @get:InputFiles
@@ -631,6 +686,7 @@ abstract class KspTaskJvm @Inject constructor(
                 ignoreClasspathResolutionErrors
             )
         )
+        (compilerOptions as KotlinJvmCompilerOptionsDefault).fillCompilerArguments(args)
         if (blockOtherCompilerPlugins) {
             args.blockOtherPlugins(overridePluginClasspath)
         }
@@ -701,7 +757,12 @@ abstract class KspTaskJvm @Inject constructor(
 abstract class KspTaskJS @Inject constructor(
     objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor
-) : Kotlin2JsCompile(KotlinJsOptionsImpl(), objectFactory, workerExecutor), KspTask {
+) : Kotlin2JsCompile(
+        objectFactory.newInstance(KotlinJsCompilerOptionsDefault::class.java),
+        objectFactory,
+        workerExecutor
+    ),
+    KspTask {
     private val backendSelectionArgs = listOf(
         "-Xir-only",
         "-Xir-produce-js",
@@ -714,9 +775,7 @@ abstract class KspTaskJS @Inject constructor(
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
         kotlinCompile as Kotlin2JsCompile
-        kotlinOptions.freeCompilerArgs = kotlinCompile.kotlinOptions.freeCompilerArgs.filter {
-            it in backendSelectionArgs
-        }
+
         val providerFactory = kotlinCompile.project.providers
         compileKotlinArgumentsContributor.set(
             providerFactory.provider {
@@ -742,7 +801,6 @@ abstract class KspTaskJS @Inject constructor(
         ignoreClasspathResolutionErrors: Boolean,
     ) {
         // Start with / copy from kotlinCompile.
-        args.fillDefaultValues()
         compileKotlinArgumentsContributor.get().contributeArguments(
             args,
             compilerArgumentsConfigurationFlags(
@@ -750,13 +808,14 @@ abstract class KspTaskJS @Inject constructor(
                 ignoreClasspathResolutionErrors
             )
         )
+        (compilerOptions as KotlinJsCompilerOptionsDefault).fillCompilerArguments(args)
         if (blockOtherCompilerPlugins) {
             args.blockOtherPlugins(overridePluginClasspath)
         }
         args.addPluginOptions(options.get())
         args.outputFile = File(destination, "dummyOutput.js").canonicalPath
-        kotlinOptions.copyFreeCompilerArgsToArgs(args)
         args.useK2 = false
+        args.outputDir = destination.canonicalPath
     }
 
     // Overrding an internal function is hacky.
@@ -774,6 +833,7 @@ abstract class KspTaskJS @Inject constructor(
         } else {
             args.addChangedFiles(changedFiles)
         }
+        args.freeArgs = enhancedFreeCompilerArgs.get()
         super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
     }
 
@@ -795,7 +855,12 @@ abstract class KspTaskJS @Inject constructor(
 abstract class KspTaskMetadata @Inject constructor(
     workerExecutor: WorkerExecutor,
     objectFactory: ObjectFactory
-) : KotlinCompileCommon(KotlinMultiplatformCommonOptionsImpl(), workerExecutor, objectFactory), KspTask {
+) : KotlinCompileCommon(
+        objectFactory.newInstance(KotlinMultiplatformCommonCompilerOptionsDefault::class.java),
+        workerExecutor,
+        objectFactory
+    ),
+    KspTask {
     override fun configureCompilation(
         kotlinCompilation: KotlinCompilationData<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
@@ -826,7 +891,6 @@ abstract class KspTaskMetadata @Inject constructor(
         ignoreClasspathResolutionErrors: Boolean,
     ) {
         // Start with / copy from kotlinCompile.
-        args.apply { fillDefaultValues() }
         compileKotlinArgumentsContributor.get().contributeArguments(
             args,
             compilerArgumentsConfigurationFlags(
@@ -834,6 +898,7 @@ abstract class KspTaskMetadata @Inject constructor(
                 ignoreClasspathResolutionErrors
             )
         )
+        (compilerOptions as KotlinMultiplatformCommonCompilerOptionsDefault).fillCompilerArguments(args)
         if (blockOtherCompilerPlugins) {
             args.blockOtherPlugins(overridePluginClasspath)
         }
@@ -881,13 +946,9 @@ abstract class KspTaskNative @Inject constructor(
     providerFactory: ProviderFactory,
     execOperations: ExecOperations
 ) : KotlinNativeCompile(compilation, objectFactory, providerFactory, execOperations), KspTask {
-    override val additionalCompilerOptions: Provider<Collection<String>>
-        get() {
-            return project.provider {
-                val kspOptions = options.get().flatMap { listOf("-P", it.toArg()) }
-                super.additionalCompilerOptions.get() + kspOptions
-            }
-        }
+
+    override val compilerOptions: KotlinCommonCompilerOptions =
+        objectFactory.newInstance(KotlinMultiplatformCommonCompilerOptionsDefault::class.java)
 
     override var compilerPluginClasspath: FileCollection? = null
         get() {
