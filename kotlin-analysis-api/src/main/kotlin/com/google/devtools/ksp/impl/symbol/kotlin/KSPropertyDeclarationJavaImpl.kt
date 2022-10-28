@@ -1,16 +1,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.symbol.KSExpectActual
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSPropertySetter
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeParameter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 
 class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldSymbol: KtJavaFieldSymbol) :
@@ -35,7 +26,7 @@ class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldS
     }
 
     override val isMutable: Boolean
-        get() = true
+        get() = !modifiers.contains(Modifier.FINAL)
 
     override val hasBackingField: Boolean
         get() = true
