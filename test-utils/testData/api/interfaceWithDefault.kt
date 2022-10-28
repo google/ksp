@@ -33,6 +33,8 @@
 // abstractVar: isAbstract: true: isMutable: true
 // abstractProperty: isAbstract: true: isMutable: false
 // a: false
+// normalField: isMutable: true
+// finalField: isMutable: false
 // END
 // FILE: a.kt
 interface KTInterface: Sequence<String> {
@@ -65,4 +67,12 @@ interface C {
     }
 
     int bar()
+}
+
+// FILE: D.java
+
+class D {
+    int normalField;
+
+    final int finalField;
 }
