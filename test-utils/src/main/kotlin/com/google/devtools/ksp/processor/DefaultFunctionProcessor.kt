@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.Resolver
@@ -97,6 +98,8 @@ class DefaultFunctionProcessor : AbstractTestProcessor() {
         )
         val aProperty = abstractClass.declarations.single { it.simpleName.asString() == "a" } as KSPropertyDeclaration
         result.add("${aProperty.simpleName.asString()}: ${aProperty.isAbstract()}")
+        val D = resolver.getClassDeclarationByName("D")!!
+        D.getAllProperties().forEach { result.add("${it.simpleName.asString()}: isMutable: ${it.isMutable}") }
         return emptyList()
     }
 

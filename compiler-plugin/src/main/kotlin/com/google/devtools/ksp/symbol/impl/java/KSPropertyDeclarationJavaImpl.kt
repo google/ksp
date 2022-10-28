@@ -42,7 +42,8 @@ class KSPropertyDeclarationJavaImpl private constructor(val psi: PsiField) :
         psi.toLocation()
     }
 
-    override val isMutable: Boolean = true
+    override val isMutable: Boolean
+        get() = !modifiers.contains(Modifier.FINAL)
 
     override val hasBackingField: Boolean
         get() = true

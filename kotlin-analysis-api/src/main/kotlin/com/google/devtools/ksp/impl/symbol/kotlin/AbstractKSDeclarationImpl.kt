@@ -26,6 +26,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.toKSModifiers
+import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
@@ -47,7 +48,11 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        (ktDeclarationSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()
+        when (val psi = ktDeclarationSymbol.psi) {
+            is KtModifierListOwner -> psi.toKSModifiers()
+            is PsiModifierListOwner -> psi.toKSModifiers()
+            else -> emptySet()
+        }
     }
 
     override val containingFile: KSFile? by lazy {
