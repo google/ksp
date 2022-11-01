@@ -66,7 +66,7 @@ class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol
     }
 
     override val parameters: List<KSValueParameter> by lazy {
-        ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it) }
+        ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it, this) }
     }
 
     override fun findOverridee(): KSDeclaration? {
