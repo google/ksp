@@ -86,7 +86,7 @@ class KspConfigurations(private val project: Project) {
 
     private fun decorateKotlinProject(kotlin: KotlinProjectExtension, project: Project) {
         when (kotlin) {
-            is KotlinSingleTargetExtension<*> -> decorateKotlinTarget(kotlin.target)
+            is KotlinSingleTargetExtension -> decorateKotlinTarget(kotlin.target)
             is KotlinMultiplatformExtension -> {
                 kotlin.targets.configureEach(::decorateKotlinTarget)
 
