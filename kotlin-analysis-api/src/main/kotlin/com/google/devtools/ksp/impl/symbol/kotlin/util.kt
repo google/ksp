@@ -285,3 +285,34 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
         null
     }
 }
+
+internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {
+    return when (this) {
+        is KSPropertyGetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let {
+            it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.GET }
+        }
+        is KSPropertySetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let {
+            it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SET }
+        }
+        is KSValueParameter -> {
+            var parent = this.parent
+            // TODO: eliminate annotationsFromParents to make this fully sequence.
+            val annotationsFromParents = mutableListOf<KSAnnotation>()
+            (parent as? KSPropertyAccessorImpl)?.let {
+                annotationsFromParents.addAll(
+                    it.originalAnnotations.asSequence()
+                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
+                )
+                parent = (parent as KSPropertyAccessorImpl).receiver
+            }
+            (parent as? KSPropertyDeclarationImpl)?.let {
+                annotationsFromParents.addAll(
+                    it.originalAnnotations.asSequence()
+                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
+                )
+            }
+            annotationsFromParents.asSequence()
+        }
+        else -> emptySequence()
+    } ?: emptySequence()
+}

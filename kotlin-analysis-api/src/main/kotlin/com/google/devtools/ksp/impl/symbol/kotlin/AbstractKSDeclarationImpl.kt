@@ -44,7 +44,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktDeclarationSymbol.annotations()
+        originalAnnotations
     }
 
     override val modifiers: Set<Modifier> by lazy {
@@ -86,4 +86,6 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
 
     override val docString: String?
         get() = ktDeclarationSymbol.toDocString()
+
+    internal val originalAnnotations = ktDeclarationSymbol.annotations()
 }

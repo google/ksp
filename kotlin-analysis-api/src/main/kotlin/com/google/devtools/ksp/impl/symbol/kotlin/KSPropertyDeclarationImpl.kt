@@ -19,7 +19,10 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
+import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 
 class KSPropertyDeclarationImpl private constructor(private val ktPropertySymbol: KtPropertySymbol) :
     KSPropertyDeclaration,
@@ -28,6 +31,12 @@ class KSPropertyDeclarationImpl private constructor(private val ktPropertySymbol
     companion object : KSObjectCache<KtPropertySymbol, KSPropertyDeclarationImpl>() {
         fun getCached(ktPropertySymbol: KtPropertySymbol) =
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
+    }
+
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        ktPropertySymbol.annotations.asSequence()
+            .filter { !it.isUseSiteTargetAnnotation() }
+            .map { KSAnnotationImpl.getCached(it) }
     }
 
     override val getter: KSPropertyGetter? by lazy {
@@ -73,4 +82,12 @@ class KSPropertyDeclarationImpl private constructor(private val ktPropertySymbol
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+}
+
+internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {
+    return this.useSiteTarget?.let {
+        it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
+            it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
+            it == AnnotationUseSiteTarget.SETTER_PARAMETER
+    } ?: false
 }

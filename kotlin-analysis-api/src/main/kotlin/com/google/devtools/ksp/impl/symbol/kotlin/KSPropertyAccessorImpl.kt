@@ -20,18 +20,26 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSModifiers
+import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
 abstract class KSPropertyAccessorImpl(
     private val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor {
+
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktPropertyAccessorSymbol.annotations()
+        ktPropertyAccessorSymbol.annotations.asSequence()
+            .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
+            .map { KSAnnotationImpl.getCached(it) }
+            .plus(findAnnotationFromUseSiteTarget())
     }
+
+    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations()
 
     override val location: Location by lazy {
         ktPropertyAccessorSymbol.psi?.toLocation() ?: NonExistLocation
@@ -72,7 +80,7 @@ class KSPropertySetterImpl private constructor(
     }
 
     override val parameter: KSValueParameter by lazy {
-        KSValueParameterImpl.getCached(setter.parameter)
+        KSValueParameterImpl.getCached(setter.parameter, this)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
