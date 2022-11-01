@@ -189,6 +189,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             target: String,
             isIncremental: Boolean,
             allWarningsAsErrors: Boolean,
+            commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>,
         ): List<SubpluginOption> {
             val options = mutableListOf<SubpluginOption>()
             options += SubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
@@ -217,7 +218,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
             }
-            kspExtension.commandLineArgumentProviders.forEach {
+            commandLineArgumentProviders.get().forEach {
                 val argument = it.asArguments().joinToString("")
                 if (!argument.matches(Regex("\\S+=\\S+"))) {
                     throw IllegalArgumentException("KSP apoption does not match \\S+=\\S+: $argument")
@@ -313,6 +314,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
             kspTask.processorClasspath.from(processorClasspath)
             kspTask.dependsOn(processorClasspath.buildDependencies)
+            kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
 
             kspTask.options.addAll(
                 kspTask.project.provider {
@@ -323,11 +325,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         sourceSetName,
                         target,
                         isIncremental,
-                        kspExtension.allWarningsAsErrors
+                        kspExtension.allWarningsAsErrors,
+                        kspTask.commandLineArgumentProviders
                     )
                 }
             )
-            kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
             kspTask.destination = kspOutputDir
             kspTask.blockOtherCompilerPlugins = kspExtension.blockOtherCompilerPlugins
             kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
