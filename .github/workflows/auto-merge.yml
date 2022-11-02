@@ -39,8 +39,9 @@ jobs:
         MERGE_BASE=$(git merge-base HEAD origin/main)
         CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
         PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
-        VERSION_BUMPS=$(git log origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
-        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
+        VERSION_BUMPS=$(git log $MERGE_BASE..origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
+        AA_COMMITS=$(git log $MERGE_BASE..origin/main --pretty=%H kotlin-analysis-api)
+        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK"; echo "$AA_COMMITS") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
         echo Picking $TO_PICK
         if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
 
@@ -122,8 +123,9 @@ jobs:
           MERGE_BASE=$(git merge-base HEAD origin/main)
           CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
           PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
-          VERSION_BUMPS=$(git log origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
-          TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | tac)
+          VERSION_BUMPS=$(git log $MERGE_BASE..origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
+          AA_COMMITS=$(git log $MERGE_BASE..origin/main --pretty=%H kotlin-analysis-api)
+          TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK"; echo "$AA_COMMITS") <(echo "$CANDIDATES") | tac)
           echo Picking $TO_PICK
           if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
 
