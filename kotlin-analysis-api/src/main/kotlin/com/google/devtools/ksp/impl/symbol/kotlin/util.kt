@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
@@ -31,16 +32,32 @@ import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.*
+import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
+import org.jetbrains.kotlin.fir.java.toFirExpression
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
+import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
+import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSignatureParser
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
+import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
+import org.jetbrains.org.objectweb.asm.AnnotationVisitor
+import org.jetbrains.org.objectweb.asm.ClassReader
+import org.jetbrains.org.objectweb.asm.ClassVisitor
+import org.jetbrains.org.objectweb.asm.MethodVisitor
+import org.jetbrains.org.objectweb.asm.Opcodes
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.JAVA to Origin.JAVA,
@@ -372,4 +389,60 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
         result = result.parent
     }
     return result
+}
+
+@OptIn(SymbolInternals::class)
+internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
+    return this.psi.let {
+        when (it) {
+            is KtParameter -> analyze {
+                it.defaultValue?.evaluateAsAnnotationValue()
+            }
+            null -> {
+                val fileManager = ResolverAAImpl.instance.javaFileManager
+                val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
+                val file = analyze {
+                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+                }
+                var defaultValue: JavaAnnotationArgument? = null
+                ClassReader(file).accept(
+                    object : ClassVisitor(Opcodes.API_VERSION) {
+                        override fun visitMethod(
+                            access: Int,
+                            name: String?,
+                            desc: String?,
+                            signature: String?,
+                            exceptions: Array<out String>?
+                        ): MethodVisitor {
+                            return if (name == this@getDefaultValue.name.asString()) {
+                                object : MethodVisitor(Opcodes.API_VERSION) {
+                                    override fun visitAnnotationDefault(): AnnotationVisitor =
+                                        BinaryJavaAnnotationVisitor(
+                                            ClassifierResolutionContext { null },
+                                            BinaryClassSignatureParser()
+                                        ) {
+                                            defaultValue = it
+                                        }
+                                }
+                            } else {
+                                object : MethodVisitor(Opcodes.API_VERSION) {}
+                            }
+                        }
+                    },
+                    ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+                )
+                (this as? KtFirValueParameterSymbol)?.let {
+                    val firSession = it.firSymbol.fir.moduleData.session
+                    val expectedTypeRef = it.firSymbol.fir.returnTypeRef
+                    val expression = defaultValue
+                        ?.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef)
+                    expression?.let {
+                        FirAnnotationValueConverter.toConstantValue(expression, firSession)
+                    }
+                }
+            }
+            else -> throw IllegalStateException("Unhandled default value type ${it.javaClass}")
+        }
+    }
 }

@@ -30,11 +30,12 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
 
 class KSValueArgumentImpl private constructor(
-    private val namedAnnotationValue: KtNamedAnnotationValue
+    private val namedAnnotationValue: KtNamedAnnotationValue,
+    override val origin: Origin
 ) : KSValueArgument {
     companion object : KSObjectCache<KtNamedAnnotationValue, KSValueArgumentImpl>() {
-        fun getCached(namedAnnotationValue: KtNamedAnnotationValue) =
-            cache.getOrPut(namedAnnotationValue) { KSValueArgumentImpl(namedAnnotationValue) }
+        fun getCached(namedAnnotationValue: KtNamedAnnotationValue, origin: Origin) =
+            cache.getOrPut(namedAnnotationValue) { KSValueArgumentImpl(namedAnnotationValue, origin) }
     }
 
     override val name: KSName? by lazy {
@@ -46,8 +47,6 @@ class KSValueArgumentImpl private constructor(
     override val value: Any? = namedAnnotationValue.expression.toValue()
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
-
-    override val origin: Origin = Origin.KOTLIN
 
     override val location: Location by lazy {
         namedAnnotationValue.expression.sourcePsi?.toLocation() ?: NonExistLocation
