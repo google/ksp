@@ -525,7 +525,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/signatureMapper.kt")
     }
 
-    @Disabled
     @TestMetadata("superTypes.kt")
     @Test
     fun testSuperTypes() {
