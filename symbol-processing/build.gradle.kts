@@ -77,6 +77,7 @@ publishing {
 }
 
 signing {
-    isRequired = hasProperty("signingKey") && !gradle.taskGraph.hasTask("publishToMavenLocal")
+    isRequired = hasProperty("signingKey")
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign(extensions.getByType<PublishingExtension>().publications)
 }
