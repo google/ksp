@@ -35,6 +35,8 @@ import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToke
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.types.Variance
@@ -315,4 +317,23 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotatio
         }
         else -> emptySequence()
     } ?: emptySequence()
+}
+
+internal fun org.jetbrains.kotlin.descriptors.Visibility.toModifier(): Modifier {
+    return when (this) {
+        Visibilities.Public -> Modifier.PUBLIC
+        Visibilities.Private -> Modifier.PRIVATE
+        Visibilities.Internal -> Modifier.INTERNAL
+        Visibilities.Protected -> Modifier.PROTECTED
+        else -> Modifier.PUBLIC
+    }
+}
+
+internal fun Modality.toModifier(): Modifier {
+    return when (this) {
+        Modality.FINAL -> Modifier.FINAL
+        Modality.ABSTRACT -> Modifier.ABSTRACT
+        Modality.OPEN -> Modifier.OPEN
+        Modality.SEALED -> Modifier.SEALED
+    }
 }

@@ -112,3 +112,24 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         ktClassOrObjectSymbol.declarations()
     }
 }
+
+internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
+    val result = mutableSetOf<Modifier>()
+    if (this is KtNamedClassOrObjectSymbol) {
+        result.add(modality.toModifier())
+        result.add(visibility.toModifier())
+        if (isInline) {
+            result.add(Modifier.INLINE)
+        }
+        if (isData) {
+            result.add(Modifier.DATA)
+        }
+        if (isExternal) {
+            result.add(Modifier.EXTERNAL)
+        }
+    }
+    if (classKind == KtClassKind.ENUM_CLASS) {
+        result.add(Modifier.ENUM)
+    }
+    return result
+}

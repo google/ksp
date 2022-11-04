@@ -374,7 +374,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaWildcards2.kt")
     }
 
-    @Disabled
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
