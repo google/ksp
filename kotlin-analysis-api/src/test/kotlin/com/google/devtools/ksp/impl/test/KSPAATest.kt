@@ -29,7 +29,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @DisabledOnOs(OS.WINDOWS)
 class KSPAATest : AbstractKSPAATest() {
 
-    @Disabled
     @TestMetadata("annotatedUtil.kt")
     @Test
     fun testAnnotatedUtil() {

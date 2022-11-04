@@ -119,6 +119,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             (origin == Origin.JAVA && ktFunctionSymbol.psi == null || ktFunctionSymbol.psi is PsiClass)
     }
 
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        if (isSyntheticConstructor()) {
+            emptySequence()
+        } else {
+            super.annotations
+        }
+    }
+
     override fun toString(): String {
         // TODO: fix origin for implicit Java constructor in AA
         // TODO: should we change the toString() behavior for synthetic constructors?
