@@ -60,8 +60,16 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
         analyze {
-            ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
+            val supers = ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
                 KSTypeReferenceImpl.getCached(type, this@KSClassDeclarationImpl, index)
+            }
+            // AA is returning additional kotlin.Any for java classes, explicitly extending kotlin.Any will result in
+            // compile error, therefore filtering by name should work.
+            // TODO: reconsider how to model super types for interface.
+            if (supers.size > 1) {
+                supers.filterNot { it.resolve().declaration.qualifiedName?.asString() == "kotlin.Any" }
+            } else {
+                supers
             }.asSequence()
         }
     }
