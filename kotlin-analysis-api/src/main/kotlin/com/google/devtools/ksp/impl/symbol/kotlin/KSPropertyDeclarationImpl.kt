@@ -21,10 +21,11 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 
-class KSPropertyDeclarationImpl private constructor(private val ktPropertySymbol: KtPropertySymbol) :
+class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
     KSPropertyDeclaration,
     AbstractKSDeclarationImpl(ktPropertySymbol),
     KSExpectActual by KSExpectActualImpl(ktPropertySymbol) {
@@ -90,4 +91,26 @@ internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {
             it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
             it == AnnotationUseSiteTarget.SETTER_PARAMETER
     } ?: false
+}
+
+internal fun KtPropertySymbol.toModifiers(): Set<Modifier> {
+    val result = mutableSetOf<Modifier>()
+    result.add(visibility.toModifier())
+    if (isOverride) {
+        result.add(Modifier.OVERRIDE)
+    }
+    if (isStatic) {
+        Modifier.JAVA_STATIC
+    }
+    result.add(modality.toModifier())
+
+    if (this is KtKotlinPropertySymbol) {
+        if (isLateInit) {
+            result.add(Modifier.LATEINIT)
+        }
+        if (isConst) {
+            result.add(Modifier.CONST)
+        }
+    }
+    return result
 }

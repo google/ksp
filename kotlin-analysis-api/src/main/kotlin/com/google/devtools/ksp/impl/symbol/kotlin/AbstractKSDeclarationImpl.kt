@@ -27,8 +27,11 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.toKSModifiers
 import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
@@ -51,6 +54,12 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
         when (val psi = ktDeclarationSymbol.psi) {
             is KtModifierListOwner -> psi.toKSModifiers()
             is PsiModifierListOwner -> psi.toKSModifiers()
+            null -> when (ktDeclarationSymbol) {
+                is KtPropertySymbol -> ktDeclarationSymbol.toModifiers()
+                is KtClassOrObjectSymbol -> ktDeclarationSymbol.toModifiers()
+                is KtFunctionLikeSymbol -> ktDeclarationSymbol.toModifiers()
+                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
+            }
             else -> emptySet()
         }
     }

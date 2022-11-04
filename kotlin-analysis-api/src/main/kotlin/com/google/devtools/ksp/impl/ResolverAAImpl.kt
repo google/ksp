@@ -22,7 +22,11 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImp
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeAliasImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
@@ -47,7 +51,11 @@ import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.name.ClassId
@@ -134,8 +142,29 @@ class ResolverAAImpl(
         }
     }
 
+    @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
+        return analyze {
+            val packageNames = packageName.split(".")
+            var packages = listOf(analysisSession.ROOT_PACKAGE_SYMBOL)
+            for (curName in packageNames) {
+                packages = packages
+                    .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
+                    .distinct()
+            }
+            packages.flatMap {
+                it.getPackageScope().getAllSymbols().distinct().mapNotNull { symbol ->
+                    when (symbol) {
+                        is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                        is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
+                        is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
+                        is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
+                        is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
+                        else -> null
+                    }
+                }
+            }.asSequence()
+        }
     }
 
     override fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration> {
