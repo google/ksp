@@ -22,11 +22,12 @@ import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 
 class KSValueParameterImpl private constructor(
-    private val ktValueParameterSymbol: KtValueParameterSymbol
+    private val ktValueParameterSymbol: KtValueParameterSymbol,
+    override val parent: KSAnnotated
 ) : KSValueParameter {
     companion object : KSObjectCache<KtValueParameterSymbol, KSValueParameterImpl>() {
-        fun getCached(ktValueParameterSymbol: KtValueParameterSymbol) =
-            cache.getOrPut(ktValueParameterSymbol) { KSValueParameterImpl(ktValueParameterSymbol) }
+        fun getCached(ktValueParameterSymbol: KtValueParameterSymbol, parent: KSAnnotated) =
+            cache.getOrPut(ktValueParameterSymbol) { KSValueParameterImpl(ktValueParameterSymbol, parent) }
     }
 
     override val name: KSName? by lazy {
@@ -58,7 +59,10 @@ class KSValueParameterImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktValueParameterSymbol.annotations()
+        (
+            ktValueParameterSymbol.generatedPrimaryConstructorProperty?.annotations()
+                ?: ktValueParameterSymbol.annotations()
+            ).plus(findAnnotationFromUseSiteTarget())
     }
     override val origin: Origin by lazy {
         mapAAOrigin(ktValueParameterSymbol.origin)
@@ -67,8 +71,6 @@ class KSValueParameterImpl private constructor(
     override val location: Location by lazy {
         ktValueParameterSymbol.psi?.toLocation() ?: NonExistLocation
     }
-    override val parent: KSNode?
-        get() = TODO("Not yet implemented")
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitValueParameter(this, data)

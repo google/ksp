@@ -109,7 +109,7 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
             if (hasConstructor) {
                 allDeclarations.memoized()
             } else {
-                (allDeclarations + KSConstructorSyntheticImpl(this)).memoized()
+                (allDeclarations + KSConstructorSyntheticImpl.getCached(this)).memoized()
             }
         } else {
             allDeclarations.memoized()

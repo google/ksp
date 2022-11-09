@@ -160,7 +160,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     // dist/kotlinc/lib/*
     //
     // No, sourceFileProvider doesn't group files by module unfortunately. Let's do it by ourselves.
-    fun compileModule(module: TestModule, testServices: TestServices) {
+    open fun compileModule(module: TestModule, testServices: TestServices) {
         val javaFiles = module.writeJavaFiles()
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
         val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }

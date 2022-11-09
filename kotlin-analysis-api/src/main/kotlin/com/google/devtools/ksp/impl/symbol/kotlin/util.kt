@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -34,11 +35,12 @@ import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToke
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.JAVA to Origin.JAVA,
@@ -131,7 +133,7 @@ internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
         com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.IN_VARIANCE
         else -> null
     }
-    val argType = this.type?.resolve()?.safeAs<KSTypeImpl>()?.type
+    val argType = (this.type?.resolve() as? KSTypeImpl)?.type
     // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
     val alwaysAccessibleLifetimeToken = KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
     return if (argType == null || variance == null) {
@@ -168,16 +170,18 @@ internal inline fun <R> analyze(crossinline action: KtAnalysisSession.() -> R): 
 
 internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
     return analyze {
-        this@declarations.getDeclaredMemberScope().getAllSymbols().map {
-            when (it) {
-                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
-                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(it)
-                is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
-                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
-                is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(it)
+        this@declarations.let {
+            it.getDeclaredMemberScope().getAllSymbols() + it.getStaticMemberScope().getAllSymbols()
+        }.distinct().map { symbol ->
+            when (symbol) {
+                is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
+                is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
+                is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(symbol)
+                is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
                 else -> throw IllegalStateException()
             }
-        }
+        }.memoized()
     }
 }
 
@@ -242,6 +246,7 @@ internal fun KtSymbol.toKSNode(): KSNode {
         is KtFileSymbol -> KSFileImpl.getCached(this)
         is KtEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
         is KtTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
+        is KtLocalVariableSymbol -> KSPropertyDeclarationLocalVariableImpl.getCached(this)
         else -> throw IllegalStateException("Unexpected class for KtSymbol: ${this.javaClass}")
     }
 }
@@ -253,7 +258,7 @@ internal fun ClassId.toKtClassSymbol(): KtClassOrObjectSymbol? {
                 it.asString() == this@toKtClassSymbol.shortClassName.asString()
             }?.singleOrNull() as? KtClassOrObjectSymbol
         } else {
-            this@toKtClassSymbol.getCorrespondingToplevelClassOrObjectSymbol()
+            getClassOrObjectSymbolByClassId(this@toKtClassSymbol)
         }
     }
 }
@@ -280,5 +285,55 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
         // The implementation for getting symbols from a type throws an excpetion
         // when it can't find the corresponding class symbol fot the given class ID.
         null
+    }
+}
+
+internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {
+    return when (this) {
+        is KSPropertyGetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let {
+            it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.GET }
+        }
+        is KSPropertySetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let {
+            it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SET }
+        }
+        is KSValueParameter -> {
+            var parent = this.parent
+            // TODO: eliminate annotationsFromParents to make this fully sequence.
+            val annotationsFromParents = mutableListOf<KSAnnotation>()
+            (parent as? KSPropertyAccessorImpl)?.let {
+                annotationsFromParents.addAll(
+                    it.originalAnnotations.asSequence()
+                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
+                )
+                parent = (parent as KSPropertyAccessorImpl).receiver
+            }
+            (parent as? KSPropertyDeclarationImpl)?.let {
+                annotationsFromParents.addAll(
+                    it.originalAnnotations.asSequence()
+                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
+                )
+            }
+            annotationsFromParents.asSequence()
+        }
+        else -> emptySequence()
+    } ?: emptySequence()
+}
+
+internal fun org.jetbrains.kotlin.descriptors.Visibility.toModifier(): Modifier {
+    return when (this) {
+        Visibilities.Public -> Modifier.PUBLIC
+        Visibilities.Private -> Modifier.PRIVATE
+        Visibilities.Internal -> Modifier.INTERNAL
+        Visibilities.Protected -> Modifier.PROTECTED
+        else -> Modifier.PUBLIC
+    }
+}
+
+internal fun Modality.toModifier(): Modifier {
+    return when (this) {
+        Modality.FINAL -> Modifier.FINAL
+        Modality.ABSTRACT -> Modifier.ABSTRACT
+        Modality.OPEN -> Modifier.OPEN
+        Modality.SEALED -> Modifier.SEALED
     }
 }

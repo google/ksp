@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
+import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.jvmAccessFlag
@@ -112,7 +113,6 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import org.jetbrains.org.objectweb.asm.ClassReader
 import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
@@ -191,7 +191,7 @@ class ResolverImpl(
 
                 // TODO: evaluate with benchmarks: cost of getContainingFile v.s. name collision
                 // Import aliases are file-scoped. `aliasingNamesByFile` could be faster
-                file.safeAs<KSFileImpl>()?.file?.importDirectives?.forEach {
+                (file as? KSFileImpl)?.file?.importDirectives?.forEach {
                     it.aliasName?.let { aliasingNames.add(it) }
                 }
             }
@@ -422,7 +422,7 @@ class ResolverImpl(
         val originalDescriptor = when (original) {
             is KSPropertyDeclaration -> resolvePropertyDeclaration(original)
             is KSFunctionDeclaration ->
-                resolveFunctionDeclaration(original).safeAs<FunctionDescriptor>()?.propertyIfAccessor
+                (resolveFunctionDeclaration(original) as? FunctionDescriptor)?.propertyIfAccessor
             else -> return false
         }
 
@@ -822,7 +822,7 @@ class ResolverImpl(
     override fun getJvmName(declaration: KSFunctionDeclaration): String? {
         // function names might be mangled if they receive inline class parameters or they are internal
         val descriptor = resolveFunctionDeclaration(declaration)
-        return descriptor.safeAs<FunctionDescriptor>()?.let {
+        return (descriptor as? FunctionDescriptor)?.let {
             // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
             typeMapper.mapFunctionName(it, OwnerKind.IMPLEMENTATION)
         }
@@ -1240,7 +1240,7 @@ class ResolverImpl(
         while (candidate.parent is KSTypeArgument) {
             // If the parent is a KSType, it's a synthetic reference.
             // Do nothing and reply on the fallback behavior.
-            val referenceElement = candidate.parent!!.parent.safeAs<KSReferenceElement>() ?: return fallback
+            val referenceElement = (candidate.parent!!.parent as? KSReferenceElement) ?: return fallback
             indexes.add(referenceElement.typeArguments.indexOf(candidate.parent))
             // In case the program isn't properly structured, fallback.
             candidate = referenceElement.findParentRef() ?: return fallback
@@ -1276,7 +1276,7 @@ class ResolverImpl(
         var candidate = this.parent
         while (candidate !is KSClassDeclaration && candidate != null)
             candidate = candidate.parent
-        return candidate.safeAs<KSClassDeclaration>()?.classKind == ClassKind.ANNOTATION_CLASS
+        return (candidate as? KSClassDeclaration)?.classKind == ClassKind.ANNOTATION_CLASS
     }
 
     // Convert type arguments for Java wildcard, recursively.
@@ -1313,9 +1313,11 @@ class ResolverImpl(
 
         while (candidate != null) {
             if ((candidate is KSTypeReference || candidate is KSDeclaration)) {
-                (candidate as KSAnnotated).annotations.firstOrNull {
-                    checkAnnotation(it, JVM_SUPPRESS_WILDCARDS_NAME, JVM_SUPPRESS_WILDCARDS_SHORT)
-                }?.arguments?.firstOrNull()?.value.safeAs<Boolean>()?.let {
+                (
+                    (candidate as KSAnnotated).annotations.firstOrNull {
+                        checkAnnotation(it, JVM_SUPPRESS_WILDCARDS_NAME, JVM_SUPPRESS_WILDCARDS_SHORT)
+                    }?.arguments?.firstOrNull()?.value as? Boolean
+                    )?.let {
                     // KSAnnotated.getAnnotationsByType is handy but it uses reflection.
                     return it
                 }
@@ -1329,10 +1331,12 @@ class ResolverImpl(
     private fun TypeMappingMode.updateFromAnnotations(
         type: KotlinType
     ): TypeMappingMode {
-        type.annotations.findAnnotation(JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME)
-            ?.argumentValue("suppress")?.value.safeAs<Boolean>()?.let {
-                return this.suppressJvmWildcards(it)
-            }
+        (
+            type.annotations.findAnnotation(JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME)
+                ?.argumentValue("suppress")?.value as? Boolean
+            )?.let {
+            return this.suppressJvmWildcards(it)
+        }
 
         if (type.annotations.hasAnnotation(JVM_WILDCARD_ANNOTATION_FQ_NAME)) {
             return TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
@@ -1419,6 +1423,12 @@ class ResolverImpl(
     override fun isJavaRawType(type: KSType): Boolean {
         return type is KSTypeImpl && type.kotlinType.unwrap() is RawType
     }
+
+    private val psiJavaFiles = allKSFiles.filterIsInstance<KSFileJavaImpl>().map {
+        Pair(it.psi.virtualFile.path, it.psi)
+    }.toMap()
+
+    internal fun findPsiJavaFile(path: String): PsiFile? = psiJavaFiles.get(path)
 }
 
 // TODO: cross module resolution

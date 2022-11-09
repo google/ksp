@@ -21,7 +21,6 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntrySymbol: KtEnumEntrySymbol) :
     KSClassDeclaration,
@@ -72,8 +71,10 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val parentDeclaration: KSDeclaration? by lazy {
         analyze {
-            ktEnumEntrySymbol.getContainingSymbol()
-                .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl.getCached(it) }
+            (
+                ktEnumEntrySymbol.getContainingSymbol()
+                    as? KtNamedClassOrObjectSymbol
+                )?.let { KSClassDeclarationImpl.getCached(it) }
         }
     }
 
@@ -96,8 +97,8 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val parent: KSNode? by lazy {
         analyze {
-            ktEnumEntrySymbol.getContainingSymbol()
-                .safeAs<KtNamedClassOrObjectSymbol>()?.let { KSClassDeclarationImpl.getCached(it) }
+            (ktEnumEntrySymbol.getContainingSymbol() as? KtNamedClassOrObjectSymbol)
+                ?.let { KSClassDeclarationImpl.getCached(it) }
         }
     }
 

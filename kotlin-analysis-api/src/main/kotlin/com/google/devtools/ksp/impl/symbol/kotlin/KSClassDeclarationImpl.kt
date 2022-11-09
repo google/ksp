@@ -47,17 +47,29 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
-        analyze {
-            ktClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
-                KSFunctionDeclarationImpl.getCached(it)
+        if (ktClassOrObjectSymbol.origin == KtSymbolOrigin.JAVA) {
+            null
+        } else {
+            analyze {
+                ktClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
+                    KSFunctionDeclarationImpl.getCached(it)
+                }
             }
         }
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
         analyze {
-            ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
+            val supers = ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
                 KSTypeReferenceImpl.getCached(type, this@KSClassDeclarationImpl, index)
+            }
+            // AA is returning additional kotlin.Any for java classes, explicitly extending kotlin.Any will result in
+            // compile error, therefore filtering by name should work.
+            // TODO: reconsider how to model super types for interface.
+            if (supers.size > 1) {
+                supers.filterNot { it.resolve().declaration.qualifiedName?.asString() == "kotlin.Any" }
+            } else {
+                supers
             }.asSequence()
         }
     }
@@ -99,4 +111,25 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     override val declarations: Sequence<KSDeclaration> by lazy {
         ktClassOrObjectSymbol.declarations()
     }
+}
+
+internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
+    val result = mutableSetOf<Modifier>()
+    if (this is KtNamedClassOrObjectSymbol) {
+        result.add(modality.toModifier())
+        result.add(visibility.toModifier())
+        if (isInline) {
+            result.add(Modifier.INLINE)
+        }
+        if (isData) {
+            result.add(Modifier.DATA)
+        }
+        if (isExternal) {
+            result.add(Modifier.EXTERNAL)
+        }
+    }
+    if (classKind == KtClassKind.ENUM_CLASS) {
+        result.add(Modifier.ENUM)
+    }
+    return result
 }

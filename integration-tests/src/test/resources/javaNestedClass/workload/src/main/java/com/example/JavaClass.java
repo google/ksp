@@ -9,4 +9,14 @@ public class JavaClass {
     public enum ENUM {
         R,G,B
     }
+
+    void inject(InjectionTarget t) {}
+
+    class InjectionTarget {}
+
+    static final class NestedClass {
+        static String provideString() {
+            return "str";
+        }
+    }
 }

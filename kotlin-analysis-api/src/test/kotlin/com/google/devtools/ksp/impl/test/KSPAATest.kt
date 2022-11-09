@@ -68,7 +68,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
@@ -196,7 +195,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/declarationInconsistency.kt")
     }
 
-    @Disabled
     @TestMetadata("declarationPackageName.kt")
     @Test
     fun testDeclarationPackageName() {
@@ -376,7 +374,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaWildcards2.kt")
     }
 
-    @Disabled
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
@@ -527,7 +524,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/signatureMapper.kt")
     }
 
-    @Disabled
     @TestMetadata("superTypes.kt")
     @Test
     fun testSuperTypes() {

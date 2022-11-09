@@ -26,11 +26,14 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.toKSModifiers
+import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationSymbol) : KSDeclaration {
     override val origin: Origin = mapAAOrigin(ktDeclarationSymbol.origin)
@@ -40,15 +43,25 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl.getCached(ktDeclarationSymbol.safeAs<KtNamedSymbol>()?.name?.asString() ?: "")
+        KSNameImpl.getCached((ktDeclarationSymbol as? KtNamedSymbol)?.name?.asString() ?: "")
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktDeclarationSymbol.annotations()
+        originalAnnotations
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        ktDeclarationSymbol.psi?.safeAs<KtModifierListOwner>()?.toKSModifiers() ?: emptySet()
+        when (val psi = ktDeclarationSymbol.psi) {
+            is KtModifierListOwner -> psi.toKSModifiers()
+            is PsiModifierListOwner -> psi.toKSModifiers()
+            null -> when (ktDeclarationSymbol) {
+                is KtPropertySymbol -> ktDeclarationSymbol.toModifiers()
+                is KtClassOrObjectSymbol -> ktDeclarationSymbol.toModifiers()
+                is KtFunctionLikeSymbol -> ktDeclarationSymbol.toModifiers()
+                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
+            }
+            else -> emptySet()
+        }
     }
 
     override val containingFile: KSFile? by lazy {
@@ -56,7 +69,8 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val packageName: KSName by lazy {
-        KSNameImpl.getCached(containingFile?.packageName?.asString() ?: "")
+        ((containingFile?.packageName ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName)?.asString() ?: "")
+            .let { KSNameImpl.getCached(it) }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
@@ -81,4 +95,6 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
 
     override val docString: String?
         get() = ktDeclarationSymbol.toDocString()
+
+    internal val originalAnnotations = ktDeclarationSymbol.annotations()
 }

@@ -19,7 +19,6 @@ package com.google.devtools.ksp.symbol.impl
 import com.google.devtools.ksp.BinaryClassInfoCache
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.findPsi
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.processing.impl.workaroundForNested
 import com.google.devtools.ksp.symbol.*
@@ -52,11 +51,12 @@ import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
+import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
 import org.jetbrains.kotlin.types.*
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.util.*
 import kotlin.Comparator
 import kotlin.collections.ArrayDeque
@@ -460,10 +460,11 @@ internal val KSDeclarationContainer.declarationsInSourceOrder: Sequence<KSDeclar
         if (this !is KSClassDeclarationDescriptorImpl || origin != Origin.KOTLIN_LIB)
             return declarations
 
-        val declarationOrdering = descriptor.safeAs<DeserializedClassDescriptor>()
-            ?.source.safeAs<KotlinJvmBinarySourceElement>()?.binaryClass?.let {
-                DeclarationOrdering(it)
-            } ?: return declarations
+        val declarationOrdering = (
+            (descriptor as? DeserializedClassDescriptor)?.source as? KotlinJvmBinarySourceElement
+            )?.binaryClass?.let {
+            DeclarationOrdering(it)
+        } ?: return declarations
 
         return (declarations as? Sequence<KSDeclarationDescriptorImpl>)?.sortedWith(declarationOrdering.comparator)
             ?: declarations
@@ -481,7 +482,7 @@ internal val KSPropertyDeclaration.jvmAccessFlag: Int
         }
         Origin.JAVA_LIB -> {
             val descriptor = (this as KSPropertyDeclarationDescriptorImpl).descriptor
-            descriptor.source.safeAs<JavaSourceElement>()?.javaElement.safeAs<BinaryJavaField>()?.access ?: 0
+            ((descriptor.source as? JavaSourceElement)?.javaElement as? BinaryJavaField)?.access ?: 0
         }
         else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
     }
@@ -500,7 +501,7 @@ internal val KSFunctionDeclaration.jvmAccessFlag: Int
         Origin.JAVA_LIB -> {
             val descriptor = (this as KSFunctionDeclarationDescriptorImpl).descriptor
             // Some functions, like `equals` in builtin types, doesn't have source.
-            descriptor.source.safeAs<JavaSourceElement>()?.javaElement.safeAs<BinaryJavaMethodBase>()?.access ?: 0
+            ((descriptor.source as? JavaSourceElement)?.javaElement as? BinaryJavaMethodBase)?.access ?: 0
         }
         else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
     }
@@ -543,4 +544,16 @@ private fun ClassifierDescriptor.shouldMapToKotlinForAssignabilityCheck(): Boole
         }
         else -> false
     }
+}
+
+fun DeclarationDescriptor.findPsi(): PsiElement? {
+    // For synthetic members.
+    if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
+    val psi = (this as? DeclarationDescriptorWithSource)?.source?.getPsi() ?: return null
+    if (psi is KtElement) return psi
+
+    // Find Java PSIs loaded by KSP
+    val containingFile = ResolverImpl.instance!!.findPsiJavaFile(psi.containingFile.virtualFile.path) ?: return null
+    val leaf = containingFile.findElementAt(psi.textOffset) ?: return null
+    return leaf.parentsWithSelf.firstOrNull { psi.manager.areElementsEquivalent(it, psi) }
 }

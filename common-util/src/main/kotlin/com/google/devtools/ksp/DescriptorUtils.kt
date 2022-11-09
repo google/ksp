@@ -20,11 +20,7 @@ package com.google.devtools.ksp
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
-import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.MemberDescriptor
@@ -43,7 +39,6 @@ import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
 import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import org.jetbrains.org.objectweb.asm.ClassReader
 import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
@@ -135,12 +130,6 @@ fun org.jetbrains.kotlin.types.Variance.toKSVariance(): Variance {
     }
 }
 
-fun DeclarationDescriptor.findPsi(): PsiElement? {
-    // For synthetic members.
-    if ((this is CallableMemberDescriptor) && this.kind != CallableMemberDescriptor.Kind.DECLARATION) return null
-    return (this as? DeclarationDescriptorWithSource)?.source?.getPsi()
-}
-
 /**
  * Custom check for backing fields of descriptors that support properties coming from .class files.
  * The compiler API always returns true for them even when they don't have backing fields.
@@ -171,7 +160,7 @@ object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
     fun getCached(
         kotlinJvmBinaryClass: KotlinJvmBinaryClass,
     ) = cache.getOrPut(kotlinJvmBinaryClass.classId) {
-        val virtualFileContent = kotlinJvmBinaryClass.safeAs<VirtualFileKotlinClass>()?.file?.contentsToByteArray()
+        val virtualFileContent = (kotlinJvmBinaryClass as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
         val fieldAccFlags = mutableMapOf<String, Int>()
         val methodAccFlags = mutableMapOf<String, Int>()
         ClassReader(virtualFileContent).accept(
@@ -217,7 +206,7 @@ private fun DeserializedPropertyDescriptor.hasBackingFieldInBinaryClass(): Boole
         // Companion objects have backing fields in containing classes.
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-fields
         val container = containingDeclaration.containingDeclaration as? DeserializedClassDescriptor
-        container?.source?.safeAs<KotlinJvmBinarySourceElement>()?.binaryClass
+        (container?.source as? KotlinJvmBinarySourceElement)?.binaryClass
     } else {
         this.getContainingKotlinJvmBinaryClass()
     } ?: return false

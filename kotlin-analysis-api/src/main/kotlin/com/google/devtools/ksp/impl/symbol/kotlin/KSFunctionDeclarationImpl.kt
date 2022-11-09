@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
 
-class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol: KtFunctionLikeSymbol) :
+class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbol: KtFunctionLikeSymbol) :
     KSFunctionDeclaration,
     AbstractKSDeclarationImpl(ktFunctionSymbol),
     KSExpectActual by KSExpectActualImpl(ktFunctionSymbol) {
@@ -66,7 +66,7 @@ class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol
     }
 
     override val parameters: List<KSValueParameter> by lazy {
-        ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it) }
+        ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it, this) }
     }
 
     override fun findOverridee(): KSDeclaration? {
@@ -115,4 +115,34 @@ class KSFunctionDeclarationImpl private constructor(private val ktFunctionSymbol
             this.simpleName.asString()
         }
     }
+}
+
+internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {
+    val result = mutableSetOf<Modifier>()
+    if (this is KtFunctionSymbol) {
+        result.add(visibility.toModifier())
+        result.add(modality.toModifier())
+        if (isExternal) {
+            result.add(Modifier.EXTERNAL)
+        }
+        if (isInfix) {
+            result.add(Modifier.INFIX)
+        }
+        if (isInline) {
+            result.add(Modifier.INLINE)
+        }
+        if (isStatic) {
+            result.add(Modifier.JAVA_STATIC)
+        }
+        if (isSuspend) {
+            result.add(Modifier.SUSPEND)
+        }
+        if (isOperator) {
+            result.add(Modifier.OPERATOR)
+        }
+        if (isOperator) {
+            result.add(Modifier.OVERRIDE)
+        }
+    }
+    return result
 }

@@ -131,7 +131,7 @@ class GradleCompilationTest {
             import androidx.room.Entity
             import androidx.room.PrimaryKey
             import androidx.room.ColumnInfo
-            
+
             @Entity
             data class User(
                 @PrimaryKey val uid: Int,
@@ -145,7 +145,7 @@ class GradleCompilationTest {
             """
             import androidx.room.Dao
             import androidx.room.Query
-            
+
             @Dao
             interface UserDao {
                 @Query("SELECT * FROM User")
@@ -158,7 +158,7 @@ class GradleCompilationTest {
             """
             import androidx.room.Database
             import androidx.room.RoomDatabase
-            
+
             @Database(entities = [User::class], version = 1)
             abstract class Database : RoomDatabase() {
                 abstract fun userDao(): UserDao
@@ -187,14 +187,14 @@ class GradleCompilationTest {
                         )
                     }
                 }
-                tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach { 
+                tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach {
                     doFirst {
                         options.get().forEach { option ->
                             println("${'$'}{option.key}=${'$'}{option.value}")
                         }
                     }
                 }
-                
+
             """.trimIndent()
         )
         val result = testRule.runner().withArguments(":app:assembleDebug").build()
@@ -233,5 +233,49 @@ class GradleCompilationTest {
 
         val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
         assertThat(result.output).contains("KSP apoption does not match \\S+=\\S+: invalid")
+    }
+
+    @Test
+    fun commandLineArgumentIsIncludedInApoptionsWhenAddedInKspTask() {
+        testRule.setupAppAsAndroidApp()
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2")
+            )
+        )
+        testRule.appModule.buildFileAdditions.add(
+            """
+                 class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
+
+                     @OutputDirectory
+                     val outputDir = roomOutputDir
+
+                     override fun asArguments(): Iterable<String> {
+                         return listOf(
+                             "room.schemaLocation=${'$'}{outputDir.path}"
+                         )
+                     }
+                 }
+                 afterEvaluate {
+                   tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach {
+                     val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
+                     commandLineArgumentProviders.add(Provider(destination.asFile))
+
+                     options.get().forEach { option ->
+                       println("${'$'}{option.key}=${'$'}{option.value}")
+                     }
+                     commandLineArgumentProviders.get().forEach { commandLine ->
+                       println("commandLine=${'$'}{commandLine.asArguments()}")
+                     }
+                   }
+                 }
+            """.trimIndent()
+        )
+        val result = testRule.runner().withDebug(true).withArguments(":app:assembleDebug").build()
+        val pattern1 = Regex.escape("apoption=room.schemaLocation=")
+        val pattern2 = Regex.escape("${testRule.appModule.moduleRoot}/schemas-kspDebugKotlin")
+        val pattern3 = Regex.escape("commandLine=[")
+        assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
+        assertThat(result.output).containsMatch("$pattern3\\S*$pattern2")
     }
 }
