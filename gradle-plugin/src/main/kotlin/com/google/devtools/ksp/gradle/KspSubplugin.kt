@@ -53,9 +53,6 @@ import org.jetbrains.kotlin.gradle.internal.compilerArgumentsConfigurationFlags
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinNativeCompilationData
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.isMainCompilationData
 import org.jetbrains.kotlin.gradle.targets.js.ir.*
 import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -74,7 +71,10 @@ import kotlin.reflect.KProperty1
 
 @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
 internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<*>> {
-    constructor(compilation: KotlinCompilationData<*>, kotlinCompile: AbstractKotlinCompile<*>) : super(compilation) {
+    constructor (
+        compilation: KotlinCompilation<*>,
+        kotlinCompile: AbstractKotlinCompile<*>
+    ) : super(KotlinCompilationInfo(compilation)) {
         configureTask { task ->
             if (task is KspTaskJvm) {
                 // Assign ownModuleName different from kotlin compilation to
@@ -118,7 +118,7 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
 
     // copied from upstream.
     protected fun MutableList<String>.commonJsAdditionalCompilerFlags(
-        compilation: KotlinCompilationData<*>
+        compilation: KotlinCompilation<*>
     ) {
         if (contains(DISABLE_PRE_IR) &&
             !contains(PRODUCE_UNZIPPED_KLIB) &&
@@ -132,10 +132,10 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
             contains(PRODUCE_ZIPPED_KLIB)
         ) {
             // Configure FQ module name to avoid cyclic dependencies in klib manifests (see KT-36721).
-            val baseName = if (compilation.isMainCompilationData()) {
+            val baseName = if (compilation.isMain()) {
                 project.name
             } else {
-                "${project.name}_${compilation.compilationPurpose}"
+                "${project.name}_${compilation.compilationName}"
             }
             if (none { it.startsWith(KLIB_MODULE_NAME) }) {
                 add("$KLIB_MODULE_NAME=${project.klibModuleName(baseName)}")
@@ -147,9 +147,6 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
 class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) :
     KotlinCompilerPluginSupportPlugin {
     companion object {
-        const val KSP_MAIN_CONFIGURATION_NAME = "ksp"
-        const val KSP_ARTIFACT_NAME = "symbol-processing"
-        const val KSP_ARTIFACT_NAME_NATIVE = "symbol-processing-cmdline"
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
         const val KSP_API_ID = "symbol-processing-api"
         const val KSP_COMPILER_PLUGIN_ID = "symbol-processing"
@@ -391,30 +388,30 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
                     kspTask.libraries.setFrom(kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries }))
                     kspTask.configureCompilation(
-                        kotlinCompilation as KotlinCompilationData<*>,
+                        kotlinCompilation,
                         kotlinCompileTask,
                     )
                 }
             }
             is KotlinNativeCompile -> {
                 val kspTaskClass = KspTaskNative::class.java
-                val pluginConfigurationName =
-                    (kotlinCompileTask.compilation as AbstractKotlinNativeCompilation).pluginConfigurationName
-                project.configurations.getByName(pluginConfigurationName).dependencies.add(
-                    project.dependencies.create(apiArtifact)
-                )
                 project.tasks.register(kspTaskName, kspTaskClass, kotlinCompileTask.compilation).apply {
                     configure { kspTask ->
                         kspTask.onlyIf {
-                            kotlinCompileTask.compilation.konanTarget.enabledOnCurrentHost
+                            kspTask.konanTarget.enabledOnCurrentHost
                         }
                         configureAsKspTask(kspTask, false)
                         configureAsAbstractKotlinCompileTool(kspTask)
 
                         // KotlinNativeCompile computes -Xplugin=... from compilerPluginClasspath.
-                        kspTask.compilerPluginClasspath = project.configurations.getByName(pluginConfigurationName)
+                        if (kspExtension.blockOtherCompilerPlugins) {
+                            kspTask.compilerPluginClasspath = kspClasspathCfg
+                        } else {
+                            kspTask.compilerPluginClasspath =
+                                kspClasspathCfg + kotlinCompileTask.compilerPluginClasspath!!
+                            kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
+                        }
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
-                        kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
@@ -429,7 +426,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         (kotlinCompileTask as? AbstractKotlinCompile<*>)?.let {
-            Configurator(kotlinCompilation as KotlinCompilationData<*>, kotlinCompileTask as AbstractKotlinCompile<*>)
+            Configurator(kotlinCompilation, kotlinCompileTask as AbstractKotlinCompile<*>)
                 .execute(kspTaskProvider as TaskProvider<AbstractKotlinCompile<*>>)
         }
 
@@ -468,14 +465,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
-            artifactId = KSP_ARTIFACT_NAME,
+            artifactId = KSP_COMPILER_PLUGIN_ID,
             version = KSP_VERSION
         )
 
     override fun getPluginArtifactForNative(): SubpluginArtifact? =
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
-            artifactId = KSP_ARTIFACT_NAME_NATIVE,
+            artifactId = KSP_COMPILER_PLUGIN_ID,
             version = KSP_VERSION
         )
 
@@ -534,7 +531,7 @@ interface KspTask : Task {
     var isKspIncremental: Boolean
 
     fun configureCompilation(
-        kotlinCompilation: KotlinCompilationData<*>,
+        kotlinCompilation: KotlinCompilation<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     )
 }
@@ -559,7 +556,7 @@ abstract class KspTaskJvm @Inject constructor(
     var isIntermoduleIncremental: Boolean = false
 
     override fun configureCompilation(
-        kotlinCompilation: KotlinCompilationData<*>,
+        kotlinCompilation: KotlinCompilation<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
         kotlinCompile as KotlinCompile
@@ -776,7 +773,7 @@ abstract class KspTaskJS @Inject constructor(
     )
 
     override fun configureCompilation(
-        kotlinCompilation: KotlinCompilationData<*>,
+        kotlinCompilation: KotlinCompilation<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
         kotlinCompile as Kotlin2JsCompile
@@ -867,7 +864,7 @@ abstract class KspTaskMetadata @Inject constructor(
     ),
     KspTask {
     override fun configureCompilation(
-        kotlinCompilation: KotlinCompilationData<*>,
+        kotlinCompilation: KotlinCompilation<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) {
         kotlinCompile as KotlinCompileCommon
@@ -945,8 +942,8 @@ abstract class KspTaskMetadata @Inject constructor(
 }
 
 @CacheableTask
-abstract class KspTaskNative @Inject constructor(
-    compilation: KotlinNativeCompilationData<*>,
+abstract class KspTaskNative @Inject internal constructor(
+    compilation: KotlinCompilationInfo,
     objectFactory: ObjectFactory,
     providerFactory: ProviderFactory,
     execOperations: ExecOperations
@@ -955,16 +952,8 @@ abstract class KspTaskNative @Inject constructor(
     override val compilerOptions: KotlinCommonCompilerOptions =
         objectFactory.newInstance(KotlinMultiplatformCommonCompilerOptionsDefault::class.java)
 
-    override var compilerPluginClasspath: FileCollection? = null
-        get() {
-            if (blockOtherCompilerPlugins) {
-                field = overridePluginClasspath
-            }
-            return field
-        }
-
     override fun configureCompilation(
-        kotlinCompilation: KotlinCompilationData<*>,
+        kotlinCompilation: KotlinCompilation<*>,
         kotlinCompile: AbstractKotlinCompile<*>,
     ) = Unit
 
