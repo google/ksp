@@ -4,6 +4,12 @@ import com.google.devtools.ksp.configureKtlintApplyToIdea
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
 
+val kotlinBaseVersion: String? by project
+if (extra.has("kspOnlyVersion") && kotlinBaseVersion != null) {
+    val kspOnlyVersion = extra.get("kspOnlyVersion") as String
+    extra.set("kspVersion", "$kotlinBaseVersion-$kspOnlyVersion")
+}
+
 if (!extra.has("kspVersion")) {
     extra.set("kspVersion", "2.0.255-SNAPSHOT")
 }
