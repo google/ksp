@@ -61,7 +61,12 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
     override val returnType: KSTypeReference? by lazy {
         analyze {
-            KSTypeReferenceImpl.getCached(ktFunctionSymbol.returnType, this@KSFunctionDeclarationImpl)
+            // Constructors
+            if (ktFunctionSymbol is KtConstructorSymbol) {
+                ((parentDeclaration as KSClassDeclaration).asStarProjectedType() as KSTypeImpl).type
+            } else {
+                ktFunctionSymbol.returnType
+            }.let { KSTypeReferenceImpl.getCached(it, this@KSFunctionDeclarationImpl) }
         }
     }
 
@@ -106,10 +111,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         }
     }
 
+    private fun isSyntheticConstructor(): Boolean {
+        return origin == Origin.SYNTHETIC || (origin == Origin.JAVA && ktFunctionSymbol.psi == null)
+    }
+
     override fun toString(): String {
         // TODO: fix origin for implicit Java constructor in AA
         // TODO: should we change the toString() behavior for synthetic constructors?
-        return if (origin == Origin.SYNTHETIC || (origin == Origin.JAVA && ktFunctionSymbol.psi == null)) {
+        return if (isSyntheticConstructor()) {
             "synthetic constructor for ${this.parentDeclaration}"
         } else {
             this.simpleName.asString()
