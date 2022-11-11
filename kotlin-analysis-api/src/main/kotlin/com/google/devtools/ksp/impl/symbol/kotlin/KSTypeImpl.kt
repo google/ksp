@@ -155,12 +155,12 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override fun toString(): String {
         return type.render()
     }
+}
 
-    private fun KtType.toAbbreviatedType(): KtType {
-        val symbol = this.classifierSymbol()
-        return when (symbol) {
-            is KtTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
-            else -> this
-        }
+internal fun KtType.toAbbreviatedType(): KtType {
+    val symbol = this.classifierSymbol()
+    return when (symbol) {
+        is KtTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
+        else -> this
     }
 }

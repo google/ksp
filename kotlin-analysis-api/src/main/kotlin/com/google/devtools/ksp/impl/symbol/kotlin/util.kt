@@ -87,7 +87,7 @@ internal fun KtAnnotationValue.render(): String {
     }
 }
 
-internal fun KtType.render(): String {
+internal fun KtType.render(inFunctionType: Boolean = false): String {
     return buildString {
         annotations.forEach {
             append("[${it.render()}] ")
@@ -97,7 +97,11 @@ internal fun KtType.render(): String {
                 is KtNonErrorClassType -> buildString {
                     val symbol = this@render.classifierSymbol()
                     if (symbol is KtTypeAliasSymbol) {
-                        append("[typealias ${symbol.name.asString()}]")
+                        if (!inFunctionType) {
+                            append("[typealias ${symbol.name.asString()}]")
+                        } else {
+                            append(this@render.toAbbreviatedType().render(inFunctionType))
+                        }
                     } else {
                         append(classSymbol.name?.asString())
                         if (typeArguments.isNotEmpty()) {
@@ -106,7 +110,8 @@ internal fun KtType.render(): String {
                                     is KtStarProjectionTypeArgument -> "*"
                                     is KtTypeArgumentWithVariance ->
                                         "${it.variance}" +
-                                            "${if (it.variance != Variance.INVARIANT) " " else ""}${it.type.render()}"
+                                            (if (it.variance != Variance.INVARIANT) " " else "") +
+                                            it.type.render(this@render is KtFunctionalType)
                                 }
                             }.also { append(it) }
                         }
@@ -114,12 +119,13 @@ internal fun KtType.render(): String {
                 }
                 is KtClassErrorType -> "<ERROR TYPE>"
                 is KtCapturedType -> asStringForDebugging()
-                is KtDefinitelyNotNullType -> original.render() + " & Any"
+                is KtDefinitelyNotNullType -> original.render(inFunctionType) + " & Any"
                 is KtDynamicType -> "<dynamic type>"
-                is KtFlexibleType -> "(${lowerBound.render()}..${upperBound.render()})"
+                is KtFlexibleType -> "(${lowerBound.render(inFunctionType)}..${upperBound.render(inFunctionType)})"
                 is KtIntegerLiteralType -> "ILT: $value"
                 is KtIntersectionType ->
-                    this@render.conjuncts.joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render() }
+                    this@render.conjuncts
+                        .joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render(inFunctionType) }
                 is KtTypeParameterType -> asStringForDebugging()
             } + if (nullability == KtTypeNullability.NULLABLE) "?" else ""
         )

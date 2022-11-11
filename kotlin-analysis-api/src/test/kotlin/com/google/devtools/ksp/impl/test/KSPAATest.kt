@@ -241,7 +241,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/errorTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("functionTypeAlias.kt")
     @Test
     fun testFunctionTypeAlias() {
