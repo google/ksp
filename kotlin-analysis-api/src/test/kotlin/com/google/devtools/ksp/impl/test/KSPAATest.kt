@@ -313,11 +313,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/inheritedTypeAlias.kt")
     }
 
-    @Disabled
     @TestMetadata("innerTypes.kt")
     @Test
     fun testInnerTypes() {
-        runTest("../test-utils/testData/api/innerTypes.kt")
+        runTest("testData/innerTypes.kt")
     }
 
     @TestMetadata("interfaceWithDefault.kt")
