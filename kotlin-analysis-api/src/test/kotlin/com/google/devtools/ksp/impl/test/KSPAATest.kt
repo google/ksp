@@ -219,7 +219,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/declared.kt")
     }
 
-    @Disabled
     @TestMetadata("docString.kt")
     @Test
     fun testDocString() {
