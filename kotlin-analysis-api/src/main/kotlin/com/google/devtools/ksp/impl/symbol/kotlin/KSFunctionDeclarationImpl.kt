@@ -143,6 +143,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             this.simpleName.asString()
         }
     }
+
+    override val docString: String? by lazy {
+        if (isSyntheticConstructor()) {
+            parentDeclaration?.docString
+        } else {
+            super.docString
+        }
+    }
 }
 
 internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {
