@@ -175,14 +175,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/constProperties.kt")
     }
 
-    @Disabled
     @TestMetadata("constructorDeclarations.kt")
     @Test
     fun testConstructorDeclarations() {
         runTest("../test-utils/testData/api/constructorDeclarations.kt")
     }
 
-    @Disabled
     @TestMetadata("crossModuleTypeAlias.kt")
     @Test
     fun testCrossModuleTypeAlias() {
@@ -574,7 +572,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/varianceTypeCheck.kt")
     }
 
-    @Disabled
     @TestMetadata("validateTypes.kt")
     @Test
     fun testValidateTypes() {

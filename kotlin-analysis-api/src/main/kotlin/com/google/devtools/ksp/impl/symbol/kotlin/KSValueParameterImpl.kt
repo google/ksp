@@ -15,11 +15,17 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
+import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
+import org.jetbrains.kotlin.fir.java.declarations.FirJavaValueParameter
+import org.jetbrains.kotlin.fir.java.resolveIfJavaType
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 
 class KSValueParameterImpl private constructor(
     private val ktValueParameterSymbol: KtValueParameterSymbol,
@@ -34,7 +40,16 @@ class KSValueParameterImpl private constructor(
         KSNameImpl.getCached(ktValueParameterSymbol.name.asString())
     }
 
+    @OptIn(SymbolInternals::class)
     override val type: KSTypeReference by lazy {
+        // FIXME: temporary workaround before upstream fixes java type refs.
+        if (origin == Origin.JAVA) {
+            ((ktValueParameterSymbol as KtFirValueParameterSymbol).firSymbol.fir as FirJavaValueParameter).also {
+                // can't get containing class for FirJavaValueParameter, using empty stack for now.
+                it.returnTypeRef =
+                    it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY)
+            }
+        }
         KSTypeReferenceImpl.getCached(ktValueParameterSymbol.returnType, this@KSValueParameterImpl)
     }
 

@@ -15,13 +15,20 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.fir.java.declarations.FirJavaClass
+import org.jetbrains.kotlin.fir.java.declarations.FirJavaMethod
+import org.jetbrains.kotlin.fir.java.resolveIfJavaType
+import org.jetbrains.kotlin.fir.resolve.getContainingClass
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
 
@@ -59,7 +66,19 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         }
     }
 
+    @OptIn(SymbolInternals::class)
     override val returnType: KSTypeReference? by lazy {
+        // FIXME: temporary workaround before upstream fixes java type refs.
+        if (origin == Origin.JAVA) {
+            if (ktFunctionSymbol is KtFirFunctionSymbol) {
+                (ktFunctionSymbol.firSymbol.fir as? FirJavaMethod)?.also {
+                    it.returnTypeRef = it.returnTypeRef.resolveIfJavaType(
+                        it.moduleData.session,
+                        (it.getContainingClass(it.moduleData.session) as FirJavaClass).javaTypeParameterStack
+                    )
+                }
+            }
+        }
         analyze {
             // Constructors
             if (ktFunctionSymbol is KtConstructorSymbol) {
