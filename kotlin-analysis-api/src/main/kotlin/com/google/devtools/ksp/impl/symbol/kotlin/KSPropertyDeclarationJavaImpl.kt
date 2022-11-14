@@ -1,8 +1,15 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
+import org.jetbrains.kotlin.fir.java.declarations.FirJavaClass
+import org.jetbrains.kotlin.fir.java.declarations.FirJavaField
+import org.jetbrains.kotlin.fir.java.resolveIfJavaType
+import org.jetbrains.kotlin.fir.resolve.getContainingClass
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 
 class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldSymbol: KtJavaFieldSymbol) :
     KSPropertyDeclaration,
@@ -21,7 +28,15 @@ class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldS
     override val extensionReceiver: KSTypeReference?
         get() = null
 
+    @OptIn(SymbolInternals::class)
     override val type: KSTypeReference by lazy {
+        // FIXME: temporary workaround before upstream fixes java type refs.
+        ((ktJavaFieldSymbol as KtFirJavaFieldSymbol).firSymbol.fir as FirJavaField).also {
+            it.returnTypeRef = it.returnTypeRef.resolveIfJavaType(
+                it.moduleData.session,
+                (it.getContainingClass(it.moduleData.session) as FirJavaClass).javaTypeParameterStack
+            )
+        }
         KSTypeReferenceImpl.getCached(ktJavaFieldSymbol.returnType, this@KSPropertyDeclarationJavaImpl)
     }
 
