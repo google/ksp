@@ -14,7 +14,7 @@ tasks.withType<KotlinCompile> {
 plugins {
     kotlin("jvm")
     id("org.jetbrains.intellij") version "0.6.4"
-    id("org.jetbrains.dokka") version ("1.4.32")
+    id("org.jetbrains.dokka") version ("1.7.20")
 }
 
 intellij {
