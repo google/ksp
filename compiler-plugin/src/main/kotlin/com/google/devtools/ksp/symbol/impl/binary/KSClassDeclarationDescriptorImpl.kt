@@ -27,11 +27,13 @@ import com.google.devtools.ksp.symbol.impl.kotlin.*
 import com.google.devtools.ksp.symbol.impl.replaceTypeArguments
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.resolve.calls.tower.isSynthesized
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -97,7 +99,13 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
     override val declarations: Sequence<KSDeclaration> by lazy {
         sequenceOf(
             descriptor.unsubstitutedMemberScope.getDescriptorsFiltered(),
-            descriptor.staticScope.getDescriptorsFiltered(),
+            // FIXME: Support static, synthetic `entries` for enums when the language feature is enabled.
+            descriptor.staticScope.getDescriptorsFiltered().filterNot {
+                descriptor.kind == KtClassKind.ENUM_CLASS &&
+                    it is CallableDescriptor &&
+                    it.isSynthesized &&
+                    it.name == StandardNames.ENUM_ENTRIES
+            },
             descriptor.constructors
         ).flatten()
             .filter {
