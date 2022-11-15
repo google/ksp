@@ -62,19 +62,23 @@ object AndroidPluginIntegration {
             .map { it.name }
     }
 
-    fun registerGeneratedJavaSources(
+    fun registerGeneratedSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<KspTaskJvm>,
         javaOutputDir: File,
+        kotlinOutputDir: File,
         classOutputDir: File,
         resourcesOutputDir: FileCollection,
     ) {
         val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
+        val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
         val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
         kspJavaOutput.include("**/*.java")
+        kspKotlinOutput.include("**/*.kt")
         kspClassOutput.include("**/*.class")
         kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
+        kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.files)
         kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
         kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
     }
