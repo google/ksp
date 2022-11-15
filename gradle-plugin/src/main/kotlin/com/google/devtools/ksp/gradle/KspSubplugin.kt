@@ -448,11 +448,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
         }
         if (kotlinCompilation is KotlinJvmAndroidCompilation) {
-            AndroidPluginIntegration.registerGeneratedJavaSources(
+            AndroidPluginIntegration.registerGeneratedSources(
                 project = project,
                 kotlinCompilation = kotlinCompilation,
                 kspTaskProvider = kspTaskProvider as TaskProvider<KspTaskJvm>,
                 javaOutputDir = javaOutputDir,
+                kotlinOutputDir = kotlinOutputDir,
                 classOutputDir = classOutputDir,
                 resourcesOutputDir = project.files(resourceOutputDir)
             )
