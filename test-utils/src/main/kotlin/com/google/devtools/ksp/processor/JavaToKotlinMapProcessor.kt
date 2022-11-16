@@ -34,7 +34,12 @@ open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
         "java.lang.String",
         "java.lang.Integer",
         "java.util.List",
+        "java.util.Map",
+        "java.util.Set",
         "java.util.Map.Entry",
+        "java.util.ListIterator",
+        "java.util.Iterator",
+        "java.lang.Iterable",
         "java.lang.Void",
     )
 
@@ -50,7 +55,14 @@ open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
             val k = resolver.mapJavaNameToKotlin(
                 resolver.getKSNameFromString(it)
             )?.asString()
-            results.add("$it -> $k")
+            val m = resolver.mapJavaNameToKotlinMutable(
+                resolver.getKSNameFromString(it)
+            )?.asString()
+            if (k == m) {
+                results.add("$it -> $k")
+            } else {
+                results.add("$it -> $k, $m")
+            }
         }
 
         kotlinClasses.forEach {
