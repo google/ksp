@@ -165,7 +165,7 @@ class SourceSetConfigurationsTest {
     }
 
     @Test
-    fun registerJavaSourcesToAndroid() {
+    fun registerGeneratedSourcesToAndroid() {
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(
@@ -255,6 +255,21 @@ class SourceSetConfigurationsTest {
             ),
             SourceFolder(
                 "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/java"
+            ),
+            SourceFolder(
+                "debug", "SRC:generated/ksp/debug/kotlin"
+            ),
+            SourceFolder(
+                "release", "SRC:generated/ksp/release/kotlin"
+            ),
+            SourceFolder(
+                "debugAndroidTest", "SRC:generated/ksp/debugAndroidTest/kotlin"
+            ),
+            SourceFolder(
+                "debugUnitTest", "SRC:generated/ksp/debugUnitTest/kotlin"
+            ),
+            SourceFolder(
+                "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/kotlin"
             ),
             // TODO byte sources seems to be overridden by tmp/kotlin-classes/debug
             //  assert them as well once fixed
