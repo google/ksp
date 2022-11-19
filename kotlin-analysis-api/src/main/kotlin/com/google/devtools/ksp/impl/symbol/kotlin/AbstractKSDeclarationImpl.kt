@@ -36,7 +36,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
 abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationSymbol) : KSDeclaration {
-    override val origin: Origin = mapAAOrigin(ktDeclarationSymbol.origin)
+    override val origin: Origin by lazy {
+        mapAAOrigin(ktDeclarationSymbol)
+    }
 
     override val location: Location by lazy {
         ktDeclarationSymbol.psi.toLocation()

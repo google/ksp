@@ -43,7 +43,7 @@ class KSValueParameterImpl private constructor(
     @OptIn(SymbolInternals::class)
     override val type: KSTypeReference by lazy {
         // FIXME: temporary workaround before upstream fixes java type refs.
-        if (origin == Origin.JAVA) {
+        if (origin == Origin.JAVA || origin == Origin.JAVA_LIB) {
             ((ktValueParameterSymbol as KtFirValueParameterSymbol).firSymbol.fir as FirJavaValueParameter).also {
                 // can't get containing class for FirJavaValueParameter, using empty stack for now.
                 it.returnTypeRef =
@@ -80,7 +80,7 @@ class KSValueParameterImpl private constructor(
             ).plus(findAnnotationFromUseSiteTarget())
     }
     override val origin: Origin by lazy {
-        mapAAOrigin(ktValueParameterSymbol.origin)
+        mapAAOrigin(ktValueParameterSymbol)
     }
 
     override val location: Location by lazy {

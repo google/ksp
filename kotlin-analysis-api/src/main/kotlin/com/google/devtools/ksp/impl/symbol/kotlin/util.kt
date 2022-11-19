@@ -56,9 +56,14 @@ internal val ktSymbolOriginToOrigin = mapOf(
     KtSymbolOrigin.SUBSTITUTION_OVERRIDE to Origin.JAVA_LIB
 )
 
-internal fun mapAAOrigin(ktSymbolOrigin: KtSymbolOrigin): Origin {
-    return ktSymbolOriginToOrigin[ktSymbolOrigin]
-        ?: throw IllegalStateException("unhandled origin ${ktSymbolOrigin.name}")
+internal fun mapAAOrigin(ktSymbol: KtSymbol): Origin {
+    val symbolOrigin = ktSymbolOriginToOrigin[ktSymbol.origin]
+        ?: throw IllegalStateException("unhandled origin ${ktSymbol.origin.name}")
+    return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
+        Origin.JAVA_LIB
+    } else {
+        symbolOrigin
+    }
 }
 
 internal fun KtAnnotationApplication.render(): String {

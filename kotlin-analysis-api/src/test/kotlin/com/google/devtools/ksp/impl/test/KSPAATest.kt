@@ -395,7 +395,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/mangledNames.kt")
     }
 
-    @Disabled
     @TestMetadata("multipleModules.kt")
     @Test
     fun testMultipleModules() {
