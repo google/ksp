@@ -19,7 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
@@ -94,7 +94,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
         return analyze {
             analysisSession.buildClassType(ktClassOrObjectSymbol) {
-                typeArguments.forEach { argument(it.toKtTypeArgument()) }
+                typeArguments.forEach { argument(it.toKtTypeProjection()) }
             }.let { KSTypeImpl.getCached(it) }
         }
     }
@@ -107,7 +107,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
                     while (current is KSClassDeclarationImpl) {
                         current.ktClassOrObjectSymbol.typeParameters.forEach {
                             argument(
-                                KtStarProjectionTypeArgument(
+                                KtStarTypeProjection(
                                     (current as KSClassDeclarationImpl).ktClassOrObjectSymbol.token
                                 )
                             )

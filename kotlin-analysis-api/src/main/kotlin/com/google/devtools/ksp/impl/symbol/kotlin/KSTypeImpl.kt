@@ -25,7 +25,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
-import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationsList
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
@@ -69,7 +69,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override val arguments: List<KSTypeArgument> by lazy {
-        (type as? KtNonErrorClassType)?.typeArguments?.map { KSTypeArgumentImpl.getCached(it) } ?: emptyList()
+        (type as? KtNonErrorClassType)?.typeArguments()?.map { KSTypeArgumentImpl.getCached(it) } ?: emptyList()
     }
 
     override val annotations: Sequence<KSAnnotation>
@@ -100,7 +100,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override fun replace(arguments: List<KSTypeArgument>): KSType {
         return analyze {
             analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                arguments.forEach { arg -> argument(arg.toKtTypeArgument()) }
+                arguments.forEach { arg -> argument(arg.toKtTypeProjection()) }
             }.let { getCached(it) }
         }
     }
@@ -108,8 +108,8 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override fun starProjection(): KSType {
         return analyze {
             analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                type.typeArguments.forEach {
-                    argument(KtStarProjectionTypeArgument(type.token))
+                type.typeArguments().forEach {
+                    argument(KtStarTypeProjection(type.token))
                 }
             }.let { getCached(it) }
         }

@@ -19,10 +19,12 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
@@ -41,11 +43,19 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override val getter: KSPropertyGetter? by lazy {
-        ktPropertySymbol.getter?.let { KSPropertyGetterImpl.getCached(this, it) }
+        if (ktPropertySymbol.psi is PsiClass) {
+            null
+        } else {
+            ktPropertySymbol.getter?.let { KSPropertyGetterImpl.getCached(this, it) }
+        }
     }
 
     override val setter: KSPropertySetter? by lazy {
-        ktPropertySymbol.setter?.let { KSPropertySetterImpl.getCached(this, it) }
+        if (ktPropertySymbol.psi is PsiClass) {
+            null
+        } else {
+            ktPropertySymbol.setter?.let { KSPropertySetterImpl.getCached(this, it) }
+        }
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {

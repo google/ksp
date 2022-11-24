@@ -37,7 +37,11 @@ class KSValueParameterImpl private constructor(
     }
 
     override val name: KSName? by lazy {
-        KSNameImpl.getCached(ktValueParameterSymbol.name.asString())
+        if (origin == Origin.SYNTHETIC && parent is KSPropertySetter) {
+            KSNameImpl.getCached("<set-?>")
+        } else {
+            KSNameImpl.getCached(ktValueParameterSymbol.name.asString())
+        }
     }
 
     @OptIn(SymbolInternals::class)
@@ -80,7 +84,12 @@ class KSValueParameterImpl private constructor(
             ).plus(findAnnotationFromUseSiteTarget())
     }
     override val origin: Origin by lazy {
-        mapAAOrigin(ktValueParameterSymbol)
+        val symbolOrigin = mapAAOrigin(ktValueParameterSymbol)
+        if (symbolOrigin == Origin.KOTLIN && ktValueParameterSymbol.psi == null) {
+            Origin.SYNTHETIC
+        } else {
+            symbolOrigin
+        }
     }
 
     override val location: Location by lazy {

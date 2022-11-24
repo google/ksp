@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
@@ -131,7 +132,8 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     private fun isSyntheticConstructor(): Boolean {
-        return origin == Origin.SYNTHETIC || (origin == Origin.JAVA && ktFunctionSymbol.psi == null)
+        return origin == Origin.SYNTHETIC ||
+            (origin == Origin.JAVA && ktFunctionSymbol.psi == null || ktFunctionSymbol.psi is PsiClass)
     }
 
     override fun toString(): String {

@@ -50,7 +50,7 @@ class KSTypeReferenceImpl private constructor(
                     ktType.lowerBound as KtUsualClassType,
                     this@KSTypeReferenceImpl
                 )
-                is KtClassErrorType -> null
+                is KtErrorType -> null
                 is KtTypeParameterType -> null
                 else -> throw IllegalStateException("Unexpected type element ${ktType.javaClass}, $ExceptionMessage")
             }

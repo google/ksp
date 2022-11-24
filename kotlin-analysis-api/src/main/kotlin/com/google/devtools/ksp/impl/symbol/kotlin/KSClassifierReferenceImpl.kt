@@ -27,7 +27,7 @@ class KSClassifierReferenceImpl private constructor(
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        ktType.typeArguments.map { KSTypeArgumentImpl.getCached(it, this) }
+        ktType.typeArguments().map { KSTypeArgumentImpl.getCached(it, this) }
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
