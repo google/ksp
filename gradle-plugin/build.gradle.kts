@@ -10,7 +10,7 @@ val signingKey: String? by project
 val signingPassword: String? by project
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
+    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
 }
 
 plugins {

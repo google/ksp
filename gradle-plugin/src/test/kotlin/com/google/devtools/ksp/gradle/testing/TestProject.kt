@@ -50,8 +50,17 @@ class TestProject(
     fun writeFiles() {
         writeBuildFile()
         writeSettingsFile()
+        writeRootProperties()
         appModule.writeBuildFile()
         processorModule.writeBuildFile()
+    }
+
+    private fun writeRootProperties() {
+        val contents = """
+            
+            kotlin.jvm.target.validation.mode=warning
+        """.trimIndent()
+        rootDir.resolve("gradle.properties").appendText(contents)
     }
 
     private fun writeSettingsFile() {

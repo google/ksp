@@ -11,7 +11,7 @@ val kotlinBaseVersion: String by project
 val libsForTesting by configurations.creating
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
+    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
 }
 
 plugins {
