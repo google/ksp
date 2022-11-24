@@ -25,9 +25,9 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
-import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
-import org.jetbrains.kotlin.analysis.api.KtTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
+import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
@@ -109,10 +109,10 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
                         }
                     } else {
                         append(classSymbol.name?.asString())
-                        if (typeArguments.isNotEmpty()) {
-                            typeArguments.joinToString(separator = ", ", prefix = "<", postfix = ">") {
+                        if (typeArguments().isNotEmpty()) {
+                            typeArguments().joinToString(separator = ", ", prefix = "<", postfix = ">") {
                                 when (it) {
-                                    is KtStarProjectionTypeArgument -> "*"
+                                    is KtStarTypeProjection -> "*"
                                     is KtTypeArgumentWithVariance ->
                                         "${it.variance}" +
                                             (if (it.variance != Variance.INVARIANT) " " else "") +
@@ -122,7 +122,7 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
                         }
                     }
                 }
-                is KtClassErrorType -> "<ERROR TYPE>"
+                is KtClassErrorType, is KtTypeErrorType -> "<ERROR TYPE>"
                 is KtCapturedType -> asStringForDebugging()
                 is KtDefinitelyNotNullType -> original.render(inFunctionType) + " & Any"
                 is KtDynamicType -> "<dynamic type>"
@@ -137,7 +137,7 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
     }
 }
 
-internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
+internal fun KSTypeArgument.toKtTypeProjection(): KtTypeProjection {
     val variance = when (this.variance) {
         com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
         com.google.devtools.ksp.symbol.Variance.COVARIANT -> Variance.OUT_VARIANCE
@@ -148,7 +148,7 @@ internal fun KSTypeArgument.toKtTypeArgument(): KtTypeArgument {
     // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
     val alwaysAccessibleLifetimeToken = KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
     return if (argType == null || variance == null) {
-        KtStarProjectionTypeArgument(alwaysAccessibleLifetimeToken)
+        KtStarTypeProjection(alwaysAccessibleLifetimeToken)
     } else {
         KtTypeArgumentWithVariance(argType, variance, alwaysAccessibleLifetimeToken)
     }
@@ -280,7 +280,7 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
             is KtTypeParameterType -> this.symbol
             // TODO: upstream is not exposing enough information for captured types.
             is KtCapturedType -> TODO("fix in upstream")
-            is KtClassErrorType -> null
+            is KtClassErrorType, is KtTypeErrorType -> null
             is KtFunctionalType -> classSymbol
             is KtUsualClassType -> classSymbol
             is KtDefinitelyNotNullType -> original.classifierSymbol()
@@ -297,6 +297,10 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
         // when it can't find the corresponding class symbol fot the given class ID.
         null
     }
+}
+
+internal fun KtType.typeArguments(): List<KtTypeProjection> {
+    return (this as? KtNonErrorClassType)?.qualifiers?.reversed()?.flatMap { it.typeArguments } ?: emptyList()
 }
 
 internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {

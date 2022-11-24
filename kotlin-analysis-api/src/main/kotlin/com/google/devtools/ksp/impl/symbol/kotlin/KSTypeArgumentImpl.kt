@@ -27,22 +27,24 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
-import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
-import org.jetbrains.kotlin.analysis.api.KtTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
+import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 
-class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeArgument, override val parent: KSNode?) :
-    KSTypeArgument {
-    companion object : KSObjectCache<IdKeyPair<KtTypeArgument, KSNode?>, KSTypeArgumentImpl>() {
-        fun getCached(ktTypeArgument: KtTypeArgument, parent: KSNode? = null) =
-            cache.getOrPut(IdKeyPair(ktTypeArgument, parent)) { KSTypeArgumentImpl(ktTypeArgument, parent) }
+class KSTypeArgumentImpl private constructor(
+    private val ktTypeProjection: KtTypeProjection,
+    override val parent: KSNode?
+) : KSTypeArgument {
+    companion object : KSObjectCache<IdKeyPair<KtTypeProjection, KSNode?>, KSTypeArgumentImpl>() {
+        fun getCached(ktTypeProjection: KtTypeProjection, parent: KSNode? = null) =
+            cache.getOrPut(IdKeyPair(ktTypeProjection, parent)) { KSTypeArgumentImpl(ktTypeProjection, parent) }
     }
 
     override val variance: Variance by lazy {
-        when (ktTypeArgument) {
-            is KtStarProjectionTypeArgument -> Variance.STAR
+        when (ktTypeProjection) {
+            is KtStarTypeProjection -> Variance.STAR
             is KtTypeArgumentWithVariance -> {
-                when (ktTypeArgument.variance) {
+                when (ktTypeProjection.variance) {
                     org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
                     org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
                     org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
@@ -53,11 +55,11 @@ class KSTypeArgumentImpl private constructor(private val ktTypeArgument: KtTypeA
     }
 
     override val type: KSTypeReference? by lazy {
-        ktTypeArgument.type?.let { KSTypeReferenceImpl.getCached(it, this@KSTypeArgumentImpl) }
+        ktTypeProjection.type?.let { KSTypeReferenceImpl.getCached(it, this@KSTypeArgumentImpl) }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeArgument.type?.annotations() ?: emptySequence()
+        ktTypeProjection.type?.annotations() ?: emptySequence()
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC

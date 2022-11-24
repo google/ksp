@@ -26,7 +26,7 @@ class KSCallableReferenceImpl private constructor(
         get() = KSTypeReferenceImpl.getCached(ktFunctionalType.returnType)
 
     override val typeArguments: List<KSTypeArgument>
-        get() = ktFunctionalType.typeArguments.map { KSTypeArgumentImpl.getCached(it, this) }
+        get() = ktFunctionalType.typeArguments().map { KSTypeArgumentImpl.getCached(it, this) }
 
     override val origin: Origin
         get() = parent.origin
