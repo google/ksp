@@ -23,6 +23,7 @@ class TemporaryTestProject(projectName: String, baseProject: String? = null) : T
         gradleProperties.appendText("\nagpVersion=$agpVersion")
         gradleProperties.appendText("\ntestRepo=$testRepo")
         gradleProperties.appendText("\norg.gradle.unsafe.configuration-cache=true")
+        gradleProperties.appendText("\nkotlin.jvm.target.validation.mode=warning")
         // Uncomment this to debug compiler and compiler plugin.
         // gradleProperties.appendText("\nsystemProp.kotlin.compiler.execution.strategy=in-process")
     }

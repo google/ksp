@@ -4,7 +4,7 @@ val kotlinBaseVersion: String by project
 val intellijVersion: String by project
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xjvm-default=compatibility"
+    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
 }
 plugins {
     kotlin("jvm")
