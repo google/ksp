@@ -249,7 +249,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             )
             kspTask.destination = kspOutputDir
-            kspTask.apOptions.value(kspExtension.arguments).disallowChanges()
+            kspTask.inputs.property("apOptions", kspExtension.arguments)
             kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName, target)).disallowChanges()
 
             kspTask.isKspIncremental = isIncremental
@@ -487,9 +487,6 @@ interface KspTask : Task {
 
     @get:OutputDirectory
     var destination: File
-
-    @get:Input
-    val apOptions: MapProperty<String, String>
 
     @get:Classpath
     val processorClasspath: ConfigurableFileCollection
