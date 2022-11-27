@@ -30,7 +30,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.*
@@ -110,9 +109,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>,
         ): List<SubpluginOption> {
             val options = mutableListOf<SubpluginOption>()
-            options += InternalSubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
-            options += InternalSubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName, target).path)
-            options += InternalSubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName, target).path)
+            options +=
+                InternalSubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
+            options +=
+                InternalSubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName, target).path)
+            options +=
+                InternalSubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName, target).path)
             options += InternalSubpluginOption(
                 "resourceOutputDir",
                 getKspResourceOutputDir(project, sourceSetName, target).path
