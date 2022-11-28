@@ -22,6 +22,9 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -29,7 +32,13 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
+import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
+import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
+import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformAction
+import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformLegacyAction
 import org.jetbrains.kotlin.gradle.plugin.CompilerPluginConfig
 import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.InternalSubpluginOption
@@ -50,6 +59,10 @@ import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+import org.jetbrains.kotlin.incremental.ChangedFiles
+import org.jetbrains.kotlin.incremental.isJavaFile
+import org.jetbrains.kotlin.incremental.isKotlinFile
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.concurrent.Callable
 import javax.inject.Inject
@@ -218,11 +231,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         val kotlinCompileTask = kotlinCompileProvider.get()
 
+        val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
+            .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
             // depends on the processor; if the processor changes, it needs to be reprocessed.
-            val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
-                .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
-            kspTask.processorClasspath.from(processorClasspath)
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
 
@@ -240,11 +252,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     )
                 }
             )
-            kspTask.destination = kspOutputDir
             kspTask.inputs.property("apOptions", kspExtension.arguments)
-            kspTask.kspCacheDir.fileValue(getKspCachesDir(project, sourceSetName, target)).disallowChanges()
-
-            kspTask.isKspIncremental = isIncremental
         }
 
         fun configureAsAbstractKotlinCompileTool(kspTask: AbstractKotlinCompileTool<*>) {
@@ -312,12 +320,29 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.configureClasspathSnapshot()
-                        kspTask.libraries.setFrom(kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries }))
+                        kspTask.libraries.setFrom(
+                            kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries })
+                        )
                         kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
                         kspTask.compilerOptions.useK2.value(false)
                         kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName.map { "$it-ksp" })
                         kspTask.moduleName.value(kotlinCompileTask.moduleName.get())
+                        kspTask.destination.value(kspOutputDir)
+
+                        val isIntermoduleIncremental =
+                            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) &&
+                                isIncremental
+                        val classStructureFiles = getClassStructureFiles(project, kspTask.libraries)
+                        kspTask.incrementalChangesTransformers.add(
+                            createIncrementalChangesTransformer(
+                                isIncremental,
+                                isIntermoduleIncremental,
+                                getKspCachesDir(project, sourceSetName, target),
+                                project.provider { classStructureFiles },
+                                project.provider { kspTask.libraries },
+                                project.provider { processorClasspath }
+                            )
+                        )
                     }
                     // Don't support binary generation for non-JVM platforms yet.
                     // FIXME: figure out how to add user generated libraries.
@@ -331,12 +356,24 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.libraries.setFrom(kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries }))
-                        kspTask.compilerOptions.freeCompilerArgs.value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
+                        kspTask.libraries.setFrom(
+                            kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries })
+                        )
+                        kspTask.compilerOptions.freeCompilerArgs
+                            .value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
                         kspTask.compilerOptions.useK2.value(false)
                         kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName.map { "$it-ksp" })
-                        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-                        kspTask.incrementalJsKlib = false
+
+                        kspTask.incrementalChangesTransformers.add(
+                            createIncrementalChangesTransformer(
+                                isIncremental,
+                                false,
+                                getKspCachesDir(project, sourceSetName, target),
+                                project.provider { project.files() },
+                                project.provider { project.files() },
+                                project.provider { project.files() },
+                            )
+                        )
                     }
                 }
             }
@@ -347,8 +384,21 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.libraries.setFrom(kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries }))
+                        kspTask.libraries.setFrom(
+                            kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries })
+                        )
                         kspTask.compilerOptions.useK2.value(false)
+
+                        kspTask.incrementalChangesTransformers.add(
+                            createIncrementalChangesTransformer(
+                                isIncremental,
+                                false,
+                                getKspCachesDir(project, sourceSetName, target),
+                                project.provider { project.files() },
+                                project.provider { project.files() },
+                                project.provider { project.files() },
+                            )
+                        )
                     }
                 }
             }
@@ -375,7 +425,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             kspOutputDir.deleteRecursively()
                         }
                     }
-
                 }
             }
             else -> return project.provider { emptyList() }
@@ -427,8 +476,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             artifactId = KSP_COMPILER_PLUGIN_ID,
             version = KSP_VERSION
         )
-
-    val apiArtifact = "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION"
 }
 
 // Copied from kotlin-gradle-plugin, because they are internal.
@@ -447,3 +494,162 @@ internal fun findJavaTaskForKotlinCompilation(compilation: KotlinCompilation<*>)
         is KotlinJvmCompilation -> compilation.compileJavaTaskProvider // may be null for Kotlin-only JVM target in MPP
         else -> null
     }
+
+internal val artifactType = Attribute.of("artifactType", String::class.java)
+
+internal fun maybeRegisterTransform(project: Project) {
+    // Use the same flag with KAPT, so as to share the same transformation in case KAPT and KSP are both enabled.
+    if (!project.extensions.extraProperties.has("KaptStructureTransformAdded")) {
+        val transformActionClass =
+            if (GradleVersion.current() >= GradleVersion.version("5.4"))
+                StructureTransformAction::class.java
+            else
+
+                StructureTransformLegacyAction::class.java
+        project.dependencies.registerTransform(transformActionClass) { transformSpec ->
+            transformSpec.from.attribute(artifactType, "jar")
+            transformSpec.to.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
+        }
+
+        project.dependencies.registerTransform(transformActionClass) { transformSpec ->
+            transformSpec.from.attribute(artifactType, "directory")
+            transformSpec.to.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
+        }
+
+        project.extensions.extraProperties["KaptStructureTransformAdded"] = true
+    }
+}
+
+internal fun getClassStructureFiles(
+    project: Project,
+    libraries: ConfigurableFileCollection,
+): FileCollection {
+    maybeRegisterTransform(project)
+
+    val classStructureIfIncremental = project.configurations.detachedConfiguration(
+        project.dependencies.create(project.files(project.provider { libraries }))
+    )
+
+    return classStructureIfIncremental.incoming.artifactView { viewConfig ->
+        viewConfig.attributes.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
+    }.files
+}
+
+// Reuse Kapt's infrastructure to compute affected names in classpath.
+// This is adapted from KaptTask.findClasspathChanges.
+internal fun findClasspathChanges(
+    changes: ChangedFiles,
+    cacheDir: File,
+    allDataFiles: Set<File>,
+    libs: List<File>,
+    processorCP: List<File>,
+): KaptClasspathChanges {
+    cacheDir.mkdirs()
+
+    val changedFiles = (changes as? ChangedFiles.Known)?.let { it.modified + it.removed }?.toSet() ?: allDataFiles
+
+    val loadedPrevious = ClasspathSnapshot.ClasspathSnapshotFactory.loadFrom(cacheDir)
+    val previousAndCurrentDataFiles = lazy { loadedPrevious.getAllDataFiles() + allDataFiles }
+    val allChangesRecognized = changedFiles.all {
+        val extension = it.extension
+        if (extension.isEmpty() || extension == "kt" || extension == "java" || extension == "jar" ||
+            extension == "class"
+        ) {
+            return@all true
+        }
+        // if not a directory, Java source file, jar, or class, it has to be a structure file, in order to understand changes
+        it in previousAndCurrentDataFiles.value
+    }
+    val previousSnapshot = if (allChangesRecognized) {
+        loadedPrevious
+    } else {
+        ClasspathSnapshot.ClasspathSnapshotFactory.getEmptySnapshot()
+    }
+
+    val currentSnapshot =
+        ClasspathSnapshot.ClasspathSnapshotFactory.createCurrent(
+            cacheDir,
+            libs,
+            processorCP,
+            allDataFiles
+        )
+
+    val classpathChanges = currentSnapshot.diff(previousSnapshot, changedFiles)
+    if (classpathChanges is KaptClasspathChanges.Unknown || changes is ChangedFiles.Unknown) {
+        cacheDir.deleteRecursively()
+        cacheDir.mkdirs()
+    }
+    currentSnapshot.writeToCache()
+
+    return classpathChanges
+}
+
+internal fun ChangedFiles.hasNonSourceChange(): Boolean {
+    if (this !is ChangedFiles.Known)
+        return true
+
+    return !(this.modified + this.removed).all {
+        it.isKotlinFile(listOf("kt")) || it.isJavaFile()
+    }
+}
+
+fun KaptClasspathChanges.toSubpluginOptions(): List<SubpluginOption> {
+    return if (this is KaptClasspathChanges.Known) {
+        this.names.map { it.replace('/', '.').replace('$', '.') }.ifNotEmpty {
+            listOf(SubpluginOption("changedClasses", joinToString(":")))
+        } ?: emptyList()
+    } else {
+        emptyList()
+    }
+}
+
+fun ChangedFiles.toSubpluginOptions(): List<SubpluginOption> {
+    return if (this is ChangedFiles.Known) {
+        val options = mutableListOf<SubpluginOption>()
+        this.modified.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
+            options += SubpluginOption("knownModified", map { it.path }.joinToString(File.pathSeparator))
+        }
+        this.removed.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
+            options += SubpluginOption("knownRemoved", map { it.path }.joinToString(File.pathSeparator))
+        }
+        options
+    } else {
+        emptyList()
+    }
+}
+
+// Return a closure that captures required arguments only.
+internal fun createIncrementalChangesTransformer(
+    isKspIncremental: Boolean,
+    isIntermoduleIncremental: Boolean,
+    cacheDir: File,
+    classpathStructure: Provider<FileCollection>,
+    libraries: Provider<FileCollection>,
+    processorCP: Provider<FileCollection>,
+): (ChangedFiles) -> List<SubpluginOption> = { changedFiles ->
+    val options = mutableListOf<SubpluginOption>()
+    if (isKspIncremental) {
+        if (isIntermoduleIncremental) {
+            // findClasspathChanges may clear caches, if there are
+            // 1. unknown changes, or
+            // 2. changes in annotation processors.
+            val classpathChanges = findClasspathChanges(
+                changedFiles,
+                cacheDir,
+                classpathStructure.get().files,
+                libraries.get().files.toList(),
+                processorCP.get().files.toList()
+            )
+            options += classpathChanges.toSubpluginOptions()
+        } else {
+            if (changedFiles.hasNonSourceChange()) {
+                cacheDir.deleteRecursively()
+            }
+        }
+    } else {
+        cacheDir.deleteRecursively()
+    }
+    options += changedFiles.toSubpluginOptions()
+
+    options
+}
