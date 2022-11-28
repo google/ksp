@@ -28,7 +28,6 @@ import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
@@ -39,7 +38,6 @@ import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 
 private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("Ksp options")
 
-@ExperimentalCompilerApi
 class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
     override val pluginId = "com.google.devtools.ksp.symbol-processing"
 
@@ -62,7 +60,6 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 // Third party libraries:
 //   https://github.com/tschuchortdev/kotlin-compile-testing
 @Suppress("DEPRECATION")
-@ExperimentalCompilerApi
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
