@@ -13,7 +13,7 @@ kotlin {
     mingwX64()
     macosX64()
     ios()
-    js(BOTH) {
+    js() {
         browser()
         nodejs()
     }
@@ -32,8 +32,4 @@ kotlin {
 ksp {
     arg("option1", "value1")
     arg("option2", "value2")
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
 }

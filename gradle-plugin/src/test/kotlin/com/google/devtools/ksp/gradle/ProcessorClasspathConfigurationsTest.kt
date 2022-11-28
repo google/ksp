@@ -96,7 +96,7 @@ class ProcessorClasspathConfigurationsTest {
             """
                 kotlin {
                     jvm { }
-                    js(IR) { browser() }
+                    js { browser() }
                 }
             """.trimIndent()
         )
