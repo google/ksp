@@ -60,7 +60,3 @@ dependencies {
     add("kspMingwX64", project(":test-processor"))
     add("kspMingwX64Test", project(":test-processor"))
 }
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
-}

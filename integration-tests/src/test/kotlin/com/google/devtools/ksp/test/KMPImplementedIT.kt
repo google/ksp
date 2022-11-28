@@ -75,7 +75,7 @@ class KMPImplementedIT {
     @Test
     fun testJs() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        val gradleRunner = GradleRunner.create().withDebug(true).withProjectDir(project.root)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
