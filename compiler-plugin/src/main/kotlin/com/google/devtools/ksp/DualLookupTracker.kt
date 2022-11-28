@@ -38,9 +38,4 @@ class DualLookupTracker : LookupTracker {
             classTracker.record(filePath, position, outerScope, scopeKind, className)
         }
     }
-
-    override fun clear() {
-        // Do not clear symbolTracker and classTracker.
-        // LookupTracker.clear() is called in repeatAnalysisIfNeeded, but we need records across all rounds.
-    }
 }
