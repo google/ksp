@@ -31,6 +31,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD
 import org.jetbrains.kotlin.lexer.KtTokens.NOINLINE_KEYWORD
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -69,7 +70,13 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
+        ktParameter.annotationEntries.asSequence().filter { annotation ->
+            annotation.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
+                it != AnnotationUseSiteTarget.PROPERTY_GETTER &&
+                    it != AnnotationUseSiteTarget.PROPERTY_SETTER &&
+                    it != AnnotationUseSiteTarget.SETTER_PARAMETER
+            } ?: true
+        }.map { KSAnnotationImpl.getCached(it) }
             .plus(this.findAnnotationFromUseSiteTarget()).memoized()
     }
 
