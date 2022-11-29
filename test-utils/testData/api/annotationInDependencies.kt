@@ -45,6 +45,7 @@
 // parameter param1 : annotations.ValueParameterTarget{[value = onParam1]}
 // parameter param2 : annotations.NoTargetAnnotation{[value = onParam2]}
 // parameter param2 : annotations.ValueParameterTarget{[value = onParam2]}
+// parameter propInConstructor : annotations.ValueParameterTarget{[value = propInConstructor]}
 // property prop : annotations.FieldTarget2{[value = field:]}
 // property prop : annotations.FieldTarget{[value = onProp]}
 // property prop : annotations.NoTargetAnnotation{[value = onProp]}
@@ -59,6 +60,7 @@
 // parameter constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // parameter constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // parameter constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
+// parameter constructorParam : annotations.ValueParameterTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.FieldTarget2{[value = field:]}
 // property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
@@ -108,7 +110,7 @@ package lib;
 import annotations.*;
 @NoTargetAnnotation("onClass")
 @ClassTarget("onClass")
-class KotlinClass {
+class KotlinClass(@ValueParameterTarget("propInConstructor") val propInConstructor: String ) {
     @NoTargetAnnotation("onProp")
     @FieldTarget("onProp")
     @PropertyTarget("onProp")
@@ -186,6 +188,7 @@ class DataClass(
     @get:PropertyGetterTarget("get:")
     @field:FieldTarget2("field:")
     @setparam:ValueParameterTarget("onConstructorParam")
+    @ValueParameterTarget("onConstructorParam")
     var constructorParam : String = ""
 )
 // FILE: main/JavaClassInModule2.java

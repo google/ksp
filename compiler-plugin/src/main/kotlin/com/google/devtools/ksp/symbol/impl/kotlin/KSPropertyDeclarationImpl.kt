@@ -123,7 +123,7 @@ internal fun KtAnnotated.filterUseSiteTargetAnnotations(): Sequence<KtAnnotation
     return this.annotationEntries.asSequence().filter { property ->
         property.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
             it != AnnotationUseSiteTarget.PROPERTY_GETTER && it != AnnotationUseSiteTarget.PROPERTY_SETTER &&
-                it != AnnotationUseSiteTarget.SETTER_PARAMETER
+                it != AnnotationUseSiteTarget.SETTER_PARAMETER && it != AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
         } ?: true
     }
 }
