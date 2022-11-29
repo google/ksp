@@ -40,6 +40,16 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
             .map { KSAnnotationImpl.getCached(it) }
+            .filterNot { valueParameterAnnotation ->
+                valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
+                    metaAnnotation.annotationType.resolve().declaration.qualifiedName
+                        ?.asString() == "kotlin.annotation.Target" &&
+                        (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.any {
+                        (it as? KSClassDeclaration)?.qualifiedName
+                            ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
+                    } ?: false
+                }
+            }
     }
 
     override val getter: KSPropertyGetter? by lazy {
@@ -99,7 +109,8 @@ internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {
     return this.useSiteTarget?.let {
         it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
             it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
-            it == AnnotationUseSiteTarget.SETTER_PARAMETER
+            it == AnnotationUseSiteTarget.SETTER_PARAMETER ||
+            it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
     } ?: false
 }
 
