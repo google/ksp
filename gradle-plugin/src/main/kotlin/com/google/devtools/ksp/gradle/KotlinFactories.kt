@@ -145,12 +145,6 @@ abstract class KspTaskJvm @Inject constructor(
         objectFactory
     ),
     KspTask {
-    init {
-        // Mute a warning from ScriptingGradleSubplugin, which tries to get `sourceSetName` before this task is
-        // configured.
-        sourceSetName.set("main")
-    }
-
     @get:OutputDirectory
     abstract val destination: Property<File>
 
@@ -168,7 +162,6 @@ abstract class KspTaskJvm @Inject constructor(
             it(changedFiles)
         }
         args.addPluginOptions(extraOptions)
-        args.allowNoSourceFiles = true
         super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
     }
 
@@ -237,7 +230,6 @@ abstract class KspTaskMetadata @Inject constructor(
             it(changedFiles)
         }
         args.addPluginOptions(extraOptions)
-        args.expectActualLinker = true
         super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
     }
 }
