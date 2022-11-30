@@ -183,7 +183,8 @@ class GradleCompilationTest {
 
                     override fun asArguments(): Iterable<String> {
                         return listOf(
-                            "room.schemaLocation=${'$'}{outputDir.path}"
+                            "room.schemaLocation=${'$'}{outputDir.path}",
+                            "room.generateKotlin=true"
                         )
                     }
                 }
@@ -201,6 +202,7 @@ class GradleCompilationTest {
         val pattern1 = Regex.escape("apoption=room.schemaLocation=")
         val pattern2 = Regex.escape("${testRule.appModule.moduleRoot}/schemas")
         assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
+        assertThat(result.output).contains("apoption=room.generateKotlin=true")
         val schemasFolder = testRule.appModule.moduleRoot.resolve("schemas")
         assertThat(result.task(":app:kspDebugKotlin")!!.outcome).isEquivalentAccordingToCompareTo(TaskOutcome.SUCCESS)
         assertThat(schemasFolder.exists()).isTrue()
