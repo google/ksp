@@ -19,6 +19,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.getKSDeclarations
 import com.google.devtools.ksp.symbol.impl.toLocation
