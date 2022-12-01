@@ -23,7 +23,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeAliasImpl
@@ -33,6 +32,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -47,6 +47,7 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.toKSName
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
@@ -58,8 +59,10 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
 
 @OptIn(KspExperimental::class)
@@ -242,12 +245,14 @@ class ResolverAAImpl(
         TODO("Not yet implemented")
     }
 
+    @KspExperimental
     override fun mapJavaNameToKotlin(javaName: KSName): KSName? {
-        TODO("Not yet implemented")
+        return JavaToKotlinClassMap.mapJavaToKotlin(FqName(javaName.asString()))?.toKSName()
     }
 
+    @KspExperimental
     override fun mapKotlinNameToJava(kotlinName: KSName): KSName? {
-        TODO("Not yet implemented")
+        return JavaToKotlinClassMap.mapKotlinToJava(FqNameUnsafe(kotlinName.asString()))?.toKSName()
     }
 
     override fun mapToJvmSignature(declaration: KSDeclaration): String? {

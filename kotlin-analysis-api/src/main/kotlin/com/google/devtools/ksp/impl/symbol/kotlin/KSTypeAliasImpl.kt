@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSTypeAlias

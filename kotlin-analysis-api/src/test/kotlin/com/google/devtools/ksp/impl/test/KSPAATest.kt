@@ -342,7 +342,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaSubtype.kt")
     }
 
-    @Disabled
     @TestMetadata("javaToKotlinMapper.kt")
     @Test
     fun testJavaToKotlinMapper() {
