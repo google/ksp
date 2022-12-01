@@ -82,7 +82,6 @@ import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
@@ -1119,8 +1118,6 @@ class ResolverImpl(
     internal val javaSerializableType = module.resolveClassByFqName(
         FqName("java.io.Serializable"), NoLookupLocation.WHEN_FIND_BY_FQNAME
     )?.defaultType
-
-    private fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
 
     @KspExperimental
     override fun mapJavaNameToKotlin(javaName: KSName): KSName? =

@@ -20,6 +20,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentAnnotated
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration

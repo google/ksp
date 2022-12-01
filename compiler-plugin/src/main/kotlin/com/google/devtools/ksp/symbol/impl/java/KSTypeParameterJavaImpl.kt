@@ -19,10 +19,10 @@ package com.google.devtools.ksp.symbol.impl.java
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findParentDeclaration
 import com.google.devtools.ksp.symbol.impl.kotlin.KSExpectActualNoImpl
-import com.google.devtools.ksp.symbol.impl.kotlin.KSNameImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiTypeParameter
