@@ -246,6 +246,10 @@ class ResolverAAImpl(
         TODO("Not yet implemented")
     }
 
+    override fun mapJavaNameToKotlinMutable(javaName: KSName): KSName? {
+        TODO("Not yet implemented")
+    }
+
     override fun mapKotlinNameToJava(kotlinName: KSName): KSName? {
         TODO("Not yet implemented")
     }

@@ -167,6 +167,7 @@ package com.google.devtools.ksp.processing {
     method @NonNull public com.google.devtools.ksp.symbol.KSTypeArgument getTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeRef, @NonNull com.google.devtools.ksp.symbol.Variance variance);
     method @com.google.devtools.ksp.KspExperimental public boolean isJavaRawType(@NonNull com.google.devtools.ksp.symbol.KSType type);
     method @Nullable @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName mapJavaNameToKotlin(@NonNull com.google.devtools.ksp.symbol.KSName javaName);
+    method @Nullable @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName mapJavaNameToKotlinMutable(@NonNull com.google.devtools.ksp.symbol.KSName javaName);
     method @Nullable @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName mapKotlinNameToJava(@NonNull com.google.devtools.ksp.symbol.KSName kotlinName);
     method @Nullable @com.google.devtools.ksp.KspExperimental public String mapToJvmSignature(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration);
     method public boolean overrides(@NonNull com.google.devtools.ksp.symbol.KSDeclaration overrider, @NonNull com.google.devtools.ksp.symbol.KSDeclaration overridee);

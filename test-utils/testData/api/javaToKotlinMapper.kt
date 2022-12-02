@@ -20,8 +20,13 @@
 // EXPECTED:
 // java.lang.String -> kotlin.String
 // java.lang.Integer -> kotlin.Int
-// java.util.List -> kotlin.collections.List
-// java.util.Map.Entry -> kotlin.collections.Map.Entry
+// java.util.List -> kotlin.collections.List, kotlin.collections.MutableList
+// java.util.Map -> kotlin.collections.Map, kotlin.collections.MutableMap
+// java.util.Set -> kotlin.collections.Set, kotlin.collections.MutableSet
+// java.util.Map.Entry -> kotlin.collections.Map.Entry, kotlin.collections.MutableMap.MutableEntry
+// java.util.ListIterator -> kotlin.collections.ListIterator, kotlin.collections.MutableListIterator
+// java.util.Iterator -> kotlin.collections.Iterator, kotlin.collections.MutableIterator
+// java.lang.Iterable -> kotlin.collections.Iterable, kotlin.collections.MutableIterable
 // java.lang.Void -> null
 // kotlin.Throwable -> java.lang.Throwable
 // kotlin.Int -> java.lang.Integer

@@ -250,9 +250,29 @@ interface Resolver {
      *
      * @param javaName a Java class name
      * @return corresponding Kotlin class name or null
+     *
+     * @see mapJavaNameToKotlinMutable
      */
     @KspExperimental
     fun mapJavaNameToKotlin(javaName: KSName): KSName?
+
+    /**
+     * Returns the corresponding Kotlin class with the given Java class, choosing mutable counterpart if applicable.
+     *
+     * E.g.
+     * java.lang.String -> kotlin.String
+     * java.lang.Integer -> kotlin.Int
+     * java.util.List -> kotlin.MutableList
+     * java.util.Map.Entry -> kotlin.MutableMap.MutableEntry
+     * java.lang.Void -> null
+     *
+     * @param javaName a Java class name
+     * @return corresponding mutable Kotlin class name or null
+     *
+     * @see mapJavaNameToKotlin
+     */
+    @KspExperimental
+    fun mapJavaNameToKotlinMutable(javaName: KSName): KSName?
 
     /**
      * Returns the corresponding Java class with the given Kotlin class.

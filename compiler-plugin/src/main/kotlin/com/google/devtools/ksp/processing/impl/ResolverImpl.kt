@@ -1127,6 +1127,18 @@ class ResolverImpl(
         JavaToKotlinClassMap.mapJavaToKotlin(FqName(javaName.asString()))?.toKSName()
 
     @KspExperimental
+    override fun mapJavaNameToKotlinMutable(javaName: KSName): KSName? {
+        var name = mapJavaNameToKotlin(javaName)
+        if (name != null) {
+            val mutable = JavaToKotlinClassMap.readOnlyToMutable(FqNameUnsafe(name.asString()))
+            if (mutable != null) {
+                name = getKSNameFromString(mutable.asString())
+            }
+        }
+        return name
+    }
+
+    @KspExperimental
     override fun mapKotlinNameToJava(kotlinName: KSName): KSName? =
         JavaToKotlinClassMap.mapKotlinToJava(FqNameUnsafe(kotlinName.asString()))?.toKSName()
 
