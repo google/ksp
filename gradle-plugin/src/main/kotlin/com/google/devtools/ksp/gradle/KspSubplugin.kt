@@ -87,6 +87,7 @@ internal class Configurator : AbstractKotlinCompileConfig<AbstractKotlinCompile<
                 // work around https://github.com/google/ksp/issues/647
                 // This will not be necessary once https://youtrack.jetbrains.com/issue/KT-45777 lands
                 task.ownModuleName.value(kotlinCompile.ownModuleName.map { "$it-ksp" })
+                task.compilerOptions.moduleName.value(kotlinCompile.ownModuleName)
                 (compilation.compilerOptions.options as? KotlinJvmCompilerOptions)?.let {
                     task.compilerOptions.noJdk.value(it.noJdk)
                 }
