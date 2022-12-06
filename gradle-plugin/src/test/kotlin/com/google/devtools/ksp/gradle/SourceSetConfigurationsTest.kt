@@ -82,9 +82,12 @@ class SourceSetConfigurationsTest {
                 kotlin {
                     jvm { }
                     android(name = "foo") { }
-                    js { browser() }
+                    js(BOTH) { browser() }
                     androidNativeX86 { }
                     androidNativeX64(name = "bar") { }
+                }
+                tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+                    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
                 }
             """.trimIndent()
         )
