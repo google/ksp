@@ -40,13 +40,13 @@ class ClassVisitor : KSTopDownVisitor<OutputStreamWriter, Unit>() {
         data: OutputStreamWriter
     ) {
         super.visitClassDeclaration(classDeclaration, data)
-        val symbolName = classDeclaration.simpleName.asString().toLowerCase()
+        val symbolName = classDeclaration.simpleName.asString().lowercase()
         data.write("    val $symbolName = true\n")
     }
 }
 
 class TestProcessorProvider : SymbolProcessorProvider {
-    override fun create(env: SymbolProcessorEnvironment): SymbolProcessor {
-        return TestProcessor(env.codeGenerator, env.logger)
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return TestProcessor(environment.codeGenerator, environment.logger)
     }
 }

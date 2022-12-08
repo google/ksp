@@ -7,10 +7,6 @@ plugins {
 group = "com.example"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.squareup:javapoet:1.12.1")
