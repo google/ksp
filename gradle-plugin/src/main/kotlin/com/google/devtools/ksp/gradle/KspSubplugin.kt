@@ -586,6 +586,8 @@ abstract class KspTaskJvm @Inject constructor(
 
         // Used only in incremental compilation and is not applicable to KSP.
         useKotlinAbiSnapshot.value(false)
+
+        jvmTargetValidationMode.value(PropertiesProvider.JvmTargetValidationMode.WARNING)
     }
 
     private fun maybeRegisterTransform(project: Project) {
