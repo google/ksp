@@ -4,7 +4,6 @@ evaluationDependsOn(":common-util")
 
 description = "Kotlin Symbol Processing"
 
-val kotlinProjectPath: String? by project
 val intellijVersion: String by project
 val kotlinBaseVersion: String by project
 
@@ -49,12 +48,6 @@ dependencies {
 
     implementation(project(":api"))
     implementation(project(":common-util"))
-
-    // workaround: IntelliJ doesn't resolve packed classes from included builds.
-    if (kotlinProjectPath != null) {
-        compileOnly("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
-        sourceArtifacts("kotlin.build:intellij-core:$intellijVersion") { includeJars("intellij-core") }
-    }
 
     testImplementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
@@ -116,24 +109,6 @@ tasks.test {
 }
 
 repositories {
-    if (kotlinProjectPath != null) {
-        ivy {
-            url = uri("file:$kotlinProjectPath/dependencies/repo")
-            patternLayout {
-                ivy("[organisation]/[module]/[revision]/[module].ivy.xml")
-                ivy("[organisation]/[module]/[revision]/ivy/[module].ivy.xml")
-
-                artifact("[organisation]/[module]/[revision]/artifacts/lib/[artifact](-[classifier]).[ext]")
-                artifact("[organisation]/[module]/[revision]/artifacts/[artifact](-[classifier]).[ext]")
-                artifact("[organisation]/sources/[artifact]-[revision](-[classifier]).[ext]")
-                artifact("[organisation]/[module]/[revision]/[artifact](-[classifier]).[ext]")
-            }
-
-            metadataSources {
-                ivyDescriptor()
-            }
-        }
-    }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
     maven("https://www.jetbrains.com/intellij-repository/snapshots")
 }
