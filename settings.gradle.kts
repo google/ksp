@@ -21,12 +21,3 @@ include("symbol-processing")
 include("symbol-processing-cmdline")
 include("integration-tests")
 include("kotlin-analysis-api")
-
-val kotlinProjectPath: String? by settings
-if (kotlinProjectPath != null) {
-    includeBuild(kotlinProjectPath!!) {
-        dependencySubstitution {
-            substitute(module("org.jetbrains.kotlin:kotlin-compiler")).using(project(":include:kotlin-compiler"))
-        }
-    }
-}
