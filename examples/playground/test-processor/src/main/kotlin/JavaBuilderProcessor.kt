@@ -27,7 +27,7 @@ class JavaBuilderProcessor : AbstractProcessor() {
             typeSpecBuilder.addField(ClassName.get(it.asType()), it.simpleName.toString(), Modifier.PRIVATE)
             val parameterSpec = ParameterSpec.builder(ClassName.get(it.asType()), it.simpleName.toString()).build()
             typeSpecBuilder.addMethod(
-                    MethodSpec.methodBuilder("with${it.simpleName.toString().capitalize()}")
+                    MethodSpec.methodBuilder("with${it.simpleName.toString().replaceFirstChar { it.uppercase() } }")
                             .addParameter(parameterSpec)
                             .addModifiers(Modifier.PUBLIC)
                             .addStatement("this.\$N = \$N", it.simpleName, it.simpleName)
