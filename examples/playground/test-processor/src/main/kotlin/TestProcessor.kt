@@ -252,8 +252,8 @@ class TestProcessor(
 
 class TestProcessorProvider : SymbolProcessorProvider {
     override fun create(
-        env: SymbolProcessorEnvironment
+        environment: SymbolProcessorEnvironment
     ): SymbolProcessor {
-        return TestProcessor(env.codeGenerator, env.options)
+        return TestProcessor(environment.codeGenerator, environment.options)
     }
 }

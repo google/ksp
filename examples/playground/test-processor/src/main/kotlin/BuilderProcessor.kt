@@ -49,7 +49,7 @@ class BuilderProcessor(
                     typeName.append(">")
                 }
                 file.appendText("    private var $name: $typeName? = null\n")
-                file.appendText("    internal fun with${name.capitalize()}($name: $typeName): $className {\n")
+                file.appendText("    internal fun with${name.replaceFirstChar { it.uppercase() } }($name: $typeName): $className {\n")
                 file.appendText("        this.$name = $name\n")
                 file.appendText("        return this\n")
                 file.appendText("    }\n\n")
@@ -72,8 +72,8 @@ class BuilderProcessor(
 
 class BuilderProcessorProvider : SymbolProcessorProvider {
     override fun create(
-        env: SymbolProcessorEnvironment
+        environment: SymbolProcessorEnvironment
     ): SymbolProcessor {
-        return BuilderProcessor(env.codeGenerator, env.logger)
+        return BuilderProcessor(environment.codeGenerator, environment.logger)
     }
 }
