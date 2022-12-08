@@ -32,6 +32,13 @@ class KMPImplementedIT {
         Assert.assertTrue(artifact.readBytes().size > 0)
     }
 
+    private fun checkExecutionOptimizations(log: String) {
+        Assert.assertFalse(
+            "Execution optimizations have been disabled",
+            log.contains("Execution optimizations have been disabled")
+        )
+    }
+
     @Test
     fun testJvm() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
@@ -52,6 +59,7 @@ class KMPImplementedIT {
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JVM"))
             Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
+            checkExecutionOptimizations(it.output)
         }
     }
 
@@ -98,6 +106,7 @@ class KMPImplementedIT {
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JS"))
             Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
+            checkExecutionOptimizations(it.output)
         }
     }
 
@@ -156,6 +165,7 @@ class KMPImplementedIT {
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
+            checkExecutionOptimizations(it.output)
         }
     }
 
@@ -193,6 +203,7 @@ class KMPImplementedIT {
             Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
             Assert.assertTrue(File(genDir, "Main_dot_kt.kt").exists())
             Assert.assertTrue(File(genDir, "ToBeRemoved_dot_kt.kt").exists())
+            checkExecutionOptimizations(it.output)
         }
 
         File(project.root, "workload-linuxX64/src/linuxX64Main/kotlin/ToBeRemoved.kt").delete()
@@ -206,6 +217,7 @@ class KMPImplementedIT {
             verifyKexe("workload-linuxX64/build/bin/linuxX64/releaseExecutable/workload-linuxX64.kexe")
             Assert.assertTrue(File(genDir, "Main_dot_kt.kt").exists())
             Assert.assertFalse(File(genDir, "ToBeRemoved_dot_kt.kt").exists())
+            checkExecutionOptimizations(it.output)
         }
     }
 
@@ -313,6 +325,7 @@ class KMPImplementedIT {
                     output.contains(it)
                 }
             )
+            checkExecutionOptimizations(output)
         }
 
         // KotlinNative doesn't support configuration cache yet.
@@ -327,6 +340,7 @@ class KMPImplementedIT {
                 }
             )
             verifyAll(this)
+            checkExecutionOptimizations(output)
         }
     }
 }

@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
@@ -422,9 +423,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
                         )
-                        kspTask.doFirst {
-                            kspOutputDir.deleteRecursively()
-                        }
+                        // Cannot use lambda; See below for details.
+                        // https://docs.gradle.org/7.2/userguide/validation_problems.html#implementation_unknown
+                        kspTask.doFirst(object : Action<Task> {
+                            override fun execute(t: Task) {
+                                kspOutputDir.deleteRecursively()
+                            }
+                        })
                     }
                 }
             }
