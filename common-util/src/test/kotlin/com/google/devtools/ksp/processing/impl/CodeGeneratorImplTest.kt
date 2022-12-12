@@ -30,6 +30,7 @@ class CodeGeneratorImplTest {
             kotlinDir,
             resourcesDir,
             baseDir,
+            baseDir,
             AnyChanges(baseDir),
             emptyList(),
             true

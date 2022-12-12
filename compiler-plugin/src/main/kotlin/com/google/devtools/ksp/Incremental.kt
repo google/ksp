@@ -167,9 +167,17 @@ object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
     }
 }
 
-internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConverter {
+internal class RelativeFileToPathConverter(
+    val baseDir: File,
+    val buildDir: File,
+) : FileToPathConverter {
     override fun toPath(file: File): String = file.path
-    override fun toFile(path: String): File = File(path).relativeTo(baseDir)
+    override fun toFile(path: String): File =
+        if (path.startsWith(buildDir.path)) {
+            File(path).relativeTo(buildDir)
+        } else {
+            File(path).relativeTo(baseDir)
+        }
 }
 
 class IncrementalContext(
@@ -195,6 +203,7 @@ class IncrementalContext(
     private val rebuild = !cachesUpToDateFile.exists()
 
     private val baseDir = options.projectBaseDir
+    private val buildDir = options.buildDir
 
     private val logsDir = File(options.cachesDir, "logs").apply { mkdirs() }
     private val buildTime = Date().time
@@ -207,7 +216,7 @@ class IncrementalContext(
     // Disable incremental processing if somehow DualLookupTracker failed to be registered.
     // This may happen when a platform hasn't support incremental compilation yet. E.g, Common / Metadata.
     private val isIncremental = options.incremental && lookupTracker is DualLookupTracker
-    private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
+    private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir, buildDir)
 
     private val symbolLookupTracker = (lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING
     private val symbolLookupCacheDir = File(options.cachesDir, "symbolLookups")
@@ -220,7 +229,17 @@ class IncrementalContext(
 
     private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
 
-    private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
+    // Ugly, but better than copying the private logics out of stdlib.
+    // TODO: get rid of `relativeTo` if possible.
+    private fun String.toRelativeFile(): File {
+        val buildDirPrefix = if (buildDir.path.startsWith("/")) buildDir.path else buildDir.path.replace("\\", "/")
+        return if (this.startsWith(buildDirPrefix)) {
+            File(this).relativeTo(buildDir)
+        } else {
+            File(this).relativeTo(baseDir)
+        }
+    }
+
     private val KSFile.relativeFile
         get() = filePath.toRelativeFile()
 
@@ -438,11 +457,11 @@ class IncrementalContext(
     }
 
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
-        val outRoot = options.kspOutputDir
         val bakRoot = File(options.cachesDir, "backups")
 
-        fun File.abs() = File(baseDir, path)
-        fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
+        // Assuming that output is always in buildDir.
+        fun File.abs() = File(buildDir, path)
+        fun File.bak() = File(bakRoot, path)
 
         // Copy recursively, including last-modified-time of file and its parent dirs.
         //

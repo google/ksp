@@ -139,6 +139,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
             resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
             projectBaseDir = testRoot
+            buildDir = File(testRoot, "kspTest/build")
             cachesDir = File(testRoot, "kspTest/kspCaches")
             kspOutputDir = File(testRoot, "kspTest")
         }.build()

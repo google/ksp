@@ -138,6 +138,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 "returnOkOnError",
                 project.findProperty("ksp.return.ok.on.error")?.toString() ?: "true"
             )
+            options += SubpluginOption(
+                "buildDir",
+                project.project.buildDir.canonicalPath
+            )
 
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")

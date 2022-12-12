@@ -33,6 +33,7 @@ class CodeGeneratorImpl(
     private val kotlinDir: File,
     private val resourcesDir: File,
     private val projectBase: File,
+    private val buildDir: File,
     private val anyChangesWildcard: KSFile,
     private val allSources: List<KSFile>,
     private val isIncremental: Boolean
@@ -93,7 +94,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = classes.map {
-            it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
+            it.containingFile ?: NoSourceFile(buildDir, it.qualifiedName?.asString().toString())
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -154,18 +155,27 @@ class CodeGeneratorImpl(
         associate(sources, file)
     }
 
+    private val File.relativeFile: File
+        get() {
+            val buildDirPrefix = if (buildDir.path.startsWith("/")) buildDir.path else buildDir.path.replace("\\", "/")
+            return if (this.startsWith(buildDirPrefix))
+                relativeTo(buildDir)
+            else
+                relativeTo(projectBase)
+        }
+
     private fun associate(sources: List<KSFile>, outputPath: File) {
         if (!isIncremental)
             return
 
-        val output = outputPath.relativeTo(projectBase)
+        val output = outputPath.relativeTo(buildDir)
         sources.forEach { source ->
-            sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
+            sourceToOutputs.getOrPut(File(source.filePath).relativeFile) { mutableSetOf() }.add(output)
         }
     }
 
     val outputs: Set<File>
-        get() = fileMap.values.mapTo(mutableSetOf()) { it.relativeTo(projectBase) }
+        get() = fileMap.values.mapTo(mutableSetOf()) { it.relativeTo(buildDir) }
 
     override val generatedFile: Collection<File>
         get() = fileOutputStreamMap.keys.map { fileMap[it]!! }
