@@ -162,7 +162,9 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
 
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
-        val ksFiles = files.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
+        val commonSources: Set<String?> = options.commonSources.map { it.canonicalPath }.toSet()
+        val ksFiles = files.filterNot { it.virtualFile.canonicalPath in commonSources }
+            .map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
         lateinit var newFiles: List<KSFile>
 
         handleException(module, project) {
@@ -175,6 +177,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 dirtyFiles = incrementalContext.calcDirtyFiles(ksFiles).toSet()
                 cleanFilenames = ksFiles.filterNot { it in dirtyFiles }.map { it.filePath }.toSet()
                 newFiles = dirtyFiles.toList()
+                // DO NOT filter out common sources.
                 files.forEach { fileClassProcessor.preprocessFile(it) }
             } else {
                 newFiles = ksFiles.filter {
