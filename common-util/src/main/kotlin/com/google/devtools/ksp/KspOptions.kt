@@ -53,6 +53,8 @@ class KspOptions(
     val languageVersion: KotlinVersion,
     val apiVersion: KotlinVersion,
     val compilerVersion: KotlinVersion,
+
+    val commonSources: List<File>,
 ) {
     class Builder {
         var projectBaseDir: File? = null
@@ -86,6 +88,8 @@ class KspOptions(
         var apiVersion: KotlinVersion = ApiVersion.LATEST_STABLE.toKotlinVersion()
         var compilerVersion: KotlinVersion = KotlinVersion.CURRENT
 
+        var commonSources: MutableList<File> = mutableListOf()
+
         fun build(): KspOptions {
             return KspOptions(
                 requireNotNull(projectBaseDir) { "A non-null projectBaseDir must be provided" },
@@ -111,6 +115,7 @@ class KspOptions(
                 languageVersion,
                 apiVersion,
                 compilerVersion,
+                commonSources,
             )
         }
     }
@@ -273,6 +278,14 @@ enum class KspCliOption(
         false,
         false
     ),
+
+    COMMON_SOURCES_OPTION(
+        "commonSources",
+        "<commonSources>",
+        "common sources",
+        false,
+        true
+    ),
 }
 
 @Suppress("IMPLICIT_CAST_TO_ANY")
@@ -300,4 +313,5 @@ fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when
     KspCliOption.WITH_COMPILATION_OPTION -> withCompilation = value.toBoolean()
     KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
     KspCliOption.RETURN_OK_ON_ERROR_OPTION -> returnOkOnError = value.toBoolean()
+    KspCliOption.COMMON_SOURCES_OPTION -> commonSources.addAll(value.split(File.pathSeparator).map { File(it) })
 }
