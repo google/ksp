@@ -35,6 +35,7 @@ import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
@@ -63,6 +64,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.concurrent.Callable
@@ -231,6 +233,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
+        val kspGeneratedSourceSet =
+            project.kotlinExtension.sourceSets.create("generatedBy" + kspTaskName.capitalizeAsciiOnly())
+
         val kotlinCompileTask = kotlinCompileProvider.get()
 
         val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
@@ -267,17 +272,24 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
 
             if (kspExtension.allowSourcesFromOtherPlugins) {
-                val deps = kotlinCompileTask.dependsOn.filterNot {
-                    (it as? TaskProvider<*>)?.name == kspTaskName ||
-                        (it as? Task)?.name == kspTaskName
+                fun FileCollection.nonSelfDeps(): List<Task> =
+                    buildDependencies.getDependencies(null).filterNot {
+                        it.name == kspTaskName
+                    }
+
+                fun setSource(source: FileCollection) {
+                    // kspTask.setSource(source) would create circular dependency.
+                    // Therefore we need to manually extract input deps, filter them, and tell kspTask.
+                    kspTask.setSource(project.provider { source.files })
+                    kspTask.dependsOn(project.provider { source.nonSelfDeps() })
                 }
-                kspTask.dependsOn(deps)
-                kspTask.setSource(kotlinCompileTask.sources)
+
+                setSource(kotlinCompileTask.sources - kspGeneratedSourceSet.kotlin)
                 if (kotlinCompileTask is KotlinCompile) {
-                    kspTask.setSource(kotlinCompileTask.javaSources)
+                    setSource(kotlinCompileTask.javaSources - kspGeneratedSourceSet.kotlin)
                 }
             } else {
-                kotlinCompilation.allKotlinSourceSets.forEach { sourceSet ->
+                kotlinCompilation.allKotlinSourceSets.filterNot { it == kspGeneratedSourceSet }.forEach { sourceSet ->
                     kspTask.setSource(sourceSet.kotlin)
                 }
                 if (kotlinCompilation is KotlinCommonCompilation) {
@@ -435,10 +447,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
             else -> return project.provider { emptyList() }
         }
-
+        kspGeneratedSourceSet.kotlin.srcDir(project.files(kotlinOutputDir, javaOutputDir).builtBy(kspTaskProvider))
+        kotlinCompilation.source(kspGeneratedSourceSet)
         kotlinCompileProvider.configure { kotlinCompile ->
-            kotlinCompile.dependsOn(kspTaskProvider)
-            kotlinCompile.setSource(kotlinOutputDir, javaOutputDir)
             when (kotlinCompile) {
                 is AbstractKotlinCompile<*> -> kotlinCompile.libraries.from(project.files(classOutputDir))
                 // is KotlinNativeCompile -> TODO: support binary generation?
@@ -449,8 +460,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             (kotlinCompilation as? KotlinCompilationWithResources)?.processResourcesTaskName ?: "processResources"
         project.locateTask<ProcessResources>(processResourcesTaskName)?.let { provider ->
             provider.configure { resourcesTask ->
-                resourcesTask.dependsOn(kspTaskProvider)
-                resourcesTask.from(resourceOutputDir)
+                resourcesTask.from(project.files(resourceOutputDir).builtBy(kspTaskProvider))
             }
         }
         if (kotlinCompilation is KotlinJvmAndroidCompilation) {
