@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.gradle.plugin.InternalSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
@@ -113,6 +114,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             isIncremental: Boolean,
             allWarningsAsErrors: Boolean,
             commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>,
+            commonSources: List<File>,
         ): List<SubpluginOption> {
             val options = mutableListOf<SubpluginOption>()
             options +=
@@ -140,6 +142,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 "returnOkOnError",
                 project.findProperty("ksp.return.ok.on.error")?.toString() ?: "true"
             )
+            commonSources.ifNotEmpty {
+                options += FilesSubpluginOption("commonSources", this)
+            }
 
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
@@ -189,6 +194,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         return true
     }
 
+    // TODO: to be future proof, protect with `synchronized`
+    // Map from default input source set to output source set
+    private val sourceSetMap: MutableMap<KotlinSourceSet, KotlinSourceSet> = mutableMapOf()
+
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
@@ -230,11 +239,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             javaCompile.classpath += project.files(classOutputDir)
         }
 
+        val processingModel = project.findProperty("ksp.experimental.processing.model")?.toString() ?: "traditional"
+
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
         val kspGeneratedSourceSet =
             project.kotlinExtension.sourceSets.create("generatedBy" + kspTaskName.capitalizeAsciiOnly())
+        sourceSetMap.put(kotlinCompilation.defaultSourceSet, kspGeneratedSourceSet)
 
         val kotlinCompileTask = kotlinCompileProvider.get()
 
@@ -244,6 +256,27 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
+
+            val commonSources: List<File> = when (processingModel) {
+                "hierarchical" -> {
+                    fun unclaimedDeps(roots: Set<KotlinSourceSet>): Set<KotlinSourceSet> {
+                        val unclaimedParents =
+                            roots.flatMap { it.dependsOn }.filterNot { it in sourceSetMap }.toSet()
+                        return if (unclaimedParents.isEmpty()) {
+                            unclaimedParents
+                        } else {
+                            unclaimedParents + unclaimedDeps(unclaimedParents)
+                        }
+                    }
+                    // Source sets that are not claimed by other compilations.
+                    // I.e., those that should be processed by this compilation.
+                    val unclaimed =
+                        kotlinCompilation.kotlinSourceSets + unclaimedDeps(kotlinCompilation.kotlinSourceSets)
+                    val commonSourceSets = kotlinCompilation.allKotlinSourceSets - unclaimed
+                    commonSourceSets.flatMap { it.kotlin.files }
+                }
+                else -> emptyList()
+            }
 
             kspTask.options.addAll(
                 kspTask.project.provider {
@@ -255,7 +288,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         target,
                         isIncremental,
                         kspExtension.allWarningsAsErrors,
-                        kspTask.commandLineArgumentProviders
+                        kspTask.commandLineArgumentProviders,
+                        commonSources,
                     )
                 }
             )
@@ -294,6 +328,20 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
                 if (kotlinCompilation is KotlinCommonCompilation) {
                     kspTask.setSource(kotlinCompilation.defaultSourceSet.kotlin)
+                }
+                val generated = when (processingModel) {
+                    "hierarchical" -> {
+                        // boundary parent source sets that are going to be compiled by other compilations
+                        fun claimedParents(root: KotlinSourceSet): Set<KotlinSourceSet> {
+                            val (claimed, unclaimed) = root.dependsOn.partition { it in sourceSetMap }
+                            return claimed.toSet() + unclaimed.flatMap { claimedParents(it) }
+                        }
+                        kotlinCompilation.kotlinSourceSets.flatMap { claimedParents(it) }.map { sourceSetMap[it]!! }
+                    }
+                    else -> emptyList()
+                }
+                generated.forEach {
+                    kspTask.setSource(it.kotlin)
                 }
             }
             kspTask.exclude { kspOutputDir.isParentOf(it.file) }
