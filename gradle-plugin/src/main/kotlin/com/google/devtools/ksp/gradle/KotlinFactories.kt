@@ -80,6 +80,16 @@ class KotlinFactories {
             return project.tasks.register(taskName, KspTaskJvm::class.java).also { kspTaskProvider ->
                 KotlinCompileConfig(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<KotlinCompile>)
+
+                // useClasspathSnapshot isn't configurable per task.
+                // Workaround: enable the other path and ignore irrelevant changes
+                // See [KotlinCompileConfig] in for details.
+                // FIXME: make it configurable in upstream or support useClasspathSnapshot == true, if possible.
+                kspTaskProvider.configure {
+                    if (it.classpathSnapshotProperties.useClasspathSnapshot.get()) {
+                        it.classpathSnapshotProperties.classpath.from(project.provider { it.libraries })
+                    }
+                }
             }
         }
 
@@ -147,6 +157,15 @@ abstract class KspTaskJvm @Inject constructor(
     KspTask {
     @get:OutputDirectory
     abstract val destination: Property<File>
+
+    // Override incrementalProps to exclude irrelevant changes
+    override val incrementalProps: List<FileCollection>
+        get() = listOf(
+            sources,
+            javaSources,
+            commonSourceSet,
+            classpathSnapshotProperties.classpath,
+        )
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
