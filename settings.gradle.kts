@@ -6,10 +6,6 @@ pluginManagement {
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
         maven("https://www.jetbrains.com/intellij-repository/snapshots")
     }
-    val kotlinBaseVersion: String by settings
-    plugins {
-        id("org.jetbrains.kotlin.jvm") version kotlinBaseVersion
-    }
 }
 
 include("api")
