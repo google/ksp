@@ -55,6 +55,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
@@ -297,7 +298,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         fun configureAsAbstractKotlinCompileTool(kspTask: AbstractKotlinCompileTool<*>) {
-            kspTask.destinationDirectory.set(kspOutputDir)
+            when (kspTask) {
+                is Kotlin2JsCompile -> {
+                    kspTask.outputFileProperty.value(
+                        File(kspOutputDir, "dummyOutput.js")
+                    )
+                }
+                else -> kspTask.destinationDirectory.set(kspOutputDir)
+            }
             kspTask.outputs.dirs(
                 kotlinOutputDir,
                 javaOutputDir,
@@ -376,6 +384,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         // Create and configure KSP tasks.
         val kspTaskProvider = when (kotlinCompileTask) {
             is KotlinCompile -> {
+                kotlinCompilation as KotlinCompilationData<*>
                 KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
@@ -387,7 +396,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         )
                         kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
                         kspTask.compilerOptions.useK2.value(false)
-                        kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName.map { "$it-ksp" })
+                        kspTask.ownModuleName.value(kotlinCompileTask.ownModuleName.map { "$it-ksp" })
                         kspTask.moduleName.value(kotlinCompileTask.moduleName.get())
                         kspTask.destination.value(kspOutputDir)
 
@@ -412,6 +421,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             }
             is Kotlin2JsCompile -> {
+                kotlinCompilation as KotlinCompilationData<*>
                 KotlinFactories.registerKotlinJSCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
@@ -424,7 +434,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspTask.compilerOptions.freeCompilerArgs
                             .value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
                         kspTask.compilerOptions.useK2.value(false)
-                        kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName.map { "$it-ksp" })
+                        kspTask.moduleName.value(kotlinCompileTask.moduleName.map { "$it-ksp" })
 
                         kspTask.incrementalChangesTransformers.add(
                             createIncrementalChangesTransformer(
@@ -440,6 +450,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             }
             is KotlinCompileCommon -> {
+                kotlinCompilation as KotlinCompilationData<*>
                 KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
