@@ -110,7 +110,6 @@
 // classifier ref: T4: JAVA
 // classifier ref: T4: JAVA
 // declaration: <init>: KOTLIN
-// declaration: T3: KOTLIN
 // declaration: foo.bar.Anno1.<init>: KOTLIN_LIB
 // declaration: foo.bar.Anno1: KOTLIN_LIB
 // declaration: foo.bar.Anno2.<init>: KOTLIN_LIB
@@ -143,6 +142,7 @@
 // declaration: foo.bar.KotlinLibClass.p2: KOTLIN_LIB
 // declaration: foo.bar.KotlinLibClass.p3: KOTLIN_LIB
 // declaration: foo.bar.KotlinLibClass: KOTLIN_LIB
+// declaration: foo.bar.KotlinSrcClass.T3: KOTLIN
 // declaration: foo.bar.KotlinSrcClass.g1: KOTLIN
 // declaration: foo.bar.KotlinSrcClass.g2: KOTLIN
 // declaration: foo.bar.KotlinSrcClass.g3: KOTLIN

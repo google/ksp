@@ -742,11 +742,12 @@ class ResolverImpl(
     fun findDeclaration(kotlinType: KotlinType): KSDeclaration {
         val descriptor = kotlinType.constructor.declarationDescriptor
         val psi = descriptor?.findPsi()
-        return if (psi != null && psi !is KtTypeParameter) {
+        return if (psi != null) {
             when (psi) {
                 is KtClassOrObject -> KSClassDeclarationImpl.getCached(psi)
                 is PsiClass -> KSClassDeclarationJavaImpl.getCached(psi)
                 is KtTypeAlias -> KSTypeAliasImpl.getCached(psi)
+                is KtTypeParameter -> KSTypeParameterImpl.getCached(psi)
                 is PsiEnumConstant -> KSClassDeclarationJavaEnumEntryImpl.getCached(psi)
                 else -> throw IllegalStateException("Unexpected psi type: ${psi.javaClass}, $ExceptionMessage")
             }
