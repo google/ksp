@@ -70,6 +70,11 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
                 .map { it.boundTypeReference }
         ).filterNotNull().map { KSTypeReferenceImpl.getCached(it) }.memoized()
     }
+
+    override val qualifiedName: KSName? by lazy {
+        KSNameImpl.getCached("${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}")
+    }
+
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached(ktTypeParameter.name ?: "_")
     }

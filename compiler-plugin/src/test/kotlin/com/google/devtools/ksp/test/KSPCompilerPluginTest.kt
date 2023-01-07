@@ -513,6 +513,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/typeComposure.kt")
     }
 
+    @TestMetadata("typeParameterEquals.kt")
+    @Test
+    fun testTypeParameterEquals() {
+        runTest("../test-utils/testData/api/typeParameterEquals.kt")
+    }
+
     @TestMetadata("typeParameterReference.kt")
     @Test
     fun testTypeParameterReference() {
