@@ -48,10 +48,10 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptionsDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptionsDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptionsDefault
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationInfo
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinNativeCompilationData
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
@@ -75,10 +75,10 @@ class KotlinFactories {
         fun registerKotlinJvmCompileTask(
             project: Project,
             taskName: String,
-            kotlinCompilation: KotlinCompilation<*>,
+            kotlinCompilation: KotlinCompilationData<*>,
         ): TaskProvider<out KspTaskJvm> {
             return project.tasks.register(taskName, KspTaskJvm::class.java).also { kspTaskProvider ->
-                KotlinCompileConfig(KotlinCompilationInfo(kotlinCompilation))
+                KotlinCompileConfig(kotlinCompilation)
                     .execute(kspTaskProvider as TaskProvider<KotlinCompile>)
 
                 // useClasspathSnapshot isn't configurable per task.
@@ -96,10 +96,10 @@ class KotlinFactories {
         fun registerKotlinJSCompileTask(
             project: Project,
             taskName: String,
-            kotlinCompilation: KotlinCompilation<*>,
+            kotlinCompilation: KotlinCompilationData<*>,
         ): TaskProvider<out KspTaskJS> {
             return project.tasks.register(taskName, KspTaskJS::class.java).also { kspTaskProvider ->
-                BaseKotlin2JsCompileConfig<Kotlin2JsCompile>(KotlinCompilationInfo(kotlinCompilation))
+                BaseKotlin2JsCompileConfig<Kotlin2JsCompile>(kotlinCompilation)
                     .execute(kspTaskProvider as TaskProvider<Kotlin2JsCompile>)
                 kspTaskProvider.configure {
                     it.incrementalJsKlib = false
@@ -110,10 +110,10 @@ class KotlinFactories {
         fun registerKotlinMetadataCompileTask(
             project: Project,
             taskName: String,
-            kotlinCompilation: KotlinCompilation<*>,
+            kotlinCompilation: KotlinCompilationData<*>,
         ): TaskProvider<out KspTaskMetadata> {
             return project.tasks.register(taskName, KspTaskMetadata::class.java).also { kspTaskProvider ->
-                KotlinCompileCommonConfig(KotlinCompilationInfo(kotlinCompilation))
+                KotlinCompileCommonConfig(kotlinCompilation)
                     .execute(kspTaskProvider as TaskProvider<KotlinCompileCommon>)
             }
         }
@@ -255,7 +255,7 @@ abstract class KspTaskMetadata @Inject constructor(
 
 @CacheableTask
 abstract class KspTaskNative @Inject internal constructor(
-    compilation: KotlinCompilationInfo,
+    compilation: KotlinNativeCompilationData<*>,
     objectFactory: ObjectFactory,
     providerFactory: ProviderFactory,
     execOperations: ExecOperations
