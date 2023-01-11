@@ -133,6 +133,7 @@ class ResolverImpl(
 ) : Resolver {
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
+    private val javaTypeParameterMap: MutableMap<LazyJavaTypeParameterDescriptor, PsiTypeParameter> = mutableMapOf()
 
     /**
      * Checking as member of is an expensive operation, hence we cache result values in this map.
@@ -720,20 +721,15 @@ class ResolverImpl(
                                 filter = { it.findPsi() == owner }
                             ) as FunctionDescriptor
                     } as DeclarationDescriptor
-                    return getKSTypeCached(
-                        LazyJavaTypeParameterDescriptor(
-                            lazyJavaResolverContext,
-                            JavaTypeParameterImpl(psi),
-                            psi.index,
-                            containingDeclaration
-                        ).defaultType
+                    val typeParameterDescriptor = LazyJavaTypeParameterDescriptor(
+                        lazyJavaResolverContext,
+                        JavaTypeParameterImpl(psi),
+                        psi.index,
+                        containingDeclaration
                     )
-                } else {
-                    return getKSTypeCached(
-                        resolveJavaType(type.psi, type),
-                        type.element.typeArguments, type.annotations
-                    )
+                    javaTypeParameterMap[typeParameterDescriptor] = psi
                 }
+                return getKSTypeCached(resolveJavaType(type.psi, type), type.element.typeArguments, type.annotations)
             }
             else -> throw IllegalStateException("Unable to resolve type for $type, $ExceptionMessage")
         }
@@ -754,7 +750,13 @@ class ResolverImpl(
         } else {
             when (descriptor) {
                 is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(descriptor)
-                is TypeParameterDescriptor -> KSTypeParameterDescriptorImpl.getCached(descriptor)
+                // LazyJavaTypeParameterDescriptor has `source` overridden to `NO_SOURCE`, therefore
+                // need to look up psi within KSP.
+                is TypeParameterDescriptor -> if (descriptor in javaTypeParameterMap) {
+                    KSTypeParameterJavaImpl.getCached(javaTypeParameterMap[descriptor]!!)
+                } else {
+                    KSTypeParameterDescriptorImpl.getCached(descriptor)
+                }
                 is TypeAliasDescriptor -> KSTypeAliasDescriptorImpl.getCached(descriptor)
                 null -> throw IllegalStateException("Failed to resolve descriptor for $kotlinType")
                 else -> throw IllegalStateException(

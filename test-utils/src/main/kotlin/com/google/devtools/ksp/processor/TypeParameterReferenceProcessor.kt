@@ -18,13 +18,9 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassifierReference
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.*
 
 open class TypeParameterReferenceProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -52,6 +48,12 @@ open class TypeParameterReferenceProcessor : AbstractTestProcessor() {
         val srj = resolver.getClassDeclarationByName("SelfReferencingJava")!!
         srj.asStarProjectedType().declaration.typeParameters.single().bounds
             .forEach { results.add(it.resolve().toString()) }
+        val boundedTypeParameter = resolver.getClassDeclarationByName("BoundedTypeParameter")!!
+        boundedTypeParameter.getDeclaredFunctions().filter { it.origin == Origin.JAVA }.forEach {
+            (it.returnType!!.resolve().declaration as KSTypeParameter).bounds.forEach {
+                results.add(it.resolve().toString())
+            }
+        }
         return emptyList()
     }
 
