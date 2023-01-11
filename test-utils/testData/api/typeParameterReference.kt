@@ -30,6 +30,7 @@
 // T
 // MutableList<(T..T?)>
 // (SelfReferencingJava<(T..T?)>..SelfReferencingJava<(T..T?)>?)
+// (T1..T1?)
 // END
 
 // MODULE: lib
@@ -70,4 +71,12 @@ fun <T3> foo(p: T3) = 1
 
 // FILE: SelfReferencingJava.java
 public class SelfReferencingJava<T extends SelfReferencingJava<T>> {
+}
+
+// FILE: BoundedTypeParameter.java
+
+public class BoundedTypeParameter {
+    static <T1, T2 extends T1> T2 method(T1 input) {
+        return null;
+    }
 }
