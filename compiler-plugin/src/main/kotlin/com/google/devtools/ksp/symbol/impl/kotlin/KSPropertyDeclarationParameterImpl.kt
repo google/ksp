@@ -91,9 +91,8 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
     override fun isDelegated(): Boolean = false
 
     override fun findOverridee(): KSPropertyDeclaration? {
-        return ResolverImpl.instance!!.resolvePropertyDeclaration(this)?.original?.overriddenDescriptors
-            ?.singleOrNull { it.overriddenDescriptors.isEmpty() }
-            ?.toKSPropertyDeclaration()
+        return ResolverImpl.instance!!.resolvePropertyDeclaration(this)?.original
+            ?.findClosestOverridee()?.toKSPropertyDeclaration()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
