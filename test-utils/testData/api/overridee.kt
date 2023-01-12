@@ -89,6 +89,9 @@
 // JavaAnno.intParam() -> null
 // JavaAnnos:
 // JavaAnnos.value() -> null
+// PrimaryConstructorOverride:
+// PrimaryConstructorOverride.x -> KtInterfaceWithProperty.x
+// PrimaryConstructorOverride.y -> KtInterfaceWithProperty.y
 // END
 // MODULE: lib
 // FILE: lib.kt
@@ -149,6 +152,12 @@ class NoOverride(val propInParam: Int) {
 interface KtInterfaceWithProperty {
     val x:Int
     var y:Int
+}
+
+interface Intermediate: KtInterfaceWithProperty
+
+class PrimaryConstructorOverride(override val x: Int): Intermediate {
+    override val y: Int = 1
 }
 
 abstract class GrandBase {
