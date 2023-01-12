@@ -42,6 +42,7 @@ class OverrideeProcessor : AbstractTestProcessor() {
         logSubject(resolver, "JavaAccessorImpl")
         logSubject(resolver, "JavaAnno")
         logSubject(resolver, "JavaAnnos")
+        logSubject(resolver, "PrimaryConstructorOverride")
         return emptyList()
     }
 
