@@ -48,6 +48,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptionsDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptionsDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
@@ -121,9 +122,13 @@ class KotlinFactories {
         fun registerKotlinNativeCompileTask(
             project: Project,
             taskName: String,
-            kotlinCompileTask: KotlinNativeCompile
+            kotlinCompilation: KotlinCompilation<*>
         ): TaskProvider<out KspTaskNative> {
-            return project.tasks.register(taskName, KspTaskNative::class.java, kotlinCompileTask.compilation).apply {
+            return project.tasks.register(
+                taskName,
+                KspTaskNative::class.java,
+                kotlinCompilation as KotlinNativeCompilationData<*>
+            ).apply {
                 configure { kspTask ->
                     kspTask.onlyIf {
                         kspTask.konanTarget.enabledOnCurrentHost
