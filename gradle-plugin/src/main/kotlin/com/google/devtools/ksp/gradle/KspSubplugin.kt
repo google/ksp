@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.gradle.plugin.InternalSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
@@ -202,7 +203,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val project = kotlinCompilation.target.project
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
             project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
-        val javaCompile = findJavaTaskForKotlinCompilation(kotlinCompilation)?.get()
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
         val kspConfigurations = kspConfigurations.find(kotlinCompilation)
         val nonEmptyKspConfigurations = kspConfigurations.filter { it.allDependencies.isNotEmpty() }
@@ -232,7 +232,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID:$KSP_VERSION"
         )
 
-        if (javaCompile != null) {
+        findJavaTaskForKotlinCompilation(kotlinCompilation)?.configure { javaCompile ->
             val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
             generatedJavaSources.include("**/*.java")
             javaCompile.source(generatedJavaSources)
@@ -247,8 +247,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kspGeneratedSourceSet =
             project.kotlinExtension.sourceSets.create("generatedBy" + kspTaskName.capitalizeAsciiOnly())
         sourceSetMap.put(kotlinCompilation.defaultSourceSet, kspGeneratedSourceSet)
-
-        val kotlinCompileTask = kotlinCompileProvider.get()
 
         val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
             .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
@@ -306,6 +304,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
 
             if (kspExtension.allowSourcesFromOtherPlugins) {
+                val kotlinCompileTask = kotlinCompileProvider.get()
                 fun FileCollection.nonSelfDeps(): List<Task> =
                     buildDependencies.getDependencies(null).filterNot {
                         it.name == kspTaskName
@@ -374,10 +373,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true
 
         // Create and configure KSP tasks.
-        val kspTaskProvider = when (kotlinCompileTask) {
-            is KotlinCompile -> {
+        val kspTaskProvider = when (kotlinCompilation.platformType) {
+            KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
                 KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
+                        val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
@@ -411,9 +411,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     kotlinCompilation.output.classesDirs.from(classOutputDir)
                 }
             }
-            is Kotlin2JsCompile -> {
+            KotlinPlatformType.js, KotlinPlatformType.wasm -> {
                 KotlinFactories.registerKotlinJSCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
+                        val kotlinCompileTask = kotlinCompileProvider.get() as Kotlin2JsCompile
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
@@ -439,9 +440,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
-            is KotlinCompileCommon -> {
+            KotlinPlatformType.common -> {
                 KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
+                        val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompileCommon
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
@@ -464,9 +466,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
-            is KotlinNativeCompile -> {
-                KotlinFactories.registerKotlinNativeCompileTask(project, kspTaskName, kotlinCompileTask).also {
+            KotlinPlatformType.native -> {
+                KotlinFactories.registerKotlinNativeCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
+                        val kotlinCompileTask = kotlinCompileProvider.get() as KotlinNativeCompile
                         configureAsKspTask(kspTask, false)
                         configureAsAbstractKotlinCompileTool(kspTask)
 
@@ -493,7 +496,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
-            else -> return project.provider { emptyList() }
+            // No else; The cases should be exhaustive
         }
         kspGeneratedSourceSet.kotlin.srcDir(project.files(kotlinOutputDir, javaOutputDir).builtBy(kspTaskProvider))
         kotlinCompilation.source(kspGeneratedSourceSet)
