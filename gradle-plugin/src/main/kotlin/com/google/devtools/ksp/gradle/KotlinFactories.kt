@@ -121,9 +121,13 @@ class KotlinFactories {
         fun registerKotlinNativeCompileTask(
             project: Project,
             taskName: String,
-            kotlinCompileTask: KotlinNativeCompile
+            kotlinCompilation: KotlinCompilation<*>
         ): TaskProvider<out KspTaskNative> {
-            return project.tasks.register(taskName, KspTaskNative::class.java, kotlinCompileTask.compilation).apply {
+            return project.tasks.register(
+                taskName,
+                KspTaskNative::class.java,
+                KotlinCompilationInfo(kotlinCompilation)
+            ).apply {
                 configure { kspTask ->
                     kspTask.onlyIf {
                         kspTask.konanTarget.enabledOnCurrentHost
