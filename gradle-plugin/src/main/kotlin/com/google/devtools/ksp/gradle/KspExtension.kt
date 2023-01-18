@@ -23,6 +23,7 @@ import org.gradle.process.CommandLineArgumentProvider
 open class KspExtension {
     internal val apOptions = mutableMapOf<String, String>()
     internal val commandLineArgumentProviders = mutableListOf<CommandLineArgumentProvider>()
+    internal val excludedProcessors = mutableSetOf<String>()
 
     open val arguments: Map<String, String> get() = apOptions.toMap()
 
@@ -47,4 +48,9 @@ open class KspExtension {
 
     // Treat all warning as errors.
     open var allWarningsAsErrors: Boolean = false
+
+    // Keep processor providers from being called. Providers will still be loaded if they're in classpath.
+    open fun excludeProcessor(fullyQualifiedName: String) {
+        excludedProcessors.add(fullyQualifiedName)
+    }
 }
