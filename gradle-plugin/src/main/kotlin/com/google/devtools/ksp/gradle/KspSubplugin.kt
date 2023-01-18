@@ -150,6 +150,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspExtension.apOptions.forEach {
                 options += SubpluginOption("apoption", "${it.key}=${it.value}")
             }
+            options += SubpluginOption(
+                "excludedProcessors",
+                kspExtension.excludedProcessors.joinToString(":")
+            )
             commandLineArgumentProviders.get().forEach {
                 it.asArguments().forEach { argument ->
                     if (!argument.matches(Regex("\\S+=\\S+"))) {

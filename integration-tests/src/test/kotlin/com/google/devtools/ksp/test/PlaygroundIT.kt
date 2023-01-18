@@ -180,4 +180,31 @@ class PlaygroundIT {
         }
         project.restore(buildFile.path)
     }
+
+    @Test
+    fun testExcludeProcessor() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp {\n  excludeProcessor(\"TestProcessorProvider\")\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\n  excludeProcessor(\"NotMatchingAnything\")\n}\n")
+        gradleRunner.withArguments("build").buildAndFail().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
+            Assert.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
+            Assert.assertTrue("Unresolved reference: AClassBuilder" in it.output)
+        }
+        gradleRunner.withArguments("build").buildAndFail().let {
+            Assert.assertEquals(TaskOutcome.UP_TO_DATE, it.task(":workload:kspKotlin")?.outcome)
+            Assert.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
+            Assert.assertTrue("Unresolved reference: AClassBuilder" in it.output)
+        }
+
+        project.restore("workload/build.gradle.kts")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp {\n  excludeProcessor(\"DoNotMatch\")\n}\n")
+        gradleRunner.buildAndCheck("build")
+
+        project.restore("workload/build.gradle.kts")
+    }
 }

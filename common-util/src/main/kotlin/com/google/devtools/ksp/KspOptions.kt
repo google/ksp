@@ -55,6 +55,8 @@ class KspOptions(
     val compilerVersion: KotlinVersion,
 
     val commonSources: List<File>,
+
+    val excludedProcessors: Set<String>,
 ) {
     class Builder {
         var projectBaseDir: File? = null
@@ -90,6 +92,8 @@ class KspOptions(
 
         var commonSources: MutableList<File> = mutableListOf()
 
+        var excludedProcessors: MutableSet<String> = mutableSetOf()
+
         fun build(): KspOptions {
             return KspOptions(
                 requireNotNull(projectBaseDir) { "A non-null projectBaseDir must be provided" },
@@ -116,6 +120,7 @@ class KspOptions(
                 apiVersion,
                 compilerVersion,
                 commonSources,
+                excludedProcessors,
             )
         }
     }
@@ -286,6 +291,14 @@ enum class KspCliOption(
         false,
         true
     ),
+
+    EXCLUDED_PROCESSORS_OPTION(
+        "excludedProcessors",
+        "<excludedProcessors>",
+        "exclude providers by fqn",
+        false,
+        true
+    ),
 }
 
 @Suppress("IMPLICIT_CAST_TO_ANY")
@@ -314,4 +327,5 @@ fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when
     KspCliOption.CHANGED_CLASSES_OPTION -> changedClasses.addAll(value.split(':'))
     KspCliOption.RETURN_OK_ON_ERROR_OPTION -> returnOkOnError = value.toBoolean()
     KspCliOption.COMMON_SOURCES_OPTION -> commonSources.addAll(value.split(File.pathSeparator).map { File(it) })
+    KspCliOption.EXCLUDED_PROCESSORS_OPTION -> excludedProcessors.addAll(value.split(":"))
 }
