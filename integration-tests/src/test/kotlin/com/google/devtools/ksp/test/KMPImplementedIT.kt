@@ -222,6 +222,29 @@ class KMPImplementedIT {
     }
 
     @Test
+    fun testNonEmbeddableArtifact() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "-Pkotlin.native.useEmbeddableCompilerJar=false",
+            ":workload-linuxX64:kspTestKotlinLinuxX64"
+        ).build()
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "-Pkotlin.native.useEmbeddableCompilerJar=true",
+            ":workload-linuxX64:kspTestKotlinLinuxX64"
+        ).build()
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            ":workload-linuxX64:kspTestKotlinLinuxX64"
+        ).build()
+    }
+
+    @Test
     fun testLinuxX64ErrorLog() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
