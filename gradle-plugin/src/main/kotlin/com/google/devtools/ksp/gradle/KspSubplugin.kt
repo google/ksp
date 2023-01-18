@@ -78,8 +78,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
         const val KSP_API_ID = "symbol-processing-api"
         const val KSP_COMPILER_PLUGIN_ID = "symbol-processing"
+        const val KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE = "symbol-processing-cmdline"
         const val KSP_GROUP_ID = "com.google.devtools.ksp"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
+        const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
 
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
@@ -232,8 +234,19 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         )
         project.dependencies.add(
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME,
-
             "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID:$KSP_VERSION"
+        )
+
+        val kspClasspathCfgNonEmbeddable = project.configurations.maybeCreate(
+            KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE
+        )
+        project.dependencies.add(
+            KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE,
+            "$KSP_GROUP_ID:$KSP_API_ID:$KSP_VERSION"
+        )
+        project.dependencies.add(
+            KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE,
+            "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE:$KSP_VERSION"
         )
 
         findJavaTaskForKotlinCompilation(kotlinCompilation)?.configure { javaCompile ->
@@ -477,12 +490,19 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, false)
                         configureAsAbstractKotlinCompileTool(kspTask)
 
+                        val useEmbeddable = project.findProperty("kotlin.native.useEmbeddableCompilerJar")
+                            ?.toString()?.toBoolean() ?: true
+                        val classpathCfg = if (useEmbeddable) {
+                            kspClasspathCfg
+                        } else {
+                            kspClasspathCfgNonEmbeddable
+                        }
                         // KotlinNativeCompile computes -Xplugin=... from compilerPluginClasspath.
                         if (kspExtension.blockOtherCompilerPlugins) {
-                            kspTask.compilerPluginClasspath = kspClasspathCfg
+                            kspTask.compilerPluginClasspath = classpathCfg
                         } else {
                             kspTask.compilerPluginClasspath =
-                                kspClasspathCfg + kotlinCompileTask.compilerPluginClasspath!!
+                                classpathCfg + kotlinCompileTask.compilerPluginClasspath!!
                             kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         }
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
@@ -544,7 +564,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     override fun getPluginArtifactForNative(): SubpluginArtifact? =
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
-            artifactId = KSP_COMPILER_PLUGIN_ID,
+            artifactId = KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE,
             version = KSP_VERSION
         )
 }
