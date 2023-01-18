@@ -81,7 +81,8 @@ class KotlinSymbolProcessingExtension(
                     URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
 
                 ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader).filter {
-                    options.processors.isEmpty() || it.javaClass.name in options.processors
+                    (options.processors.isEmpty() && it.javaClass.name !in options.excludedProcessors) ||
+                        it.javaClass.name in options.processors
                 }
             }
             if (providers.isEmpty()) {
