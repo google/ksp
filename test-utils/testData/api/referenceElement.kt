@@ -26,6 +26,7 @@
 // KSClassifierReferenceDescriptorImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Y is X
 // KSClassifierReferenceDescriptorImpl: Qualifier of Z<Int> is X<String>
+// KSDefNonNullReferenceImpl: Enclosed type of T
 // KSClassifierReferenceJavaImpl: Qualifier of H is J<String>
 // KSClassifierReferenceJavaImpl: Qualifier of I is J
 // KSClassifierReferenceJavaImpl: Qualifier of Object is null
@@ -50,6 +51,10 @@ val w: X<String>.Z<Int> = X<String>().Z<Int>()
 class A<T1> {
     class B
     inner class C<T2>
+}
+
+class DefNonNull<T> {
+    val u: T & Any
 }
 
 val x: A.B = A.B()

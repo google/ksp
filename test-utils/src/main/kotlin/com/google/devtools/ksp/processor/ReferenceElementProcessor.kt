@@ -60,6 +60,16 @@ open class ReferenceElementProcessor : AbstractTestProcessor() {
             )
         }
 
+        val defNonNullReferences =
+            references.filter { it.element is KSDefNonNullReference && it.origin == Origin.KOTLIN }
+                .sortedBy { it.toString() }
+
+        defNonNullReferences.forEach {
+            results.add(
+                "KSDefNonNullReferenceImpl: Enclosed type of ${(it.element as KSDefNonNullReference).enclosedType}"
+            )
+        }
+
         val javaReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.JAVA }
             .sortedBy(::refName)
         for (i in javaReferences) {

@@ -325,6 +325,12 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSDeclaration> declarations;
   }
 
+  public interface KSDefNonNullReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
+    method public default <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, @Nullable D data);
+    method @NonNull public com.google.devtools.ksp.symbol.KSClassifierReference getEnclosedType();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSClassifierReference enclosedType;
+  }
+
   public interface KSDynamicReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
   }
 
@@ -531,6 +537,7 @@ package com.google.devtools.ksp.symbol {
     method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @Nullable D data);
     method public R visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable D data);
     method public R visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable D data);
+    method public R visitDefNonNullReference(@NonNull com.google.devtools.ksp.symbol.KSDefNonNullReference reference, @Nullable D data);
     method public R visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, @Nullable D data);
     method public R visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, @Nullable D data);
     method public R visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @Nullable D data);
@@ -559,6 +566,7 @@ package com.google.devtools.ksp.symbol {
     method public void visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @NonNull kotlin.Unit data);
     method public void visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @NonNull kotlin.Unit data);
     method public void visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @NonNull kotlin.Unit data);
+    method public void visitDefNonNullReference(@NonNull com.google.devtools.ksp.symbol.KSDefNonNullReference reference, @NonNull kotlin.Unit data);
     method public void visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, @NonNull kotlin.Unit data);
     method public void visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, @NonNull kotlin.Unit data);
     method public void visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @NonNull kotlin.Unit data);
@@ -676,6 +684,7 @@ package com.google.devtools.ksp.visitor {
     method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @Nullable D data);
     method public R visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable D data);
     method public R visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable D data);
+    method public R visitDefNonNullReference(@NonNull com.google.devtools.ksp.symbol.KSDefNonNullReference reference, @Nullable D data);
     method public R visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, @Nullable D data);
     method public R visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, @Nullable D data);
     method public R visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, @Nullable D data);
