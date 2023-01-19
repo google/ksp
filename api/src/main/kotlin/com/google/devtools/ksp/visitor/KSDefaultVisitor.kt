@@ -107,6 +107,11 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitClassifierReference(reference, data)
     }
 
+    override fun visitDefNonNullReference(reference: KSDefNonNullReference, data: D): R {
+        this.visitReferenceElement(reference, data)
+        return super.visitDefNonNullReference(reference, data)
+    }
+
     override fun visitTypeArgument(typeArgument: KSTypeArgument, data: D): R {
         this.visitAnnotated(typeArgument, data)
         return super.visitTypeArgument(typeArgument, data)

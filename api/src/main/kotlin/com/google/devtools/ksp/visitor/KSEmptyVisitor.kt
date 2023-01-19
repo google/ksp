@@ -88,6 +88,10 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(reference, data)
     }
 
+    override fun visitDefNonNullReference(reference: KSDefNonNullReference, data: D): R {
+        return defaultHandler(reference, data)
+    }
+
     override fun visitReferenceElement(element: KSReferenceElement, data: D): R {
         return defaultHandler(element, data)
     }
