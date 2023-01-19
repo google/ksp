@@ -57,6 +57,7 @@ class KspOptions(
     val commonSources: List<File>,
 
     val excludedProcessors: Set<String>,
+    val mapAnnotationArgumentsInJava: Boolean,
 ) {
     class Builder {
         var projectBaseDir: File? = null
@@ -93,6 +94,7 @@ class KspOptions(
         var commonSources: MutableList<File> = mutableListOf()
 
         var excludedProcessors: MutableSet<String> = mutableSetOf()
+        var mapAnnotationArgumentsInJava: Boolean = false
 
         fun build(): KspOptions {
             return KspOptions(
@@ -121,6 +123,7 @@ class KspOptions(
                 compilerVersion,
                 commonSources,
                 excludedProcessors,
+                mapAnnotationArgumentsInJava,
             )
         }
     }
@@ -299,6 +302,14 @@ enum class KspCliOption(
         false,
         true
     ),
+
+    MAP_ANNOTATION_ARGUMENTS_IN_JAVA_OPTION(
+        "mapAnnotationArgumentsInJava",
+        "<mapAnnotationArgumentsInJava>",
+        "Map types in annotation arguments in Java sources",
+        false,
+        false
+    ),
 }
 
 @Suppress("IMPLICIT_CAST_TO_ANY")
@@ -328,4 +339,5 @@ fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when
     KspCliOption.RETURN_OK_ON_ERROR_OPTION -> returnOkOnError = value.toBoolean()
     KspCliOption.COMMON_SOURCES_OPTION -> commonSources.addAll(value.split(File.pathSeparator).map { File(it) })
     KspCliOption.EXCLUDED_PROCESSORS_OPTION -> excludedProcessors.addAll(value.split(":"))
+    KspCliOption.MAP_ANNOTATION_ARGUMENTS_IN_JAVA_OPTION -> mapAnnotationArgumentsInJava = value.toBoolean()
 }
