@@ -657,6 +657,38 @@ class ResolverImpl(
             resolverContext.typeResolver.transformJavaType(javaType, TypeUsage.COMMON.toAttributes())
     }
 
+    /*
+     * Don't map Java types in annotation parameters
+     *
+     * Users may specify Java types explicitly by instances of `Class<T>`.
+     * The situation is similar to `getClassDeclarationByName` where we have
+     * decided to keep those Java types not mapped.
+     *
+     * It would be troublesome if users try to use reflection on types that
+     * were mapped to Kotlin builtins, becuase some of those builtins don't
+     * even exist in classpath.
+     *
+     * Therefore, ResolverImpl.resolveJavaType cannot be used.
+     */
+    fun resolveJavaTypeInAnnotations(psiType: PsiType): KSType = if (options.mapAnnotationArgumentsInJava) {
+        getKSTypeCached(resolveJavaType(psiType))
+    } else {
+        when (psiType) {
+            is PsiPrimitiveType -> {
+                getClassDeclarationByName(psiType.boxedTypeName!!)!!.asStarProjectedType()
+            }
+            is PsiArrayType -> {
+                val componentType = resolveJavaTypeInAnnotations(psiType.componentType)
+                val componentTypeRef = createKSTypeReferenceFromKSType(componentType)
+                val typeArgs = listOf(getTypeArgument(componentTypeRef, Variance.INVARIANT))
+                builtIns.arrayType.replace(typeArgs)
+            }
+            else -> {
+                getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType() ?: KSErrorType
+            }
+        }
+    }
+
     fun KotlinType.expandNonRecursively(): KotlinType =
         (constructor.declarationDescriptor as? TypeAliasDescriptor)?.expandedType?.withAbbreviation(this as SimpleType)
             ?: this

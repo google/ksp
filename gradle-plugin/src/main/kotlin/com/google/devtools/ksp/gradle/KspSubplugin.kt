@@ -156,6 +156,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 "excludedProcessors",
                 kspExtension.excludedProcessors.joinToString(":")
             )
+            options += SubpluginOption(
+                "mapAnnotationArgumentsInJava",
+                project.findProperty("ksp.map.annotation.arguments.in.java")?.toString() ?: "false"
+            )
             commandLineArgumentProviders.get().forEach {
                 it.asArguments().forEach { argument ->
                     if (!argument.matches(Regex("\\S+=\\S+"))) {
