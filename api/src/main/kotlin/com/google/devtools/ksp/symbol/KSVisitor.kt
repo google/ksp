@@ -67,4 +67,6 @@ interface KSVisitor<D, R> {
     fun visitValueArgument(valueArgument: KSValueArgument, data: D): R
 
     fun visitClassifierReference(reference: KSClassifierReference, data: D): R
+
+    fun visitDefNonNullReference(reference: KSDefNonNullReference, data: D): R
 }

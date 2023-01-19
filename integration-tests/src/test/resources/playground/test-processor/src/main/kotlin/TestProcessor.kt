@@ -68,6 +68,11 @@ class TestProcessor : SymbolProcessor {
         override fun visitDynamicReference(reference: KSDynamicReference, data: String) {
             TODO("Not yet implemented")
         }
+
+        override fun visitDefNonNullReference(reference: KSDefNonNullReference, data: String) {
+            TODO("Not yet implemented")
+        }
+
         val visited = HashSet<Any>()
 
         private fun checkVisited(symbol: Any): Boolean {

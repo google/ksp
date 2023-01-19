@@ -91,4 +91,7 @@ open class KSVisitorVoid : KSVisitor<Unit, Unit> {
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: Unit) {
     }
+
+    override fun visitDefNonNullReference(reference: KSDefNonNullReference, data: Unit) {
+    }
 }
