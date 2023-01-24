@@ -91,6 +91,7 @@ fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
         DescriptorVisibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
         // Since there is no modifier for package-private, use No modifier to tell if a symbol from binary is package private.
         JavaDescriptorVisibilities.PACKAGE_VISIBILITY, JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY -> Unit
+        DescriptorVisibilities.INVISIBLE_FAKE, DescriptorVisibilities.INVISIBLE_FROM_OTHER_MODULES -> Unit
         else -> throw IllegalStateException("unhandled visibility: ${this.visibility}")
     }
 
