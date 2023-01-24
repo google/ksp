@@ -280,4 +280,37 @@ class GradleCompilationTest {
         assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
         assertThat(result.output).containsMatch("$pattern3\\S*$pattern2")
     }
+
+    @Test
+    fun kspLibrariesHaveNoGenerated() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                 afterEvaluate {
+                   tasks.withType<com.google.devtools.ksp.gradle.KspTaskJvm>().configureEach {
+                     libraries.files.forEach {
+                       println("HAS LIBRARY: ${'$'}{it.path}")
+                     }
+                   }
+                 }
+            """.trimIndent()
+        )
+
+        testRule.appModule.dependencies.add(
+            module(configuration = "ksp", testRule.processorModule)
+        )
+
+        class DummyProcessor : SymbolProcessor {
+            override fun process(resolver: Resolver): List<KSAnnotated> = emptyList()
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> DummyProcessor() })
+
+        testRule.addProvider(Provider::class)
+
+        val result = testRule.runner().withArguments(":app:assemble").build()
+        assertThat(result.output).contains("HAS LIBRARY: ")
+        assertThat(result.output).doesNotContain("app/build/generated/ksp/main/classes")
+    }
 }
