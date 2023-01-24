@@ -332,8 +332,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourceOutputDir
             )
 
+            val kotlinCompileTask = kotlinCompileProvider.get()
             if (kspExtension.allowSourcesFromOtherPlugins) {
-                val kotlinCompileTask = kotlinCompileProvider.get()
                 fun FileCollection.nonSelfDeps(): List<Task> =
                     buildDependencies.getDependencies(null).filterNot {
                         it.name == kspTaskName
@@ -374,6 +374,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
             kspTask.exclude { kspOutputDir.isParentOf(it.file) }
 
+            kspTask.libraries.setFrom(
+                kotlinCompileTask.project.files(
+                    Callable {
+                        kotlinCompileTask.libraries.filter {
+                            !kspOutputDir.isParentOf(it)
+                        }
+                    }
+                )
+            )
             // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
             // * It doesn't consider private / internal changes when computing dirty sets.
             // * It compiles iteratively; Sources can be compiled in different rounds.
@@ -412,9 +421,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.libraries.setFrom(
-                            kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries })
-                        )
                         kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
                         kspTask.compilerOptions.useK2.value(false)
                         kspTask.ownModuleName.value(kotlinCompileTask.ownModuleName.map { "$it-ksp" })
@@ -450,9 +456,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.libraries.setFrom(
-                            kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries })
-                        )
                         kspTask.compilerOptions.freeCompilerArgs
                             .value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
                         kspTask.compilerOptions.useK2.value(false)
@@ -480,9 +483,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.libraries.setFrom(
-                            kotlinCompileTask.project.files(Callable { kotlinCompileTask.libraries })
-                        )
                         kspTask.compilerOptions.useK2.value(false)
 
                         kspTask.incrementalChangesTransformers.add(
@@ -525,6 +525,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
                         )
+                        kspTask.compilerOptions.useK2.value(false)
                         // Cannot use lambda; See below for details.
                         // https://docs.gradle.org/7.2/userguide/validation_problems.html#implementation_unknown
                         kspTask.doFirst(object : Action<Task> {
