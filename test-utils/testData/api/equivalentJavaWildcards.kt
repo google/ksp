@@ -23,8 +23,11 @@
 // Y : X -> X
 // <init> : Y -> Y
 // A : Any -> Any
+// T1 : Any? -> Any?
+// T2 : Any? -> Any?
 // <init> : A<T1, T2> -> A<T1, T2>
 // B : Any -> Any
+// T : Any? -> Any?
 // synthetic constructor for B : B<*> -> B<out Any?>
 // bar1 : [@kotlin.jvm.JvmSuppressWildcards] A<X, X> -> [@kotlin.jvm.JvmSuppressWildcards] A<X, X>
 // - INVARIANT X : X -> X

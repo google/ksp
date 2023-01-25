@@ -30,6 +30,7 @@
 // parent of INVARIANT T: Map
 // parent of Map: Map
 // parent of Map: Alias
+// parent of Any?: T
 // parent of T: Alias
 // parent of Alias: File: a.kt
 // parent of Int: Int
@@ -49,6 +50,7 @@
 // parent of topProp: File: a.kt
 // parent of T: T
 // parent of T: topFun
+// parent of Any?: T
 // parent of T: topFun
 // parent of Anno: Anno
 // parent of Anno: @Anno
@@ -68,6 +70,7 @@
 // parent of Int: memberFun
 // parent of memberFun: topClass
 // parent of Any: InnerClass
+// parent of Any?: P
 // parent of P: InnerClass
 // parent of InnerClass: topClass
 // parent of P: P

@@ -20,12 +20,14 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.kotlin.psi.KtTypeParameterListOwner
@@ -68,7 +70,11 @@ class KSTypeParameterImpl private constructor(val ktTypeParameter: KtTypeParamet
                     it.subjectTypeParameterName!!.getReferencedName() == ktTypeParameter.nameAsSafeName.asString()
                 }
                 .map { it.boundTypeReference }
-        ).filterNotNull().map { KSTypeReferenceImpl.getCached(it) }.memoized()
+        ).filterNotNull().map { KSTypeReferenceImpl.getCached(it) }.ifEmpty {
+            sequenceOf(
+                KSTypeReferenceSyntheticImpl.getCached(ResolverImpl.instance!!.builtIns.anyType.makeNullable(), this)
+            )
+        }.memoized()
     }
 
     override val qualifiedName: KSName? by lazy {
