@@ -21,6 +21,7 @@
 // MyEnum : Any
 // <init> : MyEnum
 // VarianceSubjectSuppressed : Any
+// R : Any?
 // starList : List<Any?>
 // typeArgList : List<R>
 // numberList : List<Number>
