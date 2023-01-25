@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitor
@@ -75,9 +76,19 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
             annotation.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
                 it != AnnotationUseSiteTarget.PROPERTY_GETTER &&
                     it != AnnotationUseSiteTarget.PROPERTY_SETTER &&
-                    it != AnnotationUseSiteTarget.SETTER_PARAMETER
+                    it != AnnotationUseSiteTarget.SETTER_PARAMETER &&
+                    it != AnnotationUseSiteTarget.FIELD
             } ?: true
-        }.map { KSAnnotationImpl.getCached(it) }
+        }.map { KSAnnotationImpl.getCached(it) }.filterNot { valueParameterAnnotation ->
+            valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
+                metaAnnotation.annotationType.resolve().declaration.qualifiedName
+                    ?.asString() == "kotlin.annotation.Target" &&
+                    (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.none {
+                    (it as? KSType)?.declaration?.qualifiedName
+                        ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
+                } ?: false
+            }
+        }
             .plus(this.findAnnotationFromUseSiteTarget()).memoized()
     }
 

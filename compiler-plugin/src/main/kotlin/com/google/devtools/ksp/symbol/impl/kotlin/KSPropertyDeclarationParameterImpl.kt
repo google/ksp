@@ -40,14 +40,17 @@ class KSPropertyDeclarationParameterImpl private constructor(val ktParameter: Kt
         ktParameter.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
             .filterNot { valueParameterAnnotation ->
                 valueParameterAnnotation.useSiteTarget == AnnotationUseSiteTarget.PARAM ||
-                    valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
-                        metaAnnotation.annotationType.resolve().declaration.qualifiedName
-                            ?.asString() == "kotlin.annotation.Target" &&
-                            (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.any {
-                            (it as? KSType)?.declaration?.qualifiedName
-                                ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
-                        } ?: false
-                    }
+                    (
+                        valueParameterAnnotation.annotationType.resolve()
+                            .declaration.annotations.any { metaAnnotation ->
+                                metaAnnotation.annotationType.resolve().declaration.qualifiedName
+                                    ?.asString() == "kotlin.annotation.Target" &&
+                                    (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.any {
+                                    (it as? KSType)?.declaration?.qualifiedName
+                                        ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
+                                } ?: false
+                            } && valueParameterAnnotation.useSiteTarget == null
+                        )
             }
     }
 
