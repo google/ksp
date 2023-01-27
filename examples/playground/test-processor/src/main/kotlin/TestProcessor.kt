@@ -51,6 +51,10 @@ class TestProcessor(
             TODO("Not yet implemented")
         }
 
+        override fun visitDefNonNullReference(reference: KSDefNonNullReference, data: String) {
+            TODO("Not yet implemented")
+        }
+
         override fun visitNode(node: KSNode, data: String) {
             TODO("Not yet implemented")
         }
