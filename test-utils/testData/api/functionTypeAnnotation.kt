@@ -25,6 +25,11 @@
 // strWithAnnoExt1: Function2 @A, @ExtensionFunctionType
 // END
 // FILE: a.kt
+
+// Workaround: force file to be resolved.
+// Remove after https://github.com/JetBrains/kotlin/pull/5089 is merged.
+@file:Suppress()
+
 annotation class A
 
 val strExt0: String.() -> Unit = TODO()
