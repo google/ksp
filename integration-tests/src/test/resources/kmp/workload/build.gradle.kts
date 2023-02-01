@@ -9,7 +9,7 @@ kotlin {
     jvm {
         withJava()
     }
-    js(BOTH) {
+    js(IR) {
         browser()
         nodejs()
     }

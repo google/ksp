@@ -92,13 +92,7 @@ class KMPImplementedIT {
         ).build().let {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-js:build")?.outcome)
             verify(
-                "workload-js/build/libs/workload-js-jslegacy-1.0-SNAPSHOT.jar",
-                listOf(
-                    "playground-workload-js-js-legacy.js"
-                )
-            )
-            verify(
-                "workload-js/build/libs/workload-js-jsir-1.0-SNAPSHOT.klib",
+                "workload-js/build/libs/workload-js-js-1.0-SNAPSHOT.klib",
                 listOf(
                     "default/ir/types.knt"
                 )
@@ -274,14 +268,7 @@ class KMPImplementedIT {
         )
 
         verify(
-            "workload/build/libs/workload-jslegacy-1.0-SNAPSHOT.jar",
-            listOf(
-                "playground-workload-js-legacy.js"
-            )
-        )
-
-        verify(
-            "workload/build/libs/workload-jsir-1.0-SNAPSHOT.klib",
+            "workload/build/libs/workload-js-1.0-SNAPSHOT.klib",
             listOf(
                 "default/ir/types.knt"
             )
