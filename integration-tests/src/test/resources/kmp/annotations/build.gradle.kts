@@ -8,7 +8,7 @@ version = "1.0-SNAPSHOT"
 kotlin {
     jvm {
     }
-    js(BOTH) {
+    js(IR) {
         browser()
         nodejs()
     }

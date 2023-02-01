@@ -6,7 +6,7 @@ plugins {
 version = "1.0-SNAPSHOT"
 
 kotlin {
-    js(BOTH) {
+    js(IR) {
         browser()
         nodejs()
     }

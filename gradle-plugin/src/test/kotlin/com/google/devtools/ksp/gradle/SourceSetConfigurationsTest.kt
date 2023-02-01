@@ -82,7 +82,7 @@ class SourceSetConfigurationsTest {
                 kotlin {
                     jvm { }
                     android(name = "foo") { }
-                    js(BOTH) { browser() }
+                    js(IR) { browser() }
                     androidNativeX86 { }
                     androidNativeX64(name = "bar") { }
                 }

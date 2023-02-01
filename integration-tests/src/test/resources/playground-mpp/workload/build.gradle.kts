@@ -13,7 +13,7 @@ kotlin {
     mingwX64()
     macosX64()
     ios()
-    js(BOTH) {
+    js(IR) {
         browser()
         nodejs()
     }
