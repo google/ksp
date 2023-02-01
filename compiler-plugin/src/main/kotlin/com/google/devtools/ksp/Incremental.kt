@@ -53,16 +53,21 @@ abstract class PersistentMap<K : Comparable<K>, V>(
     storageFile: File,
     keyDescriptor: KeyDescriptor<K>,
     valueExternalizer: DataExternalizer<V>,
-) : BasicMap<K, V>(storageFile, keyDescriptor, valueExternalizer) {
+    icContext: IncrementalCompilationContext,
+) : BasicMap<K, V>(storageFile, keyDescriptor, valueExternalizer, icContext) {
     abstract operator fun get(key: K): V?
     abstract operator fun set(key: K, value: V)
     abstract fun remove(key: K)
 }
 
-class FileToSymbolsMap(storageFile: File) : PersistentMap<File, Collection<LookupSymbol>>(
+class FileToSymbolsMap(
+    storageFile: File,
+    icContext: IncrementalCompilationContext
+) : PersistentMap<File, Collection<LookupSymbol>>(
     storageFile,
     FileKeyDescriptor,
-    CollectionExternalizer(LookupSymbolExternalizer, { HashSet() })
+    CollectionExternalizer(LookupSymbolExternalizer, { HashSet() }),
+    icContext,
 ) {
     override fun dumpKey(key: File): String = key.toString()
 
@@ -117,10 +122,14 @@ object FileExternalizer : DataExternalizer<File> {
     }
 }
 
-class FileToFilesMap(storageFile: File) : PersistentMap<File, Collection<File>>(
+class FileToFilesMap(
+    storageFile: File,
+    icContext: IncrementalCompilationContext
+) : PersistentMap<File, Collection<File>>(
     storageFile,
     FileKeyDescriptor,
-    CollectionExternalizer(FileExternalizer, { HashSet() })
+    CollectionExternalizer(FileExternalizer, { HashSet() }),
+    icContext,
 ) {
 
     override operator fun get(key: File): Collection<File>? = storage[key]
@@ -184,17 +193,19 @@ class IncrementalContext(
     // This is used to update sealedMap in the end.
     private val updatedSealed = MultiMap.createSet<File, LookupSymbol>()
 
+    private val baseDir = options.projectBaseDir
+    private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
+    private val icContext = IncrementalCompilationContext(PATH_CONVERTER)
+
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is saved across processing.
-    private val sealedMap = FileToSymbolsMap(File(options.cachesDir, "sealed"))
+    private val sealedMap = FileToSymbolsMap(File(options.cachesDir, "sealed"), icContext)
 
     // Symbols defined in each file. This is saved across processing.
-    private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
+    private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"), icContext)
 
     private val cachesUpToDateFile = File(options.cachesDir, "caches.uptodate")
     private val rebuild = !cachesUpToDateFile.exists()
-
-    private val baseDir = options.projectBaseDir
 
     private val logsDir = File(options.cachesDir, "logs").apply { mkdirs() }
     private val buildTime = Date().time
@@ -207,18 +218,17 @@ class IncrementalContext(
     // Disable incremental processing if somehow DualLookupTracker failed to be registered.
     // This may happen when a platform hasn't support incremental compilation yet. E.g, Common / Metadata.
     private val isIncremental = options.incremental && lookupTracker is DualLookupTracker
-    private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
 
     private val symbolLookupTracker = (lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING
     private val symbolLookupCacheDir = File(options.cachesDir, "symbolLookups")
-    private val symbolLookupCache = LookupStorage(symbolLookupCacheDir, PATH_CONVERTER)
+    private val symbolLookupCache = LookupStorage(symbolLookupCacheDir, icContext)
 
     // TODO: rewrite LookupStorage to share file-to-id, etc.
     private val classLookupTracker = (lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING
     private val classLookupCacheDir = File(options.cachesDir, "classLookups")
-    private val classLookupCache = LookupStorage(classLookupCacheDir, PATH_CONVERTER)
+    private val classLookupCache = LookupStorage(classLookupCacheDir, icContext)
 
-    private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
+    private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"), icContext)
 
     private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
     private val KSFile.relativeFile
