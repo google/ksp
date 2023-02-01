@@ -31,6 +31,10 @@
 // k: [], [@TA]
 // END
 
+// Workaround: force file to be resolved.
+// Remove after https://github.com/JetBrains/kotlin/pull/5089 is merged.
+@file:Suppress()
+
 @Target(AnnotationTarget.TYPE)
 annotation class TA
 
