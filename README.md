@@ -35,6 +35,6 @@ If you are interested in sending PRs, please also check out the [Contributor gui
 Here are some planned features that have not yet been completely implemented:
 * Support [new Kotlin compiler](https://kotlinlang.org/docs/roadmap.html)
 * Improve support to multiplatform. E.g., running KSP on a subset of targets / sharing computations between targets
-* Improve performance. There a bunch of optimizations to be done!
+* Improve performance. There are a bunch of optimizations to be done!
 * Make the IDE aware of the generated code
 * Keep fixing bugs!
