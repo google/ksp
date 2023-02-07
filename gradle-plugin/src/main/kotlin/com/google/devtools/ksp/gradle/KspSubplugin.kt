@@ -28,6 +28,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -313,6 +314,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             )
             kspTask.inputs.property("apOptions", kspExtension.arguments)
+            kspTask.inputs.files(processorClasspath).withNormalizer(ClasspathNormalizer::class.java)
         }
 
         fun configureAsAbstractKotlinCompileTool(kspTask: AbstractKotlinCompileTool<*>) {
