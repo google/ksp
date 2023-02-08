@@ -22,7 +22,6 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -112,7 +111,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         private fun getSubpluginOptions(
             project: Project,
             kspExtension: KspExtension,
-            classpath: Configuration,
             sourceSetName: String,
             target: String,
             isIncremental: Boolean,
@@ -140,7 +138,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
             options += InternalSubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
             options += SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
-            options += FilesSubpluginOption("apclasspath", classpath.toList())
             // Turn this on by default to work KT-30172 around. It is off by default in the compiler plugin.
             options += SubpluginOption(
                 "returnOkOnError",
@@ -303,7 +300,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     getSubpluginOptions(
                         project,
                         kspExtension,
-                        processorClasspath,
                         sourceSetName,
                         target,
                         isIncremental,
@@ -460,7 +456,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 getKspCachesDir(project, sourceSetName, target),
                                 project.provider { project.files() },
                                 project.provider { project.files() },
-                                project.provider { project.files() },
+                                project.provider { processorClasspath }
                             )
                         )
                     }
@@ -483,7 +479,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 getKspCachesDir(project, sourceSetName, target),
                                 project.provider { project.files() },
                                 project.provider { project.files() },
-                                project.provider { project.files() },
+                                project.provider { processorClasspath }
                             )
                         )
                     }
@@ -512,6 +508,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         }
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
+                        kspTask.options.add(FilesSubpluginOption("apclasspath", processorClasspath.files.toList()))
                         val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
@@ -726,6 +723,7 @@ internal fun createIncrementalChangesTransformer(
     processorCP: Provider<FileCollection>,
 ): (ChangedFiles) -> List<SubpluginOption> = { changedFiles ->
     val options = mutableListOf<SubpluginOption>()
+    val apClasspath = processorCP.get().files.toList()
     if (isKspIncremental) {
         if (isIntermoduleIncremental) {
             // findClasspathChanges may clear caches, if there are
@@ -736,7 +734,7 @@ internal fun createIncrementalChangesTransformer(
                 cacheDir,
                 classpathStructure.get().files,
                 libraries.get().files.toList(),
-                processorCP.get().files.toList()
+                apClasspath
             )
             options += classpathChanges.toSubpluginOptions()
         } else {
@@ -748,6 +746,8 @@ internal fun createIncrementalChangesTransformer(
         cacheDir.deleteRecursively()
     }
     options += changedFiles.toSubpluginOptions()
+
+    options += FilesSubpluginOption("apclasspath", apClasspath)
 
     options
 }
