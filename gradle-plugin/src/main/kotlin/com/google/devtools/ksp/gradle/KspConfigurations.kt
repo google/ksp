@@ -22,7 +22,11 @@ class KspConfigurations(private val project: Project) {
         } ?: true
 
     // The "ksp" configuration, applied to every compilations.
-    private val configurationForAll = project.configurations.create(PREFIX)
+    private val configurationForAll = project.configurations.create(PREFIX).apply {
+        isCanBeConsumed = false
+        isCanBeResolved = false
+        isVisible = false
+    }
 
     private fun configurationNameOf(vararg parts: String): String {
         return parts.joinToString("") {

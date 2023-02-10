@@ -50,6 +50,18 @@ class PlaygroundIT {
         gradleRunner.buildAndCheck("clean", "build")
     }
 
+    @Test
+    fun testConfigurationOfConfiguration() {
+        // FIXME: `clean` fails to delete files on windows.
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0-rc-5")
+        gradleRunner.withArguments(":workload:dependencies", "--info").build().let {
+            Assert.assertTrue(
+                it.output.lines().filter { it.startsWith("The configuration :workload:ksp") }.isEmpty()
+            )
+        }
+    }
+
     // TODO: add another plugin and see if it is blocked.
     // Or use a project that depends on a builtin plugin like all-open and see if the build fails
     @Test

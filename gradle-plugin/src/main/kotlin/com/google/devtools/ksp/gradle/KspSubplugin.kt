@@ -229,7 +229,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName, target)
         val kspOutputDir = getKspOutputDir(project, sourceSetName, target)
 
-        val kspClasspathCfg = project.configurations.maybeCreate(KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME)
+        val kspClasspathCfg = project.configurations.maybeCreate(
+            KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME
+        ).markResolvable()
         project.dependencies.add(
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME,
             "$KSP_GROUP_ID:$KSP_API_ID:$KSP_VERSION"
@@ -241,7 +243,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         val kspClasspathCfgNonEmbeddable = project.configurations.maybeCreate(
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE
-        )
+        ).markResolvable()
         project.dependencies.add(
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE,
             "$KSP_GROUP_ID:$KSP_API_ID:$KSP_VERSION"
@@ -268,7 +270,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         sourceSetMap.put(kotlinCompilation.defaultSourceSet, kspGeneratedSourceSet)
 
         val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
-            .extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
+            .extendsFrom(*nonEmptyKspConfigurations.toTypedArray()).markResolvable()
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
@@ -623,7 +625,7 @@ internal fun getClassStructureFiles(
 
     val classStructureIfIncremental = project.configurations.detachedConfiguration(
         project.dependencies.create(project.files(project.provider { libraries }))
-    )
+    ).markResolvable()
 
     return classStructureIfIncremental.incoming.artifactView { viewConfig ->
         viewConfig.attributes.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
@@ -750,4 +752,10 @@ internal fun createIncrementalChangesTransformer(
     options += FilesSubpluginOption("apclasspath", apClasspath)
 
     options
+}
+
+internal fun Configuration.markResolvable(): Configuration = apply {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    isVisible = false
 }
