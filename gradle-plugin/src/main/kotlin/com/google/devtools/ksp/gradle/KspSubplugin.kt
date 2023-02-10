@@ -22,6 +22,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -35,6 +36,8 @@ import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.config.LanguageVersion.Companion.LATEST_STABLE
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
@@ -56,13 +59,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
-import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
-import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
@@ -82,6 +79,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_GROUP_ID = "com.google.devtools.ksp"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
+        val LANGUAGE_VERSION = KotlinVersion.fromVersion(LATEST_STABLE.toString())
 
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
@@ -400,6 +398,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
         }
 
+        fun configureLanguageVersion(kspTask: KotlinCompilationTask<*>) {
+            kspTask.compilerOptions.useK2.value(false)
+            kspTask.compilerOptions.languageVersion.orNull?.let { version ->
+                if (version >= KotlinVersion.KOTLIN_2_0) {
+                    kspTask.compilerOptions.languageVersion.value(LANGUAGE_VERSION)
+                }
+            }
+        }
+
         val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true
 
         // Create and configure KSP tasks.
@@ -413,7 +420,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
                         kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
-                        kspTask.compilerOptions.useK2.value(false)
+                        configureLanguageVersion(kspTask)
                         kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName.map { "$it-ksp" })
                         kspTask.moduleName.value(kotlinCompileTask.moduleName.get())
                         kspTask.destination.value(kspOutputDir)
@@ -448,7 +455,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configurePluginOptions(kspTask)
                         kspTask.compilerOptions.freeCompilerArgs
                             .value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
-                        kspTask.compilerOptions.useK2.value(false)
+                        configureLanguageVersion(kspTask)
                         kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName.map { "$it-ksp" })
 
                         kspTask.incrementalChangesTransformers.add(
@@ -472,7 +479,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.compilerOptions.useK2.value(false)
+                        configureLanguageVersion(kspTask)
 
                         kspTask.incrementalChangesTransformers.add(
                             createIncrementalChangesTransformer(
@@ -515,7 +522,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
                         )
-                        kspTask.compilerOptions.useK2.value(false)
+                        configureLanguageVersion(kspTask)
                         // Cannot use lambda; See below for details.
                         // https://docs.gradle.org/7.2/userguide/validation_problems.html#implementation_unknown
                         kspTask.doFirst(object : Action<Task> {
