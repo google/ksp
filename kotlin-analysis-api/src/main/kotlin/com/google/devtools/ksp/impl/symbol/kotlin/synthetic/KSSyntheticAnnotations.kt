@@ -1,11 +1,12 @@
 package com.google.devtools.ksp.impl.symbol.kotlin.synthetic
 
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
 import org.jetbrains.kotlin.name.ClassId
 
-val ExtensionFunctionTypeAnnotation = KtAnnotationApplication(
+fun getExtensionFunctionTypeAnnotation(index: Int) = KtAnnotationApplicationWithArgumentsInfo(
     ClassId.fromString(ExtensionFunctionType::class.qualifiedName!!),
     null,
     null,
-    emptyList()
+    emptyList(),
+    index
 )
