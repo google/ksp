@@ -371,6 +371,16 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                 }
                 else -> {
                     when {
+                        // Workaround for java annotation value array type
+                        // https://github.com/google/ksp/issues/1329
+                        method.returnType.isArray -> {
+                            if (result !is Array<*>) {
+                                val value = { result.asArray(method, clazz) }
+                                cache.getOrPut(Pair(method.returnType, value), value)
+                            } else {
+                                throw IllegalStateException("unhandled value type, $ExceptionMessage")
+                            }
+                        }
                         method.returnType.isEnum -> {
                             val value = { result.asEnum(method.returnType) }
                             cache.getOrPut(Pair(method.returnType, result), value)
@@ -517,3 +527,6 @@ private fun List<KSType>.asClasses(proxyClass: Class<*>) = try {
 }
 
 fun KSValueArgument.isDefault() = origin == Origin.SYNTHETIC
+
+@KspExperimental
+private fun Any.asArray(method: Method, proxyClass: Class<*>) = listOf(this).asArray(method, proxyClass)
