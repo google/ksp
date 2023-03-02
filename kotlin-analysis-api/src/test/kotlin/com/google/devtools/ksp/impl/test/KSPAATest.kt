@@ -329,7 +329,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaModifiers.kt")
     }
 
-    @Disabled
     @TestMetadata("javaNonNullTypes.kt")
     @Test
     fun testJavaNonNullTypes() {
