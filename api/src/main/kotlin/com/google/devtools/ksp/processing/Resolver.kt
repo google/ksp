@@ -116,6 +116,13 @@ interface Resolver {
     fun mapToJvmSignature(declaration: KSDeclaration): String?
 
     /**
+     * Returns the [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) in JVM
+     * for the given [KSClassDeclaration].
+     */
+    @KspExperimental
+    fun mapToJvmClassName(declaration: KSClassDeclaration): String?
+
+    /**
      * @param overrider the candidate overriding declaration being checked.
      * @param overridee the candidate overridden declaration being checked.
      * @return boolean value indicating whether [overrider] overrides [overridee]

@@ -367,6 +367,13 @@ class ResolverImpl(
         else -> null
     }
 
+    @KspExperimental
+    override fun mapToJvmClassName(declaration: KSClassDeclaration): String? {
+        val descriptor = resolveClassDeclaration(declaration) ?: return null
+
+        return typeMapper.mapType(descriptor).className
+    }
+
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
         fun resolveForOverride(declaration: KSDeclaration): DeclarationDescriptor? {
             return when (declaration) {
