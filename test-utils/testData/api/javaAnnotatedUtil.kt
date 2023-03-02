@@ -35,6 +35,9 @@
 // Test: ParameterArraysTestAnnotationWithDefaultTest
 // IsPresent: class com.google.devtools.ksp.processor.ParameterArraysTestAnnotation
 // ByType: ParameterArraysTestAnnotation[booleanArrayValue=[true, false],byteArrayValue=[-2, 4],shortArrayValue=[-1, 2, 3],charArrayValue=[a, b, c],doubleArrayValue=[1.1, 2.2, 3.3],floatArrayValue=[1.0, 2.0, 3.3],intArrayValue=[1, 2, 4, 8, 16],longArrayValue=[1, 2, 4, 8, 16, 32],stringArrayValue=[first, second, third],kClassArrayValue=[class kotlin.Throwable, class com.google.devtools.ksp.processor.ParametersTestAnnotation],enumArrayValue=[VALUE1, VALUE2, VALUE1, VALUE2]]
+// Test: ParameterArraysTestAnnotationWithSingleAsArrayTest
+// IsPresent: class com.google.devtools.ksp.processor.ParameterArraysTestAnnotation
+// ByType: ParameterArraysTestAnnotation[booleanArrayValue=[true],byteArrayValue=[-2],shortArrayValue=[-1],charArrayValue=[a],doubleArrayValue=[1.1],floatArrayValue=[1.0],intArrayValue=[1],longArrayValue=[1],stringArrayValue=[first],kClassArrayValue=[class kotlin.Throwable],enumArrayValue=[VALUE1]]
 // Test: AnnotationWithinAnAnnotationTest
 // IsPresent: class com.google.devtools.ksp.processor.OuterAnnotation
 // ByType: com.google.devtools.ksp.processor.OuterAnnotation[innerAnnotation=com.google.devtools.ksp.processor.InnerAnnotation[value=hello from the other side]]
@@ -163,6 +166,22 @@ public class ParametersTestWithNegativeDefaultsAnnotationTest {}
 )
 @Test
 public class ParameterArraysTestAnnotationWithDefaultTest {}
+
+@ParameterArraysTestAnnotation(
+    booleanArrayValue = true,
+    byteArrayValue = -2,
+    shortArrayValue = -1,
+    charArrayValue = 'a',
+    doubleArrayValue = 1.1,
+    floatArrayValue = 1.0f,
+    intArrayValue = 1,
+    longArrayValue = 1L,
+    stringArrayValue = "first",
+    kClassArrayValue = java.lang.Throwable.class,
+    enumArrayValue = TestEnum.VALUE1
+)
+@Test
+public class ParameterArraysTestAnnotationWithSingleAsArrayTest {}
 
 @OuterAnnotation(innerAnnotation = @InnerAnnotation(value = "hello from the other side"))
 @Test
