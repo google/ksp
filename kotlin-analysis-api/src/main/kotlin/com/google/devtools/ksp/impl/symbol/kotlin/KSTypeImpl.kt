@@ -62,10 +62,10 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override val nullability: Nullability by lazy {
-        if (type.nullability == KtTypeNullability.NON_NULLABLE) {
-            Nullability.NOT_NULL
-        } else {
-            Nullability.NULLABLE
+        when {
+            type is KtFlexibleType && type.lowerBound.nullability != type.upperBound.nullability -> Nullability.PLATFORM
+            analyze { type.canBeNull } -> Nullability.NULLABLE
+            else -> Nullability.NOT_NULL
         }
     }
 
