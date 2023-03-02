@@ -304,7 +304,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/implicitPropertyAccessors.kt")
     }
 
-    @Disabled
     @TestMetadata("inheritedTypeAlias.kt")
     @Test
     fun testInheritedTypeAlias() {
@@ -356,7 +355,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("javaTypes2.kt")
     @Test
     fun testJavaTypes2() {
