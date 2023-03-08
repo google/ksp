@@ -259,6 +259,10 @@ class ResolverAAImpl(
         TODO("Not yet implemented")
     }
 
+    override fun mapToJvmClassName(declaration: KSClassDeclaration): String? {
+        TODO("Not yet implemented")
+    }
+
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
         TODO("Not yet implemented")
     }
