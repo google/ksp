@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
@@ -134,6 +135,19 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
                 is KtTypeParameterType -> asStringForDebugging()
             } + if (nullability == KtTypeNullability.NULLABLE) "?" else ""
         )
+    }
+}
+
+internal fun KtType.toClassifierReference(parent: KSTypeReference?): KSReferenceElement? {
+    return when (val ktType = this) {
+        is KtFunctionalType -> KSCallableReferenceImpl.getCached(ktType, parent)
+        is KtDynamicType -> KSDynamicReferenceImpl.getCached(parent!!)
+        is KtUsualClassType -> KSClassifierReferenceImpl.getCached(ktType, ktType.qualifiers.size - 1, parent)
+        is KtFlexibleType -> ktType.lowerBound.toClassifierReference(parent)
+        is KtErrorType -> null
+        is KtTypeParameterType -> KSClassifierParameterImpl.getCached(ktType, parent)
+        is KtDefinitelyNotNullType -> KSDefNonNullReferenceImpl.getCached(ktType, parent)
+        else -> throw IllegalStateException("Unexpected type element ${ktType.javaClass}, $ExceptionMessage")
     }
 }
 

@@ -8,10 +8,10 @@ import org.jetbrains.kotlin.analysis.api.types.KtType
 
 class KSCallableReferenceImpl private constructor(
     private val ktFunctionalType: KtFunctionalType,
-    override val parent: KSNode
+    override val parent: KSNode?
 ) : KSCallableReference {
-    companion object : KSObjectCache<IdKeyPair<KtType, KSNode>, KSCallableReference>() {
-        fun getCached(ktFunctionalType: KtFunctionalType, parent: KSNode): KSCallableReference =
+    companion object : KSObjectCache<IdKeyPair<KtType, KSNode?>, KSCallableReference>() {
+        fun getCached(ktFunctionalType: KtFunctionalType, parent: KSNode?): KSCallableReference =
             cache.getOrPut(IdKeyPair(ktFunctionalType, parent)) { KSCallableReferenceImpl(ktFunctionalType, parent) }
     }
     override val receiverType: KSTypeReference?
@@ -29,8 +29,8 @@ class KSCallableReferenceImpl private constructor(
         get() = ktFunctionalType.typeArguments().map { KSTypeArgumentImpl.getCached(it, this) }
 
     override val origin: Origin
-        get() = parent.origin
+        get() = parent?.origin ?: Origin.SYNTHETIC
 
     override val location: Location
-        get() = parent.location
+        get() = parent?.location ?: NonExistLocation
 }

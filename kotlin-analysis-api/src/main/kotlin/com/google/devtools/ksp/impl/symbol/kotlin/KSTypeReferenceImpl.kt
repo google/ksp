@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
@@ -42,18 +41,7 @@ class KSTypeReferenceImpl private constructor(
         if (parent == null || parent.origin == Origin.SYNTHETIC) {
             null
         } else {
-            when (ktType) {
-                is KtFunctionalType -> KSCallableReferenceImpl.getCached(ktType, this@KSTypeReferenceImpl)
-                is KtDynamicType -> KSDynamicReferenceImpl.getCached(this@KSTypeReferenceImpl)
-                is KtUsualClassType -> KSClassifierReferenceImpl.getCached(ktType, this@KSTypeReferenceImpl)
-                is KtFlexibleType -> KSClassifierReferenceImpl.getCached(
-                    ktType.lowerBound as KtUsualClassType,
-                    this@KSTypeReferenceImpl
-                )
-                is KtErrorType -> null
-                is KtTypeParameterType -> null
-                else -> throw IllegalStateException("Unexpected type element ${ktType.javaClass}, $ExceptionMessage")
-            }
+            ktType.toClassifierReference(this)
         }
     }
 
