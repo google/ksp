@@ -142,7 +142,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             cachesDir = File(testRoot, "kspTest/kspCaches")
             kspOutputDir = File(testRoot, "kspTest")
         }.build()
-        val analysisSession = buildStandaloneAnalysisAPISession {
+        val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
             buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
         }
         val ksp = KotlinSymbolProcessing(

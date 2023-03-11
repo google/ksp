@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
@@ -46,10 +47,15 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.toKSName
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiManager
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
@@ -64,15 +70,31 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
+import java.io.File
+import java.nio.file.Files
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
     val ktFiles: List<KtFileSymbol>,
-    val javaFiles: List<PsiJavaFile>
+    val options: KspOptions,
+    val project: Project
 ) : Resolver {
     companion object {
         lateinit var instance: ResolverAAImpl
         lateinit var ktModule: KtModule
+    }
+
+    val javaFiles: List<PsiJavaFile>
+    init {
+        val psiManager = PsiManager.getInstance(project)
+        val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+        // Get non-symbolic paths first
+        javaFiles = options.javaSourceRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
+            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
+            // This time is for .java files
+            .sortedBy { Files.isSymbolicLink(it.toPath()) }
+            .distinctBy { it.canonicalPath }
+            .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
     }
 
     private val ksFiles by lazy {
@@ -166,8 +188,34 @@ class ResolverAAImpl(
                         else -> null
                     }
                 }
-            }.asSequence()
+            }.plus(javaPackageToClassMap.getOrDefault(packageName, emptyList()).asSequence()).asSequence()
         }
+    }
+
+    private val javaPackageToClassMap: Map<String, List<KSDeclaration>> by lazy {
+        val packageToClassMapping = mutableMapOf<String, List<KSDeclaration>>()
+        ksFiles
+            .filter { file ->
+                file.origin == Origin.JAVA &&
+                    options.javaSourceRoots.any { root ->
+                        file.filePath.startsWith(root.absolutePath) &&
+                            file.filePath.substringAfter(root.absolutePath)
+                            .dropLastWhile { c -> c != File.separatorChar }.dropLast(1).drop(1)
+                            .replace(File.separatorChar, '.') == file.packageName.asString()
+                    }
+            }
+            .forEach {
+                packageToClassMapping.put(
+                    it.packageName.asString(),
+                    packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList())
+                        .plus(
+                            it.declarations.filterNot {
+                                it.containingFile?.fileName?.split(".")?.first() == it.simpleName.asString()
+                            }
+                        )
+                )
+            }
+        packageToClassMapping
     }
 
     override fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration> {
