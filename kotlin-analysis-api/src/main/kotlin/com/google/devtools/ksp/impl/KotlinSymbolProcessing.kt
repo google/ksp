@@ -107,7 +107,8 @@ class KotlinSymbolProcessing(
             ktFiles.map {
                 analyze { it.getFileSymbol() }
             },
-            javaFiles
+            options,
+            project
         )
         ResolverAAImpl.instance = resolver
         processors.forEach { it.process(resolver) }
@@ -119,7 +120,7 @@ fun main(args: Array<String>) {
     val commandLineProcessor = KSPCommandLineProcessor(compilerConfiguration)
     val logger = CommandLineKSPLogger()
 
-    val analysisSession = buildStandaloneAnalysisAPISession {
+    val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
         buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
     }
 

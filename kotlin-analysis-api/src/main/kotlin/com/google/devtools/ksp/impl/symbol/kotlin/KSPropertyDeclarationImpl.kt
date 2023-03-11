@@ -98,7 +98,9 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
+        val name = ktPropertySymbol.callableIdIfNonLocal?.asSingleFqName()?.asString()
+            ?: ("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
+        KSNameImpl.getCached(name)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
