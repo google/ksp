@@ -1,37 +1,77 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.IdKeyPair
+import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.types.KtUsualClassType
+import org.jetbrains.kotlin.analysis.api.types.KtClassType
+import org.jetbrains.kotlin.analysis.api.types.KtClassTypeQualifier
+import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
 
 class KSClassifierReferenceImpl private constructor(
-    internal val ktType: KtUsualClassType,
+    internal val ktType: KtClassType,
+    internal val index: Int,
     override val parent: KSTypeReference?
 ) : KSClassifierReference {
-    companion object : KSObjectCache<IdKeyPair<KtUsualClassType, KSTypeReference?>, KSClassifierReferenceImpl>() {
-        fun getCached(ktType: KtUsualClassType, parent: KSTypeReference?) =
-            cache.getOrPut(IdKeyPair(ktType, parent)) { KSClassifierReferenceImpl(ktType, parent) }
+    companion object : KSObjectCache<IdKeyTriple<KtClassType, Int, KSTypeReference?>, KSClassifierReferenceImpl>() {
+        fun getCached(ktType: KtClassType, index: Int, parent: KSTypeReference?) =
+            cache.getOrPut(IdKeyTriple(ktType, index, parent)) { KSClassifierReferenceImpl(ktType, index, parent) }
     }
+
+    private val classifierReference: KtClassTypeQualifier
+        get() = ktType.qualifiers[index]
+
     override val qualifier: KSClassifierReference? by lazy {
-        ktType.classId.outerClassId?.let {
-            analyze {
-                buildClassType(it)
-            }
-        }?.let { getCached(it as KtUsualClassType, parent) }
+        if (index == 0) {
+            null
+        } else {
+            getCached(ktType, index - 1, parent)
+        }
     }
 
     override fun referencedName(): String {
-        return ktType.classId.asFqNameString()
+        return classifierReference.name.asString()
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        ktType.typeArguments().map { KSTypeArgumentImpl.getCached(it, this) }
+        classifierReference.typeArguments.map { KSTypeArgumentImpl.getCached(it, this) }
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
 
     override val location: Location
         get() = parent?.location ?: NonExistLocation
+
+    override fun toString(): String {
+        return referencedName()
+    }
+}
+
+class KSClassifierParameterImpl private constructor(
+    internal val ktType: KtTypeParameterType,
+    override val parent: KSTypeReference?
+) : KSClassifierReference {
+    companion object : KSObjectCache<IdKeyPair<KtTypeParameterType, KSTypeReference?>, KSClassifierParameterImpl>() {
+        fun getCached(ktType: KtTypeParameterType, parent: KSTypeReference?) =
+            KSClassifierParameterImpl.cache.getOrPut(IdKeyPair(ktType, parent)) {
+                KSClassifierParameterImpl(ktType, parent)
+            }
+    }
+
+    override val qualifier: KSClassifierReference? = null
+
+    override fun referencedName(): String {
+        return ktType.name.asString()
+    }
+
+    override val typeArguments: List<KSTypeArgument>
+        get() = emptyList()
+    override val origin: Origin
+        get() = parent?.origin ?: Origin.SYNTHETIC
+    override val location: Location
+        get() = parent?.location ?: NonExistLocation
+
+    override fun toString(): String {
+        return referencedName()
+    }
 }
