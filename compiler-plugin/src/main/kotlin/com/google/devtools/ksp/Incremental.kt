@@ -195,7 +195,8 @@ class IncrementalContext(
 
     private val baseDir = options.projectBaseDir
     private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
-    private val icContext = IncrementalCompilationContext(PATH_CONVERTER)
+    private val icContext =
+        IncrementalCompilationContext(pathConverter = PATH_CONVERTER, trackChangesInLookupCache = true)
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is saved across processing.
