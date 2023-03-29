@@ -30,11 +30,11 @@ class AndroidIncrementalIT {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
 
-    @Test
-    fun testPlaygroundAndroid() {
+    private fun testWithExtraFlags(vararg extras: String) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
+            *extras,
             "clean", ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:compileDebugKotlin")?.outcome)
@@ -51,6 +51,7 @@ class AndroidIncrementalIT {
         }
 
         gradleRunner.withArguments(
+            *extras,
             ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(
@@ -58,5 +59,15 @@ class AndroidIncrementalIT {
                 BuildResultFixture(result).compiledKotlinSources,
             )
         }
+    }
+
+    @Test
+    fun testPlaygroundAndroid() {
+        testWithExtraFlags()
+    }
+
+    @Test
+    fun testPlaygroundAndroidUseClasspathSnapshotFalse() {
+        testWithExtraFlags("-Pkotlin.incremental.useClasspathSnapshot=false")
     }
 }
