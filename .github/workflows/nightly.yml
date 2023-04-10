@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        branch: [ main, 1.0.9-release, 1.0.10-release ]
+        branch: [ main, 1.0.11-release, 1.0.10-release ]
     runs-on: windows-latest
     steps:
       - name: configure Pagefile
