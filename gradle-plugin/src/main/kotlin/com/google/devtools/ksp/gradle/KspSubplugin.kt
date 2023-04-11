@@ -368,7 +368,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 kotlinCompileTask.project.files(
                     Callable {
                         kotlinCompileTask.libraries.filter {
-                            !kspOutputDir.isParentOf(it)
+                            // manually exclude KAPT generated class folder from class path snapshot.
+                            // TODO: remove in 1.9.0.
+
+                            !kspOutputDir.isParentOf(it) && !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                         }
                     }
                 )
