@@ -23,6 +23,7 @@ import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.testutils.AbstractKSPTest
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionConfigurator
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
@@ -144,6 +145,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         }.build()
         val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
             buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
+            LLFirSessionConfigurator.registerExtensionPoint(project)
         }
         val ksp = KotlinSymbolProcessing(
             compilerConfiguration,
