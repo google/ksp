@@ -45,10 +45,6 @@ kotlin {
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
-}
-
 dependencies {
     add("kspCommonMainMetadata", project(":test-processor"))
     add("kspJvm", project(":test-processor"))
