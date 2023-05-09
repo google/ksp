@@ -17,37 +17,27 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
+import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.toLocation
-import com.intellij.psi.PsiAnnotation
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 
-class KSValueParameterJavaImpl private constructor(val psi: PsiParameter) : KSValueParameter {
-    companion object : KSObjectCache<PsiParameter, KSValueParameterJavaImpl>() {
-        fun getCached(psi: PsiParameter) = cache.getOrPut(psi) { KSValueParameterJavaImpl(psi) }
+class KSValueParameterJavaImpl private constructor(val psi: PsiParameter, override val parent: KSNode) :
+    KSValueParameter {
+    companion object : KSObjectCache<IdKeyPair<PsiParameter, KSNode>, KSValueParameterJavaImpl>() {
+        fun getCached(psi: PsiParameter, parent: KSNode): KSValueParameterJavaImpl {
+            val curParent = getInstanceForCurrentRound(parent) as KSNode
+            return cache.getOrPut(IdKeyPair(psi, curParent)) { KSValueParameterJavaImpl(psi, curParent) }
+        }
     }
 
     override val origin = Origin.JAVA
 
     override val location: Location by lazy {
         psi.toLocation()
-    }
-    override val parent: KSNode? by lazy {
-        var parentPsi = psi.parent
-        while (true) {
-            when (parentPsi) {
-                null, is PsiMethod, is PsiAnnotation -> break
-                else -> parentPsi = parentPsi.parent
-            }
-        }
-        when (parentPsi) {
-            is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(parentPsi)
-            is PsiAnnotation -> KSAnnotationJavaImpl.getCached(parentPsi)
-            else -> null
-        }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
