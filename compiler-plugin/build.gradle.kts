@@ -8,6 +8,7 @@ val intellijVersion: String by project
 val kotlinBaseVersion: String by project
 
 val libsForTesting by configurations.creating
+val libsForTestingCommon by configurations.creating
 
 tasks.withType<KotlinCompile> {
     compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
@@ -66,11 +67,19 @@ dependencies {
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
     libsForTesting(kotlin("test", kotlinBaseVersion))
     libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
+    libsForTestingCommon(kotlin("stdlib-common", kotlinBaseVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
+    val escaped = Regex.escape(kotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+tasks.register<Copy>("CopyLibsForTestingCommon") {
+    from(configurations.get("libsForTestingCommon"))
+    into("dist/common")
     val escaped = Regex.escape(kotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
@@ -83,6 +92,7 @@ val Project.testSourceSet: SourceSet
 
 tasks.test {
     dependsOn("CopyLibsForTesting")
+    dependsOn("CopyLibsForTestingCommon")
     maxHeapSize = "2g"
 
     useJUnitPlatform()
@@ -114,6 +124,7 @@ repositories {
 }
 
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(tasks.dokkaJavadoc)
     from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     from(project(":common-util").tasks.dokkaJavadoc.flatMap { it.outputDirectory })
