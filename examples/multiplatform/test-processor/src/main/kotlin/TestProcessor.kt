@@ -14,7 +14,7 @@ class TestProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger) : S
         }
         invoked = true
 
-        codeGenerator.createNewFile(Dependencies(false), "", "Foo", "kt").use { output ->
+        codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Foo", "kt").use { output ->
             OutputStreamWriter(output).use { writer ->
                 writer.write("package com.example\n\n")
                 writer.write("class Foo {\n")
