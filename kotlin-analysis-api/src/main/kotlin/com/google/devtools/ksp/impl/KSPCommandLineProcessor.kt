@@ -24,12 +24,15 @@ import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.ServiceLoaderLite
 import java.io.File
 import java.net.URLClassLoader
 
 class KSPCommandLineProcessor(val compilerConfiguration: CompilerConfiguration) {
-    private val kspOptionsBuilder = KspOptions.Builder()
+    private val kspOptionsBuilder = KspOptions.Builder().apply {
+        languageVersionSettings = compilerConfiguration.languageVersionSettings
+    }
 
     val kspOptions: KspOptions
         get() = kspOptionsBuilder.build()

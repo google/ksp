@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
@@ -65,6 +66,7 @@ abstract class AbstractKSPCompilerPluginTest : AbstractKSPTest(FrontendKinds.Cla
                     projectBaseDir = testRoot
                     cachesDir = File(testRoot, "kspTest/kspCaches")
                     kspOutputDir = File(testRoot, "kspTest")
+                    languageVersionSettings = compilerConfiguration.languageVersionSettings
                 }.build(),
                 logger, testProcessor
             )
