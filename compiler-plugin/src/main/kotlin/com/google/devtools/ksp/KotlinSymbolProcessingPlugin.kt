@@ -68,8 +68,7 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
         val options = configuration[KSP_OPTIONS]?.apply {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
-            languageVersion = configuration.languageVersionSettings.languageVersion.toKotlinVersion()
-            apiVersion = configuration.languageVersionSettings.apiVersion.toKotlinVersion()
+            languageVersionSettings = configuration.languageVersionSettings
             compilerVersion = KotlinCompilerVersion.getVersion().toKotlinVersion()
         }?.build() ?: return
         val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)

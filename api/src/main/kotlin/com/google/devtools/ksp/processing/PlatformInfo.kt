@@ -32,6 +32,11 @@ interface JvmPlatformInfo : PlatformInfo {
      * JVM target version. Correspond to `-jvm-target` to Kotlin compiler
      */
     val jvmTarget: String
+
+    /**
+     * JVM default mode. Correspond to `-Xjvm-default' to Kotlin compiler
+     */
+    val jvmDefaultMode: String
 }
 
 /**

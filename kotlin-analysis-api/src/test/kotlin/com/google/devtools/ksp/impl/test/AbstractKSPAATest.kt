@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
@@ -143,6 +144,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             projectBaseDir = testRoot
             cachesDir = File(testRoot, "kspTest/kspCaches")
             kspOutputDir = File(testRoot, "kspTest")
+            languageVersionSettings = compilerConfiguration.languageVersionSettings
         }.build()
         val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
             buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)

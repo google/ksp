@@ -86,7 +86,7 @@ class KotlinSymbolProcessing(
                     options.apiVersion,
                     options.compilerVersion,
                     // TODO: fix platform info
-                    listOf(JvmPlatformInfoImpl("JVM", "1.8"))
+                    listOf(JvmPlatformInfoImpl("JVM", "1.8", "disable"))
                 )
             )
             processor.also { deferredSymbols[it] = mutableListOf() }
