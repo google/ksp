@@ -48,6 +48,8 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.config.JvmAnalysisFlags
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -267,7 +269,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                             logger,
                             options.apiVersion,
                             options.compilerVersion,
-                            findTargetInfos(module)
+                            findTargetInfos(options.languageVersionSettings, module)
                         )
                     )
                 }?.let { analysisResult ->
@@ -441,12 +443,21 @@ abstract class AbstractKotlinSymbolProcessingExtension(
     }
 }
 
-fun findTargetInfos(module: ModuleDescriptor): List<PlatformInfo> =
+fun findTargetInfos(languageVersionSettings: LanguageVersionSettings, module: ModuleDescriptor): List<PlatformInfo> =
     module.platform?.componentPlatforms?.map { platform ->
         when (platform) {
-            is JdkPlatform -> JvmPlatformInfoImpl(platform.platformName, platform.targetVersion.toString())
-            is JsPlatform -> JsPlatformInfoImpl(platform.platformName)
-            is NativePlatform -> NativePlatformInfoImpl(platform.platformName, platform.targetName)
+            is JdkPlatform -> JvmPlatformInfoImpl(
+                platformName = platform.platformName,
+                jvmTarget = platform.targetVersion.toString(),
+                jvmDefaultMode = languageVersionSettings.getFlag(JvmAnalysisFlags.jvmDefaultMode).description
+            )
+            is JsPlatform -> JsPlatformInfoImpl(
+                platformName = platform.platformName
+            )
+            is NativePlatform -> NativePlatformInfoImpl(
+                platformName = platform.platformName,
+                targetName = platform.targetName
+            )
             // Unknown platform; toString() may be more informative than platformName
             else -> UnknownPlatformInfoImpl(platform.toString())
         }

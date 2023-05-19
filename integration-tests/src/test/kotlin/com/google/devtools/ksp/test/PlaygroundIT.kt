@@ -282,4 +282,20 @@ class PlaygroundIT {
 
         project.restore("workload/build.gradle.kts")
     }
+
+    @Test
+    fun testJvmPlatformInfo() {
+        val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
+        val buildFile = File(project.root, "workload/build.gradle.kts")
+        buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
+        buildFile.appendText("\n    kotlinOptions.freeCompilerArgs += \"-Xjvm-default=all\"")
+        buildFile.appendText("\n}")
+
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("clean", "build") { result ->
+            Assert.assertTrue(result.output.contains("platform: JVM"))
+            Assert.assertTrue(result.output.contains("jvm default mode: all"))
+        }
+        project.restore(buildFile.path)
+    }
 }
