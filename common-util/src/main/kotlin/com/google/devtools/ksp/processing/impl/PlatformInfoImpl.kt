@@ -24,7 +24,8 @@ import com.google.devtools.ksp.processing.UnknownPlatformInfo
 
 class JvmPlatformInfoImpl(
     override val platformName: String,
-    override val jvmTarget: String
+    override val jvmTarget: String,
+    override val jvmDefaultMode: String
 ) : JvmPlatformInfo {
     override fun toString() = "$platformName ($jvmTarget)"
 }

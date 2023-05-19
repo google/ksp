@@ -87,7 +87,9 @@ package com.google.devtools.ksp.processing {
   }
 
   public interface JvmPlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
+    method @NonNull public String getJvmDefaultMode();
     method @NonNull public String getJvmTarget();
+    property @NonNull public abstract String jvmDefaultMode;
     property @NonNull public abstract String jvmTarget;
   }
 
