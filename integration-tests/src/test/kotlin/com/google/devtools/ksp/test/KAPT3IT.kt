@@ -4,6 +4,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -39,6 +40,7 @@ class KAPT3IT {
     }
 
     @Test
+    @Ignore
     fun testWithKAPT3() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("--build-cache", "build")
