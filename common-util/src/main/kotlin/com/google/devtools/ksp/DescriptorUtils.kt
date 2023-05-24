@@ -159,8 +159,11 @@ data class BinaryClassInfo(
 object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
     fun getCached(
         kotlinJvmBinaryClass: KotlinJvmBinaryClass,
-    ) = cache.getOrPut(kotlinJvmBinaryClass.classId) {
-        val virtualFileContent = (kotlinJvmBinaryClass as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
+    ) = getCached(
+        kotlinJvmBinaryClass.classId, (kotlinJvmBinaryClass as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
+    )
+
+    fun getCached(classId: ClassId, virtualFileContent: ByteArray?) = cache.getOrPut(classId) {
         val fieldAccFlags = mutableMapOf<String, Int>()
         val methodAccFlags = mutableMapOf<String, Int>()
         ClassReader(virtualFileContent).accept(

@@ -57,6 +57,7 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
@@ -67,6 +68,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
@@ -86,6 +88,7 @@ class ResolverAAImpl(
     }
 
     val javaFiles: List<PsiJavaFile>
+    val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     init {
         val psiManager = PsiManager.getInstance(project)
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
@@ -208,12 +211,7 @@ class ResolverAAImpl(
             .forEach {
                 packageToClassMapping.put(
                     it.packageName.asString(),
-                    packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList())
-                        .plus(
-                            it.declarations.filterNot {
-                                it.containingFile?.fileName?.split(".")?.first() == it.simpleName.asString()
-                            }
-                        )
+                    packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList()).plus(it.declarations)
                 )
             }
         packageToClassMapping
