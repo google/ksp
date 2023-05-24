@@ -366,3 +366,11 @@ internal fun Modality.toModifier(): Modifier {
         Modality.SEALED -> Modifier.SEALED
     }
 }
+
+internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
+    var result = parent
+    while (!(result == null || result is T)) {
+        result = result.parent
+    }
+    return result
+}
