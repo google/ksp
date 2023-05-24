@@ -43,7 +43,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
-            .map { KSAnnotationImpl.getCached(it) }
+            .map { KSAnnotationImpl.getCached(it, this) }
             .filterNot { valueParameterAnnotation ->
                 valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
                     metaAnnotation.annotationType.resolve().declaration.qualifiedName

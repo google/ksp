@@ -35,7 +35,7 @@ abstract class KSPropertyAccessorImpl(
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
-            .map { KSAnnotationImpl.getCached(it) }
+            .map { KSAnnotationImpl.getCached(it, this) }
             .plus(findAnnotationFromUseSiteTarget())
     }
 
