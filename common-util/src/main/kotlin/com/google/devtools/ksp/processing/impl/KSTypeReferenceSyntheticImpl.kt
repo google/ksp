@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.symbol.impl.synthetic
+package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.IdKey
 import com.google.devtools.ksp.KSObjectCache

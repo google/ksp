@@ -20,6 +20,7 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
@@ -31,7 +32,6 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.toLocation
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.lexer.KtTokens.CROSSINLINE_KEYWORD

@@ -21,6 +21,7 @@ import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findPsi
@@ -28,7 +29,6 @@ import com.google.devtools.ksp.symbol.impl.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 import com.google.devtools.ksp.symbol.impl.kotlin.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
-import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImpl
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMethod

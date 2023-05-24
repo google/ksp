@@ -34,6 +34,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -125,7 +126,7 @@ class ResolverAAImpl(
     }
 
     override fun createKSTypeReferenceFromKSType(type: KSType): KSTypeReference {
-        TODO("Not yet implemented")
+        return KSTypeReferenceSyntheticImpl.getCached(type, null)
     }
 
     override fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier> {
