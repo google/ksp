@@ -53,7 +53,7 @@ class PlaygroundIT {
     fun testConfigurationOfConfiguration() {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0-rc-5")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
         gradleRunner.withArguments(":workload:dependencies", "--info").build().let {
             Assert.assertTrue(
                 it.output.lines().filter { it.startsWith("The configuration :workload:ksp") }.isEmpty()
@@ -281,5 +281,21 @@ class PlaygroundIT {
         gradleRunner.buildAndCheck("build")
 
         project.restore("workload/build.gradle.kts")
+    }
+
+    @Test
+    fun testJvmPlatformInfo() {
+        val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
+        val buildFile = File(project.root, "workload/build.gradle.kts")
+        buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
+        buildFile.appendText("\n    kotlinOptions.freeCompilerArgs += \"-Xjvm-default=all\"")
+        buildFile.appendText("\n}")
+
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("clean", "build") { result ->
+            Assert.assertTrue(result.output.contains("platform: JVM"))
+            Assert.assertTrue(result.output.contains("jvm default mode: all"))
+        }
+        project.restore(buildFile.path)
     }
 }

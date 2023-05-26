@@ -1,14 +1,17 @@
+import com.google.devtools.ksp.AbsolutePathProvider
+
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
 val intellijVersion: String by project
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
 val libsForTesting by configurations.creating
+val libsForTestingCommon by configurations.creating
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.intellij") version "0.6.4"
-    id("org.jetbrains.dokka") version ("1.7.20")
+    id("org.jetbrains.intellij")
+    id("org.jetbrains.dokka")
 }
 
 intellij {
@@ -65,11 +68,19 @@ dependencies {
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
     libsForTesting(kotlin("test", kotlinBaseVersion))
     libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
+    libsForTestingCommon(kotlin("stdlib-common", kotlinBaseVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
+    val escaped = Regex.escape(kotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+tasks.register<Copy>("CopyLibsForTestingCommon") {
+    from(configurations.get("libsForTestingCommon"))
+    into("dist/common")
     val escaped = Regex.escape(kotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
@@ -86,28 +97,23 @@ val Project.testSourceSet: SourceSet
 
 tasks.test {
     dependsOn("CopyLibsForTesting")
+    dependsOn("CopyLibsForTestingCommon")
     maxHeapSize = "2g"
 
     useJUnitPlatform()
 
-    systemProperty("idea.is.unit.test", "true")
-    systemProperty("idea.home.path", buildDir)
-    systemProperty("java.awt.headless", "true")
-    environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
-    environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
-    environment("PROJECT_BUILD_DIR", buildDir)
     testLogging {
         events("passed", "skipped", "failed")
     }
 
-    var tempTestDir: File? = null
+    lateinit var tempTestDir: File
     doFirst {
         tempTestDir = createTempDir()
-        systemProperty("java.io.tmpdir", tempTestDir.toString())
+        jvmArgumentProviders.add(AbsolutePathProvider("java.io.tmpdir", tempTestDir))
     }
 
     doLast {
-        tempTestDir?.let { delete(it) }
+        delete(tempTestDir)
     }
 }
 

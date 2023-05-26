@@ -19,7 +19,7 @@ package com.google.devtools.ksp
 
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.config.ApiVersion
-import org.jetbrains.kotlin.config.LanguageVersion
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.toKotlinVersion
 import java.io.File
 
@@ -50,8 +50,8 @@ class KspOptions(
     val returnOkOnError: Boolean,
     val changedClasses: List<String>,
 
-    val languageVersion: KotlinVersion,
-    val apiVersion: KotlinVersion,
+    val languageVersionSettings: LanguageVersionSettings,
+
     val compilerVersion: KotlinVersion,
 
     val commonSources: List<File>,
@@ -59,6 +59,9 @@ class KspOptions(
     val excludedProcessors: Set<String>,
     val mapAnnotationArgumentsInJava: Boolean,
 ) {
+    val languageVersion: KotlinVersion = languageVersionSettings.languageVersion.toKotlinVersion()
+    val apiVersion: KotlinVersion = languageVersionSettings.apiVersion.toKotlinVersion()
+
     class Builder {
         var projectBaseDir: File? = null
         val compileClasspath: MutableList<File> = mutableListOf()
@@ -87,8 +90,7 @@ class KspOptions(
         var returnOkOnError: Boolean = false
         var changedClasses: MutableList<String> = mutableListOf()
 
-        var languageVersion: KotlinVersion = LanguageVersion.LATEST_STABLE.toKotlinVersion()
-        var apiVersion: KotlinVersion = ApiVersion.LATEST_STABLE.toKotlinVersion()
+        var languageVersionSettings: LanguageVersionSettings? = null
         var compilerVersion: KotlinVersion = KotlinVersion.CURRENT
 
         var commonSources: MutableList<File> = mutableListOf()
@@ -118,8 +120,7 @@ class KspOptions(
                 withCompilation,
                 returnOkOnError,
                 changedClasses,
-                languageVersion,
-                apiVersion,
+                requireNotNull(languageVersionSettings) { "A non-null languageVersionSettings must be provided" },
                 compilerVersion,
                 commonSources,
                 excludedProcessors,

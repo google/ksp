@@ -1,3 +1,5 @@
+import com.google.devtools.ksp.AbsolutePathProvider
+
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
 val agpBaseVersion: String by project
@@ -16,7 +18,7 @@ tasks.named<Test>("test") {
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
     systemProperty("agpVersion", agpBaseVersion)
-    systemProperty("testRepo", File(rootProject.buildDir, "repos/test").absolutePath)
+    jvmArgumentProviders.add(AbsolutePathProvider("testRepo", File(rootProject.buildDir, "repos/test")))
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")

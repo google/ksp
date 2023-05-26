@@ -22,13 +22,20 @@ import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.testutils.AbstractKSPTest
+import com.intellij.openapi.extensions.ExtensionPoint
+import com.intellij.openapi.vfs.VirtualFile
+import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
+import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISessionBuilder
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
-import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionConfigurator
+import org.jetbrains.kotlin.analysis.decompiler.stub.file.CachedAttributeData
+import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
+import org.jetbrains.kotlin.analysis.decompiler.stub.file.FileAttributeService
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
@@ -41,6 +48,8 @@ import org.jetbrains.kotlin.test.services.javaFiles
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.jetbrains.kotlin.utils.PathUtil
 import java.io.ByteArrayOutputStream
+import java.io.DataInput
+import java.io.DataOutput
 import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
@@ -142,10 +151,20 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             projectBaseDir = testRoot
             cachesDir = File(testRoot, "kspTest/kspCaches")
             kspOutputDir = File(testRoot, "kspTest")
+            languageVersionSettings = compilerConfiguration.languageVersionSettings
         }.build()
         val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
+            registerOnce<FileAttributeService> { DummyFileAttributeService }
+            registerOnce(::ClsKotlinBinaryClassCache)
             buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-            LLFirSessionConfigurator.registerExtensionPoint(project)
+            project.extensionArea.apply {
+                registerExtensionPoint(
+                    KtResolveExtensionProvider.EP_NAME.name,
+                    KtResolveExtensionProvider::class.java.name,
+                    ExtensionPoint.Kind.INTERFACE,
+                    false
+                )
+            }
         }
         val ksp = KotlinSymbolProcessing(
             compilerConfiguration,
@@ -157,5 +176,26 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         ksp.prepare()
         ksp.execute()
         return testProcessor.toResult()
+    }
+}
+
+object DummyFileAttributeService : FileAttributeService {
+    override fun <T> write(
+        file: VirtualFile,
+        id: String,
+        value: T,
+        writeValueFun: (DataOutput, T) -> Unit
+    ): CachedAttributeData<T> {
+        return CachedAttributeData(value, 0)
+    }
+
+    override fun <T> read(file: VirtualFile, id: String, readValueFun: (DataInput) -> T): CachedAttributeData<T>? {
+        return null
+    }
+}
+
+inline fun <reified T : Any> StandaloneAnalysisAPISessionBuilder.registerOnce(createInstance: () -> T) {
+    if (application.getServiceIfCreated(T::class.java) == null) {
+        registerApplicationService(T::class.java, createInstance())
     }
 }

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
@@ -161,7 +160,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     if (!argument.matches(Regex("\\S+=\\S+"))) {
                         throw IllegalArgumentException("KSP apoption does not match \\S+=\\S+: $argument")
                     }
-                    options += SubpluginOption("apoption", argument)
+                    options += InternalSubpluginOption("apoption", argument)
                 }
             }
             return options
@@ -315,6 +314,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         fun configureAsAbstractKotlinCompileTool(kspTask: AbstractKotlinCompileTool<*>) {
             kspTask.destinationDirectory.set(kspOutputDir)
+            disableRunViaBuildToolsApi(kspTask)
             kspTask.outputs.dirs(
                 kotlinOutputDir,
                 javaOutputDir,
@@ -424,13 +424,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureLanguageVersion(kspTask)
                         if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
                             kspTask.compilerOptions.moduleName.convention(
-                                kotlinCompileTask.moduleName.map { "$it-ksp" }
+                                kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
                             )
                         } else {
-                            kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName)
+                            kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.compilerOptions.moduleName)
                         }
 
-                        kspTask.moduleName.value(kotlinCompileTask.moduleName.get())
                         kspTask.destination.value(kspOutputDir)
 
                         val isIntermoduleIncremental =

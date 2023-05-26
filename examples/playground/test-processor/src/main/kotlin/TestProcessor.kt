@@ -23,10 +23,10 @@ class TestProcessor(
         file = codeGenerator.createNewFile(Dependencies(false), "", "TestProcessor", "log")
         emit("TestProcessor: init($options)", "")
 
-        val javaFile = codeGenerator.createNewFile(Dependencies(false), "", "Generated", "java")
+        val javaFile = codeGenerator.createNewFile(Dependencies(true), "", "Generated", "java")
         javaFile.appendText("class Generated {}")
 
-        val fileKt = codeGenerator.createNewFile(Dependencies(false), "", "HELLO", "java")
+        val fileKt = codeGenerator.createNewFile(Dependencies(true), "", "HELLO", "java")
         fileKt.appendText("public class HELLO{\n")
         fileKt.appendText("public int foo() { return 1234; }\n")
         fileKt.appendText("}")
