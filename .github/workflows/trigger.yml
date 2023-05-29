@@ -1,0 +1,73 @@
+# Workflow to run tests
+
+name: CI on demand
+
+on:
+    workflow_dispatch:
+
+jobs:
+    build-and-test:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, macos-latest]
+
+        # The type of runner that the job will run on
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - name: Setup Java 9
+              uses: actions/setup-java@v1.4.3
+              with:
+                  java-version: '9'
+                  java-package: jdk
+                  architecture: x64
+            - name: set JDK_9 environment variable for kotlin compiler
+              shell: bash
+              env:
+                  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+              run: echo ::set-env name=JDK_9::$(echo $JAVA_HOME)
+            - name: Setup Java 11
+              uses: actions/setup-java@v1.4.3
+              with:
+                  java-version: '11'
+                  java-package: jdk
+                  architecture: x64
+
+            # Checkout
+            - uses: actions/checkout@v2
+
+            # Build cache
+            - name: Cache Gradle Cache
+              uses: actions/cache@v2
+              with:
+                  path: ~/.gradle/caches
+                  key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+                  # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
+                  restore-keys: |
+                      ${{ runner.os }}-gradle-
+            - name: Cache gradle wrapper
+              uses: actions/cache@v2
+              with:
+                  path: ~/.gradle/wrapper
+                  key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+            - name: Ubuntu - ktlin checkApi test
+              shell: bash
+              run: ./gradlew ktlint :api:checkApi --stacktrace --info test
+
+            - name: Others - test only
+              shell: bash
+              if: matrix.os != 'ubuntu-latest'
+              run: ./gradlew --stacktrace --info test
+
+            - name: Upload test results
+              if: always()
+              uses: actions/upload-artifact@v3
+              with:
+                  name: test-reports-${{ matrix.os }}
+                  path: |
+                      compiler-plugin/build/reports
+                      integration-tests/build/reports
+                      gradle-plugin/build/reports
+                      common-util/build/reports

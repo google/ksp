@@ -3,7 +3,6 @@
 name: CI
 
 on:
-  workflow_dispatch:
   push:
     branches: [ main, 1.0.12-release, 1.0.11-release ]
   pull_request:
