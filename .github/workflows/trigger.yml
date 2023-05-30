@@ -4,6 +4,8 @@ name: CI on demand
 
 on:
     workflow_dispatch:
+    push:
+        branches: [ feature/gePoc, feature/gePoc2 ]
 
 jobs:
     build-and-test:
