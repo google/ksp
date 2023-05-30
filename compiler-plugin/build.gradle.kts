@@ -107,9 +107,7 @@ repositories {
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(tasks.dokkaJavadoc)
-    from(project(":common-util").tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    from(project(":common-util").tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
-    // This will not merge them correctly, it will overwrite files when it copies files the 2nd time!!
-    duplicatesStrategy = DuplicatesStrategy.WARN
 }
