@@ -98,5 +98,5 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     override val docString: String?
         get() = ktDeclarationSymbol.toDocString()
 
-    internal val originalAnnotations = ktDeclarationSymbol.annotations()
+    internal val originalAnnotations = ktDeclarationSymbol.annotations(this)
 }

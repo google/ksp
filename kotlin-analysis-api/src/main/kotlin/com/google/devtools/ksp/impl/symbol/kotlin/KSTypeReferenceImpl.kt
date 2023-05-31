@@ -59,7 +59,7 @@ class KSTypeReferenceImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktType.annotations()
+        ktType.annotations(this)
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
