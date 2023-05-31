@@ -32,7 +32,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
-import org.jetbrains.kotlin.analysis.project.structure.getKtModule
+import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
@@ -60,7 +60,10 @@ class KotlinSymbolProcessing(
 
     fun prepare() {
         // TODO: support no Kotlin source mode.
-        ResolverAAImpl.ktModule = ktFiles.first().getKtModule()
+        ResolverAAImpl.ktModule = ktFiles.first().let {
+            project.getService(ProjectStructureProvider::class.java)
+                .getModule(it, null)
+        }
         val ksFiles = ktFiles.map { file ->
             analyze { KSFileImpl.getCached(file.getFileSymbol()) }
         }
