@@ -31,6 +31,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
+import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.KSNameImpl
@@ -302,8 +303,49 @@ class ResolverAAImpl(
         return JavaToKotlinClassMap.mapKotlinToJava(FqNameUnsafe(kotlinName.asString()))?.toKSName()
     }
 
+    @KspExperimental
     override fun mapToJvmSignature(declaration: KSDeclaration): String? {
-        TODO("Not yet implemented")
+        fun KSType.toSignature(): String {
+            return if (this is KSTypeImpl) {
+                analyze {
+                    this@toSignature.type.mapTypeToJvmType().descriptor.let {
+                        if (it == "Ljava.lang.Void;") {
+                            "Ljava/lang/Void;"
+                        } else {
+                            it
+                        }
+                    }
+                }
+            } else {
+                "<ERROR>"
+            }
+        }
+
+        return when (declaration) {
+            is KSClassDeclaration -> analyze {
+                (declaration.asStarProjectedType() as KSTypeImpl).type.mapTypeToJvmType().descriptor
+            }
+            is KSFunctionDeclarationImpl -> {
+                analyze {
+                    buildString {
+                        append("(")
+                        declaration.parameters.forEach { append(it.type.resolve().toSignature()) }
+                        append(")")
+                        if (declaration.isConstructor()) {
+                            append("V")
+                        } else {
+                            append(declaration.returnType!!.resolve().toSignature())
+                        }
+                    }
+                }
+            }
+            is KSPropertyDeclaration -> {
+                analyze {
+                    declaration.type.resolve().toSignature()
+                }
+            }
+            else -> null
+        }
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
