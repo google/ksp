@@ -1,4 +1,4 @@
-import com.google.devtools.ksp.AbsolutePathProvider
+import com.google.devtools.ksp.RelativizingPathProvider
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
@@ -109,7 +109,7 @@ tasks.test {
     lateinit var tempTestDir: File
     doFirst {
         tempTestDir = createTempDir()
-        jvmArgumentProviders.add(AbsolutePathProvider("java.io.tmpdir", tempTestDir))
+        jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", tempTestDir))
     }
 
     doLast {

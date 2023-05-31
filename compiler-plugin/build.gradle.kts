@@ -1,4 +1,4 @@
-import com.google.devtools.ksp.AbsolutePathProvider
+import com.google.devtools.ksp.RelativizingPathProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
@@ -91,7 +91,7 @@ tasks.test {
     lateinit var tempTestDir: File
     doFirst {
         tempTestDir = createTempDir()
-        jvmArgumentProviders.add(AbsolutePathProvider("java.io.tmpdir", tempTestDir))
+        jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", tempTestDir))
     }
 
     doLast {

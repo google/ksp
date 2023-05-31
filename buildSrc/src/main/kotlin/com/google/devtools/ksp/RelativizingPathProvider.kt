@@ -7,7 +7,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
 
-class AbsolutePathProvider(
+class RelativizingPathProvider(
     @Input
     val argumentName: String,
     @InputDirectory
