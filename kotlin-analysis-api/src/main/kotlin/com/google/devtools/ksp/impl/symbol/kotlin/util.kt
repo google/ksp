@@ -244,8 +244,8 @@ internal fun KtSymbolWithMembers.getAllFunctions(): Sequence<KSFunctionDeclarati
     }
 }
 
-internal fun KtAnnotated.annotations(): Sequence<KSAnnotation> {
-    return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
+internal fun KtAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
+    return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it, parent) }
 }
 
 internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
