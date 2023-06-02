@@ -94,4 +94,11 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()
     }
+
+    tasks.withType<Test>().configureEach {
+        // Java 11 is required to run tests
+        javaLauncher.set(javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(11))
+        })
+    }
 }
