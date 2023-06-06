@@ -19,17 +19,22 @@ package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.KspOptions
+import com.google.devtools.ksp.extractThrowsAnnotation
+import com.google.devtools.ksp.extractThrowsFromClassFile
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyAccessorImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeAliasImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.findParentOfType
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.KSBuiltIns
@@ -45,6 +50,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyAccessor
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
@@ -58,6 +64,7 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
@@ -67,9 +74,11 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
+import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
@@ -234,11 +243,60 @@ class ResolverAAImpl(
     }
 
     override fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType> {
-        TODO("Not yet implemented")
+        return when (accessor.origin) {
+            Origin.KOTLIN -> {
+                extractThrowsAnnotation(accessor)
+            }
+            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+                val fileManager = javaFileManager
+                val parentClass = accessor.findParentOfType<KSClassDeclaration>()
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
+                val virtualFileContent = analyze {
+                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+                }
+                val jvmDesc = this.mapToJvmSignatureInternal(accessor)
+                if (virtualFileContent == null) {
+                    return emptySequence()
+                }
+                extractThrowsFromClassFile(
+                    virtualFileContent,
+                    jvmDesc,
+                    (if (accessor is KSPropertyGetter) "get" else "set") +
+                        accessor.receiver.simpleName.asString().capitalize()
+                )
+            }
+            else -> emptySequence()
+        }
     }
 
     override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
-        TODO("Not yet implemented")
+        return when (function.origin) {
+            Origin.JAVA -> {
+                val psi = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as PsiMethod
+                psi.throwsList.referencedTypes.asSequence().mapNotNull {
+                    analyze {
+                        it.resolve()?.qualifiedName?.let { getClassDeclarationByName(it)?.asStarProjectedType() }
+                    }
+                }
+            }
+            Origin.KOTLIN -> {
+                extractThrowsAnnotation(function)
+            }
+            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+                val fileManager = javaFileManager
+                val parentClass = function.findParentOfType<KSClassDeclaration>()
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
+                val virtualFileContent = analyze {
+                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+                }
+                val jvmDesc = this.mapToJvmSignature(function)
+                if (virtualFileContent == null) {
+                    return emptySequence()
+                }
+                extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
+            }
+            else -> emptySequence()
+        }
     }
 
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
@@ -305,47 +363,7 @@ class ResolverAAImpl(
 
     @KspExperimental
     override fun mapToJvmSignature(declaration: KSDeclaration): String? {
-        fun KSType.toSignature(): String {
-            return if (this is KSTypeImpl) {
-                analyze {
-                    this@toSignature.type.mapTypeToJvmType().descriptor.let {
-                        if (it == "Ljava.lang.Void;") {
-                            "Ljava/lang/Void;"
-                        } else {
-                            it
-                        }
-                    }
-                }
-            } else {
-                "<ERROR>"
-            }
-        }
-
-        return when (declaration) {
-            is KSClassDeclaration -> analyze {
-                (declaration.asStarProjectedType() as KSTypeImpl).type.mapTypeToJvmType().descriptor
-            }
-            is KSFunctionDeclarationImpl -> {
-                analyze {
-                    buildString {
-                        append("(")
-                        declaration.parameters.forEach { append(it.type.resolve().toSignature()) }
-                        append(")")
-                        if (declaration.isConstructor()) {
-                            append("V")
-                        } else {
-                            append(declaration.returnType!!.resolve().toSignature())
-                        }
-                    }
-                }
-            }
-            is KSPropertyDeclaration -> {
-                analyze {
-                    declaration.type.resolve().toSignature()
-                }
-            }
-            else -> null
-        }
+        return mapToJvmSignatureInternal(declaration)
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
@@ -358,5 +376,67 @@ class ResolverAAImpl(
         containingClass: KSClassDeclaration
     ): Boolean {
         TODO("Not yet implemented")
+    }
+
+    internal fun mapToJvmSignatureInternal(ksAnnotated: KSAnnotated): String? {
+        fun KtType.toSignature(): String {
+            return analyze {
+                this@toSignature.mapTypeToJvmType().descriptor.let {
+                    when (it) {
+                        "Ljava.lang.Void;" -> "Ljava/lang/Void;"
+                        "Lkotlin.Unit;" -> "V"
+                        else -> it
+                    }
+                }
+            }
+        }
+
+        fun KSType.toSignature(): String {
+            return if (this is KSTypeImpl) {
+                analyze {
+                    this@toSignature.type.toSignature()
+                }
+            } else {
+                "<ERROR>"
+            }
+        }
+
+        return when (ksAnnotated) {
+            is KSClassDeclaration -> analyze {
+                (ksAnnotated.asStarProjectedType() as KSTypeImpl).type.mapTypeToJvmType().descriptor
+            }
+            is KSFunctionDeclarationImpl -> {
+                analyze {
+                    buildString {
+                        append("(")
+                        ksAnnotated.parameters.forEach { append(it.type.resolve().toSignature()) }
+                        append(")")
+                        if (ksAnnotated.isConstructor()) {
+                            append("V")
+                        } else {
+                            append(ksAnnotated.returnType!!.resolve().toSignature())
+                        }
+                    }
+                }
+            }
+            is KSPropertyDeclaration -> {
+                analyze {
+                    ksAnnotated.type.resolve().toSignature()
+                }
+            }
+            is KSPropertyAccessorImpl -> {
+                analyze {
+                    buildString {
+                        append("(")
+                        ksAnnotated.ktPropertyAccessorSymbol.valueParameters.forEach {
+                            append(it.returnType.toSignature())
+                        }
+                        append(")")
+                        append(ksAnnotated.ktPropertyAccessorSymbol.returnType.toSignature())
+                    }
+                }
+            }
+            else -> null
+        }
     }
 }

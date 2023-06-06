@@ -28,7 +28,7 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
 abstract class KSPropertyAccessorImpl(
-    private val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
+    internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor {
 

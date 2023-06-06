@@ -112,11 +112,7 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
-import org.jetbrains.org.objectweb.asm.ClassReader
-import org.jetbrains.org.objectweb.asm.ClassVisitor
-import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes
-import org.jetbrains.org.objectweb.asm.Opcodes.API_VERSION
 import java.io.File
 import java.util.Stack
 
@@ -880,47 +876,6 @@ class ResolverImpl(
         } catch (unsupported: UnsupportedOperationException) {
             null
         }
-    }
-
-    private fun extractThrowsFromClassFile(
-        virtualFileContent: ByteArray,
-        jvmDesc: String?,
-        simpleName: String?
-    ): Sequence<KSType> {
-        val exceptionNames = mutableListOf<String>()
-        ClassReader(virtualFileContent).accept(
-            object : ClassVisitor(API_VERSION) {
-                override fun visitMethod(
-                    access: Int,
-                    name: String?,
-                    descriptor: String?,
-                    signature: String?,
-                    exceptions: Array<out String>?,
-                ): MethodVisitor {
-                    if (name == simpleName && jvmDesc == descriptor) {
-                        exceptions?.toList()?.let { exceptionNames.addAll(it) }
-                    }
-                    return object : MethodVisitor(API_VERSION) {
-                    }
-                }
-            },
-            ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-        )
-        return exceptionNames.mapNotNull {
-            this@ResolverImpl.getClassDeclarationByName(it.replace("/", "."))?.asStarProjectedType()
-        }.asSequence()
-    }
-
-    @SuppressWarnings("UNCHECKED_CAST")
-    private fun extractThrowsAnnotation(annotated: KSAnnotated): Sequence<KSType> {
-        return annotated.annotations
-            .singleOrNull {
-                it.shortName.asString() == "Throws" &&
-                    it.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.Throws"
-            }?.arguments
-            ?.singleOrNull()
-            ?.let { it.value as? ArrayList<KSType> }
-            ?.asSequence() ?: emptySequence()
     }
 
     // TODO: refactor and reuse BinaryClassInfoCache

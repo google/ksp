@@ -509,7 +509,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/sealedClass.kt")
     }
 
-    @Disabled
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
@@ -522,7 +521,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/superTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("throwList.kt")
     @Test
     fun testThrowList() {
