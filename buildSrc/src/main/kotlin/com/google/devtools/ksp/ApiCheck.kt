@@ -21,7 +21,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.PathSensitivity
 
-val API_BASE_FILE = "api.base"
+private const val API_BASE_FILE = "api.base"
 
 /**
  * Adapted from ktlint
@@ -34,13 +34,12 @@ fun Project.configureMetalava() {
         task.args = listOf("--check-compatibility:api:released", API_BASE_FILE) + task.args!!
         task.inputs.files(API_BASE_FILE).withPropertyName("apiCheckBaseFile").withPathSensitivity(PathSensitivity.RELATIVE)
 
-        val outDir = project.buildDir.resolve("reports/checkApi").takeIf { it.mkdirs() || it.exists() }!!
-        val outFile = outDir.resolve("checkApiSuccess.txt")
+        val outFile = project.layout.buildDirectory.file("reports/checkApi/checkApiSuccess.txt")
         task.outputs.files(outFile).withPropertyName("apiCheckSuccessFile")
         task.outputs.cacheIf { true }
         task.doLast {
             task.executionResult.get().assertNormalExitValue()
-            outFile.writeText("SUCCESS")
+            outFile.get().asFile.writeText("SUCCESS")
         }
     }
 
