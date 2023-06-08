@@ -451,7 +451,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/platformDeclaration.kt")
     }
 
-    @Disabled
     @TestMetadata("rawTypes.kt")
     @Test
     fun testRawTypes() {
