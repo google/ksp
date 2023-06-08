@@ -19,7 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
+import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.ExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -27,7 +27,6 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationsList
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
@@ -76,7 +75,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override val annotations: Sequence<KSAnnotation>
         get() = type.annotations() +
             if (type is KtFunctionalType && type.receiverType != null) {
-                sequenceOf(KSAnnotationImpl.getCached(getExtensionFunctionTypeAnnotation(type.annotations.size)))
+                sequenceOf(KSAnnotationImpl.getCached(ExtensionFunctionTypeAnnotation))
             } else {
                 emptySequence<KSAnnotation>()
             }
