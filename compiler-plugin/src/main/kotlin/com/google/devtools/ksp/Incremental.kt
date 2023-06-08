@@ -36,8 +36,7 @@ import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
-import org.jetbrains.kotlin.incremental.storage.AppendableBasicMap
-import org.jetbrains.kotlin.incremental.storage.AppendableDataExternalizer
+import org.jetbrains.kotlin.incremental.storage.BasicMap
 import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
@@ -53,9 +52,9 @@ import java.util.*
 abstract class PersistentMap<K : Comparable<K>, V>(
     storageFile: File,
     keyDescriptor: KeyDescriptor<K>,
-    valueExternalizer: AppendableDataExternalizer<V>,
+    valueExternalizer: DataExternalizer<V>,
     icContext: IncrementalCompilationContext,
-) : AppendableBasicMap<K, V>(storageFile, keyDescriptor, valueExternalizer, icContext) {
+) : BasicMap<K, V>(storageFile, keyDescriptor, valueExternalizer, icContext) {
     abstract operator fun get(key: K): V?
     abstract operator fun set(key: K, value: V)
     abstract fun remove(key: K)
