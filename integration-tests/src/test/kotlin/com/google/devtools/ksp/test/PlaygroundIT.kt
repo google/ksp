@@ -161,13 +161,6 @@ class PlaygroundIT {
     @Test
     fun testFirPreview() {
         val buildFile = File(project.root, "workload/build.gradle.kts")
-        // K2 enables HMPP even on JVM only project, and is not compatible with copy task for source.
-        // Disable copy task check for K2 tests, it does not impact KSP itself.
-        val buildFileContent = buildFile.readLines().dropLast(9)
-        buildFile.writeText("")
-        buildFileContent.forEach {
-            buildFile.appendText("$it\n")
-        }
         buildFile.appendText(
             """
             kotlin {
@@ -180,19 +173,9 @@ class PlaygroundIT {
             """.trimIndent()
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val result = gradleRunner.withArguments("clean", "build").build()
-
-        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
-
-        val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
-
-        JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+        gradleRunner.buildAndCheck("clean", "build") { result ->
+            Assert.assertTrue(result.output.contains("w: Language version 2.0 is experimental"))
         }
-        Assert.assertTrue(result.output.contains("w: Language version 2.0 is experimental"))
         project.restore(buildFile.path)
     }
 
@@ -201,13 +184,6 @@ class PlaygroundIT {
         val gradleProperties = File(project.root, "gradle.properties")
         gradleProperties.appendText("\nkotlin.useK2=true")
         val buildFile = File(project.root, "workload/build.gradle.kts")
-        // K2 enables HMPP even on JVM only project, and is not compatible with copy task for source.
-        // Disable copy task check for K2 tests, it does not impact KSP itself.
-        val buildFileContent = buildFile.readLines().dropLast(9)
-        buildFile.writeText("")
-        buildFileContent.forEach {
-            buildFile.appendText("$it\n")
-        }
         buildFile.appendText(
             """
             kotlin {
@@ -220,19 +196,9 @@ class PlaygroundIT {
             """.trimIndent()
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val result = gradleRunner.withArguments("clean", "build").build()
-
-        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
-
-        val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
-
-        JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+        gradleRunner.buildAndCheck("clean", "build") { result ->
+            Assert.assertTrue(result.output.contains("w: Language version 2.0 is experimental"))
         }
-        Assert.assertTrue(result.output.contains("w: Language version 2.0 is experimental"))
         project.restore(buildFile.path)
         project.restore(gradleProperties.path)
     }
