@@ -49,7 +49,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationInfo
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
@@ -174,6 +173,7 @@ abstract class KspTaskJvm @Inject constructor(
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
     fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JVMCompilerArguments,
+        kotlinSources: Set<File>,
         inputChanges: InputChanges,
         taskOutputsBackup: TaskOutputsBackup?
     ) {
@@ -182,7 +182,7 @@ abstract class KspTaskJvm @Inject constructor(
             it(changedFiles)
         }
         args.addPluginOptions(extraOptions)
-        super.callCompilerAsync(args, inputChanges, taskOutputsBackup)
+        super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
     }
 
     override fun skipCondition(): Boolean = sources.isEmpty && javaSources.isEmpty
@@ -212,6 +212,7 @@ abstract class KspTaskJS @Inject constructor(
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
     fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JSCompilerArguments,
+        kotlinSources: Set<File>,
         inputChanges: InputChanges,
         taskOutputsBackup: TaskOutputsBackup?
     ) {
@@ -220,7 +221,7 @@ abstract class KspTaskJS @Inject constructor(
             it(changedFiles)
         }
         args.addPluginOptions(extraOptions)
-        super.callCompilerAsync(args, inputChanges, taskOutputsBackup)
+        super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
     }
 }
 
@@ -240,6 +241,7 @@ abstract class KspTaskMetadata @Inject constructor(
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
     fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2MetadataCompilerArguments,
+        kotlinSources: Set<File>,
         inputChanges: InputChanges,
         taskOutputsBackup: TaskOutputsBackup?
     ) {
@@ -248,7 +250,7 @@ abstract class KspTaskMetadata @Inject constructor(
             it(changedFiles)
         }
         args.addPluginOptions(extraOptions)
-        super.callCompilerAsync(args, inputChanges, taskOutputsBackup)
+        super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
     }
 }
 
@@ -278,8 +280,4 @@ internal fun File.isParentOf(childCandidate: File): Boolean {
     val childCandidatePath = Paths.get(childCandidate.absolutePath).normalize()
 
     return childCandidatePath.startsWith(parentPath)
-}
-
-internal fun disableRunViaBuildToolsApi(kspTask: AbstractKotlinCompileTool<*>) {
-    kspTask.runViaBuildToolsApi.value(false).disallowChanges()
 }

@@ -54,7 +54,7 @@ class KSAnnotationJavaImpl private constructor(val psi: PsiAnnotation) : KSAnnot
             is PsiJavaFile -> KSFileJavaImpl.getCached(parentPsi)
             is PsiClass -> KSClassDeclarationJavaImpl.getCached(parentPsi)
             is PsiMethod -> KSFunctionDeclarationJavaImpl.getCached(parentPsi)
-            is PsiParameter -> KSValueParameterJavaImpl.getCached(parentPsi, this)
+            is PsiParameter -> KSValueParameterJavaImpl.getCached(parentPsi)
             is PsiTypeParameter -> KSTypeParameterJavaImpl.getCached(parentPsi)
             is PsiType ->
                 if (parentPsi.parent is PsiClassType) KSTypeArgumentJavaImpl.getCached(parentPsi, this)

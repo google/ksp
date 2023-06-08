@@ -29,6 +29,10 @@ kotlin {
     }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
+}
+
 ksp {
     arg("option1", "value1")
     arg("option2", "value2")

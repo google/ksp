@@ -5,7 +5,6 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Assume
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -216,7 +215,6 @@ class KMPImplementedIT {
         }
     }
 
-    @Ignore
     @Test
     fun testNonEmbeddableArtifact() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))

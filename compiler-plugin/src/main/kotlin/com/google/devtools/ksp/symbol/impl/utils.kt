@@ -65,7 +65,6 @@ fun PsiElement.findParentAnnotated(): KSAnnotated? {
     var parent = when (this) {
         // Unfortunately, LightMethod doesn't implement parent.
         is LightMethod -> this.containingClass
-        is PsiMethod -> this.containingClass
         else -> this.parent
     }
 
@@ -262,7 +261,7 @@ internal fun getInstanceForCurrentRound(node: KSNode): KSNode? {
             is KSTypeParameterJavaImpl -> KSTypeParameterJavaImpl.getCached(node.psi)
             is KSTypeReferenceJavaImpl ->
                 KSTypeReferenceJavaImpl.getCached(node.psi, (node.parent as? KSAnnotated)?.getInstanceForCurrentRound())
-            is KSValueParameterJavaImpl -> KSValueParameterJavaImpl.getCached(node.psi, node.parent)
+            is KSValueParameterJavaImpl -> KSValueParameterJavaImpl.getCached(node.psi)
             is KSPropertyGetterSyntheticImpl -> KSPropertyGetterSyntheticImpl.getCached(node.ksPropertyDeclaration)
             is KSPropertySetterSyntheticImpl -> KSPropertySetterSyntheticImpl.getCached(node.ksPropertyDeclaration)
             is KSValueParameterSyntheticImpl ->

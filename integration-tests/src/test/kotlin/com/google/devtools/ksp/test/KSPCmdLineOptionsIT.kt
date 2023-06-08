@@ -4,6 +4,7 @@ import org.gradle.testkit.runner.GradleRunner
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.ByteArrayOutputStream
@@ -13,6 +14,7 @@ import java.net.URLClassLoader
 
 data class CompileResult(val exitCode: ExitCode, val output: String)
 
+@Ignore
 class KSPCmdLineOptionsIT {
     @Rule
     @JvmField

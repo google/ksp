@@ -162,6 +162,8 @@
 // parent of Array<(RGB..RGB?)>: Array<(RGB..RGB?)>
 // parent of Array<(RGB..RGB?)>: values
 // parent of values: RGB
+// parent of java: String
+// parent of lang: String
 // parent of String: String
 // parent of String: name
 // parent of name: valueOf

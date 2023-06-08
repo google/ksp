@@ -87,6 +87,9 @@ class SourceSetConfigurationsTest {
                     androidNativeX64(name = "bar") { }
                 }
                 
+                tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+                    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
+                }
             """.trimIndent()
         )
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
