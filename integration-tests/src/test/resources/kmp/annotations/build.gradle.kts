@@ -26,3 +26,7 @@ kotlin {
         val commonMain by getting
     }
 }
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.freeCompilerArgs += "-Xuse-deprecated-legacy-compiler"
+}

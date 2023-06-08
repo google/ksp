@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
@@ -314,7 +315,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         fun configureAsAbstractKotlinCompileTool(kspTask: AbstractKotlinCompileTool<*>) {
             kspTask.destinationDirectory.set(kspOutputDir)
-            disableRunViaBuildToolsApi(kspTask)
             kspTask.outputs.dirs(
                 kotlinOutputDir,
                 javaOutputDir,
@@ -427,12 +427,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureLanguageVersion(kspTask)
                         if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
                             kspTask.compilerOptions.moduleName.convention(
-                                kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
+                                kotlinCompileTask.moduleName.map { "$it-ksp" }
                             )
                         } else {
-                            kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.compilerOptions.moduleName)
+                            kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName)
                         }
 
+                        kspTask.moduleName.value(kotlinCompileTask.moduleName.get())
                         kspTask.destination.value(kspOutputDir)
 
                         val isIntermoduleIncremental =
