@@ -178,6 +178,8 @@ class ResolverAAImpl(
                     .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
                     .distinct()
             }
+            // Above steps forfeited root package, adding it back.
+            packages += analysisSession.ROOT_PACKAGE_SYMBOL
             packages.flatMap {
                 it.getPackageScope().getAllSymbols().distinct().mapNotNull { symbol ->
                     when (symbol) {
