@@ -94,7 +94,7 @@ tasks.test {
 
     lateinit var tempTestDir: File
     doFirst {
-        val ideaHomeDir = project.layout.buildDirectory.dir("tmp/ideaHome").get().asFile
+        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
         jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
 
         tempTestDir = createTempDir()
