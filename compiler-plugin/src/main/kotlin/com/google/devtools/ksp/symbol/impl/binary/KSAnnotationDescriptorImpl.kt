@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSTypeReferenceSyntheticImp
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMethod
+import com.intellij.psi.PsiType
 import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
@@ -339,7 +340,11 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
             when (psi.defaultValue) {
                 is PsiAnnotation -> KSAnnotationJavaImpl.getCached(psi.defaultValue as PsiAnnotation)
                 else -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
-                    .computeConstantExpression((psi).defaultValue)
+                    .computeConstantExpression((psi).defaultValue).let {
+                        if (it is PsiType) {
+                            ResolverImpl.instance!!.resolveJavaTypeInAnnotations(it)
+                        } else it
+                    }
             }
         }
         else -> throw IllegalStateException("Unexpected psi ${psi.javaClass}, $ExceptionMessage")
