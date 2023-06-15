@@ -298,4 +298,36 @@ class PlaygroundIT {
         }
         project.restore(buildFile.path)
     }
+
+    @Test
+    fun testProjectExtensionCompilerOptions() {
+        val properties = File(project.root, "gradle.properties")
+        properties.writeText(
+            properties.readText().replace(
+                "kotlin.jvm.target.validation.mode=warning",
+                "kotlin.jvm.target.validation.mode=error"
+            )
+        )
+        val buildFile = File(project.root, "workload/build.gradle.kts")
+        buildFile.appendText(
+            """
+            kotlin {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+               }
+            }
+            """.trimIndent()
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
+        gradleRunner.withArguments("clean", "build").buildAndFail().let { result ->
+            Assert.assertTrue(
+                result.output.contains(
+                    "'compileJava' task (current target is 11) and 'kspKotlin' " +
+                        "task (current target is 17) jvm target compatibility should be set to the same Java version."
+                )
+            )
+        }
+        project.restore(buildFile.path)
+        project.restore(properties.path)
+    }
 }
