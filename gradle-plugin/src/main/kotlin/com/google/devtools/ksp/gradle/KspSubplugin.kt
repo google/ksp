@@ -420,6 +420,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
                         kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
+                        kspTask.compilerOptions.jvmTarget.value(kotlinCompileTask.compilerOptions.jvmTarget)
                         kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
                         configureLanguageVersion(kspTask)
                         if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
