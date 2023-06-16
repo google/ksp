@@ -22,6 +22,7 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
@@ -86,10 +87,11 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override val simpleName: KSName by lazy {
-        if (ktFunctionSymbol is KtFunctionSymbol) {
-            KSNameImpl.getCached(ktFunctionSymbol.name.asString())
-        } else {
-            KSNameImpl.getCached("<init>")
+        when (ktFunctionSymbol) {
+            is KtFunctionSymbol -> KSNameImpl.getCached(ktFunctionSymbol.name.asString())
+            is KtPropertyAccessorSymbol -> KSNameImpl.getCached((ktFunctionSymbol.psi as PsiMethod).name)
+            is KtConstructorSymbol -> KSNameImpl.getCached("<init>")
+            else -> throw IllegalStateException("Unexpected function symbol type ${ktFunctionSymbol.javaClass}")
         }
     }
 
