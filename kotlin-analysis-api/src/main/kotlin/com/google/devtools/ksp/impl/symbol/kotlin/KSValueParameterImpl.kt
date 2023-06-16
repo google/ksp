@@ -79,10 +79,7 @@ class KSValueParameterImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        (
-            ktValueParameterSymbol.generatedPrimaryConstructorProperty?.annotations(this)
-                ?: ktValueParameterSymbol.annotations(this)
-            ).plus(findAnnotationFromUseSiteTarget())
+        ktValueParameterSymbol.annotations(this).plus(findAnnotationFromUseSiteTarget())
     }
     override val origin: Origin by lazy {
         val symbolOrigin = mapAAOrigin(ktValueParameterSymbol)

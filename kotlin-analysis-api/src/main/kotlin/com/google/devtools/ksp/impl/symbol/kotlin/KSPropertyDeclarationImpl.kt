@@ -56,6 +56,13 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             }.plus(
                 ktPropertySymbol.backingFieldSymbol?.annotations
                     ?.map { KSAnnotationImpl.getCached(it) } ?: emptyList()
+            ).plus(
+                if (ktPropertySymbol.isFromPrimaryConstructor) {
+                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters
+                        ?.singleOrNull { it.name == simpleName }?.annotations ?: emptySequence()
+                } else {
+                    emptySequence()
+                }
             )
     }
 

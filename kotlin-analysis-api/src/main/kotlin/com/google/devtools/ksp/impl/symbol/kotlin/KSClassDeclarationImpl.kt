@@ -129,7 +129,31 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val declarations: Sequence<KSDeclaration> by lazy {
-        ktClassOrObjectSymbol.declarations()
+        val decls = ktClassOrObjectSymbol.declarations()
+        if (origin == Origin.JAVA && classKind != ClassKind.ANNOTATION_CLASS) {
+            buildList {
+                decls.forEach { decl ->
+                    if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KtSyntheticJavaPropertySymbol) {
+                        decl.getter?.let {
+                            add(
+                                KSFunctionDeclarationImpl.getCached(
+                                    (it as KSPropertyAccessorImpl).ktPropertyAccessorSymbol
+                                )
+                            )
+                        }
+                        decl.setter?.let {
+                            add(
+                                KSFunctionDeclarationImpl.getCached(
+                                    (it as KSPropertyAccessorImpl).ktPropertyAccessorSymbol
+                                )
+                            )
+                        }
+                    } else {
+                        add(decl)
+                    }
+                }
+            }.asSequence()
+        } else decls
     }
 }
 
