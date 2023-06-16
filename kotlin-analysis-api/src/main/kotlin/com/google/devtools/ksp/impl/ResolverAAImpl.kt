@@ -57,6 +57,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
@@ -366,7 +367,24 @@ class ResolverAAImpl(
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
-        TODO("Not yet implemented")
+        val overriderSymbol = when (overrider) {
+            is KSFunctionDeclarationImpl -> if (overrider.ktFunctionSymbol is KtPropertyAccessorSymbol) {
+                (overrider.parent as KSPropertyDeclarationImpl).ktPropertySymbol
+            } else {
+                overrider.ktFunctionSymbol
+            }
+            is KSPropertyDeclarationImpl -> overrider.ktPropertySymbol
+            else -> return false
+        }
+        val overrideeSymbol = when (overridee) {
+            is KSFunctionDeclarationImpl -> overridee.ktFunctionSymbol
+            is KSPropertyDeclarationImpl -> overridee.ktPropertySymbol
+            else -> return false
+        }
+        return analyze {
+            overriderSymbol.getAllOverriddenSymbols().contains(overrideeSymbol) ||
+                overriderSymbol.getIntersectionOverriddenSymbols().contains(overrideeSymbol)
+        }
     }
 
     override fun overrides(
@@ -374,7 +392,31 @@ class ResolverAAImpl(
         overridee: KSDeclaration,
         containingClass: KSClassDeclaration
     ): Boolean {
-        TODO("Not yet implemented")
+        return when (overrider) {
+            is KSPropertyDeclaration -> containingClass.getAllProperties().singleOrNull {
+                it.simpleName.asString() == overrider.simpleName.asString()
+            }?.let { overrides(it, overridee) } ?: false
+            is KSFunctionDeclaration -> {
+                val candidates = containingClass.getAllFunctions().filter {
+                    it.simpleName.asString() == overridee.simpleName.asString()
+                }
+                if (overrider.simpleName.asString().startsWith("get") ||
+                    overrider.simpleName.asString().startsWith("set")
+                ) {
+                    candidates.plus(
+                        containingClass.getAllProperties().filter {
+                            val overriderName = overrider.simpleName.asString().substring(3)
+                                .replaceFirstChar { it.lowercase() }
+                            it.simpleName.asString() == overriderName ||
+                                it.simpleName.asString().replaceFirstChar { it.lowercase() } == overriderName
+                        }
+                    ).any { overrides(it, overridee) }
+                } else {
+                    candidates.any { overrides(it, overridee) }
+                }
+            }
+            else -> false
+        }
     }
 
     internal fun mapToJvmSignatureInternal(ksAnnotated: KSAnnotated): String? {
