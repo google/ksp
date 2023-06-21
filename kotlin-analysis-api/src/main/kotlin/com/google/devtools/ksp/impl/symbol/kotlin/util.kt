@@ -67,7 +67,7 @@ internal fun mapAAOrigin(ktSymbol: KtSymbol): Origin {
     }
 }
 
-internal fun KtAnnotationApplication.render(): String {
+internal fun KtAnnotationApplicationWithArgumentsInfo.render(): String {
     return buildString {
         append("@")
         if (this@render.useSiteTarget != null) {
