@@ -20,7 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
+import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
 import org.jetbrains.kotlin.analysis.api.annotations.KtConstantAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.base.KtConstantValue
@@ -30,9 +30,11 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 import org.jetbrains.kotlin.psi.KtParameter
 
-class KSAnnotationImpl private constructor(private val annotationApplication: KtAnnotationApplication) : KSAnnotation {
-    companion object : KSObjectCache<KtAnnotationApplication, KSAnnotationImpl>() {
-        fun getCached(annotationApplication: KtAnnotationApplication) =
+class KSAnnotationImpl private constructor(
+    private val annotationApplication: KtAnnotationApplicationWithArgumentsInfo
+) : KSAnnotation {
+    companion object : KSObjectCache<KtAnnotationApplicationWithArgumentsInfo, KSAnnotationImpl>() {
+        fun getCached(annotationApplication: KtAnnotationApplicationWithArgumentsInfo) =
             cache.getOrPut(annotationApplication) { KSAnnotationImpl(annotationApplication) }
     }
 
