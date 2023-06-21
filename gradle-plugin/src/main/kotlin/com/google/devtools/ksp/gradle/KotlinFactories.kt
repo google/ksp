@@ -44,10 +44,7 @@ import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
-import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptions
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptionsDefault
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptionsDefault
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationInfo
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
@@ -263,11 +260,14 @@ abstract class KspTaskNative @Inject internal constructor(
     objectFactory: ObjectFactory,
     providerFactory: ProviderFactory,
     execOperations: ExecOperations
-) : KotlinNativeCompile(compilation, objectFactory, providerFactory, execOperations), KspTask {
-
-    override val compilerOptions: KotlinCommonCompilerOptions =
-        objectFactory.newInstance(KotlinMultiplatformCommonCompilerOptionsDefault::class.java)
-}
+) : KotlinNativeCompile(
+        compilation,
+        objectFactory.newInstance(KotlinNativeCompilerOptionsDefault::class.java),
+        objectFactory,
+        providerFactory,
+        execOperations
+    ),
+    KspTask
 
 internal fun SubpluginOption.toArg() = "plugin:${KspGradleSubplugin.KSP_PLUGIN_ID}:$key=$value"
 
