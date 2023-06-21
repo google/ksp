@@ -174,7 +174,7 @@ class GradleCompilationTest {
         testRule.appModule.buildFileAdditions.add(
             """
                 ksp {
-                    arg(Provider(project.layout.projectDirectory.dir("schemas").asFile))
+                    arg(Provider(project.layout.projectDirectory.dir("room schemas").asFile))
                 }
                 class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
 
@@ -200,10 +200,10 @@ class GradleCompilationTest {
         )
         val result = testRule.runner().withArguments(":app:assembleDebug").build()
         val pattern1 = Regex.escape("apoption=room.schemaLocation=")
-        val pattern2 = Regex.escape("${testRule.appModule.moduleRoot}/schemas")
+        val pattern2 = Regex.escape("${testRule.appModule.moduleRoot}/room schemas")
         assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
         assertThat(result.output).contains("apoption=room.generateKotlin=true")
-        val schemasFolder = testRule.appModule.moduleRoot.resolve("schemas")
+        val schemasFolder = testRule.appModule.moduleRoot.resolve("room schemas")
         assertThat(result.task(":app:kspDebugKotlin")!!.outcome).isEquivalentAccordingToCompareTo(TaskOutcome.SUCCESS)
         assertThat(schemasFolder.exists()).isTrue()
         assertThat(schemasFolder.resolve("Database/1.json").exists()).isTrue()
@@ -234,7 +234,7 @@ class GradleCompilationTest {
         )
 
         val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
-        assertThat(result.output).contains("KSP apoption does not match \\S+=\\S+: invalid")
+        assertThat(result.output).contains("KSP apoption does not match \\S+=.*\\S+.*: invalid")
     }
 
     @Test
