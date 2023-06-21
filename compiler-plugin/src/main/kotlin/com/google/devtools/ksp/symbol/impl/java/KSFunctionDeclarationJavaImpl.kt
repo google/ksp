@@ -79,7 +79,7 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
     }
 
     override val parameters: List<KSValueParameter> by lazy {
-        psi.parameterList.parameters.map { KSValueParameterJavaImpl.getCached(it) }
+        psi.parameterList.parameters.map { KSValueParameterJavaImpl.getCached(it, this) }
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {
