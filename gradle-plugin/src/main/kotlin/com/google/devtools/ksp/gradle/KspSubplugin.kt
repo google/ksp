@@ -424,6 +424,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configurePluginOptions(kspTask)
                         kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
                         kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
+                        // Read from kotlinCompileTask's language version as
+                        // kspTask's language version is yet to be configured by configurator.
+                        kspTask.compilerOptions.languageVersion.value(kotlinCompileTask.compilerOptions.languageVersion)
                         configureLanguageVersion(kspTask)
                         if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
                             kspTask.compilerOptions.moduleName.convention(
