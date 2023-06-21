@@ -419,16 +419,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
-                        kspTask.compilerOptions.jvmTarget.value(kotlinCompileTask.compilerOptions.jvmTarget)
-                        kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
                         configureLanguageVersion(kspTask)
                         if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
                             kspTask.compilerOptions.moduleName.convention(
                                 kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
                             )
-                        } else {
-                            kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.compilerOptions.moduleName)
                         }
 
                         kspTask.destination.value(kspOutputDir)
@@ -461,11 +456,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
-                        kspTask.compilerOptions.freeCompilerArgs
-                            .value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
                         configureLanguageVersion(kspTask)
-                        kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName)
 
                         kspTask.incrementalChangesTransformers.add(
                             createIncrementalChangesTransformer(
@@ -525,12 +516,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 classpathCfg + kotlinCompileTask.compilerPluginClasspath!!
                             kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         }
-                        kspTask.compilerOptions.moduleName
-                            .convention(kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" })
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
                         kspTask.options.add(FilesSubpluginOption("apclasspath", processorClasspath.files.toList()))
                         val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
-                        kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
                         )
