@@ -526,6 +526,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 classpathCfg + kotlinCompileTask.compilerPluginClasspath!!
                             kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         }
+                        kspTask.compilerOptions.moduleName
+                            .convention(kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" })
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
                         kspTask.options.add(FilesSubpluginOption("apclasspath", processorClasspath.files.toList()))
                         val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
