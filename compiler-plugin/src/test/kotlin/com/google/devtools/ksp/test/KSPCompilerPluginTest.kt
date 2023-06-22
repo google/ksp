@@ -507,6 +507,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/typeAliasComparison.kt")
     }
 
+    @TestMetadata("typeAnnotation.kt")
+    @Test
+    fun testTypeAnnotation() {
+        runTest("../test-utils/testData/api/typeAnnotation.kt")
+    }
+
     @TestMetadata("typeComposure.kt")
     @Test
     fun testTypeComposure() {
