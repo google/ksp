@@ -1009,7 +1009,7 @@ class ResolverImpl(
             val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
             val substituted = declaration.substitute(typeSubstitutor) as? ValueDescriptor
             substituted?.let {
-                return getKSTypeCached(substituted.type)
+                return getKSTypeCached(substituted.type, annotations = property.type.resolve().annotations)
             }
         }
         // if substitution fails, fallback to the type from the property
