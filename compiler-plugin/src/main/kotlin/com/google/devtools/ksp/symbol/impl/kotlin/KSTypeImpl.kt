@@ -97,12 +97,12 @@ class KSTypeImpl private constructor(
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
         return kotlinType.replaceTypeArguments(arguments)?.let {
-            getKSTypeCached(it, arguments)
+            getKSTypeCached(it, arguments, annotations)
         } ?: KSErrorType
     }
 
     override fun starProjection(): KSType {
-        return getKSTypeCached(kotlinType.replaceArgumentsWithStarProjections())
+        return getKSTypeCached(kotlinType.replaceArgumentsWithStarProjections(), annotations = annotations)
     }
 
     private val meNullable: KSType by lazy { getKSTypeCached(kotlinType.makeNullable()) }
