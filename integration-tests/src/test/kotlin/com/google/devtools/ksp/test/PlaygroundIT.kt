@@ -321,10 +321,7 @@ class PlaygroundIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
         gradleRunner.withArguments("clean", "build").buildAndFail().let { result ->
             Assert.assertTrue(
-                result.output.contains(
-                    "'compileJava' task (current target is 11) and 'kspKotlin' " +
-                        "task (current target is 17) jvm target compatibility should be set to the same Java version."
-                )
+                result.output.contains("Inconsistent JVM-target compatibility detected for tasks")
             )
         }
         project.restore(buildFile.path)
