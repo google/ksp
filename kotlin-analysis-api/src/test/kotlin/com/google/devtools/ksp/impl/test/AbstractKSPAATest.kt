@@ -17,26 +17,15 @@
 
 package com.google.devtools.ksp.impl.test
 
-import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
+import com.google.devtools.ksp.impl.KSPJvmConfig
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.testutils.AbstractKSPTest
-import com.intellij.core.CoreApplicationEnvironment
-import com.intellij.mock.MockProject
-import com.intellij.openapi.vfs.VirtualFile
-import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
-import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISessionBuilder
-import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
-import org.jetbrains.kotlin.analysis.decompiler.stub.file.CachedAttributeData
-import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
-import org.jetbrains.kotlin.analysis.decompiler.stub.file.FileAttributeService
-import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.JvmFirDeserializedSymbolProviderFactory
-import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
-import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
-import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
@@ -50,12 +39,9 @@ import org.jetbrains.kotlin.test.services.javaFiles
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.jetbrains.kotlin.utils.PathUtil
 import java.io.ByteArrayOutputStream
-import java.io.DataInput
-import java.io.DataOutput
 import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
-import java.nio.file.Files
 
 abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     val TestModule.kotlinSrc
@@ -120,86 +106,44 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         testProcessor: AbstractTestProcessor
     ): List<String> {
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(mainModule)
-        compilerConfiguration.put(CommonConfigurationKeys.MODULE_NAME, mainModule.name)
-        compilerConfiguration.addKotlinSourceRoot(mainModule.kotlinSrc.absolutePath)
         mainModule.kotlinSrc.mkdirs()
-        if (!mainModule.javaFiles.isEmpty()) {
-            mainModule.writeJavaFiles()
-            compilerConfiguration.addJavaSourceRoot(mainModule.javaDir)
-        }
 
         // Some underlying service needs files backed by local fs.
         // Therefore, this doesn't work:
         //  val ktFiles = mainModule.loadKtFiles(kotlinCoreEnvironment.project)
         mainModule.writeKtFiles()
-        val kotlinSourceFiles = mainModule.files.filter { it.isKtFile }.map {
-            File(mainModule.kotlinSrc, it.relativePath)
+        if (!mainModule.javaFiles.isEmpty()) {
+            mainModule.writeJavaFiles()
         }
-        val ktSourceRoots = kotlinSourceFiles
-            .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
-            .distinctBy { it.canonicalPath }
-        compilerConfiguration.addKotlinSourceRoots(ktSourceRoots.map { it.absolutePath })
 
         val testRoot = mainModule.testRoot
 
-        val kspOptions = KspOptions.Builder().apply {
+        val kspConfig = KSPJvmConfig.Builder().apply {
+            moduleName = mainModule.name
+            sourceRoots = listOf(mainModule.kotlinSrc)
             if (!mainModule.javaFiles.isEmpty()) {
-                javaSourceRoots.add(mainModule.javaDir)
+                javaSourceRoots = listOf(mainModule.javaDir)
             }
+            this.jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
+            languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
+            apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
+            libraries = libModules.map { it.outDir } +
+                compilerConfiguration.jvmModularRoots +
+                compilerConfiguration.jvmClasspathRoots
+            logger = CommandLineKSPLogger()
+
+            processorProviders = listOf(testProcessor)
+
+            projectBaseDir = testRoot
             classOutputDir = File(testRoot, "kspTest/classes/main")
             javaOutputDir = File(testRoot, "kspTest/src/main/java")
             kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
             resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
-            projectBaseDir = testRoot
             cachesDir = File(testRoot, "kspTest/kspCaches")
-            kspOutputDir = File(testRoot, "kspTest")
-            languageVersionSettings = compilerConfiguration.languageVersionSettings
+            outputBaseDir = File(testRoot, "kspTest")
         }.build()
-        val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
-            registerOnce<FileAttributeService> { DummyFileAttributeService }
-            registerOnce(::ClsKotlinBinaryClassCache)
-            CoreApplicationEnvironment.registerExtensionPoint(
-                project.extensionArea,
-                KtResolveExtensionProvider.EP_NAME.name,
-                KtResolveExtensionProvider::class.java
-            )
-            buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-        }.apply {
-            (project as MockProject).registerService(
-                JvmFirDeserializedSymbolProviderFactory::class.java,
-                JvmFirDeserializedSymbolProviderFactory::class.java
-            )
-        }
-        val ksp = KotlinSymbolProcessing(
-            compilerConfiguration,
-            kspOptions,
-            CommandLineKSPLogger(),
-            analysisSession,
-            listOf(testProcessor)
-        )
-        ksp.prepare()
+        val ksp = KotlinSymbolProcessing(kspConfig)
         ksp.execute()
         return testProcessor.toResult()
-    }
-}
-
-object DummyFileAttributeService : FileAttributeService {
-    override fun <T> write(
-        file: VirtualFile,
-        id: String,
-        value: T,
-        writeValueFun: (DataOutput, T) -> Unit
-    ): CachedAttributeData<T> {
-        return CachedAttributeData(value, 0)
-    }
-
-    override fun <T> read(file: VirtualFile, id: String, readValueFun: (DataInput) -> T): CachedAttributeData<T>? {
-        return null
-    }
-}
-
-inline fun <reified T : Any> StandaloneAnalysisAPISessionBuilder.registerOnce(createInstance: () -> T) {
-    if (application.getServiceIfCreated(T::class.java) == null) {
-        registerApplicationService(T::class.java, createInstance())
     }
 }
