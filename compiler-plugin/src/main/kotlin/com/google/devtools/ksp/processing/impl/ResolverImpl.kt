@@ -1443,6 +1443,7 @@ fun MemberDescriptor.toKSDeclaration(): KSDeclaration =
             is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(this)
             is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(this)
             is PropertyDescriptor -> KSPropertyDeclarationDescriptorImpl.getCached(this)
+            is TypeAliasDescriptor -> KSTypeAliasDescriptorImpl.getCached(this)
             else -> throw IllegalStateException("Unknown expect/actual implementation")
         }
     }
