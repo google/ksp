@@ -27,6 +27,7 @@ tasks.named<Test>("test") {
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
+    dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
 
     // JDK_9 environment property is required.
     // To add a custom location (if not detected automatically) follow https://docs.gradle.org/current/userguide/toolchains.html#sec:custom_loc

@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.RelativizingPathProvider
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
@@ -10,10 +11,15 @@ val guavaVersion: String by project
 val kotlinBaseVersion: String by project
 val libsForTesting by configurations.creating
 val libsForTestingCommon by configurations.creating
+val signingKey: String? by project
+val signingPassword: String? by project
 
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
+    id("com.github.johnrengelman.shadow")
+    `maven-publish`
+    signing
 }
 
 dependencies {
@@ -49,7 +55,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", kotlinBaseVersion))
 
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
@@ -135,4 +141,70 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar> {
+    archiveClassifier.set("real")
+}
+
+tasks.withType<ShadowJar>() {
+    archiveClassifier.set("")
+    minimize()
+}
+
+tasks {
+    val sourcesJar by creating(Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+    val dokkaJavadocJar by creating(Jar::class) {
+        dependsOn(dokkaJavadoc)
+        from(dokkaJavadoc.flatMap { it.outputDirectory })
+        archiveClassifier.set("javadoc")
+    }
+    publish {
+        dependsOn(shadowJar)
+        dependsOn(sourcesJar)
+        dependsOn(dokkaJavadocJar)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("shadow") {
+            artifactId = "symbol-processing-aa"
+            artifact(tasks["shadowJar"])
+            artifact(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+            artifact(project(":kotlin-analysis-api").tasks["sourcesJar"])
+            pom {
+                name.set("com.google.devtools.ksp:symbol-processing-aa")
+                description.set("KSP implementation on Kotlin Analysis API")
+                withXml {
+                    fun groovy.util.Node.addDependency(
+                        groupId: String,
+                        artifactId: String,
+                        version: String,
+                        scope: String = "runtime"
+                    ) {
+                        appendNode("dependency").apply {
+                            appendNode("groupId", groupId)
+                            appendNode("artifactId", artifactId)
+                            appendNode("version", version)
+                            appendNode("scope", scope)
+                        }
+                    }
+
+                    asNode().appendNode("dependencies").apply {
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    isRequired = hasProperty("signingKey")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign(extensions.getByType<PublishingExtension>().publications)
 }
