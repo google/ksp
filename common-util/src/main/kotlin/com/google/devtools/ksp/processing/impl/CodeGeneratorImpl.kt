@@ -112,8 +112,7 @@ class CodeGeneratorImpl(
         if (!isWithinBaseDir(baseDir, file)) {
             throw IllegalStateException("requested path is outside the bounds of the required directory")
         }
-        val absolutePath = file.absolutePath
-        if (absolutePath in fileMap) {
+        if (path in fileMap) {
             throw FileAlreadyExistsException(file)
         }
         val parentFile = file.parentFile
@@ -121,7 +120,7 @@ class CodeGeneratorImpl(
             throw IllegalStateException("failed to make parent directories.")
         }
         file.writeText("")
-        fileMap[absolutePath] = file
+        fileMap[path] = file
         val sources = if (dependencies.isAllSources) {
             allSources + anyChangesWildcard
         } else {
@@ -132,8 +131,8 @@ class CodeGeneratorImpl(
             }
         }
         associate(sources, file)
-        fileOutputStreamMap[absolutePath] = fileMap[absolutePath]!!.outputStream()
-        return fileOutputStreamMap[absolutePath]!!
+        fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
+        return fileOutputStreamMap[path]!!
     }
 
     private fun isWithinBaseDir(baseDir: File, file: File): Boolean {
