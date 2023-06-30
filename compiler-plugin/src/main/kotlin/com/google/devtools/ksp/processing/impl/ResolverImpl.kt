@@ -65,8 +65,6 @@ import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDesc
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
-import org.jetbrains.kotlin.load.java.structure.JavaClass
-import org.jetbrains.kotlin.load.java.structure.classId
 import org.jetbrains.kotlin.load.java.structure.impl.JavaArrayTypeImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
@@ -518,9 +516,7 @@ class ResolverImpl(
     // TODO: Resolve Java variables is not supported by this function. Not needed currently.
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
-            is PsiClass -> moduleClassResolver.resolveClass(
-                JavaClassImpl(psi).apply { workaroundForNested(lazyJavaResolverContext) }
-            )
+            is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
             is PsiMethod -> {
                 // TODO: get rid of hardcoded check if possible.
                 val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
@@ -548,9 +544,7 @@ class ResolverImpl(
             }
             is PsiField -> {
                 moduleClassResolver
-                    .resolveClass(
-                        JavaFieldImpl(psi).containingClass.apply { workaroundForNested(lazyJavaResolverContext) }
-                    )
+                    .resolveClass(JavaFieldImpl(psi).containingClass)
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
                         filter = { it.findPsi() == psi }
@@ -739,9 +733,7 @@ class ResolverImpl(
                         }
                     }
                     val containingDeclaration = if (psi.owner is PsiClass) {
-                        moduleClassResolver.resolveClass(
-                            JavaClassImpl(psi.owner as PsiClass).apply { workaroundForNested(lazyJavaResolverContext) }
-                        )
+                        moduleClassResolver.resolveClass(JavaClassImpl(psi.owner as PsiClass))
                     } else {
                         val owner = psi.owner
                         check(owner is PsiMethod) {
@@ -1597,17 +1589,4 @@ internal fun KSTypeReference.resolveToUnderlying(): KSType {
         declaration = candidate.declaration
     }
     return candidate
-}
-
-// TODO: Remove this after upgrading to Kotlin 1.8.20.
-// Temporary work around for https://github.com/google/ksp/issues/1034
-// Force resolve outer most class for Java nested classes.
-internal fun JavaClass.workaroundForNested(
-    lazyJavaResolverContext: LazyJavaResolverContext = ResolverImpl.instance!!.lazyJavaResolverContext
-) {
-    var outerMost = outerClass
-    while (outerMost?.outerClass != null) {
-        outerMost = outerMost.outerClass
-    }
-    outerMost?.classId?.let { lazyJavaResolverContext.components.finder.findClass(it) }
 }
