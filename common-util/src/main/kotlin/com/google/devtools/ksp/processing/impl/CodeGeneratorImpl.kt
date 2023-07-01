@@ -29,7 +29,7 @@ import java.io.OutputStream
 
 class CodeGeneratorImpl(
     private val classDir: File,
-    private val javaDir: File,
+    private val javaDir: () -> File,
     private val kotlinDir: File,
     private val resourcesDir: File,
     private val projectBase: File,
@@ -101,7 +101,7 @@ class CodeGeneratorImpl(
     private fun extensionToDirectory(extensionName: String): File {
         return when (extensionName) {
             "class" -> classDir
-            "java" -> javaDir
+            "java" -> javaDir()
             "kt" -> kotlinDir
             else -> resourcesDir
         }

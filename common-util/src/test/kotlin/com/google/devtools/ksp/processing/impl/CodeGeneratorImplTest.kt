@@ -26,7 +26,7 @@ class CodeGeneratorImplTest {
         resourcesDir.mkdir()
         codeGenerator = CodeGeneratorImpl(
             classesDir,
-            javaDir,
+            { javaDir },
             kotlinDir,
             resourcesDir,
             baseDir,

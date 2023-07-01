@@ -141,6 +141,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             if (!options.returnOkOnError && logger.hasError()) {
                 return AnalysisResult.compilationError(BindingContext.EMPTY)
             }
+            // DO NOT updateFromShadow(); withCompilation requires the java output shadows to continue.
             return null
         }
 
@@ -152,11 +153,22 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         val psiManager = PsiManager.getInstance(project)
         if (initialized) {
             psiManager.dropPsiCaches()
+        } else {
+            // In case of broken builds.
+            if (javaShadowBase.exists()) {
+                javaShadowBase.deleteRecursively()
+            }
         }
 
+        val javaShadowRoots = mutableListOf<File>()
+        if (javaShadowBase.exists() && javaShadowBase.isDirectory) {
+            javaShadowBase.listFiles()?.forEach {
+                javaShadowRoots.add(it)
+            }
+        }
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        val javaSourceRoots =
-            if (initialized) options.javaSourceRoots + options.javaOutputDir else options.javaSourceRoots
+        // FIXME: reuse from previous rounds.
+        val javaSourceRoots = options.javaSourceRoots + javaShadowRoots
         val javaFiles = javaSourceRoots
             .sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
             .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
@@ -250,7 +262,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         if (!initialized) {
             codeGenerator = CodeGeneratorImpl(
                 options.classOutputDir,
-                options.javaOutputDir,
+                { javaShadowDir },
                 options.kotlinOutputDir,
                 options.resourceOutputDir,
                 options.projectBaseDir,
@@ -306,6 +318,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         // Post processing.
         newFileNames = codeGenerator.generatedFile.filter { it.extension == "kt" || it.extension == "java" }
             .map { it.canonicalPath.replace(File.separatorChar, '/') }.toSet()
+
         if (codeGenerator.generatedFile.isEmpty()) {
             finished = true
         }
@@ -353,21 +366,21 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             logger.reportAll()
         }
         resolver.tearDown()
-        return if (finished && !options.withCompilation) {
-            if (!options.returnOkOnError && logger.hasError()) {
+        if (finished && !options.withCompilation) {
+            updateFromShadow()
+            return if (!options.returnOkOnError && logger.hasError()) {
                 AnalysisResult.compilationError(BindingContext.EMPTY)
             } else {
                 AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
             }
-        } else {
-            AnalysisResult.RetryWithAdditionalRoots(
-                BindingContext.EMPTY,
-                module,
-                listOf(options.javaOutputDir),
-                listOf(options.kotlinOutputDir),
-                listOf(options.classOutputDir)
-            )
         }
+        return AnalysisResult.RetryWithAdditionalRoots(
+            BindingContext.EMPTY,
+            module,
+            listOf(javaShadowDir),
+            listOf(options.kotlinOutputDir),
+            listOf(options.classOutputDir)
+        )
     }
 
     abstract fun loadProviders(): List<SymbolProcessorProvider>
@@ -416,6 +429,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 e is KSPCompilationError -> {
                     logger.error("${project.findLocationString(e.file, e.offset)}: ${e.message}")
                     logger.reportAll()
+                    updateFromShadow()
                     return if (options.returnOkOnError) {
                         AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
                     } else {
@@ -426,6 +440,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                 e.isNotRecoverable() -> {
                     e.logToError()
                     logger.reportAll()
+                    updateFromShadow()
                     return if (options.returnOkOnError) {
                         AnalysisResult.success(BindingContext.EMPTY, module, shouldGenerateCode = false)
                     } else {
@@ -440,6 +455,24 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             }
         }
         return null
+    }
+
+    private val javaShadowBase = File(options.javaOutputDir, "byRounds")
+
+    private val javaShadowDir: File
+        get() = File(javaShadowBase, "$rounds")
+
+    private fun updateFromShadow() {
+        if (javaShadowBase.exists() && javaShadowBase.isDirectory()) {
+            javaShadowBase.listFiles()?.forEach { roundDir ->
+                if (roundDir.exists() && roundDir.isDirectory()) {
+                    roundDir.walkTopDown().forEach {
+                        it.copyTo(File(options.javaOutputDir, it.path))
+                    }
+                }
+            }
+            javaShadowBase.deleteRecursively()
+        }
     }
 }
 
