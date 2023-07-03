@@ -275,7 +275,7 @@ class GradleCompilationTest {
         )
         val result = testRule.runner().withDebug(true).withArguments(":app:assembleDebug").build()
         val pattern1 = Regex.escape("apoption=room.schemaLocation=")
-        val pattern2 = Regex.escape("${testRule.appModule.moduleRoot}/schemas-kspDebugKotlin")
+        val pattern2 = Regex.escape(testRule.appModule.moduleRoot.resolve("schemas-kspDebugKotlin").path)
         val pattern3 = Regex.escape("commandLine=[")
         assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
         assertThat(result.output).containsMatch("$pattern3\\S*$pattern2")
