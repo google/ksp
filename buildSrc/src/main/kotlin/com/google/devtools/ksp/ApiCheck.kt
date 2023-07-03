@@ -19,6 +19,7 @@ package com.google.devtools.ksp
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.JavaExec
+import java.io.File
 
 val API_BASE_FILE="api.base"
 
@@ -74,7 +75,7 @@ private fun JavaExec.configureCommonMetalavaArgs(
 }
 
 private fun Project.getCompileClasspath(): String =
-    configurations.findByName("compileClasspath")!!.files.map { it.absolutePath }.joinToString(":")
+    configurations.findByName("compileClasspath")!!.files.map { it.absolutePath }.joinToString(File.pathSeparator)
 
 private fun Project.getMetalavaConfiguration(): Configuration {
     return configurations.findByName("metalava") ?: configurations.create("metalava") {
