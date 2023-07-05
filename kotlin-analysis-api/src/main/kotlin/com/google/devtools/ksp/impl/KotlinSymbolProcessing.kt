@@ -70,7 +70,7 @@ class KotlinSymbolProcessing(
         val anyChangesWildcard = AnyChanges(options.projectBaseDir)
         codeGenerator = CodeGeneratorImpl(
             options.classOutputDir,
-            options.javaOutputDir,
+            { options.javaOutputDir },
             options.kotlinOutputDir,
             options.resourceOutputDir,
             options.projectBaseDir,
