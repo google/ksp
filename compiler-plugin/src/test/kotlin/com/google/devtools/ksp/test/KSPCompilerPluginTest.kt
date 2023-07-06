@@ -387,6 +387,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/overridee.kt")
     }
 
+    @TestMetadata("packageAnnotations.kt")
+    @Test
+    fun testPackageAnnotation() {
+        runTest("../test-utils/testData/api/packageAnnotations.kt")
+    }
+
     @TestMetadata("parameterTypes.kt")
     @Test
     fun testParameterTypes() {
