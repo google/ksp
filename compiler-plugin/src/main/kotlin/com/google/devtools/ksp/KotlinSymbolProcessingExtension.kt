@@ -467,7 +467,10 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             javaShadowBase.listFiles()?.forEach { roundDir ->
                 if (roundDir.exists() && roundDir.isDirectory()) {
                     roundDir.walkTopDown().forEach {
-                        it.copyTo(File(options.javaOutputDir, it.path))
+                        val dst = File(options.javaOutputDir, File(it.path).toRelativeString(roundDir))
+                        if (dst.isFile || !dst.exists()) {
+                            it.copyTo(dst)
+                        }
                     }
                 }
             }
