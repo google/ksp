@@ -182,6 +182,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/declarationPackageName.kt")
     }
 
+    @TestMetadata("declarationsInAccessor.kt")
+    @Test
+    fun testDeclarationsInAccessor() {
+        runTest("../test-utils/testData/api/declarationsInAccessor.kt")
+    }
+
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
