@@ -408,7 +408,7 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSReferenceElement element;
   }
 
-  public interface KSPropertyAccessor extends com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
+  public interface KSPropertyAccessor extends com.google.devtools.ksp.symbol.KSDeclarationContainer com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
     method @NonNull public com.google.devtools.ksp.symbol.KSPropertyDeclaration getReceiver();
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSPropertyDeclaration receiver;
   }

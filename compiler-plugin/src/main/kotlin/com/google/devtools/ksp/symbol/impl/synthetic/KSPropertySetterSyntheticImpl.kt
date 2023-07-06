@@ -19,11 +19,7 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertySetter
-import com.google.devtools.ksp.symbol.KSValueParameter
-import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.binary.KSValueParameterDescriptorImpl
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
@@ -44,6 +40,9 @@ class KSPropertySetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
         descriptor.valueParameters.singleOrNull()?.let { KSValueParameterDescriptorImpl.getCached(it, this) }
             ?: throw IllegalStateException("Failed to resolve property type")
     }
+
+    override val declarations: Sequence<KSDeclaration>
+        get() = emptySequence()
 
     override val parent: KSNode? = ksPropertyDeclaration
 
