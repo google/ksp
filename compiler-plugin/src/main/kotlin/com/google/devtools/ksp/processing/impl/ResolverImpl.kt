@@ -24,10 +24,9 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.symbol.impl.*
 import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
-import com.google.devtools.ksp.symbol.impl.findParentAnnotated
-import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.java.*
 import com.google.devtools.ksp.symbol.impl.jvmAccessFlag
@@ -128,6 +127,9 @@ class ResolverImpl(
     val psiDocumentManager = PsiDocumentManager.getInstance(project)
     private val nameToKSMap: MutableMap<KSName, KSClassDeclaration>
     private val javaTypeParameterMap: MutableMap<LazyJavaTypeParameterDescriptor, PsiTypeParameter> = mutableMapOf()
+    private val packageInfoFiles by lazy {
+        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
+    }
 
     /**
      * Checking as member of is an expensive operation, hence we cache result values in this map.
@@ -1401,6 +1403,23 @@ class ResolverImpl(
     @KspExperimental
     override fun isJavaRawType(type: KSType): Boolean {
         return type is KSTypeImpl && type.kotlinType.unwrap() is RawType
+    }
+
+    @KspExperimental
+    override fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation> {
+        return packageInfoFiles.singleOrNull { it.packageName.asString() == packageName }
+            ?.getPackageAnnotations()?.asSequence() ?: emptySequence()
+    }
+
+    @KspExperimental
+    override fun getPackagesWithAnnotation(annotationName: String): Sequence<String> {
+        return packageInfoFiles.filter {
+            it.getPackageAnnotations().any {
+                (it.annotationType.element as? KSClassifierReference)?.referencedName()
+                    ?.substringAfterLast(".") == annotationName.substringAfterLast(".") &&
+                    it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+            }
+        }.map { it.packageName.asString() }
     }
 
     private val psiJavaFiles = allKSFiles.filterIsInstance<KSFileJavaImpl>().map {
