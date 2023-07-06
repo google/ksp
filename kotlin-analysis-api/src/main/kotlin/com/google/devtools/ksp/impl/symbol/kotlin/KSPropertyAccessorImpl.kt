@@ -25,7 +25,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtModifierListOwner
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(
     internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
@@ -68,6 +70,19 @@ abstract class KSPropertyAccessorImpl(
 
     override val parent: KSNode?
         get() = ktPropertyAccessorSymbol.getContainingKSSymbol()
+
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        val psi = ktPropertyAccessorSymbol.psi as? KtPropertyAccessor ?: return@lazy emptySequence()
+        if (!psi.hasBlockBody()) {
+            emptySequence()
+        } else {
+            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
+                analyze {
+                    it.getSymbol().toKSDeclaration()
+                }
+            } ?: emptySequence()
+        }
+    }
 }
 
 class KSPropertySetterImpl private constructor(
