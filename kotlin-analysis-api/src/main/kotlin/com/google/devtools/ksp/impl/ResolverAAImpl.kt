@@ -41,22 +41,7 @@ import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSDeclarationContainer
-import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSPropertyAccessor
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeArgument
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.Modifier
-import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSName
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
@@ -348,6 +333,16 @@ class ResolverAAImpl(
     }
 
     override fun isJavaRawType(type: KSType): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    @KspExperimental
+    override fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation> {
+        TODO("Not yet implemented")
+    }
+
+    @KspExperimental
+    override fun getPackagesWithAnnotation(annotationName: String): Sequence<String> {
         TODO("Not yet implemented")
     }
 
