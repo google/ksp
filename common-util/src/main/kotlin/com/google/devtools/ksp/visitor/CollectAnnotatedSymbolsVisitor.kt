@@ -56,11 +56,17 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVo
 
     override fun visitPropertyGetter(getter: KSPropertyGetter, data: Unit) {
         visitAnnotated(getter, data)
+        if (inDepth) {
+            getter.declarations.forEach { it.accept(this, data) }
+        }
     }
 
     override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {
         setter.parameter.accept(this, data)
         visitAnnotated(setter, data)
+        if (inDepth) {
+            setter.declarations.forEach { it.accept(this, data) }
+        }
     }
 
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
