@@ -164,6 +164,8 @@ package com.google.devtools.ksp.processing {
     method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFile> getNewFiles();
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration declaration);
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration declaration);
+    method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotation> getPackageAnnotations(@NonNull String packageName);
+    method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<java.lang.String> getPackagesWithAnnotation(@NonNull String annotationName);
     method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel = false);
     method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotated> getSymbolsWithAnnotation(@NonNull String annotationName, boolean inDepth = false);
     method @NonNull public com.google.devtools.ksp.symbol.KSTypeArgument getTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeRef, @NonNull com.google.devtools.ksp.symbol.Variance variance);

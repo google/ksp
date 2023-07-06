@@ -557,3 +557,6 @@ fun DeclarationDescriptor.findPsi(): PsiElement? {
     val leaf = containingFile.findElementAt(psi.textOffset) ?: return null
     return leaf.parentsWithSelf.firstOrNull { psi.manager.areElementsEquivalent(it, psi) }
 }
+
+internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement
+    ?.annotationList?.annotations?.map { KSAnnotationJavaImpl.getCached(it) } ?: emptyList<KSAnnotation>()
