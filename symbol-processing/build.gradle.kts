@@ -72,7 +72,6 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
-                        addDependency("org.jetbrains.kotlin", "kotlin-compiler-embeddable", kotlinBaseVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                     }
                 }
