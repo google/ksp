@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.impl.kotlin.getKSTypeCached
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMethod
+import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiType
 import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
@@ -339,6 +340,21 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
         is PsiAnnotationMethod -> {
             when (psi.defaultValue) {
                 is PsiAnnotation -> KSAnnotationJavaImpl.getCached(psi.defaultValue as PsiAnnotation)
+                // Special handling for array initializers
+                // as they are not PsiExpression therefore can't be evaluated directly.
+                is PsiArrayInitializerMemberValue -> ConstantValueFactory.createArrayValue(
+                    (psi.defaultValue as PsiArrayInitializerMemberValue).initializers.mapNotNull {
+                        JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
+                            .computeConstantExpression(it).let {
+                                if (it is PsiType) {
+                                    ResolverImpl.instance!!.resolveJavaTypeInAnnotations(it)
+                                } else it
+                            }?.let {
+                                ConstantValueFactory.createConstantValue(it)
+                            }
+                    }.toList(),
+                    this.type
+                )
                 else -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
                     .computeConstantExpression((psi).defaultValue).let {
                         if (it is PsiType) {
