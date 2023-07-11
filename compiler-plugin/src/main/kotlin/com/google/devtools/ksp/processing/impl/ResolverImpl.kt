@@ -716,7 +716,7 @@ class ResolverImpl(
                         return getKSTypeCached(it, type.element.typeArguments, type.annotations)
                     }
                 }
-                val scope = resolveSession.fileScopeProvider.getFileResolutionScope(typeReference.containingKtFile)
+                val scope = typeReference.findLexicalScope()
                 return resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
                     getKSTypeCached(it, type.element.typeArguments, type.annotations)
                 }
