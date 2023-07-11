@@ -375,6 +375,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/multipleModules.kt")
     }
 
+    @TestMetadata("nestedAnnotations.kt")
+    @Test
+    fun testNestedAnnotations() {
+        runTest("../test-utils/testData/api/nestedAnnotations.kt")
+    }
+
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
