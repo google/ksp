@@ -406,6 +406,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/multipleModules.kt")
     }
 
+    @TestMetadata("nestedAnnotations.kt")
+    @Test
+    fun testNestedAnnotations() {
+        runTest("../test-utils/testData/api/nestedAnnotations.kt")
+    }
+
     @Disabled
     @TestMetadata("nestedClassType.kt")
     @Test
