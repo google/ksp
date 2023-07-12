@@ -3,18 +3,19 @@ import com.google.devtools.ksp.RelativizingPathProvider
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
-val intellijVersion: String by project
 val junitVersion: String by project
 val junit5Version: String by project
 val junitPlatformVersion: String by project
-val guavaVersion: String by project
-val kotlinBaseVersion: String by project
-val asmVersion: String by project
-val fastutilVersion: String by project
 val libsForTesting by configurations.creating
 val libsForTestingCommon by configurations.creating
 val signingKey: String? by project
 val signingPassword: String? by project
+
+val aaKotlinBaseVersion: String by project
+val aaIntellijVersion: String by project
+val aaGuavaVersion: String by project
+val aaAsmVersion: String by project
+val aaFastutilVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -38,7 +39,7 @@ dependencies {
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
-        implementation("$it:$intellijVersion") { isTransitive = false }
+        implementation("$it:$aaIntellijVersion") { isTransitive = false }
     }
 
     listOf(
@@ -52,15 +53,15 @@ dependencies {
         "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-for-ide",
     ).forEach {
-        implementation("$it:$kotlinBaseVersion") { isTransitive = false }
+        implementation("$it:$aaKotlinBaseVersion") { isTransitive = false }
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation(kotlin("stdlib", kotlinBaseVersion))
+    implementation(kotlin("stdlib", aaKotlinBaseVersion))
 
-    implementation("com.google.guava:guava:$guavaVersion")
-    implementation("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$fastutilVersion")
-    implementation("org.jetbrains.intellij.deps:asm-all:$asmVersion")
+    implementation("com.google.guava:guava:$aaGuavaVersion")
+    implementation("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion")
+    implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
@@ -75,28 +76,28 @@ dependencies {
     testImplementation(project(":api"))
     testImplementation(project(":common-util"))
 
-    testImplementation(kotlin("stdlib", kotlinBaseVersion))
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
+    testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$aaKotlinBaseVersion")
 
-    libsForTesting(kotlin("stdlib", kotlinBaseVersion))
-    libsForTesting(kotlin("test", kotlinBaseVersion))
-    libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
-    libsForTestingCommon(kotlin("stdlib-common", kotlinBaseVersion))
+    libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
+    libsForTesting(kotlin("test", aaKotlinBaseVersion))
+    libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
+    libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
-    val escaped = Regex.escape(kotlinBaseVersion)
+    val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
 tasks.register<Copy>("CopyLibsForTestingCommon") {
     from(configurations.get("libsForTestingCommon"))
     into("dist/common")
-    val escaped = Regex.escape(kotlinBaseVersion)
+    val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
@@ -199,7 +200,7 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
                     }
                 }
             }
