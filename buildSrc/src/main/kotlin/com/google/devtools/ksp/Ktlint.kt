@@ -80,6 +80,7 @@ private fun JavaExec.configureCommonKtlintParams(
         it.exclude("**/testData/**")
         it.exclude("**/build/**")
         it.exclude("**/.*/**")
+        it.exclude("**/resources/**")
     }
     val outputFile = project.buildDir.resolve("reports/ktlint/ktlint-checkstyle-report.xml")
     inputs.files(ktlintInputFiles)
