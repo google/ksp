@@ -9,6 +9,8 @@ val junit5Version: String by project
 val junitPlatformVersion: String by project
 val guavaVersion: String by project
 val kotlinBaseVersion: String by project
+val asmVersion: String by project
+val fastutilVersion: String by project
 val libsForTesting by configurations.creating
 val libsForTestingCommon by configurations.creating
 val signingKey: String? by project
@@ -48,6 +50,7 @@ dependencies {
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
         "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
+        "org.jetbrains.kotlin:kotlin-compiler-for-ide",
     ).forEach {
         implementation("$it:$kotlinBaseVersion") { isTransitive = false }
     }
@@ -55,7 +58,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", kotlinBaseVersion))
 
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    implementation("com.google.guava:guava:$guavaVersion")
+    implementation("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$fastutilVersion")
+    implementation("org.jetbrains.intellij.deps:asm-all:$asmVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
@@ -74,8 +79,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
-
-    testImplementation("com.google.guava:guava:$guavaVersion")
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
     libsForTesting(kotlin("test", kotlinBaseVersion))
@@ -141,6 +144,7 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
+    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
 }
 
 tasks.withType<org.gradle.jvm.tasks.Jar> {
