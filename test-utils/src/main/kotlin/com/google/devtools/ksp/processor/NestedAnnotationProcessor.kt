@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
@@ -30,10 +31,22 @@ class NestedAnnotationProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val myClass = resolver.getClassDeclarationByName("MyClass")!!
-        val param = myClass.primaryConstructor!!.parameters.single()
+        val param = myClass.primaryConstructor!!.parameters.single { it.name?.asString() == "param" }
         param.annotations.forEach { annotation ->
-            result.add("$annotation: ${annotation.annotationType.resolve()}")
+            result.add("@param: $annotation: ${annotation.annotationType.resolve()}")
         }
+        val field = myClass.getDeclaredProperties().single { it.simpleName.asString() == "field" }
+        field.annotations.forEach { annotation ->
+            result.add("@field $annotation: ${annotation.annotationType.resolve()}")
+        }
+        val property = myClass.getDeclaredProperties().single { it.simpleName.asString() == "property" }
+        property.annotations.forEach { annotation ->
+            result.add("@property: $annotation: ${annotation.annotationType.resolve()}")
+        }
+        property.setter!!.parameter.annotations.forEach { annotation ->
+            result.add("@setparam: $annotation: ${annotation.annotationType.resolve()}")
+        }
+
         return emptyList()
     }
 }
