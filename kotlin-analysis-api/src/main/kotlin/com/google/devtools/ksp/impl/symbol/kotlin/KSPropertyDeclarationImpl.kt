@@ -53,7 +53,10 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                             ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
                     } ?: false
                 }
-            }
+            }.plus(
+                ktPropertySymbol.backingFieldSymbol?.annotations
+                    ?.map { KSAnnotationImpl.getCached(it) } ?: emptyList()
+            )
     }
 
     override val getter: KSPropertyGetter? by lazy {
