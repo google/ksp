@@ -29,10 +29,11 @@ import com.google.devtools.ksp.symbol.impl.binary.*
 import com.google.devtools.ksp.symbol.impl.declarationsInSourceOrder
 import com.google.devtools.ksp.symbol.impl.getInstanceForCurrentRound
 import com.google.devtools.ksp.symbol.impl.java.*
-import com.google.devtools.ksp.symbol.impl.jvmAccessFlag
 import com.google.devtools.ksp.symbol.impl.kotlin.*
-import com.google.devtools.ksp.symbol.impl.resolveContainingClass
-import com.google.devtools.ksp.symbol.impl.synthetic.*
+import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
+import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
@@ -54,31 +55,16 @@ import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
-import org.jetbrains.kotlin.load.java.lazy.JavaResolverComponents
-import org.jetbrains.kotlin.load.java.lazy.LazyJavaResolverContext
-import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
-import org.jetbrains.kotlin.load.java.lazy.TypeParameterResolver
-import org.jetbrains.kotlin.load.java.lazy.childForClassOrPackage
-import org.jetbrains.kotlin.load.java.lazy.childForMethod
+import org.jetbrains.kotlin.load.java.lazy.*
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
 import org.jetbrains.kotlin.load.java.lazy.types.toAttributes
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
-import org.jetbrains.kotlin.load.java.structure.impl.JavaArrayTypeImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaConstructorImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaFieldImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaMethodImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeImpl
-import org.jetbrains.kotlin.load.java.structure.impl.JavaTypeParameterImpl
+import org.jetbrains.kotlin.load.java.structure.impl.*
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethodBase
-import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
-import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
-import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
-import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
-import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
+import org.jetbrains.kotlin.load.kotlin.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
@@ -89,7 +75,8 @@ import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstituto
 import org.jetbrains.kotlin.resolve.calls.inference.components.composeWith
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
-import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
@@ -111,7 +98,7 @@ import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 import org.jetbrains.org.objectweb.asm.Opcodes
 import java.io.File
-import java.util.Stack
+import java.util.*
 
 class ResolverImpl(
     val module: ModuleDescriptor,
@@ -790,9 +777,26 @@ class ResolverImpl(
 
     // Finds closest non-local scope.
     fun KtElement.findLexicalScope(): LexicalScope {
-        return containingNonLocalDeclaration()?.let {
-            resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it)
-        } ?: resolveSession.fileScopeProvider.getFileResolutionScope(this.containingKtFile)
+        val ktDeclaration = KtStubbedPsiUtil.getPsiOrStubParent(this, KtDeclaration::class.java, false)
+            ?: return resolveSession.fileScopeProvider.getFileResolutionScope(this.containingKtFile)
+        var parentDeclaration = KtStubbedPsiUtil.getContainingDeclaration(ktDeclaration)
+
+        if (ktDeclaration is KtPropertyAccessor && parentDeclaration != null) {
+            parentDeclaration = KtStubbedPsiUtil.getContainingDeclaration(
+                parentDeclaration,
+                KtDeclaration::class.java
+            )
+        }
+        if (parentDeclaration == null) {
+            return resolveSession.fileScopeProvider.getFileResolutionScope(this.containingKtFile)
+        }
+        return if (parentDeclaration is KtClassOrObject) {
+            resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(this)
+        } else {
+            containingNonLocalDeclaration()?.let {
+                resolveSession.declarationScopeProvider.getResolutionScopeForDeclaration(it)
+            } ?: resolveSession.fileScopeProvider.getFileResolutionScope(this.containingKtFile)
+        }
     }
 
     fun resolveAnnotationEntry(ktAnnotationEntry: KtAnnotationEntry): AnnotationDescriptor? {
