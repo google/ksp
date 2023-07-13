@@ -17,10 +17,17 @@
 
 // TEST PROCESSOR: NestedAnnotationProcessor
 // EXPECTED:
-// @MyNestedAnnotation: MyNestedAnnotation
+// @param: @MyNestedAnnotation: MyNestedAnnotation
+// @field @MyNestedAnnotation: MyNestedAnnotation
+// @property: @MyNestedAnnotation: MyNestedAnnotation
+// @setparam: @MyNestedAnnotation: MyNestedAnnotation
 // END
 
 class MyClass(@param:MyNestedAnnotation param: String) {
+    @field:MyNestedAnnotation val field: String = TODO()
+    @property:MyNestedAnnotation val property: String = TODO()
+        @setparam:MyNestedAnnotation
+        set(value) {}
     annotation class MyNestedAnnotation
 }
 
