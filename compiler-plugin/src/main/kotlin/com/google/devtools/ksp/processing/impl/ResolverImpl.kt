@@ -742,7 +742,16 @@ class ResolverImpl(
                     )
                     javaTypeParameterMap[typeParameterDescriptor] = psi
                 }
-                return getKSTypeCached(resolveJavaType(type.psi, type), type.element.typeArguments, type.annotations)
+                val resolved = getKSTypeCached(
+                    resolveJavaType(type.psi, type),
+                    type.element.typeArguments,
+                    type.annotations
+                )
+                return if (type.psi is PsiArrayType) {
+                    resolved
+                } else {
+                    resolved.replace(type.element.typeArguments)
+                }
             }
             else -> throw IllegalStateException("Unable to resolve type for $type, $ExceptionMessage")
         }
