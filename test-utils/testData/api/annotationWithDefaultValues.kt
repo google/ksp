@@ -18,14 +18,14 @@
 // TEST PROCESSOR: AnnotationDefaultValuesProcessor
 // EXPECTED:
 // KotlinAnnotation -> b:default,kClassValue:Array<Array<InnerObj>>,topLevelProp:foo,companionProp:companion
-// JavaAnnotation -> withDefaultValue:OK,nested:@Nested
+// JavaAnnotation -> withDefaultValue:OK,stringArrayParam:["3", "5", "7"],typeVal:HashMap<*, *>,nested:@Nested
 // JavaAnnotation2 -> x:x-default,y:y-default,z:z-default
 // KotlinAnnotation2 -> y:y-default,z:z-default,kotlinEnumVal:VALUE_1
 // KotlinAnnotationLib -> b:defaultInLib,kClassValue:OtherKotlinAnnotation,topLevelProp:bar
 // JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:JavaAnnotationWithDefaults.LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotation -> b:default,kClassValue:Array<Array<InnerObj>>,topLevelProp:foo,companionProp:companion
-// JavaAnnotation -> withDefaultValue:OK,nested:@Nested
+// JavaAnnotation -> withDefaultValue:OK,stringArrayParam:["3", "5", "7"],typeVal:HashMap<*, *>,nested:@Nested
 // JavaAnnotation2 -> x:x-default,y:y-default,z:z-default
 // KotlinAnnotation2 -> y:y-default,z:z-default,kotlinEnumVal:VALUE_1
 // END
@@ -128,9 +128,12 @@ enum class KotlinEnum {
 }
 
 // FILE: JavaAnnotation.java
+import java.util.HashMap;
 public @interface JavaAnnotation {
     String debug();
     String withDefaultValue()  default "OK";
+    String[] stringArrayParam() default {"3", "5", "7"};
+    Class<?> typeVal() default HashMap.class;
     @interface Nested {
         String nestedX() default "nested";
     }

@@ -4,57 +4,61 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 
 val intellijVersion: String by project
 val junitVersion: String by project
+val junit5Version: String by project
+val junitPlatformVersion: String by project
+val guavaVersion: String by project
 val kotlinBaseVersion: String by project
 val libsForTesting by configurations.creating
 val libsForTestingCommon by configurations.creating
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.intellij")
     id("org.jetbrains.dokka")
 }
 
-intellij {
-    version = intellijVersion
-}
-
 dependencies {
+    listOf(
+        "com.jetbrains.intellij.platform:util-rt",
+        "com.jetbrains.intellij.platform:util-class-loader",
+        "com.jetbrains.intellij.platform:util-text-matching",
+        "com.jetbrains.intellij.platform:util",
+        "com.jetbrains.intellij.platform:util-base",
+        "com.jetbrains.intellij.platform:util-xml-dom",
+        "com.jetbrains.intellij.platform:core",
+        "com.jetbrains.intellij.platform:core-impl",
+        "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.java:java-psi",
+        "com.jetbrains.intellij.java:java-psi-impl",
+    ).forEach {
+        implementation("$it:$intellijVersion") { isTransitive = false }
+    }
+
+    listOf(
+        "org.jetbrains.kotlin:high-level-api-fir-for-ide",
+        "org.jetbrains.kotlin:high-level-api-for-ide",
+        "org.jetbrains.kotlin:low-level-api-fir-for-ide",
+        "org.jetbrains.kotlin:analysis-api-providers-for-ide",
+        "org.jetbrains.kotlin:analysis-project-structure-for-ide",
+        "org.jetbrains.kotlin:symbol-light-classes-for-ide",
+        "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
+        "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
+    ).forEach {
+        implementation("$it:$kotlinBaseVersion") { isTransitive = false }
+    }
+
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", kotlinBaseVersion))
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
-    implementation("org.jetbrains.kotlin:high-level-api-fir-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:high-level-api-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:low-level-api-fir-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:analysis-api-providers-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:symbol-light-classes-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:analysis-api-standalone-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
-    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$kotlinBaseVersion") {
-        isTransitive = false
-    }
+    compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:5.8.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite:1.8.2")
+    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
 
     testImplementation(project(":test-utils"))
     testImplementation(project(":api"))
@@ -64,6 +68,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
+
+    testImplementation("com.google.guava:guava:$guavaVersion")
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
     libsForTesting(kotlin("test", kotlinBaseVersion))
@@ -128,7 +134,5 @@ repositories {
     flatDir {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
-    maven("https://www.jetbrains.com/intellij-repository/releases")
 }

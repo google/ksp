@@ -25,21 +25,23 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtModifierListOwner
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(
-    private val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
+    internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor {
 
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
-            .map { KSAnnotationImpl.getCached(it) }
+            .map { KSAnnotationImpl.getCached(it, this) }
             .plus(findAnnotationFromUseSiteTarget())
     }
 
-    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations()
+    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations(this)
 
     override val location: Location by lazy {
         ktPropertyAccessorSymbol.psi?.toLocation() ?: NonExistLocation
@@ -68,6 +70,19 @@ abstract class KSPropertyAccessorImpl(
 
     override val parent: KSNode?
         get() = ktPropertyAccessorSymbol.getContainingKSSymbol()
+
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        val psi = ktPropertyAccessorSymbol.psi as? KtPropertyAccessor ?: return@lazy emptySequence()
+        if (!psi.hasBlockBody()) {
+            emptySequence()
+        } else {
+            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
+                analyze {
+                    it.getSymbol().toKSDeclaration()
+                }
+            } ?: emptySequence()
+        }
+    }
 }
 
 class KSPropertySetterImpl private constructor(

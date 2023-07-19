@@ -157,10 +157,10 @@
 // parent of G: RGB
 // parent of B: RGB
 // parent of RGB: RGB
-// parent of RGB: INVARIANT RGB
-// parent of INVARIANT RGB: Array<(RGB..RGB?)>
-// parent of Array<(RGB..RGB?)>: Array<(RGB..RGB?)>
-// parent of Array<(RGB..RGB?)>: values
+// parent of RGB: COVARIANT RGB
+// parent of COVARIANT RGB: Array<out (RGB..RGB?)>
+// parent of Array<out (RGB..RGB?)>: Array<out (RGB..RGB?)>
+// parent of Array<out (RGB..RGB?)>: values
 // parent of values: RGB
 // parent of String: String
 // parent of String: name

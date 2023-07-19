@@ -182,6 +182,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/declarationPackageName.kt")
     }
 
+    @TestMetadata("declarationsInAccessor.kt")
+    @Test
+    fun testDeclarationsInAccessor() {
+        runTest("../test-utils/testData/api/declarationsInAccessor.kt")
+    }
+
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
@@ -369,6 +375,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/multipleModules.kt")
     }
 
+    @TestMetadata("nestedAnnotations.kt")
+    @Test
+    fun testNestedAnnotations() {
+        runTest("../test-utils/testData/api/nestedAnnotations.kt")
+    }
+
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
@@ -385,6 +397,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
     @Test
     fun testOverridee() {
         runTest("../test-utils/testData/api/overridee.kt")
+    }
+
+    @TestMetadata("packageAnnotations.kt")
+    @Test
+    fun testPackageAnnotation() {
+        runTest("../test-utils/testData/api/packageAnnotations.kt")
     }
 
     @TestMetadata("parameterTypes.kt")
@@ -505,6 +523,18 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
     @Test
     fun testTypeAliasComparison() {
         runTest("../test-utils/testData/api/typeAliasComparison.kt")
+    }
+
+    @TestMetadata("typeAnnotation.kt")
+    @Test
+    fun testTypeAnnotation() {
+        runTest("../test-utils/testData/api/typeAnnotation.kt")
+    }
+
+    @TestMetadata("typeArgumentVariance.kt")
+    @Test
+    fun testTypeArgumentVariance() {
+        runTest("../test-utils/testData/api/typeArgumentVariance.kt")
     }
 
     @TestMetadata("typeComposure.kt")

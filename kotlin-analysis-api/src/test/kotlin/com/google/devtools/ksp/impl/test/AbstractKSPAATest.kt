@@ -22,7 +22,8 @@ import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.google.devtools.ksp.testutils.AbstractKSPTest
-import com.intellij.openapi.extensions.ExtensionPoint
+import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.mock.MockProject
 import com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISessionBuilder
@@ -30,6 +31,7 @@ import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISe
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.CachedAttributeData
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.FileAttributeService
+import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.JvmFirDeserializedSymbolProviderFactory
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
@@ -156,15 +158,17 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
             registerOnce<FileAttributeService> { DummyFileAttributeService }
             registerOnce(::ClsKotlinBinaryClassCache)
+            CoreApplicationEnvironment.registerExtensionPoint(
+                project.extensionArea,
+                KtResolveExtensionProvider.EP_NAME.name,
+                KtResolveExtensionProvider::class.java
+            )
             buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-            project.extensionArea.apply {
-                registerExtensionPoint(
-                    KtResolveExtensionProvider.EP_NAME.name,
-                    KtResolveExtensionProvider::class.java.name,
-                    ExtensionPoint.Kind.INTERFACE,
-                    false
-                )
-            }
+        }.apply {
+            (project as MockProject).registerService(
+                JvmFirDeserializedSymbolProviderFactory::class.java,
+                JvmFirDeserializedSymbolProviderFactory::class.java
+            )
         }
         val ksp = KotlinSymbolProcessing(
             compilerConfiguration,

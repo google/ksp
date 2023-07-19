@@ -82,6 +82,7 @@ private fun JavaExec.configureCommonKtlintParams(
         it.exclude("**/build/**")
         it.exclude("dist/**")
         it.exclude("**/.*/**")
+        it.exclude("**/resources/**")
     }
     val outputFile = project.buildDir.resolve("reports/ktlint/ktlint-checkstyle-report.xml").toRelativeString(project.projectDir)
     inputs.files(ktlintInputFiles).withPropertyName("ktlintInputFiles").withPathSensitivity(PathSensitivity.RELATIVE)

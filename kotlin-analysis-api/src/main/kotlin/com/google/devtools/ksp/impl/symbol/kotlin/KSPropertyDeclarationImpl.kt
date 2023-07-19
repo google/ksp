@@ -17,7 +17,9 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.BinaryClassInfoCache
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
@@ -27,6 +29,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
     KSPropertyDeclaration,
@@ -40,7 +43,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
-            .map { KSAnnotationImpl.getCached(it) }
+            .map { KSAnnotationImpl.getCached(it, this) }
             .filterNot { valueParameterAnnotation ->
                 valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
                     metaAnnotation.annotationType.resolve().declaration.qualifiedName
@@ -50,7 +53,10 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                             ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
                     } ?: false
                 }
-            }
+            }.plus(
+                ktPropertySymbol.backingFieldSymbol?.annotations
+                    ?.map { KSAnnotationImpl.getCached(it) } ?: emptyList()
+            )
     }
 
     override val getter: KSPropertyGetter? by lazy {
@@ -82,7 +88,17 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override val hasBackingField: Boolean by lazy {
-        ktPropertySymbol.hasBackingField
+        if (origin == Origin.KOTLIN_LIB || origin == Origin.JAVA_LIB) {
+            val fileManager = ResolverAAImpl.instance.javaFileManager
+            val parentClass = this.findParentOfType<KSClassDeclaration>()
+            val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
+            val virtualFileContent = analyze {
+                (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+            }
+            BinaryClassInfoCache.getCached(classId, virtualFileContent).fieldAccFlags.containsKey(simpleName.asString())
+        } else {
+            ktPropertySymbol.hasBackingField
+        }
     }
 
     override fun isDelegated(): Boolean {
