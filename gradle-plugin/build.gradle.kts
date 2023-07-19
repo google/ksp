@@ -108,6 +108,16 @@ val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfigurati
     property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
 }
 
+normalization {
+    runtimeClasspath {
+        properties("**/testprops.properties") {
+            ignoreProperty("kspProjectRootDir")
+            ignoreProperty("mavenRepoDir")
+            ignoreProperty("processorClasspath")
+        }
+    }
+}
+
 java {
     sourceSets {
         test {
