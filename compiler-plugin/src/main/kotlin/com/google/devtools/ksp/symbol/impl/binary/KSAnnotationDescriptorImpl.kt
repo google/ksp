@@ -354,7 +354,7 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
                             }
                     }.toList(),
                     this.type
-                )
+                ).toValue(ownerAnnotation)
                 else -> JavaPsiFacade.getInstance(psi.project).constantEvaluationHelper
                     .computeConstantExpression((psi).defaultValue).let {
                         if (it is PsiType) {
