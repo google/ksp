@@ -750,7 +750,10 @@ class ResolverImpl(
                 return if (type.psi is PsiArrayType) {
                     resolved
                 } else {
-                    resolved.replace(type.element.typeArguments)
+                    // Replacing with error argument results in error type, fall back to original logic.
+                    resolved.replace(type.element.typeArguments).let {
+                        if (it.isError) resolved else it
+                    }
                 }
             }
             else -> throw IllegalStateException("Unable to resolve type for $type, $ExceptionMessage")
