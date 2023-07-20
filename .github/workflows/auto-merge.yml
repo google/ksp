@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-        ref: 1.0.12-release
+        ref: 1.0.13-release
 
     - name: merge commits from main to release branch
       run: |
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: 1.0.12-release
+          ref: 1.0.13-release
 
       - name: merge commits from main to release branch
         run: |
