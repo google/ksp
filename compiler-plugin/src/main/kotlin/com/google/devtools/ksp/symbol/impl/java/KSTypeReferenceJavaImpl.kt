@@ -98,7 +98,7 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
                 val componentType = ResolverImpl.instance!!.resolveJavaType(type.componentType, this)
                 if (type.componentType !is PsiPrimitiveType) {
                     KSClassifierReferenceDescriptorImpl.getCached(
-                        ResolverImpl.instance!!.module.builtIns.getArrayType(Variance.INVARIANT, componentType),
+                        ResolverImpl.instance!!.module.builtIns.getArrayType(Variance.OUT_VARIANCE, componentType),
                         origin,
                         this
                     )

@@ -17,8 +17,10 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
+import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.getKSDeclarations
 import com.google.devtools.ksp.symbol.impl.toLocation
 import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.psi.KtProperty
@@ -52,6 +54,15 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
 
     override val modifiers: Set<Modifier> by lazy {
         ktPropertyAccessor.toKSModifiers()
+    }
+
+    override val declarations: Sequence<KSDeclaration> by lazy {
+        if (!ktPropertyAccessor.hasBlockBody()) {
+            emptySequence()
+        } else {
+            ktPropertyAccessor.bodyBlockExpression?.statements?.asSequence()?.getKSDeclarations()?.memoized()
+                ?: emptySequence()
+        }
     }
 
     override val origin: Origin = Origin.KOTLIN

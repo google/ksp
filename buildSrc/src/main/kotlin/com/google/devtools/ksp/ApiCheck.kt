@@ -19,8 +19,10 @@ package com.google.devtools.ksp
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.PathSensitivity
+import java.io.File
 
-val API_BASE_FILE="api.base"
+private const val API_BASE_FILE = "api.base"
 
 /**
  * Adapted from ktlint
@@ -31,6 +33,15 @@ fun Project.configureMetalava() {
         task.description = "Check API compatibility."
         task.group = "Verification"
         task.args = listOf("--check-compatibility:api:released", API_BASE_FILE) + task.args!!
+        task.inputs.files(API_BASE_FILE).withPropertyName("apiCheckBaseFile").withPathSensitivity(PathSensitivity.RELATIVE)
+
+        val outFile = project.layout.buildDirectory.file("reports/checkApi/checkApiSuccess.txt")
+        task.outputs.files(outFile).withPropertyName("apiCheckSuccessFile")
+        task.outputs.cacheIf { true }
+        task.doLast {
+            task.executionResult.get().assertNormalExitValue()
+            outFile.get().asFile.writeText("SUCCESS")
+        }
     }
 
     afterEvaluate {
@@ -45,6 +56,7 @@ fun Project.configureMetalava() {
         task.description = "Update API base file."
         task.group = "formatting"
         task.args = listOf("--api", API_BASE_FILE) + task.args!!
+        task.outputs.file(API_BASE_FILE).withPropertyName("updateApiOutputBaseFile")
     }
 }
 
@@ -54,7 +66,7 @@ fun Project.configureMetalava() {
 private fun JavaExec.configureCommonMetalavaArgs(
     project: Project
 ) {
-    val jdkHome = org.gradle.internal.jvm.Jvm.current().getJavaHome().absolutePath
+    val jdkHome = org.gradle.internal.jvm.Jvm.current().javaHome.absolutePath
     val compileClasspath = project.getCompileClasspath()
     val apiFiles = project.fileTree(project.projectDir).also {
         it.include("**/*.kt")
@@ -63,18 +75,20 @@ private fun JavaExec.configureCommonMetalavaArgs(
         it.exclude("**/build/**")
         it.exclude("**/.*/**")
     }
-    inputs.files(apiFiles)
+    inputs.files(apiFiles).withPropertyName("apiCheckInputFiles").withPathSensitivity(PathSensitivity.RELATIVE)
     classpath = project.getMetalavaConfiguration()
     mainClass.set("com.android.tools.metalava.Driver")
     args = listOf(
         "--jdk-home", jdkHome,
         "--classpath", compileClasspath,
         "--source-files",
-    ) + apiFiles.files.map { it.absolutePath }
+    ) + apiFiles.files.map { it.toRelativeString(project.projectDir) }
 }
 
 private fun Project.getCompileClasspath(): String =
-    configurations.findByName("compileClasspath")!!.files.map { it.absolutePath }.joinToString(":")
+    configurations.findByName("compileClasspath")!!.files
+        .map { it.toRelativeString(projectDir) }
+        .joinToString(File.pathSeparator)
 
 private fun Project.getMetalavaConfiguration(): Configuration {
     return configurations.findByName("metalava") ?: configurations.create("metalava") {

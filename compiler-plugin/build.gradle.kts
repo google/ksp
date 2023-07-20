@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.RelativizingPathProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
@@ -6,6 +7,9 @@ description = "Kotlin Symbol Processing"
 
 val intellijVersion: String by project
 val kotlinBaseVersion: String by project
+val junitVersion: String by project
+val junit5Version: String by project
+val junitPlatformVersion: String by project
 
 val libsForTesting by configurations.creating
 val libsForTestingCommon by configurations.creating
@@ -16,12 +20,7 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.intellij") version "0.6.4"
-    id("org.jetbrains.dokka") version ("1.7.20")
-}
-
-intellij {
-    version = intellijVersion
+    id("org.jetbrains.dokka")
 }
 
 tasks {
@@ -32,20 +31,27 @@ tasks {
     }
 }
 
-fun ModuleDependency.includeJars(vararg names: String) {
-    names.forEach {
-        artifact {
-            name = it
-            type = "jar"
-            extension = "jar"
-        }
-    }
-}
-
 // WARNING: remember to update the dependencies in symbol-processing as well.
 dependencies {
+    listOf(
+        "com.jetbrains.intellij.platform:util-rt",
+        "com.jetbrains.intellij.platform:util-class-loader",
+        "com.jetbrains.intellij.platform:util-text-matching",
+        "com.jetbrains.intellij.platform:util",
+        "com.jetbrains.intellij.platform:util-base",
+        "com.jetbrains.intellij.platform:util-xml-dom",
+        "com.jetbrains.intellij.platform:core",
+        "com.jetbrains.intellij.platform:core-impl",
+        "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.java:java-psi",
+        "com.jetbrains.intellij.java:java-psi-impl",
+    ).forEach {
+        implementation("$it:$intellijVersion") { isTransitive = false }
+    }
+
     implementation(kotlin("stdlib", kotlinBaseVersion))
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+
+    compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
@@ -55,13 +61,12 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:5.8.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite:1.8.2")
+    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
 
-    testImplementation(project(":api"))
-    testImplementation(project(":common-util"))
     testImplementation(project(":test-utils"))
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
@@ -98,29 +103,25 @@ tasks.test {
     useJUnitPlatform()
 
     systemProperty("idea.is.unit.test", "true")
-    systemProperty("idea.home.path", buildDir)
     systemProperty("java.awt.headless", "true")
     environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
-    environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
-    environment("PROJECT_BUILD_DIR", buildDir)
+
     testLogging {
         events("passed", "skipped", "failed")
     }
 
-    var tempTestDir: File? = null
+    lateinit var tempTestDir: File
     doFirst {
+        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
+        jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
+
         tempTestDir = createTempDir()
-        systemProperty("java.io.tmpdir", tempTestDir.toString())
+        jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", tempTestDir))
     }
 
     doLast {
-        tempTestDir?.let { delete(it) }
+        delete(tempTestDir)
     }
-}
-
-repositories {
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
-    maven("https://www.jetbrains.com/intellij-repository/snapshots")
 }
 
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {

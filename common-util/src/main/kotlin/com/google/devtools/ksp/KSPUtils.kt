@@ -1,6 +1,8 @@
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSType
 import org.jetbrains.kotlin.name.ClassId
 
 class IdKey<T>(private val k: T) {
@@ -21,3 +23,17 @@ class IdKeyTriple<T, P, Q>(private val k1: T, private val k2: P, private val k3:
 }
 
 fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
+
+@SuppressWarnings("UNCHECKED_CAST")
+fun extractThrowsAnnotation(annotated: KSAnnotated): Sequence<KSType> {
+    return annotated.annotations
+        .singleOrNull {
+            it.shortName.asString() == "Throws" &&
+                it.annotationType.resolve().declaration.qualifiedName?.asString()?.let {
+                it == "kotlin.jvm.Throws" || it == "kotlin.Throws"
+            } ?: false
+        }?.arguments
+        ?.singleOrNull()
+        ?.let { it.value as? ArrayList<KSType> }
+        ?.asSequence() ?: emptySequence()
+}

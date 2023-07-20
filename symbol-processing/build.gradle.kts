@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 evaluationDependsOn(":common-util")
 evaluationDependsOn(":compiler-plugin")
@@ -9,7 +10,7 @@ val signingPassword: String? by project
 
 plugins {
     kotlin("jvm")
-    id("com.github.johnrengelman.shadow") version "6.0.0"
+    id("com.github.johnrengelman.shadow")
     `maven-publish`
     signing
 }
@@ -21,7 +22,11 @@ dependencies {
     packedJars(project(":common-util")) { isTransitive = false }
 }
 
-tasks.withType<ShadowJar>() {
+tasks.withType<Jar> {
+    archiveClassifier.set("real")
+}
+
+tasks.withType<ShadowJar> {
     archiveClassifier.set("")
     // ShadowJar picks up the `compile` configuration by default and pulls stdlib in.
     // Therefore, specifying another configuration instead.

@@ -31,7 +31,6 @@ import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.psi.KtModifierListOwner
@@ -87,7 +86,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     override val parent: KSNode? by lazy {
         analyze {
             ktDeclarationSymbol.getContainingSymbol()?.let {
-                KSClassDeclarationImpl.getCached(it as KtNamedClassOrObjectSymbol)
+                ktDeclarationSymbol.getContainingKSSymbol()
             } ?: ktDeclarationSymbol.toContainingFile()
         }
     }
@@ -99,5 +98,5 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     override val docString: String?
         get() = ktDeclarationSymbol.toDocString()
 
-    internal val originalAnnotations = ktDeclarationSymbol.annotations()
+    internal val originalAnnotations = ktDeclarationSymbol.annotations(this)
 }

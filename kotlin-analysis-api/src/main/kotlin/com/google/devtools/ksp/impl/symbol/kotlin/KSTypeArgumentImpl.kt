@@ -59,7 +59,7 @@ class KSTypeArgumentImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeProjection.type?.annotations() ?: emptySequence()
+        ktTypeProjection.type?.annotations(this) ?: emptySequence()
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC

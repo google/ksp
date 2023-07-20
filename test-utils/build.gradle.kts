@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val kotlinBaseVersion: String by project
 val intellijVersion: String by project
+val junit5Version: String by project
 
 tasks.withType<KotlinCompile> {
     compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
@@ -22,13 +23,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
 
-    implementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    implementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
 
     implementation(project(":api"))
     implementation(project(":compiler-plugin"))
-}
-
-repositories {
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
-    maven("https://www.jetbrains.com/intellij-repository/releases")
 }

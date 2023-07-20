@@ -17,7 +17,9 @@
 
 package com.google.devtools.ksp
 
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Variance
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
@@ -159,8 +161,11 @@ data class BinaryClassInfo(
 object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
     fun getCached(
         kotlinJvmBinaryClass: KotlinJvmBinaryClass,
-    ) = cache.getOrPut(kotlinJvmBinaryClass.classId) {
-        val virtualFileContent = (kotlinJvmBinaryClass as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
+    ) = getCached(
+        kotlinJvmBinaryClass.classId, (kotlinJvmBinaryClass as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
+    )
+
+    fun getCached(classId: ClassId, virtualFileContent: ByteArray?) = cache.getOrPut(classId) {
         val fieldAccFlags = mutableMapOf<String, Int>()
         val methodAccFlags = mutableMapOf<String, Int>()
         ClassReader(virtualFileContent).accept(
@@ -226,3 +231,32 @@ fun KSAnnotated.hasAnnotation(fqn: String): Boolean =
         fqn.endsWith(it.shortName.asString()) &&
             it.annotationType.resolve().declaration.qualifiedName?.asString() == fqn
     }
+
+fun Resolver.extractThrowsFromClassFile(
+    virtualFileContent: ByteArray,
+    jvmDesc: String?,
+    simpleName: String?
+): Sequence<KSType> {
+    val exceptionNames = mutableListOf<String>()
+    ClassReader(virtualFileContent).accept(
+        object : ClassVisitor(Opcodes.API_VERSION) {
+            override fun visitMethod(
+                access: Int,
+                name: String?,
+                descriptor: String?,
+                signature: String?,
+                exceptions: Array<out String>?,
+            ): MethodVisitor {
+                if (name == simpleName && jvmDesc == descriptor) {
+                    exceptions?.toList()?.let { exceptionNames.addAll(it) }
+                }
+                return object : MethodVisitor(Opcodes.API_VERSION) {
+                }
+            }
+        },
+        ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
+    )
+    return exceptionNames.mapNotNull {
+        this.getClassDeclarationByName(it.replace("/", "."))?.asStarProjectedType()
+    }.asSequence()
+}

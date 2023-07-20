@@ -11,3 +11,4 @@ build/
 local.properties
 compiler-plugin/dist
 kotlin-analysis-api/dist
+.DS_Store

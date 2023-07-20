@@ -20,7 +20,6 @@ import com.google.devtools.ksp.BinaryClassInfoCache
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.processing.impl.workaroundForNested
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.symbol.impl.binary.KSClassDeclarationDescriptorImpl
@@ -231,9 +230,9 @@ internal inline fun <reified T : CallableMemberDescriptor> T.findClosestOverride
 
 internal fun ModuleClassResolver.resolveContainingClass(psiMethod: PsiMethod): ClassDescriptor? {
     return if (psiMethod.isConstructor) {
-        resolveClass(JavaConstructorImpl(psiMethod).containingClass.apply { workaroundForNested() })
+        resolveClass(JavaConstructorImpl(psiMethod).containingClass)
     } else {
-        resolveClass(JavaMethodImpl(psiMethod).containingClass.apply { workaroundForNested() })
+        resolveClass(JavaMethodImpl(psiMethod).containingClass)
     }
 }
 
@@ -558,3 +557,6 @@ fun DeclarationDescriptor.findPsi(): PsiElement? {
     val leaf = containingFile.findElementAt(psi.textOffset) ?: return null
     return leaf.parentsWithSelf.firstOrNull { psi.manager.areElementsEquivalent(it, psi) }
 }
+
+internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement
+    ?.annotationList?.annotations?.map { KSAnnotationJavaImpl.getCached(it) } ?: emptyList<KSAnnotation>()

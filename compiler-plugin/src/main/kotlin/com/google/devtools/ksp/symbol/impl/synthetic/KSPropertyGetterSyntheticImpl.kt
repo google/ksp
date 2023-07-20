@@ -19,11 +19,7 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
@@ -47,6 +43,10 @@ class KSPropertyGetterSyntheticImpl(val ksPropertyDeclaration: KSPropertyDeclara
             null
         }
     }
+
+    override val declarations: Sequence<KSDeclaration>
+        get() = emptySequence()
+
     override val parent: KSNode? = ksPropertyDeclaration
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

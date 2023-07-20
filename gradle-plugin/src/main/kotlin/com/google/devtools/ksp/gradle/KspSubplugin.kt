@@ -368,7 +368,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 kotlinCompileTask.project.files(
                     Callable {
                         kotlinCompileTask.libraries.filter {
-                            !kspOutputDir.isParentOf(it)
+                            // manually exclude KAPT generated class folder from class path snapshot.
+                            // TODO: remove in 1.9.0.
+
+                            !kspOutputDir.isParentOf(it) && !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                         }
                     }
                 )
@@ -400,7 +403,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         fun configureLanguageVersion(kspTask: KotlinCompilationTask<*>) {
             kspTask.compilerOptions.useK2.value(false)
-            kspTask.compilerOptions.languageVersion.orNull?.let { version ->
+            kotlinCompilation.compilerOptions.options.languageVersion.orNull?.let { version ->
                 if (version >= KotlinVersion.KOTLIN_2_0) {
                     kspTask.compilerOptions.languageVersion.value(LANGUAGE_VERSION)
                 }
@@ -419,15 +422,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.compilerOptions.noJdk.value(kotlinCompileTask.compilerOptions.noJdk)
-                        kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
                         configureLanguageVersion(kspTask)
                         if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
                             kspTask.compilerOptions.moduleName.convention(
                                 kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
                             )
-                        } else {
-                            kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.compilerOptions.moduleName)
                         }
 
                         kspTask.destination.value(kspOutputDir)
@@ -460,11 +459,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                         configurePluginOptions(kspTask)
-                        kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
-                        kspTask.compilerOptions.freeCompilerArgs
-                            .value(kotlinCompileTask.compilerOptions.freeCompilerArgs)
                         configureLanguageVersion(kspTask)
-                        kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.moduleName)
 
                         kspTask.incrementalChangesTransformers.add(
                             createIncrementalChangesTransformer(
@@ -524,11 +519,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 classpathCfg + kotlinCompileTask.compilerPluginClasspath!!
                             kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         }
-                        kspTask.compilerOptions.moduleName.convention(kotlinCompileTask.compilerOptions.moduleName)
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
                         kspTask.options.add(FilesSubpluginOption("apclasspath", processorClasspath.files.toList()))
                         val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
-                        kspTask.compilerOptions.verbose.convention(kotlinCompilation.compilerOptions.options.verbose)
                         kspTask.compilerOptions.freeCompilerArgs.value(
                             kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
                         )

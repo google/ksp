@@ -22,6 +22,10 @@ repositories {
 plugins {
     kotlin("jvm") version "1.8.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+
+    // Adding plugins used in multiple places to the classpath for centralized version control
+    id("com.github.johnrengelman.shadow") version "7.1.2" apply false
+    id("org.jetbrains.dokka") version "1.8.10" apply false
 }
 
 nexusPublishing {
@@ -36,16 +40,16 @@ nexusPublishing {
 
 version = rootProject.extra.get("kspVersion") as String
 
-project.configureKtlintApplyToIdea()
+configureKtlintApplyToIdea()
 subprojects {
     group = "com.google.devtools.ksp"
     version = rootProject.extra.get("kspVersion") as String
-    this.configureKtlint()
+    configureKtlint()
     repositories {
         mavenCentral()
         google()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
-        maven("https://www.jetbrains.com/intellij-repository/snapshots")
+        maven("https://www.jetbrains.com/intellij-repository/releases")
     }
     pluginManager.withPlugin("maven-publish") {
         val publishExtension = extensions.getByType<PublishingExtension>()
