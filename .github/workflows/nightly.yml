@@ -69,3 +69,4 @@ jobs:
             integration-tests/build/reports
             gradle-plugin/build/reports
             common-util/build/reports
+            kotlin-analysis-api/build/reports

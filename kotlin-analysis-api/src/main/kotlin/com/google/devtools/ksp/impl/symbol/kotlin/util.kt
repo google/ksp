@@ -244,8 +244,8 @@ internal fun KtSymbolWithMembers.getAllFunctions(): Sequence<KSFunctionDeclarati
     }
 }
 
-internal fun KtAnnotated.annotations(): Sequence<KSAnnotation> {
-    return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it) }
+internal fun KtAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
+    return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it, parent) }
 }
 
 internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
@@ -365,4 +365,12 @@ internal fun Modality.toModifier(): Modifier {
         Modality.OPEN -> Modifier.OPEN
         Modality.SEALED -> Modifier.SEALED
     }
+}
+
+internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
+    var result = parent
+    while (!(result == null || result is T)) {
+        result = result.parent
+    }
+    return result
 }

@@ -84,6 +84,12 @@ class KotlinFactories {
                 // See [KotlinCompileConfig] in for details.
                 // FIXME: make it configurable in upstream or support useClasspathSnapshot == true, if possible.
                 kspTaskProvider.configure {
+                    val compilerOptions = kotlinCompilation.compilerOptions.options as KotlinJvmCompilerOptions
+                    KotlinJvmCompilerOptionsHelper.syncOptionsAsConvention(
+                        from = compilerOptions,
+                        into = it.compilerOptions
+                    )
+
                     if (it.classpathSnapshotProperties.useClasspathSnapshot.get()) {
                         it.classpathSnapshotProperties.classpath.from(project.provider { it.libraries })
                     }
@@ -100,6 +106,12 @@ class KotlinFactories {
                 BaseKotlin2JsCompileConfig<Kotlin2JsCompile>(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<Kotlin2JsCompile>)
                 kspTaskProvider.configure {
+                    val compilerOptions = kotlinCompilation.compilerOptions.options as KotlinJsCompilerOptions
+                    KotlinJsCompilerOptionsHelper.syncOptionsAsConvention(
+                        from = compilerOptions,
+                        into = it.compilerOptions
+                    )
+
                     it.incrementalJsKlib = false
                 }
             }
@@ -113,6 +125,15 @@ class KotlinFactories {
             return project.tasks.register(taskName, KspTaskMetadata::class.java).also { kspTaskProvider ->
                 KotlinCompileCommonConfig(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<KotlinCompileCommon>)
+
+                kspTaskProvider.configure {
+                    val compilerOptions =
+                        kotlinCompilation.compilerOptions.options as KotlinMultiplatformCommonCompilerOptions
+                    KotlinMultiplatformCommonCompilerOptionsHelper.syncOptionsAsConvention(
+                        from = compilerOptions,
+                        into = it.compilerOptions
+                    )
+                }
             }
         }
 
@@ -127,6 +148,12 @@ class KotlinFactories {
                 KotlinCompilationInfo(kotlinCompilation)
             ).apply {
                 configure { kspTask ->
+                    val compilerOptions = kotlinCompilation.compilerOptions.options as KotlinNativeCompilerOptions
+                    KotlinNativeCompilerOptionsHelper.syncOptionsAsConvention(
+                        from = compilerOptions,
+                        into = kspTask.compilerOptions
+                    )
+
                     kspTask.onlyIf {
                         kspTask.konanTarget.enabledOnCurrentHost
                     }

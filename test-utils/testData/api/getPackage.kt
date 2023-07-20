@@ -26,6 +26,7 @@
 // symbols from package lib2
 // lib2.Foo KOTLIN_LIB
 // lib2.a KOTLIN_LIB
+// lib2.FooTypeAlias KOTLIN_LIB
 // symbols from package main.test
 // main.test.KotlinMain KOTLIN
 // main.test.C JAVA
@@ -52,6 +53,8 @@ class Bar {}
 package lib2
 
 class Foo
+
+typealias FooTypeAlias = Foo
 
 val a = 0
 

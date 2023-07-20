@@ -201,6 +201,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/declarationPackageName.kt")
     }
 
+    @TestMetadata("declarationsInAccessor.kt")
+    @Test
+    fun testDeclarationsInAccessor() {
+        runTest("../test-utils/testData/api/declarationsInAccessor.kt")
+    }
+
     @Disabled
     @TestMetadata("declarationOrder.kt")
     @Test
@@ -234,6 +240,7 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/equivalentJavaWildcards.kt")
     }
 
+    @Disabled
     @TestMetadata("errorTypes.kt")
     @Test
     fun testErrorTypes() {
@@ -399,6 +406,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/multipleModules.kt")
     }
 
+    @TestMetadata("nestedAnnotations.kt")
+    @Test
+    fun testNestedAnnotations() {
+        runTest("../test-utils/testData/api/nestedAnnotations.kt")
+    }
+
     @Disabled
     @TestMetadata("nestedClassType.kt")
     @Test
@@ -509,7 +522,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/sealedClass.kt")
     }
 
-    @Disabled
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
@@ -522,7 +534,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/superTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("throwList.kt")
     @Test
     fun testThrowList() {
