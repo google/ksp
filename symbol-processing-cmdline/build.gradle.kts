@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 evaluationDependsOn(":common-util")
 evaluationDependsOn(":compiler-plugin")
@@ -9,7 +10,7 @@ val signingPassword: String? by project
 
 plugins {
     kotlin("jvm")
-    id("com.github.johnrengelman.shadow") version "6.0.0"
+    id("com.github.johnrengelman.shadow")
     `maven-publish`
     signing
 }
@@ -19,6 +20,10 @@ val packedJars by configurations.creating
 dependencies {
     packedJars(project(":compiler-plugin")) { isTransitive = false }
     packedJars(project(":common-util")) { isTransitive = false }
+}
+
+tasks.withType<Jar> {
+    archiveClassifier.set("real")
 }
 
 tasks.withType<ShadowJar>() {

@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.RelativizingPathProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
@@ -19,7 +20,7 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.dokka") version ("1.7.20")
+    id("org.jetbrains.dokka")
 }
 
 tasks {
@@ -27,16 +28,6 @@ tasks {
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
         from(project(":common-util").sourceSets.main.get().allSource)
-    }
-}
-
-fun ModuleDependency.includeJars(vararg names: String) {
-    names.forEach {
-        artifact {
-            name = it
-            type = "jar"
-            extension = "jar"
-        }
     }
 }
 
@@ -76,8 +67,6 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
 
-    testImplementation(project(":api"))
-    testImplementation(project(":common-util"))
     testImplementation(project(":test-utils"))
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
@@ -114,23 +103,24 @@ tasks.test {
     useJUnitPlatform()
 
     systemProperty("idea.is.unit.test", "true")
-    systemProperty("idea.home.path", buildDir)
     systemProperty("java.awt.headless", "true")
     environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
-    environment("PROJECT_CLASSES_DIRS", testSourceSet.output.classesDirs.asPath)
-    environment("PROJECT_BUILD_DIR", buildDir)
+
     testLogging {
         events("passed", "skipped", "failed")
     }
 
-    var tempTestDir: File? = null
+    lateinit var tempTestDir: File
     doFirst {
+        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
+        jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
+
         tempTestDir = createTempDir()
-        systemProperty("java.io.tmpdir", tempTestDir.toString())
+        jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", tempTestDir))
     }
 
     doLast {
-        tempTestDir?.let { delete(it) }
+        delete(tempTestDir)
     }
 }
 

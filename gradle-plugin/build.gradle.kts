@@ -18,7 +18,7 @@ plugins {
     id("java-gradle-plugin")
     `maven-publish`
     signing
-    id("org.jetbrains.dokka") version ("1.7.20")
+    id("org.jetbrains.dokka")
 }
 
 dependencies {
@@ -108,6 +108,16 @@ val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfigurati
     property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
 }
 
+normalization {
+    runtimeClasspath {
+        properties("**/testprops.properties") {
+            ignoreProperty("kspProjectRootDir")
+            ignoreProperty("mavenRepoDir")
+            ignoreProperty("processorClasspath")
+        }
+    }
+}
+
 java {
     sourceSets {
         test {
@@ -117,6 +127,10 @@ java {
 }
 
 tasks.named("compileTestKotlin").configure {
+    dependsOn(writeTestPropsTask)
+}
+
+tasks.named("processTestResources").configure {
     dependsOn(writeTestPropsTask)
 }
 
