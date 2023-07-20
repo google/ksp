@@ -378,7 +378,7 @@ class ResolverAAImpl(
                 this@toSignature.mapTypeToJvmType().descriptor.let {
                     when (it) {
                         "Ljava.lang.Void;" -> "Ljava/lang/Void;"
-                        "Lkotlin.Unit;" -> "V"
+                        "Lkotlin/Unit;" -> "V"
                         else -> it
                     }
                 }
