@@ -1,4 +1,4 @@
-import com.google.devtools.ksp.RelativizingPathProvider
+import com.google.devtools.ksp.RelativizingLocalPathProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
@@ -110,17 +110,15 @@ tasks.test {
         events("passed", "skipped", "failed")
     }
 
-    lateinit var tempTestDir: File
+    val ideaHomeDir = File(buildDir, "tmp/ideaHome")
+    jvmArgumentProviders.add(RelativizingLocalPathProvider("idea.home.path", ideaHomeDir))
+
+    val tempTestDir = File(buildDir, "tmp/test")
+    jvmArgumentProviders.add(RelativizingLocalPathProvider("java.io.tmpdir", tempTestDir))
+
     doFirst {
-        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
-        jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
-
-        tempTestDir = createTempDir()
-        jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", tempTestDir))
-    }
-
-    doLast {
-        delete(tempTestDir)
+        if (!ideaHomeDir.exists()) ideaHomeDir.mkdirs()
+        tempTestDir.deleteRecursively()
     }
 }
 

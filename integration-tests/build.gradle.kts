@@ -1,4 +1,4 @@
-import com.google.devtools.ksp.RelativizingInternalPathProvider
+import com.google.devtools.ksp.RelativizingLocalPathProvider
 
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
@@ -19,14 +19,24 @@ dependencies {
 }
 
 tasks.named<Test>("test") {
-    systemProperty("kotlinVersion", kotlinBaseVersion)
-    systemProperty("kspVersion", version)
-    systemProperty("agpVersion", agpBaseVersion)
-    jvmArgumentProviders.add(RelativizingInternalPathProvider("testRepo", File(rootProject.buildDir, "repos/test")))
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
+
+    systemProperty("kotlinVersion", kotlinBaseVersion)
+    systemProperty("kspVersion", version)
+    systemProperty("agpVersion", agpBaseVersion)
+
+    val testBuildDir = File(buildDir, "tmp/test")
+    jvmArgumentProviders.add(RelativizingLocalPathProvider("java.io.tmpdir", testBuildDir))
+    val testRepo = File(rootProject.buildDir, "repos/test")
+    jvmArgumentProviders.add(RelativizingLocalPathProvider("testRepo", testRepo))
+
+    doFirst {
+        if (!testRepo.exists()) testRepo.mkdirs()
+        testBuildDir.deleteRecursively()
+    }
 
     // JDK_9 environment property is required.
     // To add a custom location (if not detected automatically) follow https://docs.gradle.org/current/userguide/toolchains.html#sec:custom_loc
