@@ -27,6 +27,8 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.toKotlinVersion
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
+import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
+import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.JvmFirDeserializedSymbolProviderFactory
@@ -47,6 +49,7 @@ import org.jetbrains.kotlin.config.languageVersionSettings
 class KotlinSymbolProcessing(
     val kspConfig: KSPJvmConfig,
 ) {
+    @OptIn(KtAnalysisApiInternals::class)
     fun execute() {
         val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
         val providers: List<SymbolProcessorProvider> = kspConfig.processorProviders
@@ -73,6 +76,10 @@ class KotlinSymbolProcessing(
                 project.extensionArea,
                 KtResolveExtensionProvider.EP_NAME.name,
                 KtResolveExtensionProvider::class.java
+            )
+            (project as MockProject).registerService(
+                KtLifetimeTokenProvider::class.java,
+                KtAlwaysAccessibleLifeTimeTokenProvider::class.java
             )
             buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
         }.apply {

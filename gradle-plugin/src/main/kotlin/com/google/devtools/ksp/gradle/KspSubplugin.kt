@@ -54,10 +54,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.isJavaFile
@@ -215,6 +212,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             return project.provider { emptyList() }
         }
         if (kotlinCompileProvider.name == "compileKotlinMetadata") {
+            return project.provider { emptyList() }
+        }
+        if ((kotlinCompilation as? KotlinSharedNativeCompilation)?.platformType == KotlinPlatformType.common) {
             return project.provider { emptyList() }
         }
 
@@ -486,7 +486,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             KotlinPlatformType.common -> {
                 KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
-                        val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompileCommon
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
