@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
-import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
@@ -190,7 +189,7 @@ internal fun KtSymbol.toContainingFile(): KSFile? {
 internal fun KtSymbol.toDocString(): String? = this.psi?.getDocString()
 
 internal inline fun <R> analyze(crossinline action: KtAnalysisSession.() -> R): R {
-    return analyze(ResolverAAImpl.ktModule, KtAlwaysAccessibleLifetimeTokenFactory, action)
+    return analyze(ResolverAAImpl.ktModule, action)
 }
 
 internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
