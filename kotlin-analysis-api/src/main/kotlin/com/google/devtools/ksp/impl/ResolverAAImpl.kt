@@ -18,7 +18,6 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.extractThrowsAnnotation
 import com.google.devtools.ksp.extractThrowsFromClassFile
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -74,7 +73,7 @@ import java.nio.file.Files
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
     val ktFiles: List<KtFileSymbol>,
-    val options: KspOptions,
+    val kspConfig: KSPJvmConfig,
     val project: Project
 ) : Resolver {
     companion object {
@@ -88,7 +87,7 @@ class ResolverAAImpl(
         val psiManager = PsiManager.getInstance(project)
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
         // Get non-symbolic paths first
-        javaFiles = options.javaSourceRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
+        javaFiles = kspConfig.javaSourceRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
             .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
             // This time is for .java files
             .sortedBy { Files.isSymbolicLink(it.toPath()) }
@@ -196,7 +195,7 @@ class ResolverAAImpl(
         ksFiles
             .filter { file ->
                 file.origin == Origin.JAVA &&
-                    options.javaSourceRoots.any { root ->
+                    kspConfig.javaSourceRoots.any { root ->
                         file.filePath.startsWith(root.absolutePath) &&
                             file.filePath.substringAfter(root.absolutePath)
                             .dropLastWhile { c -> c != File.separatorChar }.dropLast(1).drop(1)
@@ -379,7 +378,7 @@ class ResolverAAImpl(
                 this@toSignature.mapTypeToJvmType().descriptor.let {
                     when (it) {
                         "Ljava.lang.Void;" -> "Ljava/lang/Void;"
-                        "Lkotlin.Unit;" -> "V"
+                        "Lkotlin/Unit;" -> "V"
                         else -> it
                     }
                 }

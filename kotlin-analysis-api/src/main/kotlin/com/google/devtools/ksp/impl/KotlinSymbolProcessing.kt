@@ -18,122 +18,130 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.AnyChanges
-import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.toKotlinVersion
+import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
-import com.intellij.openapi.vfs.StandardFileSystems
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiManager
-import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
+import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
+import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.JvmFirDeserializedSymbolProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
+import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
-import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
+import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
+import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
-import java.nio.file.Files
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.LanguageVersion
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
+import org.jetbrains.kotlin.config.languageVersionSettings
 
 class KotlinSymbolProcessing(
-    val compilerConfiguration: CompilerConfiguration,
-    val options: KspOptions,
-    val logger: KSPLogger,
-    val analysisAPISession: StandaloneAnalysisAPISession,
-    val providers: List<SymbolProcessorProvider>
+    val kspConfig: KSPJvmConfig,
 ) {
-    val project = analysisAPISession.project as MockProject
-    val kspCoreEnvironment = KSPCoreEnvironment(project)
+    @OptIn(KtAnalysisApiInternals::class)
+    fun execute() {
+        val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
+        val providers: List<SymbolProcessorProvider> = kspConfig.processorProviders
 
-    var finished = false
-    val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
-    val ktFiles = createSourceFilesFromSourceRoots(
-        compilerConfiguration, project, compilerConfiguration.kotlinSourceRoots
-    ).toSet().toList()
-    val javaFiles = compilerConfiguration.javaSourceRoots
-    lateinit var codeGenerator: CodeGeneratorImpl
-    lateinit var processors: List<SymbolProcessor>
+        // TODO: CompilerConfiguration is deprecated.
+        val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
+            addKotlinSourceRoots(kspConfig.sourceRoots.map { it.path })
+            addJavaSourceRoots(kspConfig.javaSourceRoots)
+            addJvmClasspathRoots(kspConfig.libraries)
+            put(CommonConfigurationKeys.MODULE_NAME, kspConfig.moduleName)
+            kspConfig.jdkHome?.let {
+                put(JVMConfigurationKeys.JDK_HOME, it)
+            }
+            val languageVersion = LanguageVersion.fromFullVersionString(kspConfig.languageVersion)!!
+            val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
+            languageVersionSettings = LanguageVersionSettingsImpl(
+                languageVersion,
+                ApiVersion.createByLanguageVersion(apiVersion)
+            )
+        }
 
-    fun prepare() {
+        val analysisAPISession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
+            CoreApplicationEnvironment.registerExtensionPoint(
+                project.extensionArea,
+                KtResolveExtensionProvider.EP_NAME.name,
+                KtResolveExtensionProvider::class.java
+            )
+            (project as MockProject).registerService(
+                KtLifetimeTokenProvider::class.java,
+                KtAlwaysAccessibleLifeTimeTokenProvider::class.java
+            )
+            buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
+        }.apply {
+            (project as MockProject).registerService(
+                JvmFirDeserializedSymbolProviderFactory::class.java,
+                JvmFirDeserializedSymbolProviderFactory::class.java
+            )
+        }
+
+        val kspCoreEnvironment = KSPCoreEnvironment(analysisAPISession.project as MockProject)
+
+        val ktFiles = createSourceFilesFromSourceRoots(
+            compilerConfiguration, analysisAPISession.project, compilerConfiguration.kotlinSourceRoots
+        ).toSet().toList()
+
         // TODO: support no Kotlin source mode.
         ResolverAAImpl.ktModule = ktFiles.first().let {
-            project.getService(ProjectStructureProvider::class.java)
+            analysisAPISession.project.getService(ProjectStructureProvider::class.java)
                 .getModule(it, null)
         }
         val ksFiles = ktFiles.map { file ->
             analyze { KSFileImpl.getCached(file.getFileSymbol()) }
         }
-        val anyChangesWildcard = AnyChanges(options.projectBaseDir)
-        codeGenerator = CodeGeneratorImpl(
-            options.classOutputDir,
-            { options.javaOutputDir },
-            options.kotlinOutputDir,
-            options.resourceOutputDir,
-            options.projectBaseDir,
+        val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
+        val codeGenerator = CodeGeneratorImpl(
+            kspConfig.classOutputDir,
+            { kspConfig.javaOutputDir },
+            kspConfig.kotlinOutputDir,
+            kspConfig.resourceOutputDir,
+            kspConfig.projectBaseDir,
             anyChangesWildcard,
             ksFiles,
-            options.incremental
+            kspConfig.incremental
         )
-        processors = providers.mapNotNull { provider ->
+        val processors = providers.mapNotNull { provider ->
             var processor: SymbolProcessor? = null
             processor = provider.create(
                 SymbolProcessorEnvironment(
-                    options.processingOptions,
-                    options.languageVersion,
+                    kspConfig.processorOptions,
+                    kspConfig.languageVersion.toKotlinVersion(),
                     codeGenerator,
-                    logger,
-                    options.apiVersion,
-                    options.compilerVersion,
+                    kspConfig.logger,
+                    kspConfig.apiVersion.toKotlinVersion(),
+                    // TODO: compilerVersion
+                    KotlinVersion.CURRENT,
                     // TODO: fix platform info
                     listOf(JvmPlatformInfoImpl("JVM", "1.8", "disable"))
                 )
             )
             processor.also { deferredSymbols[it] = mutableListOf() }
         }
-    }
-
-    fun execute() {
         // TODO: support no kotlin source input.
-        val psiManager = PsiManager.getInstance(project)
-        val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        val javaSourceRoots = options.javaSourceRoots
-        val javaFiles = javaSourceRoots.sortedBy { Files.isSymbolicLink(it.toPath()) } // Get non-symbolic paths first
-            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
-            .sortedBy { java.nio.file.Files.isSymbolicLink(it.toPath()) } // This time is for .java files
-            .distinctBy { it.canonicalPath }
-            .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
         val resolver = ResolverAAImpl(
             ktFiles.map {
                 analyze { it.getFileSymbol() }
             },
-            options,
-            project
+            kspConfig,
+            analysisAPISession.project
         )
         ResolverAAImpl.instance = resolver
+
+        // TODO: multiple rounds
         processors.forEach { it.process(resolver) }
     }
-}
-
-fun main(args: Array<String>) {
-    val compilerConfiguration = CompilerConfiguration()
-    val commandLineProcessor = KSPCommandLineProcessor(compilerConfiguration)
-    val logger = CommandLineKSPLogger()
-
-    val analysisSession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
-        buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-    }
-
-    val kotlinSymbolProcessing = KotlinSymbolProcessing(
-        commandLineProcessor.compilerConfiguration,
-        commandLineProcessor.kspOptions,
-        logger,
-        analysisSession,
-        commandLineProcessor.providers
-    )
-    kotlinSymbolProcessing.prepare()
-    kotlinSymbolProcessing.execute()
 }

@@ -54,10 +54,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.isJavaFile
@@ -215,6 +212,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             return project.provider { emptyList() }
         }
         if (kotlinCompileProvider.name == "compileKotlinMetadata") {
+            return project.provider { emptyList() }
+        }
+        if ((kotlinCompilation as? KotlinSharedNativeCompilation)?.platformType == KotlinPlatformType.common) {
             return project.provider { emptyList() }
         }
 
@@ -411,44 +411,53 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true
+        val isIntermoduleIncremental =
+            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) && isIncremental
+        val useKSP2 = project.findProperty("ksp.useK2")?.toString()?.toBoolean() ?: false
 
         // Create and configure KSP tasks.
         val kspTaskProvider = when (kotlinCompilation.platformType) {
             KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
-                KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
-                    it.configure { kspTask ->
-                        val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile
-                        maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
-                        configureAsKspTask(kspTask, isIncremental)
-                        configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
-                        configurePluginOptions(kspTask)
-                        configureLanguageVersion(kspTask)
-                        if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
-                            kspTask.compilerOptions.moduleName.convention(
-                                kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
+                if (useKSP2) {
+                    KspAATask.registerKspAATaskJvm(
+                        kotlinCompilation,
+                        kotlinCompileProvider,
+                        processorClasspath,
+                        kspGeneratedSourceSet
+                    )
+                } else {
+                    KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
+                        it.configure { kspTask ->
+                            val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile
+                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            configureAsKspTask(kspTask, isIncremental)
+                            configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
+                            configurePluginOptions(kspTask)
+                            configureLanguageVersion(kspTask)
+                            if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
+                                kspTask.compilerOptions.moduleName.convention(
+                                    kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
+                                )
+                            }
+
+                            kspTask.destination.value(kspOutputDir)
+
+                            val classStructureFiles = getClassStructureFiles(project, kspTask.libraries)
+                            kspTask.incrementalChangesTransformers.add(
+                                createIncrementalChangesTransformer(
+                                    isIncremental,
+                                    isIntermoduleIncremental,
+                                    getKspCachesDir(project, sourceSetName, target),
+                                    project.provider { classStructureFiles },
+                                    project.provider { kspTask.libraries },
+                                    project.provider { processorClasspath }
+                                )
                             )
                         }
-
-                        kspTask.destination.value(kspOutputDir)
-
-                        val isIntermoduleIncremental =
-                            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) &&
-                                isIncremental
-                        val classStructureFiles = getClassStructureFiles(project, kspTask.libraries)
-                        kspTask.incrementalChangesTransformers.add(
-                            createIncrementalChangesTransformer(
-                                isIncremental,
-                                isIntermoduleIncremental,
-                                getKspCachesDir(project, sourceSetName, target),
-                                project.provider { classStructureFiles },
-                                project.provider { kspTask.libraries },
-                                project.provider { processorClasspath }
-                            )
-                        )
+                        // Don't support binary generation for non-JVM platforms yet.
+                        // FIXME: figure out how to add user generated libraries.
+                        kotlinCompilation.output.classesDirs.from(classOutputDir)
                     }
-                    // Don't support binary generation for non-JVM platforms yet.
-                    // FIXME: figure out how to add user generated libraries.
-                    kotlinCompilation.output.classesDirs.from(classOutputDir)
                 }
             }
             KotlinPlatformType.js, KotlinPlatformType.wasm -> {
@@ -477,7 +486,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             KotlinPlatformType.common -> {
                 KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
-                        val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompileCommon
                         maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                         configureAsKspTask(kspTask, isIncremental)
                         configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)

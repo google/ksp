@@ -1,19 +1,28 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.RelativizingLocalPathProvider
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
-val intellijVersion: String by project
 val junitVersion: String by project
 val junit5Version: String by project
 val junitPlatformVersion: String by project
-val guavaVersion: String by project
-val kotlinBaseVersion: String by project
 val libsForTesting by configurations.creating
 val libsForTestingCommon by configurations.creating
+val signingKey: String? by project
+val signingPassword: String? by project
+
+val aaKotlinBaseVersion: String by project
+val aaIntellijVersion: String by project
+val aaGuavaVersion: String by project
+val aaAsmVersion: String by project
+val aaFastutilVersion: String by project
 
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
+    id("com.github.johnrengelman.shadow")
+    `maven-publish`
+    signing
 }
 
 dependencies {
@@ -30,7 +39,7 @@ dependencies {
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
-        implementation("$it:$intellijVersion") { isTransitive = false }
+        implementation("$it:$aaIntellijVersion") { isTransitive = false }
     }
 
     listOf(
@@ -42,14 +51,17 @@ dependencies {
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
         "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
+        "org.jetbrains.kotlin:kotlin-compiler-for-ide",
     ).forEach {
-        implementation("$it:$kotlinBaseVersion") { isTransitive = false }
+        implementation("$it:$aaKotlinBaseVersion") { isTransitive = false }
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation(kotlin("stdlib", kotlinBaseVersion))
+    implementation(kotlin("stdlib", aaKotlinBaseVersion))
 
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    implementation("com.google.guava:guava:$aaGuavaVersion")
+    implementation("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion")
+    implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
@@ -64,30 +76,28 @@ dependencies {
     testImplementation(project(":api"))
     testImplementation(project(":common-util"))
 
-    testImplementation(kotlin("stdlib", kotlinBaseVersion))
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")
+    testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$aaKotlinBaseVersion")
 
-    testImplementation("com.google.guava:guava:$guavaVersion")
-
-    libsForTesting(kotlin("stdlib", kotlinBaseVersion))
-    libsForTesting(kotlin("test", kotlinBaseVersion))
-    libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
-    libsForTestingCommon(kotlin("stdlib-common", kotlinBaseVersion))
+    libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
+    libsForTesting(kotlin("test", aaKotlinBaseVersion))
+    libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
+    libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 }
 
 tasks.register<Copy>("CopyLibsForTesting") {
     from(configurations.get("libsForTesting"))
     into("dist/kotlinc/lib")
-    val escaped = Regex.escape(kotlinBaseVersion)
+    val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
 tasks.register<Copy>("CopyLibsForTestingCommon") {
     from(configurations.get("libsForTestingCommon"))
     into("dist/common")
-    val escaped = Regex.escape(kotlinBaseVersion)
+    val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
@@ -133,4 +143,71 @@ repositories {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
+    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar> {
+    archiveClassifier.set("real")
+}
+
+tasks.withType<ShadowJar>() {
+    archiveClassifier.set("")
+    minimize()
+}
+
+tasks {
+    val sourcesJar by creating(Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+    val dokkaJavadocJar by creating(Jar::class) {
+        dependsOn(dokkaJavadoc)
+        from(dokkaJavadoc.flatMap { it.outputDirectory })
+        archiveClassifier.set("javadoc")
+    }
+    publish {
+        dependsOn(shadowJar)
+        dependsOn(sourcesJar)
+        dependsOn(dokkaJavadocJar)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("shadow") {
+            artifactId = "symbol-processing-aa"
+            artifact(tasks["shadowJar"])
+            artifact(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+            artifact(project(":kotlin-analysis-api").tasks["sourcesJar"])
+            pom {
+                name.set("com.google.devtools.ksp:symbol-processing-aa")
+                description.set("KSP implementation on Kotlin Analysis API")
+                withXml {
+                    fun groovy.util.Node.addDependency(
+                        groupId: String,
+                        artifactId: String,
+                        version: String,
+                        scope: String = "runtime"
+                    ) {
+                        appendNode("dependency").apply {
+                            appendNode("groupId", groupId)
+                            appendNode("artifactId", artifactId)
+                            appendNode("version", version)
+                            appendNode("scope", scope)
+                        }
+                    }
+
+                    asNode().appendNode("dependencies").apply {
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    isRequired = hasProperty("signingKey")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign(extensions.getByType<PublishingExtension>().publications)
 }

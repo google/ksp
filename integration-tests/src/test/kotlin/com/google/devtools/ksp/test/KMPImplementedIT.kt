@@ -329,7 +329,7 @@ class KMPImplementedIT {
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
             "clean",
-            "build",
+            ":workload:build",
             "-Pksp.allow.all.target.configuration=false"
         ).buildAndFail().apply {
             Assert.assertTrue(
@@ -344,7 +344,7 @@ class KMPImplementedIT {
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
             "clean",
-            "build"
+            ":workload:build",
         ).build().apply {
             Assert.assertTrue(
                 messages.all {
