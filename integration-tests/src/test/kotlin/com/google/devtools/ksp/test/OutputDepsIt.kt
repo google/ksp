@@ -37,6 +37,9 @@ class OutputDepsIt {
 
     val src2Output = mapOf(
         "workload/src/main/java/p1/J1.java" to setOf(
+            "java/p1/J1Generated.java",
+            "java/p1/K1Generated.java",
+            "java/p1/K2Generated.java",
             "kotlin/p1/J1Generated.kt",
             "kotlin/p1/K1Generated.kt",
             "kotlin/p1/K2Generated.kt",
@@ -44,11 +47,15 @@ class OutputDepsIt {
             "resources/p1.Anno2.log",
         ),
         "workload/src/main/java/p1/J2.java" to setOf(
+            "java/p1/J2Generated.java",
             "kotlin/p1/J2Generated.kt",
             "resources/p1.Anno1.log",
             "resources/p1.Anno2.log",
         ),
         "workload/src/main/kotlin/p1/K1.kt" to setOf(
+            "java/p1/J1Generated.java",
+            "java/p1/K1Generated.java",
+            "java/p1/K2Generated.java",
             "kotlin/p1/J1Generated.kt",
             "kotlin/p1/K1Generated.kt",
             "kotlin/p1/K2Generated.kt",
@@ -56,6 +63,9 @@ class OutputDepsIt {
             "resources/p1.Anno2.log",
         ),
         "workload/src/main/kotlin/p1/K2.kt" to setOf(
+            "java/p1/J1Generated.java",
+            "java/p1/K1Generated.java",
+            "java/p1/K2Generated.java",
             "kotlin/p1/J1Generated.kt",
             "kotlin/p1/K1Generated.kt",
             "kotlin/p1/K2Generated.kt",
@@ -66,6 +76,11 @@ class OutputDepsIt {
 
     val deletedSrc2Output = listOf(
         "workload/src/main/java/p1/J1.java" to listOf(
+            "java/p1/Anno1Generated.java",
+            "java/p1/Anno2Generated.java",
+            "java/p1/J2Generated.java",
+            "java/p1/K1Generated.java",
+            "java/p1/K2Generated.java",
             "kotlin/p1/Anno1Generated.kt",
             "kotlin/p1/Anno2Generated.kt",
             "kotlin/p1/J2Generated.kt",
@@ -75,6 +90,10 @@ class OutputDepsIt {
             "resources/p1.Anno2.log",
         ),
         "workload/src/main/java/p1/J2.java" to listOf(
+            "java/p1/Anno1Generated.java",
+            "java/p1/Anno2Generated.java",
+            "java/p1/K1Generated.java",
+            "java/p1/K2Generated.java",
             "kotlin/p1/Anno1Generated.kt",
             "kotlin/p1/Anno2Generated.kt",
             "kotlin/p1/K1Generated.kt",
@@ -83,6 +102,9 @@ class OutputDepsIt {
             "resources/p1.Anno2.log",
         ),
         "workload/src/main/kotlin/p1/K1.kt" to listOf(
+            "java/p1/Anno1Generated.java",
+            "java/p1/Anno2Generated.java",
+            "java/p1/K2Generated.java",
             "kotlin/p1/Anno1Generated.kt",
             "kotlin/p1/Anno2Generated.kt",
             "kotlin/p1/K2Generated.kt",
@@ -90,6 +112,8 @@ class OutputDepsIt {
             "resources/p1.Anno2.log",
         ),
         "workload/src/main/kotlin/p1/K2.kt" to listOf(
+            "java/p1/Anno1Generated.java",
+            "java/p1/Anno2Generated.java",
             "kotlin/p1/Anno1Generated.kt",
             "kotlin/p1/Anno2Generated.kt",
             "resources/p1.Anno1.log",
