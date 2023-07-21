@@ -19,6 +19,8 @@ package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.*
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 abstract class KSVirtualFile(val baseDir: File, val name: String) : KSFile {
     override val annotations: Sequence<KSAnnotation>
@@ -61,4 +63,23 @@ class AnyChanges(baseDir: File) : KSVirtualFile(baseDir, "AnyChanges")
 class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, "NoSourceFile") {
     override val fileName: String
         get() = "<NoSourceFile for $fqn is a virtual file; DO NOT USE.>"
+}
+
+// Copy recursively, including last-modified-time of file and its parent dirs.
+//
+// `java.nio.file.Files.copy(path1, path2, options...)` keeps last-modified-time (if supported) according to
+// https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html
+fun copyWithTimestamp(src: File, dst: File, overwrite: Boolean) {
+    if (!dst.parentFile.exists())
+        copyWithTimestamp(src.parentFile, dst.parentFile, false)
+    if (overwrite) {
+        Files.copy(
+            src.toPath(),
+            dst.toPath(),
+            StandardCopyOption.COPY_ATTRIBUTES,
+            StandardCopyOption.REPLACE_EXISTING
+        )
+    } else {
+        Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES)
+    }
 }

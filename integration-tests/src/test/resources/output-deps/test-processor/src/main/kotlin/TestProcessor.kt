@@ -44,6 +44,12 @@ class TestProcessor : SymbolProcessor {
                         writer.write("private val unused = \"unused\"")
                     }
                 }
+            codeGenerator.createNewFile(Dependencies(false, file), file.packageName.asString(), outputBaseFN, "java")
+                .use { output ->
+                    OutputStreamWriter(output).use { writer ->
+                        writer.write("class $outputBaseFN {}")
+                    }
+                }
         }
         processed = true
         return emptyList()

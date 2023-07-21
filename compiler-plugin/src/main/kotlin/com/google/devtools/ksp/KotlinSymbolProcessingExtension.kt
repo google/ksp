@@ -469,7 +469,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                     roundDir.walkTopDown().forEach {
                         val dst = File(options.javaOutputDir, File(it.path).toRelativeString(roundDir))
                         if (dst.isFile || !dst.exists()) {
-                            it.copyTo(dst)
+                            copyWithTimestamp(it, dst, false)
                         }
                     }
                 }
