@@ -5,6 +5,8 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 
 class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldSymbol: KtJavaFieldSymbol) :
     KSPropertyDeclaration,
@@ -56,9 +58,25 @@ class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldS
         get() = KSNameImpl.getCached(ktJavaFieldSymbol.callableIdIfNonLocal?.packageName?.asString() ?: "")
 
     override val origin: Origin
-        get() = Origin.JAVA
+        get() = mapAAOrigin(ktJavaFieldSymbol)
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+}
+
+internal fun KtJavaFieldSymbol.toModifiers(): Set<Modifier> {
+    val result = mutableSetOf<Modifier>()
+    if (visibility != JavaVisibilities.PackageVisibility) {
+        result.add(visibility.toModifier())
+    }
+    if (isStatic) {
+        result.add(Modifier.JAVA_STATIC)
+        result.add(Modifier.FINAL)
+    }
+    // Analysis API returns open for static members which should be ignored.
+    if (!isStatic || modality != Modality.OPEN) {
+        result.add(modality.toModifier())
+    }
+    return result
 }

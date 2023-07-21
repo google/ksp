@@ -19,6 +19,8 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.isConstructor
+import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
@@ -26,6 +28,7 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
 
@@ -49,6 +52,22 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
     override val isAbstract: Boolean by lazy {
         (ktFunctionSymbol as? KtFunctionSymbol)?.modality == Modality.ABSTRACT
+    }
+
+    override val modifiers: Set<Modifier> by lazy {
+        if (isSyntheticConstructor()) {
+            val ksClassDeclaration = parentDeclaration as KSClassDeclaration
+            if (ksClassDeclaration.classKind == ClassKind.ENUM_CLASS) {
+                return@lazy setOf(Modifier.FINAL, Modifier.PRIVATE)
+            }
+            if (ksClassDeclaration.isPublic()) {
+                setOf(Modifier.FINAL, Modifier.PUBLIC)
+            } else {
+                setOf(Modifier.FINAL)
+            }
+        } else {
+            if (isConstructor()) super.modifiers + Modifier.FINAL else super.modifiers
+        }
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
@@ -150,30 +169,44 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
 internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
-    if (this is KtFunctionSymbol) {
-        result.add(visibility.toModifier())
-        result.add(modality.toModifier())
-        if (isExternal) {
-            result.add(Modifier.EXTERNAL)
+    when (this) {
+        is KtConstructorSymbol -> {
+            if (visibility != JavaVisibilities.PackageVisibility) {
+                result.add(visibility.toModifier())
+            }
+            result.add(Modifier.FINAL)
         }
-        if (isInfix) {
-            result.add(Modifier.INFIX)
+        is KtFunctionSymbol -> {
+            if (visibility != JavaVisibilities.PackageVisibility) {
+                result.add(visibility.toModifier())
+            }
+            if (!isStatic || modality != Modality.OPEN) {
+                result.add(modality.toModifier())
+            }
+            if (isExternal) {
+                result.add(Modifier.EXTERNAL)
+            }
+            if (isInfix) {
+                result.add(Modifier.INFIX)
+            }
+            if (isInline) {
+                result.add(Modifier.INLINE)
+            }
+            if (isStatic) {
+                result.add(Modifier.JAVA_STATIC)
+                result.add(Modifier.FINAL)
+            }
+            if (isSuspend) {
+                result.add(Modifier.SUSPEND)
+            }
+            if (isOperator) {
+                result.add(Modifier.OPERATOR)
+            }
+            if (isOperator) {
+                result.add(Modifier.OVERRIDE)
+            }
         }
-        if (isInline) {
-            result.add(Modifier.INLINE)
-        }
-        if (isStatic) {
-            result.add(Modifier.JAVA_STATIC)
-        }
-        if (isSuspend) {
-            result.add(Modifier.SUSPEND)
-        }
-        if (isOperator) {
-            result.add(Modifier.OPERATOR)
-        }
-        if (isOperator) {
-            result.add(Modifier.OVERRIDE)
-        }
+        else -> Unit
     }
     return result
 }

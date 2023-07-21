@@ -28,13 +28,12 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.toKSModifiers
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJvmModifiersOwner
 import com.intellij.psi.PsiModifierListOwner
-import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
+import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
@@ -56,16 +55,20 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        when (val psi = ktDeclarationSymbol.psi) {
-            is KtModifierListOwner -> psi.toKSModifiers()
-            is PsiModifierListOwner -> psi.toKSModifiers()
-            null -> when (ktDeclarationSymbol) {
+        if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB) {
+            when (ktDeclarationSymbol) {
                 is KtPropertySymbol -> ktDeclarationSymbol.toModifiers()
                 is KtClassOrObjectSymbol -> ktDeclarationSymbol.toModifiers()
                 is KtFunctionLikeSymbol -> ktDeclarationSymbol.toModifiers()
+                is KtJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
                 else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
             }
-            else -> emptySet()
+        } else {
+            when (val psi = ktDeclarationSymbol.psi) {
+                is KtModifierListOwner -> psi.toKSModifiers()
+                is PsiModifierListOwner -> psi.toKSModifiers()
+                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
+            }
         }
     }
 
@@ -90,6 +93,8 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
         analyze {
             ktDeclarationSymbol.getContainingSymbol()?.let {
                 ktDeclarationSymbol.getContainingKSSymbol()
+            } ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>())?.getNamedClassSymbol()?.let {
+                KSClassDeclarationImpl.getCached(it)
             } ?: ktDeclarationSymbol.toContainingFile()
         }
     }
