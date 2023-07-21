@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
@@ -369,7 +370,8 @@ internal fun org.jetbrains.kotlin.descriptors.Visibility.toModifier(): Modifier 
         Visibilities.Public -> Modifier.PUBLIC
         Visibilities.Private -> Modifier.PRIVATE
         Visibilities.Internal -> Modifier.INTERNAL
-        Visibilities.Protected -> Modifier.PROTECTED
+        Visibilities.Protected, JavaVisibilities.ProtectedAndPackage, JavaVisibilities.ProtectedStaticVisibility ->
+            Modifier.PROTECTED
         else -> Modifier.PUBLIC
     }
 }

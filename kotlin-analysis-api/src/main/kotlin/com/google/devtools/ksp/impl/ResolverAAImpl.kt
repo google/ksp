@@ -18,10 +18,19 @@
 
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.BinaryClassInfoCache
+import com.google.devtools.ksp.JVM_DEFAULT_ANNOTATION_FQN
+import com.google.devtools.ksp.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
+import com.google.devtools.ksp.JVM_STATIC_ANNOTATION_FQN
+import com.google.devtools.ksp.JVM_STRICTFP_ANNOTATION_FQN
+import com.google.devtools.ksp.JVM_SYNCHRONIZED_ANNOTATION_FQN
+import com.google.devtools.ksp.JVM_TRANSIENT_ANNOTATION_FQN
+import com.google.devtools.ksp.JVM_VOLATILE_ANNOTATION_FQN
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.extractThrowsAnnotation
 import com.google.devtools.ksp.extractThrowsFromClassFile
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.hasAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
@@ -36,7 +45,13 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.findParentOfType
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
+import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isConstructor
+import com.google.devtools.ksp.isOpen
+import com.google.devtools.ksp.isPrivate
+import com.google.devtools.ksp.isProtected
+import com.google.devtools.ksp.isPublic
+import com.google.devtools.ksp.javaModifiers
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.KSNameImpl
@@ -71,6 +86,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.org.objectweb.asm.Opcodes
 import java.io.File
 import java.nio.file.Files
 
@@ -131,8 +147,122 @@ class ResolverAAImpl(
     }
 
     override fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier> {
-        TODO("Not yet implemented")
+        val modifiers = HashSet<Modifier>(declaration.modifiers.filter { it in javaModifiers })
+
+        // This is only needed by sources.
+        // PUBLIC, PRIVATE, PROTECTED are already handled in descriptor based impls.
+        fun addVisibilityModifiers() {
+            when {
+                declaration.isPublic() -> modifiers.add(Modifier.PUBLIC)
+                declaration.isPrivate() -> modifiers.add(Modifier.PRIVATE)
+                declaration.isProtected() -> modifiers.add(Modifier.PROTECTED)
+            }
+        }
+
+        when (declaration.origin) {
+            Origin.JAVA -> {
+                addVisibilityModifiers()
+                if (declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE)
+                    modifiers.add(Modifier.ABSTRACT)
+            }
+            Origin.KOTLIN -> {
+                addVisibilityModifiers()
+                if (!declaration.isOpen())
+                    modifiers.add(Modifier.FINAL)
+                (declaration as? KSClassDeclarationImpl)?.let {
+                    analyze {
+                        if (
+                            it.ktClassOrObjectSymbol.getStaticMemberScope()
+                                .getAllSymbols().contains(declaration.ktDeclarationSymbol)
+                        )
+                            modifiers.add(Modifier.JAVA_STATIC)
+                    }
+                }
+
+                if (declaration.hasAnnotation(JVM_DEFAULT_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_DEFAULT)
+                if (declaration.hasAnnotation(JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_DEFAULT)
+                if (declaration.hasAnnotation(JVM_STRICTFP_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_STRICT)
+                if (declaration.hasAnnotation(JVM_SYNCHRONIZED_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_SYNCHRONIZED)
+                if (declaration.hasAnnotation(JVM_TRANSIENT_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_TRANSIENT)
+                if (declaration.hasAnnotation(JVM_VOLATILE_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_VOLATILE)
+                when (declaration) {
+                    is KSClassDeclaration -> {
+                        if (declaration.isCompanionObject)
+                            modifiers.add(Modifier.JAVA_STATIC)
+                        if (declaration.classKind == ClassKind.INTERFACE)
+                            modifiers.add(Modifier.ABSTRACT)
+                    }
+                    is KSPropertyDeclaration -> {
+                        if (declaration.isAbstract())
+                            modifiers.add(Modifier.ABSTRACT)
+                    }
+                    is KSFunctionDeclaration -> {
+                        if (declaration.isAbstract)
+                            modifiers.add(Modifier.ABSTRACT)
+                    }
+                }
+            }
+            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+                if (declaration.hasAnnotation(JVM_STATIC_ANNOTATION_FQN)) {
+                    modifiers.add(Modifier.JAVA_STATIC)
+                }
+                addVisibilityModifiers()
+                when (declaration) {
+                    is KSPropertyDeclaration -> {
+                        if (declaration.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0)
+                            modifiers.add(Modifier.JAVA_TRANSIENT)
+                        if (declaration.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0)
+                            modifiers.add(Modifier.JAVA_VOLATILE)
+                    }
+                    is KSFunctionDeclaration -> {
+                        if (declaration.jvmAccessFlag and Opcodes.ACC_STRICT != 0)
+                            modifiers.add(Modifier.JAVA_STRICT)
+                        if (declaration.jvmAccessFlag and Opcodes.ACC_SYNCHRONIZED != 0)
+                            modifiers.add(Modifier.JAVA_SYNCHRONIZED)
+                    }
+                }
+            }
+            else -> Unit
+        }
+        return modifiers
     }
+
+    internal val KSPropertyDeclaration.jvmAccessFlag: Int
+        get() = when (origin) {
+            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+                val fileManager = instance.javaFileManager
+                val parentClass = this.findParentOfType<KSClassDeclaration>()
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
+                val virtualFileContent = analyze {
+                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+                }
+                BinaryClassInfoCache.getCached(classId, virtualFileContent)
+                    .fieldAccFlags[this.simpleName.asString()] ?: 0
+            }
+            else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
+        }
+
+    internal val KSFunctionDeclaration.jvmAccessFlag: Int
+        get() = when (origin) {
+            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+                val jvmDesc = mapToJvmSignatureInternal(this)
+                val fileManager = instance.javaFileManager
+                val parentClass = this.findParentOfType<KSClassDeclaration>()
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
+                val virtualFileContent = analyze {
+                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+                }
+                BinaryClassInfoCache.getCached(classId, virtualFileContent)
+                    .methodAccFlags[this.simpleName.asString() + jvmDesc] ?: 0
+            }
+            else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
+        }
 
     override fun getAllFiles(): Sequence<KSFile> {
         return ksFiles.asSequence()

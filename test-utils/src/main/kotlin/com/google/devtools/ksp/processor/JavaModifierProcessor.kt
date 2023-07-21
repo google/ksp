@@ -27,7 +27,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
-        return results
+        return results.sorted()
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -61,11 +61,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
         @OptIn(KspExperimental::class)
         private fun KSDeclaration.toSignature(): String {
             val parent = parentDeclaration
-            val id = if (parent == null) {
-                ""
-            } else {
-                "${parent.simpleName.asString()}."
-            } + simpleName.asString()
+            val id = qualifiedName?.asString()
             val modifiersSignature = modifiers.map { it.toString() }.sorted().joinToString(" ")
             val extras = resolver.effectiveJavaModifiers(this).map { it.toString() }.sorted().joinToString(" ").trim()
             return "$id: $modifiersSignature".trim() + " : " + extras

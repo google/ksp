@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.processing.impl
+package com.google.devtools.ksp
 
-internal val JVM_STATIC_ANNOTATION_FQN = "kotlin.jvm.JvmStatic"
-internal val JVM_DEFAULT_ANNOTATION_FQN = "kotlin.jvm.JvmDefault"
-internal val JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN = "kotlin.jvm.JvmDefaultWithoutCompatibility"
-internal val JVM_STRICTFP_ANNOTATION_FQN = "kotlin.jvm.Strictfp"
-internal val JVM_SYNCHRONIZED_ANNOTATION_FQN = "kotlin.jvm.Synchronized"
-internal val JVM_TRANSIENT_ANNOTATION_FQN = "kotlin.jvm.Transient"
-internal val JVM_VOLATILE_ANNOTATION_FQN = "kotlin.jvm.Volatile"
+val JVM_STATIC_ANNOTATION_FQN = "kotlin.jvm.JvmStatic"
+val JVM_DEFAULT_ANNOTATION_FQN = "kotlin.jvm.JvmDefault"
+val JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN = "kotlin.jvm.JvmDefaultWithoutCompatibility"
+val JVM_STRICTFP_ANNOTATION_FQN = "kotlin.jvm.Strictfp"
+val JVM_SYNCHRONIZED_ANNOTATION_FQN = "kotlin.jvm.Synchronized"
+val JVM_TRANSIENT_ANNOTATION_FQN = "kotlin.jvm.Transient"
+val JVM_VOLATILE_ANNOTATION_FQN = "kotlin.jvm.Volatile"
