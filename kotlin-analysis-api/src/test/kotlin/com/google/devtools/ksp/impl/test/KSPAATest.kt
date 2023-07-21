@@ -74,7 +74,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationInDependencies.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationOnConstructorParameter.kt")
     @Test
     fun testAnnotationOnConstructorParameter() {
@@ -328,11 +327,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/interfaceWithDefault.kt")
     }
 
-    @Disabled
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
-        runTest("../test-utils/testData/api/javaModifiers.kt")
+        runTest("testData/javaModifiers.kt")
     }
 
     @TestMetadata("javaNonNullTypes.kt")

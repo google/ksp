@@ -23,6 +23,7 @@ import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
@@ -161,7 +162,9 @@ internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
     if (this is KtNamedClassOrObjectSymbol) {
         result.add(modality.toModifier())
-        result.add(visibility.toModifier())
+        if (visibility != JavaVisibilities.PackageVisibility) {
+            result.add(visibility.toModifier())
+        }
         if (isInline) {
             result.add(Modifier.INLINE)
         }
@@ -170,6 +173,9 @@ internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
         }
         if (isExternal) {
             result.add(Modifier.EXTERNAL)
+        }
+        if (isInner) {
+            result.add(Modifier.INNER)
         }
     }
     if (classKind == KtClassKind.ENUM_CLASS) {

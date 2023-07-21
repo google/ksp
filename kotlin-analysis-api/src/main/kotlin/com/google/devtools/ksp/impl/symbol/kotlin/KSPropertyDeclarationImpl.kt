@@ -28,7 +28,9 @@ import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
+import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
@@ -142,14 +144,20 @@ internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {
 
 internal fun KtPropertySymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
-    result.add(visibility.toModifier())
+    if (visibility != JavaVisibilities.PackageVisibility) {
+        result.add(visibility.toModifier())
+    }
     if (isOverride) {
         result.add(Modifier.OVERRIDE)
     }
     if (isStatic) {
-        Modifier.JAVA_STATIC
+        result.add(Modifier.JAVA_STATIC)
+        result.add(Modifier.FINAL)
     }
-    result.add(modality.toModifier())
+    // Analysis API returns open for static members which should be ignored.
+    if (!isStatic || modality != Modality.OPEN) {
+        result.add(modality.toModifier())
+    }
 
     if (this is KtKotlinPropertySymbol) {
         if (isLateInit) {
