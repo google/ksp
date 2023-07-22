@@ -25,6 +25,7 @@ import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.binary.getAllContextReceivers
 import com.google.devtools.ksp.symbol.impl.binary.getAllFunctions
 import com.google.devtools.ksp.symbol.impl.binary.getAllProperties
 import com.google.devtools.ksp.symbol.impl.binary.sealedSubclassesSequence
@@ -130,6 +131,10 @@ class KSClassDeclarationImpl private constructor(val ktClassOrObject: KtClassOrO
 
     override fun asStarProjectedType(): KSType {
         return getKSTypeCached(descriptor.defaultType.replaceArgumentsWithStarProjections())
+    }
+
+    override val contextReceivers: List<KSTypeReference> by lazy {
+        descriptor.getAllContextReceivers(this)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

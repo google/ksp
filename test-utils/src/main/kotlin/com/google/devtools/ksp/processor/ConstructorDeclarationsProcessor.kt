@@ -56,8 +56,15 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
                     listOf("class: " + it.key.qualifiedName!!.asString()) + it.value
                 }
         }
-        fun KSFunctionDeclaration.toSignature(): String {
+        fun KSFunctionDeclaration.toSignature(classDeclaration: KSClassDeclaration): String {
+            val contextSignature = if (classDeclaration.contextReceivers.isNotEmpty()) {
+                classDeclaration.contextReceivers.map { it.resolve().declaration.qualifiedName?.asString() }
+                    .joinToString(prefix = " context(", postfix = ") ", separator = ",")
+            } else {
+                ""
+            }
             return this.simpleName.asString() +
+                contextSignature +
                 "(${this.parameters.map {
                     buildString {
                         append(it.type.resolve().declaration.qualifiedName?.asString())
@@ -74,7 +81,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
             val declarations = mutableListOf<String>()
             declarations.addAll(
                 classDeclaration.getConstructors().map {
-                    it.toSignature()
+                    it.toSignature(classDeclaration)
                 }.sorted()
             )
             // TODO add some assertions that if we go through he path of getDeclarations

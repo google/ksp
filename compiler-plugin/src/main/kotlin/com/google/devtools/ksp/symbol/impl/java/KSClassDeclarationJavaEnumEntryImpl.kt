@@ -105,6 +105,8 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
         return getKSTypeCached(descriptor!!.defaultType)
     }
 
+    override val contextReceivers: List<KSTypeReference> = emptyList()
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }

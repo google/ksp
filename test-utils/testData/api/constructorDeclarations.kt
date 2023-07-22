@@ -114,6 +114,28 @@
 // <init>(): KotlinClassWithCompanion
 // class: lib.KotlinClassWithCompanion
 // <init>(): lib.KotlinClassWithCompanion
+// class: KotlinClassWithContextAndExplicitConstructor
+// <init> context(kotlin.Int,kotlin.String) (kotlin.Int): KotlinClassWithContextAndExplicitConstructor
+// class: lib.KotlinClassWithContextAndExplicitConstructor
+// <init> context(kotlin.Int,kotlin.String) (kotlin.Int): lib.KotlinClassWithContextAndExplicitConstructor
+// class: KotlinClassWithContextAndExplicitEmptyConstructor
+// <init> context(kotlin.Int,kotlin.String) (): KotlinClassWithContextAndExplicitEmptyConstructor
+// class: lib.KotlinClassWithContextAndExplicitEmptyConstructor
+// <init> context(kotlin.Int,kotlin.String) (): lib.KotlinClassWithContextAndExplicitEmptyConstructor
+// class: KotlinClassWithContextAndMultipleConstructors
+// <init> context(kotlin.Int,kotlin.String) (): KotlinClassWithContextAndMultipleConstructors
+// <init> context(kotlin.Int,kotlin.String) (kotlin.Int): KotlinClassWithContextAndMultipleConstructors
+// class: lib.KotlinClassWithContextAndMultipleConstructors
+// <init> context(kotlin.Int,kotlin.String) (): lib.KotlinClassWithContextAndMultipleConstructors
+// <init> context(kotlin.Int,kotlin.String) (kotlin.Int): lib.KotlinClassWithContextAndMultipleConstructors
+// class: KotlinClassWithContextAndPrimaryConstructor
+// <init> context(kotlin.Int,kotlin.String) (kotlin.Int): KotlinClassWithContextAndPrimaryConstructor
+// class: lib.KotlinClassWithContextAndPrimaryConstructor
+// <init> context(kotlin.Int,kotlin.String) (kotlin.Int): lib.KotlinClassWithContextAndPrimaryConstructor
+// class: KotlinClassWithContextWithoutExplicitConstructor
+// <init> context(kotlin.Int,kotlin.String) (): KotlinClassWithContextWithoutExplicitConstructor
+// class: lib.KotlinClassWithContextWithoutExplicitConstructor
+// <init> context(kotlin.Int,kotlin.String) (): lib.KotlinClassWithContextWithoutExplicitConstructor
 // class: KotlinClassWithExplicitConstructor
 // <init>(kotlin.Int): KotlinClassWithExplicitConstructor
 // class: lib.KotlinClassWithExplicitConstructor
@@ -229,6 +251,23 @@ class KotlinClassWithMultipleConstructors2(z:Float) {
     constructor(y:Int): this(0f) {}
     constructor(x: String) : this(0f) {}
 }
+context(Int, String)
+class KotlinClassWithContextWithoutExplicitConstructor {
+}
+context(kotlin.Int, kotlin.String)
+class KotlinClassWithContextAndExplicitEmptyConstructor() {}
+context(Int, String)
+class KotlinClassWithContextAndPrimaryConstructor(x:Int) {
+}
+context(Int, String)
+class KotlinClassWithContextAndExplicitConstructor {
+    constructor(x:Int) {}
+}
+context(Int, String)
+class KotlinClassWithContextAndMultipleConstructors {
+    constructor() {}
+    constructor(y:Int): this() {}
+}
 abstract class AbstractKotlinClassWithoutExplicitConstructor {
 }
 abstract class AbstractKotlinClassWithPrimaryConstructor(x:Int) {
@@ -317,6 +356,23 @@ class KotlinClassWithMultipleConstructors1 {
 class KotlinClassWithMultipleConstructors2(z:Float) {
     constructor(y:Int): this(0f) {}
     constructor(x: String) : this(0f) {}
+}
+context(Int, String)
+class KotlinClassWithContextWithoutExplicitConstructor {
+}
+context(Int, String)
+class KotlinClassWithContextAndExplicitEmptyConstructor() {}
+context(Int, String)
+class KotlinClassWithContextAndPrimaryConstructor(x:Int) {
+}
+context(Int, String)
+class KotlinClassWithContextAndExplicitConstructor {
+    constructor(x:Int) {}
+}
+context(Int, String)
+class KotlinClassWithContextAndMultipleConstructors {
+    constructor() {}
+    constructor(y:Int): this() {}
 }
 abstract class AbstractKotlinClassWithoutExplicitConstructor {
 }

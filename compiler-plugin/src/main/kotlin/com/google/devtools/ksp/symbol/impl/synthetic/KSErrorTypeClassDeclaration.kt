@@ -64,6 +64,8 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
         return ResolverImpl.instance!!.builtIns.nothingType
     }
 
+    override val contextReceivers: List<KSTypeReference> = emptyList()
+
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
         return ResolverImpl.instance!!.builtIns.nothingType
     }

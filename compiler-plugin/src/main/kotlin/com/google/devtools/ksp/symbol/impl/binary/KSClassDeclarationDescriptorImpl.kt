@@ -72,6 +72,10 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> = descriptor.getAllProperties()
 
+    override val contextReceivers: List<KSTypeReference> by lazy {
+        descriptor.getAllContextReceivers(this)
+    }
+
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
         descriptor.unsubstitutedPrimaryConstructor?.let { KSFunctionDeclarationDescriptorImpl.getCached(it) }
     }
@@ -188,6 +192,12 @@ internal fun ClassDescriptor.getAllProperties(): Sequence<KSPropertyDeclaration>
                 else -> KSPropertyDeclarationDescriptorImpl.getCached(it as PropertyDescriptor)
             }
         }
+}
+
+internal fun ClassDescriptor.getAllContextReceivers(node: KSNode): List<KSTypeReference> {
+    return contextReceivers.map {
+        KSTypeReferenceDescriptorImpl.getCached(it.type, origin, node)
+    }
 }
 
 internal fun ClassDescriptor.sealedSubclassesSequence(): Sequence<KSClassDeclaration> {
