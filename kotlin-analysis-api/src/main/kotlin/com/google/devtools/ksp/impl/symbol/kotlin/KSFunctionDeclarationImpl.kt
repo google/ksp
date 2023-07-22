@@ -62,6 +62,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         }
     }
 
+    override val contextReceivers: List<KSTypeReference> by lazy {
+        analyze {
+            ktFunctionSymbol.contextReceivers.map {
+                KSTypeReferenceImpl.getCached(it.type, this@KSFunctionDeclarationImpl)
+            }
+        }
+    }
+
     override val returnType: KSTypeReference? by lazy {
         analyze {
             // Constructors

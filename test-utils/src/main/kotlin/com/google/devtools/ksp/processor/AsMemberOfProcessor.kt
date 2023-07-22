@@ -224,7 +224,12 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         } else {
             ""
         }
-        return "$receiverSignature$paramTypesSignature($params) -> $returnType"
+        val contextSignature = if (contextReceiverTypes.isNotEmpty()) {
+            contextReceiverTypes.map { it.toSignature() }.joinToString(prefix = "context(", postfix = ") ", separator = ",")
+        } else {
+            ""
+        }
+        return "$contextSignature$receiverSignature$paramTypesSignature($params) -> $returnType"
     }
 
     private fun Nullability.toSignature() = when (this) {

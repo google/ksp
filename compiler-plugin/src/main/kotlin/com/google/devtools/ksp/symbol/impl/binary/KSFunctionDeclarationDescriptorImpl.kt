@@ -58,6 +58,12 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
         }
     }
 
+    override val contextReceivers: List<KSTypeReference> by lazy {
+        descriptor.contextReceiverParameters.map {
+            KSTypeReferenceDescriptorImpl.getCached(it.type, origin, this)
+        }
+    }
+
     override val functionKind: FunctionKind by lazy {
 
         when {

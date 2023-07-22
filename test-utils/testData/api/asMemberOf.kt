@@ -26,6 +26,7 @@
 // errorType: <Error>?
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
+// returnInt2: context(kotlin.Int!!,kotlin.String!!) () -> kotlin.Int!!
 // returnArg1: () -> kotlin.Int!!
 // returnArg1Nullable: () -> kotlin.Int?
 // returnArg2: () -> kotlin.String?
@@ -43,6 +44,7 @@
 // errorType: <Error>?
 // extensionProperty: kotlin.Any?
 // returnInt: () -> kotlin.Int!!
+// returnInt2: context(kotlin.Int!!,kotlin.String!!) () -> kotlin.Int!!
 // returnArg1: () -> kotlin.Any?
 // returnArg1Nullable: () -> kotlin.Any?
 // returnArg2: () -> kotlin.Any?
@@ -60,6 +62,7 @@
 // errorType: <Error>?
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
+// returnInt2: context(kotlin.Int!!,kotlin.String!!) () -> kotlin.Int!!
 // returnArg1: () -> kotlin.String!!
 // returnArg1Nullable: () -> kotlin.String?
 // returnArg2: () -> kotlin.String?
@@ -77,6 +80,7 @@
 // errorType: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `errorType` (Base)
 // extensionProperty: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `extensionProperty` (Base)
 // returnInt: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt` (Base)
+// returnInt2: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt2` (Base)
 // returnArg1: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg1` (Base)
 // returnArg1Nullable: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg1Nullable` (Base)
 // returnArg2: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg2` (Base)
@@ -104,7 +108,7 @@
 // fileLevelFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelExtensionFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelProperty: java.lang.IllegalArgumentException: Cannot call asMemberOf with a property that is not declared in a class or an interface
-// errorType: (<Error>?) -> <Error>?
+// errorType: context(<Error>?) (<Error>?) -> <Error>?
 // expected comparison failures
 // <BaseTypeArg1: kotlin.Any?>(Base.functionArgType.BaseTypeArg1?) -> kotlin.String?
 // () -> kotlin.Int!!
@@ -119,6 +123,10 @@ open class Base<BaseTypeArg1, BaseTypeArg2> {
     val typePair: Pair<BaseTypeArg2, BaseTypeArg1>  = TODO()
     val errorType: NonExistType = TODO()
     fun returnInt():Int = TODO()
+
+    context(Int, String)
+    fun returnInt2():Int = TODO()
+
     fun returnArg1(): BaseTypeArg1 = TODO()
     fun returnArg1Nullable(): BaseTypeArg1? = TODO()
     fun returnArg2(): BaseTypeArg2 = TODO()

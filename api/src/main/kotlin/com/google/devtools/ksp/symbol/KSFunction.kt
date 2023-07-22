@@ -54,6 +54,13 @@ interface KSFunction {
     val extensionReceiverType: KSType?
 
     /**
+     * The context receiver types of the function
+     *
+     * @see KSFunctionDeclaration.contextReceivers
+     */
+    val contextReceiverTypes: List<KSType>
+
+    /**
      * True if the compiler couldn't resolve the function.
      */
     val isError: Boolean

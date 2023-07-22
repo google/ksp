@@ -54,6 +54,12 @@ class KSFunctionImpl(val descriptor: CallableDescriptor) : KSFunction {
         descriptor.extensionReceiverParameter?.type?.let(::getKSTypeCached)
     }
 
+    override val contextReceiverTypes: List<KSType> by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        descriptor.contextReceiverParameters.map {
+            getKSTypeCached(it.type)
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -64,6 +70,7 @@ class KSFunctionImpl(val descriptor: CallableDescriptor) : KSFunction {
         if (parameterTypes != other.parameterTypes) return false
         if (typeParameters != other.typeParameters) return false
         if (extensionReceiverType != other.extensionReceiverType) return false
+        if (contextReceiverTypes != other.contextReceiverTypes) return false
 
         return true
     }

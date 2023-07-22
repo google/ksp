@@ -25,6 +25,7 @@ import com.google.devtools.ksp.processing.impl.KSPCompilationError
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
+import com.google.devtools.ksp.symbol.impl.binary.KSTypeReferenceDescriptorImpl
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtConstructor
@@ -75,6 +76,12 @@ class KSFunctionDeclarationImpl private constructor(val ktFunction: KtFunction) 
             KSTypeReferenceImpl.getCached(ktFunction.receiverTypeReference!!)
         } else {
             null
+        }
+    }
+
+    override val contextReceivers: List<KSTypeReference> by lazy {
+        ktFunction.contextReceivers.map {
+            KSTypeReferenceImpl.getCached(it.typeReference()!!)
         }
     }
 
