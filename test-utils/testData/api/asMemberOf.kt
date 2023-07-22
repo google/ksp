@@ -27,6 +27,8 @@
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
 // returnInt2: context(kotlin.Int!!,kotlin.String!!) () -> kotlin.Int!!
+// returnInt3: context(kotlin.String!!) kotlin.Int!!.() -> kotlin.Int!!
+// returnInt4: kotlin.Int!!.() -> kotlin.Int!!
 // returnArg1: () -> kotlin.Int!!
 // returnArg1Nullable: () -> kotlin.Int?
 // returnArg2: () -> kotlin.String?
@@ -45,6 +47,8 @@
 // extensionProperty: kotlin.Any?
 // returnInt: () -> kotlin.Int!!
 // returnInt2: context(kotlin.Int!!,kotlin.String!!) () -> kotlin.Int!!
+// returnInt3: context(kotlin.String!!) kotlin.Int!!.() -> kotlin.Int!!
+// returnInt4: kotlin.Int!!.() -> kotlin.Int!!
 // returnArg1: () -> kotlin.Any?
 // returnArg1Nullable: () -> kotlin.Any?
 // returnArg2: () -> kotlin.Any?
@@ -63,6 +67,8 @@
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
 // returnInt2: context(kotlin.Int!!,kotlin.String!!) () -> kotlin.Int!!
+// returnInt3: context(kotlin.String!!) kotlin.Int!!.() -> kotlin.Int!!
+// returnInt4: kotlin.Int!!.() -> kotlin.Int!!
 // returnArg1: () -> kotlin.String!!
 // returnArg1Nullable: () -> kotlin.String?
 // returnArg2: () -> kotlin.String?
@@ -81,6 +87,8 @@
 // extensionProperty: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `extensionProperty` (Base)
 // returnInt: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt` (Base)
 // returnInt2: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt2` (Base)
+// returnInt3: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt3` (Base)
+// returnInt4: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnInt4` (Base)
 // returnArg1: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg1` (Base)
 // returnArg1Nullable: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg1Nullable` (Base)
 // returnArg2: java.lang.IllegalArgumentException: NotAChild is not a sub type of the class/interface that contains `returnArg2` (Base)
@@ -126,6 +134,11 @@ open class Base<BaseTypeArg1, BaseTypeArg2> {
 
     context(Int, String)
     fun returnInt2():Int = TODO()
+
+    context(String)
+    fun Int.returnInt3():Int = TODO()
+
+    fun Int.returnInt4():Int = TODO()
 
     fun returnArg1(): BaseTypeArg1 = TODO()
     fun returnArg1Nullable(): BaseTypeArg1? = TODO()
