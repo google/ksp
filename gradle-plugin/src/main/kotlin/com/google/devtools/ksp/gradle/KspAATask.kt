@@ -74,9 +74,9 @@ abstract class KspAATask @Inject constructor(
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
                     cfg.moduleName.value(kotlinCompilation.defaultSourceSet.name)
-                    kotlinCompilation.allKotlinSourceSets
-                        .filterNot { it == kspGeneratedSourceSet }
-                        .forEach { sourceSet ->
+                    kotlinCompilation.allKotlinSourceSetsObservable
+                        .forAll { sourceSet ->
+                            if (sourceSet == kspGeneratedSourceSet) return@forAll
                             cfg.sourceRoots.from(sourceSet.kotlin)
                             cfg.javaSourceRoots.from(sourceSet.kotlin)
                         }
