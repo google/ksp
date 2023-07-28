@@ -133,7 +133,7 @@ class KspConfigurations(private val project: Project) {
             }
         } else {
             target.compilations.configureEach { compilation ->
-                compilation.kotlinSourceSets.forEach { sourceSet ->
+                compilation.kotlinSourceSetsObservable.forAll { sourceSet ->
                     createConfiguration(
                         name = getKotlinConfigurationName(compilation, sourceSet),
                         readableSetName = sourceSet.name

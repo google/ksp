@@ -268,34 +268,36 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
             .extendsFrom(*nonEmptyKspConfigurations.toTypedArray()).markResolvable()
+
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
 
-            val commonSources: List<File> = when (processingModel) {
-                "hierarchical" -> {
-                    fun unclaimedDeps(roots: Set<KotlinSourceSet>): Set<KotlinSourceSet> {
-                        val unclaimedParents =
-                            roots.flatMap { it.dependsOn }.filterNot { it in sourceSetMap }.toSet()
-                        return if (unclaimedParents.isEmpty()) {
-                            unclaimedParents
-                        } else {
-                            unclaimedParents + unclaimedDeps(unclaimedParents)
-                        }
-                    }
-                    // Source sets that are not claimed by other compilations.
-                    // I.e., those that should be processed by this compilation.
-                    val unclaimed =
-                        kotlinCompilation.kotlinSourceSets + unclaimedDeps(kotlinCompilation.kotlinSourceSets)
-                    val commonSourceSets = kotlinCompilation.allKotlinSourceSets - unclaimed
-                    commonSourceSets.flatMap { it.kotlin.files }
-                }
-                else -> emptyList()
-            }
-
             kspTask.options.addAll(
                 kspTask.project.provider {
+                    val commonSources: List<File> = when (processingModel) {
+                        "hierarchical" -> {
+                            fun unclaimedDeps(roots: Set<KotlinSourceSet>): Set<KotlinSourceSet> {
+                                val unclaimedParents =
+                                    roots.flatMap { it.dependsOn }.filterNot { it in sourceSetMap }.toSet()
+                                return if (unclaimedParents.isEmpty()) {
+                                    unclaimedParents
+                                } else {
+                                    unclaimedParents + unclaimedDeps(unclaimedParents)
+                                }
+                            }
+                            // Source sets that are not claimed by other compilations.
+                            // I.e., those that should be processed by this compilation.
+                            val unclaimed =
+                                kotlinCompilation.kotlinSourceSets + unclaimedDeps(kotlinCompilation.kotlinSourceSets)
+                            val commonSourceSets = kotlinCompilation.allKotlinSourceSets - unclaimed
+                            commonSourceSets.flatMap { it.kotlin.files }
+                        }
+
+                        else -> emptyList()
+                    }
+
                     getSubpluginOptions(
                         project,
                         kspExtension,
@@ -341,9 +343,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     setSource(kotlinCompileTask.javaSources - kspGeneratedSourceSet.kotlin)
                 }
             } else {
-                kotlinCompilation.allKotlinSourceSets.filterNot { it == kspGeneratedSourceSet }.forEach { sourceSet ->
+                kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
+                    if (sourceSet == kspGeneratedSourceSet) return@forAll
                     kspTask.setSource(sourceSet.kotlin)
                 }
+
                 if (kotlinCompilation is KotlinCommonCompilation) {
                     kspTask.setSource(kotlinCompilation.defaultSourceSet.kotlin)
                 }
@@ -356,6 +360,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         }
                         kotlinCompilation.kotlinSourceSets.flatMap { claimedParents(it) }.map { sourceSetMap[it]!! }
                     }
+
                     else -> emptyList()
                 }
                 generated.forEach {
@@ -460,6 +465,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
+
             KotlinPlatformType.js, KotlinPlatformType.wasm -> {
                 KotlinFactories.registerKotlinJSCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
@@ -483,6 +489,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
+
             KotlinPlatformType.common -> {
                 KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
@@ -506,6 +513,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
+
             KotlinPlatformType.native -> {
                 KotlinFactories.registerKotlinNativeCompileTask(project, kspTaskName, kotlinCompilation).also {
                     it.configure { kspTask ->
