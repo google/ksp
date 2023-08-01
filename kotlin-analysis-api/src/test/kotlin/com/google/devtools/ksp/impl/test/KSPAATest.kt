@@ -635,4 +635,10 @@ class KSPAATest : AbstractKSPAATest() {
     fun testVisibilities() {
         runTest("../test-utils/testData/api/visibilities.kt")
     }
+
+    @TestMetadata("multipleround.kt")
+    @Test
+    fun testMultipleround() {
+        runTest("../test-utils/testData/api/multipleround.kt")
+    }
 }

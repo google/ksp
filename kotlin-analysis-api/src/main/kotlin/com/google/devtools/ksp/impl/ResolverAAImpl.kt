@@ -87,7 +87,6 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.org.objectweb.asm.Opcodes
-import java.io.File
 import java.nio.file.Files
 
 @OptIn(KspExperimental::class)
@@ -322,29 +321,8 @@ class ResolverAAImpl(
                         else -> null
                     }
                 }
-            }.plus(javaPackageToClassMap.getOrDefault(packageName, emptyList()).asSequence()).asSequence()
+            }.asSequence()
         }
-    }
-
-    private val javaPackageToClassMap: Map<String, List<KSDeclaration>> by lazy {
-        val packageToClassMapping = mutableMapOf<String, List<KSDeclaration>>()
-        ksFiles
-            .filter { file ->
-                file.origin == Origin.JAVA &&
-                    kspConfig.javaSourceRoots.any { root ->
-                        file.filePath.startsWith(root.absolutePath) &&
-                            file.filePath.substringAfter(root.absolutePath)
-                            .dropLastWhile { c -> c != File.separatorChar }.dropLast(1).drop(1)
-                            .replace(File.separatorChar, '.') == file.packageName.asString()
-                    }
-            }
-            .forEach {
-                packageToClassMapping.put(
-                    it.packageName.asString(),
-                    packageToClassMapping.getOrDefault(it.packageName.asString(), emptyList()).plus(it.declarations)
-                )
-            }
-        packageToClassMapping
     }
 
     override fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration> {
