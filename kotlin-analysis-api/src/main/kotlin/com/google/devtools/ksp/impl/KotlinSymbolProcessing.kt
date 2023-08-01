@@ -15,9 +15,13 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.AnyChanges
+import com.google.devtools.ksp.KSObjectCacheManager
+import com.google.devtools.ksp.analysisapi.providers.IncrementalKotlinDeclarationProviderFactory
+import com.google.devtools.ksp.analysisapi.providers.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
@@ -26,18 +30,82 @@ import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.toKotlinVersion
 import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.core.CorePackageIndex
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.mock.MockProject
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.Application
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.PackageIndex
+import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
+import com.intellij.psi.PsiFileSystemItem
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiTreeChangeAdapter
+import com.intellij.psi.PsiTreeChangeListener
+import com.intellij.psi.impl.file.impl.JavaFileManager
+import com.intellij.psi.search.DelegatingGlobalSearchScope
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.ProjectScope
+import com.intellij.util.io.URLUtil
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
+import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
 import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
+import org.jetbrains.kotlin.analysis.api.lifetime.KtReadActionConfinementLifetimeTokenProvider
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
-import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider
+import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
+import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.FirStandaloneServiceRegistrar
+import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.JvmFirDeserializedSymbolProviderFactory
-import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
+import org.jetbrains.kotlin.analysis.project.structure.KtModule
+import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
+import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProviderImpl
+import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
+import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
+import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtLibraryModule
+import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
+import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSourceModule
+import org.jetbrains.kotlin.analysis.project.structure.impl.KtModuleProviderImpl
+import org.jetbrains.kotlin.analysis.project.structure.impl.getSourceFilePaths
+import org.jetbrains.kotlin.analysis.providers.KotlinAnnotationsResolverFactory
+import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProviderFactory
+import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProviderMerger
+import org.jetbrains.kotlin.analysis.providers.KotlinModificationTrackerFactory
+import org.jetbrains.kotlin.analysis.providers.KotlinPackageProviderFactory
+import org.jetbrains.kotlin.analysis.providers.KotlinPsiDeclarationProviderFactory
+import org.jetbrains.kotlin.analysis.providers.KotlinResolutionScopeProvider
+import org.jetbrains.kotlin.analysis.providers.PackagePartProviderFactory
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinByModulesResolutionScopeProvider
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticAnnotationsResolverFactory
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProviderMerger
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticModificationTrackerFactory
+import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticPsiDeclarationProviderFactory
+import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
+import org.jetbrains.kotlin.cli.jvm.compiler.computeDefaultRootModules
 import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
+import org.jetbrains.kotlin.cli.jvm.compiler.getJavaModuleRoots
+import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
+import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
+import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
+import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
+import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
+import org.jetbrains.kotlin.cli.jvm.modules.JavaModuleGraph
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -45,10 +113,219 @@ import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
+import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
+import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProviderImpl
+import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
+import org.jetbrains.kotlin.psi.KtFile
+import java.nio.file.Paths
 
 class KotlinSymbolProcessing(
     val kspConfig: KSPJvmConfig,
 ) {
+    init {
+        // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
+        // to avoid accidentally starting the UI thread. But, don't set it if it was set externally.
+        if (System.getProperty("java.awt.headless") == null) {
+            System.setProperty("java.awt.headless", "true")
+        }
+        setupIdeaStandaloneExecution()
+    }
+
+    @OptIn(KtAnalysisApiInternals::class)
+    private fun createAASession(
+        compilerConfiguration: CompilerConfiguration,
+        applicationDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.application"),
+        projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project"),
+    ): Triple<StandaloneAnalysisAPISession, KotlinCoreProjectEnvironment, List<KtModule>> {
+        val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment =
+            StandaloneProjectFactory.createProjectEnvironment(
+                projectDisposable,
+                applicationDisposable,
+                false,
+                classLoader = MockProject::class.java.classLoader
+            )
+
+        val application: Application = kotlinCoreProjectEnvironment.environment.application
+        val project: Project = kotlinCoreProjectEnvironment.project
+        val configLanguageVersionSettings = compilerConfiguration[CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS]
+
+        CoreApplicationEnvironment.registerExtensionPoint(
+            project.extensionArea,
+            KtResolveExtensionProvider.EP_NAME.name,
+            KtResolveExtensionProvider::class.java
+        )
+        (project as MockProject).registerService(
+            KtLifetimeTokenProvider::class.java,
+            KtAlwaysAccessibleLifeTimeTokenProvider::class.java
+        )
+
+        // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
+        val projectStructureProvider = KtModuleProviderBuilder().apply {
+            val compilerConfig = compilerConfiguration
+            val platform = JvmPlatforms.defaultJvmPlatform
+
+            fun KtModuleBuilder.addModuleDependencies(moduleName: String) {
+                val libraryRoots = compilerConfig.jvmModularRoots + compilerConfig.jvmClasspathRoots
+                addRegularDependency(
+                    buildKtLibraryModule {
+                        this.platform = platform
+                        this.project = project
+                        contentScope = ProjectScope.getLibrariesScope(project)
+                        binaryRoots = libraryRoots.map { it.toPath() }
+                        libraryName = "Library for $moduleName"
+                    }
+                )
+                compilerConfig.get(JVMConfigurationKeys.JDK_HOME)?.let { jdkHome ->
+                    val vfm = VirtualFileManager.getInstance()
+                    val jdkHomePath = jdkHome.toPath()
+                    val jdkHomeVirtualFile = vfm.findFileByNioPath(jdkHomePath)
+                    val binaryRoots = LibraryUtils.findClassesFromJdkHome(jdkHomePath).map {
+                        Paths.get(URLUtil.extractPath(it))
+                    }
+                    addRegularDependency(
+                        buildKtSdkModule {
+                            this.platform = platform
+                            this.project = project
+                            contentScope = GlobalSearchScope.fileScope(project, jdkHomeVirtualFile)
+                            this.binaryRoots = binaryRoots
+                            sdkName = "JDK for $moduleName"
+                        }
+                    )
+                }
+            }
+
+            buildKtSourceModule {
+                configLanguageVersionSettings?.let { this.languageVersionSettings = it }
+                this.project = project
+                this.platform = platform
+                this.moduleName = compilerConfig.get(CommonConfigurationKeys.MODULE_NAME) ?: "<no module name provided>"
+
+                addModuleDependencies(moduleName)
+
+                // Single file java source roots are added in reinitJavaFileManager() later.
+                val roots = kspConfig.sourceRoots + kspConfig.commonSourceRoots + kspConfig.javaSourceRoots +
+                    listOf(kspConfig.kotlinOutputDir, kspConfig.javaOutputDir)
+                roots.forEach {
+                    it.mkdirs()
+                }
+                val fs = StandardFileSystems.local()
+                contentScope = DirectoriesScope(project, roots.mapNotNull { fs.findFileByPath(it.path) }.toSet())
+            }.apply(::addModule)
+
+            this.platform = platform
+            this.project = project
+        }.build()
+
+        // register services and build session
+        val ktModuleProviderImpl = projectStructureProvider as KtModuleProviderImpl
+        val modules = ktModuleProviderImpl.mainModules
+        val allSourceFiles = ktModuleProviderImpl.allSourceFiles()
+        StandaloneProjectFactory.registerServicesForProjectEnvironment(
+            kotlinCoreProjectEnvironment,
+            projectStructureProvider,
+            modules,
+            allSourceFiles,
+        )
+        val ktFiles = allSourceFiles.filterIsInstance<KtFile>()
+        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment)
+        val createPackagePartProvider =
+            StandaloneProjectFactory.createPackagePartsProvider(
+                project as MockProject,
+                libraryRoots,
+            )
+        registerProjectServices(
+            kotlinCoreProjectEnvironment,
+            ktFiles,
+            createPackagePartProvider,
+        )
+
+        kotlinCoreProjectEnvironment.project.apply {
+            registerService(
+                KotlinPsiDeclarationProviderFactory::class.java,
+                KotlinStaticPsiDeclarationProviderFactory(
+                    this,
+                    ktModuleProviderImpl.binaryModules,
+                    kotlinCoreProjectEnvironment.environment.jarFileSystem as CoreJarFileSystem
+                )
+            )
+        }
+
+        project.registerService(
+            JvmFirDeserializedSymbolProviderFactory::class.java,
+            JvmFirDeserializedSymbolProviderFactory::class.java
+        )
+        CoreApplicationEnvironment.registerExtensionPoint(
+            project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
+        )
+        return Triple(
+            StandaloneAnalysisAPISession(kotlinCoreProjectEnvironment, createPackagePartProvider),
+            kotlinCoreProjectEnvironment,
+            modules
+        )
+    }
+
+    // TODO: org.jetbrains.kotlin.analysis.providers.impl.KotlinStatic*
+    @OptIn(KtAnalysisApiInternals::class)
+    private fun registerProjectServices(
+        kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
+        ktFiles: List<KtFile>,
+        packagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
+    ) {
+        val project = kotlinCoreProjectEnvironment.project
+        project.apply {
+            FirStandaloneServiceRegistrar.registerProjectServices(project)
+            FirStandaloneServiceRegistrar.registerProjectExtensionPoints(project)
+            FirStandaloneServiceRegistrar.registerProjectModelServices(
+                project,
+                kotlinCoreProjectEnvironment.parentDisposable
+            )
+
+            registerService(
+                KotlinModificationTrackerFactory::class.java,
+                KotlinStaticModificationTrackerFactory::class.java
+            )
+            registerService(
+                KtLifetimeTokenProvider::class.java,
+                KtReadActionConfinementLifetimeTokenProvider::class.java
+            )
+
+            registerService(KtModuleScopeProvider::class.java, KtModuleScopeProviderImpl())
+            // Despite being a static implementation, this is only used by IDE tests
+            registerService(
+                KotlinAnnotationsResolverFactory::class.java,
+                KotlinStaticAnnotationsResolverFactory(ktFiles)
+            )
+            registerService(
+                KotlinResolutionScopeProvider::class.java,
+                KotlinByModulesResolutionScopeProvider::class.java
+            )
+            registerService(
+                KotlinDeclarationProviderFactory::class.java,
+                IncrementalKotlinDeclarationProviderFactory(this)
+            )
+            registerService(
+                KotlinDeclarationProviderMerger::class.java,
+                KotlinStaticDeclarationProviderMerger(this)
+            )
+            registerService(KotlinPackageProviderFactory::class.java, IncrementalKotlinPackageProviderFactory(project))
+
+            registerService(
+                FirSealedClassInheritorsProcessorFactory::class.java,
+                object : FirSealedClassInheritorsProcessorFactory() {
+                    override fun createSealedClassInheritorsProvider(): SealedClassInheritorsProvider {
+                        return SealedClassInheritorsProviderImpl
+                    }
+                }
+            )
+
+            registerService(
+                PackagePartProviderFactory::class.java,
+                KotlinStaticPackagePartProviderFactory(packagePartProvider)
+            )
+        }
+    }
+
     @OptIn(KtAnalysisApiInternals::class)
     fun execute() {
         val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
@@ -57,7 +334,9 @@ class KotlinSymbolProcessing(
         // TODO: CompilerConfiguration is deprecated.
         val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
             addKotlinSourceRoots(kspConfig.sourceRoots.map { it.path })
+            addKotlinSourceRoot(kspConfig.kotlinOutputDir.path)
             addJavaSourceRoots(kspConfig.javaSourceRoots)
+            addJavaSourceRoot(kspConfig.javaOutputDir)
             addJvmClasspathRoots(kspConfig.libraries)
             put(CommonConfigurationKeys.MODULE_NAME, kspConfig.moduleName)
             kspConfig.jdkHome?.let {
@@ -71,77 +350,214 @@ class KotlinSymbolProcessing(
             )
         }
 
-        val analysisAPISession = buildStandaloneAnalysisAPISession(withPsiDeclarationFromBinaryModuleProvider = true) {
-            CoreApplicationEnvironment.registerExtensionPoint(
-                project.extensionArea,
-                KtResolveExtensionProvider.EP_NAME.name,
-                KtResolveExtensionProvider::class.java
-            )
-            (project as MockProject).registerService(
-                KtLifetimeTokenProvider::class.java,
-                KtAlwaysAccessibleLifeTimeTokenProvider::class.java
-            )
-            buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-        }.apply {
-            (project as MockProject).registerService(
-                JvmFirDeserializedSymbolProviderFactory::class.java,
-                JvmFirDeserializedSymbolProviderFactory::class.java
-            )
-        }
+        val (analysisAPISession, kotlinCoreProjectEnvironment, modules) = createAASession(compilerConfiguration)
 
         val kspCoreEnvironment = KSPCoreEnvironment(analysisAPISession.project as MockProject)
 
-        val ktFiles = createSourceFilesFromSourceRoots(
-            compilerConfiguration, analysisAPISession.project, compilerConfiguration.kotlinSourceRoots
-        ).toSet().toList()
-
-        // TODO: support no Kotlin source mode.
-        ResolverAAImpl.ktModule = ktFiles.first().let {
-            analysisAPISession.project.getService(ProjectStructureProvider::class.java)
-                .getModule(it, null)
-        }
-        val ksFiles = ktFiles.map { file ->
-            analyze { KSFileImpl.getCached(file.getFileSymbol()) }
-        }
-        val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
-        val codeGenerator = CodeGeneratorImpl(
-            kspConfig.classOutputDir,
-            { kspConfig.javaOutputDir },
-            kspConfig.kotlinOutputDir,
-            kspConfig.resourceOutputDir,
-            kspConfig.projectBaseDir,
-            anyChangesWildcard,
-            ksFiles,
-            kspConfig.incremental
-        )
-        val processors = providers.mapNotNull { provider ->
-            var processor: SymbolProcessor? = null
-            processor = provider.create(
-                SymbolProcessorEnvironment(
-                    kspConfig.processorOptions,
-                    kspConfig.languageVersion.toKotlinVersion(),
-                    codeGenerator,
-                    kspConfig.logger,
-                    kspConfig.apiVersion.toKotlinVersion(),
-                    // TODO: compilerVersion
-                    KotlinVersion.CURRENT,
-                    // TODO: fix platform info
-                    listOf(JvmPlatformInfoImpl("JVM", "1.8", "disable"))
-                )
+        // TODO: deferred symbols: use PSIs; they don't change.
+        // TODO: KSFiles for java
+        // TODO: error handling, onError()
+        // TODO: Resolver.getNewFiles()
+        // TODO: performance
+        var finished = false
+        while (!finished) {
+            val project = analysisAPISession.project
+            val ktFiles = createSourceFilesFromSourceRoots(
+                compilerConfiguration, analysisAPISession.project, compilerConfiguration.kotlinSourceRoots
+            ).toSet().toList()
+            val psiFiles = getPsiFilesFromPaths<PsiFileSystemItem>(
+                project,
+                getSourceFilePaths(compilerConfiguration, includeDirectoryRoot = true)
             )
-            processor.also { deferredSymbols[it] = mutableListOf() }
-        }
-        // TODO: support no kotlin source input.
-        val resolver = ResolverAAImpl(
-            ktFiles.map {
-                analyze { it.getFileSymbol() }
-            },
-            kspConfig,
-            analysisAPISession.project
-        )
-        ResolverAAImpl.instance = resolver
 
-        // TODO: multiple rounds
-        processors.forEach { it.process(resolver) }
+            // Update Kotlin providers for newly generated source files.
+            (
+                project.getService(
+                    KotlinDeclarationProviderFactory::class.java
+                ) as IncrementalKotlinDeclarationProviderFactory
+                ).update(ktFiles)
+            (
+                project.getService(
+                    KotlinPackageProviderFactory::class.java
+                ) as IncrementalKotlinPackageProviderFactory
+                ).update(ktFiles)
+
+            // Update Java providers for newly generated source files.
+            reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, psiFiles)
+
+            ResolverAAImpl.ktModule = modules.single()
+            val ksFiles = ktFiles.map { file ->
+                analyze { KSFileImpl.getCached(file.getFileSymbol()) }
+            }
+            val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
+            val codeGenerator = CodeGeneratorImpl(
+                kspConfig.classOutputDir,
+                { kspConfig.javaOutputDir },
+                kspConfig.kotlinOutputDir,
+                kspConfig.resourceOutputDir,
+                kspConfig.projectBaseDir,
+                anyChangesWildcard,
+                ksFiles,
+                kspConfig.incremental
+            )
+            val processors = providers.mapNotNull { provider ->
+                var processor: SymbolProcessor? = null
+                processor = provider.create(
+                    SymbolProcessorEnvironment(
+                        kspConfig.processorOptions,
+                        kspConfig.languageVersion.toKotlinVersion(),
+                        codeGenerator,
+                        kspConfig.logger,
+                        kspConfig.apiVersion.toKotlinVersion(),
+                        // TODO: compilerVersion
+                        KotlinVersion.CURRENT,
+                        // TODO: fix platform info
+                        listOf(JvmPlatformInfoImpl("JVM", "1.8", "disable"))
+                    )
+                )
+                processor.also { deferredSymbols[it] = mutableListOf() }
+            }
+            // TODO: support no kotlin source input.
+            val resolver = ResolverAAImpl(
+                ktFiles.map {
+                    analyze { it.getFileSymbol() }
+                },
+                kspConfig,
+                analysisAPISession.project
+            )
+            ResolverAAImpl.instance = resolver
+
+            // TODO: multiple rounds
+            processors.forEach { it.process(resolver) }
+
+            if (codeGenerator.generatedFile.isEmpty()) {
+                finished = true
+                processors.forEach { it.finish() }
+            } else {
+                // Drop caches
+                KotlinModificationTrackerFactory.getService(project)
+                    .incrementModificationsCount(includeBinaryTrackers = false)
+                KtAnalysisSessionProvider.getInstance(project).clearCaches()
+                project.getService(KotlinModificationTrackerFactory::class.java)
+                    .incrementModificationsCount(false)
+                PsiManager.getInstance(project).dropResolveCaches()
+                PsiManager.getInstance(project).dropPsiCaches()
+
+                KSObjectCacheManager.clear()
+            }
+
+            codeGenerator.closeFiles()
+        }
+    }
+}
+
+private inline fun <reified T : PsiFileSystemItem> getPsiFilesFromPaths(
+    project: Project,
+    paths: Collection<String>,
+): List<T> {
+    val fs = StandardFileSystems.local()
+    val psiManager = PsiManager.getInstance(project)
+    return buildList {
+        for (path in paths) {
+            val vFile = fs.findFileByPath(path) ?: continue
+            val psiFileSystemItem =
+                if (vFile.isDirectory)
+                    psiManager.findDirectory(vFile) as? T
+                else
+                    psiManager.findFile(vFile) as? T
+            psiFileSystemItem?.let { add(it) }
+        }
+    }
+}
+
+class DirectoriesScope(
+    project: Project,
+    private val directories: Set<VirtualFile>
+) : DelegatingGlobalSearchScope(GlobalSearchScope.allScope(project)) {
+    private val fileSystems = directories.mapTo(hashSetOf(), VirtualFile::getFileSystem)
+
+    override fun contains(file: VirtualFile): Boolean {
+        if (file.fileSystem !in fileSystems) return false
+
+        var parent: VirtualFile = file
+        while (true) {
+            if (parent in directories) return true
+            parent = parent.parent ?: return false
+        }
+    }
+
+    override fun toString() = "All files under: $directories"
+}
+
+private fun reinitJavaFileManager(
+    environment: KotlinCoreProjectEnvironment,
+    modules: List<KtModule>,
+    sourceFiles: List<PsiFileSystemItem>,
+) {
+    val project = environment.project
+    val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
+    val javaModuleFinder = CliJavaModuleFinder(null, null, javaFileManager, project, null)
+    val javaModuleGraph = JavaModuleGraph(javaModuleFinder)
+    val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
+    val jdkRoots = getDefaultJdkModuleRoots(javaModuleFinder, javaModuleGraph)
+    val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, environment)
+
+    val rootsWithSingleJavaFileRoots = buildList {
+        addAll(libraryRoots)
+        addAll(allSourceFileRoots)
+        addAll(jdkRoots)
+    }
+
+    val (roots, singleJavaFileRoots) = rootsWithSingleJavaFileRoots.partition { (file) ->
+        file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
+    }
+
+    val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
+    val rootsIndex = JvmDependenciesDynamicCompoundIndex().apply {
+        addIndex(JvmDependenciesIndexImpl(roots))
+        indexedRoots.forEach { javaRoot ->
+            if (javaRoot.file.isDirectory) {
+                if (javaRoot.type == JavaRoot.RootType.SOURCE) {
+                    // NB: [JavaCoreProjectEnvironment#addSourcesToClasspath] calls:
+                    //   1) [CoreJavaFileManager#addToClasspath], which is used to look up Java roots;
+                    //   2) [CorePackageIndex#addToClasspath], which populates [PackageIndex]; and
+                    //   3) [FileIndexFacade#addLibraryRoot], which conflicts with this SOURCE root when generating a library scope.
+                    // Thus, here we manually call first two, which are used to:
+                    //   1) create [PsiPackage] as a package resolution result; and
+                    //   2) find directories by package name.
+                    // With both supports, annotations defined in package-info.java can be properly propagated.
+                    javaFileManager.addToClasspath(javaRoot.file)
+                    corePackageIndex.addToClasspath(javaRoot.file)
+                } else {
+                    environment.addSourcesToClasspath(javaRoot.file)
+                }
+            }
+        }
+    }
+
+    javaFileManager.initialize(
+        rootsIndex,
+        listOf(
+            StandaloneProjectFactory.createPackagePartsProvider(
+                project,
+                libraryRoots + jdkRoots,
+                LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST)
+            ).invoke(ProjectScope.getLibrariesScope(project))
+        ),
+        SingleJavaFileRootsIndex(singleJavaFileRoots),
+        true
+    )
+}
+
+private fun getDefaultJdkModuleRoots(
+    javaModuleFinder: CliJavaModuleFinder,
+    javaModuleGraph: JavaModuleGraph
+): List<JavaRoot> {
+    // In contrast to `ClasspathRootsResolver.addModularRoots`, we do not need to handle automatic Java modules because JDK modules
+    // aren't automatic.
+    return javaModuleGraph.getAllDependencies(javaModuleFinder.computeDefaultRootModules()).flatMap { moduleName ->
+        val module = javaModuleFinder.findModule(moduleName) ?: return@flatMap emptyList<JavaRoot>()
+        val result = module.getJavaModuleRoots()
+        result
     }
 }
