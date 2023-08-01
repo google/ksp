@@ -24,9 +24,10 @@ import com.google.devtools.ksp.symbol.*
 
 class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
     val visitor = ConstructorsVisitor()
+    lateinit var result: List<String>
 
     override fun toResult(): List<String> {
-        return visitor.toResult()
+        return result
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -39,6 +40,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
                 .getClassDeclarationByName("lib.${it.simpleName.asString()}")
                 ?.accept(visitor, Unit)
         }
+        result = visitor.toResult()
         return emptyList()
     }
 
