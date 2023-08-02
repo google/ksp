@@ -115,7 +115,10 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override fun findOverridee(): KSPropertyDeclaration? {
-        TODO("Not yet implemented")
+        return analyze {
+            ktPropertySymbol.getDirectlyOverriddenSymbols().firstOrNull()
+                ?.unwrapFakeOverrides?.toKSDeclaration() as? KSPropertyDeclaration
+        }
     }
 
     override fun asMemberOf(containing: KSType): KSType {
