@@ -98,7 +98,9 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override fun findOverridee(): KSDeclaration? {
-        TODO("Not yet implemented")
+        return analyze {
+            ktFunctionSymbol.getDirectlyOverriddenSymbols().firstOrNull()?.unwrapFakeOverrides?.toKSDeclaration()
+        }
     }
 
     override fun asMemberOf(containing: KSType): KSFunction {
