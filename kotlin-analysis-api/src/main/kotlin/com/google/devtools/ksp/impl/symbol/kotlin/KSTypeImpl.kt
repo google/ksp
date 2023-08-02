@@ -52,6 +52,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
                 is KtClassErrorType -> KSErrorTypeClassDeclaration
                 is KtFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()
+                is KtDefinitelyNotNullType -> this@toDeclaration.original.toDeclaration()
                 else -> KSErrorTypeClassDeclaration
             }
         }
