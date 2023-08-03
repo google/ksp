@@ -277,7 +277,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/getPackage.kt")
     }
 
-    @Disabled
     @TestMetadata("getByName.kt")
     @Test
     fun testGetByName() {
