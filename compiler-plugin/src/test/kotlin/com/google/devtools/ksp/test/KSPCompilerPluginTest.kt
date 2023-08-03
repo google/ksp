@@ -393,10 +393,58 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/nullableTypes.kt")
     }
 
-    @TestMetadata("overridee.kt")
+    @TestMetadata("conflictingOverride.kt")
     @Test
-    fun testOverridee() {
-        runTest("../test-utils/testData/api/overridee.kt")
+    fun testConflictingOverride() {
+        runTest("../test-utils/testData/api/overridee/conflictingOverride.kt")
+    }
+
+    @TestMetadata("javaAccessor.kt")
+    @Test
+    fun testJavaAccessor() {
+        runTest("../test-utils/testData/api/overridee/javaAccessor.kt")
+    }
+
+    @TestMetadata("javaAnno.kt")
+    @Test
+    fun testJavaAnno() {
+        runTest("../test-utils/testData/api/overridee/javaAnno.kt")
+    }
+
+    @TestMetadata("javaOverrideInSource.kt")
+    @Test
+    fun testJavaOverrideInSource() {
+        runTest("../test-utils/testData/api/overridee/javaOverrideInSource.kt")
+    }
+
+    @TestMetadata("noOverride.kt")
+    @Test
+    fun testNoOverride() {
+        runTest("../test-utils/testData/api/overridee/noOverride.kt")
+    }
+
+    @TestMetadata("overrideInLib.kt")
+    @Test
+    fun testOverrideInLib() {
+        runTest("../test-utils/testData/api/overridee/overrideInLib.kt")
+    }
+
+    @TestMetadata("overrideInSource.kt")
+    @Test
+    fun testOverrideInSource() {
+        runTest("../test-utils/testData/api/overridee/overrideInSource.kt")
+    }
+
+    @TestMetadata("overrideOrder.kt")
+    @Test
+    fun testOverrideOrder() {
+        runTest("../test-utils/testData/api/overridee/overrideOrder.kt")
+    }
+
+    @TestMetadata("primaryConstructorOverride.kt")
+    @Test
+    fun testPrimaryConstructorOverride() {
+        runTest("../test-utils/testData/api/overridee/primaryConstructorOverride.kt")
     }
 
     @TestMetadata("packageAnnotations.kt")

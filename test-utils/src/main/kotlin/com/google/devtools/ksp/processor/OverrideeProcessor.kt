@@ -47,8 +47,8 @@ class OverrideeProcessor : AbstractTestProcessor() {
     }
 
     private fun logSubject(resolver: Resolver, qName: String) {
+        val subject = resolver.getClassDeclarationByName(qName) ?: return
         results.add("$qName:")
-        val subject = resolver.getClassDeclarationByName(qName)!!
         subject.declarations.filterIsInstance<KSClassDeclaration>().forEach {
             logClass(it)
         }
