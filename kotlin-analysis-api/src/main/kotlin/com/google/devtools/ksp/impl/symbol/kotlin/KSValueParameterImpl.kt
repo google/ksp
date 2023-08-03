@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.declarations.FirJavaValueParameter
 import org.jetbrains.kotlin.fir.java.resolveIfJavaType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
+import org.jetbrains.kotlin.psi.KtParameter
 
 class KSValueParameterImpl private constructor(
     private val ktValueParameterSymbol: KtValueParameterSymbol,
@@ -63,16 +64,16 @@ class KSValueParameterImpl private constructor(
     }
 
     override val isNoInline: Boolean
-        get() = TODO("Not yet implemented")
+        get() = ktValueParameterSymbol.isNoinline
 
     override val isCrossInline: Boolean
-        get() = TODO("Not yet implemented")
+        get() = ktValueParameterSymbol.isCrossinline
 
     override val isVal: Boolean
-        get() = TODO("Not yet implemented")
+        get() = (ktValueParameterSymbol.psi as? KtParameter)?.let { it.hasValOrVar() && !it.isMutable } ?: false
 
     override val isVar: Boolean
-        get() = TODO("Not yet implemented")
+        get() = (ktValueParameterSymbol.psi as? KtParameter)?.let { it.hasValOrVar() && it.isMutable } ?: false
 
     override val hasDefault: Boolean by lazy {
         ktValueParameterSymbol.hasDefaultValue
