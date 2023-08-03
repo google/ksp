@@ -30,6 +30,8 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.extractThrowsAnnotation
 import com.google.devtools.ksp.extractThrowsFromClassFile
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.hasAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
@@ -42,6 +44,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.findParentOfType
+import com.google.devtools.ksp.impl.symbol.kotlin.toKSDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isConstructor
@@ -310,7 +313,21 @@ class ResolverAAImpl(
         name: KSName,
         includeTopLevel: Boolean
     ): Sequence<KSFunctionDeclaration> {
-        TODO("Not yet implemented")
+        val qualifier = name.getQualifier()
+        val functionName = name.getShortName()
+        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()
+            ?.filter { it.simpleName.asString() == functionName }?.asSequence() ?: emptySequence()
+        return if (!includeTopLevel) nonTopLevelResult else {
+            nonTopLevelResult.plus(
+                analyze {
+                    getTopLevelCallableSymbols(FqName(qualifier), Name.identifier(functionName))
+                        .filterIsInstance<KtFunctionLikeSymbol>()
+                        .map {
+                            KSFunctionDeclarationImpl.getCached(it)
+                        }
+                }
+            )
+        }
     }
 
     override fun getJavaWildcard(reference: KSTypeReference): KSTypeReference {
@@ -400,7 +417,25 @@ class ResolverAAImpl(
     }
 
     override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
-        TODO("Not yet implemented")
+        val qualifier = name.getQualifier()
+        val propertyName = name.getShortName()
+        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()
+            ?.singleOrNull { it.simpleName.asString() == propertyName }
+        return if (!includeTopLevel) {
+            nonTopLevelResult
+        } else {
+            val topLevelResult = (
+                analyze {
+                    getTopLevelCallableSymbols(FqName(qualifier), Name.identifier(propertyName)).singleOrNull {
+                        it is KtPropertySymbol
+                    }?.toKSDeclaration() as? KSPropertyDeclaration
+                }
+                )
+            if (topLevelResult != null && nonTopLevelResult != null) {
+                throw IllegalStateException("Found multiple properties with same qualified name")
+            }
+            nonTopLevelResult ?: topLevelResult
+        }
     }
 
     // TODO: optimization and type alias handling.
