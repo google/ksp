@@ -57,11 +57,11 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        TODO("Not yet implemented")
+        return KSTypeImpl.getCached(ktEnumEntrySymbol.returnType).replace(typeArguments)
     }
 
     override fun asStarProjectedType(): KSType {
-        TODO("Not yet implemented")
+        return KSTypeImpl.getCached(ktEnumEntrySymbol.returnType).starProjection()
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()
