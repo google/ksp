@@ -408,11 +408,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/nestedAnnotations.kt")
     }
 
-    @Disabled
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
-        runTest("../test-utils/testData/api/nestedClassType.kt")
+        runTest("testData/nestedClassType.kt")
     }
 
     @TestMetadata("nullableTypes.kt")
