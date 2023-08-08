@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.*
+import org.jetbrains.kotlin.analysis.api.components.KtSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
@@ -446,5 +447,22 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
             }
             else -> throw IllegalStateException("Unhandled default value type ${it.javaClass}")
         }
+    }
+}
+
+internal fun fillInDeepSubstitutor(context: KtType, substitutorBuilder: KtSubstitutorBuilder) {
+    if (context !is KtNonErrorClassType) {
+        return
+    }
+    val parameters = context.classSymbol.typeParameters
+    val arguments = context.ownTypeArguments
+    if (parameters.size != arguments.size) {
+        throw IllegalStateException("invalid substitution for $context")
+    }
+    parameters.zip(arguments).forEach {
+        substitutorBuilder.substitution(it.first, it.second.type ?: it.first.upperBounds.first())
+    }
+    (context.classSymbol as? KtClassOrObjectSymbol)?.superTypes?.forEach {
+        fillInDeepSubstitutor(it, substitutorBuilder)
     }
 }

@@ -18,51 +18,18 @@
 
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.BinaryClassInfoCache
-import com.google.devtools.ksp.JVM_DEFAULT_ANNOTATION_FQN
-import com.google.devtools.ksp.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
-import com.google.devtools.ksp.JVM_STATIC_ANNOTATION_FQN
-import com.google.devtools.ksp.JVM_STRICTFP_ANNOTATION_FQN
-import com.google.devtools.ksp.JVM_SYNCHRONIZED_ANNOTATION_FQN
-import com.google.devtools.ksp.JVM_TRANSIENT_ANNOTATION_FQN
-import com.google.devtools.ksp.JVM_VOLATILE_ANNOTATION_FQN
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.extractThrowsAnnotation
-import com.google.devtools.ksp.extractThrowsFromClassFile
-import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.getDeclaredFunctions
-import com.google.devtools.ksp.getDeclaredProperties
-import com.google.devtools.ksp.hasAnnotation
-import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyAccessorImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeAliasImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentLiteImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.analyze
-import com.google.devtools.ksp.impl.symbol.kotlin.findParentOfType
-import com.google.devtools.ksp.impl.symbol.kotlin.toKSDeclaration
-import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
-import com.google.devtools.ksp.isAbstract
-import com.google.devtools.ksp.isConstructor
-import com.google.devtools.ksp.isOpen
-import com.google.devtools.ksp.isPrivate
-import com.google.devtools.ksp.isProtected
-import com.google.devtools.ksp.isPublic
-import com.google.devtools.ksp.javaModifiers
+import com.google.devtools.ksp.*
+import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.toKSName
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
+import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
 import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
@@ -94,6 +61,8 @@ class ResolverAAImpl(
     companion object {
         lateinit var instance: ResolverAAImpl
         lateinit var ktModule: KtModule
+        lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
+        lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     }
 
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
@@ -598,6 +567,75 @@ class ResolverAAImpl(
                 }
             }
             else -> null
+        }
+    }
+
+    internal fun computeAsMemberOf(property: KSPropertyDeclaration, containing: KSType): KSType {
+        val declaredIn = property.closestClassDeclaration()
+            ?: throw IllegalArgumentException(
+                "Cannot call asMemberOf with a property that is not declared in a class or an interface"
+            )
+        val key = property to containing
+        return propertyAsMemberOfCache.getOrPut(key) {
+            val resolved = property.type.resolve()
+            if (containing is KSTypeImpl && resolved is KSTypeImpl) {
+                val isSubTypeOf = analyze {
+                    (declaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
+                        containing.type.isSubTypeOf(it)
+                    } ?: false
+                }
+                if (!isSubTypeOf) {
+                    throw IllegalArgumentException(
+                        "$containing is not a sub type of the class/interface that contains `$property` ($declaredIn)"
+                    )
+                }
+                analyze {
+                    buildSubstitutor {
+                        fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
+                    }.let {
+                        // recursively substitute to ensure transitive substitution works.
+                        // should fix in upstream as well.
+                        var result = resolved.type
+                        while (it.substitute(result) != result) {
+                            result = it.substitute(result)
+                        }
+                        KSTypeImpl.getCached(result)
+                    }
+                }
+            } else {
+                KSErrorType
+            }
+        }
+    }
+
+    internal fun computeAsMemberOf(function: KSFunctionDeclaration, containing: KSType): KSFunction {
+        val propertyDeclaredIn = function.closestClassDeclaration()
+            ?: throw IllegalArgumentException(
+                "Cannot call asMemberOf with a property that is not declared in a class or an interface"
+            )
+        val key = function to containing
+        return functionAsMemberOfCache.getOrPut(key) {
+            if (containing is KSTypeImpl) {
+                val isSubTypeOf = analyze {
+                    (propertyDeclaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
+                        containing.type.isSubTypeOf(it)
+                    } ?: false
+                }
+                if (!isSubTypeOf) {
+                    throw IllegalArgumentException(
+                        "$containing is not a sub type of the class/interface that contains `$function` " +
+                            "($propertyDeclaredIn)"
+                    )
+                }
+                analyze {
+                    // TODO: recursive substitution does not solve fix point problem for signatures, probably needs fix in upstream.
+                    buildSubstitutor {
+                        fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
+                    }.let { (function as KSFunctionDeclarationImpl).ktFunctionSymbol.substitute(it) }.let {
+                        KSFunctionImpl(it)
+                    }
+                }
+            } else KSFunctionErrorImpl(function)
         }
     }
 }

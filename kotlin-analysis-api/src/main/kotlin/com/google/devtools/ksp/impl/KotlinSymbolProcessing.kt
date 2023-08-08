@@ -394,6 +394,8 @@ class KotlinSymbolProcessing(
             reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, psiFiles)
 
             ResolverAAImpl.ktModule = modules.single()
+            ResolverAAImpl.functionAsMemberOfCache = mutableMapOf()
+            ResolverAAImpl.propertyAsMemberOfCache = mutableMapOf()
             val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
             val javaRoots = kspConfig.javaSourceRoots + kspConfig.javaOutputDir
             // Get non-symbolic paths first
