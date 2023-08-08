@@ -18,9 +18,8 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.isConstructor
-import com.google.devtools.ksp.isPublic
+import com.google.devtools.ksp.*
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
@@ -104,7 +103,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override fun asMemberOf(containing: KSType): KSFunction {
-        TODO("Not yet implemented")
+        return ResolverAAImpl.instance.computeAsMemberOf(this, containing)
     }
 
     override val simpleName: KSName by lazy {

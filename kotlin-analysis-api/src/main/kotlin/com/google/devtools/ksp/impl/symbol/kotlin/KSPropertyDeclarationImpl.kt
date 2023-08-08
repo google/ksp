@@ -122,7 +122,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override fun asMemberOf(containing: KSType): KSType {
-        TODO("Not yet implemented")
+        return ResolverAAImpl.instance.computeAsMemberOf(this, containing)
     }
 
     override val qualifiedName: KSName? by lazy {
