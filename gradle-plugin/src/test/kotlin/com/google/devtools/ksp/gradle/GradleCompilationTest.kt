@@ -239,6 +239,7 @@ class GradleCompilationTest {
 
     @Test
     fun commandLineArgumentIsIncludedInApoptionsWhenAddedInKspTask() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(
