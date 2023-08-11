@@ -2,6 +2,7 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 
@@ -66,6 +67,7 @@ class HmppIT {
 
     @Test
     fun testHmpp() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         taskToFilesHmpp.forEach { (task, expected) ->
