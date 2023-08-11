@@ -25,6 +25,8 @@
 // File
 // Local
 // Array
+// Error type synthetic declaration
+// [<ERROR TYPE>, Foo]
 // @Foo
 // @Suppress
 // G
@@ -55,6 +57,8 @@ annotation class Bar(
     val argClsLib: kotlin.reflect.KClass<*>,
     val argClsLocal: kotlin.reflect.KClass<*>,
     val argClsArray: kotlin.reflect.KClass<*>,
+    val argClsMissing: kotlin.reflect.KClass<*>,
+    val argClsMissingInArray: Array<kotlin.reflect.KClass<*>>,
     val argAnnoUser: Foo,
     val argAnnoLib: Suppress,
     val argEnum: RGB,
@@ -64,7 +68,20 @@ annotation class Bar(
 
 fun Fun() {
     @Foo.Nested
-    @Bar("Str", 40 + 2, Foo::class, java.io.File::class, Local::class, Array<String>::class, Foo(17), Suppress("name1", "name2"), RGB.G, JavaEnum.ONE)
+    @Bar(
+        "Str",
+        40 + 2,
+        Foo::class,
+        java.io.File::class,
+        Local::class,
+        Array<String>::class,
+        Missing::class,
+        [Missing::class, Foo::class],
+        Foo(17),
+        Suppress("name1", "name2"),
+        RGB.G,
+        JavaEnum.ONE
+    )
     class Local
 }
 

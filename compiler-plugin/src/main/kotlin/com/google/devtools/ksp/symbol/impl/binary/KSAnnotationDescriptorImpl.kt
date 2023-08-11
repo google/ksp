@@ -38,9 +38,16 @@ import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptorVisitor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
+import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
+import org.jetbrains.kotlin.descriptors.SourceElement
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationArgumentVisitor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.load.java.components.JavaAnnotationDescriptor
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaAnnotationDescriptor
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
@@ -54,10 +61,17 @@ import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.psi.KtCollectionLiteralExpression
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.resolve.AnnotationResolverImpl
+import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.calls.components.hasDefaultValue
+import org.jetbrains.kotlin.resolve.calls.model.DefaultValueArgument
 import org.jetbrains.kotlin.resolve.constants.*
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.resolve.lazy.descriptors.LazyAnnotationDescriptor
+import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeConstructor
 import org.jetbrains.kotlin.types.isError
@@ -145,12 +159,86 @@ private fun <T> ConstantValue<T>.toValue(parent: KSNode): Any? = when (this) {
         } else classValue.classId.findKSType()
         is KClassValue.Value.LocalClass -> getKSTypeCached(classValue.type)
     }
-    is ErrorValue, is NullValue -> null
+    is ErrorValue -> KSErrorType
+    is NullValue -> null
     else -> value
 }
 
+private object DefaultConstantValue : ConstantValue<Unit>(Unit) {
+    override val value: Unit
+        get() = throw UnsupportedOperationException()
+
+    override fun getType(module: ModuleDescriptor): KotlinType =
+        throw UnsupportedOperationException()
+
+    override fun <R, D> accept(visitor: AnnotationArgumentVisitor<R, D>, data: D) =
+        throw UnsupportedOperationException()
+}
+
+// Adapted from LazyAnnotationDescriptor, which throws unresolvables away.
+fun LazyAnnotationDescriptor.getValueArguments(): Map<Name, ConstantValue<*>> {
+    class FileDescriptorForVisibilityChecks(
+        private val source: SourceElement,
+        private val containingDeclaration: PackageFragmentDescriptor
+    ) : DeclarationDescriptorWithSource, PackageFragmentDescriptor by containingDeclaration {
+        override val annotations: Annotations get() = Annotations.EMPTY
+        override fun getSource() = source
+        override fun getOriginal() = this
+        override fun getName() = Name.special("< file descriptor for annotation resolution >")
+
+        private fun error(): Nothing = error("This method should not be called")
+        override fun <R : Any?, D : Any?> accept(visitor: DeclarationDescriptorVisitor<R, D>?, data: D): R = error()
+        override fun acceptVoid(visitor: DeclarationDescriptorVisitor<Void, Void>?) = error()
+
+        override fun toString(): String = "${name.asString()} declared in LazyAnnotations.kt"
+    }
+
+    val scope = (c.scope.ownerDescriptor as? PackageFragmentDescriptor)?.let {
+        LexicalScope.Base(c.scope, FileDescriptorForVisibilityChecks(source, it))
+    } ?: c.scope
+
+    val resolutionResults = c.annotationResolver.resolveAnnotationCall(annotationEntry, scope, c.trace)
+    AnnotationResolverImpl.checkAnnotationType(annotationEntry, c.trace, resolutionResults)
+
+    if (!resolutionResults.isSingleResult) return emptyMap()
+
+    return resolutionResults.resultingCall.valueArguments.map { (valueParameter, resolvedArgument) ->
+        if (resolvedArgument == null) {
+            valueParameter.name to ErrorValue.create("ERROR VALUE")
+        } else if (resolvedArgument is DefaultValueArgument) {
+            valueParameter.name to DefaultConstantValue
+        } else {
+            c.annotationResolver.getAnnotationArgumentValue(c.trace, valueParameter, resolvedArgument)?.let { value ->
+                val argExp = resolvedArgument.arguments.lastOrNull()?.getArgumentExpression()
+                // When some elements are not available, the expected and actual size of an array argument will
+                // be different. In such case, we need to reconstruct the array.
+                //
+                // According to JLS, only 1-D array is allowed in annotations.
+                // No Kotlin spec is available so let's not get it overcomplicated.
+                if (argExp is KtCollectionLiteralExpression && value is TypedArrayValue &&
+                    argExp.innerExpressions.size != value.value.size
+                ) {
+                    val bc = ResolverImpl.instance!!.bindingTrace.bindingContext
+                    val args = argExp.innerExpressions.map {
+                        bc.get(BindingContext.COMPILE_TIME_VALUE, it)?.toConstantValue(value.type)
+                            ?: ErrorValue.create("<ERROR VALUE>")
+                    }
+                    valueParameter.name to TypedArrayValue(args, value.type)
+                } else {
+                    valueParameter.name to value
+                }
+            } ?: (valueParameter.name to ErrorValue.create("<ERROR VALUE>"))
+        }
+    }.toMap()
+}
+
 fun AnnotationDescriptor.createKSValueArguments(ownerAnnotation: KSAnnotation): List<KSValueArgument> {
-    val presentValueArguments = allValueArguments.map { (name, constantValue) ->
+    val allValueArgs = if (this is LazyAnnotationDescriptor) {
+        this.getValueArguments()
+    } else {
+        allValueArguments
+    }
+    val presentValueArguments = allValueArgs.filter { it.value !== DefaultConstantValue }.map { (name, constantValue) ->
         KSValueArgumentLiteImpl.getCached(
             KSNameImpl.getCached(name.asString()),
             constantValue.toValue(ownerAnnotation),
