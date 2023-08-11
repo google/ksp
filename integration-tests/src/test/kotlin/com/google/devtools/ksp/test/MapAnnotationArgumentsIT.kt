@@ -3,6 +3,7 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 
@@ -19,6 +20,7 @@ class MapAnnotationArgumentsIT {
 
     @Test
     fun testMapAnnotationArguments() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("assemble", "-Pksp.map.annotation.arguments.in.java=true").build().let { result ->

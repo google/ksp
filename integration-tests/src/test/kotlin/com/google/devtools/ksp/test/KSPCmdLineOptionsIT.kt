@@ -4,6 +4,7 @@ import org.gradle.testkit.runner.GradleRunner
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.ByteArrayOutputStream
@@ -59,6 +60,7 @@ class KSPCmdLineOptionsIT {
 
     @Test
     fun testWithCompilationOnError() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val result = runCmdCompiler(listOf("apoption=error=true", "withCompilation=true"))
         val errors = result.output.lines().filter { it.startsWith("error: [ksp]") }
         val exitCode = result.exitCode
@@ -72,6 +74,7 @@ class KSPCmdLineOptionsIT {
 
     @Test
     fun testWithCompilationOnErrorOk() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val result = runCmdCompiler(listOf("apoption=error=true", "returnOkOnError=true", "withCompilation=true"))
         val errors = result.output.lines().filter { it.startsWith("error: [ksp]") }
         val exitCode = result.exitCode

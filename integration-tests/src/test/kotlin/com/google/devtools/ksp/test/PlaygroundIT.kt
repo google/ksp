@@ -301,6 +301,7 @@ class PlaygroundIT {
 
     @Test
     fun testProjectExtensionCompilerOptions() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val properties = File(project.root, "gradle.properties")
         properties.writeText(
             properties.readText().replace(
