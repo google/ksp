@@ -33,8 +33,6 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.hasAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyAccessorImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
@@ -60,15 +58,10 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.toKSName
 import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.StandardFileSystems
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
@@ -87,11 +80,11 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.org.objectweb.asm.Opcodes
-import java.nio.file.Files
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
-    val ktFiles: List<KtFileSymbol>,
+    val allKSFiles: List<KSFile>,
+    val newKSFiles: List<KSFile>,
     val kspConfig: KSPJvmConfig,
     val project: Project
 ) : Resolver {
@@ -100,23 +93,7 @@ class ResolverAAImpl(
         lateinit var ktModule: KtModule
     }
 
-    val javaFiles: List<PsiJavaFile>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
-    init {
-        val psiManager = PsiManager.getInstance(project)
-        val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        // Get non-symbolic paths first
-        javaFiles = kspConfig.javaSourceRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
-            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
-            // This time is for .java files
-            .sortedBy { Files.isSymbolicLink(it.toPath()) }
-            .distinctBy { it.canonicalPath }
-            .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
-    }
-
-    private val ksFiles by lazy {
-        ktFiles.map { KSFileImpl.getCached(it) } + javaFiles.map { KSFileJavaImpl.getCached(it) }
-    }
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
@@ -264,7 +241,7 @@ class ResolverAAImpl(
         }
 
     override fun getAllFiles(): Sequence<KSFile> {
-        return ksFiles.asSequence()
+        return allKSFiles.asSequence()
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -411,7 +388,7 @@ class ResolverAAImpl(
 
     // FIXME: correct implementation after incremental is ready.
     override fun getNewFiles(): Sequence<KSFile> {
-        return getAllFiles().asSequence()
+        return newKSFiles.asSequence()
     }
 
     override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
