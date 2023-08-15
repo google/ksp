@@ -22,14 +22,16 @@ import com.google.devtools.ksp.AnyChanges
 import com.google.devtools.ksp.KSObjectCacheManager
 import com.google.devtools.ksp.analysisapi.providers.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.analysisapi.providers.IncrementalKotlinPackageProviderFactory
+import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.toKotlinVersion
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.core.CorePackageIndex
@@ -332,9 +334,6 @@ class KotlinSymbolProcessing(
 
     @OptIn(KtAnalysisApiInternals::class)
     fun execute() {
-        val deferredSymbols = mutableMapOf<SymbolProcessor, List<KSAnnotated>>()
-        val providers: List<SymbolProcessorProvider> = kspConfig.processorProviders
-
         // TODO: CompilerConfiguration is deprecated.
         val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
             addKotlinSourceRoots(kspConfig.sourceRoots.map { it.path })
@@ -358,11 +357,13 @@ class KotlinSymbolProcessing(
 
         val kspCoreEnvironment = KSPCoreEnvironment(analysisAPISession.project as MockProject)
 
-        // TODO: deferred symbols: use PSIs; they don't change.
         // TODO: error handling, onError()
         // TODO: performance
         val project = analysisAPISession.project
         val psiManager = PsiManager.getInstance(project)
+        val providers: List<SymbolProcessorProvider> = kspConfig.processorProviders
+
+        val deferredSymbols = mutableMapOf<SymbolProcessor, List<Restorable>>()
         var finished = false
         var initialized = false
         lateinit var codeGenerator: CodeGeneratorImpl
@@ -448,17 +449,22 @@ class KotlinSymbolProcessing(
                     it.filePath in newFileNames
                 }
             }
-            // TODO: support no kotlin source input.
             val resolver = ResolverAAImpl(
                 allKSFiles,
                 newKSFiles,
-                kspConfig,
+                deferredSymbols,
                 analysisAPISession.project
             )
             ResolverAAImpl.instance = resolver
 
-            // TODO: multiple rounds
-            processors.forEach { it.process(resolver) }
+            processors.forEach {
+                deferredSymbols[it] =
+                    it.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
+                        .filterIsInstance<Deferrable>().mapNotNull(Deferrable::defer)
+                if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
+                    deferredSymbols.remove(it)
+                }
+            }
 
             if (codeGenerator.generatedFile.isEmpty()) {
                 finished = true

@@ -31,7 +31,7 @@ class KSTypeReferenceImpl private constructor(
     private val ktType: KtType,
     override val parent: KSNode?,
     private val index: Int
-) : KSTypeReference {
+) : KSTypeReference, Deferrable {
     companion object : KSObjectCache<IdKeyTriple<KtType, KSNode?, Int>, KSTypeReference>() {
         fun getCached(type: KtType, parent: KSNode? = null, index: Int = -1): KSTypeReference =
             cache.getOrPut(IdKeyTriple(type, parent, index)) { KSTypeReferenceImpl(type, parent, index) }
@@ -102,5 +102,9 @@ class KSTypeReferenceImpl private constructor(
 
     override fun toString(): String {
         return ktType.render()
+    }
+
+    override fun defer(): Restorable? {
+        TODO("Not yet implemented")
     }
 }

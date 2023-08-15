@@ -51,4 +51,8 @@ class KSPropertyDeclarationLocalVariableImpl private constructor(
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun defer(): Restorable? {
+        return ktLocalVariableSymbol.defer(::getCached)
+    }
 }

@@ -64,6 +64,10 @@ class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldS
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun defer(): Restorable? {
+        TODO("Not yet implemented")
+    }
 }
 
 internal fun KtJavaFieldSymbol.toModifiers(): Set<Modifier> {
