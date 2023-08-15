@@ -20,24 +20,31 @@
 // Round 0:
 // K : <Error>, <Error>, <Error>, <Error>, <Error>, <Error>
 // J : <Error>, <Error>, <Error>, <Error>, <Error>, <Error>
+// +J.java, +K.kt
 // Round 1:
 // K : I0, <Error>, <Error>, <Error>, <Error>, <Error>
 // J : I0, <Error>, <Error>, <Error>, <Error>, <Error>
+// +I0.kt, J.java, K.kt
 // Round 2:
 // K : I0, I1, <Error>, <Error>, <Error>, <Error>
 // J : I0, I1, <Error>, <Error>, <Error>, <Error>
+// +I1.java, I0.kt, J.java, K.kt
 // Round 3:
 // K : I0, I1, I2, <Error>, <Error>, <Error>
 // J : I0, I1, I2, <Error>, <Error>, <Error>
+// +I2.kt, I0.kt, I1.java, J.java, K.kt
 // Round 4:
 // K : I0, I1, I2, I3, <Error>, <Error>
 // J : I0, I1, I2, I3, <Error>, <Error>
+// +I3.java, I0.kt, I1.java, I2.kt, J.java, K.kt
 // Round 5:
 // K : I0, I1, I2, I3, I4, <Error>
 // J : I0, I1, I2, I3, I4, <Error>
+// +I4.kt, I0.kt, I1.java, I2.kt, I3.java, J.java, K.kt
 // Round 6:
 // K : I0, I1, I2, I3, I4, I5
 // J : I0, I1, I2, I3, I4, I5
+// +I5.java, I0.kt, I1.java, I2.kt, I3.java, I4.kt, J.java, K.kt
 // END
 
 // FILE: K.kt

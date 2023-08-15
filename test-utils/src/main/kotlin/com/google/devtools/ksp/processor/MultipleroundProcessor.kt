@@ -42,6 +42,9 @@ class MultipleroundProcessor : AbstractTestProcessor() {
         result.add("Round $round:")
         check("K")
         check("J")
+        val newFiles = resolver.getNewFiles().map { it.fileName }.toSet()
+        val allFiles = resolver.getAllFiles().map { it.fileName }
+        result.add(allFiles.map { if (it in newFiles) "+$it" else it }.sorted().joinToString())
 
         round++
         return emptyList()
