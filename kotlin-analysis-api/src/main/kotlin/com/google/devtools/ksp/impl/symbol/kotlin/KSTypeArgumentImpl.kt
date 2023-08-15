@@ -34,7 +34,7 @@ import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 class KSTypeArgumentImpl private constructor(
     private val ktTypeProjection: KtTypeProjection,
     override val parent: KSNode?
-) : KSTypeArgument {
+) : KSTypeArgument, Deferrable {
     companion object : KSObjectCache<IdKeyPair<KtTypeProjection, KSNode?>, KSTypeArgumentImpl>() {
         fun getCached(ktTypeProjection: KtTypeProjection, parent: KSNode? = null) =
             cache.getOrPut(IdKeyPair(ktTypeProjection, parent)) { KSTypeArgumentImpl(ktTypeProjection, parent) }
@@ -73,5 +73,9 @@ class KSTypeArgumentImpl private constructor(
 
     override fun toString(): String {
         return "$variance $type"
+    }
+
+    override fun defer(): Restorable? {
+        TODO("Not yet implemented")
     }
 }

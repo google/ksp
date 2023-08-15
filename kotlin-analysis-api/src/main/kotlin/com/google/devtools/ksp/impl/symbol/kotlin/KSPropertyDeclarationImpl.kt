@@ -134,6 +134,10 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)
     }
+
+    override fun defer(): Restorable? {
+        return ktPropertySymbol.defer(::getCached)
+    }
 }
 
 internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {

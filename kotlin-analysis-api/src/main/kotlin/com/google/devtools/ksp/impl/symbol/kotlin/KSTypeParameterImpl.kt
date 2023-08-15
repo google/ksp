@@ -66,4 +66,8 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeParameter(this, data)
     }
+
+    override fun defer(): Restorable? {
+        return ktTypeParameterSymbol.defer(::getCached)
+    }
 }

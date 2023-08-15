@@ -156,6 +156,10 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             }.asSequence()
         } else decls
     }
+
+    override fun defer(): Restorable? {
+        return ktClassOrObjectSymbol.defer(::getCached)
+    }
 }
 
 internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
