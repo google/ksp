@@ -127,4 +127,8 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
         // TODO: fix after .getDeclaredMemberScope() works for enum entry with no initializer.
         emptySequence()
     }
+
+    override fun defer(): Restorable? {
+        return ktEnumEntrySymbol.defer(Companion::getCached)
+    }
 }

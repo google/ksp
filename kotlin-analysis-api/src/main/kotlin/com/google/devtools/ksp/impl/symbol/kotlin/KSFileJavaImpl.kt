@@ -29,7 +29,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 
-class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile {
+class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile, Deferrable {
     companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }
@@ -63,4 +63,7 @@ class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile 
     override fun toString(): String {
         return "File: ${this.fileName}"
     }
+
+    // Resolver.getSymbolsWithAnnotation never returns a java file because the latter cannot have file annotation.
+    override fun defer(): Restorable? = null
 }

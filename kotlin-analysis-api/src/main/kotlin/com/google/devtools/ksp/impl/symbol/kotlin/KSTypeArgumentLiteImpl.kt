@@ -12,7 +12,7 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 
 class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeReference, override val variance: Variance) :
-    KSTypeArgument {
+    KSTypeArgument, Deferrable {
     companion object : KSObjectCache<Pair<KSTypeReference, Variance>, KSTypeArgument>() {
         fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) {
             KSTypeArgumentLiteImpl(type, variance)
@@ -29,5 +29,9 @@ class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeRefere
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeArgument(this, data)
+    }
+
+    override fun defer(): Restorable? {
+        TODO("Not yet implemented")
     }
 }

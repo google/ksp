@@ -466,3 +466,21 @@ internal fun fillInDeepSubstitutor(context: KtType, substitutorBuilder: KtSubsti
         fillInDeepSubstitutor(it, substitutorBuilder)
     }
 }
+
+fun interface Restorable {
+    fun restore(): KSAnnotated?
+}
+
+fun interface Deferrable {
+    fun defer(): Restorable?
+}
+
+fun <T : KtSymbol> T.defer(restore: (T) -> KSAnnotated?): Restorable? {
+    val ptr = analyze { with(this) { this@defer.createPointer() } }
+    return Restorable {
+        analyze {
+            val restored = ptr.restoreSymbol() ?: return@analyze null
+            restore(restored as T)
+        }
+    }
+}

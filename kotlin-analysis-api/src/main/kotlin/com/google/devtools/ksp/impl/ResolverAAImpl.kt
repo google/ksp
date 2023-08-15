@@ -22,6 +22,7 @@ import com.google.devtools.ksp.*
 import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
@@ -55,7 +56,7 @@ import org.jetbrains.org.objectweb.asm.Opcodes
 class ResolverAAImpl(
     val allKSFiles: List<KSFile>,
     val newKSFiles: List<KSFile>,
-    val kspConfig: KSPJvmConfig,
+    val deferredSymbols: Map<SymbolProcessor, List<Restorable>>,
     val project: Project
 ) : Resolver {
     companion object {
@@ -415,7 +416,11 @@ class ResolverAAImpl(
             file.accept(visitor, Unit)
         }
 
-        return visitor.symbols.asSequence().filter {
+        val deferred = deferredSymbols.values.flatten().mapNotNull {
+            it.restore()
+        }.toSet()
+
+        return (visitor.symbols + deferred).asSequence().filter {
             it.annotations.any {
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
             }

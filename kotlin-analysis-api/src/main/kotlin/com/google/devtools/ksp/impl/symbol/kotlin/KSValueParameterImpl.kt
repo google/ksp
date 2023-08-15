@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 class KSValueParameterImpl private constructor(
     private val ktValueParameterSymbol: KtValueParameterSymbol,
     override val parent: KSAnnotated
-) : KSValueParameter {
+) : KSValueParameter, Deferrable {
     companion object : KSObjectCache<KtValueParameterSymbol, KSValueParameterImpl>() {
         fun getCached(ktValueParameterSymbol: KtValueParameterSymbol, parent: KSAnnotated) =
             cache.getOrPut(ktValueParameterSymbol) { KSValueParameterImpl(ktValueParameterSymbol, parent) }
@@ -101,5 +101,12 @@ class KSValueParameterImpl private constructor(
 
     override fun toString(): String {
         return name?.asString() ?: "_"
+    }
+
+    override fun defer(): Restorable? {
+        val other = (parent as Deferrable).defer() ?: return null
+        return ktValueParameterSymbol.defer {
+            getCached(it, other.restore() ?: return@defer null)
+        }
     }
 }

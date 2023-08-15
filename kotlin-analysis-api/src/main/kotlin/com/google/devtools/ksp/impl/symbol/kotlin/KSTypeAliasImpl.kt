@@ -53,4 +53,8 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KtTypeA
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeAlias(this, data)
     }
+
+    override fun defer(): Restorable? {
+        return ktTypeAliasSymbol.defer(::getCached)
+    }
 }
