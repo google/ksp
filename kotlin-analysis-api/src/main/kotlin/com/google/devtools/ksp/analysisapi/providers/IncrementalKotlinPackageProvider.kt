@@ -50,6 +50,7 @@ class IncrementalKotlinPackageProviderFactory(
     private var provider: IncrementalKotlinPackageProvider? = null
     private lateinit var scope: GlobalSearchScope
     private var files: Collection<KtFile> = emptyList()
+    private lateinit var staticFactory: KotlinPackageProviderFactory
 
     override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
         this.scope = searchScope
@@ -60,13 +61,13 @@ class IncrementalKotlinPackageProviderFactory(
 
     fun update(files: Collection<KtFile>) {
         this.files = files
+        this.staticFactory = KotlinStaticPackageProviderFactory(project, files)
         provider?.let {
             it.del = createDelegateProvider()
         }
     }
 
     private fun createDelegateProvider(): KotlinPackageProvider {
-        val staticFactory = KotlinStaticPackageProviderFactory(project, files)
         return staticFactory.createPackageProvider(scope)
     }
 }
