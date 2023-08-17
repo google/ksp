@@ -28,7 +28,6 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiJavaFile
 import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
@@ -47,7 +46,6 @@ class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : K
     override val packageName: KSName by lazy {
         when (psi) {
             is KtFile -> KSNameImpl.getCached((psi as KtFile).packageFqName.asString())
-            is PsiJavaFile -> KSNameImpl.getCached((psi as PsiJavaFile).packageName)
             else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
         }
     }
@@ -99,7 +97,6 @@ class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : K
         return Restorable {
             when (psi) {
                 is KtFile -> analyze { getCached(psi.getFileSymbol()) }
-                is PsiJavaFile -> null
                 else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
             }
         }
