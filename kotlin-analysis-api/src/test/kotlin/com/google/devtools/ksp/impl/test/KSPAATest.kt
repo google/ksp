@@ -659,4 +659,10 @@ class KSPAATest : AbstractKSPAATest() {
     fun testDeferredTypeRefs() {
         runTest("../test-utils/testData/api/deferredTypeRefs.kt")
     }
+
+    @TestMetadata("exitCode.kt")
+    @Test
+    fun testExitCode() {
+        runTest("../test-utils/testData/api/exitCode.kt")
+    }
 }
