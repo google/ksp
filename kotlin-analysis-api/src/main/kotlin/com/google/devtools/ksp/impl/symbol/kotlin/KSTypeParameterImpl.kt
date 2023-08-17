@@ -18,7 +18,9 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 
@@ -48,6 +50,10 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
     override val bounds: Sequence<KSTypeReference> by lazy {
         ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
             KSTypeReferenceImpl.getCached(type, this@KSTypeParameterImpl, index)
+        }.ifEmpty {
+            sequenceOf(
+                KSTypeReferenceSyntheticImpl.getCached(ResolverAAImpl.instance.builtIns.anyType.makeNullable(), this)
+            )
         }
     }
 
