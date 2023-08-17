@@ -79,6 +79,7 @@ class IncrementalKotlinDeclarationProviderFactory(
     private lateinit var scope: GlobalSearchScope
     private var contextualModule: KtModule? = null
     private var files: Collection<KtFile> = emptyList()
+    private lateinit var staticFactory: KotlinDeclarationProviderFactory
 
     override fun createDeclarationProvider(
         scope: GlobalSearchScope,
@@ -93,13 +94,13 @@ class IncrementalKotlinDeclarationProviderFactory(
 
     fun update(files: Collection<KtFile>) {
         this.files = files
+        this.staticFactory = KotlinStaticDeclarationProviderFactory(project, files)
         provider?.let {
             it.del = createDelegateProvider()
         }
     }
 
     private fun createDelegateProvider(): KotlinDeclarationProvider {
-        val staticFactory = KotlinStaticDeclarationProviderFactory(project, files)
         return staticFactory.createDeclarationProvider(scope, contextualModule)
     }
 }
