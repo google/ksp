@@ -142,8 +142,10 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             cachesDir = File(testRoot, "kspTest/kspCaches")
             outputBaseDir = File(testRoot, "kspTest")
         }.build()
-        val ksp = KotlinSymbolProcessing(kspConfig)
-        ksp.execute()
+        val exitCode = KotlinSymbolProcessing(kspConfig).execute()
+        if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
+            return listOf("KSP FAILED WITH EXIT CODE: ${exitCode.name}") + testProcessor.toResult()
+        }
         return testProcessor.toResult()
     }
 }
