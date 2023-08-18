@@ -76,19 +76,8 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.impl.KtModuleProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.impl.getSourceFilePaths
-import org.jetbrains.kotlin.analysis.providers.KotlinAnnotationsResolverFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProviderFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProviderMerger
-import org.jetbrains.kotlin.analysis.providers.KotlinModificationTrackerFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinPackageProviderFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinPsiDeclarationProviderFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinResolutionScopeProvider
-import org.jetbrains.kotlin.analysis.providers.PackagePartProviderFactory
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinByModulesResolutionScopeProvider
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticAnnotationsResolverFactory
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProviderMerger
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticModificationTrackerFactory
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticPsiDeclarationProviderFactory
+import org.jetbrains.kotlin.analysis.providers.*
+import org.jetbrains.kotlin.analysis.providers.impl.*
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
@@ -223,13 +212,11 @@ class KotlinSymbolProcessing(
 
         // register services and build session
         val ktModuleProviderImpl = projectStructureProvider as KtModuleProviderImpl
-        val modules = ktModuleProviderImpl.mainModules
-        val allSourceFiles = ktModuleProviderImpl.allSourceFiles()
+        val modules = ktModuleProviderImpl.allKtModules
+        val allSourceFiles = ktModuleProviderImpl.allSourceFiles
         StandaloneProjectFactory.registerServicesForProjectEnvironment(
             kotlinCoreProjectEnvironment,
             projectStructureProvider,
-            modules,
-            allSourceFiles,
         )
         val ktFiles = allSourceFiles.filterIsInstance<KtFile>()
         val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment)
@@ -278,6 +265,10 @@ class KotlinSymbolProcessing(
     ) {
         val project = kotlinCoreProjectEnvironment.project
         project.apply {
+            registerService(
+                KotlinMessageBusProvider::class.java,
+                KotlinProjectMessageBusProvider::class.java
+            )
             FirStandaloneServiceRegistrar.registerProjectServices(project)
             FirStandaloneServiceRegistrar.registerProjectExtensionPoints(project)
             FirStandaloneServiceRegistrar.registerProjectModelServices(
@@ -288,6 +279,10 @@ class KotlinSymbolProcessing(
             registerService(
                 KotlinModificationTrackerFactory::class.java,
                 KotlinStaticModificationTrackerFactory::class.java
+            )
+            registerService(
+                KotlinGlobalModificationService::class.java,
+                KotlinStaticGlobalModificationService::class.java
             )
             registerService(
                 KtLifetimeTokenProvider::class.java,
@@ -465,8 +460,7 @@ class KotlinSymbolProcessing(
                 processors.forEach { it.finish() }
             } else {
                 // Drop caches
-                KotlinModificationTrackerFactory.getService(project)
-                    .incrementModificationsCount(includeBinaryTrackers = false)
+                KotlinGlobalModificationService.getInstance(project).publishGlobalModuleStateModification()
                 KtAnalysisSessionProvider.getInstance(project).clearCaches()
                 psiManager.dropResolveCaches()
                 psiManager.dropPsiCaches()
