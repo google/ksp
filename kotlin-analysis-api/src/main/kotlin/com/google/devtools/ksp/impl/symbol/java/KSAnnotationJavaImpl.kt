@@ -3,14 +3,13 @@ package com.google.devtools.ksp.impl.symbol.java
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeReferenceImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
-import com.google.devtools.ksp.impl.symbol.kotlin.toKSDeclaration
-import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
@@ -39,7 +38,6 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KtType
-import org.jetbrains.kotlin.name.ClassId
 
 class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -149,10 +147,8 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
     }
     return when (result) {
         is PsiType -> {
-            analyze {
-                (ClassId.fromString(result.canonicalText).toKtClassSymbol()?.toKSDeclaration() as? KSClassDeclaration)
-                    ?.asStarProjectedType()
-            }
+            ResolverAAImpl.instance
+                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
         }
         is PsiLiteralValue -> {
             result.value
@@ -163,7 +159,7 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
             if (containingClass?.classKind == JvmClassKind.ENUM) {
                 // this is an enum entry
                 containingClass.qualifiedName?.let {
-                    ResolverAAImpl.instance!!.getClassDeclarationByName(it)
+                    ResolverAAImpl.instance.getClassDeclarationByName(it)
                 }?.declarations?.find {
                     it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
                         it.simpleName.asString() == result.name
