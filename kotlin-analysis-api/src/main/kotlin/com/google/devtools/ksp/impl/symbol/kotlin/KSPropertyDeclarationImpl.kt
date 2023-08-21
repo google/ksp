@@ -46,7 +46,14 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
             .map { KSAnnotationImpl.getCached(it, this) }
-            .filterNot { valueParameterAnnotation ->
+            .plus(
+                if (ktPropertySymbol.isFromPrimaryConstructor) {
+                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters
+                        ?.singleOrNull { it.name == simpleName }?.annotations ?: emptySequence()
+                } else {
+                    emptySequence()
+                }
+            ).filterNot { valueParameterAnnotation ->
                 valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
                     metaAnnotation.annotationType.resolve().declaration.qualifiedName
                         ?.asString() == "kotlin.annotation.Target" &&
@@ -58,13 +65,6 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             }.plus(
                 ktPropertySymbol.backingFieldSymbol?.annotations
                     ?.map { KSAnnotationImpl.getCached(it) } ?: emptyList()
-            ).plus(
-                if (ktPropertySymbol.isFromPrimaryConstructor) {
-                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters
-                        ?.singleOrNull { it.name == simpleName }?.annotations ?: emptySequence()
-                } else {
-                    emptySequence()
-                }
             )
     }
 
