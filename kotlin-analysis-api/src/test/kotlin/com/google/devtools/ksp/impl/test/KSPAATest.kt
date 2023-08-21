@@ -60,14 +60,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/allFunctions_java_inherits_kt.kt")
     }
 
-    @Disabled
     @TestMetadata("allFunctions_kt_inherits_java.kt")
     @Test
     fun testAllFunctions_kt_inherits_java() {
         runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
