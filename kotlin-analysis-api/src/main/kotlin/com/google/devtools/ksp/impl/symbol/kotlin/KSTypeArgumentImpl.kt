@@ -1,6 +1,6 @@
 /*
- * Copyright 2022 Google LLC
- * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2023 Google LLC
+ * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.findParentOfType
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeArgument
@@ -27,55 +26,51 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
-import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
-import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
-import org.jetbrains.kotlin.analysis.api.KtTypeProjection
+import org.jetbrains.kotlin.psi.KtProjectionKind
+import org.jetbrains.kotlin.psi.KtTypeProjection
+import org.jetbrains.kotlin.psi.KtUserType
 
-class KSTypeArgumentImpl private constructor(
-    private val ktTypeProjection: KtTypeProjection,
-    override val parent: KSNode?
-) : KSTypeArgument, Deferrable {
-    companion object : KSObjectCache<IdKeyPair<KtTypeProjection, KSNode?>, KSTypeArgumentImpl>() {
-        fun getCached(ktTypeProjection: KtTypeProjection, parent: KSNode? = null) =
-            cache.getOrPut(IdKeyPair(ktTypeProjection, parent)) { KSTypeArgumentImpl(ktTypeProjection, parent) }
-    }
-
-    override val variance: Variance by lazy {
-        when (ktTypeProjection) {
-            is KtStarTypeProjection -> Variance.STAR
-            is KtTypeArgumentWithVariance -> {
-                when (ktTypeProjection.variance) {
-                    org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
-                    org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
-                    org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
-                    else -> throw IllegalStateException("Unexpected variance")
-                }
-            }
+class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection) : KSTypeArgument {
+    companion object : KSObjectCache<KtTypeProjection, KSTypeArgument>() {
+        fun getCached(ktTypeArgument: KtTypeProjection) = cache.getOrPut(ktTypeArgument) {
+            KSTypeArgumentImpl(ktTypeArgument)
         }
     }
 
-    override val type: KSTypeReference? by lazy {
-        ktTypeProjection.type?.let { KSTypeReferenceImpl.getCached(it, this@KSTypeArgumentImpl) }
+    override val origin = Origin.KOTLIN
+
+    override val location: Location by lazy {
+        ktTypeArgument.toLocation()
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeProjection.type?.annotations(this) ?: emptySequence()
+    override val parent: KSNode? by lazy {
+        ktTypeArgument.findParentOfType<KtUserType>()?.let { KSClassifierReferenceImpl.getCached(it, this) }
     }
-
-    override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
-
-    override val location: Location
-        get() = TODO("Not yet implemented")
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeArgument(this, data)
     }
 
-    override fun toString(): String {
-        return "$variance $type"
+    override val variance: Variance by lazy {
+        when (ktTypeArgument.projectionKind) {
+            KtProjectionKind.STAR -> Variance.STAR
+            KtProjectionKind.IN -> Variance.CONTRAVARIANT
+            KtProjectionKind.NONE -> Variance.INVARIANT
+            KtProjectionKind.OUT -> Variance.COVARIANT
+        }
     }
 
-    override fun defer(): Restorable? {
-        TODO("Not yet implemented")
+    override val type: KSTypeReference? by lazy {
+        if (ktTypeArgument.typeReference != null) {
+            KSTypeReferenceImpl.getCached(ktTypeArgument.typeReference!!, this)
+        } else {
+            null
+        }
+    }
+    override val annotations: Sequence<KSAnnotation>
+        get() = emptySequence()
+
+    override fun toString(): String {
+        return "$variance $type"
     }
 }

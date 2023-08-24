@@ -19,10 +19,13 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
+import org.jetbrains.kotlin.psi.KtTypeParameter
+import org.jetbrains.kotlin.psi.KtTypeParameterListOwner
 
 class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol: KtTypeParameterSymbol) :
     KSTypeParameter,
@@ -48,8 +51,27 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
     override val isReified: Boolean = ktTypeParameterSymbol.isReified
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
-            KSTypeReferenceImpl.getCached(type, this@KSTypeParameterImpl, index)
+        when (val psi = ktTypeParameterSymbol.psi) {
+            is KtTypeParameter -> {
+                val owner = (parentDeclaration as? AbstractKSDeclarationImpl)
+                    ?.ktDeclarationSymbol?.psi as? KtTypeParameterListOwner
+                val list = sequenceOf(psi.extendsBound)
+                if (owner != null) {
+                    list.plus(
+                        owner.typeConstraints
+                            .filter {
+                                it.subjectTypeParameterName!!.getReferencedName() == psi.nameAsSafeName.asString()
+                            }
+                            .map { it.boundTypeReference }
+                    )
+                }
+                list.filterNotNull().map { KSTypeReferenceImpl.getCached(it, this) }
+            }
+            else -> {
+                ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
+                    KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
+                }
+            }
         }.ifEmpty {
             sequenceOf(
                 KSTypeReferenceSyntheticImpl.getCached(ResolverAAImpl.instance.builtIns.anyType.makeNullable(), this)
