@@ -639,4 +639,30 @@ class KSPAATest : AbstractKSPAATest() {
     fun testMultipleround() {
         runTest("../test-utils/testData/api/multipleround.kt")
     }
+
+    @TestMetadata("deferredSymbols.kt")
+    @Test
+    fun testDeferredSymbols() {
+        runTest("../test-utils/testData/api/deferredSymbols.kt")
+    }
+
+    @Disabled
+    @TestMetadata("deferredJavaSymbols.kt")
+    @Test
+    fun testDeferredJavaSymbols() {
+        runTest("../test-utils/testData/api/deferredJavaSymbols.kt")
+    }
+
+    @Disabled
+    @TestMetadata("deferredTypeRefs.kt")
+    @Test
+    fun testDeferredTypeRefs() {
+        runTest("../test-utils/testData/api/deferredTypeRefs.kt")
+    }
+
+    @TestMetadata("exitCode.kt")
+    @Test
+    fun testExitCode() {
+        runTest("../test-utils/testData/api/exitCode.kt")
+    }
 }

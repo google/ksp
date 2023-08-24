@@ -213,3 +213,9 @@ signing {
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(extensions.getByType<PublishingExtension>().publications)
 }
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-receivers")
+    }
+}

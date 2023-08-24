@@ -166,6 +166,10 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             super.docString
         }
     }
+
+    override fun defer(): Restorable? {
+        return ktFunctionSymbol.defer(::getCached)
+    }
 }
 
 internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {

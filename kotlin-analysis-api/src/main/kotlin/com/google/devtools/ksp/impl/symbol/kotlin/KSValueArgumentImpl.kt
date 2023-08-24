@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValu
 class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KtNamedAnnotationValue,
     override val origin: Origin
-) : KSValueArgument {
+) : KSValueArgument, Deferrable {
     companion object : KSObjectCache<KtNamedAnnotationValue, KSValueArgumentImpl>() {
         fun getCached(namedAnnotationValue: KtNamedAnnotationValue, origin: Origin) =
             cache.getOrPut(namedAnnotationValue) { KSValueArgumentImpl(namedAnnotationValue, origin) }
@@ -93,4 +93,6 @@ class KSValueArgumentImpl private constructor(
         is KtConstantAnnotationValue -> this.constantValue.value
         is KtUnsupportedAnnotationValue -> null
     }
+
+    override fun defer(): Restorable = Restorable { getCached(namedAnnotationValue, origin) }
 }

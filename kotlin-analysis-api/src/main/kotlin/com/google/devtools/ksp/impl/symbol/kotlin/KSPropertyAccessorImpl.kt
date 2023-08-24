@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.psi.KtPropertyAccessor
 abstract class KSPropertyAccessorImpl(
     internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
     override val receiver: KSPropertyDeclaration
-) : KSPropertyAccessor {
+) : KSPropertyAccessor, Deferrable {
 
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessorSymbol.annotations.asSequence()
@@ -105,6 +105,14 @@ class KSPropertySetterImpl private constructor(
     override fun toString(): String {
         return "$receiver.setter()"
     }
+
+    override fun defer(): Restorable? {
+        val other = (receiver as Deferrable).defer() ?: return null
+        return ktPropertyAccessorSymbol.defer {
+            val owner = other.restore() ?: return@defer null
+            getCached(owner as KSPropertyDeclaration, it as KtPropertySetterSymbol)
+        }
+    }
 }
 
 class KSPropertyGetterImpl private constructor(
@@ -126,5 +134,13 @@ class KSPropertyGetterImpl private constructor(
 
     override fun toString(): String {
         return "$receiver.getter()"
+    }
+
+    override fun defer(): Restorable? {
+        val other = (receiver as Deferrable).defer() ?: return null
+        return ktPropertyAccessorSymbol.defer {
+            val owner = other.restore() ?: return@defer null
+            getCached(owner as KSPropertyDeclaration, it as KtPropertyGetterSymbol)
+        }
     }
 }
