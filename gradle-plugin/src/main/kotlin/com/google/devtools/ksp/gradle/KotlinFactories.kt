@@ -40,6 +40,7 @@ import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.process.ExecOperations
 import org.gradle.work.InputChanges
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
@@ -58,7 +59,6 @@ import org.jetbrains.kotlin.gradle.tasks.TaskOutputsBackup
 import org.jetbrains.kotlin.gradle.tasks.configuration.BaseKotlin2JsCompileConfig
 import org.jetbrains.kotlin.gradle.tasks.configuration.KotlinCompileCommonConfig
 import org.jetbrains.kotlin.gradle.tasks.configuration.KotlinCompileConfig
-import org.jetbrains.kotlin.incremental.ChangedFiles
 import java.io.File
 import java.nio.file.Paths
 import javax.inject.Inject
@@ -171,7 +171,7 @@ interface KspTask : Task {
     val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
     @get:Internal
-    val incrementalChangesTransformers: ListProperty<(ChangedFiles) -> List<SubpluginOption>>
+    val incrementalChangesTransformers: ListProperty<(SourcesChanges) -> List<SubpluginOption>>
 }
 
 @CacheableTask
