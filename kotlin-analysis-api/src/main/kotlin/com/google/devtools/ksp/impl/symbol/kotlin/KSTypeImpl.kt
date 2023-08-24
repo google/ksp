@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -76,9 +77,10 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
             emptyList()
         } else {
             if (type is KtFlexibleType) {
-                type.upperBound.typeArguments().map { KSTypeArgumentImpl.getCached(it) }
+                type.upperBound.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it) }
             } else {
-                (type as? KtNonErrorClassType)?.typeArguments()?.map { KSTypeArgumentImpl.getCached(it) } ?: emptyList()
+                (type as? KtNonErrorClassType)?.typeArguments()?.map { KSTypeArgumentResolvedImpl.getCached(it) }
+                    ?: emptyList()
             }
         }
     }

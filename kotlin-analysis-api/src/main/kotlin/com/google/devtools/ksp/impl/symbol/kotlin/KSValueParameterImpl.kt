@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
@@ -56,7 +57,9 @@ class KSValueParameterImpl private constructor(
                     it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY)
             }
         }
-        KSTypeReferenceImpl.getCached(ktValueParameterSymbol.returnType, this@KSValueParameterImpl)
+        (ktValueParameterSymbol.psiIfSource() as? KtParameter)?.typeReference
+            ?.let { KSTypeReferenceImpl.getCached(it, this) }
+            ?: KSTypeReferenceResolvedImpl.getCached(ktValueParameterSymbol.returnType, this@KSValueParameterImpl)
     }
 
     override val isVararg: Boolean by lazy {

@@ -4,11 +4,11 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
-import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeReferenceImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
@@ -59,7 +59,8 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 
     override val annotationType: KSTypeReference by lazy {
-        KSTypeReferenceImpl.getCached(type, this)
+        // TODO: repleace with psi based implementation once `PsiType -> KtType` is supported in AA.
+        KSTypeReferenceResolvedImpl.getCached(type, this)
     }
 
     override val arguments: List<KSValueArgument> by lazy {

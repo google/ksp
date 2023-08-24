@@ -21,6 +21,8 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.KSNameImpl
@@ -168,7 +170,7 @@ internal fun KtType.toClassifierReference(parent: KSTypeReference?): KSReference
     return when (val ktType = this) {
         is KtFunctionalType -> KSCallableReferenceImpl.getCached(ktType, parent)
         is KtDynamicType -> KSDynamicReferenceImpl.getCached(parent!!)
-        is KtUsualClassType -> KSClassifierReferenceImpl.getCached(ktType, ktType.qualifiers.size - 1, parent)
+        is KtUsualClassType -> KSClassifierReferenceResolvedImpl.getCached(ktType, ktType.qualifiers.size - 1, parent)
         is KtFlexibleType -> ktType.lowerBound.toClassifierReference(parent)
         is KtErrorType -> null
         is KtTypeParameterType -> KSClassifierParameterImpl.getCached(ktType, parent)
@@ -472,6 +474,14 @@ internal fun fillInDeepSubstitutor(context: KtType, substitutorBuilder: KtSubsti
     }
     (context.classSymbol as? KtClassOrObjectSymbol)?.superTypes?.forEach {
         fillInDeepSubstitutor(it, substitutorBuilder)
+    }
+}
+
+internal fun KtSymbol.psiIfSource(): PsiElement? {
+    return if (origin == KtSymbolOrigin.SOURCE || origin == KtSymbolOrigin.JAVA && toContainingFile() != null) {
+        psi
+    } else {
+        null
     }
 }
 

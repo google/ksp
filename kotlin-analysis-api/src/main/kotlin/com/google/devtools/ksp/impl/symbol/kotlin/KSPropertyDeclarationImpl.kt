@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
@@ -32,6 +33,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
     KSPropertyDeclaration,
@@ -85,11 +87,15 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override val extensionReceiver: KSTypeReference? by lazy {
-        ktPropertySymbol.receiverType?.let { KSTypeReferenceImpl.getCached(it, this@KSPropertyDeclarationImpl) }
+        (ktPropertySymbol.psiIfSource() as? KtProperty)?.receiverTypeReference
+            ?.let { KSTypeReferenceImpl.getCached(it, this) }
+            ?: ktPropertySymbol.receiverType
+                ?.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) }
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl.getCached(ktPropertySymbol.returnType, this@KSPropertyDeclarationImpl)
+        (ktPropertySymbol.psiIfSource() as? KtProperty)?.typeReference?.let { KSTypeReferenceImpl.getCached(it, this) }
+            ?: KSTypeReferenceResolvedImpl.getCached(ktPropertySymbol.returnType, this@KSPropertyDeclarationImpl)
     }
 
     override val isMutable: Boolean by lazy {

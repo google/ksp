@@ -1,77 +1,61 @@
+/*
+ * Copyright 2023 Google LLC
+ * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.IdKeyPair
-import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.types.KtClassType
-import org.jetbrains.kotlin.analysis.api.types.KtClassTypeQualifier
-import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
+import com.google.devtools.ksp.symbol.KSClassifierReference
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSTypeArgument
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.Origin
+import org.jetbrains.kotlin.psi.KtUserType
 
 class KSClassifierReferenceImpl private constructor(
-    internal val ktType: KtClassType,
-    internal val index: Int,
-    override val parent: KSTypeReference?
+    val ktUserType: KtUserType,
+    override val parent: KSNode?
 ) : KSClassifierReference {
-    companion object : KSObjectCache<IdKeyTriple<KtClassType, Int, KSTypeReference?>, KSClassifierReferenceImpl>() {
-        fun getCached(ktType: KtClassType, index: Int, parent: KSTypeReference?) =
-            cache.getOrPut(IdKeyTriple(ktType, index, parent)) { KSClassifierReferenceImpl(ktType, index, parent) }
+    companion object : KSObjectCache<IdKeyPair<KtUserType, KSNode?>, KSClassifierReferenceImpl>() {
+        fun getCached(ktUserType: KtUserType, parent: KSNode? = null) =
+            cache.getOrPut(IdKeyPair(ktUserType, parent)) { KSClassifierReferenceImpl(ktUserType, parent) }
     }
 
-    private val classifierReference: KtClassTypeQualifier
-        get() = ktType.qualifiers[index]
+    override val origin = Origin.KOTLIN
 
-    override val qualifier: KSClassifierReference? by lazy {
-        if (index == 0) {
-            null
-        } else {
-            getCached(ktType, index - 1, parent)
-        }
-    }
-
-    override fun referencedName(): String {
-        return classifierReference.name.asString()
+    override val location: Location by lazy {
+        ktUserType.toLocation()
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        classifierReference.typeArguments.map { KSTypeArgumentImpl.getCached(it, this) }
+        ktUserType.typeArguments.map { KSTypeArgumentImpl.getCached(it) }
+        // ktUserType.typeArguments.map { KSTypeArgumentKtImpl.getCached(it) }
     }
-
-    override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
-
-    override val location: Location
-        get() = parent?.location ?: NonExistLocation
-
-    override fun toString(): String {
-        return referencedName()
-    }
-}
-
-class KSClassifierParameterImpl private constructor(
-    internal val ktType: KtTypeParameterType,
-    override val parent: KSTypeReference?
-) : KSClassifierReference {
-    companion object : KSObjectCache<IdKeyPair<KtTypeParameterType, KSTypeReference?>, KSClassifierParameterImpl>() {
-        fun getCached(ktType: KtTypeParameterType, parent: KSTypeReference?) =
-            KSClassifierParameterImpl.cache.getOrPut(IdKeyPair(ktType, parent)) {
-                KSClassifierParameterImpl(ktType, parent)
-            }
-    }
-
-    override val qualifier: KSClassifierReference? = null
 
     override fun referencedName(): String {
-        return ktType.name.asString()
+        return ktUserType.referencedName ?: ""
     }
 
-    override val typeArguments: List<KSTypeArgument>
-        get() = emptyList()
-    override val origin: Origin
-        get() = parent?.origin ?: Origin.SYNTHETIC
-    override val location: Location
-        get() = parent?.location ?: NonExistLocation
-
-    override fun toString(): String {
-        return referencedName()
+    override val qualifier: KSClassifierReference? by lazy {
+        if (ktUserType.qualifier == null) {
+            null
+        } else {
+            KSClassifierReferenceImpl.getCached(ktUserType.qualifier!!, parent)
+        }
     }
+
+    override fun toString() = referencedName()
 }
