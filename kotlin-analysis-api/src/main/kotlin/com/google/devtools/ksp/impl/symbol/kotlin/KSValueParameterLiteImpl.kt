@@ -2,6 +2,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.types.KtType
@@ -17,7 +18,7 @@ class KSValueParameterLiteImpl private constructor(private val ktType: KtType, o
     // preferably maybe use empty name to match compiler, but use underscore to match FE1.0 implementation.
     override val name: KSName = KSNameImpl.getCached("_")
 
-    override val type: KSTypeReference = KSTypeReferenceImpl.getCached(ktType)
+    override val type: KSTypeReference = KSTypeReferenceResolvedImpl.getCached(ktType)
 
     override val isVararg: Boolean = false
 

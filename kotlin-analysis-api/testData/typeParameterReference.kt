@@ -18,9 +18,6 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: TypeParameterReferenceProcessor
 // EXPECTED:
-// kotlin.Any: false
-// kotlin.Any: false
-// kotlin.Any: false
 // kotlin.Int: false
 // kotlin.Int: false
 // LibFoo: false

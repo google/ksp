@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSName
@@ -40,7 +41,7 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KtTypeA
     }
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl.getCached(ktTypeAliasSymbol.expandedType, this)
+        KSTypeReferenceResolvedImpl.getCached(ktTypeAliasSymbol.expandedType, this)
     }
 
     override val simpleName: KSName

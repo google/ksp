@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
@@ -73,22 +74,25 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             if (!ktFunctionSymbol.isExtension) {
                 null
             } else {
-                ktFunctionSymbol.receiverType?.let {
-                    KSTypeReferenceImpl.getCached(it, this@KSFunctionDeclarationImpl)
-                }
+                (ktFunctionSymbol.psiIfSource() as? KtFunction)?.receiverTypeReference
+                    ?.let { KSTypeReferenceImpl.getCached(it, this@KSFunctionDeclarationImpl) }
+                    ?: ktFunctionSymbol.receiverType?.let {
+                        KSTypeReferenceResolvedImpl.getCached(it, this@KSFunctionDeclarationImpl)
+                    }
             }
         }
     }
 
     override val returnType: KSTypeReference? by lazy {
-        analyze {
-            // Constructors
-            if (ktFunctionSymbol is KtConstructorSymbol) {
-                ((parentDeclaration as KSClassDeclaration).asStarProjectedType() as KSTypeImpl).type
-            } else {
-                ktFunctionSymbol.returnType
-            }.let { KSTypeReferenceImpl.getCached(it, this@KSFunctionDeclarationImpl) }
-        }
+        (ktFunctionSymbol.psiIfSource() as? KtFunction)?.typeReference?.let { KSTypeReferenceImpl.getCached(it, this) }
+            ?: analyze {
+                // Constructors
+                if (ktFunctionSymbol is KtConstructorSymbol) {
+                    ((parentDeclaration as KSClassDeclaration).asStarProjectedType() as KSTypeImpl).type
+                } else {
+                    ktFunctionSymbol.returnType
+                }.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSFunctionDeclarationImpl) }
+            }
     }
 
     override val parameters: List<KSValueParameter> by lazy {

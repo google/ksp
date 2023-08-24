@@ -18,12 +18,16 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
+import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
@@ -62,9 +66,21 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        analyze {
+        (ktClassOrObjectSymbol.psiIfSource() as? KtClassOrObject)?.let {
+            if (classKind == ClassKind.ANNOTATION_CLASS || classKind == ClassKind.ENUM_CLASS) {
+                null
+            } else {
+                it.superTypeListEntries.map {
+                    KSTypeReferenceImpl.getCached(it.typeReference!!, this)
+                }.asSequence().ifEmpty {
+                    sequenceOf(
+                        KSTypeReferenceSyntheticImpl.getCached(ResolverAAImpl.instance.builtIns.anyType, this)
+                    )
+                }
+            }
+        } ?: analyze {
             val supers = ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
-                KSTypeReferenceImpl.getCached(type, this@KSClassDeclarationImpl, index)
+                KSTypeReferenceResolvedImpl.getCached(type, this@KSClassDeclarationImpl, index)
             }
             // AA is returning additional kotlin.Any for java classes, explicitly extending kotlin.Any will result in
             // compile error, therefore filtering by name should work.

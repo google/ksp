@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -10,6 +11,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import org.jetbrains.kotlin.analysis.api.symbols.KtLocalVariableSymbol
+import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationLocalVariableImpl private constructor(
     private val ktLocalVariableSymbol: KtLocalVariableSymbol
@@ -28,7 +30,9 @@ class KSPropertyDeclarationLocalVariableImpl private constructor(
     override val extensionReceiver: KSTypeReference? = null
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceImpl.getCached(ktLocalVariableSymbol.returnType)
+        (ktLocalVariableSymbol.psiIfSource() as? KtProperty)?.typeReference
+            ?.let { KSTypeReferenceImpl.getCached(it, this) }
+            ?: KSTypeReferenceResolvedImpl.getCached(ktLocalVariableSymbol.returnType, this)
     }
 
     override val isMutable: Boolean = !ktLocalVariableSymbol.isVal

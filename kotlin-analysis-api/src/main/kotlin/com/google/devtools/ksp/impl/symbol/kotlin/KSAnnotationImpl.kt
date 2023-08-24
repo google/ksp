@@ -21,6 +21,7 @@ import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiAnnotationMethod
@@ -31,6 +32,7 @@ import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 
+// TODO: implement a psi based version of annotation application.
 class KSAnnotationImpl private constructor(
     private val annotationApplication: KtAnnotationApplicationWithArgumentsInfo,
     override val parent: KSNode?
@@ -42,7 +44,7 @@ class KSAnnotationImpl private constructor(
 
     override val annotationType: KSTypeReference by lazy {
         analyze {
-            KSTypeReferenceImpl.getCached(buildClassType(annotationApplication.classId!!))
+            KSTypeReferenceResolvedImpl.getCached(buildClassType(annotationApplication.classId!!))
         }
     }
 
