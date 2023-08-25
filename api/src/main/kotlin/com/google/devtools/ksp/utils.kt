@@ -378,7 +378,8 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                                 val value = { result.asArray(method, clazz) }
                                 cache.getOrPut(Pair(method.returnType, value), value)
                             } else {
-                                throw IllegalStateException("unhandled value type, $ExceptionMessage")
+                                val value = { result }
+                                cache.getOrPut(Pair(method.returnType, value), value)
                             }
                         }
                         method.returnType.isEnum -> {
