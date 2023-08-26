@@ -99,7 +99,7 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_1_8.toString()
         javaCompiler.set(
             javaToolchains.compilerFor {
-                languageVersion.set(JavaLanguageVersion.of(11))
+                languageVersion.set(JavaLanguageVersion.of(17))
             }
         )
     }
@@ -117,7 +117,7 @@ subprojects {
         // Java 11 is required to run
         javaLauncher.set(
             javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(11))
+                languageVersion.set(JavaLanguageVersion.of(17))
             }
         )
     }

@@ -50,6 +50,33 @@ class PlaygroundIT {
     }
 
     @Test
+    fun testPlaygroundJDK8() {
+        // FIXME: `clean` fails to delete files on windows.
+        File(project.root, "test-processor/build.gradle.kts").appendText(
+            """
+            kotlin {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+               }
+            }
+            """.trimIndent()
+        )
+        File(project.root, "workload/build.gradle.kts").appendText(
+            """
+            kotlin {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+               }
+            }
+            """.trimIndent()
+        )
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("clean", "build")
+        gradleRunner.buildAndCheck("clean", "build")
+    }
+
+    @Test
     fun testConfigurationOfConfiguration() {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
@@ -314,7 +341,7 @@ class PlaygroundIT {
             """
             kotlin {
                 compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_20)
                }
             }
             """.trimIndent()
