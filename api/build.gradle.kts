@@ -18,9 +18,6 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-dependencies {
-    api(kotlin("stdlib", kotlinBaseVersion))
-}
 tasks {
     val sourcesJar by creating(Jar::class) {
         archiveClassifier.set("sources")
