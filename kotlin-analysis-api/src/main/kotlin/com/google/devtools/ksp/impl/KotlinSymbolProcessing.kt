@@ -262,7 +262,12 @@ class KotlinSymbolProcessing(
             project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
         )
         return Triple(
-            StandaloneAnalysisAPISession(kotlinCoreProjectEnvironment, createPackagePartProvider),
+            StandaloneAnalysisAPISession(kotlinCoreProjectEnvironment, createPackagePartProvider) {
+                // This is only used by kapt4, which should query a provider, instead of have it passed here IMHO.
+                // kapt4's implementation is static, which may or may not work for us depending on future use cases.
+                // Let's implement it later if necessary.
+                TODO("Not implemented yet.")
+            },
             kotlinCoreProjectEnvironment,
             modules
         )
