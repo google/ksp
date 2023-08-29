@@ -174,6 +174,12 @@ interface KspAAWorkParameter : WorkParameters {
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config
+
+        // Clean stale files for now.
+        // TODO: support incremental processing.
+        gradleCfg.outputBaseDir.get().deleteRecursively()
+        gradleCfg.cachesDir.get().deleteRecursively()
+
         val processorClassloader = URLClassLoader(
             gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
             SymbolProcessorProvider::class.java.classLoader
