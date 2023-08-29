@@ -98,7 +98,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationValue_kt.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithArrayValue.kt")
     @Test
     fun testAnnotationWithArrayValue() {
@@ -119,7 +118,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithDefaultValues.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithJavaTypeValue.kt")
     @Test
     fun testAnnotationWithJavaTypeValue() {
