@@ -23,14 +23,17 @@ import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.symbol.Variance
 import com.intellij.lang.jvm.JvmClassKind
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerMemberValue
+import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteralValue
+import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.source.PsiAnnotationMethodImpl
@@ -146,6 +149,28 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         }
     }
     return when (result) {
+        is PsiPrimitiveType -> {
+            result.boxedTypeName?.let {
+                ResolverAAImpl.instance
+                    .getClassDeclarationByName(result.boxedTypeName!!)?.asStarProjectedType() ?: KSErrorType
+            }
+        }
+        is PsiArrayType -> {
+            val componentType = when (val component = result.componentType) {
+                is PsiPrimitiveType -> component.boxedTypeName?.let {
+                    ResolverAAImpl.instance
+                        .getClassDeclarationByName(component.boxedTypeName!!)?.asStarProjectedType()
+                } ?: KSErrorType
+                else -> {
+                    ResolverAAImpl.instance
+                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                }
+            }
+            val componentTypeRef = ResolverAAImpl.instance.createKSTypeReferenceFromKSType(componentType)
+            val typeArgs = listOf(ResolverAAImpl.instance.getTypeArgument(componentTypeRef, Variance.INVARIANT))
+            ResolverAAImpl.instance
+                .getClassDeclarationByName("kotlin.Array")!!.asType(typeArgs)
+        }
         is PsiType -> {
             ResolverAAImpl.instance
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
