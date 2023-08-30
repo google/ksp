@@ -18,6 +18,7 @@ val aaAsmVersion: String by project
 val aaFastutilVersion: String by project
 val aaStax2Version: String by project
 val aaAaltoXmlVersion: String by project
+val aaStreamexVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -62,6 +63,7 @@ dependencies {
     implementation(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation("com.google.guava:guava:$aaGuavaVersion")
+    implementation("one.util:streamex:$aaStreamexVersion")
     implementation("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion")
     implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
     implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
