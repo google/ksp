@@ -75,7 +75,9 @@ class ResolverAAImpl(
             override val anyType: KSType by lazy { KSTypeImpl.getCached(builtIns.ANY) }
             override val nothingType: KSType by lazy { KSTypeImpl.getCached(builtIns.NOTHING) }
             override val unitType: KSType by lazy { KSTypeImpl.getCached(builtIns.UNIT) }
-            override val numberType: KSType by lazy { TODO() }
+            override val numberType: KSType by lazy {
+                getClassDeclarationByName("kotlin.Number")!!.asStarProjectedType()
+            }
             override val byteType: KSType by lazy { KSTypeImpl.getCached(builtIns.BYTE) }
             override val shortType: KSType by lazy { KSTypeImpl.getCached(builtIns.SHORT) }
             override val intType: KSType by lazy { KSTypeImpl.getCached(builtIns.INT) }
@@ -85,9 +87,15 @@ class ResolverAAImpl(
             override val charType: KSType by lazy { KSTypeImpl.getCached(builtIns.CHAR) }
             override val booleanType: KSType by lazy { KSTypeImpl.getCached(builtIns.BOOLEAN) }
             override val stringType: KSType by lazy { KSTypeImpl.getCached(builtIns.STRING) }
-            override val iterableType: KSType by lazy { TODO() }
-            override val annotationType: KSType by lazy { TODO() }
-            override val arrayType: KSType by lazy { TODO() }
+            override val iterableType: KSType by lazy {
+                getClassDeclarationByName("kotlin.collections.Iterable")!!.asStarProjectedType()
+            }
+            override val annotationType: KSType by lazy {
+                getClassDeclarationByName("kotlin.Annotation")!!.asStarProjectedType()
+            }
+            override val arrayType: KSType by lazy {
+                getClassDeclarationByName("kotlin.Array")!!.asStarProjectedType()
+            }
         }
     }
 

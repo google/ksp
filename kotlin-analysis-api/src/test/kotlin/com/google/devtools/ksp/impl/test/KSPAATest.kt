@@ -35,7 +35,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotatedUtil.kt")
     }
 
-    @Disabled
     @TestMetadata("javaAnnotatedUtil.kt")
     @Test
     fun testJavaAnnotatedUtil() {
@@ -138,7 +137,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/backingFields.kt")
     }
 
-    @Disabled
     @TestMetadata("builtInTypes.kt")
     @Test
     fun testBuiltInTypes() {
