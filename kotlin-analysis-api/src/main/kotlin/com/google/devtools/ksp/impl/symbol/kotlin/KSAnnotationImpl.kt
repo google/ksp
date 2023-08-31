@@ -23,8 +23,8 @@ import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiClass
-import com.intellij.psi.impl.source.PsiAnnotationMethodImpl
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
@@ -59,7 +59,7 @@ class KSAnnotationImpl private constructor(
         analyze {
             annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
                 if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null) {
-                    (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethodImpl>()
+                    (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
                             annoMethod.defaultValue?.let {
                                 KSValueArgumentLiteImpl.getCached(
