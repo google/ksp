@@ -155,6 +155,10 @@ fun KSDeclaration.getVisibility(): Visibility {
         this.modifiers.contains(Modifier.PROTECTED) ||
             this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
+        // for synthetic origin from Java source, synthetic members follow visibility from parent to avoid
+        // package private synthetic members being mishandled as public.
+        this.origin == Origin.SYNTHETIC && this.parentDeclaration?.origin == Origin.JAVA ->
+            this.parentDeclaration!!.getVisibility()
         else -> if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB)
             Visibility.PUBLIC else Visibility.JAVA_PACKAGE
     }
