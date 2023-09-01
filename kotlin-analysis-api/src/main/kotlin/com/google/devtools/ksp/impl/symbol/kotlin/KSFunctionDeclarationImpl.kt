@@ -54,18 +54,17 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        if (isSyntheticConstructor()) {
+        if (isConstructor()) {
             val ksClassDeclaration = parentDeclaration as KSClassDeclaration
             if (ksClassDeclaration.classKind == ClassKind.ENUM_CLASS) {
-                return@lazy setOf(Modifier.FINAL, Modifier.PRIVATE)
-            }
-            if (ksClassDeclaration.isPublic()) {
+                setOf(Modifier.FINAL, Modifier.PRIVATE)
+            } else if (isSyntheticConstructor() && ksClassDeclaration.isPublic()) {
                 setOf(Modifier.FINAL, Modifier.PUBLIC)
             } else {
-                setOf(Modifier.FINAL)
+                super.modifiers + Modifier.FINAL
             }
         } else {
-            if (isConstructor()) super.modifiers + Modifier.FINAL else super.modifiers
+            super.modifiers
         }
     }
 
@@ -137,8 +136,10 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     private fun isSyntheticConstructor(): Boolean {
-        return origin == Origin.SYNTHETIC ||
-            (origin == Origin.JAVA && ktFunctionSymbol.psi == null || ktFunctionSymbol.psi is PsiClass)
+        return isConstructor() && (
+            origin == Origin.SYNTHETIC ||
+                (origin == Origin.JAVA && ktFunctionSymbol.psi == null || ktFunctionSymbol.psi is PsiClass)
+            )
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {

@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToke
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
+import org.jetbrains.kotlin.analysis.project.structure.KtLibraryModule
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
@@ -81,7 +82,11 @@ internal fun mapAAOrigin(ktSymbol: KtSymbol): Origin {
     return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
         Origin.JAVA_LIB
     } else {
-        symbolOrigin
+        if (ktSymbol.psi == null && analyze { ktSymbol.getContainingModule() is KtLibraryModule }) {
+            Origin.KOTLIN_LIB
+        } else {
+            symbolOrigin
+        }
     }
 }
 

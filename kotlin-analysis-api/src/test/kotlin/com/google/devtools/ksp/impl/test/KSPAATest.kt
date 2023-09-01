@@ -621,11 +621,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/validateTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("visibilities.kt")
     @Test
     fun testVisibilities() {
-        runTest("../test-utils/testData/api/visibilities.kt")
+        runTest("testData/visibilities.kt")
     }
 
     @TestMetadata("multipleround.kt")
