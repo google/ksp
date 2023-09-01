@@ -67,7 +67,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
             when (val psi = ktDeclarationSymbol.psi) {
                 is KtModifierListOwner -> psi.toKSModifiers()
                 is PsiModifierListOwner -> psi.toKSModifiers()
-                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
+                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}")
             }
         }
     }
