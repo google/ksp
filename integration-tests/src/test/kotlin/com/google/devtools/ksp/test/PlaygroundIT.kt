@@ -351,7 +351,7 @@ class PlaygroundIT {
             Assert.assertTrue(
                 result.output.contains(
                     "'compileJava' task (current target is 11) and 'kspKotlin' " +
-                        "task (current target is 17) jvm target compatibility should be set to the same Java version."
+                        "task (current target is 20) jvm target compatibility should be set to the same Java version."
                 )
             )
         }
