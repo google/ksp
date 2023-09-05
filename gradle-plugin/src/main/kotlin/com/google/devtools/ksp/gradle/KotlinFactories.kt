@@ -48,7 +48,6 @@ import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationInfo
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
-import org.jetbrains.kotlin.gradle.plugin.mpp.enabledOnCurrentHost
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -59,6 +58,7 @@ import org.jetbrains.kotlin.gradle.tasks.configuration.BaseKotlin2JsCompileConfi
 import org.jetbrains.kotlin.gradle.tasks.configuration.KotlinCompileCommonConfig
 import org.jetbrains.kotlin.gradle.tasks.configuration.KotlinCompileConfig
 import org.jetbrains.kotlin.incremental.ChangedFiles
+import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.File
 import java.nio.file.Paths
 import javax.inject.Inject
@@ -155,7 +155,11 @@ class KotlinFactories {
                     )
 
                     kspTask.onlyIf {
-                        kspTask.konanTarget.enabledOnCurrentHost
+                        // kspTask.konanTarget.enabledOnCurrentHost
+                        // workaround for: https://github.com/google/ksp/issues/1522
+                        HostManager().enabled.any {
+                            it.name == kspTask.konanTarget.name
+                        }
                     }
                 }
             }
