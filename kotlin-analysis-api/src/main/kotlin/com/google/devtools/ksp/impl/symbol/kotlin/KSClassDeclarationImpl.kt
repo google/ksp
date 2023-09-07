@@ -82,7 +82,12 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
-        TODO("Not yet implemented")
+        if (!modifiers.contains(Modifier.SEALED)) return emptySequence()
+        return (ktClassOrObjectSymbol as? KtNamedClassOrObjectSymbol)?.let {
+            analyze {
+                it.getSealedClassInheritors().map { getCached(it) }.asSequence()
+            }
+        } ?: emptySequence()
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
