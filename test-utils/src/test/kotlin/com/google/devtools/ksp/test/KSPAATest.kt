@@ -606,7 +606,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/typeParameterReference.kt")
     }
 
-    @Disabled
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {
