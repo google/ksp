@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.RelativizingLocalPathProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processor"
@@ -96,7 +97,8 @@ signing {
  * Create a properties file with that can be read from the gradle-plugin tests to setup test
  * projects.
  */
-val testPropsOutDir = project.layout.buildDirectory.dir("test-config")
+val tempTestDir = File(buildDir, "tmp/test")
+val testPropsOutDir: Provider<Directory> = project.layout.buildDirectory.dir("test-config")
 val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfiguration") {
     description = "Generates a properties file with the current environment for gradle integration tests"
     this.setOutputFile(
@@ -105,19 +107,14 @@ val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfigurati
         }
     )
     property("kspVersion", version)
-    property("mavenRepoDir", File(rootProject.buildDir, "repos/test").absolutePath)
-    property("kspProjectRootDir", rootProject.projectDir.absolutePath)
-    property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
-}
-
-normalization {
-    runtimeClasspath {
-        properties("**/testprops.properties") {
-            ignoreProperty("kspProjectRootDir")
-            ignoreProperty("mavenRepoDir")
-            ignoreProperty("processorClasspath")
-        }
-    }
+    property("mavenRepoDir", File(rootProject.buildDir, "repos/test").toRelativeString(projectDir))
+    property("kspProjectRootDir", rootProject.projectDir.toRelativeString(projectDir))
+    property(
+        "processorClasspath",
+        project.tasks["compileTestKotlin"].outputs.files
+            .map { it.toRelativeString(projectDir) }
+            .joinToString(File.pathSeparator)
+    )
 }
 
 java {
@@ -136,10 +133,16 @@ tasks.named("processTestResources").configure {
     dependsOn(writeTestPropsTask)
 }
 
-tasks.named<Test>("test").configure {
+tasks.test {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
+
+    jvmArgumentProviders.add(RelativizingLocalPathProvider("java.io.tmpdir", tempTestDir))
+
+    doFirst {
+        tempTestDir.deleteRecursively()
+    }
 }
 
 abstract class WriteVersionSrcTask @Inject constructor(

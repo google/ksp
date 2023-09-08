@@ -58,7 +58,7 @@ data class TestConfig(
         kspProjectProperties["agpBaseVersion"] as String
     }
 
-    val mavenRepoPath = mavenRepoDir.path.replace(File.separatorChar, '/')
+    val mavenRepoPath = mavenRepoDir.absolutePath.replace(File.separatorChar, '/')
 
     companion object {
         /**
@@ -71,10 +71,17 @@ data class TestConfig(
             }
             return TestConfig(
                 kspProjectDir = File(props.get("kspProjectRootDir") as String),
-                processorClasspath = props.get("processorClasspath") as String,
+                processorClasspath = absoluteClasspath(props.get("processorClasspath") as String),
                 mavenRepoDir = File(props.get("mavenRepoDir") as String),
                 kspVersion = props.get("kspVersion") as String
             )
+        }
+
+        private fun absoluteClasspath(classpathString: String): String {
+            return classpathString
+                .split(File.pathSeparator)
+                .map { File(it).absolutePath }
+                .joinToString(File.pathSeparator)
         }
     }
 }
