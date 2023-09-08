@@ -61,6 +61,8 @@ class KSFunctionDeclarationJavaImpl private constructor(val psi: PsiMethod) :
 
     override val extensionReceiver: KSTypeReference? = null
 
+    override val contextReceivers: List<KSTypeReference> = emptyList()
+
     override val functionKind: FunctionKind = when {
         psi.hasModifier(JvmModifier.STATIC) -> FunctionKind.STATIC
         else -> FunctionKind.MEMBER

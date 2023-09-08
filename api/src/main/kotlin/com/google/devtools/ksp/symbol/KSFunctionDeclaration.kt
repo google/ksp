@@ -45,6 +45,11 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     val extensionReceiver: KSTypeReference?
 
     /**
+     * Context receivers of this function
+     */
+    val contextReceivers: List<KSTypeReference>
+
+    /**
      * Return type of this function.
      * Can be null if an error occurred during resolution.
      */

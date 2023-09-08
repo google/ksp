@@ -166,6 +166,8 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
         } ?: KSErrorType
     }
 
+    override val contextReceivers: List<KSTypeReference> = emptyList()
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }

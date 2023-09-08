@@ -43,6 +43,11 @@ class KSFunctionErrorImpl(
             KSErrorType
         }
 
+    override val contextReceiverTypes: List<KSType>
+        get() = declaration.contextReceivers.let {
+            listOf(KSErrorType)
+        }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

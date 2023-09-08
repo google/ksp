@@ -74,4 +74,9 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
      * @return A type with all type parameters applied with star projection.
      */
     fun asStarProjectedType(): KSType
+
+    /**
+     * The class may have context receivers at the class level, which affect all constructors
+     */
+    val contextReceivers: List<KSTypeReference>
 }
