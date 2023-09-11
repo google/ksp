@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
+import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration

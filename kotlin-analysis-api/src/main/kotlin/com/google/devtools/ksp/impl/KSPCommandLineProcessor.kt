@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots

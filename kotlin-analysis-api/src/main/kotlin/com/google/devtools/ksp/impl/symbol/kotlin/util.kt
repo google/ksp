@@ -19,10 +19,11 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.google.devtools.ksp.getDocString
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.util.getDocString
 import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -489,3 +490,5 @@ fun <T : KtSymbol> T.defer(restore: (T) -> KSAnnotated?): Restorable? {
         }
     }
 }
+
+fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
