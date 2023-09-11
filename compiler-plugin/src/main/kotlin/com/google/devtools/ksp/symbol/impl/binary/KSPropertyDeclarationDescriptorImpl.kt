@@ -18,7 +18,6 @@
 package com.google.devtools.ksp.symbol.impl.binary
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.hasBackingFieldWithBinaryClassSupport
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*

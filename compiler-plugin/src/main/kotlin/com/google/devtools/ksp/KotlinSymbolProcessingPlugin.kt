@@ -34,7 +34,6 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.config.languageVersionSettings
-import org.jetbrains.kotlin.config.toKotlinVersion
 import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 
 private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("Ksp options")

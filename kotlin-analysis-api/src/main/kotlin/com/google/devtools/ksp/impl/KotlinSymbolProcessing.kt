@@ -33,7 +33,6 @@ import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.toKotlinVersion
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.core.CorePackageIndex
 import com.intellij.ide.highlighter.JavaFileType

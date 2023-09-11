@@ -16,9 +16,9 @@
  */
 package com.google.devtools.ksp.symbol.impl
 
-import com.google.devtools.ksp.BinaryClassInfoCache
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance
@@ -48,6 +48,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -560,3 +561,5 @@ fun DeclarationDescriptor.findPsi(): PsiElement? {
 
 internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement
     ?.annotationList?.annotations?.map { KSAnnotationJavaImpl.getCached(it) } ?: emptyList<KSAnnotation>()
+
+fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())

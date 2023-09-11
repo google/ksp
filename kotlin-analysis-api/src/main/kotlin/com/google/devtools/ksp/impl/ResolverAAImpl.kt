@@ -20,6 +20,9 @@ package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.impl.symbol.kotlin.*
+import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
+import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
+import com.google.devtools.ksp.impl.symbol.util.hasAnnotation
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor

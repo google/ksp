@@ -4,7 +4,6 @@ evaluationDependsOn(":api")
 
 description = "Kotlin Symbol Processing Util"
 
-val kotlinBaseVersion: String by project
 val intellijVersion: String by project
 val junitVersion: String by project
 
@@ -33,10 +32,6 @@ dependencies {
     ).forEach {
         implementation("$it:$intellijVersion") { isTransitive = false }
     }
-
-    implementation(kotlin("stdlib", kotlinBaseVersion))
-
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
 
     implementation(project(":api"))
     testImplementation("junit:junit:$junitVersion")
