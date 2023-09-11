@@ -1,6 +1,6 @@
 /*
- * Copyright 2022 Google LLC
- * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2023 Google LLC
+ * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.testutils
+package com.google.devtools.ksp.impl.test
 
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.intellij.openapi.Disposable

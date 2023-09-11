@@ -5,7 +5,6 @@ import com.google.devtools.ksp.KotlinSymbolProcessingExtension
 import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processor.AbstractTestProcessor
-import com.google.devtools.ksp.testutils.AbstractKSPTest
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
