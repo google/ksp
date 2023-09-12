@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.impl.test
+package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.intellij.openapi.Disposable
@@ -74,7 +74,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         val EXPECTED_RESULTS = "// EXPECTED:"
     }
 
-    val kspTestRoot = KtTestUtil.tmpDir("test")
+    val kspTestRoot = KtTestUtil.tmpDir("com/google/devtools/ksp/test/testgoogle/devtools/ksp/test/test")
     fun rootDirForModule(name: String) = File(kspTestRoot, name)
     fun outDirForModule(name: String) = File(rootDirForModule(name), "out")
     fun javaDirForModule(name: String) = File(rootDirForModule(name), "javaSrc")

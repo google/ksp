@@ -1,13 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.google.devtools.ksp.RelativizingPathProvider
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
-val junitVersion: String by project
-val junit5Version: String by project
-val junitPlatformVersion: String by project
-val libsForTesting by configurations.creating
-val libsForTestingCommon by configurations.creating
 val signingKey: String? by project
 val signingPassword: String? by project
 
@@ -71,40 +65,6 @@ dependencies {
 
     implementation(project(":api"))
     implementation(project(":common-util"))
-
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
-
-    testImplementation(project(":test-utils"))
-    testImplementation(project(":api"))
-    testImplementation(project(":common-util"))
-
-    testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$aaKotlinBaseVersion")
-
-    libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
-    libsForTesting(kotlin("test", aaKotlinBaseVersion))
-    libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
-    libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
-}
-
-tasks.register<Copy>("CopyLibsForTesting") {
-    from(configurations.get("libsForTesting"))
-    into("dist/kotlinc/lib")
-    val escaped = Regex.escape(aaKotlinBaseVersion)
-    rename("(.+)-$escaped\\.jar", "$1.jar")
-}
-
-tasks.register<Copy>("CopyLibsForTestingCommon") {
-    from(configurations.get("libsForTestingCommon"))
-    into("dist/common")
-    val escaped = Regex.escape(aaKotlinBaseVersion)
-    rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
 sourceSets.main {
@@ -116,35 +76,6 @@ val JavaPluginConvention.testSourceSet: SourceSet
     get() = sourceSets.getByName("test")
 val Project.testSourceSet: SourceSet
     get() = javaPluginConvention().testSourceSet
-
-tasks.test {
-    dependsOn("CopyLibsForTesting")
-    dependsOn("CopyLibsForTestingCommon")
-    maxHeapSize = "2g"
-
-    useJUnitPlatform()
-
-    systemProperty("idea.is.unit.test", "true")
-    systemProperty("java.awt.headless", "true")
-    environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
-
-    testLogging {
-        events("passed", "skipped", "failed")
-    }
-
-    lateinit var tempTestDir: File
-    doFirst {
-        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
-        jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
-
-        tempTestDir = createTempDir()
-        jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", tempTestDir))
-    }
-
-    doLast {
-        delete(tempTestDir)
-    }
-}
 
 repositories {
     flatDir {

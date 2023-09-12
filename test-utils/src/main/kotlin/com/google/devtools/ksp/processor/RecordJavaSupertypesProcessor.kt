@@ -33,7 +33,7 @@ class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val types = mutableSetOf<KSType>()
         resolver.getAllFiles().forEach {
-            it.accept(com.google.devtools.ksp.processor.TypeCollectorNoAccessor(), types)
+            it.accept(TypeCollectorNoAccessor(), types)
         }
         types.forEach {
             resolver.builtIns.anyType.isAssignableFrom(it)
