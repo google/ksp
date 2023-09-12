@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.impl.test
+package com.google.devtools.ksp.test
 
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Disabled
@@ -311,7 +311,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("innerTypes.kt")
     @Test
     fun testInnerTypes() {
-        runTest("testData/innerTypes.kt")
+        runTest("../kotlin-analysis-api/testData/innerTypes.kt")
     }
 
     @TestMetadata("interfaceWithDefault.kt")
@@ -323,7 +323,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
-        runTest("testData/javaModifiers.kt")
+        runTest("../kotlin-analysis-api/testData/javaModifiers.kt")
     }
 
     @TestMetadata("javaNonNullTypes.kt")
@@ -405,7 +405,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
-        runTest("testData/nestedClassType.kt")
+        runTest("../kotlin-analysis-api/testData/nestedClassType.kt")
     }
 
     @TestMetadata("nullableTypes.kt")
@@ -430,7 +430,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("javaAnno.kt")
     @Test
     fun testJavaAnno() {
-        runTest("testData/overridee/javaAnno.kt")
+        runTest("../kotlin-analysis-api/testData/overridee/javaAnno.kt")
     }
 
     @TestMetadata("javaOverrideInSource.kt")
@@ -460,7 +460,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("overrideOrder.kt")
     @Test
     fun testOverrideOrder() {
-        runTest("testData/overridee/overrideOrder.kt")
+        runTest("../kotlin-analysis-api/testData/overridee/overrideOrder.kt")
     }
 
     @TestMetadata("primaryConstructorOverride.kt")
@@ -624,7 +624,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("visibilities.kt")
     @Test
     fun testVisibilities() {
-        runTest("testData/visibilities.kt")
+        runTest("../kotlin-analysis-api/testData/visibilities.kt")
     }
 
     @TestMetadata("multipleround.kt")
