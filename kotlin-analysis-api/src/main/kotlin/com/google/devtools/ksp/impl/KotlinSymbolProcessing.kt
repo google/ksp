@@ -622,3 +622,17 @@ private fun getDefaultJdkModuleRoots(
         result
     }
 }
+
+fun String?.toKotlinVersion(): KotlinVersion {
+    if (this == null)
+        return KotlinVersion.CURRENT
+
+    return split('-').first().split('.').map { it.toInt() }.let {
+        when (it.size) {
+            1 -> KotlinVersion(it[0], 0, 0)
+            2 -> KotlinVersion(it[0], it[1], 0)
+            3 -> KotlinVersion(it[0], it[1], it[2])
+            else -> KotlinVersion.CURRENT
+        }
+    }
+}
