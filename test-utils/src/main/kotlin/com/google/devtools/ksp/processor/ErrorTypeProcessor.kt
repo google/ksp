@@ -41,22 +41,22 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
         errorInComponent.type.resolve().arguments.forEach { result.add(it.type!!.resolve().print()) }
         result.add(
             "errorInComponent is assignable from errorAtTop: ${
-            errorAtTop.type.resolve().isAssignableFrom(errorAtTop.type.resolve())
+            errorInComponent.type.resolve().isAssignableFrom(errorAtTop.type.resolve())
             }"
         )
         result.add(
             "errorInComponent is assignable from class C: ${
-            errorAtTop.type.resolve().isAssignableFrom(classC.asStarProjectedType())
+            errorInComponent.type.resolve().isAssignableFrom(classC.asStarProjectedType())
             }"
         )
         result.add(
             "Any is assignable from errorInComponent: ${
-            resolver.builtIns.anyType.isAssignableFrom(errorAtTop.type.resolve())
+            resolver.builtIns.anyType.isAssignableFrom(errorInComponent.type.resolve())
             }"
         )
         result.add(
             "class C is assignable from errorInComponent: ${
-            classC.asStarProjectedType().isAssignableFrom(errorAtTop.type.resolve())
+            classC.asStarProjectedType().isAssignableFrom(errorInComponent.type.resolve())
             }"
         )
         result.add(

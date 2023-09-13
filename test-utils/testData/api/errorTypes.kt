@@ -24,7 +24,7 @@
 // ERROR TYPE
 // errorInComponent is assignable from errorAtTop: false
 // errorInComponent is assignable from class C: false
-// Any is assignable from errorInComponent: false
+// Any is assignable from errorInComponent: true
 // class C is assignable from errorInComponent: false
 // Any is assignable from class C: true
 // Cls's super type is Error type: true
