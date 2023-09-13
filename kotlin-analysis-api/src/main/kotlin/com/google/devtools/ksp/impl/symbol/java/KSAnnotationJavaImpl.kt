@@ -4,7 +4,6 @@ import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
-import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeReferenceImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
@@ -38,9 +37,12 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.source.PsiAnnotationMethodImpl
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 
 class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
@@ -49,8 +51,10 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation) :
     }
 
     private val type: KtType by lazy {
-        (ResolverAAImpl.instance.getClassDeclarationByName(psi.qualifiedName!!)!!.asStarProjectedType() as KSTypeImpl)
-            .type
+        // TODO: local class annotations?
+        analyze {
+            buildClassType(ClassId.topLevel(FqName(psi.qualifiedName!!)))
+        }
     }
 
     override val annotationType: KSTypeReference by lazy {

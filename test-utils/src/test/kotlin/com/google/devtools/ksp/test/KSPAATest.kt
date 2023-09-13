@@ -232,11 +232,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/equivalentJavaWildcards.kt")
     }
 
-    @Disabled
     @TestMetadata("errorTypes.kt")
     @Test
     fun testErrorTypes() {
-        runTest("../test-utils/testData/api/errorTypes.kt")
+        runTest("../kotlin-analysis-api/testData/errorTypes.kt")
     }
 
     @TestMetadata("functionTypeAlias.kt")
