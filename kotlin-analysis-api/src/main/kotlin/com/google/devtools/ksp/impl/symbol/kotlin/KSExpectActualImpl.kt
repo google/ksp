@@ -19,19 +19,27 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSExpectActual
 import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KtPossibleMultiplatformSymbol
 
 class KSExpectActualImpl(private val declarationSymbol: KtDeclarationSymbol) : KSExpectActual {
     override val isActual: Boolean
-        get() = TODO("Not yet implemented")
+        get() = (declarationSymbol as? KtPossibleMultiplatformSymbol)?.isActual == true
 
     override val isExpect: Boolean
-        get() = TODO("Not yet implemented")
+        get() = (declarationSymbol as? KtPossibleMultiplatformSymbol)?.isExpect == true
 
+    // TODO: not possible in new KMP model, returning empty sequence for now.
     override fun findActuals(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
+        return emptySequence()
     }
 
     override fun findExpects(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
+        return if (!isActual) {
+            emptySequence()
+        } else {
+            analyze {
+                declarationSymbol.getExpectsForActual().mapNotNull { it.toKSDeclaration() }
+            }.asSequence()
+        }
     }
 }

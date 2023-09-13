@@ -109,20 +109,6 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
 
-    override val isActual: Boolean
-        get() = TODO("Not yet implemented")
-
-    override val isExpect: Boolean
-        get() = TODO("Not yet implemented")
-
-    override fun findActuals(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
-    }
-
-    override fun findExpects(): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
-    }
-
     override val declarations: Sequence<KSDeclaration> by lazy {
         // TODO: fix after .getDeclaredMemberScope() works for enum entry with no initializer.
         emptySequence()
