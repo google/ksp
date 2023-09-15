@@ -86,9 +86,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         if (that.isError || this.isError) {
             return false
         }
-        return analyze {
-            (that as? KSTypeImpl)?.type?.isSubTypeOf(type) == true
-        }
+        return type.isAssignableFrom((that as KSTypeImpl).type)
     }
 
     override fun isMutabilityFlexible(): Boolean {
