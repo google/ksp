@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.analysis.api.KtTypeProjection
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.components.KtSubstitutorBuilder
+import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
@@ -41,6 +42,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.analysis.project.structure.KtLibraryModule
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
@@ -492,3 +494,47 @@ fun <T : KtSymbol> T.defer(restore: (T) -> KSAnnotated?): Restorable? {
 }
 
 fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
+
+// Only need to map java types if type declaration has origin of java
+// or kotlin functional type (in the case of Java functional type).
+internal fun KtClassLikeSymbol.shouldMapToKotlinForAssignabilityCheck(): Boolean {
+    return this.origin == KtSymbolOrigin.JAVA ||
+        this.classIdIfNonLocal?.packageFqName?.asString() == "kotlin.jvm.functions"
+}
+
+// recursively replace type & type argument to map java types into kotlin types.
+internal fun KtType.convertToKotlinType(): KtType {
+    if (this !is KtNonErrorClassType) {
+        return this
+    }
+    val declaration = this.classifierSymbol() as? KtClassLikeSymbol ?: return this
+    if (declaration.classIdIfNonLocal == null) {
+        return this
+    }
+    val base = if (declaration.classIdIfNonLocal != null && declaration.shouldMapToKotlinForAssignabilityCheck()) {
+        JavaToKotlinClassMap.mapJavaToKotlin(declaration.classIdIfNonLocal!!.asSingleFqName())?.toKtClassSymbol()
+            ?: declaration
+    } else declaration
+    return analyze {
+        buildClassType(base) {
+            this@convertToKotlinType.typeArguments().forEach { typeProjection ->
+                if (typeProjection is KtTypeArgumentWithVariance) {
+                    argument(typeProjection.type.convertToKotlinType(), typeProjection.variance)
+                } else {
+                    argument(typeProjection)
+                }
+            }
+            nullability = this@convertToKotlinType.nullability
+        }
+    }
+}
+
+internal fun KtType.isAssignableFrom(that: KtType): Boolean {
+    return if (that is KtFlexibleType) {
+        this.isAssignableFrom(that.upperBound) || this.isAssignableFrom(that.lowerBound)
+    } else {
+        analyze {
+            that.convertToKotlinType().isSubTypeOf(this@isAssignableFrom.convertToKotlinType())
+        }
+    }
+}
