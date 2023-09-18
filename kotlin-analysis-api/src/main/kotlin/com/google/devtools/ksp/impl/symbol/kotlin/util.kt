@@ -158,7 +158,7 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
                 is KtIntersectionType ->
                     this@render.conjuncts
                         .joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render(inFunctionType) }
-                is KtTypeParameterType -> asStringForDebugging()
+                is KtTypeParameterType -> name.asString()
             } + if (nullability == KtTypeNullability.NULLABLE) "?" else ""
         )
     }
