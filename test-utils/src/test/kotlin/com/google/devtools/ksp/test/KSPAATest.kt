@@ -598,11 +598,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/typeComposure.kt")
     }
 
-    @Disabled
     @TestMetadata("typeParameterReference.kt")
     @Test
     fun testTypeParameterReference() {
-        runTest("../test-utils/testData/api/typeParameterReference.kt")
+        runTest("../kotlin-analysis-api/testData/typeParameterReference.kt")
     }
 
     @TestMetadata("varianceTypeCheck.kt")
