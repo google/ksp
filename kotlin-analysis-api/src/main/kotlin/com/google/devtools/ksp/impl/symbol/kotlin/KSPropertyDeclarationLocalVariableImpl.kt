@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -44,9 +43,7 @@ class KSPropertyDeclarationLocalVariableImpl private constructor(
         TODO("Not yet implemented")
     }
 
-    override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached("${parentDeclaration?.qualifiedName?.asString()}.${this.simpleName.asString()}")
-    }
+    override val qualifiedName: KSName? = null
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitPropertyDeclaration(this, data)

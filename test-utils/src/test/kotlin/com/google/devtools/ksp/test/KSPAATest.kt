@@ -206,11 +206,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/declarationOrder.kt")
     }
 
-    @Disabled
     @TestMetadata("declarationUtil.kt")
     @Test
     fun testDeclarationUtil() {
-        runTest("../test-utils/testData/api/declarationUtil.kt")
+        runTest("../kotlin-analysis-api/testData/declarationUtil.kt")
     }
 
     @TestMetadata("declared.kt")
