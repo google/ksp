@@ -62,6 +62,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
         private fun KSDeclaration.toSignature(): String {
             val parent = parentDeclaration
             val id = qualifiedName?.asString()
+                ?: "${parentDeclaration?.qualifiedName?.asString()}.${simpleName.asString()}"
             val modifiersSignature = modifiers.map { it.toString() }.sorted().joinToString(" ")
             val extras = resolver.effectiveJavaModifiers(this).map { it.toString() }.sorted().joinToString(" ").trim()
             return "$id: $modifiersSignature".trim() + " : " + extras
