@@ -542,11 +542,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/replaceWithErrorTypeArgs.kt")
     }
 
-    @Disabled
     @TestMetadata("resolveJavaType.kt")
     @Test
     fun testResolveJavaType() {
-        runTest("../test-utils/testData/api/resolveJavaType.kt")
+        runTest("../kotlin-analysis-api/testData/resolveJavaType.kt")
     }
 
     @Disabled
