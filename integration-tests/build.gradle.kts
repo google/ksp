@@ -13,6 +13,7 @@ dependencies {
     testImplementation(gradleTestKit())
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation(project(":api"))
+    testImplementation(project(":common-util"))
     testImplementation(project(":gradle-plugin"))
     testImplementation(project(":symbol-processing"))
     testImplementation(project(":symbol-processing-cmdline"))
