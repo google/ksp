@@ -81,7 +81,7 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
                         Variance.INVARIANT -> ""
                         Variance.CONTRAVARIANT -> "in "
                         Variance.COVARIANT -> "out "
-                    } + it.type?.render()
+                    } + (it.type?.render() ?: "")
                 }.joinToString(", ")}>"
             )
         }
