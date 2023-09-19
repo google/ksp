@@ -60,7 +60,9 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
     override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached("${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}")
+        this.parentDeclaration?.qualifiedName?.let {
+            KSNameImpl.getCached("${it.asString()}.${simpleName.asString()}")
+        }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
