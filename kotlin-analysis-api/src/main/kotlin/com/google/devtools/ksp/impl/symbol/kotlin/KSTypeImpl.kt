@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -71,7 +72,15 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override val arguments: List<KSTypeArgument> by lazy {
-        (type as? KtNonErrorClassType)?.typeArguments()?.map { KSTypeArgumentImpl.getCached(it) } ?: emptyList()
+        if (ResolverAAImpl.instance.isJavaRawType(this)) {
+            emptyList()
+        } else {
+            if (type is KtFlexibleType) {
+                type.upperBound.typeArguments().map { KSTypeArgumentImpl.getCached(it) }
+            } else {
+                (type as? KtNonErrorClassType)?.typeArguments()?.map { KSTypeArgumentImpl.getCached(it) } ?: emptyList()
+            }
+        }
     }
 
     override val annotations: Sequence<KSAnnotation>

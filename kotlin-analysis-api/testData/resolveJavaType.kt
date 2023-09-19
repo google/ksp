@@ -1,6 +1,6 @@
 /*
- * Copyright 2020 Google LLC
- * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2023 Google LLC
+ * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,49 +17,45 @@
 
 // TEST PROCESSOR: ResolveJavaTypeProcessor
 // EXPECTED:
-// C<*kotlin.Any?>
-// C.<init>.X?
-// C<*kotlin.Any?>
 // kotlin.Int
 // kotlin.String?
-// kotlin.collections.MutableSet<*kotlin.Any?>?
+// kotlin.collections.MutableSet<*>?
 // kotlin.Unit
 // kotlin.IntArray?
 // C.T?
 // C.PFun.P?
 // kotlin.collections.MutableList<out kotlin.collections.MutableSet<kotlin.Double?>?>?
 // kotlin.collections.MutableList<in kotlin.collections.MutableList<out kotlin.Double?>?>?
+// Bar?
+// kotlin.Array<out Bar?>?
+// C<*>
 // <ERROR>?
-// kotlin.Array<<ERROR>?>?
+// C<*>
+// kotlin.collections.MutableList<Base.T?>?
+// kotlin.Unit
+// Base.T?
+// kotlin.Unit
+// Base.T?
+// kotlin.Unit
+// kotlin.Array<out Base.T?>?
+// kotlin.Unit
 // Foo<Base.T?, Base.Inner.P?>?
 // Bar<Base.Inner.P?, Base.T?>?
 // kotlin.collections.MutableList<Base.T?>?
 // kotlin.Unit
 // Base.T?
 // kotlin.Unit
-// kotlin.Array<Base.T?>?
-// kotlin.Unit
-// kotlin.Array<Base.T?>?
-// kotlin.Unit
-// kotlin.collections.MutableList<Base.T?>?
-// kotlin.Unit
 // Base.T?
 // kotlin.Unit
-// kotlin.Array<Base.T?>?
-// kotlin.Unit
-// kotlin.Array<Base.T?>?
+// kotlin.Array<out Base.T?>?
 // kotlin.Unit
 // Base<Another.T?, Another.T?>?
 // kotlin.Int
+// kotlin.Unit
 // kotlin.Int
 // JavaEnum
-// kotlin.Unit
-// kotlin.Array<JavaEnum?>?
-// kotlin.String?
-// JavaEnum?
 // END
-// FILE: a.kt
-annotation class Test
+// FILE: dummy.kt
 
 // FILE: C.java
 import java.util.List;
