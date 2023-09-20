@@ -6,6 +6,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -58,6 +59,7 @@ abstract class KspAATask @Inject constructor(
             kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>>,
             processorClasspath: Configuration,
             kspGeneratedSourceSet: KotlinSourceSet,
+            kspExtension: KspExtension,
         ): TaskProvider<KspAATask> {
             val project = kotlinCompilation.target.project
             val target = kotlinCompilation.target.name
@@ -108,6 +110,7 @@ abstract class KspAATask @Inject constructor(
                             target
                         )
                     )
+                    cfg.processorOptions.value(kspExtension.apOptions)
                 }
             }
 
@@ -164,6 +167,9 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Input
     abstract val apiVersion: Property<String>
+
+    @get:Input
+    abstract val processorOptions: MapProperty<String, String>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -209,6 +215,8 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             apiVersion = gradleCfg.apiVersion.get()
 
             logger = kspGradleLogger
+
+            processorOptions = gradleCfg.processorOptions.get()
         }.build()
 
         val exitCode = try {
