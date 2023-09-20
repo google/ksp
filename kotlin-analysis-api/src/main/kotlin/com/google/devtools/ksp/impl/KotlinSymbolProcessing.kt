@@ -457,10 +457,12 @@ class KotlinSymbolProcessing(
             provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
         }
 
+        var rounds = 0
         // Run processors until either
         // 1) there is an error
         // 2) there is no more new files.
         while (!logger.hasError) {
+            logger.logging("round ${++rounds} of processing")
             val resolver = ResolverAAImpl(
                 allKSFiles,
                 newKSFiles,
