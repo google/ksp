@@ -428,7 +428,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kotlinCompilation,
                         kotlinCompileProvider,
                         processorClasspath,
-                        kspGeneratedSourceSet
+                        kspGeneratedSourceSet,
+                        kspExtension,
                     )
                 } else {
                     KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
