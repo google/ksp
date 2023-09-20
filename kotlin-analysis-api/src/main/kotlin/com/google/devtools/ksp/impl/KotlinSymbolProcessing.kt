@@ -418,6 +418,12 @@ class KotlinSymbolProcessing(
                 hasError = true
                 kspConfig.logger.error(message, symbol)
             }
+
+            override fun warn(message: String, symbol: KSNode?) {
+                if (kspConfig.allWarningsAsErrors)
+                    hasError = true
+                kspConfig.logger.warn(message, symbol)
+            }
         }
 
         val psiManager = PsiManager.getInstance(project)
