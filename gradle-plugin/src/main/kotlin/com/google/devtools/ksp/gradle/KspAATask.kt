@@ -116,6 +116,7 @@ abstract class KspAATask @Inject constructor(
                         project.logger.isEnabled(it)
                     }
                     cfg.logLevel.value(logLevel)
+                    cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
                 }
             }
 
@@ -179,6 +180,9 @@ abstract class KspGradleConfig @Inject constructor() {
     // Unfortunately, passing project.logger over is not possible.
     @get:Input
     abstract val logLevel: Property<LogLevel>
+
+    @get:Input
+    abstract val allWarningsAsErrors: Property<Boolean>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -237,6 +241,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             logger = kspGradleLogger
 
             processorOptions = gradleCfg.processorOptions.get()
+            allWarningsAsErrors = gradleCfg.allWarningsAsErrors.get()
         }.build()
 
         val exitCode = try {
