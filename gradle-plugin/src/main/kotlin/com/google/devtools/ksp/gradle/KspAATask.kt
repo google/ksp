@@ -111,7 +111,18 @@ abstract class KspAATask @Inject constructor(
                             target
                         )
                     )
-                    cfg.processorOptions.value(kspExtension.apOptions)
+                    val apOptions = mutableMapOf<String, String>()
+                    apOptions.putAll(kspExtension.apOptions)
+                    kspExtension.commandLineArgumentProviders.forEach { provider ->
+                        provider.asArguments().forEach { argument ->
+                            val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
+                            if (kv == null || kv.size != 3) {
+                                throw IllegalArgumentException("KSP apoption does not match (\\S+)=(\\S+): $argument")
+                            }
+                            apOptions.put(kv[1], kv[2])
+                        }
+                    }
+                    cfg.processorOptions.value(apOptions)
                     val logLevel = LogLevel.values().first {
                         project.logger.isEnabled(it)
                     }
