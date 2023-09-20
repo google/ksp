@@ -6,6 +6,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
@@ -111,6 +112,10 @@ abstract class KspAATask @Inject constructor(
                         )
                     )
                     cfg.processorOptions.value(kspExtension.apOptions)
+                    val logLevel = LogLevel.values().first {
+                        project.logger.isEnabled(it)
+                    }
+                    cfg.logLevel.value(logLevel)
                 }
             }
 
@@ -170,6 +175,10 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Input
     abstract val processorOptions: MapProperty<String, String>
+
+    // Unfortunately, passing project.logger over is not possible.
+    @get:Input
+    abstract val logLevel: Property<LogLevel>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -194,7 +203,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             SymbolProcessorProvider::class.java,
             processorClassloader
         ).toList()
-        val kspGradleLogger = KspGradleLogger()
+        val kspGradleLogger = KspGradleLogger(gradleCfg.logLevel.get())
 
         if (processorProviders.isEmpty()) {
             kspGradleLogger.error("No providers found in processor classpath.")
