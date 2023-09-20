@@ -195,6 +195,17 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             processorClassloader
         ).toList()
         val kspGradleLogger = KspGradleLogger()
+
+        if (processorProviders.isEmpty()) {
+            kspGradleLogger.error("No providers found in processor classpath.")
+            throw Exception("KSP failed with exit code: ${KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR}")
+        } else {
+            kspGradleLogger.info(
+                "loaded provider(s): " +
+                    processorProviders.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.javaClass.name }
+            )
+        }
+
         val kspConfig = KSPJvmConfig.Builder().apply {
             this.processorProviders = processorProviders
             moduleName = gradleCfg.moduleName.get()
