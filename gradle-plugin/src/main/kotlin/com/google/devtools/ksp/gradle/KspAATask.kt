@@ -1,6 +1,5 @@
 package com.google.devtools.ksp.gradle
 
-import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KSPJvmConfig
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
@@ -189,6 +188,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             SymbolProcessorProvider::class.java,
             processorClassloader
         ).toList()
+        val kspGradleLogger = KspGradleLogger()
         val kspConfig = KSPJvmConfig.Builder().apply {
             this.processorProviders = processorProviders
             moduleName = gradleCfg.moduleName.get()
@@ -208,9 +208,18 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             languageVersion = gradleCfg.languageVersion.get()
             apiVersion = gradleCfg.apiVersion.get()
 
-            // TODO:
-            logger = CommandLineKSPLogger()
+            logger = kspGradleLogger
         }.build()
-        KotlinSymbolProcessing(kspConfig).execute()
+
+        val exitCode = try {
+            KotlinSymbolProcessing(kspConfig).execute()
+        } catch (e: Exception) {
+            kspGradleLogger.exception(e)
+            KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR
+        }
+
+        if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
+            throw Exception("KSP failed with exit code: $exitCode")
+        }
     }
 }
