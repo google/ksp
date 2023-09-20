@@ -32,6 +32,7 @@ dependencies {
     compileOnly(project(":api"))
     testImplementation(gradleApi())
     testImplementation(project(":api"))
+    testImplementation(project(":common-util"))
     testImplementation("junit:junit:$junitVersion")
     testImplementation("com.google.truth:truth:$googleTruthVersion")
     testImplementation(gradleTestKit())
@@ -140,6 +141,7 @@ tasks.named<Test>("test").configure {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
+    dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
 }
 
 abstract class WriteVersionSrcTask @Inject constructor(
