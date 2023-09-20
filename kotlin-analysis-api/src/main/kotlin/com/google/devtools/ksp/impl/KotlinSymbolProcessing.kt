@@ -104,6 +104,7 @@ import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
@@ -451,8 +452,7 @@ class KotlinSymbolProcessing(
             codeGenerator,
             logger,
             kspConfig.apiVersion.toKotlinVersion(),
-            // TODO: compilerVersion
-            KotlinVersion.CURRENT,
+            KotlinCompilerVersion.getVersion().toKotlinVersion(),
             // TODO: fix platform info
             listOf(JvmPlatformInfoImpl("JVM", "1.8", "disable"))
         )
