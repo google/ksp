@@ -636,3 +636,9 @@ fun String?.toKotlinVersion(): KotlinVersion {
         }
     }
 }
+
+// Workaround for ShadowJar's minimize, whose configuration isn't very flexible.
+internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
+    org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
+    org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
+)
