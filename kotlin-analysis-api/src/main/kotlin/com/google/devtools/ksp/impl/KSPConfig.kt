@@ -70,6 +70,8 @@ class KSPJvmConfig(
     val javaSourceRoots: List<File>,
     val javaOutputDir: File,
     val jdkHome: File?,
+    val jvmTarget: String,
+    val jvmDefaultMode: String,
     moduleName: String,
     sourceRoots: List<File>,
     commonSourceRoots: List<File>,
@@ -132,12 +134,16 @@ class KSPJvmConfig(
         var javaSourceRoots: List<File> = emptyList()
         lateinit var javaOutputDir: File
         var jdkHome: File? = null
+        lateinit var jvmTarget: String
+        var jvmDefaultMode: String = "disable"
 
         fun build(): KSPJvmConfig {
             return KSPJvmConfig(
                 javaSourceRoots,
                 javaOutputDir,
                 jdkHome,
+                jvmTarget,
+                jvmDefaultMode,
 
                 moduleName,
                 sourceRoots,
