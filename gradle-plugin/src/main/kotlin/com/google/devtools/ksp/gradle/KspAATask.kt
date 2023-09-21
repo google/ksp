@@ -15,6 +15,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
@@ -130,6 +131,18 @@ abstract class KspAATask @Inject constructor(
                     cfg.logLevel.value(logLevel)
                     cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
                     cfg.excludedProcessors.value(kspExtension.excludedProcessors)
+
+                    val jvmDefaultMode = project.provider {
+                        compilerOptions.freeCompilerArgs.get().lastOrNull {
+                            it.startsWith("-Xjvm-default=")
+                        }?.substringAfter("=") ?: "disable"
+                    }
+                    cfg.jvmDefaultMode.value(jvmDefaultMode)
+
+                    val jvmTarget = project.provider {
+                        (compilerOptions as KotlinJvmCompilerOptions).jvmTarget.get().target
+                    }
+                    cfg.jvmTarget.value(jvmTarget)
                 }
             }
 
@@ -199,6 +212,14 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Input
     abstract val excludedProcessors: SetProperty<String>
+
+    @get:Input
+    @get:Optional
+    abstract val jvmTarget: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val jvmDefaultMode: Property<String>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -262,6 +283,9 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
             processorOptions = gradleCfg.processorOptions.get()
             allWarningsAsErrors = gradleCfg.allWarningsAsErrors.get()
+
+            jvmTarget = gradleCfg.jvmTarget.get()
+            jvmDefaultMode = gradleCfg.jvmDefaultMode.get()
         }.build()
 
         val exitCode = try {

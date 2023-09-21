@@ -453,8 +453,8 @@ class KotlinSymbolProcessing(
             logger,
             kspConfig.apiVersion.toKotlinVersion(),
             KotlinCompilerVersion.getVersion().toKotlinVersion(),
-            // TODO: fix platform info
-            listOf(JvmPlatformInfoImpl("JVM", "1.8", "disable"))
+            // TODO: multiplatform
+            listOf(JvmPlatformInfoImpl("JVM", kspConfig.jvmTarget, kspConfig.jvmDefaultMode))
         )
 
         // Load and instantiate processsors
