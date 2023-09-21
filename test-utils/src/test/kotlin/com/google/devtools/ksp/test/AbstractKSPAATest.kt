@@ -123,7 +123,8 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             if (!mainModule.javaFiles.isEmpty()) {
                 javaSourceRoots = listOf(mainModule.javaDir)
             }
-            this.jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
+            jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
+            jvmTarget = compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)!!.description
             languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
             apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
             libraries = libModules.map { it.outDir } +
