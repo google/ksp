@@ -9,6 +9,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -128,6 +129,7 @@ abstract class KspAATask @Inject constructor(
                     }
                     cfg.logLevel.value(logLevel)
                     cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
+                    cfg.excludedProcessors.value(kspExtension.excludedProcessors)
                 }
             }
 
@@ -194,6 +196,9 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Input
     abstract val allWarningsAsErrors: Property<Boolean>
+
+    @get:Input
+    abstract val excludedProcessors: SetProperty<String>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -214,10 +219,14 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             SymbolProcessorProvider::class.java.classLoader
         )
 
+        val excludedProcessors = gradleCfg.excludedProcessors.get()
         val processorProviders = ServiceLoader.load(
             SymbolProcessorProvider::class.java,
             processorClassloader
-        ).toList()
+        ).filter {
+            it.javaClass.name !in excludedProcessors
+        }.toList()
+
         val kspGradleLogger = KspGradleLogger(gradleCfg.logLevel.get())
 
         if (processorProviders.isEmpty()) {
