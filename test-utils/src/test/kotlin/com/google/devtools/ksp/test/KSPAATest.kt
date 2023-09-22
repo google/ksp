@@ -471,11 +471,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/parameterTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("parent.kt")
     @Test
     fun testParent() {
-        runTest("../test-utils/testData/api/parent.kt")
+        runTest("../kotlin-analysis-api/testData/parent.kt")
     }
 
     @Disabled

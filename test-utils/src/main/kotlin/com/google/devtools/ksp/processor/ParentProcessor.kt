@@ -16,7 +16,7 @@ class ParentProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val collector = AllSymbolProcessor()
         val nodes = mutableSetOf<KSNode>()
-        resolver.getAllFiles().forEach { it.accept(collector, nodes) }
+        resolver.getAllFiles().sortedBy { it.fileName }.forEach { it.accept(collector, nodes) }
         for (e in listOf("YUV", "HSV")) {
             resolver.getClassDeclarationByName(e)!!.accept(collector, nodes)
         }
