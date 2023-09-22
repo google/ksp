@@ -21,6 +21,7 @@ package com.google.devtools.ksp.impl
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
+import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
 import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
 import com.google.devtools.ksp.impl.symbol.util.hasAnnotation
 import com.google.devtools.ksp.processing.KSBuiltIns
@@ -44,6 +45,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
@@ -70,6 +72,7 @@ class ResolverAAImpl(
     }
 
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
+    val classBinaryCache = ClsKotlinBinaryClassCache()
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
@@ -287,7 +290,27 @@ class ResolverAAImpl(
     }
 
     override fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration> {
-        TODO("Not yet implemented")
+        if (container.origin != Origin.KOTLIN_LIB) {
+            return container.declarations
+        }
+        require(container is AbstractKSDeclarationImpl)
+        val fileManager = instance.javaFileManager
+        var parentClass: KSNode = container
+        while (parentClass.parent != null &&
+            (parentClass !is KSClassDeclarationImpl || parentClass.ktClassOrObjectSymbol.classIdIfNonLocal == null)
+        ) {
+            parentClass = parentClass.parent!!
+        }
+        val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal
+            ?: return container.declarations
+        val virtualFile = analyze {
+            (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile
+        }!!
+        val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
+        val declarationOrdering = DeclarationOrdering(kotlinClass)
+
+        return (container.declarations as? Sequence<AbstractKSDeclarationImpl>)
+            ?.sortedWith(declarationOrdering.comparator) ?: container.declarations
     }
 
     override fun getFunctionDeclarationsByName(
@@ -372,12 +395,19 @@ class ResolverAAImpl(
         }
     }
 
+    // TODO: handle @JvmName annotations, mangled names
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
-        TODO("Not yet implemented")
+        val prefix = if (accessor is KSPropertyGetter) {
+            "get"
+        } else {
+            "set"
+        }
+        return "${prefix}${accessor.receiver.simpleName.asString().capitalize()}"
     }
 
+    // TODO: handle @JvmName annotations, mangled names
     override fun getJvmName(declaration: KSFunctionDeclaration): String? {
-        TODO("Not yet implemented")
+        return declaration.simpleName.asString()
     }
 
     override fun getKSNameFromString(name: String): KSName {
@@ -469,6 +499,10 @@ class ResolverAAImpl(
     @KspExperimental
     override fun mapToJvmSignature(declaration: KSDeclaration): String? {
         return mapToJvmSignatureInternal(declaration)
+    }
+
+    internal fun mapToJvmSignature(accessor: KSPropertyAccessor): String {
+        return mapToJvmSignatureInternal(accessor) ?: ""
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
