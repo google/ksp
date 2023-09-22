@@ -199,7 +199,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/declarationsInAccessor.kt")
     }
 
-    @Disabled
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
