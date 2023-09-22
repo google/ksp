@@ -320,7 +320,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             KotlinSymbolProcessing(kspConfig).execute()
         } catch (e: Exception) {
             kspGradleLogger.exception(e)
-            KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR
+            throw e
         }
 
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
