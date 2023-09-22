@@ -7,12 +7,15 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class OutputDepsIt {
+@RunWith(Parameterized::class)
+class OutputDepsIt(val useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("output-deps")
+    val project: TemporaryTestProject = TemporaryTestProject("output-deps", useK2 = useK2)
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(
@@ -124,6 +127,7 @@ class OutputDepsIt {
     @Test
     fun testOutputDeps() {
         // FIXME
+        Assume.assumeFalse(useK2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
@@ -177,5 +181,11 @@ class OutputDepsIt {
                 Assert.assertEquals(expectedDirties, outputs)
             }
         }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

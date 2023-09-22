@@ -7,12 +7,15 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class KotlinConstsInJavaIT {
+@RunWith(Parameterized::class)
+class KotlinConstsInJavaIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kotlin-consts-in-java")
+    val project: TemporaryTestProject = TemporaryTestProject("kotlin-consts-in-java", useK2 = useK2)
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -38,5 +41,11 @@ class KotlinConstsInJavaIT {
 
         File(project.root, "workload/src/main/java/com/example/JavaClass.java").appendText("\n")
         gradleRunner.buildAndCheck(":workload:kspKotlin")
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

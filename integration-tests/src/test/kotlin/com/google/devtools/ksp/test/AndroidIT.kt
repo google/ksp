@@ -5,12 +5,15 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class AndroidIT {
+@RunWith(Parameterized::class)
+class AndroidIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground", useK2)
 
     @Test
     fun testPlaygroundAndroid() {
@@ -30,6 +33,12 @@ class AndroidIT {
                 "Merged configuration did not contain generated proguard rules!\n$configurationText"
             }
         }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
 

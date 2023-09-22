@@ -7,6 +7,8 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
@@ -14,10 +16,11 @@ import java.net.URLClassLoader
 
 data class CompileResult(val exitCode: ExitCode, val output: String)
 
-class KSPCmdLineOptionsIT {
+@RunWith(Parameterized::class)
+class KSPCmdLineOptionsIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("cmd-options")
+    val project: TemporaryTestProject = TemporaryTestProject("cmd-options", useK2 = useK2)
 
     private fun runCmdCompiler(pluginOptions: List<String>): CompileResult {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -84,5 +87,11 @@ class KSPCmdLineOptionsIT {
                 it.startsWith("error: [ksp] java.lang.IllegalStateException: Error on request")
             }
         )
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

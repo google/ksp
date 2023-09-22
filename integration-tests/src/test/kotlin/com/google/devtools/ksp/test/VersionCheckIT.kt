@@ -5,12 +5,15 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
+@RunWith(Parameterized::class)
 @Ignore
-class VersionCheckIT {
+class VersionCheckIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground")
+    val project: TemporaryTestProject = TemporaryTestProject("playground", useK2 = useK2)
 
     @Test
     fun testVersion() {
@@ -38,5 +41,11 @@ class VersionCheckIT {
             "-PkotlinVersion=1.4.20", "-Pksp.version.check=false", "clean", "build"
         ).buildAndFail()
         Assert.assertFalse(result.output.contains("is too new for kotlin"))
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

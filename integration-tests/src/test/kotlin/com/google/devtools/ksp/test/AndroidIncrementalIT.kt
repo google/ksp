@@ -23,12 +23,15 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class AndroidIncrementalIT {
+@RunWith(Parameterized::class)
+class AndroidIncrementalIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useK2)
 
     private fun testWithExtraFlags(vararg extras: String) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -69,5 +72,11 @@ class AndroidIncrementalIT {
     @Test
     fun testPlaygroundAndroidUseClasspathSnapshotFalse() {
         testWithExtraFlags("-Pkotlin.incremental.useClasspathSnapshot=false")
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

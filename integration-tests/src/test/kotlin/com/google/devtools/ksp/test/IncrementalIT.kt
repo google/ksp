@@ -4,14 +4,18 @@ import Artifact
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class IncrementalIT {
+@RunWith(Parameterized::class)
+class IncrementalIT(val useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental")
+    val project: TemporaryTestProject = TemporaryTestProject("incremental", useK2 = useK2)
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(
@@ -91,6 +95,7 @@ class IncrementalIT {
 
     @Test
     fun testIsolating() {
+        Assume.assumeFalse(useK2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -136,6 +141,7 @@ class IncrementalIT {
 
     @Test
     fun testMultipleChanges() {
+        Assume.assumeFalse(useK2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -258,5 +264,11 @@ class IncrementalIT {
 
         File(project.root, "validator/src/main/kotlin/Validator.kt").appendText("\n")
         buildAndCheck()
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

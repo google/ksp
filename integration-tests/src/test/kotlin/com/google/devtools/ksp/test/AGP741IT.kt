@@ -21,12 +21,15 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class AGP741IT {
+@RunWith(Parameterized::class)
+class AGP741IT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useK2)
 
     @Test
     fun testDependencyResolutionCheck() {
@@ -36,5 +39,11 @@ class AGP741IT {
         gradleRunner.withArguments(":workload:compileDebugKotlin").build().let { result ->
             Assert.assertFalse(result.output.contains("was resolved during configuration time."))
         }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
