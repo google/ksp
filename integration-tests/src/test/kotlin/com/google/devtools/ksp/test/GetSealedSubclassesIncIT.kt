@@ -2,17 +2,22 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class GetSealedSubclassesIncIT {
+@RunWith(Parameterized::class)
+class GetSealedSubclassesIncIT(val useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("sealed-subclasses", "test-processor")
+    val project: TemporaryTestProject = TemporaryTestProject("sealed-subclasses", "test-processor", useK2)
 
     @Test
     fun testGetSealedSubclassesInc() {
+        Assume.assumeFalse(useK2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val expected2 = listOf(
@@ -52,5 +57,11 @@ class GetSealedSubclassesIncIT {
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected2, outputs)
         }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

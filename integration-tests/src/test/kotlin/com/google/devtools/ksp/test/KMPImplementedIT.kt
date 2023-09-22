@@ -8,13 +8,16 @@ import org.junit.Assume
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.*
 
-class KMPImplementedIT {
+@RunWith(Parameterized::class)
+class KMPImplementedIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kmp")
+    val project: TemporaryTestProject = TemporaryTestProject("kmp", useK2 = useK2)
 
     private fun verify(jarName: String, contents: List<String>) {
         val artifact = File(project.root, jarName)
@@ -354,5 +357,11 @@ class KMPImplementedIT {
             verifyAll(this)
             checkExecutionOptimizations(output)
         }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

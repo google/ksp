@@ -7,13 +7,16 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.*
 
-class PlaygroundIT {
+@RunWith(Parameterized::class)
+class PlaygroundIT(val useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground")
+    val project: TemporaryTestProject = TemporaryTestProject("playground", useK2 = useK2)
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -105,6 +108,7 @@ class PlaygroundIT {
 
     @Test
     fun testAllowSourcesFromOtherPlugins() {
+        Assume.assumeFalse(useK2)
         fun checkGBuilder() {
             val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
 
@@ -357,5 +361,11 @@ class PlaygroundIT {
         }
         project.restore(buildFile.path)
         project.restore(properties.path)
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

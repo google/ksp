@@ -1,4 +1,4 @@
-import org.junit.*
+import org.junit.Assert
 import java.io.File
 import java.util.zip.ZipFile
 
