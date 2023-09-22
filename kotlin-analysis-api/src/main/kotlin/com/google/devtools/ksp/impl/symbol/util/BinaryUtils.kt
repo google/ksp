@@ -29,14 +29,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
-import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
-import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.resolve.descriptorUtil.isCompanionObject
-import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedClassDescriptor
-import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
 import org.jetbrains.org.objectweb.asm.ClassReader
 import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
@@ -95,22 +90,6 @@ object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
         )
         BinaryClassInfo(fieldAccFlags, methodAccFlags)
     }
-}
-
-/**
- * Workaround for backingField in deserialized descriptors.
- * They always return non-null for backing field even when they don't have a backing field.
- */
-private fun DeserializedPropertyDescriptor.hasBackingFieldInBinaryClass(): Boolean {
-    val kotlinJvmBinaryClass = if (containingDeclaration.isCompanionObject()) {
-        // Companion objects have backing fields in containing classes.
-        // https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-fields
-        val container = containingDeclaration.containingDeclaration as? DeserializedClassDescriptor
-        (container?.source as? KotlinJvmBinarySourceElement)?.binaryClass
-    } else {
-        this.getContainingKotlinJvmBinaryClass()
-    } ?: return false
-    return BinaryClassInfoCache.getCached(kotlinJvmBinaryClass).fieldAccFlags.containsKey(name.asString())
 }
 
 fun KSAnnotated.hasAnnotation(fqn: String): Boolean =
