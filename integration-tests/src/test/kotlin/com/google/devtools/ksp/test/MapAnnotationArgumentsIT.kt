@@ -6,11 +6,14 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class MapAnnotationArgumentsIT {
+@RunWith(Parameterized::class)
+class MapAnnotationArgumentsIT(val useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("map-annotation-arguments", "test-processor")
+    val project: TemporaryTestProject = TemporaryTestProject("map-annotation-arguments", "test-processor", useK2)
 
     val expectedErrors = listOf(
         "e: [ksp] unboxedChar: Char != Character\n",
@@ -20,6 +23,7 @@ class MapAnnotationArgumentsIT {
 
     @Test
     fun testMapAnnotationArguments() {
+        Assume.assumeFalse(useK2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
@@ -38,5 +42,11 @@ class MapAnnotationArgumentsIT {
                 Assert.assertEquals(TaskOutcome.FAILED, result.task(":workload:kspKotlin")?.outcome)
                 Assert.assertTrue(expectedErrors.all { it in result.output })
             }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

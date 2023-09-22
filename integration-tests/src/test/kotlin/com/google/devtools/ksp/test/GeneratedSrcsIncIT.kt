@@ -4,12 +4,15 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class GeneratedSrcsIncIT {
+@RunWith(Parameterized::class)
+class GeneratedSrcsIncIT(useK2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("srcs-gen", "test-processor")
+    val project: TemporaryTestProject = TemporaryTestProject("srcs-gen", "test-processor", useK2)
 
     @Test
     fun testGeneratedSrcsInc() {
@@ -30,5 +33,11 @@ class GeneratedSrcsIncIT {
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expected, outputs)
         }
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "K2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
