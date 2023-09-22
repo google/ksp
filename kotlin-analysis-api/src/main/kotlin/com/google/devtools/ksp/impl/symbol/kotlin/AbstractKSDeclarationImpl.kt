@@ -111,6 +111,6 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
         ktDeclarationSymbol.annotations(this)
     } else {
         (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
-            .annotations.map { KSAnnotationJavaImpl.getCached(it) }.asSequence()
+            .annotations.map { KSAnnotationJavaImpl.getCached(it, this) }.asSequence()
     }
 }

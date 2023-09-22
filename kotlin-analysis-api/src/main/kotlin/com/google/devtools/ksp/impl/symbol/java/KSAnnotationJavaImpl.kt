@@ -44,10 +44,11 @@ import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
-class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation) : KSAnnotation {
+class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) :
+    KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
-        fun getCached(psi: PsiAnnotation) =
-            KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi) }
+        fun getCached(psi: PsiAnnotation, parent: KSNode?) =
+            KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi, parent) }
     }
 
     private val type: KtType by lazy {
@@ -127,9 +128,6 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation) :
     override val location: Location
         get() = psi.toLocation()
 
-    override val parent: KSNode?
-        get() = TODO("Not yet implemented")
-
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
     }
@@ -141,7 +139,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation) :
 
 fun calcValue(value: PsiAnnotationMemberValue?): Any? {
     if (value is PsiAnnotation) {
-        return KSAnnotationJavaImpl.getCached(value)
+        return KSAnnotationJavaImpl.getCached(value, null)
     }
     val result = when (value) {
         is PsiReference -> value.resolve()?.let { resolved ->
