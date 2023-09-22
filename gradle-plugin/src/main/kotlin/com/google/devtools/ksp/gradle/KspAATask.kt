@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
+import java.util.concurrent.Callable
 import javax.inject.Inject
 
 @CacheableTask
@@ -93,7 +94,19 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
                     }
-                    cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
+                    // FIXME: figure out how to filter or set variant attributes correctly.
+                    // cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
+                    val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
+                    cfg.libraries.from(
+                        project.files(
+                            Callable {
+                                kotlinCompileProvider.get().libraries.filter {
+                                    !kspOutputDir.isParentOf(it) &&
+                                        !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                                }
+                            }
+                        )
+                    )
                     val options = kotlinCompilation.compilerOptions.options
                     if (options is KotlinJvmCompilerOptions) {
                         // TODO: set proper jdk home
