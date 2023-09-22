@@ -1,6 +1,6 @@
 /*
- * Copyright 2022 Google LLC
- * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2023 Google LLC
+ * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,23 @@
 // parent of File: B.java: null
 // parent of ITF: ITF
 // parent of ITF: B
+// parent of Any: (Any..Any?)
+// parent of (Any..Any?): T
 // parent of T: B
 // parent of Anno: Anno
 // parent of Anno: @Anno
 // parent of @Anno: B
-// parent of p: Bnno
-// parent of p.Bnno: Bnno
+// parent of Bnno: Bnno
 // parent of Bnno: @Bnno
 // parent of @Bnno: B
 // parent of B: File: B.java
-// parent of T: T
-// parent of T: t
+// parent of T: (T & Any..T?)
+// parent of T & Any: (T & Any..T?)
+// parent of (T & Any..T?): t
 // parent of t: B
-// parent of T: T
-// parent of T: t
+// parent of T: (T & Any..T?)
+// parent of T & Any: (T & Any..T?)
+// parent of (T & Any..T?): t
 // parent of t: foo
 // parent of Int: Int
 // parent of Int: i
@@ -43,36 +46,49 @@
 // parent of foo: B
 // parent of B<*>: synthetic constructor for B
 // parent of synthetic constructor for B: B
-// parent of RGB: RGB
-// parent of RGB: INVARIANT RGB
-// parent of INVARIANT RGB: Enum<RGB>
-// parent of Enum<RGB>: Enum<RGB>
-// parent of Enum<RGB>: RGB
+// parent of RGB: (RGB..RGB?)
+// parent of (RGB..RGB?): INVARIANT (RGB..RGB?)
+// parent of INVARIANT (RGB..RGB?): Enum
+// parent of Enum: Enum<(RGB..RGB?)>
+// parent of Enum<(RGB..RGB?)>: RGB
 // parent of RGB: File: B.java
 // parent of R: RGB
 // parent of G: RGB
 // parent of B: RGB
-// parent of RGB: RGB
-// parent of RGB: COVARIANT RGB
-// parent of COVARIANT RGB: Array<out (RGB..RGB?)>
-// parent of Array<out (RGB..RGB?)>: Array<out (RGB..RGB?)>
-// parent of Array<out (RGB..RGB?)>: values
+// parent of Array<RGB>: values
 // parent of values: RGB
-// parent of String: String
-// parent of String: name
-// parent of name: valueOf
-// parent of RGB: RGB
+// parent of String: value
+// parent of value: valueOf
 // parent of RGB: valueOf
 // parent of valueOf: RGB
-// parent of RGB: synthetic constructor for RGB
-// parent of synthetic constructor for RGB: RGB
+// parent of EnumEntries<RGB>: entries
+// parent of entries: RGB
 // parent of File: Bnno.kt: null
-// parent of Any: Bnno
+// parent of Annotation: Annotation
+// parent of Annotation: Bnno
 // parent of Bnno: File: Bnno.kt
 // parent of Bnno: synthetic constructor for Bnno
 // parent of synthetic constructor for Bnno: Bnno
 // parent of File: a.kt: null
-// parent of Any: Anno
+// parent of Int: Int
+// parent of Int: INVARIANT Int
+// parent of INVARIANT Int: List
+// parent of List: List<Int>?
+// parent of List<Int>?: topProp
+// parent of List<Int>?: topProp.getter()
+// parent of topProp.getter(): topProp
+// parent of Anno: null
+// parent of @Anno: topProp
+// parent of topProp: File: a.kt
+// parent of T: T?
+// parent of T?: topFun
+// parent of Any?: T
+// parent of T: topFun
+// parent of Anno: null
+// parent of @Anno: topFun
+// parent of topFun: File: a.kt
+// parent of Annotation: Annotation
+// parent of Annotation: Anno
 // parent of Anno: File: a.kt
 // parent of Anno: synthetic constructor for Anno
 // parent of synthetic constructor for Anno: Anno
@@ -82,47 +98,40 @@
 // parent of T: T
 // parent of T: INVARIANT T
 // parent of INVARIANT T: Map
-// parent of Map: Map
-// parent of Map: Alias
+// parent of Map: Map<Int, T>
+// parent of Map<Int, T>: Alias
 // parent of Any?: T
-// parent of T: Alias
+// parent of T: File: a.kt
 // parent of Alias: File: a.kt
-// parent of Int: Int
-// parent of Int: INVARIANT Int
-// parent of INVARIANT Int: List
-// parent of List: List
-// parent of List: topProp
-// parent of Int: Int
-// parent of Int: INVARIANT Int
-// parent of INVARIANT Int: List<Int>
-// parent of List<Int>: List<Int>
-// parent of List<Int>: topProp.getter()
-// parent of topProp.getter(): topProp
-// parent of Anno: Anno
-// parent of Anno: @Anno
-// parent of @Anno: topProp
-// parent of topProp: File: a.kt
-// parent of T: T
-// parent of T: topFun
-// parent of Any?: T
-// parent of T: topFun
-// parent of Anno: Anno
-// parent of Anno: @Anno
-// parent of @Anno: topFun
-// parent of topFun: File: a.kt
+// parent of Any: Any
 // parent of Any: ITF
 // parent of ITF: File: a.kt
 // parent of ITF: ITF
 // parent of ITF: topClass
-// parent of Anno: Anno
-// parent of Anno: @Anno
+// parent of Anno: null
 // parent of @Anno: topClass
 // parent of topClass: File: a.kt
 // parent of Int: Int
 // parent of Int: i
 // parent of i: memberFun
+// parent of Int: Int
 // parent of Int: memberFun
 // parent of memberFun: topClass
+// parent of Int: Int
+// parent of Int: a
+// parent of Int: a.getter()
+// parent of a.getter(): a
+// parent of a: topClass
+// parent of String: String
+// parent of String: b
+// parent of String: String
+// parent of String: b.getter()
+// parent of b.getter(): b
+// parent of String: <set-?>
+// parent of <set-?>: b.setter()
+// parent of b.setter(): b
+// parent of b: topClass
+// parent of Any: Any
 // parent of Any: InnerClass
 // parent of Any?: P
 // parent of P: InnerClass
@@ -130,61 +139,51 @@
 // parent of P: P
 // parent of P: p
 // parent of p: innerFun
+// parent of Int: Int
 // parent of Int: innerFun
 // parent of innerFun: InnerClass
 // parent of InnerClass<*>: synthetic constructor for InnerClass
+// parent of Any?: P
 // parent of synthetic constructor for InnerClass: InnerClass
-// parent of Int: Int
-// parent of Int: a
-// parent of Int: Int
-// parent of Int: a.getter()
-// parent of a.getter(): a
-// parent of a: topClass
-// parent of String: String
-// parent of String: b
-// parent of b.getter(): b
-// parent of String: String
-// parent of String: <set-?>
-// parent of <set-?>: b.setter()
-// parent of b.setter(): b
-// parent of b: topClass
 // parent of topClass: synthetic constructor for topClass
 // parent of synthetic constructor for topClass: topClass
-// parent of Any: CMYK
+// parent of CMYK: CMYK
+// parent of CMYK: INVARIANT CMYK
+// parent of INVARIANT CMYK: Enum
+// parent of Enum: Enum<CMYK>
+// parent of Enum<CMYK>: CMYK
 // parent of CMYK: File: a.kt
-// parent of Any: C
 // parent of C: CMYK
-// parent of C: synthetic constructor for C
-// parent of synthetic constructor for C: C
-// parent of Any: M
 // parent of M: CMYK
-// parent of M: synthetic constructor for M
-// parent of synthetic constructor for M: M
-// parent of Any: Y
 // parent of Y: CMYK
-// parent of Y: synthetic constructor for Y
-// parent of synthetic constructor for Y: Y
-// parent of Any: K
 // parent of K: CMYK
-// parent of K: synthetic constructor for K
-// parent of synthetic constructor for K: K
+// parent of Array<CMYK>: values
+// parent of values: CMYK
+// parent of String: value
+// parent of value: valueOf
+// parent of CMYK: valueOf
+// parent of valueOf: CMYK
+// parent of EnumEntries<CMYK>: entries
+// parent of EnumEntries<CMYK>: entries.getter()
+// parent of entries.getter(): entries
+// parent of entries: CMYK
 // parent of CMYK: synthetic constructor for CMYK
 // parent of synthetic constructor for CMYK: CMYK
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
-// parent of INVARIANT YUV: Enum<YUV>
-// parent of Enum<YUV>: Enum<YUV>
+// parent of INVARIANT YUV: Enum
+// parent of Enum: Enum<YUV>
 // parent of Enum<YUV>: YUV
 // parent of YUV: null
-// parent of YUV: YUV
-// parent of YUV: Y
 // parent of Y: YUV
-// parent of YUV: YUV
-// parent of YUV: U
 // parent of U: YUV
-// parent of YUV: YUV
-// parent of YUV: V
 // parent of V: YUV
+// parent of YUV: YUV
+// parent of YUV: INVARIANT YUV
+// parent of INVARIANT YUV: Array
+// parent of Array: Array<YUV>
+// parent of Array<YUV>: values
+// parent of values: YUV
 // parent of String: String
 // parent of String: value
 // parent of value: valueOf
@@ -193,44 +192,41 @@
 // parent of valueOf: YUV
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
-// parent of INVARIANT YUV: Array<YUV>
-// parent of Array<YUV>: Array<YUV>
-// parent of Array<YUV>: values
-// parent of values: YUV
+// parent of INVARIANT YUV: EnumEntries
+// parent of EnumEntries: EnumEntries<YUV>
+// parent of EnumEntries<YUV>: entries
+// parent of YUV: YUV
+// parent of YUV: INVARIANT YUV
+// parent of INVARIANT YUV: EnumEntries
+// parent of EnumEntries: EnumEntries<YUV>
+// parent of EnumEntries<YUV>: entries.getter()
+// parent of entries.getter(): entries
+// parent of entries: YUV
 // parent of YUV: YUV
 // parent of YUV: <init>
 // parent of <init>: YUV
-// parent of HSV: HSV
-// parent of HSV: INVARIANT HSV
-// parent of INVARIANT HSV: Enum<(HSV..HSV?)>
-// parent of Enum<(HSV..HSV?)>: Enum<(HSV..HSV?)>
+// parent of HSV: (HSV..HSV?)
+// parent of (HSV..HSV?): INVARIANT (HSV..HSV?)
+// parent of INVARIANT (HSV..HSV?): Enum
+// parent of Enum: Enum<(HSV..HSV?)>
 // parent of Enum<(HSV..HSV?)>: HSV
-// parent of HSV: null
-// parent of HSV: HSV
-// parent of HSV: H
-// parent of H: HSV
-// parent of HSV: HSV
-// parent of HSV: S
-// parent of S: HSV
-// parent of HSV: HSV
-// parent of HSV: V
-// parent of V: HSV
-// parent of String: String
-// parent of String: value
-// parent of value: valueOf
-// parent of HSV: HSV
-// parent of HSV: valueOf
-// parent of valueOf: HSV
-// parent of HSV: HSV
-// parent of HSV: INVARIANT HSV
-// parent of INVARIANT HSV: Array<HSV>
-// parent of Array<HSV>: Array<HSV>
-// parent of Array<HSV>: values
-// parent of values: HSV
+// parent of HSV: File: HSV.class
 // parent of HSV: HSV
 // parent of HSV: <init>
 // parent of <init>: HSV
+// parent of H: HSV
+// parent of S: HSV
+// parent of V: HSV
+// parent of Array<HSV>: values
+// parent of values: HSV
+// parent of String: value
+// parent of value: valueOf
+// parent of HSV: valueOf
+// parent of valueOf: HSV
+// parent of EnumEntries<HSV>: entries
+// parent of entries: HSV
 // END
+
 
 // MODULE: lib
 // FILE: YUV.kt
@@ -269,7 +265,7 @@ class topClass: ITF {
 
     val a: Int = 1
     var b: String
-    get() = "1"
+        get() = "1"
 }
 
 enum class CMYK {
