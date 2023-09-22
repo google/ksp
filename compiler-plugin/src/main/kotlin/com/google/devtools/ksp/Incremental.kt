@@ -657,6 +657,8 @@ class IncrementalContext(
         when (declaration) {
             is KSPropertyDeclarationJavaImpl -> recordLookupForJavaField(declaration.psi)
             is KSFunctionDeclarationJavaImpl -> recordLookupForJavaMethod(declaration.psi)
+            is KSClassDeclaration, is KSFunctionDeclaration, is KSPropertyDeclaration, is KSTypeAlias,
+            is KSTypeParameter -> Unit
         }
     }
 
