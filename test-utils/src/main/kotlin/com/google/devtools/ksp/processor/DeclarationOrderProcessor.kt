@@ -2,6 +2,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -30,9 +31,10 @@ class DeclarationOrderProcessor : AbstractTestProcessor() {
                 }
             )
             result.addAll(
-                resolver.getDeclarationsInSourceOrder(klass).filterIsInstance<KSFunctionDeclaration>().map {
-                    it.toSignature(resolver)
-                }
+                resolver.getDeclarationsInSourceOrder(klass).filterIsInstance<KSFunctionDeclaration>()
+                    .filter { !it.isConstructor() }.map {
+                        it.toSignature(resolver)
+                    }
             )
         }
         return emptyList()

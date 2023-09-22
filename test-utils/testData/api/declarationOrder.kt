@@ -35,7 +35,6 @@
 // overloaded:(I)Ljava/lang/String;
 // overloaded:()Ljava/lang/String;
 // overloaded:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-// <init>:()V
 // lib.JavaClass
 // b:Ljava/lang/String;
 // a:Ljava/lang/String;
@@ -44,7 +43,6 @@
 // overloaded:(I)V
 // overloaded:()V
 // overloaded:(Ljava/lang/String;Ljava/lang/String;)V
-// <init>:()V
 // KotlinClass
 // b:Ljava/lang/String;
 // a:Ljava/lang/String;
@@ -62,7 +60,6 @@
 // overloaded:(I)Ljava/lang/String;
 // overloaded:()Ljava/lang/String;
 // overloaded:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-// <init>:()V
 // JavaClass
 // b:Ljava/lang/String;
 // a:Ljava/lang/String;
@@ -71,7 +68,6 @@
 // overloaded:(I)V
 // overloaded:()V
 // overloaded:(Ljava/lang/String;Ljava/lang/String;)V
-// <init>:()V
 // END
 // MODULE: module1
 // FILE: lib/KotlinClass.kt
