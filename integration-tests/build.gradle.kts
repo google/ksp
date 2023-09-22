@@ -1,4 +1,5 @@
 import com.google.devtools.ksp.RelativizingInternalPathProvider
+import kotlin.math.max
 
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
@@ -19,7 +20,8 @@ dependencies {
     testImplementation(project(":symbol-processing-cmdline"))
 }
 
-tasks.named<Test>("test") {
+tasks.withType<Test> {
+    maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
     systemProperty("agpVersion", agpBaseVersion)
