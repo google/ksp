@@ -22,6 +22,8 @@ Most of the documentation of KSP can be found on [kotlinlang.org](https://kotlin
 * [Running KSP from command line](https://kotlinlang.org/docs/ksp-command-line.html)
 * [FAQ](https://kotlinlang.org/docs/ksp-faq.html)
 
+For debugging and testing processors, as well as KSP itself, please check [DEVELOPMENT.md](DEVELOPMENT.md)
+
 ## Feedback and Bug Reporting
 
 [Please let us know what you think about KSP by filing a Github issue](https://github.com/google/ksp/issues)
