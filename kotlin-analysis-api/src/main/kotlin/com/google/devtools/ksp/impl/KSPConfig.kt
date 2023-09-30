@@ -1,17 +1,14 @@
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import java.io.File
+import java.io.Serializable
 
 abstract class KSPConfig(
     val moduleName: String,
     val sourceRoots: List<File>,
     val commonSourceRoots: List<File>,
     val libraries: List<File>,
-    val logger: KSPLogger,
 
-    val processorProviders: List<SymbolProcessorProvider>,
     val processorOptions: Map<String, String>,
 
     val projectBaseDir: File,
@@ -33,15 +30,13 @@ abstract class KSPConfig(
 
     val allWarningsAsErrors: Boolean,
     val mapAnnotationArgumentsInJava: Boolean,
-) {
+) : Serializable {
     abstract class Builder {
         lateinit var moduleName: String
         lateinit var sourceRoots: List<File>
         var commonSourceRoots: List<File> = emptyList()
         var libraries: List<File> = emptyList()
-        lateinit var logger: KSPLogger
 
-        lateinit var processorProviders: List<SymbolProcessorProvider>
         var processorOptions = mapOf<String, String>()
 
         lateinit var projectBaseDir: File
@@ -76,9 +71,7 @@ class KSPJvmConfig(
     sourceRoots: List<File>,
     commonSourceRoots: List<File>,
     libraries: List<File>,
-    logger: KSPLogger,
 
-    processorProviders: List<SymbolProcessorProvider>,
     processorOptions: Map<String, String>,
 
     projectBaseDir: File,
@@ -105,9 +98,7 @@ class KSPJvmConfig(
     sourceRoots,
     commonSourceRoots,
     libraries,
-    logger,
 
-    processorProviders,
     processorOptions,
 
     projectBaseDir,
@@ -130,7 +121,7 @@ class KSPJvmConfig(
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
 ) {
-    class Builder : KSPConfig.Builder() {
+    class Builder : KSPConfig.Builder(), Serializable {
         var javaSourceRoots: List<File> = emptyList()
         lateinit var javaOutputDir: File
         var jdkHome: File? = null
@@ -149,9 +140,7 @@ class KSPJvmConfig(
                 sourceRoots,
                 commonSourceRoots,
                 libraries,
-                logger,
 
-                processorProviders,
                 processorOptions,
 
                 projectBaseDir,
