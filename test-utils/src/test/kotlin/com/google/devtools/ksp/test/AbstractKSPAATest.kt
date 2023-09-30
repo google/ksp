@@ -130,10 +130,6 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             libraries = libModules.map { it.outDir } +
                 compilerConfiguration.jvmModularRoots +
                 compilerConfiguration.jvmClasspathRoots
-            logger = CommandLineKSPLogger()
-
-            processorProviders = listOf(testProcessor)
-
             projectBaseDir = testRoot
             classOutputDir = File(testRoot, "kspTest/classes/main")
             javaOutputDir = File(testRoot, "kspTest/src/main/java")
@@ -142,7 +138,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             cachesDir = File(testRoot, "kspTest/kspCaches")
             outputBaseDir = File(testRoot, "kspTest")
         }.build()
-        val exitCode = KotlinSymbolProcessing(kspConfig).execute()
+        val exitCode = KotlinSymbolProcessing(kspConfig, listOf(testProcessor), CommandLineKSPLogger()).execute()
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
             return listOf("KSP FAILED WITH EXIT CODE: ${exitCode.name}") + testProcessor.toResult()
         }

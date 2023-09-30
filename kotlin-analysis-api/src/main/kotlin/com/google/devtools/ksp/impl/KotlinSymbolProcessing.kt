@@ -118,6 +118,8 @@ import java.nio.file.Paths
 
 class KotlinSymbolProcessing(
     val kspConfig: KSPJvmConfig,
+    val symbolProcessorProviders: List<SymbolProcessorProvider>,
+    val logger: KSPLogger
 ) {
     enum class ExitCode(code: Int) {
         OK(0),
@@ -412,23 +414,23 @@ class KotlinSymbolProcessing(
         val project = analysisAPISession.project
         val kspCoreEnvironment = KSPCoreEnvironment(project as MockProject)
 
-        val logger = object : KSPLogger by kspConfig.logger {
+        val logger = object : KSPLogger by logger {
             var hasError: Boolean = false
 
             override fun error(message: String, symbol: KSNode?) {
                 hasError = true
-                kspConfig.logger.error(message, symbol)
+                logger.error(message, symbol)
             }
 
             override fun warn(message: String, symbol: KSNode?) {
                 if (kspConfig.allWarningsAsErrors)
                     hasError = true
-                kspConfig.logger.warn(message, symbol)
+                logger.warn(message, symbol)
             }
         }
 
         val psiManager = PsiManager.getInstance(project)
-        val providers: List<SymbolProcessorProvider> = kspConfig.processorProviders
+        val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
         ResolverAAImpl.ktModule = modules.single()
 
         // Initializing environments
@@ -649,4 +651,5 @@ fun String?.toKotlinVersion(): KotlinVersion {
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
     org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
+    org.jetbrains.kotlin.serialization.deserialization.builtins.BuiltInsLoaderImpl::class.java,
 )
