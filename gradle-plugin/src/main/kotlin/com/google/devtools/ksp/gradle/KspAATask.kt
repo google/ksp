@@ -32,7 +32,12 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
 import java.util.ServiceLoader
 import java.util.concurrent.Callable
@@ -59,6 +64,7 @@ abstract class KspAATask @Inject constructor(
         }
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config = kspConfig
+            it.kspClassPath = kspClasspath
         }
     }
 
@@ -76,7 +82,11 @@ abstract class KspAATask @Inject constructor(
             val sourceSetName = kotlinCompilation.defaultSourceSet.name
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
             val kspAADepCfg = project.configurations.detachedConfiguration(
-                project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa:$KSP_VERSION")
+                project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa:$KSP_VERSION"),
+                project.dependencies.create(
+                    "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-gradle-plugin:$KSP_VERSION"
+                ),
+                project.dependencies.create("org.jetbrains.intellij.deps:trove4j:1.0.20200330"),
             ).apply {
                 isTransitive = false
             }
@@ -252,11 +262,17 @@ abstract class KspGradleConfig @Inject constructor() {
 
 interface KspAAWorkParameter : WorkParameters {
     var config: KspGradleConfig
+    var kspClassPath: ConfigurableFileCollection
 }
 
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config
+        val kspClassPath = parameters.kspClassPath
+        val isolatedClassLoader = URLClassLoader(
+            kspClassPath.files.map { it.toURI().toURL() }.toTypedArray(),
+            ClassLoader.getPlatformClassLoader()
+        )
 
         // Clean stale files for now.
         // TODO: support incremental processing.
@@ -265,18 +281,18 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
         val processorClassloader = URLClassLoader(
             gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
-            SymbolProcessorProvider::class.java.classLoader
+            isolatedClassLoader
         )
 
         val excludedProcessors = gradleCfg.excludedProcessors.get()
         val processorProviders = ServiceLoader.load(
-            SymbolProcessorProvider::class.java,
+            processorClassloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
             processorClassloader
         ).filter {
             it.javaClass.name !in excludedProcessors
         }.toList()
 
-        val kspGradleLogger = KspGradleLogger(gradleCfg.logLevel.get())
+        val kspGradleLogger = KspGradleLogger(gradleCfg.logLevel.get().ordinal)
 
         if (processorProviders.isEmpty()) {
             kspGradleLogger.error("No providers found in processor classpath.")
@@ -289,7 +305,6 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         }
 
         val kspConfig = KSPJvmConfig.Builder().apply {
-            this.processorProviders = processorProviders
             moduleName = gradleCfg.moduleName.get()
             sourceRoots = gradleCfg.sourceRoots.files.toList()
             javaSourceRoots = gradleCfg.javaSourceRoots.files.toList()
@@ -307,24 +322,55 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             languageVersion = gradleCfg.languageVersion.get()
             apiVersion = gradleCfg.apiVersion.get()
 
-            logger = kspGradleLogger
-
             processorOptions = gradleCfg.processorOptions.get()
             allWarningsAsErrors = gradleCfg.allWarningsAsErrors.get()
 
             jvmTarget = gradleCfg.jvmTarget.get()
             jvmDefaultMode = gradleCfg.jvmDefaultMode.get()
         }.build()
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        val objectOutputStream = ObjectOutputStream(byteArrayOutputStream)
+        objectOutputStream.writeObject(kspConfig)
 
         val exitCode = try {
-            KotlinSymbolProcessing(kspConfig).execute()
+            val kspLoaderClass = isolatedClassLoader.loadClass(KSPLoader::class.java.canonicalName)
+            val runMethod = kspLoaderClass.getMethod(
+                "loadAndRunKSP",
+                ByteArray::class.java,
+                List::class.java,
+                Int::class.java
+            )
+            val returnCode = runMethod.invoke(
+                null,
+                byteArrayOutputStream.toByteArray(),
+                processorProviders,
+                gradleCfg.logLevel.get().ordinal
+            ) as Int
+            KotlinSymbolProcessing.ExitCode.values()[returnCode]
         } catch (e: Exception) {
-            kspGradleLogger.exception(e)
-            throw e
+            require(e is InvocationTargetException)
+            kspGradleLogger.exception(e.targetException)
+            throw e.targetException
         }
 
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
             throw Exception("KSP failed with exit code: $exitCode")
+        }
+    }
+}
+
+class KSPLoader {
+    companion object {
+        @JvmStatic
+        fun loadAndRunKSP(
+            kspConfigStream: ByteArray,
+            processorProvider: List<SymbolProcessorProvider>,
+            logLevel: Int
+        ): Int {
+            val objectInputStream = ObjectInputStream(ByteArrayInputStream(kspConfigStream))
+            val kspConfig = objectInputStream.readObject() as KSPJvmConfig
+            val ksp = KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
+            return ksp.execute().ordinal
         }
     }
 }
