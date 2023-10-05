@@ -47,6 +47,9 @@ class IncrementalMultiChainIT(useK2: Boolean) {
             Assert.assertTrue(result.output.contains("validating K1Impl.kt"))
             Assert.assertTrue(result.output.contains("validating AllImpls.kt"))
             Assert.assertTrue(result.output.contains("[K1Impl]"))
+            Assert.assertFalse(
+                File(project.root, "workload/build/generated/ksp/main/kotlin/K2ImplInfo.kt").exists()
+            )
         }
     }
 

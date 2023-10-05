@@ -31,6 +31,21 @@ class Aggregator : SymbolProcessor {
             }
             codeGenerator.associate(impls.map { it.containingFile!! }.toList(), "", "AllImpls")
         }
+
+        impls.forEach { decl ->
+            decl as KSClassDeclaration
+            val file = decl.containingFile!!
+            val baseName = decl.simpleName.asString()
+            val fileName = baseName + "Info"
+            OutputStreamWriter(
+                codeGenerator.createNewFile(
+                    Dependencies(false, file),
+                    "", fileName
+                )
+            ).use {
+                it.write("// dummy file")
+            }
+        }
         return emptyList()
     }
 }
