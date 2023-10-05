@@ -556,7 +556,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // No else; The cases should be exhaustive
         }
         kspGeneratedSourceSet.kotlin.srcDir(project.files(kotlinOutputDir, javaOutputDir).builtBy(kspTaskProvider))
-        kotlinCompilation.source(kspGeneratedSourceSet)
+        if (kotlinCompilation is KotlinCommonCompilation) {
+            // Do not make common source sets depend on generated source sets.
+            // They will be observed by downstreams and confuse processors.
+            kotlinCompileProvider.configure {
+                it.source(kspGeneratedSourceSet.kotlin)
+            }
+        } else {
+            kotlinCompilation.defaultSourceSet.dependsOn(kspGeneratedSourceSet)
+        }
         kotlinCompileProvider.configure { kotlinCompile ->
             when (kotlinCompile) {
                 is AbstractKotlinCompile<*> -> kotlinCompile.libraries.from(project.files(classOutputDir))
