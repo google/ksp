@@ -254,7 +254,7 @@ class IncrementalContext(
             sealedMap.remove(it)
         }
 
-        sourceToOutputsMap.remove(removedOutputsKey)
+        sourceToOutputsMap.removeRecursively(removedOutputsKey)
     }
 
     private fun updateLookupCache(dirtyFiles: Collection<File>) {
@@ -417,6 +417,14 @@ class IncrementalContext(
         return ksFiles.filter { it.relativeFile in dirtyFiles }
     }
 
+    // Loop detection isn't needed because of overwritten checks in CodeGeneratorImpl
+    private fun FileToFilesMap.removeRecursively(src: File) {
+        get(src)?.forEach { out ->
+            removeRecursively(out)
+        }
+        remove(src)
+    }
+
     private fun updateSourceToOutputs(
         dirtyFiles: Collection<File>,
         outputs: Set<File>,
@@ -425,15 +433,15 @@ class IncrementalContext(
     ) {
         // Prune deleted sources in source-to-outputs map.
         removed.forEach {
-            sourceToOutputsMap.remove(it)
+            sourceToOutputsMap.removeRecursively(it)
         }
 
         dirtyFiles.filterNot { sourceToOutputs.containsKey(it) }.forEach {
-            sourceToOutputsMap.remove(it)
+            sourceToOutputsMap.removeRecursively(it)
         }
 
         removedOutputs.forEach {
-            sourceToOutputsMap.remove(it)
+            sourceToOutputsMap.removeRecursively(it)
         }
         sourceToOutputsMap[removedOutputsKey] = removedOutputs
 
