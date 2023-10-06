@@ -58,9 +58,7 @@ abstract class KspAATask @Inject constructor(
         //  1. passing arguments by data structures in stdlib, or
         //  2. hoisting and publishing KspGradleConfig into another package.
 
-        val workerQueue = workerExecutor.classLoaderIsolation {
-            it.classpath.setFrom(kspClasspath)
-        }
+        val workerQueue = workerExecutor.noIsolation()
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config = kspConfig
             it.kspClassPath = kspClasspath
