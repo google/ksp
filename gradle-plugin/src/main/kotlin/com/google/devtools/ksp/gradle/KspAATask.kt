@@ -1,8 +1,9 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.impl.KSPJvmConfig
+import com.google.devtools.ksp.impl.KSPLoader
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
-import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.impl.KspGradleLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
@@ -32,10 +33,8 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
@@ -83,9 +82,6 @@ abstract class KspAATask @Inject constructor(
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
             val kspAADepCfg = project.configurations.detachedConfiguration(
                 project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa:$KSP_VERSION"),
-                project.dependencies.create(
-                    "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-gradle-plugin:$KSP_VERSION"
-                ),
                 project.dependencies.create("org.jetbrains.intellij.deps:trove4j:1.0.20200330"),
             ).apply {
                 isTransitive = false
@@ -355,22 +351,6 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
             throw Exception("KSP failed with exit code: $exitCode")
-        }
-    }
-}
-
-class KSPLoader {
-    companion object {
-        @JvmStatic
-        fun loadAndRunKSP(
-            kspConfigStream: ByteArray,
-            processorProvider: List<SymbolProcessorProvider>,
-            logLevel: Int
-        ): Int {
-            val objectInputStream = ObjectInputStream(ByteArrayInputStream(kspConfigStream))
-            val kspConfig = objectInputStream.readObject() as KSPJvmConfig
-            val ksp = KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
-            return ksp.execute().ordinal
         }
     }
 }
