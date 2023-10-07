@@ -60,10 +60,7 @@ class AnyChanges(baseDir: File) : KSVirtualFile(baseDir, "AnyChanges")
 /**
  * Used for classes from classpath, i.e., classes without source files.
  */
-class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, "NoSourceFile") {
-    override val fileName: String
-        get() = "<NoSourceFile for $fqn is a virtual file; DO NOT USE.>"
-}
+class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, "NoSourceFile for $fqn")
 
 // Copy recursively, including last-modified-time of file and its parent dirs.
 //
