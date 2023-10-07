@@ -37,8 +37,10 @@ class TemporaryTestProject(
         // Update `params` in test classses to enable / disable K2.
         appendProperty("ksp.useK2=$useK2")
 
-        // Uncomment this to debug compiler and compiler plugin.
-        // gradleProperties.appendText("\nsystemProp.kotlin.compiler.execution.strategy=in-process")
+        // To debug compiler and compiler plugin:
+        // 1. s/kotlin-compiler/kotlin-compiler-embeddable in integration-tests/build.gradle.kts, and
+        // 2. uncomment below
+        // appendProperty("kotlin.compiler.execution.strategy=in-process")
     }
 
     fun restore(file: String) {
