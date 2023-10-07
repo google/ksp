@@ -481,7 +481,7 @@ class IncrementalContext(
         // Restore non-dirty outputs
         cleanOutputs.forEach { dst ->
             if (dst !in outputs) {
-                copyWithTimestamp(dst.bak(), dst.abs(), false)
+                copyWithTimestamp(dst.bak(), dst.abs(), true)
             }
         }
     }
@@ -559,17 +559,55 @@ class IncrementalContext(
         cachesUpToDateFile.delete()
         assert(!cachesUpToDateFile.exists())
 
-        val dirtyFilePaths = dirtyFiles.map { it.relativeFile }
+        val dirtySources = dirtyFiles.map { it.relativeFile }
 
-        updateCaches(dirtyFilePaths, outputs, sourceToOutputs)
+        // Throw away results from clean inputs.
+        //
+        // One common misuse of incremental APIs is associating a non-root source, instead of the ones obtained from
+        // root functions (e.g., getSymbolsWithAnnotation), to an output. This non-root source can be reached and
+        // reprocessed even when it is clean. Because it is clean, it is not available via root functions. As a result,
+        // other outputs that are solely based on it won't be re-generated and is deemed as removed.
+        //
+        // Assuming that the processors are deterministic, we are throwing away outputs from clean inputs, and
+        // recovering them from the backup as a workaround for processors.
+
+        val unassociated = outputs - sourceToOutputs.values.flatten()
+        val dirties = HashSet(unassociated)
+        fun markDirty(file: File) {
+            dirties.add(file)
+            sourceToOutputs.get(file)?.forEach {
+                markDirty(it)
+            }
+        }
+        fun isDirty(file: File) = file in dirties
+
+        val roots = mutableSetOf(anyChangesWildcard, removedOutputsKey)
+        roots.addAll(dirtySources)
+        // TODO: find a better way to identify NoSourceFile
+        roots.addAll(
+            sourceToOutputs.keys.filter {
+                it.path.startsWith("<NoSourceFile for ") &&
+                    it.path.endsWith(" is a virtual file; DO NOT USE.>")
+            }
+        )
+        roots.forEach {
+            markDirty(it)
+        }
+
+        val dirtySourceToOutputs = sourceToOutputs.filter { (src, outs) ->
+            isDirty(src)
+        }
+        val dirtyOutputs = outputs.filter(::isDirty).toSet()
+
+        updateCaches(dirtySources, dirtyOutputs, dirtySourceToOutputs)
 
         val cleanOutputs = mutableSetOf<File>()
         sourceToOutputsMap.keys.forEach { source ->
-            if (source !in dirtyFilePaths && source != anyChangesWildcard && source != removedOutputsKey)
+            if (!isDirty(source))
                 cleanOutputs.addAll(sourceToOutputsMap[source]!!)
         }
         sourceToOutputsMap.close()
-        updateOutputs(outputs, cleanOutputs)
+        updateOutputs(dirtyOutputs, cleanOutputs)
 
         cachesUpToDateFile.createNewFile()
         assert(cachesUpToDateFile.exists())
