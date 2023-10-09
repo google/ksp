@@ -18,8 +18,6 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Modifier
-import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 
@@ -82,15 +80,6 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     override val containingFile: KSFile? by lazy {
         ktEnumEntrySymbol.toContainingFile()
     }
-
-    override val docString: String?
-        get() = TODO("Not yet implemented")
-
-    override val modifiers: Set<Modifier>
-        get() = TODO("Not yet implemented")
-
-    override val origin: Origin
-        get() = TODO("Not yet implemented")
 
     override val location: Location by lazy {
         ktEnumEntrySymbol.psi.toLocation()
