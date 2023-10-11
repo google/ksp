@@ -28,10 +28,9 @@ dependencies {
     // replace AGP dependency w/ gradle-api when we have source registering API available.
     compileOnly("com.android.tools.build:gradle:$agpBaseVersion")
     compileOnly(gradleApi())
-    implementation(project(":kotlin-analysis-api")) {
-        isTransitive = false
-    }
+    compileOnly(project(":kotlin-analysis-api"))
     implementation(project(":api"))
+    implementation(project(":common-deps"))
     testImplementation(gradleApi())
     testImplementation(project(":api"))
     testImplementation(project(":common-util"))
@@ -141,6 +140,7 @@ tasks.named("processTestResources").configure {
 
 tasks.named<Test>("test").configure {
     dependsOn(":api:publishAllPublicationsToTestRepository")
+    dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")

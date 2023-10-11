@@ -1,9 +1,9 @@
 package com.google.devtools.ksp.gradle
 
-import com.google.devtools.ksp.impl.KSPJvmConfig
-import com.google.devtools.ksp.impl.KSPLoader
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
-import com.google.devtools.ksp.impl.KspGradleLogger
+import com.google.devtools.ksp.processing.ExitCode
+import com.google.devtools.ksp.processing.KSPJvmConfig
+import com.google.devtools.ksp.processing.KspGradleLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
@@ -80,6 +80,9 @@ abstract class KspAATask @Inject constructor(
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
             val kspAADepCfg = project.configurations.detachedConfiguration(
                 project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa:$KSP_VERSION"),
+                project.dependencies.create(
+                    "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-common-deps:$KSP_VERSION"
+                ),
                 project.dependencies.create("org.jetbrains.intellij.deps:trove4j:1.0.20200330"),
             ).apply {
                 isTransitive = false
@@ -327,7 +330,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         objectOutputStream.writeObject(kspConfig)
 
         val exitCode = try {
-            val kspLoaderClass = isolatedClassLoader.loadClass(KSPLoader::class.java.canonicalName)
+            val kspLoaderClass = isolatedClassLoader.loadClass("com.google.devtools.ksp.impl.KSPLoader")
             val runMethod = kspLoaderClass.getMethod(
                 "loadAndRunKSP",
                 ByteArray::class.java,
@@ -340,14 +343,14 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 processorProviders,
                 gradleCfg.logLevel.get().ordinal
             ) as Int
-            KotlinSymbolProcessing.ExitCode.values()[returnCode]
+            ExitCode.values()[returnCode]
         } catch (e: Exception) {
             require(e is InvocationTargetException)
             kspGradleLogger.exception(e.targetException)
             throw e.targetException
         }
 
-        if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
+        if (exitCode != ExitCode.OK) {
             throw Exception("KSP failed with exit code: $exitCode")
         }
     }

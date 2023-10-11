@@ -10,6 +10,7 @@ pluginManagement {
 
 include("api")
 include("gradle-plugin")
+include("common-deps")
 include("common-util")
 include("test-utils")
 include("compiler-plugin")

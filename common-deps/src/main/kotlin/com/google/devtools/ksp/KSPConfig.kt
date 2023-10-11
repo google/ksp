@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.impl
+package com.google.devtools.ksp.processing
 
 import java.io.File
 import java.io.Serializable

@@ -16,6 +16,8 @@
  */
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.processing.KSPJvmConfig
+import com.google.devtools.ksp.processing.KspGradleLogger
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
