@@ -51,6 +51,7 @@ dependencies {
     runtimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
 
     implementation(kotlin("stdlib", kotlinBaseVersion))
+    implementation(project(":common-deps"))
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")

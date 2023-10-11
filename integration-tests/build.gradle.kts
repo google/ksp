@@ -28,6 +28,7 @@ tasks.withType<Test> {
     jvmArgumentProviders.add(RelativizingInternalPathProvider("testRepo", File(rootProject.buildDir, "repos/test")))
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
+    dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
     dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
