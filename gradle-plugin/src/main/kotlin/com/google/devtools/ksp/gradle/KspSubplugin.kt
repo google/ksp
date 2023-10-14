@@ -537,10 +537,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
                         }
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
-                        kspTask.options.add(FilesSubpluginOption("apclasspath", processorClasspath.files.toList()))
-                        val kspOptions = kspTask.options.get().flatMap { listOf("-P", it.toArg()) }
-                        kspTask.compilerOptions.freeCompilerArgs.value(
-                            kspOptions + kotlinCompileTask.compilerOptions.freeCompilerArgs.get()
+                        kspTask.options.add(
+                            ClasspathFilesSubpluginOption("apclasspath", processorClasspath)
+                        )
+                        kspTask.compilerOptions.freeCompilerArgs.addAll(
+                            kspTask.options.map {
+                                it.flatMap { listOf("-P", it.toArg()) }
+                            }
+                        )
+                        kspTask.compilerOptions.freeCompilerArgs.addAll(
+                            kotlinCompileTask.compilerOptions.freeCompilerArgs
                         )
                         configureLanguageVersion(kspTask)
                         // Cannot use lambda; See below for details.
@@ -795,3 +801,15 @@ internal fun Configuration.markResolvable(): Configuration = apply {
     isCanBeConsumed = false
     isVisible = false
 }
+
+
+internal class ClasspathFilesSubpluginOption(
+    key: String,
+    val configuration: Configuration
+) : SubpluginOption(
+    key = key,
+    lazyValue = lazy<String> {
+        val files = configuration.resolve()
+        files.joinToString(File.pathSeparator) { it.normalize().absolutePath }
+    }
+)
