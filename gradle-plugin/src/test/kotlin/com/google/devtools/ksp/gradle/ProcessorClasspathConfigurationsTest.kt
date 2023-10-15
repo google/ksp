@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.google.common.truth.Truth.assertThat
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import org.junit.Rule
 import org.junit.Test
@@ -151,9 +152,19 @@ class ProcessorClasspathConfigurationsTest {
         )
         // trigger task creation. KSP should not resolve classpaths
         // at this step
-        testRule.runner()
+        val buildResult = testRule.runner()
             .withArguments(":app:tasks")
             .build()
+        val taskNames = listOf(
+            "kspKotlinJs",
+            "kspKotlinJvm",
+            "kspKotlinLinuxX64",
+        )
+        taskNames.forEach {
+            assertThat(
+                buildResult.output
+            ).contains(it)
+        }
     }
 
     @Test
@@ -183,8 +194,18 @@ class ProcessorClasspathConfigurationsTest {
         )
         // trigger task creation. KSP should not resolve arguments
         // at this step
-        testRule.runner()
-            .withArguments(":app:tasks")
+        val buildResult = testRule.runner()
+            .withArguments(":app:tasks", "--all")
             .build()
+        val taskNames = listOf(
+            "kspKotlinJs",
+            "kspKotlinJvm",
+            "kspKotlinLinuxX64",
+        )
+        taskNames.forEach {
+            assertThat(
+                buildResult.output
+            ).contains(it)
+        }
     }
 }
