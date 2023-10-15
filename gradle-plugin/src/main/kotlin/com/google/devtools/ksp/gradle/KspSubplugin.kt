@@ -539,7 +539,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         }
                         kspTask.commonSources.from(kotlinCompileTask.commonSources)
                         kspTask.options.add(
-                            ClasspathFilesSubpluginOption("apclasspath", processorClasspath)
+                            FileCollectionSubpluginOption.create(
+                                project = project,
+                                name = "apclasspath",
+                                classpath = processorClasspath
+                            )
                         )
                         kspTask.compilerOptions.freeCompilerArgs.addAll(
                             kspTask.options.map {
@@ -803,15 +807,30 @@ internal fun Configuration.markResolvable(): Configuration = apply {
 }
 
 /**
- * A [SubpluginOption] that returns the joined path for files in the given [configuration].
+ * A [SubpluginOption] that returns the joined path for files in the given [fileCollection].
  */
-internal class ClasspathFilesSubpluginOption(
+internal class FileCollectionSubpluginOption(
     key: String,
-    val configuration: Configuration
+    val fileCollection: ConfigurableFileCollection
 ) : SubpluginOption(
     key = key,
     lazyValue = lazy {
-        val files = configuration.resolve()
+        val files = fileCollection.files
         files.joinToString(File.pathSeparator) { it.normalize().absolutePath }
     }
-)
+) {
+    companion object {
+        fun create(
+            project: Project,
+            name: String,
+            classpath: Configuration
+        ): FileCollectionSubpluginOption {
+            val fileCollection = project.objects.fileCollection()
+            fileCollection.from(classpath)
+            return FileCollectionSubpluginOption(
+                key = name,
+                fileCollection = fileCollection
+            )
+        }
+    }
+}
