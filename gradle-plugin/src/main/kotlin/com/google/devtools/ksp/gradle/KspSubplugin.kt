@@ -802,13 +802,15 @@ internal fun Configuration.markResolvable(): Configuration = apply {
     isVisible = false
 }
 
-
+/**
+ * A [SubpluginOption] that returns the joined path for files in the given [configuration].
+ */
 internal class ClasspathFilesSubpluginOption(
     key: String,
     val configuration: Configuration
 ) : SubpluginOption(
     key = key,
-    lazyValue = lazy<String> {
+    lazyValue = lazy {
         val files = configuration.resolve()
         files.joinToString(File.pathSeparator) { it.normalize().absolutePath }
     }
