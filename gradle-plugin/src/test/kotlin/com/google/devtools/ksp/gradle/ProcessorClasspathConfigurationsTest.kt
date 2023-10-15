@@ -127,4 +127,64 @@ class ProcessorClasspathConfigurationsTest {
             .withArguments(":app:testConfigurations")
             .build()
     }
+
+    @Test
+    fun testConfigurationsAreNotResolvedAtConfigurationTime() {
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin {
+                    jvm { }
+                    js(IR) { browser() }
+                    linuxX64 {}
+                    androidTarget()
+                }
+            """.trimIndent()
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                $kspConfigs.matching { it.name != "ksp" }.all {
+                    // add a dependency that doesn't exist hence build would fail if it is resolved
+                    project.dependencies.add(name, "this.should.ve.not.been.resolved:exist:1.1.1")
+                }
+            """.trimIndent()
+        )
+        // trigger task creation. KSP should not resolve classpaths
+        // at this step
+        testRule.runner()
+            .withArguments(":app:tasks")
+            .build()
+    }
+
+    @Test
+    fun testArgumentsAreNotResolvedAtConfigurationTime() {
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin {
+                    jvm { }
+                    js(IR) { browser() }
+                    linuxX64 {}
+                    androidTarget()
+                }
+            """.trimIndent()
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                $kspConfigs.matching { it.name != "ksp" }.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.4.2")
+                }
+                ksp {
+                    // pass an argument provider that would fail if resolved.
+                    arg { error("Should not resolve arguments yet") }
+                }
+            """.trimIndent()
+        )
+        // trigger task creation. KSP should not resolve arguments
+        // at this step
+        testRule.runner()
+            .withArguments(":app:tasks")
+            .build()
+    }
 }
