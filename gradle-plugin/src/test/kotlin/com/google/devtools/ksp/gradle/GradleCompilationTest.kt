@@ -72,6 +72,79 @@ class GradleCompilationTest {
     }
 
     @Test
+    fun applicationCanAccessGeneratedCode_multiplatform_withConfigCache() {
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin {
+                    jvm { }
+                    js(IR) { browser() }
+                    linuxX64 {}
+                    macosArm64 {}
+                    androidTarget()
+                }
+            """.trimIndent()
+        )
+        val kspConfigs =
+            """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""
+        testRule.appModule.buildFileAdditions.add(
+            """
+                $kspConfigs.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, project(":${testRule.processorModule.name}"))
+                }
+            """.trimIndent()
+        )
+
+        class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
+            var count = 0
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                /**
+                 * The source file accessing the generated code is added later to be able to test the configuration
+                 * cache and the workaround for https://youtrack.jetbrains.com/issue/KT-61657.
+                 */
+                val needToGenerate = resolver.getAllFiles().any { it.fileName == "Foo.kt" }
+                if (count == 0 && needToGenerate) {
+                    codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
+                        it.writer(Charsets.UTF_8).use {
+                            it.write("class ToBeGenerated")
+                        }
+                    }
+                    count += 1
+                }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> MyProcessor(env.codeGenerator) })
+
+        testRule.addProvider(Provider::class)
+
+        val compileArgs = listOf(
+            "app:compileKotlinLinuxX64", "--configuration-cache", "--configuration-cache-problems=fail"
+        )
+        val runner = testRule.runner()
+        // compile, no sources, nothing will run
+        runner
+            .withArguments(compileArgs)
+            .forwardOutput()
+            .build()
+        // add a file that needs access to the generated file
+        testRule.appModule.addMultiplatformSource(
+            "commonMain", "Foo.kt",
+            """
+            class Foo {
+                val x = ToBeGenerated()
+            }
+            """.trimIndent()
+        )
+        // now compile again
+        runner
+            .withArguments(compileArgs)
+            .forwardOutput()
+            .build()
+    }
+
+    @Test
     fun applicationCanAccessGeneratedCode() {
         testRule.setupAppAsJvmApp()
         testRule.appModule.dependencies.add(
