@@ -18,7 +18,6 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 
 package com.google.devtools.ksp.gradle
-
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
@@ -45,7 +44,18 @@ import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
-import org.jetbrains.kotlin.gradle.dsl.*
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptionsHelper
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptionsHelper
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptionsHelper
+import org.jetbrains.kotlin.gradle.dsl.KotlinNativeCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinNativeCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.KotlinNativeCompilerOptionsHelper
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationInfo
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
@@ -155,10 +165,11 @@ class KotlinFactories {
                     )
 
                     kspTask.onlyIf {
-                        // kspTask.konanTarget.enabledOnCurrentHost
-                        // workaround for: https://github.com/google/ksp/issues/1522
+                        // KonanTarget is not properly serializable, hence we should check by name
+                        // see https://youtrack.jetbrains.com/issue/KT-61657.
+                        val konanTargetName = kspTask.konanTarget.name
                         HostManager().enabled.any {
-                            it.name == kspTask.konanTarget.name
+                            it.name == konanTargetName
                         }
                     }
                 }

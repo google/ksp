@@ -153,7 +153,7 @@ class ProcessorClasspathConfigurationsTest {
         // trigger task creation. KSP should not resolve classpaths
         // at this step
         val buildResult = testRule.runner()
-            .withArguments(":app:tasks")
+            .withArguments(":app:tasks", "--all")
             .build()
         val taskNames = listOf(
             "kspKotlinJs",
