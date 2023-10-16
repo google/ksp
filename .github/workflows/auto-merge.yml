@@ -28,12 +28,11 @@ jobs:
         # Cherry pick new changes from main, except for version bumps.
         # A commit is a version bump IFF it touches third_party/prebuilt/repo
         DONT_PICK=$(cat <<EOF
-        76ac8de5cd4769b2cfd7c80ad156309c5f27d52a
-        9675c5de0f689cb8563a0b6e1142a78747e8675c
-        fc22e8f947fb533e3f728252882c9dbe3f4d810d
-        caa3e0843dd169dcc3486d1ac28d16489324d564
-        1ed2d3b709adc53450eb1c09fffe33a50459cc88
-        f0647fd2acffa78454700eb4750bf77caab05076
+        a0ec95f02b561fad1473a36ec7788aa6689db9ed
+        f1a7ae788e1f94df04bcd6d7eebfb0d8f487e429
+        15e9b54fe5b3e1c51e748b2856196e1eed6c4483
+        23a7adb763ca01c24db3a83fa17227ef218d3fdc
+        e951fb9c14defe19072b1d3b78e48eedc1fb1b77
         EOF
         )
         git config --global user.email "kotlin-symbol-processing@google.com"
@@ -114,12 +113,11 @@ jobs:
           # Cherry pick new changes from main, except for version bumps.
           # A commit is a version bump IFF it touches third_party/prebuilt/repo
           DONT_PICK=$(cat <<EOF
-          76ac8de5cd4769b2cfd7c80ad156309c5f27d52a
-          9675c5de0f689cb8563a0b6e1142a78747e8675c
-          fc22e8f947fb533e3f728252882c9dbe3f4d810d
-          caa3e0843dd169dcc3486d1ac28d16489324d564
-          1ed2d3b709adc53450eb1c09fffe33a50459cc88
-          f0647fd2acffa78454700eb4750bf77caab05076
+          a0ec95f02b561fad1473a36ec7788aa6689db9ed
+          f1a7ae788e1f94df04bcd6d7eebfb0d8f487e429
+          15e9b54fe5b3e1c51e748b2856196e1eed6c4483
+          23a7adb763ca01c24db3a83fa17227ef218d3fdc
+          e951fb9c14defe19072b1d3b78e48eedc1fb1b77
           EOF
           )
           git config --global user.email "kotlin-symbol-processing@google.com"
