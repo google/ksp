@@ -36,7 +36,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.config.ApiVersion
-import org.jetbrains.kotlin.config.LanguageVersion.Companion.LATEST_STABLE
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
@@ -75,7 +74,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_GROUP_ID = "com.google.devtools.ksp"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
-        val LANGUAGE_VERSION = KotlinVersion.fromVersion(LATEST_STABLE.toString())
 
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
@@ -408,11 +406,18 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         fun configureLanguageVersion(kspTask: KotlinCompilationTask<*>) {
             kspTask.compilerOptions.useK2.value(false)
-            kotlinCompilation.compilerOptions.options.languageVersion.orNull?.let { version ->
-                if (version >= KotlinVersion.KOTLIN_2_0) {
-                    kspTask.compilerOptions.languageVersion.value(LANGUAGE_VERSION)
+            val languageVersion = kotlinCompilation.compilerOptions.options.languageVersion
+            kspTask.compilerOptions.languageVersion.value(
+                project.provider {
+                    languageVersion.orNull?.let { version ->
+                        if (version >= KotlinVersion.KOTLIN_2_0) {
+                            KotlinVersion.KOTLIN_1_9
+                        } else {
+                            version
+                        }
+                    }
                 }
-            }
+            )
         }
 
         val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true

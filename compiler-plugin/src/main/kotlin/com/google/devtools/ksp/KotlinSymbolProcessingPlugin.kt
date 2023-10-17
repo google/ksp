@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
+import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.resolve.extensions.AnalysisHandlerExtension
 
@@ -64,6 +65,10 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 @ExperimentalCompilerApi
 class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
+        // KSP 1.x don't and will not support K2. Do not register if language version >= 2.
+        if (configuration.languageVersionSettings.languageVersion >= LanguageVersion.KOTLIN_2_0)
+            return
+
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
         val options = configuration[KSP_OPTIONS]?.apply {
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
@@ -91,4 +96,8 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
             )
         }
     }
+
+    // FirKotlinToJvmBytecodeCompiler throws an error when it sees an incompatible plugin.
+    override val supportsK2: Boolean
+        get() = true
 }
