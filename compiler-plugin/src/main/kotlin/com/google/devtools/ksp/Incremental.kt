@@ -36,9 +36,7 @@ import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
-import org.jetbrains.kotlin.incremental.storage.AppendableBasicMap
-import org.jetbrains.kotlin.incremental.storage.AppendableDataExternalizer
-import org.jetbrains.kotlin.incremental.storage.CollectionExternalizer
+import org.jetbrains.kotlin.incremental.storage.AppendableAbstractBasicMap
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
 import org.jetbrains.kotlin.types.KotlinType
@@ -51,44 +49,19 @@ import java.util.*
 abstract class PersistentMap<K : Comparable<K>, V>(
     storageFile: File,
     keyDescriptor: KeyDescriptor<K>,
-    valueExternalizer: AppendableDataExternalizer<V>,
+    valueExternalizer: DataExternalizer<V>,
     icContext: IncrementalCompilationContext,
-) : AppendableBasicMap<K, V>(storageFile, keyDescriptor, valueExternalizer, icContext) {
-    abstract operator fun get(key: K): V?
-    abstract operator fun set(key: K, value: V)
-    abstract fun remove(key: K)
-}
+) : AppendableAbstractBasicMap<K, V, Collection<V>>(storageFile, keyDescriptor, valueExternalizer, icContext)
 
 class FileToSymbolsMap(
     storageFile: File,
     icContext: IncrementalCompilationContext
-) : PersistentMap<File, Collection<LookupSymbol>>(
+) : PersistentMap<File, LookupSymbol>(
     storageFile,
     FileKeyDescriptor,
-    CollectionExternalizer(LookupSymbolExternalizer, { HashSet() }),
+    LookupSymbolExternalizer,
     icContext,
-) {
-    override fun dumpKey(key: File): String = key.toString()
-
-    override fun dumpValue(value: Collection<LookupSymbol>): String = value.toString()
-
-    fun add(file: File, symbol: LookupSymbol) {
-        storage.append(file, listOf(symbol))
-    }
-
-    override operator fun get(key: File): Collection<LookupSymbol>? = storage[key]
-
-    override operator fun set(key: File, symbols: Collection<LookupSymbol>) {
-        storage[key] = symbols
-    }
-
-    override fun remove(key: File) {
-        storage.remove(key)
-    }
-
-    val keys: Collection<File>
-        get() = storage.keys
-}
+)
 
 object FileKeyDescriptor : KeyDescriptor<File> {
     override fun read(input: DataInput): File {
@@ -124,30 +97,16 @@ object FileExternalizer : DataExternalizer<File> {
 class FileToFilesMap(
     storageFile: File,
     icContext: IncrementalCompilationContext
-) : PersistentMap<File, Collection<File>>(
+) : PersistentMap<File, File>(
     storageFile,
     FileKeyDescriptor,
-    CollectionExternalizer(FileExternalizer, { HashSet() }),
+    FileExternalizer,
     icContext,
 ) {
-
-    override operator fun get(key: File): Collection<File>? = storage[key]
-
-    override operator fun set(key: File, value: Collection<File>) {
-        storage[key] = value
-    }
-
     override fun dumpKey(key: File): String = key.path
 
     override fun dumpValue(value: Collection<File>) =
         value.dumpCollection()
-
-    override fun remove(key: File) {
-        storage.remove(key)
-    }
-
-    val keys: Collection<File>
-        get() = storage.keys
 }
 
 object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
@@ -494,14 +453,14 @@ class IncrementalContext(
         updateLookupCache(dirtyFiles)
 
         // Update symbolsMap
-        fun <K : Comparable<K>, V> update(m: PersistentMap<K, Collection<V>>, u: MultiMap<K, V>) {
+        fun <K : Comparable<K>, V> update(m: PersistentMap<K, V>, u: MultiMap<K, V>) {
             // Update symbol caches from modified files.
             u.keySet().forEach {
                 m.set(it, u[it].toSet())
             }
         }
 
-        fun <K : Comparable<K>, V> remove(m: PersistentMap<K, Collection<V>>, removedKeys: Collection<K>) {
+        fun <K : Comparable<K>, V> remove(m: PersistentMap<K, V>, removedKeys: Collection<K>) {
             // Remove symbol caches from removed files.
             removedKeys.forEach {
                 m.remove(it)
