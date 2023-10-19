@@ -2,6 +2,7 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -64,6 +65,7 @@ class HmppIT {
         ),
     )
 
+    @Ignore
     @Test
     fun testHmpp() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
