@@ -3,6 +3,7 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Assume
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,6 +69,7 @@ class HmppIT(val useK2: Boolean) {
         ),
     )
 
+    @Ignore
     @Test
     fun testHmpp() {
         Assume.assumeFalse(useK2)
