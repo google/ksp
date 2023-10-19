@@ -37,7 +37,6 @@ import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion.Companion.LATEST_STABLE
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
@@ -59,7 +58,6 @@ import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
-import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.concurrent.Callable
@@ -262,10 +260,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
-        val kspGeneratedSourceSet =
-            project.kotlinExtension.sourceSets.create("generatedBy" + kspTaskName.capitalizeAsciiOnly())
-        sourceSetMap.put(kotlinCompilation.defaultSourceSet, kspGeneratedSourceSet)
-
         val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
             .extendsFrom(*nonEmptyKspConfigurations.toTypedArray()).markResolvable()
 
@@ -276,28 +270,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             kspTask.options.addAll(
                 kspTask.project.provider {
-                    val commonSources: List<File> = when (processingModel) {
-                        "hierarchical" -> {
-                            fun unclaimedDeps(roots: Set<KotlinSourceSet>): Set<KotlinSourceSet> {
-                                val unclaimedParents =
-                                    roots.flatMap { it.dependsOn }.filterNot { it in sourceSetMap }.toSet()
-                                return if (unclaimedParents.isEmpty()) {
-                                    unclaimedParents
-                                } else {
-                                    unclaimedParents + unclaimedDeps(unclaimedParents)
-                                }
-                            }
-                            // Source sets that are not claimed by other compilations.
-                            // I.e., those that should be processed by this compilation.
-                            val unclaimed =
-                                kotlinCompilation.kotlinSourceSets + unclaimedDeps(kotlinCompilation.kotlinSourceSets)
-                            val commonSourceSets = kotlinCompilation.allKotlinSourceSets - unclaimed
-                            commonSourceSets.flatMap { it.kotlin.files }
-                        }
-
-                        else -> emptyList()
-                    }
-
                     getSubpluginOptions(
                         project,
                         kspExtension,
@@ -306,7 +278,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         isIncremental,
                         kspExtension.allWarningsAsErrors,
                         kspTask.commandLineArgumentProviders,
-                        commonSources,
+                        emptyList(),
                     )
                 }
             )
@@ -326,48 +298,35 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             val kotlinCompileTask = kotlinCompileProvider.get()
             if (kspExtension.allowSourcesFromOtherPlugins) {
-                fun FileCollection.nonSelfDeps(): List<Task> =
-                    buildDependencies.getDependencies(null).filterNot {
-                        it.name == kspTaskName
-                    }
-
                 fun setSource(source: FileCollection) {
                     // kspTask.setSource(source) would create circular dependency.
                     // Therefore we need to manually extract input deps, filter them, and tell kspTask.
                     kspTask.setSource(project.provider { source.files })
-                    kspTask.dependsOn(project.provider { source.nonSelfDeps() })
+                    kspTask.dependsOn(project.provider { source.nonSelfDeps(kspTaskName) })
                 }
 
-                setSource(kotlinCompileTask.sources - kspGeneratedSourceSet.kotlin)
+                setSource(
+                    kotlinCompileTask.sources.filter {
+                        !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+                    }
+                )
                 if (kotlinCompileTask is KotlinCompile) {
-                    setSource(kotlinCompileTask.javaSources - kspGeneratedSourceSet.kotlin)
+                    setSource(
+                        kotlinCompileTask.javaSources.filter {
+                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+                        }
+                    )
                 }
             } else {
                 kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
-                    if (sourceSet == kspGeneratedSourceSet) return@forAll
-                    kspTask.setSource(sourceSet.kotlin)
-                }
-
-                if (kotlinCompilation is KotlinCommonCompilation) {
-                    kspTask.setSource(kotlinCompilation.defaultSourceSet.kotlin)
-                }
-                val generated = when (processingModel) {
-                    "hierarchical" -> {
-                        // boundary parent source sets that are going to be compiled by other compilations
-                        fun claimedParents(root: KotlinSourceSet): Set<KotlinSourceSet> {
-                            val (claimed, unclaimed) = root.dependsOn.partition { it in sourceSetMap }
-                            return claimed.toSet() + unclaimed.flatMap { claimedParents(it) }
+                    kspTask.setSource(
+                        sourceSet.kotlin.srcDirs.filter {
+                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
                         }
-                        kotlinCompilation.kotlinSourceSets.flatMap { claimedParents(it) }.map { sourceSetMap[it]!! }
-                    }
-
-                    else -> emptyList()
-                }
-                generated.forEach {
-                    kspTask.setSource(it.kotlin)
+                    )
+                    kspTask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName))
                 }
             }
-            kspTask.exclude { kspOutputDir.isParentOf(it.file) }
 
             kspTask.libraries.setFrom(
                 kotlinCompileTask.project.files(
@@ -428,7 +387,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kotlinCompilation,
                         kotlinCompileProvider,
                         processorClasspath,
-                        kspGeneratedSourceSet
                     )
                 } else {
                     KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
@@ -554,16 +512,19 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
             // No else; The cases should be exhaustive
         }
-        kspGeneratedSourceSet.kotlin.srcDir(project.files(kotlinOutputDir, javaOutputDir).builtBy(kspTaskProvider))
+
+        val generatedSources = arrayOf(
+            project.files(kotlinOutputDir).builtBy(kspTaskProvider),
+            project.files(javaOutputDir).builtBy(kspTaskProvider),
+        )
         if (kotlinCompilation is KotlinCommonCompilation) {
-            // Do not make common source sets depend on generated source sets.
-            // They will be observed by downstreams and confuse processors.
-            kotlinCompileProvider.configure {
-                it.source(kspGeneratedSourceSet.kotlin)
-            }
+            // Do not add generated sources to common source sets.
+            // They will be observed by downstreams and violate current build scheme.
+            kotlinCompileProvider.configure { it.source(*generatedSources) }
         } else {
-            kotlinCompilation.defaultSourceSet.dependsOn(kspGeneratedSourceSet)
+            kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
         }
+
         kotlinCompileProvider.configure { kotlinCompile ->
             when (kotlinCompile) {
                 is AbstractKotlinCompile<*> -> kotlinCompile.libraries.from(project.files(classOutputDir))
@@ -793,3 +754,8 @@ internal fun Configuration.markResolvable(): Configuration = apply {
     isCanBeConsumed = false
     isVisible = false
 }
+
+internal fun FileCollection.nonSelfDeps(selfTaskName: String): List<Task> =
+    buildDependencies.getDependencies(null).filterNot {
+        it.name == selfTaskName
+    }
