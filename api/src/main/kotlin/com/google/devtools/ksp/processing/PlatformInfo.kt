@@ -20,7 +20,7 @@ package com.google.devtools.ksp.processing
 /**
  * Platform specific information
  */
-sealed interface PlatformInfo {
+interface PlatformInfo {
     val platformName: String
 }
 

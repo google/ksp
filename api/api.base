@@ -141,7 +141,7 @@ package com.google.devtools.ksp.processing {
     property @NonNull public abstract String targetName;
   }
 
-  public sealed interface PlatformInfo {
+  public interface PlatformInfo {
     method @NonNull public String getPlatformName();
     property @NonNull public abstract String platformName;
   }
@@ -262,7 +262,7 @@ package com.google.devtools.ksp.symbol {
     enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind TOP_LEVEL;
   }
 
-  public sealed interface KSAnnotated extends com.google.devtools.ksp.symbol.KSNode {
+  public interface KSAnnotated extends com.google.devtools.ksp.symbol.KSNode {
     method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotation> getAnnotations();
     property @NonNull public abstract kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotation> annotations;
   }
@@ -313,7 +313,7 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSClassifierReference qualifier;
   }
 
-  public sealed interface KSDeclaration extends com.google.devtools.ksp.symbol.KSModifierListOwner com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSExpectActual {
+  public interface KSDeclaration extends com.google.devtools.ksp.symbol.KSModifierListOwner com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSExpectActual {
     method @Nullable public com.google.devtools.ksp.symbol.KSFile getContainingFile();
     method @Nullable public String getDocString();
     method @NonNull public com.google.devtools.ksp.symbol.KSName getPackageName();
@@ -330,7 +330,7 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeParameter> typeParameters;
   }
 
-  public sealed interface KSDeclarationContainer extends com.google.devtools.ksp.symbol.KSNode {
+  public interface KSDeclarationContainer extends com.google.devtools.ksp.symbol.KSNode {
     method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSDeclaration> getDeclarations();
     property @NonNull public abstract kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSDeclaration> declarations;
   }
@@ -390,7 +390,7 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference returnType;
   }
 
-  public sealed interface KSModifierListOwner extends com.google.devtools.ksp.symbol.KSNode {
+  public interface KSModifierListOwner extends com.google.devtools.ksp.symbol.KSNode {
     method @NonNull public java.util.Set<com.google.devtools.ksp.symbol.Modifier> getModifiers();
     property @NonNull public abstract java.util.Set<com.google.devtools.ksp.symbol.Modifier> modifiers;
   }
@@ -416,7 +416,7 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSReferenceElement element;
   }
 
-  public sealed interface KSPropertyAccessor extends com.google.devtools.ksp.symbol.KSDeclarationContainer com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
+  public interface KSPropertyAccessor extends com.google.devtools.ksp.symbol.KSDeclarationContainer com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
     method @NonNull public com.google.devtools.ksp.symbol.KSPropertyDeclaration getReceiver();
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSPropertyDeclaration receiver;
   }
@@ -449,7 +449,7 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSValueParameter parameter;
   }
 
-  public sealed interface KSReferenceElement extends com.google.devtools.ksp.symbol.KSNode {
+  public interface KSReferenceElement extends com.google.devtools.ksp.symbol.KSNode {
     method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> getTypeArguments();
     property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> typeArguments;
   }
