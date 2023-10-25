@@ -25,8 +25,8 @@ import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
 import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
-abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) /*: KSPropertyAccessor*/ {
-    open /*override*/ val origin: Origin by lazy {
+abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) : KSPropertyAccessor {
+    override val origin: Origin by lazy {
         when (receiver.origin) {
             // if receiver is kotlin source, that means we are a synthetic where developer
             // didn't declare an explicit accessor so we used the descriptor instead
@@ -35,27 +35,26 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         }
     }
 
-    open /*override*/ val receiver: KSPropertyDeclaration by lazy {
+    override val receiver: KSPropertyDeclaration by lazy {
         descriptor.correspondingProperty.toKSPropertyDeclaration()
     }
 
-    open /*override*/ val parent: KSNode? by lazy {
+    override val parent: KSNode? by lazy {
         receiver
     }
 
-    open /*override*/ val location: Location
+    override val location: Location
         get() {
             // if receiver is kotlin source, that means `this` is synthetic hence we want the property's location
             // Otherwise, receiver is also from a .class file where the location will be NoLocation
             return receiver.location
         }
 
-    open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this as KSPropertyAccessor) }
-            .memoized()
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this) }.memoized()
     }
 
-    open /*override*/ val modifiers: Set<Modifier> by lazy {
+    override val modifiers: Set<Modifier> by lazy {
         val modifiers = mutableSetOf<Modifier>()
         modifiers.addAll(descriptor.toKSModifiers())
         modifiers.addAll(descriptor.toFunctionKSModifiers())

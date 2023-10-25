@@ -319,7 +319,7 @@ internal class DeclarationOrdering(
     }
 
     private fun getOrder(decl: KSDeclarationDescriptorImpl): Int {
-        return declOrdering.getOrPut(decl as KSDeclaration) {
+        return declOrdering.getOrPut(decl) {
             when (decl) {
                 is KSPropertyDeclarationDescriptorImpl -> {
                     fieldOrdering[decl.simpleName.asString()]?.let {
@@ -467,8 +467,7 @@ internal val KSDeclarationContainer.declarationsInSourceOrder: Sequence<KSDeclar
             DeclarationOrdering(it)
         } ?: return declarations
 
-        return (declarations as? Sequence<KSDeclarationDescriptorImpl>)
-            ?.sortedWith(declarationOrdering.comparator) as Sequence<KSDeclaration>?
+        return (declarations as? Sequence<KSDeclarationDescriptorImpl>)?.sortedWith(declarationOrdering.comparator)
             ?: declarations
     }
 
