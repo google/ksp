@@ -20,22 +20,22 @@ package com.google.devtools.ksp.symbol.impl.synthetic
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 
-abstract class KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration: KSPropertyDeclaration) /*: KSPropertyAccessor*/ {
-    open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
-        (this as KSPropertyAccessor).findAnnotationFromUseSiteTarget()
+abstract class KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration: KSPropertyDeclaration) : KSPropertyAccessor {
+    override val annotations: Sequence<KSAnnotation> by lazy {
+        this.findAnnotationFromUseSiteTarget()
     }
 
-    open /*override*/ val location: Location by lazy {
+    override val location: Location by lazy {
         ksPropertyDeclaration.location
     }
 
-    open /*override*/ val modifiers: Set<Modifier> = emptySet()
+    override val modifiers: Set<Modifier> = emptySet()
 
-    open /*override*/ val origin: Origin = Origin.SYNTHETIC
+    override val origin: Origin = Origin.SYNTHETIC
 
-    open /*override*/ val receiver: KSPropertyDeclaration = ksPropertyDeclaration
+    override val receiver: KSPropertyDeclaration = ksPropertyDeclaration
 
-    open /*override*/ fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitPropertyAccessor(this as KSPropertyAccessor, data)
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+        return visitor.visitPropertyAccessor(this, data)
     }
 }
