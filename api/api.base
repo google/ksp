@@ -401,7 +401,7 @@ package com.google.devtools.ksp.symbol {
     method @NonNull public String getShortName();
   }
 
-  public sealed interface KSNode {
+  public interface KSNode {
     method public <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, D data);
     method @NonNull public com.google.devtools.ksp.symbol.Location getLocation();
     method @NonNull public com.google.devtools.ksp.symbol.Origin getOrigin();
