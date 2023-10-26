@@ -23,7 +23,13 @@ import com.intellij.psi.PsiDocumentManager
 class KSPCoreEnvironment(internal val project: MockProject) {
     companion object {
         // TODO: get rid of singleton.
-        lateinit var instance: KSPCoreEnvironment
+        val instance_prop: ThreadLocal<KSPCoreEnvironment> = ThreadLocal()
+
+        var instance: KSPCoreEnvironment
+            get() = instance_prop.get()
+            set(value) {
+                instance_prop.set(value)
+            }
     }
     init {
         instance = this
