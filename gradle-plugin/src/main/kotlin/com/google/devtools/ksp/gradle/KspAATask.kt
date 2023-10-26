@@ -267,14 +267,22 @@ interface KspAAWorkParameter : WorkParameters {
     var kspClassPath: ConfigurableFileCollection
 }
 
+var isolatedClassLoaderCache = mutableMapOf<String, URLClassLoader>()
+
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config
         val kspClassPath = parameters.kspClassPath
-        val isolatedClassLoader = URLClassLoader(
-            kspClassPath.files.map { it.toURI().toURL() }.toTypedArray(),
-            ClassLoader.getPlatformClassLoader()
-        )
+        val key = kspClassPath.files.map { it.toURI().toURL() }.joinToString { it.path }
+        synchronized(isolatedClassLoaderCache) {
+            if (isolatedClassLoaderCache[key] == null) {
+                isolatedClassLoaderCache[key] = URLClassLoader(
+                    kspClassPath.files.map { it.toURI().toURL() }.toTypedArray(),
+                    ClassLoader.getPlatformClassLoader()
+                )
+            }
+        }
+        val isolatedClassLoader = isolatedClassLoaderCache[key]!!
 
         // Clean stale files for now.
         // TODO: support incremental processing.

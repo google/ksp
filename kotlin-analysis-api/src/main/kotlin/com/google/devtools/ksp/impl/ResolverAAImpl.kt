@@ -65,12 +65,21 @@ class ResolverAAImpl(
     val project: Project
 ) : Resolver {
     companion object {
-        lateinit var instance: ResolverAAImpl
-        lateinit var ktModule: KtModule
-        lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
-        lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
+        val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
+        private val ktModule_prop: ThreadLocal<KtModule> = ThreadLocal()
+        var instance
+            get() = instance_prop.get()
+            set(value) {
+                instance_prop.set(value)
+            }
+        var ktModule: KtModule
+            get() = ktModule_prop.get()
+            set(value) {
+                ktModule_prop.set(value)
+            }
     }
-
+    lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
+    lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     val classBinaryCache = ClsKotlinBinaryClassCache()
 
