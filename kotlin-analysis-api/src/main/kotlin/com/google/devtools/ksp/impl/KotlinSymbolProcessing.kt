@@ -478,8 +478,8 @@ class KotlinSymbolProcessing(
                 project
             )
             ResolverAAImpl.instance = resolver
-            ResolverAAImpl.functionAsMemberOfCache = mutableMapOf()
-            ResolverAAImpl.propertyAsMemberOfCache = mutableMapOf()
+            ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
+            ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
 
             processors.forEach {
                 deferredSymbols[it] =
