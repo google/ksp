@@ -11,10 +11,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class JavaOnlyIT(useK2: Boolean) {
+class JavaOnlyIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("java-only", "test-processor", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("java-only", "test-processor", useKSP2 = useKSP2)
 
     @Test
     fun testJavaOnly() {
@@ -37,7 +37,7 @@ class JavaOnlyIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

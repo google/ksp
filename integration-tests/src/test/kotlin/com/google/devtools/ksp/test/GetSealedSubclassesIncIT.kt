@@ -10,14 +10,14 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class GetSealedSubclassesIncIT(val useK2: Boolean) {
+class GetSealedSubclassesIncIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("sealed-subclasses", "test-processor", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("sealed-subclasses", "test-processor", useKSP2)
 
     @Test
     fun testGetSealedSubclassesInc() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val expected2 = listOf(
@@ -61,7 +61,7 @@ class GetSealedSubclassesIncIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
