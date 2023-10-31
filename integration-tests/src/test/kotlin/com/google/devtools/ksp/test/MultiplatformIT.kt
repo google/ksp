@@ -11,10 +11,10 @@ import java.io.File
 import java.util.jar.*
 
 @RunWith(Parameterized::class)
-class MultiplatformIT(useK2: Boolean) {
+class MultiplatformIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp", "playground", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp", "playground", useKSP2 = useKSP2)
 
     @Test
     fun testJVM() {
@@ -37,7 +37,7 @@ class MultiplatformIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

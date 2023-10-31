@@ -12,10 +12,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class OutputDepsIt(val useK2: Boolean) {
+class OutputDepsIt(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("output-deps", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("output-deps", useKSP2 = useKSP2)
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(
@@ -127,7 +127,7 @@ class OutputDepsIt(val useK2: Boolean) {
     @Test
     fun testOutputDeps() {
         // FIXME
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
@@ -185,7 +185,7 @@ class OutputDepsIt(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

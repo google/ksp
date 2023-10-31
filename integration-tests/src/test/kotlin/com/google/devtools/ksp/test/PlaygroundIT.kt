@@ -13,10 +13,10 @@ import java.io.File
 import java.util.jar.*
 
 @RunWith(Parameterized::class)
-class PlaygroundIT(val useK2: Boolean) {
+class PlaygroundIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground", useKSP2 = useKSP2)
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -108,7 +108,7 @@ class PlaygroundIT(val useK2: Boolean) {
 
     @Test
     fun testAllowSourcesFromOtherPlugins() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         fun checkGBuilder() {
             val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
 
@@ -364,7 +364,7 @@ class PlaygroundIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

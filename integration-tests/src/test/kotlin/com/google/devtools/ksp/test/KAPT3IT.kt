@@ -12,10 +12,10 @@ import java.io.File
 import java.util.jar.JarFile
 
 @RunWith(Parameterized::class)
-class KAPT3IT(useK2: Boolean) {
+class KAPT3IT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kapt3", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("kapt3", useKSP2 = useKSP2)
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -52,7 +52,7 @@ class KAPT3IT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

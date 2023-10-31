@@ -11,10 +11,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class IncrementalCPIT(val useK2: Boolean) {
+class IncrementalCPIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental-classpath", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("incremental-classpath", useKSP2 = useKSP2)
 
     val src2Dirty = listOf(
         "l1/src/main/kotlin/p1/L1.kt" to setOf(
@@ -43,7 +43,7 @@ class IncrementalCPIT(val useK2: Boolean) {
 
     @Test
     fun testCPChanges() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -135,7 +135,7 @@ class IncrementalCPIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

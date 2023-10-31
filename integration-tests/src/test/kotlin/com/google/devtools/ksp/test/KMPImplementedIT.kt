@@ -14,10 +14,10 @@ import java.io.File
 import java.util.jar.*
 
 @RunWith(Parameterized::class)
-class KMPImplementedIT(useK2: Boolean) {
+class KMPImplementedIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kmp", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("kmp", useKSP2 = useKSP2)
 
     private fun verify(jarName: String, contents: List<String>) {
         val artifact = File(project.root, jarName)
@@ -361,7 +361,7 @@ class KMPImplementedIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

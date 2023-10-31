@@ -10,10 +10,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class PartialCleanIT(useK2: Boolean) {
+class PartialCleanIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("partial-clean", "test-processor", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("partial-clean", "test-processor", useKSP2)
 
     @Test
     fun testWorkaroundForIncorrectlyMarkedInputs() {
@@ -30,7 +30,7 @@ class PartialCleanIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

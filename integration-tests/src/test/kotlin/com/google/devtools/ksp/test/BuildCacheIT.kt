@@ -10,14 +10,14 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class BuildCacheIT(useK2: Boolean) {
+class BuildCacheIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project1: TemporaryTestProject = TemporaryTestProject("buildcache", "playground", useK2)
+    val project1: TemporaryTestProject = TemporaryTestProject("buildcache", "playground", useKSP2)
 
     @Rule
     @JvmField
-    val project2: TemporaryTestProject = TemporaryTestProject("buildcache", "playground", useK2)
+    val project2: TemporaryTestProject = TemporaryTestProject("buildcache", "playground", useKSP2)
 
     @Test
     fun testBuildCache() {
@@ -44,7 +44,7 @@ class BuildCacheIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
