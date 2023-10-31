@@ -10,10 +10,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class HmppIT(val useK2: Boolean) {
+class HmppIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("hmpp", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("hmpp", useKSP2 = useKSP2)
 
     val taskToFilesTraditional = mapOf(
         ":workload:kspCommonMainKotlinMetadata" to "w: [ksp] EchoProcessor: CommonMain",
@@ -72,7 +72,7 @@ class HmppIT(val useK2: Boolean) {
     @Ignore
     @Test
     fun testHmpp() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
@@ -91,7 +91,7 @@ class HmppIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

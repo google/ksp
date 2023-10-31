@@ -11,10 +11,10 @@ import java.io.File
 import java.util.jar.JarFile
 
 @RunWith(Parameterized::class)
-class InitPlusProviderIT(useK2: Boolean) {
+class InitPlusProviderIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("init-plus-provider", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("init-plus-provider", useKSP2 = useKSP2)
 
     @Test
     fun testInitPlusProvider() {
@@ -36,7 +36,7 @@ class InitPlusProviderIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

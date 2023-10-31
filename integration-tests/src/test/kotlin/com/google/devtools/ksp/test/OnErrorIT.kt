@@ -9,10 +9,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class OnErrorIT(useK2: Boolean) {
+class OnErrorIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("on-error", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("on-error", useKSP2 = useKSP2)
 
     @Test
     fun testOnError() {
@@ -114,7 +114,7 @@ class OnErrorIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

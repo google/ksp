@@ -9,10 +9,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class JavaNestedClassIT(useK2: Boolean) {
+class JavaNestedClassIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("javaNestedClass", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("javaNestedClass", useKSP2 = useKSP2)
 
     @Test
     fun testJavaNestedClass() {
@@ -25,7 +25,7 @@ class JavaNestedClassIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

@@ -9,10 +9,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class GeneratedSrcsIncIT(useK2: Boolean) {
+class GeneratedSrcsIncIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("srcs-gen", "test-processor", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("srcs-gen", "test-processor", useKSP2)
 
     @Test
     fun testGeneratedSrcsInc() {
@@ -37,7 +37,7 @@ class GeneratedSrcsIncIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

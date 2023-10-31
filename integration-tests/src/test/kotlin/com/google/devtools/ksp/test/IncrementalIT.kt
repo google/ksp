@@ -12,10 +12,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class IncrementalIT(val useK2: Boolean) {
+class IncrementalIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("incremental", useKSP2 = useKSP2)
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(
@@ -95,7 +95,7 @@ class IncrementalIT(val useK2: Boolean) {
 
     @Test
     fun testIsolating() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -141,7 +141,7 @@ class IncrementalIT(val useK2: Boolean) {
 
     @Test
     fun testMultipleChanges() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -268,7 +268,7 @@ class IncrementalIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

@@ -382,7 +382,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true
         val isIntermoduleIncremental =
             (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) && isIncremental
-        val useKSP2 = project.findProperty("ksp.useK2")?.toString()?.toBoolean() ?: false
+        val useKSP2 = project.findProperty("ksp.useKSP2")?.toString()?.toBoolean() ?: false
 
         // Create and configure KSP tasks.
         val kspTaskProvider = when (kotlinCompilation.platformType) {

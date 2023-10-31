@@ -26,10 +26,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class AGP741IT(useK2: Boolean) {
+class AGP741IT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useKSP2)
 
     @Test
     fun testDependencyResolutionCheck() {
@@ -43,7 +43,7 @@ class AGP741IT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

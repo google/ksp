@@ -28,10 +28,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class AndroidIncrementalIT(useK2: Boolean) {
+class AndroidIncrementalIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useKSP2)
 
     private fun testWithExtraFlags(vararg extras: String) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -76,7 +76,7 @@ class AndroidIncrementalIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
