@@ -10,14 +10,14 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class GeneratedRefsIncIT(val useK2: Boolean) {
+class GeneratedRefsIncIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("refs-gen", "test-processor", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("refs-gen", "test-processor", useKSP2)
 
     @Test
     fun testGeneratedRefsInc() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val expected = listOf(
@@ -74,7 +74,7 @@ class GeneratedRefsIncIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

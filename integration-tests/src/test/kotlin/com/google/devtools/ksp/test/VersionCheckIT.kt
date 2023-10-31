@@ -10,10 +10,10 @@ import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
 @Ignore
-class VersionCheckIT(useK2: Boolean) {
+class VersionCheckIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground", useKSP2 = useKSP2)
 
     @Test
     fun testVersion() {
@@ -45,7 +45,7 @@ class VersionCheckIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

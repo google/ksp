@@ -10,10 +10,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class MapAnnotationArgumentsIT(val useK2: Boolean) {
+class MapAnnotationArgumentsIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("map-annotation-arguments", "test-processor", useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("map-annotation-arguments", "test-processor", useKSP2)
 
     val expectedErrors = listOf(
         "e: [ksp] unboxedChar: Char != Character\n",
@@ -23,7 +23,7 @@ class MapAnnotationArgumentsIT(val useK2: Boolean) {
 
     @Test
     fun testMapAnnotationArguments() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
@@ -46,7 +46,7 @@ class MapAnnotationArgumentsIT(val useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

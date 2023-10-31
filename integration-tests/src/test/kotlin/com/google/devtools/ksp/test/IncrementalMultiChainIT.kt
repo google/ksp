@@ -9,10 +9,10 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class IncrementalMultiChainIT(useK2: Boolean) {
+class IncrementalMultiChainIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental-multi-chain", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("incremental-multi-chain", useKSP2 = useKSP2)
 
     @Test
     fun testMultiChain() {
@@ -55,7 +55,7 @@ class IncrementalMultiChainIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

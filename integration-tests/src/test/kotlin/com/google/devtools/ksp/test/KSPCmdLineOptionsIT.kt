@@ -17,10 +17,10 @@ import java.net.URLClassLoader
 data class CompileResult(val exitCode: ExitCode, val output: String)
 
 @RunWith(Parameterized::class)
-class KSPCmdLineOptionsIT(useK2: Boolean) {
+class KSPCmdLineOptionsIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("cmd-options", useK2 = useK2)
+    val project: TemporaryTestProject = TemporaryTestProject("cmd-options", useKSP2 = useKSP2)
 
     private fun runCmdCompiler(pluginOptions: List<String>): CompileResult {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -91,7 +91,7 @@ class KSPCmdLineOptionsIT(useK2: Boolean) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "K2={0}")
+        @Parameterized.Parameters(name = "KSP2={0}")
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
