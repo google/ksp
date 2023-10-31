@@ -270,7 +270,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
 
     @Test
     fun testVersions() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
         val buildFile = File(project.root, "workload/build.gradle.kts")
         buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
@@ -333,7 +333,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
 
     @Test
     fun testProjectExtensionCompilerOptions() {
-        Assume.assumeFalse(useK2)
+        Assume.assumeFalse(useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val properties = File(project.root, "gradle.properties")
         properties.writeText(
