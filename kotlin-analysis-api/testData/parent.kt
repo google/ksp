@@ -72,16 +72,17 @@
 // parent of File: a.kt: null
 // parent of Int: Int
 // parent of Int: INVARIANT Int
-// parent of INVARIANT Int: List
-// parent of List: List<Int>?
-// parent of List<Int>?: topProp
-// parent of List<Int>?: topProp.getter()
+// parent of INVARIANT Int: List<INVARIANT Int>
+// parent of List<INVARIANT Int>: List<INVARIANT Int>
+// parent of List<INVARIANT Int>: topProp
+// parent of List<INVARIANT Int>: List<INVARIANT Int>
+// parent of List<INVARIANT Int>: topProp.getter()
 // parent of topProp.getter(): topProp
 // parent of Anno: null
 // parent of @Anno: topProp
 // parent of topProp: File: a.kt
-// parent of T: T?
-// parent of T?: topFun
+// parent of T: T
+// parent of T: topFun
 // parent of Any?: T
 // parent of T: topFun
 // parent of Anno: null
@@ -103,7 +104,6 @@
 // parent of Any?: T
 // parent of T: File: a.kt
 // parent of Alias: File: a.kt
-// parent of Any: Any
 // parent of Any: ITF
 // parent of ITF: File: a.kt
 // parent of ITF: ITF
@@ -119,6 +119,7 @@
 // parent of memberFun: topClass
 // parent of Int: Int
 // parent of Int: a
+// parent of Int: Int
 // parent of Int: a.getter()
 // parent of a.getter(): a
 // parent of a: topClass
@@ -131,7 +132,6 @@
 // parent of <set-?>: b.setter()
 // parent of b.setter(): b
 // parent of b: topClass
-// parent of Any: Any
 // parent of Any: InnerClass
 // parent of Any?: P
 // parent of P: InnerClass

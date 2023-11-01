@@ -71,7 +71,7 @@ class KSTypeReferenceImpl(
         ktType.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
     }
 
-    override val origin: Origin = Origin.KOTLIN
+    override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
 
     override val location: Location by lazy {
         ktTypeReference.toLocation()
