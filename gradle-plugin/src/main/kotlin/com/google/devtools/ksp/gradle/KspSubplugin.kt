@@ -374,7 +374,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         } else {
                             version
                         }
-                    }
+                    } ?: KotlinVersion.KOTLIN_1_9
                 }
             )
         }
