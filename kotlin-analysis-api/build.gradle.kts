@@ -62,6 +62,7 @@ dependencies {
     implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
     implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
     implementation("com.fasterxml:aalto-xml:$aaAaltoXmlVersion") { isTransitive = false }
+    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
     compileOnly(project(":common-deps"))
 
     implementation(project(":api"))

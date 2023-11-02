@@ -42,8 +42,8 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
@@ -241,7 +241,7 @@ class ResolverAAImpl(
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
-        fun findClass(name: KSName): KtSymbolWithMembers? {
+        fun findClass(name: KSName): KtSymbol? {
             if (name.asString() == "") {
                 return null
             }
