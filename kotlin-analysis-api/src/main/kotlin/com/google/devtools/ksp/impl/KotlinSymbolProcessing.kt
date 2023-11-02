@@ -65,9 +65,9 @@ import org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.FirStandaloneServiceRegistrar
+import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
-import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.JvmFirDeserializedSymbolProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProviderImpl
@@ -114,7 +114,9 @@ import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 
 class KotlinSymbolProcessing(
     val kspConfig: KSPJvmConfig,
@@ -168,7 +170,7 @@ class KotlinSymbolProcessing(
         )
 
         // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-        val projectStructureProvider = KtModuleProviderBuilder().apply {
+        val projectStructureProvider = KtModuleProviderBuilder(kotlinCoreProjectEnvironment).apply {
             val compilerConfig = compilerConfiguration
             val platform = JvmPlatforms.defaultJvmPlatform
 
@@ -177,25 +179,15 @@ class KotlinSymbolProcessing(
                 addRegularDependency(
                     buildKtLibraryModule {
                         this.platform = platform
-                        this.project = project
-                        contentScope = ProjectScope.getLibrariesScope(project)
-                        binaryRoots = libraryRoots.map { it.toPath() }
+                        addBinaryRoots(libraryRoots.map { it.toPath() })
                         libraryName = "Library for $moduleName"
                     }
                 )
                 compilerConfig.get(JVMConfigurationKeys.JDK_HOME)?.let { jdkHome ->
-                    val vfm = VirtualFileManager.getInstance()
-                    val jdkHomePath = jdkHome.toPath()
-                    val jdkHomeVirtualFile = vfm.findFileByNioPath(jdkHomePath)
-                    val binaryRoots = LibraryUtils.findClassesFromJdkHome(jdkHomePath).map {
-                        Paths.get(URLUtil.extractPath(it))
-                    }
                     addRegularDependency(
                         buildKtSdkModule {
                             this.platform = platform
-                            this.project = project
-                            contentScope = GlobalSearchScope.fileScope(project, jdkHomeVirtualFile)
-                            this.binaryRoots = binaryRoots
+                            addBinaryRootsFromJdkHome(jdkHome.toPath(), isJre = false)
                             sdkName = "JDK for $moduleName"
                         }
                     )
@@ -204,7 +196,6 @@ class KotlinSymbolProcessing(
 
             buildKtSourceModule {
                 configLanguageVersionSettings?.let { this.languageVersionSettings = it }
-                this.project = project
                 this.platform = platform
                 this.moduleName = compilerConfig.get(CommonConfigurationKeys.MODULE_NAME) ?: "<no module name provided>"
 
@@ -217,11 +208,11 @@ class KotlinSymbolProcessing(
                     it.mkdirs()
                 }
                 val fs = StandardFileSystems.local()
-                contentScope = DirectoriesScope(project, roots.mapNotNull { fs.findFileByPath(it.path) }.toSet())
+                //contentScope = DirectoriesScope(project, roots.mapNotNull { fs.findFileByPath(it.path) }.toSet())
+                addSourceRoots(roots.map { it.toPath() })
             }.apply(::addModule)
 
             this.platform = platform
-            this.project = project
         }.build()
 
         // register services and build session
@@ -257,8 +248,8 @@ class KotlinSymbolProcessing(
         }
 
         project.registerService(
-            JvmFirDeserializedSymbolProviderFactory::class.java,
-            JvmFirDeserializedSymbolProviderFactory::class.java
+            LLFirLibrarySymbolProviderFactory::class.java,
+            LLFirStandaloneLibrarySymbolProviderFactory::class.java
         )
         CoreApplicationEnvironment.registerExtensionPoint(
             project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
@@ -524,13 +515,13 @@ class KotlinSymbolProcessing(
 
 private inline fun <reified T : PsiFileSystemItem> getPsiFilesFromPaths(
     project: Project,
-    paths: Collection<String>,
+    paths: Set<Path>,
 ): List<T> {
     val fs = StandardFileSystems.local()
     val psiManager = PsiManager.getInstance(project)
     return buildList {
         for (path in paths) {
-            val vFile = fs.findFileByPath(path) ?: continue
+            val vFile = fs.findFileByPath(path.toString()) ?: continue
             val psiFileSystemItem =
                 if (vFile.isDirectory)
                     psiManager.findDirectory(vFile) as? T

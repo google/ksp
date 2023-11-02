@@ -47,11 +47,13 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
-        return ktEnumEntrySymbol.declarations().filterIsInstance<KSFunctionDeclaration>()
+        return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSFunctionDeclaration>()
+            ?: emptySequence()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
-        return ktEnumEntrySymbol.declarations().filterIsInstance<KSPropertyDeclaration>()
+        return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSPropertyDeclaration>()
+            ?: emptySequence()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
