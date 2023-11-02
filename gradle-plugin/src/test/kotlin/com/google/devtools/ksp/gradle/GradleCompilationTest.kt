@@ -130,7 +130,7 @@ class GradleCompilationTest {
             .build()
         // add a file that needs access to the generated file
         testRule.appModule.addMultiplatformSource(
-            "commonMain", "Foo.kt",
+            "linuxX64Main", "Foo.kt",
             """
             class Foo {
                 val x = ToBeGenerated()
