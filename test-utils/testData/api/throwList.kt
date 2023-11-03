@@ -30,8 +30,8 @@
 // java.io.IOException
 // java.lang.IllegalStateException,java.lang.IllegalArgumentException
 // java.io.IOException
-// java.lang.IndexOutOfBoundsException
 // java.io.IOException,java.lang.IndexOutOfBoundsException
+// java.lang.IndexOutOfBoundsException
 // java.io.IOException
 // END
 // MODULE: lib
