@@ -19,8 +19,8 @@
 // TEST PROCESSOR: OverrideeProcessor
 // EXPECTED:
 // NoOverride:
-// NoOverride.propInParam -> null
 // NoOverride.prop -> null
+// NoOverride.propInParam -> null
 // NoOverride.func(param:Int) -> null
 // END
 

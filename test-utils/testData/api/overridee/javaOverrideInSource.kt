@@ -19,15 +19,15 @@
 // TEST PROCESSOR: OverrideeProcessor
 // EXPECTED:
 // JavaSubject.Subject:
-// Subject.openFun() -> Base.openFun()
 // Subject.abstractFun() -> Base.abstractFun()
-// Subject.openFunWithGenericArg(t:String) -> Base.openFunWithGenericArg(t:T)
 // Subject.abstractFunWithGenericArg(t:String) -> Base.abstractFunWithGenericArg(t:T)
-// Subject.nonOverridingMethod() -> null
-// Subject.overriddenGrandBaseFun() -> Base.overriddenGrandBaseFun()
-// Subject.overriddenAbstractGrandBaseFun() -> Base.overriddenAbstractGrandBaseFun()
-// Subject.openGrandBaseFun() -> GrandBase.openGrandBaseFun()
 // Subject.abstractGrandBaseFun() -> GrandBase.abstractGrandBaseFun()
+// Subject.nonOverridingMethod() -> null
+// Subject.openFun() -> Base.openFun()
+// Subject.openFunWithGenericArg(t:String) -> Base.openFunWithGenericArg(t:T)
+// Subject.openGrandBaseFun() -> GrandBase.openGrandBaseFun()
+// Subject.overriddenAbstractGrandBaseFun() -> Base.overriddenAbstractGrandBaseFun()
+// Subject.overriddenGrandBaseFun() -> Base.overriddenGrandBaseFun()
 // Subject.staticMethod() -> null
 // END
 
