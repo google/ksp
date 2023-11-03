@@ -164,10 +164,6 @@ class KotlinSymbolProcessing(
             KtResolveExtensionProvider.EP_NAME.name,
             KtResolveExtensionProvider::class.java
         )
-        (project as MockProject).registerService(
-            KtLifetimeTokenProvider::class.java,
-            KtAlwaysAccessibleLifeTimeTokenProvider::class.java
-        )
 
         // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
         val projectStructureProvider = KtModuleProviderBuilder(kotlinCoreProjectEnvironment).apply {
@@ -296,7 +292,7 @@ class KotlinSymbolProcessing(
             )
             registerService(
                 KtLifetimeTokenProvider::class.java,
-                KtReadActionConfinementLifetimeTokenProvider::class.java
+                KtAlwaysAccessibleLifeTimeTokenProvider::class.java
             )
 
             registerService(KtModuleScopeProvider::class.java, KtModuleScopeProviderImpl())
