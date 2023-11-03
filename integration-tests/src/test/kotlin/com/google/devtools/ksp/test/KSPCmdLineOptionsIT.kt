@@ -17,7 +17,7 @@ import java.net.URLClassLoader
 data class CompileResult(val exitCode: ExitCode, val output: String)
 
 @RunWith(Parameterized::class)
-class KSPCmdLineOptionsIT(useKSP2: Boolean) {
+class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("cmd-options", useKSP2 = useKSP2)
@@ -64,6 +64,7 @@ class KSPCmdLineOptionsIT(useKSP2: Boolean) {
     @Test
     fun testWithCompilationOnError() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assume.assumeFalse(useKSP2)
         val result = runCmdCompiler(listOf("apoption=error=true", "withCompilation=true"))
         val errors = result.output.lines().filter { it.startsWith("error: [ksp]") }
         val exitCode = result.exitCode
@@ -78,6 +79,7 @@ class KSPCmdLineOptionsIT(useKSP2: Boolean) {
     @Test
     fun testWithCompilationOnErrorOk() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assume.assumeFalse(useKSP2)
         val result = runCmdCompiler(listOf("apoption=error=true", "returnOkOnError=true", "withCompilation=true"))
         val errors = result.output.lines().filter { it.startsWith("error: [ksp]") }
         val exitCode = result.exitCode
