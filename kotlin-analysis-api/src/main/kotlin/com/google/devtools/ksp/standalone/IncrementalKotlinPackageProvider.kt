@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.analysisapi.providers
+package com.google.devtools.ksp.standalone
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
