@@ -20,8 +20,8 @@ package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.AnyChanges
 import com.google.devtools.ksp.KSObjectCacheManager
-import com.google.devtools.ksp.analysisapi.providers.IncrementalKotlinDeclarationProviderFactory
-import com.google.devtools.ksp.analysisapi.providers.IncrementalKotlinPackageProviderFactory
+import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
+import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
@@ -30,6 +30,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.standalone.buildKtIncrementalSourceModule
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
@@ -115,7 +116,6 @@ import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 
 class KotlinSymbolProcessing(
@@ -190,7 +190,7 @@ class KotlinSymbolProcessing(
                 }
             }
 
-            buildKtSourceModule {
+            buildKtIncrementalSourceModule {
                 configLanguageVersionSettings?.let { this.languageVersionSettings = it }
                 this.platform = platform
                 this.moduleName = compilerConfig.get(CommonConfigurationKeys.MODULE_NAME) ?: "<no module name provided>"
@@ -203,8 +203,6 @@ class KotlinSymbolProcessing(
                 roots.forEach {
                     it.mkdirs()
                 }
-                val fs = StandardFileSystems.local()
-                //contentScope = DirectoriesScope(project, roots.mapNotNull { fs.findFileByPath(it.path) }.toSet())
                 addSourceRoots(roots.map { it.toPath() })
             }.apply(::addModule)
 
