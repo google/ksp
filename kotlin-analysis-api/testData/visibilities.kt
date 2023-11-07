@@ -29,18 +29,18 @@
 // LibEnumJava: <init>: PRIVATE
 // LibEnumJava: values: PUBLIC
 // LibEnumJava: valueOf: PUBLIC
+// LibEnum: <init>: PRIVATE
 // LibEnum: values: PUBLIC
 // LibEnum: valueOf: PUBLIC
-// LibEnum: <init>: PRIVATE
 // Enum: <init>: PRIVATE
 // Enum: values: PUBLIC
 // Enum: valueOf: PUBLIC
+// KtEnum: <init>: PRIVATE
 // KtEnum: values: PUBLIC
 // KtEnum: valueOf: PUBLIC
-// KtEnum: <init>: PRIVATE
+// KtEnumWithVal: <init>: PRIVATE
 // KtEnumWithVal: values: PUBLIC
 // KtEnumWithVal: valueOf: PUBLIC
-// KtEnumWithVal: <init>: PRIVATE
 // END
 
 // MODULE: lib

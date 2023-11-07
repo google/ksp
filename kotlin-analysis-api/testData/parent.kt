@@ -132,6 +132,8 @@
 // parent of <set-?>: b.setter()
 // parent of b.setter(): b
 // parent of b: topClass
+// parent of topClass: synthetic constructor for topClass
+// parent of synthetic constructor for topClass: topClass
 // parent of Any: InnerClass
 // parent of Any?: P
 // parent of P: InnerClass
@@ -145,14 +147,14 @@
 // parent of InnerClass<*>: synthetic constructor for InnerClass
 // parent of Any?: P
 // parent of synthetic constructor for InnerClass: InnerClass
-// parent of topClass: synthetic constructor for topClass
-// parent of synthetic constructor for topClass: topClass
 // parent of CMYK: CMYK
 // parent of CMYK: INVARIANT CMYK
 // parent of INVARIANT CMYK: Enum
 // parent of Enum: Enum<CMYK>
 // parent of Enum<CMYK>: CMYK
 // parent of CMYK: File: a.kt
+// parent of CMYK: synthetic constructor for CMYK
+// parent of synthetic constructor for CMYK: CMYK
 // parent of C: CMYK
 // parent of M: CMYK
 // parent of Y: CMYK
@@ -167,14 +169,15 @@
 // parent of EnumEntries<CMYK>: entries.getter()
 // parent of entries.getter(): entries
 // parent of entries: CMYK
-// parent of CMYK: synthetic constructor for CMYK
-// parent of synthetic constructor for CMYK: CMYK
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
 // parent of INVARIANT YUV: Enum
 // parent of Enum: Enum<YUV>
 // parent of Enum<YUV>: YUV
 // parent of YUV: null
+// parent of YUV: YUV
+// parent of YUV: <init>
+// parent of <init>: YUV
 // parent of Y: YUV
 // parent of U: YUV
 // parent of V: YUV
@@ -202,9 +205,6 @@
 // parent of EnumEntries<YUV>: entries.getter()
 // parent of entries.getter(): entries
 // parent of entries: YUV
-// parent of YUV: YUV
-// parent of YUV: <init>
-// parent of <init>: YUV
 // parent of HSV: (HSV..HSV?)
 // parent of (HSV..HSV?): INVARIANT (HSV..HSV?)
 // parent of INVARIANT (HSV..HSV?): Enum
