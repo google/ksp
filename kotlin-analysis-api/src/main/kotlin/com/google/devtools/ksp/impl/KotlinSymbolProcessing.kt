@@ -30,7 +30,8 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
-import com.google.devtools.ksp.standalone.buildKtIncrementalSourceModule
+import com.google.devtools.ksp.standalone.buildKspLibraryModule
+import com.google.devtools.ksp.standalone.buildKspSourceModule
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
@@ -56,7 +57,6 @@ import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectScope
-import com.intellij.util.io.URLUtil
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
 import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
@@ -173,7 +173,7 @@ class KotlinSymbolProcessing(
             fun KtModuleBuilder.addModuleDependencies(moduleName: String) {
                 val libraryRoots = compilerConfig.jvmModularRoots + compilerConfig.jvmClasspathRoots
                 addRegularDependency(
-                    buildKtLibraryModule {
+                    buildKspLibraryModule {
                         this.platform = platform
                         addBinaryRoots(libraryRoots.map { it.toPath() })
                         libraryName = "Library for $moduleName"
@@ -190,7 +190,7 @@ class KotlinSymbolProcessing(
                 }
             }
 
-            buildKtIncrementalSourceModule {
+            buildKspSourceModule {
                 configLanguageVersionSettings?.let { this.languageVersionSettings = it }
                 this.platform = platform
                 this.moduleName = compilerConfig.get(CommonConfigurationKeys.MODULE_NAME) ?: "<no module name provided>"
