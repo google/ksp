@@ -41,7 +41,7 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.pathString
 
 @KtModuleBuilderDsl
-class KtIncrementalSourceModuleBuilder(
+class KspModuleBuilder(
     private val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
 ) : KtModuleBuilder() {
     public lateinit var moduleName: String
@@ -98,11 +98,11 @@ class KtIncrementalSourceModuleBuilder(
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun KtModuleProviderBuilder.buildKtIncrementalSourceModule(
-    init: KtIncrementalSourceModuleBuilder.() -> Unit
+public inline fun KtModuleProviderBuilder.buildKspSourceModule(
+    init: KspModuleBuilder.() -> Unit
 ): KtSourceModule {
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }
-    return KtIncrementalSourceModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
+    return KspModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
 }
