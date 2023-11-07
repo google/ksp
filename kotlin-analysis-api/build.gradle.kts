@@ -48,7 +48,10 @@ dependencies {
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
         "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
-        "org.jetbrains.kotlin:kotlin-compiler-for-ide",
+        "org.jetbrains.kotlin:kotlin-compiler-common-for-ide",
+        "org.jetbrains.kotlin:kotlin-compiler-fir-for-ide",
+        "org.jetbrains.kotlin:kotlin-compiler-fe10-for-ide",
+        "org.jetbrains.kotlin:kotlin-compiler-ir-for-ide",
     ).forEach {
         implementation("$it:$aaKotlinBaseVersion") { isTransitive = false }
     }
