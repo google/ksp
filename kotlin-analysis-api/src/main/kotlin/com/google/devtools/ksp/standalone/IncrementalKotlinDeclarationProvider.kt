@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.psi.KtScript
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class IncrementalKotlinDeclarationProvider(var del: KotlinDeclarationProvider) : KotlinDeclarationProvider() {
-    override fun computePackageSetWithTopLevelCallableDeclarations(): Set<String> {
+    override fun computePackageSetWithTopLevelCallableDeclarations(): Set<String>? {
         return del.computePackageSetWithTopLevelCallableDeclarations()
     }
 
