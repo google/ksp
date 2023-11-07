@@ -20,8 +20,6 @@ package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.AnyChanges
 import com.google.devtools.ksp.KSObjectCacheManager
-import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
-import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
@@ -30,6 +28,8 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
+import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
 import com.google.devtools.ksp.standalone.buildKspSourceModule
 import com.google.devtools.ksp.symbol.KSFile
@@ -58,9 +58,7 @@ import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectScope
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
-import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
 import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
-import org.jetbrains.kotlin.analysis.api.lifetime.KtReadActionConfinementLifetimeTokenProvider
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
 import org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
@@ -69,14 +67,13 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.FirSt
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
+import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
 import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtLibraryModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.impl.KtModuleProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.impl.getSourceFilePaths
 import org.jetbrains.kotlin.analysis.providers.*
@@ -116,7 +113,6 @@ import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.nio.file.Files
 import java.nio.file.Path
-import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 
 class KotlinSymbolProcessing(
     val kspConfig: KSPJvmConfig,
