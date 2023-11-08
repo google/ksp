@@ -33,23 +33,23 @@ import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(
     internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
-    override val receiver: KSPropertyDeclaration
-) : KSPropertyAccessor, Deferrable {
+    open /*override*/ val receiver: KSPropertyDeclaration
+) : /*KSPropertyAccessor,*/ Deferrable {
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
-            .map { KSAnnotationImpl.getCached(it, this) }
-            .plus(findAnnotationFromUseSiteTarget())
+            .map { KSAnnotationImpl.getCached(it, this as KSPropertyAccessor) }
+            .plus((this as KSPropertyAccessor).findAnnotationFromUseSiteTarget())
     }
 
-    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations(this)
+    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations(this as KSPropertyAccessor)
 
-    override val location: Location by lazy {
+    open /*override*/ val location: Location by lazy {
         ktPropertyAccessorSymbol.psi?.toLocation() ?: NonExistLocation
     }
 
-    override val modifiers: Set<Modifier> by lazy {
+    open /*override*/ val modifiers: Set<Modifier> by lazy {
         ((ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()).let {
             if (origin == Origin.SYNTHETIC &&
                 (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
@@ -61,7 +61,7 @@ abstract class KSPropertyAccessorImpl(
         }
     }
 
-    override val origin: Origin by lazy {
+    open /*override*/ val origin: Origin by lazy {
         val symbolOrigin = mapAAOrigin(ktPropertyAccessorSymbol)
         if (symbolOrigin == Origin.KOTLIN && ktPropertyAccessorSymbol.psi == null) {
             Origin.SYNTHETIC
@@ -70,10 +70,10 @@ abstract class KSPropertyAccessorImpl(
         }
     }
 
-    override val parent: KSNode?
+    open /*override*/ val parent: KSNode?
         get() = ktPropertyAccessorSymbol.getContainingKSSymbol()
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
+    open /*override*/ val declarations: Sequence<KSDeclaration> by lazy {
         val psi = ktPropertyAccessorSymbol.psi as? KtPropertyAccessor ?: return@lazy emptySequence()
         if (!psi.hasBlockBody()) {
             emptySequence()
