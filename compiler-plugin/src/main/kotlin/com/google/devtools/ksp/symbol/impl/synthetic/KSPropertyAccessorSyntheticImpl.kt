@@ -21,8 +21,10 @@ import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 
 abstract class KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration: KSPropertyDeclaration) /*: KSPropertyAccessor*/ {
+    protected abstract fun asKSPropertyAccessor(): KSPropertyAccessor
+
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
-        (this as KSPropertyAccessor).findAnnotationFromUseSiteTarget()
+        this.asKSPropertyAccessor().findAnnotationFromUseSiteTarget()
     }
 
     open /*override*/ val location: Location by lazy {
@@ -36,6 +38,6 @@ abstract class KSPropertyAccessorSyntheticImpl(ksPropertyDeclaration: KSProperty
     open /*override*/ val receiver: KSPropertyDeclaration = ksPropertyDeclaration
 
     open /*override*/ fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitPropertyAccessor(this as KSPropertyAccessor, data)
+        return visitor.visitPropertyAccessor(this.asKSPropertyAccessor(), data)
     }
 }

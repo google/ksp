@@ -22,9 +22,12 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
+import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
 abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) /*: KSPropertyAccessor*/ {
+    protected abstract fun asKSPropertyAccessor(): KSPropertyAccessor
+
     open /*override*/ val origin: Origin by lazy {
         when (receiver.origin) {
             // if receiver is kotlin source, that means we are a synthetic where developer
@@ -50,7 +53,8 @@ abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessor
         }
 
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this as KSPropertyAccessor) }
+        descriptor.annotations.asSequence()
+            .map { KSAnnotationDescriptorImpl.getCached(it, this.asKSPropertyAccessor()) }
             .memoized()
     }
 

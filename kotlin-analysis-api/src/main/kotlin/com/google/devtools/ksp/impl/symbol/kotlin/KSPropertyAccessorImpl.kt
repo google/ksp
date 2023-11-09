@@ -35,15 +35,16 @@ abstract class KSPropertyAccessorImpl(
     internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
     open /*override*/ val receiver: KSPropertyDeclaration
 ) : /*KSPropertyAccessor,*/ Deferrable {
+    protected abstract fun asKSPropertyAccessor(): KSPropertyAccessor
 
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
-            .map { KSAnnotationImpl.getCached(it, this as KSPropertyAccessor) }
-            .plus((this as KSPropertyAccessor).findAnnotationFromUseSiteTarget())
+            .map { KSAnnotationImpl.getCached(it, this.asKSPropertyAccessor()) }
+            .plus(this.asKSPropertyAccessor().findAnnotationFromUseSiteTarget())
     }
 
-    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations(this as KSPropertyAccessor)
+    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations(this.asKSPropertyAccessor())
 
     open /*override*/ val location: Location by lazy {
         ktPropertyAccessorSymbol.psi?.toLocation() ?: NonExistLocation
@@ -96,6 +97,8 @@ class KSPropertySetterImpl private constructor(
             cache.getOrPut(Pair(owner, setter)) { KSPropertySetterImpl(owner, setter) }
     }
 
+    override fun asKSPropertyAccessor(): KSPropertyAccessor = this
+
     override val parameter: KSValueParameter by lazy {
         KSValueParameterImpl.getCached(setter.parameter, this)
     }
@@ -125,6 +128,8 @@ class KSPropertyGetterImpl private constructor(
         fun getCached(owner: KSPropertyDeclaration, getter: KtPropertyGetterSymbol) =
             cache.getOrPut(Pair(owner, getter)) { KSPropertyGetterImpl(owner, getter) }
     }
+
+    override fun asKSPropertyAccessor(): KSPropertyAccessor = this
 
     override val returnType: KSTypeReference? by lazy {
         ((owner as? KSPropertyDeclarationImpl)?.ktPropertySymbol?.psiIfSource() as? KtProperty)?.typeReference

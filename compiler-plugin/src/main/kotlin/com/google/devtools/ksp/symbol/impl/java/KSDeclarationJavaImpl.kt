@@ -26,12 +26,14 @@ import com.google.devtools.ksp.symbol.impl.getDocString
 import com.intellij.psi.PsiElement
 
 abstract class KSDeclarationJavaImpl(private val psi: PsiElement) /*: KSDeclaration*/ {
+    protected abstract fun asKSDeclaration(): KSDeclaration
+
     open /*override*/ val packageName: KSName by lazy {
-        (this as KSDeclaration).containingFile!!.packageName
+        this.asKSDeclaration().containingFile!!.packageName
     }
 
     override fun toString(): String {
-        return (this as KSDeclaration).simpleName.asString()
+        return this.asKSDeclaration().simpleName.asString()
     }
 
     open /*override*/ val docString by lazy {

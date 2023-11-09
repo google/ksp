@@ -36,12 +36,15 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
             }
         }
     }
+
+    protected abstract fun asKSPropertyAccessor(): KSPropertyAccessor
+
     open /*override*/ val receiver: KSPropertyDeclaration by lazy {
         KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
     }
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }
-            .plus((this as KSPropertyAccessor).findAnnotationFromUseSiteTarget())
+            .plus(this.asKSPropertyAccessor().findAnnotationFromUseSiteTarget())
     }
 
     open /*override*/ val parent: KSNode? by lazy {
@@ -68,7 +71,7 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
     open /*override*/ val origin: Origin = Origin.KOTLIN
 
     open /*override*/ fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitPropertyAccessor(this as KSPropertyAccessor, data)
+        return visitor.visitPropertyAccessor(this.asKSPropertyAccessor(), data)
     }
 
     internal val originalAnnotations: List<KSAnnotation> by lazy {

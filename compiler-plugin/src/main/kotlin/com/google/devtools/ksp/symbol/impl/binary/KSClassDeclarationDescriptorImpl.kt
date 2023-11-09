@@ -49,6 +49,8 @@ class KSClassDeclarationDescriptorImpl private constructor(val descriptor: Class
         }
     }
 
+    override fun asKSDeclaration(): KSDeclaration = this
+
     override val classKind: ClassKind by lazy {
         when (descriptor.kind) {
             KtClassKind.INTERFACE -> ClassKind.INTERFACE

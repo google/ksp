@@ -44,6 +44,8 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
     }
 
+    override fun asKSDeclaration(): KSDeclaration = this
+
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }

@@ -319,7 +319,7 @@ internal class DeclarationOrdering(
     }
 
     private fun getOrder(decl: KSDeclarationDescriptorImpl): Int {
-        return declOrdering.getOrPut(decl as KSDeclaration) {
+        return declOrdering.getOrPut(decl.asKSDeclaration()) {
             when (decl) {
                 is KSPropertyDeclarationDescriptorImpl -> {
                     fieldOrdering[decl.simpleName.asString()]?.let {

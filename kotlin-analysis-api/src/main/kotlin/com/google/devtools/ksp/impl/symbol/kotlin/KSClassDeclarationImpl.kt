@@ -39,6 +39,8 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             cache.getOrPut(ktClassOrObjectSymbol) { KSClassDeclarationImpl(ktClassOrObjectSymbol) }
     }
 
+    override fun asKSDeclaration(): KSDeclaration = this
+
     override val qualifiedName: KSName? by lazy {
         ktClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
     }

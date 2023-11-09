@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 
 abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDescriptor) /*: KSDeclaration*/ {
+    abstract fun asKSDeclaration(): KSDeclaration
 
     open /*override*/ val origin by lazy {
         descriptor.origin
@@ -41,7 +42,7 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
     open /*override*/ val location: Location = NonExistLocation
 
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
-        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this as KSDeclaration) }
+        descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this.asKSDeclaration()) }
             .memoized()
     }
 

@@ -41,6 +41,8 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             cache.getOrPut(ktFunctionSymbol) { KSFunctionDeclarationImpl(ktFunctionSymbol) }
     }
 
+    override fun asKSDeclaration(): KSDeclaration = this
+
     override val functionKind: FunctionKind by lazy {
         when (ktFunctionSymbol.symbolKind) {
             KtSymbolKind.CLASS_MEMBER -> FunctionKind.MEMBER

@@ -39,6 +39,8 @@ import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
 abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationSymbol) : /*KSDeclaration,*/ Deferrable {
+    abstract fun asKSDeclaration(): KSDeclaration
+
     open /*override*/ val origin: Origin by lazy {
         mapAAOrigin(ktDeclarationSymbol)
     }
@@ -108,9 +110,9 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
         get() = ktDeclarationSymbol.toDocString()
 
     internal val originalAnnotations = if (ktDeclarationSymbol.psi is KtElement || ktDeclarationSymbol.psi == null) {
-        ktDeclarationSymbol.annotations(this as KSDeclaration)
+        ktDeclarationSymbol.annotations(this.asKSDeclaration())
     } else {
         (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
-            .annotations.map { KSAnnotationJavaImpl.getCached(it, this as KSDeclaration) }.asSequence()
+            .annotations.map { KSAnnotationJavaImpl.getCached(it, this.asKSDeclaration()) }.asSequence()
     }
 }
