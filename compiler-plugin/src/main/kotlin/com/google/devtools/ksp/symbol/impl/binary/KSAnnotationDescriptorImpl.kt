@@ -193,9 +193,10 @@ fun LazyAnnotationDescriptor.getValueArguments(): Map<Name, ConstantValue<*>> {
         override fun toString(): String = "${name.asString()} declared in LazyAnnotations.kt"
     }
 
-    val scope = (c.scope.ownerDescriptor as? PackageFragmentDescriptor)?.let {
-        LexicalScope.Base(c.scope, FileDescriptorForVisibilityChecks(source, it))
-    } ?: c.scope
+    val scope = c.trace.get(BindingContext.LEXICAL_SCOPE, annotationEntry)
+        ?: (c.scope.ownerDescriptor as? PackageFragmentDescriptor)?.let {
+            LexicalScope.Base(c.scope, FileDescriptorForVisibilityChecks(source, it))
+        } ?: c.scope
 
     val resolutionResults = c.annotationResolver.resolveAnnotationCall(annotationEntry, scope, c.trace)
     AnnotationResolverImpl.checkAnnotationType(annotationEntry, c.trace, resolutionResults)
