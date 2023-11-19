@@ -27,17 +27,19 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil
-import com.intellij.util.io.KeyDescriptor
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.incremental.*
+import org.jetbrains.kotlin.incremental.IncrementalCompilationContext
+import org.jetbrains.kotlin.incremental.LookupStorage
+import org.jetbrains.kotlin.incremental.LookupSymbol
+import org.jetbrains.kotlin.incremental.LookupTrackerImpl
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
-import org.jetbrains.kotlin.incremental.storage.AppendableAbstractBasicMap
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
+import org.jetbrains.kotlin.incremental.update
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.supertypes
@@ -46,36 +48,13 @@ import java.io.DataOutput
 import java.io.File
 import java.util.*
 
-abstract class PersistentMap<K : Comparable<K>, V>(
-    storageFile: File,
-    keyDescriptor: KeyDescriptor<K>,
-    valueExternalizer: DataExternalizer<V>,
-    icContext: IncrementalCompilationContext,
-) : AppendableAbstractBasicMap<K, V, Collection<V>>(storageFile, keyDescriptor, valueExternalizer, icContext)
-
 class FileToSymbolsMap(
     storageFile: File,
-    icContext: IncrementalCompilationContext
-) : PersistentMap<File, LookupSymbol>(
+) : PersistentMap<File, List<LookupSymbol>>(
     storageFile,
     FileKeyDescriptor,
-    LookupSymbolExternalizer,
-    icContext,
+    ListExternalizer(LookupSymbolExternalizer),
 )
-
-object FileKeyDescriptor : KeyDescriptor<File> {
-    override fun read(input: DataInput): File {
-        return File(IOUtil.readString(input))
-    }
-
-    override fun save(output: DataOutput, value: File) {
-        IOUtil.writeString(value.path, output)
-    }
-
-    override fun getHashCode(value: File): Int = value.hashCode()
-
-    override fun isEqual(val1: File, val2: File): Boolean = val1 == val2
-}
 
 object LookupSymbolExternalizer : DataExternalizer<LookupSymbol> {
     override fun read(input: DataInput): LookupSymbol = LookupSymbol(IOUtil.readString(input), IOUtil.readString(input))
@@ -84,29 +63,6 @@ object LookupSymbolExternalizer : DataExternalizer<LookupSymbol> {
         IOUtil.writeString(value.name, output)
         IOUtil.writeString(value.scope, output)
     }
-}
-
-object FileExternalizer : DataExternalizer<File> {
-    override fun read(input: DataInput): File = File(IOUtil.readString(input))
-
-    override fun save(output: DataOutput, value: File) {
-        IOUtil.writeString(value.path, output)
-    }
-}
-
-class FileToFilesMap(
-    storageFile: File,
-    icContext: IncrementalCompilationContext
-) : PersistentMap<File, File>(
-    storageFile,
-    FileKeyDescriptor,
-    FileExternalizer,
-    icContext,
-) {
-    override fun dumpKey(key: File): String = key.path
-
-    override fun dumpValue(value: Collection<File>) =
-        value.dumpCollection()
 }
 
 object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
@@ -153,15 +109,14 @@ class IncrementalContext(
 
     private val baseDir = options.projectBaseDir
     private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
-    private val icContext =
-        IncrementalCompilationContext(pathConverter = PATH_CONVERTER, trackChangesInLookupCache = true)
+    private val icContext = IncrementalCompilationContext(PATH_CONVERTER, PATH_CONVERTER, true)
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is saved across processing.
-    private val sealedMap = FileToSymbolsMap(File(options.cachesDir, "sealed"), icContext)
+    private val sealedMap = FileToSymbolsMap(File(options.cachesDir, "sealed"))
 
     // Symbols defined in each file. This is saved across processing.
-    private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"), icContext)
+    private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
 
     private val cachesUpToDateFile = File(options.cachesDir, "caches.uptodate")
     private val rebuild = !cachesUpToDateFile.exists()
@@ -187,7 +142,7 @@ class IncrementalContext(
     private val classLookupCacheDir = File(options.cachesDir, "classLookups")
     private val classLookupCache = LookupStorage(classLookupCacheDir, icContext)
 
-    private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"), icContext)
+    private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
 
     private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
     private val KSFile.relativeFile
@@ -406,7 +361,7 @@ class IncrementalContext(
 
         // Update source-to-outputs map from those reprocessed.
         sourceToOutputs.forEach { src, outs ->
-            sourceToOutputsMap[src] = outs
+            sourceToOutputsMap[src] = outs.toList()
         }
 
         logSourceToOutputs(outputs, sourceToOutputs)
@@ -453,14 +408,14 @@ class IncrementalContext(
         updateLookupCache(dirtyFiles)
 
         // Update symbolsMap
-        fun <K : Comparable<K>, V> update(m: PersistentMap<K, V>, u: MultiMap<K, V>) {
+        fun <K : Comparable<K>, V> update(m: PersistentMap<K, List<V>>, u: MultiMap<K, V>) {
             // Update symbol caches from modified files.
             u.keySet().forEach {
-                m.set(it, u[it].toSet())
+                m.set(it, u[it].toList())
             }
         }
 
-        fun <K : Comparable<K>, V> remove(m: PersistentMap<K, V>, removedKeys: Collection<K>) {
+        fun <K : Comparable<K>, V> remove(m: PersistentMap<K, List<V>>, removedKeys: Collection<K>) {
             // Remove symbol caches from removed files.
             removedKeys.forEach {
                 m.remove(it)
