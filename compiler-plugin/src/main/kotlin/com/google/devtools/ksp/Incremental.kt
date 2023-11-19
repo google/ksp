@@ -96,10 +96,34 @@ internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConver
 }
 
 class IncrementalContext(
-    private val options: KspOptions,
-    private val componentProvider: ComponentProvider,
+    private val lookupTracker: LookupTracker,
     private val anyChangesWildcard: File,
+    private val incremental: Boolean,
+    private val incrementalLog: Boolean,
+    private val baseDir: File,
+    private val cachesDir: File,
+    private val kspOutputDir: File,
+    private val knownModified: List<File>,
+    private val knownRemoved: List<File>,
+    private val changedClasses: List<String>,
 ) {
+    constructor(
+        options: KspOptions,
+        componentProvider: ComponentProvider,
+        anyChangesWildcard: File,
+    ) : this(
+        componentProvider.get(),
+        anyChangesWildcard,
+        options.incremental,
+        options.incrementalLog,
+        options.projectBaseDir,
+        options.cachesDir,
+        options.kspOutputDir,
+        options.knownModified,
+        options.knownRemoved,
+        options.changedClasses,
+    )
+
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
     private val updatedSymbols = MultiMap.createSet<File, LookupSymbol>()
 
@@ -107,42 +131,39 @@ class IncrementalContext(
     // This is used to update sealedMap in the end.
     private val updatedSealed = MultiMap.createSet<File, LookupSymbol>()
 
-    private val baseDir = options.projectBaseDir
     private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
     private val icContext = IncrementalCompilationContext(PATH_CONVERTER, PATH_CONVERTER, true)
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is saved across processing.
-    private val sealedMap = FileToSymbolsMap(File(options.cachesDir, "sealed"))
+    private val sealedMap = FileToSymbolsMap(File(cachesDir, "sealed"))
 
     // Symbols defined in each file. This is saved across processing.
-    private val symbolsMap = FileToSymbolsMap(File(options.cachesDir, "symbols"))
+    private val symbolsMap = FileToSymbolsMap(File(cachesDir, "symbols"))
 
-    private val cachesUpToDateFile = File(options.cachesDir, "caches.uptodate")
+    private val cachesUpToDateFile = File(cachesDir, "caches.uptodate")
     private val rebuild = !cachesUpToDateFile.exists()
 
-    private val logsDir = File(options.cachesDir, "logs").apply { mkdirs() }
+    private val logsDir = File(cachesDir, "logs").apply { mkdirs() }
     private val buildTime = Date().time
 
-    private val modified = options.knownModified.map { it.relativeTo(baseDir) }.toSet()
-    private val removed = options.knownRemoved.map { it.relativeTo(baseDir) }.toSet()
-
-    private val lookupTracker: LookupTracker = componentProvider.get()
+    private val modified = knownModified.map { it.relativeTo(baseDir) }.toSet()
+    private val removed = knownRemoved.map { it.relativeTo(baseDir) }.toSet()
 
     // Disable incremental processing if somehow DualLookupTracker failed to be registered.
     // This may happen when a platform hasn't support incremental compilation yet. E.g, Common / Metadata.
-    private val isIncremental = options.incremental && lookupTracker is DualLookupTracker
+    private val isIncremental = incremental && lookupTracker is DualLookupTracker
 
     private val symbolLookupTracker = (lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING
-    private val symbolLookupCacheDir = File(options.cachesDir, "symbolLookups")
+    private val symbolLookupCacheDir = File(cachesDir, "symbolLookups")
     private val symbolLookupCache = LookupStorage(symbolLookupCacheDir, icContext)
 
     // TODO: rewrite LookupStorage to share file-to-id, etc.
     private val classLookupTracker = (lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING
-    private val classLookupCacheDir = File(options.cachesDir, "classLookups")
+    private val classLookupCacheDir = File(cachesDir, "classLookups")
     private val classLookupCache = LookupStorage(classLookupCacheDir, icContext)
 
-    private val sourceToOutputsMap = FileToFilesMap(File(options.cachesDir, "sourceToOutputs"))
+    private val sourceToOutputsMap = FileToFilesMap(File(cachesDir, "sourceToOutputs"))
 
     private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
     private val KSFile.relativeFile
@@ -172,17 +193,17 @@ class IncrementalContext(
     }
 
     private fun updateLookupCache(dirtyFiles: Collection<File>) {
-        symbolLookupCache.update(symbolLookupTracker, dirtyFiles, options.knownRemoved)
+        symbolLookupCache.update(symbolLookupTracker, dirtyFiles, knownRemoved)
         symbolLookupCache.flush(false)
         symbolLookupCache.close()
 
-        classLookupCache.update(classLookupTracker, dirtyFiles, options.knownRemoved)
+        classLookupCache.update(classLookupTracker, dirtyFiles, knownRemoved)
         classLookupCache.flush(false)
         classLookupCache.close()
     }
 
     private fun logSourceToOutputs(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
-        if (!options.incrementalLog)
+        if (!incrementalLog)
             return
 
         val logFile = File(logsDir, "kspSourceToOutputs.log")
@@ -221,7 +242,7 @@ class IncrementalContext(
         dirtyFilesByNewSyms: Collection<File> = emptyList(),
         dirtyFilesBySealed: Collection<File> = emptyList(),
     ) {
-        if (!options.incrementalLog)
+        if (!incrementalLog)
             return
 
         val logFile = File(logsDir, "kspDirtySet.log")
@@ -241,7 +262,7 @@ class IncrementalContext(
         logFile.appendText("Affected By sealed\n")
         dirtyFilesBySealed.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("CP changes\n")
-        options.changedClasses.forEach { logFile.appendText("  $it\n") }
+        changedClasses.forEach { logFile.appendText("  $it\n") }
         logFile.appendText("Dirty:\n")
         files.forEach {
             logFile.appendText("  ${it.relativeFile}\n")
@@ -281,7 +302,7 @@ class IncrementalContext(
         }
 
         // Calculate dirty files by dirty classes in CP.
-        val dirtyFilesByCP = options.changedClasses.flatMap { fqn ->
+        val dirtyFilesByCP = changedClasses.flatMap { fqn ->
             val name = fqn.substringAfterLast('.')
             val scope = fqn.substringBeforeLast('.', "<anonymous>")
             classLookupCache.get(LookupSymbol(name, scope)).map { File(it) } +
@@ -291,7 +312,7 @@ class IncrementalContext(
         // output files that exist in CURR~2 but not in CURR~1
         val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: emptyList()
 
-        val noSourceFiles = options.changedClasses.map { fqn ->
+        val noSourceFiles = changedClasses.map { fqn ->
             NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
         }.toSet()
 
@@ -306,7 +327,7 @@ class IncrementalContext(
 
         // modified can be seen as removed + new. Therefore the following check doesn't work:
         //   if (modified.any { it !in sourceToOutputsMap.keys }) ...
-        if (modified.isNotEmpty() || options.changedClasses.isNotEmpty()) {
+        if (modified.isNotEmpty() || changedClasses.isNotEmpty()) {
             initialSet.add(anyChangesWildcard)
         }
 
@@ -370,8 +391,8 @@ class IncrementalContext(
     }
 
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
-        val outRoot = options.kspOutputDir
-        val bakRoot = File(options.cachesDir, "backups")
+        val outRoot = kspOutputDir
+        val bakRoot = File(cachesDir, "backups")
 
         fun File.abs() = File(baseDir, path)
         fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
