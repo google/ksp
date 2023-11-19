@@ -33,7 +33,6 @@ dependencies {
     implementation(project(":common-deps"))
     testImplementation(gradleApi())
     testImplementation(project(":api"))
-    testImplementation(project(":common-util"))
     testImplementation("junit:junit:$junitVersion")
     testImplementation("com.google.truth:truth:$googleTruthVersion")
     testImplementation(gradleTestKit())
