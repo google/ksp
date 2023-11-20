@@ -26,49 +26,27 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
-import com.intellij.util.io.IOUtil
-import org.jetbrains.kotlin.container.ComponentProvider
-import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.incremental.IncrementalCompilationContext
-import org.jetbrains.kotlin.incremental.LookupStorage
-import org.jetbrains.kotlin.incremental.LookupSymbol
-import org.jetbrains.kotlin.incremental.LookupTrackerImpl
-import org.jetbrains.kotlin.incremental.components.LookupTracker
-import org.jetbrains.kotlin.incremental.components.Position
-import org.jetbrains.kotlin.incremental.components.ScopeKind
-import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
-import org.jetbrains.kotlin.incremental.update
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.supertypes
-import java.io.DataInput
-import java.io.DataOutput
 import java.io.File
 import java.util.*
 
 class FileToSymbolsMap(
     storageFile: File,
-) : PersistentMap<File, List<LookupSymbol>>(
+    lookupSymbolExternalizer: DataExternalizer<LookupSymbolWrapper>
+) : PersistentMap<File, List<LookupSymbolWrapper>>(
     storageFile,
     FileKeyDescriptor,
-    ListExternalizer(LookupSymbolExternalizer),
+    ListExternalizer(lookupSymbolExternalizer),
 )
 
-object LookupSymbolExternalizer : DataExternalizer<LookupSymbol> {
-    override fun read(input: DataInput): LookupSymbol = LookupSymbol(IOUtil.readString(input), IOUtil.readString(input))
+object symbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>() {
+    override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
-    override fun save(output: DataOutput, value: LookupSymbol) {
-        IOUtil.writeString(value.name, output)
-        IOUtil.writeString(value.scope, output)
-    }
-}
-
-object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
-    override fun defaultHandler(node: KSNode, data: (LookupSymbol) -> Unit) = Unit
-
-    override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbol) -> Unit) {
+    override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {
         if (declaration.isPrivate())
             return
 
@@ -76,10 +54,13 @@ object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
         val scope =
             declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) }
                 ?: return
-        data(LookupSymbol(name, scope))
+        data(LookupSymbolWrapper(name, scope))
     }
 
-    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: (LookupSymbol) -> Unit) {
+    override fun visitDeclarationContainer(
+        declarationContainer: KSDeclarationContainer,
+        data: (LookupSymbolWrapper) -> Unit
+    ) {
         // Local declarations aren't visible to other files / classes.
         if (declarationContainer is KSFunctionDeclaration)
             return
@@ -90,56 +71,29 @@ object symbolCollector : KSDefaultVisitor<(LookupSymbol) -> Unit, Unit>() {
     }
 }
 
-internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConverter {
-    override fun toPath(file: File): String = file.path
-    override fun toFile(path: String): File = File(path).relativeTo(baseDir)
-}
-
-class IncrementalContext(
-    private val lookupTracker: LookupTracker,
-    private val anyChangesWildcard: File,
-    private val incremental: Boolean,
-    private val incrementalLog: Boolean,
-    private val baseDir: File,
-    private val cachesDir: File,
-    private val kspOutputDir: File,
-    private val knownModified: List<File>,
-    private val knownRemoved: List<File>,
-    private val changedClasses: List<String>,
+abstract class IncrementalContextBase(
+    protected val anyChangesWildcard: File,
+    protected val incrementalLog: Boolean,
+    protected val baseDir: File,
+    protected val cachesDir: File,
+    protected val kspOutputDir: File,
+    protected val knownModified: List<File>,
+    protected val knownRemoved: List<File>,
+    protected val changedClasses: List<String>,
 ) {
-    constructor(
-        options: KspOptions,
-        componentProvider: ComponentProvider,
-        anyChangesWildcard: File,
-    ) : this(
-        componentProvider.get(),
-        anyChangesWildcard,
-        options.incremental,
-        options.incrementalLog,
-        options.projectBaseDir,
-        options.cachesDir,
-        options.kspOutputDir,
-        options.knownModified,
-        options.knownRemoved,
-        options.changedClasses,
-    )
-
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
-    private val updatedSymbols = MultiMap.createSet<File, LookupSymbol>()
+    private val updatedSymbols = MultiMap.createSet<File, LookupSymbolWrapper>()
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is used to update sealedMap in the end.
-    private val updatedSealed = MultiMap.createSet<File, LookupSymbol>()
-
-    private val PATH_CONVERTER = RelativeFileToPathConverter(baseDir)
-    private val icContext = IncrementalCompilationContext(PATH_CONVERTER, PATH_CONVERTER, true)
+    private val updatedSealed = MultiMap.createSet<File, LookupSymbolWrapper>()
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is saved across processing.
-    private val sealedMap = FileToSymbolsMap(File(cachesDir, "sealed"))
+    protected abstract val sealedMap: FileToSymbolsMap
 
     // Symbols defined in each file. This is saved across processing.
-    private val symbolsMap = FileToSymbolsMap(File(cachesDir, "symbols"))
+    protected abstract val symbolsMap: FileToSymbolsMap
 
     private val cachesUpToDateFile = File(cachesDir, "caches.uptodate")
     private val rebuild = !cachesUpToDateFile.exists()
@@ -150,18 +104,13 @@ class IncrementalContext(
     private val modified = knownModified.map { it.relativeTo(baseDir) }.toSet()
     private val removed = knownRemoved.map { it.relativeTo(baseDir) }.toSet()
 
-    // Disable incremental processing if somehow DualLookupTracker failed to be registered.
-    // This may happen when a platform hasn't support incremental compilation yet. E.g, Common / Metadata.
-    private val isIncremental = incremental && lookupTracker is DualLookupTracker
+    protected abstract val isIncremental: Boolean
 
-    private val symbolLookupTracker = (lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING
-    private val symbolLookupCacheDir = File(cachesDir, "symbolLookups")
-    private val symbolLookupCache = LookupStorage(symbolLookupCacheDir, icContext)
+    protected abstract val symbolLookupTracker: LookupTrackerWrapper
+    protected abstract val symbolLookupCache: LookupStorageWrapper
 
-    // TODO: rewrite LookupStorage to share file-to-id, etc.
-    private val classLookupTracker = (lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING
-    private val classLookupCacheDir = File(cachesDir, "classLookups")
-    private val classLookupCache = LookupStorage(classLookupCacheDir, icContext)
+    protected abstract val classLookupTracker: LookupTrackerWrapper
+    protected abstract val classLookupCache: LookupStorageWrapper
 
     private val sourceToOutputsMap = FileToFilesMap(File(cachesDir, "sourceToOutputs"))
 
@@ -194,11 +143,11 @@ class IncrementalContext(
 
     private fun updateLookupCache(dirtyFiles: Collection<File>) {
         symbolLookupCache.update(symbolLookupTracker, dirtyFiles, knownRemoved)
-        symbolLookupCache.flush(false)
+        symbolLookupCache.flush()
         symbolLookupCache.close()
 
         classLookupCache.update(classLookupTracker, dirtyFiles, knownRemoved)
-        classLookupCache.flush(false)
+        classLookupCache.flush()
         classLookupCache.close()
     }
 
@@ -283,7 +232,7 @@ class IncrementalContext(
             return ksFiles
         }
 
-        val newSyms = mutableSetOf<LookupSymbol>()
+        val newSyms = mutableSetOf<LookupSymbolWrapper>()
 
         // Parse and add newly defined symbols in modified files.
         ksFiles.filter { it.relativeFile in modified }.forEach { file ->
@@ -305,8 +254,8 @@ class IncrementalContext(
         val dirtyFilesByCP = changedClasses.flatMap { fqn ->
             val name = fqn.substringAfterLast('.')
             val scope = fqn.substringBeforeLast('.', "<anonymous>")
-            classLookupCache.get(LookupSymbol(name, scope)).map { File(it) } +
-                symbolLookupCache.get(LookupSymbol(name, scope)).map { File(it) }
+            classLookupCache.get(LookupSymbolWrapper(name, scope)).map { File(it) } +
+                symbolLookupCache.get(LookupSymbolWrapper(name, scope)).map { File(it) }
         }.toSet()
 
         // output files that exist in CURR~2 but not in CURR~1
@@ -556,7 +505,7 @@ class IncrementalContext(
 
         // Java types are classes. Therefore lookups only happen in packages.
         fun record(scope: String, name: String) =
-            symbolLookupTracker.record(path, Position.NO_POSITION, scope, ScopeKind.PACKAGE, name)
+            symbolLookupTracker.record(path, scope, name)
 
         record(scope, name)
 
@@ -685,29 +634,19 @@ class IncrementalContext(
         val name = classDeclaration.simpleName.asString()
         val scope = classDeclaration.qualifiedName?.asString()
             ?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) } ?: return
-        updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbol(name, scope))
-    }
-
-    // Debugging and testing only.
-    fun dumpLookupRecords(): Map<String, List<String>> {
-        val map = mutableMapOf<String, List<String>>()
-        (symbolLookupTracker as LookupTrackerImpl).lookups.entrySet().forEach { e ->
-            val key = "${e.key.scope}.${e.key.name}"
-            map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
-        }
-        return map
+        updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
     }
 }
 
 internal class DirtinessPropagator(
-    private val lookupCache: LookupStorage,
+    private val lookupCache: LookupStorageWrapper,
     private val symbolsMap: FileToSymbolsMap,
     private val sourceToOutputs: FileToFilesMap,
     private val anyChangesWildcard: File,
     private val removedOutputsKey: File
 ) {
     private val visitedFiles = mutableSetOf<File>()
-    private val visitedSyms = mutableSetOf<LookupSymbol>()
+    private val visitedSyms = mutableSetOf<LookupSymbolWrapper>()
 
     private val outputToSources = mutableMapOf<File, MutableSet<File>>().apply {
         sourceToOutputs.keys.forEach { source ->
@@ -719,7 +658,7 @@ internal class DirtinessPropagator(
         }
     }
 
-    private fun visit(sym: LookupSymbol) {
+    private fun visit(sym: LookupSymbolWrapper) {
         if (sym in visitedSyms)
             return
         visitedSyms.add(sym)
