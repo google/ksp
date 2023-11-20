@@ -52,6 +52,7 @@ dependencies {
 
     implementation(kotlin("stdlib", kotlinBaseVersion))
     implementation(project(":common-deps"))
+    implementation(project(":common-util"))
     implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
     implementation("org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinBaseVersion")

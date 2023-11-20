@@ -17,31 +17,18 @@
 
 package com.google.devtools.ksp
 
-import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.symbol.impl.findPsi
-import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl
-import com.google.devtools.ksp.symbol.impl.java.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSDeclarationContainer
+import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
-import com.intellij.psi.*
-import com.intellij.psi.impl.source.PsiClassReferenceType
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiPackage
 import com.intellij.util.containers.MultiMap
-import com.intellij.util.io.DataExternalizer
-import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.io.File
-import java.util.*
-
-class FileToSymbolsMap(
-    storageFile: File,
-    lookupSymbolExternalizer: DataExternalizer<LookupSymbolWrapper>
-) : PersistentMap<File, List<LookupSymbolWrapper>>(
-    storageFile,
-    FileKeyDescriptor,
-    ListExternalizer(lookupSymbolExternalizer),
-)
+import java.util.Date
 
 object symbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>() {
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
@@ -520,113 +507,6 @@ abstract class IncrementalContextBase(
             onDemandImports.forEach {
                 record(it, name)
             }
-        }
-    }
-
-    // Record a *leaf* type reference. This doesn't address type arguments.
-    private fun recordLookup(ref: PsiClassReferenceType, def: PsiClass) {
-        val psiFile = ref.reference.containingFile as? PsiJavaFile ?: return
-        // A type parameter doesn't have qualified name.
-        //
-        // Note that bounds of type parameters, or other references in classes,
-        // are not addressed recursively here. They are recorded in other places
-        // with more contexts, when necessary.
-        def.qualifiedName?.let { recordLookup(psiFile, it) }
-    }
-
-    // Record a type reference, including its type arguments.
-    fun recordLookup(ref: PsiType) {
-        when (ref) {
-            is PsiArrayType -> recordLookup(ref.componentType)
-            is PsiClassReferenceType -> {
-                val def = ref.resolve() ?: return
-                recordLookup(ref, def)
-                // in case the corresponding KotlinType is passed through ways other than KSTypeReferenceJavaImpl
-                ref.typeArguments().forEach {
-                    if (it is PsiType) {
-                        recordLookup(it)
-                    }
-                }
-            }
-            is PsiWildcardType -> ref.bound?.let { recordLookup(it) }
-        }
-    }
-
-    // Record all references to super types (if they are written in Java) of a given type,
-    // in its type hierarchy.
-    fun recordLookupWithSupertypes(kotlinType: KotlinType) {
-        (listOf(kotlinType) + kotlinType.supertypes()).mapNotNull {
-            it.constructor.declarationDescriptor?.findPsi() as? PsiClass
-        }.forEach {
-            it.superTypes.forEach {
-                recordLookup(it)
-            }
-        }
-    }
-
-    // Record all type references in a Java field.
-    private fun recordLookupForJavaField(psi: PsiField) {
-        recordLookup(psi.type)
-    }
-
-    // Record all type references in a Java method.
-    private fun recordLookupForJavaMethod(psi: PsiMethod) {
-        psi.parameterList.parameters.forEach {
-            recordLookup(it.type)
-        }
-        psi.returnType?.let { recordLookup(it) }
-        psi.typeParameters.forEach {
-            it.bounds.mapNotNull { it as? PsiType }.forEach {
-                recordLookup(it)
-            }
-        }
-    }
-
-    // Record all type references in a KSDeclaration
-    fun recordLookupForDeclaration(declaration: KSDeclaration) {
-        when (declaration) {
-            is KSPropertyDeclarationJavaImpl -> recordLookupForJavaField(declaration.psi)
-            is KSFunctionDeclarationJavaImpl -> recordLookupForJavaMethod(declaration.psi)
-        }
-    }
-
-    // Record all type references in a CallableMemberDescriptor
-    fun recordLookupForCallableMemberDescriptor(descriptor: CallableMemberDescriptor) {
-        val psi = descriptor.findPsi()
-        when (psi) {
-            is PsiMethod -> recordLookupForJavaMethod(psi)
-            is PsiField -> recordLookupForJavaField(psi)
-        }
-    }
-
-    // Record references from all declared functions in the type hierarchy of the given class.
-    // TODO: optimization: filter out inaccessible members
-    fun recordLookupForGetAllFunctions(descriptor: ClassDescriptor) {
-        recordLookupForGetAll(descriptor) {
-            it.methods.forEach {
-                recordLookupForJavaMethod(it)
-            }
-        }
-    }
-
-    // Record references from all declared fields in the type hierarchy of the given class.
-    // TODO: optimization: filter out inaccessible members
-    fun recordLookupForGetAllProperties(descriptor: ClassDescriptor) {
-        recordLookupForGetAll(descriptor) {
-            it.fields.forEach {
-                recordLookupForJavaField(it)
-            }
-        }
-    }
-
-    fun recordLookupForGetAll(descriptor: ClassDescriptor, doChild: (PsiClass) -> Unit) {
-        (descriptor.getAllSuperclassesWithoutAny() + descriptor).mapNotNull {
-            it.findPsi() as? PsiClass
-        }.forEach { psiClass ->
-            psiClass.superTypes.forEach {
-                recordLookup(it)
-            }
-            doChild(psiClass)
         }
     }
 
