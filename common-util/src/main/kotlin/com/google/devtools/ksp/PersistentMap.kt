@@ -83,3 +83,12 @@ class FileToFilesMap(
     FileKeyDescriptor,
     ListExternalizer(FileExternalizer)
 )
+
+class FileToSymbolsMap(
+    storageFile: File,
+    lookupSymbolExternalizer: DataExternalizer<LookupSymbolWrapper>
+) : PersistentMap<File, List<LookupSymbolWrapper>>(
+    storageFile,
+    FileKeyDescriptor,
+    ListExternalizer(lookupSymbolExternalizer),
+)
