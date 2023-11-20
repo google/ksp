@@ -69,8 +69,6 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.Stand
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
-import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProvider
-import org.jetbrains.kotlin.analysis.project.structure.KtModuleScopeProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
@@ -289,11 +287,10 @@ class KotlinSymbolProcessing(
                 KtAlwaysAccessibleLifeTimeTokenProvider::class.java
             )
 
-            registerService(KtModuleScopeProvider::class.java, KtModuleScopeProviderImpl())
             // Despite being a static implementation, this is only used by IDE tests
             registerService(
                 KotlinAnnotationsResolverFactory::class.java,
-                KotlinStaticAnnotationsResolverFactory(ktFiles)
+                KotlinStaticAnnotationsResolverFactory(project, ktFiles)
             )
             registerService(
                 KotlinResolutionScopeProvider::class.java,

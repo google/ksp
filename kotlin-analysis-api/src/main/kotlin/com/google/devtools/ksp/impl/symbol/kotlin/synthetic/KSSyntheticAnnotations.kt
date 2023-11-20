@@ -8,5 +8,6 @@ fun getExtensionFunctionTypeAnnotation(index: Int) = KtAnnotationApplicationWith
     null,
     null,
     emptyList(),
-    index
+    index,
+    null
 )
