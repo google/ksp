@@ -17,9 +17,9 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
-import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.binary.getAbsentDefaultArguments
