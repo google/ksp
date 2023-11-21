@@ -25,6 +25,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.impl.JsPlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.processing.impl.KSObjectCacheManager
 import com.google.devtools.ksp.processing.impl.KSPCompilationError
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl

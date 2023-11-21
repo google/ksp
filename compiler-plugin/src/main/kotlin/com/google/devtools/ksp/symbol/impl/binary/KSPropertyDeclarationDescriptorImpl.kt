@@ -17,12 +17,11 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.*
-import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.org.objectweb.asm.Opcodes
 
