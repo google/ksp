@@ -66,6 +66,7 @@ import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.FirStandaloneServiceRegistrar
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
@@ -106,9 +107,11 @@ import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProviderImpl
+import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -412,8 +415,7 @@ class KotlinSymbolProcessing(
         ResolverAAImpl.ktModule = modules.single()
 
         // Initializing environments
-        var allKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration)
-        var newKSFiles = allKSFiles
+        val allKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration)
         val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
         val codeGenerator = CodeGeneratorImpl(
             kspConfig.classOutputDir,
@@ -425,6 +427,24 @@ class KotlinSymbolProcessing(
             allKSFiles,
             kspConfig.incremental
         )
+
+        val dualLookupTracker = DualLookupTracker()
+        val incrementalContext = IncrementalContextAA(
+            kspConfig.incremental,
+            dualLookupTracker,
+            File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
+            kspConfig.incrementalLog,
+            kspConfig.projectBaseDir,
+            kspConfig.cachesDir,
+            kspConfig.outputBaseDir,
+            kspConfig.modifiedSources,
+            kspConfig.removedSources,
+            kspConfig.changedClasses,
+        )
+        var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
+        var newKSFiles = allDirtyKSFiles
+        val initialDirtySet = allDirtyKSFiles.toSet()
+        val allCleanFilePaths = allKSFiles.filterNot { it in initialDirtySet }.map { it.filePath }.toSet()
 
         val symbolProcessorEnvironment = SymbolProcessorEnvironment(
             kspConfig.processorOptions,
@@ -449,11 +469,17 @@ class KotlinSymbolProcessing(
         // 2) there is no more new files.
         while (!logger.hasError) {
             logger.logging("round ${++rounds} of processing")
+            // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots to
+            // be resolved. Therefore, due to the implementation
+            val firSession = ResolverAAImpl.ktModule.getFirResolveSession(project)
+            firSession.useSiteFirSession.registerResolveComponents(dualLookupTracker)
+
             val resolver = ResolverAAImpl(
-                allKSFiles,
+                allDirtyKSFiles,
                 newKSFiles,
                 deferredSymbols,
-                project
+                project,
+                incrementalContext,
             )
             ResolverAAImpl.instance = resolver
             ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
@@ -482,8 +508,11 @@ class KotlinSymbolProcessing(
 
             val newFilePaths = codeGenerator.generatedFile.filter { it.extension == "kt" || it.extension == "java" }
                 .map { it.canonicalPath }.toSet()
-            allKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration)
-            newKSFiles = allKSFiles.filter { it.filePath in newFilePaths }
+            allDirtyKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration).filter {
+                it.filePath !in allCleanFilePaths
+            }
+            newKSFiles = allDirtyKSFiles.filter { it.filePath in newFilePaths }
+            incrementalContext.registerGeneratedFiles(newKSFiles)
             codeGenerator.closeFiles()
         }
 
@@ -492,6 +521,10 @@ class KotlinSymbolProcessing(
             processors.forEach(SymbolProcessor::onError)
         } else {
             processors.forEach(SymbolProcessor::finish)
+        }
+
+        if (!logger.hasError) {
+            incrementalContext.updateCachesAndOutputs(initialDirtySet, codeGenerator.outputs, codeGenerator.sourceToOutputs)
         }
 
         codeGenerator.closeFiles()

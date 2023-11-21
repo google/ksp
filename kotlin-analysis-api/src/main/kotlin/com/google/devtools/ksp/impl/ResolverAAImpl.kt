@@ -62,7 +62,8 @@ class ResolverAAImpl(
     val allKSFiles: List<KSFile>,
     val newKSFiles: List<KSFile>,
     val deferredSymbols: Map<SymbolProcessor, List<Restorable>>,
-    val project: Project
+    val project: Project,
+    val incrementalContext: IncrementalContextAA,
 ) : Resolver {
     companion object {
         val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
