@@ -17,9 +17,9 @@
 
 package com.google.devtools.ksp.symbol.impl
 
-import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier

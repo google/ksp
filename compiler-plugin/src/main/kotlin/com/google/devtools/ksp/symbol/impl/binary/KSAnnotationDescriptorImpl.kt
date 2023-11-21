@@ -18,9 +18,9 @@
 package com.google.devtools.ksp.symbol.impl.binary
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
