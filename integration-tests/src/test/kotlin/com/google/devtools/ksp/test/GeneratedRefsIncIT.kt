@@ -2,7 +2,6 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,7 +16,6 @@ class GeneratedRefsIncIT(val useKSP2: Boolean) {
 
     @Test
     fun testGeneratedRefsInc() {
-        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val expected = listOf(
