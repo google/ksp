@@ -25,6 +25,9 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.ChangeType
+import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -52,15 +55,32 @@ abstract class KspAATask @Inject constructor(
     abstract val kspConfig: KspGradleConfig
 
     @TaskAction
-    fun execute() {
+    fun execute(inputChanges: InputChanges) {
         // FIXME: Create a class loader with clean classpath instead of shadowing existing ones. It'll require either:
         //  1. passing arguments by data structures in stdlib, or
         //  2. hoisting and publishing KspGradleConfig into another package.
+
+        val modifiedSources: MutableList<File> = mutableListOf()
+        val removedSources: MutableList<File> = mutableListOf()
+
+        if (inputChanges.isIncremental) {
+            listOf(kspConfig.sourceRoots, kspConfig.javaSourceRoots, kspConfig.commonSourceRoots).forEach {
+                inputChanges.getFileChanges(it).forEach {
+                    when (it.changeType) {
+                        ChangeType.ADDED, ChangeType.MODIFIED -> modifiedSources.add(it.file)
+                        ChangeType.REMOVED -> removedSources.add(it.file)
+                    }
+                }
+            }
+        }
 
         val workerQueue = workerExecutor.noIsolation()
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config = kspConfig
             it.kspClassPath = kspClasspath
+            it.modifiedSources = modifiedSources
+            it.removedSources = removedSources
+            it.isInputChangeIncremental = inputChanges.isIncremental
         }
     }
 
@@ -174,6 +194,11 @@ abstract class KspAATask @Inject constructor(
                         (compilerOptions as KotlinJvmCompilerOptions).jvmTarget.get().target
                     }
                     cfg.jvmTarget.value(jvmTarget)
+
+                    cfg.incremental.value(project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true)
+                    cfg.incrementalLog.value(
+                        project.findProperty("ksp.incremental.log")?.toString()?.toBoolean() ?: false
+                    )
                 }
             }
 
@@ -207,6 +232,7 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val javaSourceRoots: ConfigurableFileCollection
 
+    @get:Incremental
     @get:Classpath
     abstract val libraries: ConfigurableFileCollection
 
@@ -260,11 +286,20 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     @get:Optional
     abstract val jvmDefaultMode: Property<String>
+
+    @get:Input
+    abstract val incremental: Property<Boolean>
+
+    @get:Input
+    abstract val incrementalLog: Property<Boolean>
 }
 
 interface KspAAWorkParameter : WorkParameters {
     var config: KspGradleConfig
     var kspClassPath: ConfigurableFileCollection
+    var modifiedSources: List<File>
+    var removedSources: List<File>
+    var isInputChangeIncremental: Boolean
 }
 
 var isolatedClassLoaderCache = mutableMapOf<String, URLClassLoader>()
@@ -287,7 +322,9 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         // Clean stale files for now.
         // TODO: support incremental processing.
         gradleCfg.outputBaseDir.get().deleteRecursively()
-        gradleCfg.cachesDir.get().deleteRecursively()
+        if (!parameters.isInputChangeIncremental) {
+            gradleCfg.cachesDir.get().deleteRecursively()
+        }
 
         val processorClassloader = URLClassLoader(
             gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
@@ -337,6 +374,12 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
             jvmTarget = gradleCfg.jvmTarget.get()
             jvmDefaultMode = gradleCfg.jvmDefaultMode.get()
+
+            incremental = gradleCfg.incremental.get()
+            incrementalLog = gradleCfg.incrementalLog.get()
+
+            modifiedSources = parameters.modifiedSources
+            removedSources = parameters.removedSources
         }.build()
         val byteArrayOutputStream = ByteArrayOutputStream()
         val objectOutputStream = ObjectOutputStream(byteArrayOutputStream)
