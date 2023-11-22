@@ -127,7 +127,6 @@ class OutputDepsIt(val useKSP2: Boolean) {
     @Test
     fun testOutputDeps() {
         // FIXME
-        Assume.assumeFalse(useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 

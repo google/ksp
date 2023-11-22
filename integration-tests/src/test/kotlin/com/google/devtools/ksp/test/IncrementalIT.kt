@@ -168,7 +168,6 @@ class IncrementalIT(val useKSP2: Boolean) {
 
     @Test
     fun testIsolating() {
-        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -214,7 +213,6 @@ class IncrementalIT(val useKSP2: Boolean) {
 
     @Test
     fun testMultipleChanges() {
-        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
