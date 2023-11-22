@@ -361,6 +361,24 @@ class PlaygroundIT(val useKSP2: Boolean) {
         project.restore(properties.path)
     }
 
+    @Test
+    fun testProgressiveMode() {
+        val buildFile = File(project.root, "workload/build.gradle.kts")
+        buildFile.appendText(
+            """
+            kotlin {
+                compilerOptions {
+                    allWarningsAsErrors.value(true)
+                    progressiveMode.value(true)
+               }
+            }
+            """.trimIndent()
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
+        gradleRunner.withArguments("clean", "build").build()
+        project.restore(buildFile.path)
+    }
+
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "KSP2={0}")
