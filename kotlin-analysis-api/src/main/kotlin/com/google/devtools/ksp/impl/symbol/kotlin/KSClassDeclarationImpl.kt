@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordGetSealedSubclasses
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
@@ -99,6 +100,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         if (!modifiers.contains(Modifier.SEALED)) return emptySequence()
+        recordGetSealedSubclasses(this)
         return (ktClassOrObjectSymbol as? KtNamedClassOrObjectSymbol)?.let {
             analyze {
                 it.getSealedClassInheritors().map { getCached(it) }.asSequence()
