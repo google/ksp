@@ -22,6 +22,20 @@ import com.google.devtools.ksp.IncrementalContextBase
 import com.google.devtools.ksp.LookupStorageWrapper
 import com.google.devtools.ksp.LookupSymbolWrapper
 import com.google.devtools.ksp.LookupTrackerWrapper
+import com.google.devtools.ksp.containingFile
+import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.intellij.psi.PsiJavaFile
 import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil
@@ -37,6 +51,17 @@ import org.jetbrains.kotlin.incremental.update
 import java.io.DataInput
 import java.io.DataOutput
 import java.io.File
+import org.jetbrains.kotlin.analysis.api.symbols.KtClassLikeSymbol
+import org.jetbrains.kotlin.analysis.api.types.KtCapturedType
+import org.jetbrains.kotlin.analysis.api.types.KtClassType
+import org.jetbrains.kotlin.analysis.api.types.KtDefinitelyNotNullType
+import org.jetbrains.kotlin.analysis.api.types.KtDynamicType
+import org.jetbrains.kotlin.analysis.api.types.KtErrorType
+import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
+import org.jetbrains.kotlin.analysis.api.types.KtIntegerLiteralType
+import org.jetbrains.kotlin.analysis.api.types.KtIntersectionType
+import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
 
 class IncrementalContextAA(
     override val isIncremental: Boolean,
@@ -86,7 +111,50 @@ class IncrementalContextAA(
         }
         return map
     }
+
+    private fun recordWithArgs(type: KtType, file: PsiJavaFile) {
+        type.typeArguments().forEach {
+            it.type?.let { recordWithArgs(it, file) }
+        }
+        when (type) {
+            is KtClassType -> {
+                val classifier = type.classifierSymbol() as? KtClassLikeSymbol ?: return
+                val fqn = classifier.classIdIfNonLocal?.asFqNameString() ?: return
+                recordLookup(file, fqn)
+            }
+            is KtFlexibleType -> {
+                recordWithArgs(type.lowerBound, file)
+                recordWithArgs(type.upperBound, file)
+            }
+            is KtIntersectionType -> {
+                type.conjuncts.forEach {
+                    recordWithArgs(it, file)
+                }
+            }
+            is KtCapturedType -> {
+                type.projection.type?.let {
+                    recordWithArgs(it, file)
+                }
+            }
+            is KtDefinitelyNotNullType -> {
+                recordWithArgs(type.original, file)
+            }
+            is KtErrorType, is KtIntegerLiteralType, is KtDynamicType, is KtTypeParameterType -> {}
+        }
+    }
+
+    fun recordLookup(type: KtType, parent: KSNode?) {
+        val file = (parent?.containingFile as? KSFileJavaImpl)?.psi ?: return
+
+        recordWithArgs(type, file)
+    }
 }
+
+internal fun recordLookup(ktType: KtType, parent: KSNode?) =
+    ResolverAAImpl.instance.incrementalContext.recordLookup(ktType, parent)
+
+internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) =
+    ResolverAAImpl.instance.incrementalContext.recordGetSealedSubclasses(classDeclaration)
 
 class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker) : LookupTrackerWrapper {
     override val lookups: MultiMap<LookupSymbolWrapper, String>
