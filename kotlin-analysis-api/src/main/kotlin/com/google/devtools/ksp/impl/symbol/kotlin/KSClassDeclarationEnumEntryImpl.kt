@@ -1,6 +1,9 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.recordLookup
+import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
+import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -47,11 +50,23 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
+        analyze {
+            ktEnumEntrySymbol.returnType.getDirectSuperTypes().forEach {
+                recordLookup(it, this@KSClassDeclarationEnumEntryImpl)
+            }
+            recordLookupForGetAllFunctions(ktEnumEntrySymbol.returnType.getDirectSuperTypes())
+        }
         return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSFunctionDeclaration>()
             ?: emptySequence()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
+        analyze {
+            ktEnumEntrySymbol.returnType.getDirectSuperTypes().forEach {
+                recordLookup(it, this@KSClassDeclarationEnumEntryImpl)
+            }
+            recordLookupForGetAllProperties(ktEnumEntrySymbol.returnType.getDirectSuperTypes())
+        }
         return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSPropertyDeclaration>()
             ?: emptySequence()
     }
