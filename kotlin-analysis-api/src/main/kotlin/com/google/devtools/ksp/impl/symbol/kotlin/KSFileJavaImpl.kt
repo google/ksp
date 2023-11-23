@@ -29,7 +29,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 
-class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile, Deferrable {
+class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferrable {
     companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }
