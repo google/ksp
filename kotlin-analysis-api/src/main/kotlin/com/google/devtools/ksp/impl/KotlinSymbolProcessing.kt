@@ -524,7 +524,11 @@ class KotlinSymbolProcessing(
         }
 
         if (!logger.hasError) {
-            incrementalContext.updateCachesAndOutputs(initialDirtySet, codeGenerator.outputs, codeGenerator.sourceToOutputs)
+            incrementalContext.updateCachesAndOutputs(
+                initialDirtySet,
+                codeGenerator.outputs,
+                codeGenerator.sourceToOutputs
+            )
         }
 
         codeGenerator.closeFiles()
