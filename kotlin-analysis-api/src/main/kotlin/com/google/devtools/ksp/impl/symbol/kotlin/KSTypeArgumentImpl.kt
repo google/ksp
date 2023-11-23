@@ -17,7 +17,6 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.findParentOfType
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeArgument
@@ -28,7 +27,6 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
-import org.jetbrains.kotlin.psi.KtUserType
 
 class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection, override val parent: KSNode) : KSTypeArgument {
     companion object : KSObjectCache<KtTypeProjection, KSTypeArgument>() {

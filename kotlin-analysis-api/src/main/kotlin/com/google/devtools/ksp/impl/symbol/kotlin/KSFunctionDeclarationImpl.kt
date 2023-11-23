@@ -19,6 +19,8 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
+import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
@@ -99,9 +101,13 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override fun findOverridee(): KSDeclaration? {
+        closestClassDeclaration()?.asStarProjectedType()?.let {
+            recordLookupWithSupertypes((it as KSTypeImpl).type)
+        }
+        recordLookupForPropertyOrMethod(this)
         return analyze {
             ktFunctionSymbol.getDirectlyOverriddenSymbols().firstOrNull()?.unwrapFakeOverrides?.toKSDeclaration()
-        }
+        }?.also { recordLookupForPropertyOrMethod(it) }
     }
 
     override fun asMemberOf(containing: KSType): KSFunction {
