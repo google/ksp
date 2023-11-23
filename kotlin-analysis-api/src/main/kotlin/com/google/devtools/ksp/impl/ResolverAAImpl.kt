@@ -530,6 +530,11 @@ class ResolverAAImpl(
             is KSPropertyDeclarationImpl -> overridee.ktPropertySymbol
             else -> return false
         }
+        overrider.closestClassDeclaration()?.asStarProjectedType()?.let {
+            recordLookupWithSupertypes((it as KSTypeImpl).type)
+        }
+        recordLookupForPropertyOrMethod(overrider)
+        recordLookupForPropertyOrMethod(overridee)
         return analyze {
             overriderSymbol.getAllOverriddenSymbols().contains(overrideeSymbol) ||
                 overriderSymbol.getIntersectionOverriddenSymbols().contains(overrideeSymbol)
@@ -541,8 +546,11 @@ class ResolverAAImpl(
         overridee: KSDeclaration,
         containingClass: KSClassDeclaration
     ): Boolean {
+        recordLookupForPropertyOrMethod(overrider)
+        recordLookupForPropertyOrMethod(overridee)
         return when (overrider) {
             is KSPropertyDeclaration -> containingClass.getAllProperties().singleOrNull {
+                recordLookupForPropertyOrMethod(it)
                 it.simpleName.asString() == overrider.simpleName.asString()
             }?.let { overrides(it, overridee) } ?: false
             is KSFunctionDeclaration -> {
@@ -561,7 +569,10 @@ class ResolverAAImpl(
                         }
                     ).any { overrides(it, overridee) }
                 } else {
-                    candidates.any { overrides(it, overridee) }
+                    candidates.any {
+                        recordLookupForPropertyOrMethod(it)
+                        overrides(it, overridee)
+                    }
                 }
             }
             else -> false
@@ -639,6 +650,8 @@ class ResolverAAImpl(
         return propertyAsMemberOfCache.getOrPut(key) {
             val resolved = property.type.resolve()
             if (containing is KSTypeImpl && resolved is KSTypeImpl) {
+                recordLookupWithSupertypes(containing.type)
+                recordLookupForPropertyOrMethod(property)
                 val isSubTypeOf = analyze {
                     (declaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
                         containing.type.isSubTypeOf(it)
@@ -676,6 +689,8 @@ class ResolverAAImpl(
         val key = function to containing
         return functionAsMemberOfCache.getOrPut(key) {
             if (containing is KSTypeImpl) {
+                recordLookupWithSupertypes(containing.type)
+                recordLookupForPropertyOrMethod(function)
                 val isSubTypeOf = analyze {
                     (propertyDeclaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
                         containing.type.isSubTypeOf(it)

@@ -490,35 +490,30 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/rawTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaAnnotationTypes.kt")
     @Test
     fun testRecordJavaAnnotationTypes() {
         runTest("../test-utils/testData/api/recordJavaAnnotationTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaAsMemberOf.kt")
     @Test
     fun testRecordJavaAsMemberOf() {
         runTest("../test-utils/testData/api/recordJavaAsMemberOf.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaGetAllMembers.kt")
     @Test
     fun testRecordJavaGetAllMembers() {
         runTest("../test-utils/testData/api/recordJavaGetAllMembers.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaOverrides.kt")
     @Test
     fun testRecordJavaOverrides() {
         runTest("../test-utils/testData/api/recordJavaOverrides.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {

@@ -19,7 +19,6 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
 import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
