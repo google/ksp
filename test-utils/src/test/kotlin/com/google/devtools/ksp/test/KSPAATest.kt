@@ -492,31 +492,37 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("recordJavaAnnotationTypes.kt")
     @Test
     fun testRecordJavaAnnotationTypes() {
-        runTest("../test-utils/testData/api/recordJavaAnnotationTypes.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaAnnotationTypes.kt")
     }
 
     @TestMetadata("recordJavaAsMemberOf.kt")
     @Test
     fun testRecordJavaAsMemberOf() {
-        runTest("../test-utils/testData/api/recordJavaAsMemberOf.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaAsMemberOf.kt")
     }
 
     @TestMetadata("recordJavaGetAllMembers.kt")
     @Test
     fun testRecordJavaGetAllMembers() {
-        runTest("../test-utils/testData/api/recordJavaGetAllMembers.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaGetAllMembers.kt")
     }
 
     @TestMetadata("recordJavaOverrides.kt")
     @Test
     fun testRecordJavaOverrides() {
-        runTest("../test-utils/testData/api/recordJavaOverrides.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaOverrides.kt")
+    }
+
+    @TestMetadata("recordJavaResolutions.kt")
+    @Test
+    fun testRecordJavaResolutions() {
+        runTest("../kotlin-analysis-api/testData/recordJavaResolutions.kt")
     }
 
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {
-        runTest("../test-utils/testData/api/recordJavaSupertypes.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaSupertypes.kt")
     }
 
     @Disabled
