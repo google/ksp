@@ -506,6 +506,13 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
     }
 
     @DisabledOnOs(OS.WINDOWS)
+    @TestMetadata("recordJavaResolutions.kt")
+    @Test
+    fun testRecordJavaResolutions() {
+        runTest("../test-utils/testData/api/recordJavaResolutions.kt")
+    }
+
+    @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {
