@@ -18,7 +18,6 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaProcessor
 // EXPECTED:
-// p3.K3: javaSrc/p1/TestJ2K.java
 // p1.J1: javaSrc/p1/TestJ2J.java
 // p1.J3: javaSrc/p1/TestJ2J.java
 // p1.K1: javaSrc/p1/TestJ2K.java
@@ -26,6 +25,7 @@
 // p2.J2: javaSrc/p1/TestJ2J.java
 // p2.K2: javaSrc/p1/TestJ2K.java
 // p3.J3: javaSrc/p1/TestJ2J.java
+// p3.K3: javaSrc/p1/TestJ2K.java
 // END
 
 // FILE: p1/TestJ2K.java
