@@ -74,6 +74,25 @@ abstract class KspAATask @Inject constructor(
             }
         }
 
+        val changedClasses = if (kspConfig.incremental.get()) {
+            getCPChanges(
+                inputChanges,
+                listOf(
+                    kspConfig.sourceRoots,
+                    kspConfig.javaSourceRoots,
+                    kspConfig.commonSourceRoots,
+                    kspConfig.libraries
+                ),
+                kspConfig.cachesDir.get(),
+                kspConfig.classpathStructure,
+                kspConfig.libraries,
+                kspConfig.processorClasspath,
+            )
+        } else {
+            kspConfig.cachesDir.get().deleteRecursively()
+            emptyList()
+        }
+
         val workerQueue = workerExecutor.noIsolation()
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config = kspConfig
@@ -81,6 +100,7 @@ abstract class KspAATask @Inject constructor(
             it.modifiedSources = modifiedSources
             it.removedSources = removedSources
             it.isInputChangeIncremental = inputChanges.isIncremental
+            it.changedClasses = changedClasses
         }
     }
 
@@ -199,6 +219,8 @@ abstract class KspAATask @Inject constructor(
                     cfg.incrementalLog.value(
                         project.findProperty("ksp.incremental.log")?.toString()?.toBoolean() ?: false
                     )
+
+                    cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
                 }
             }
 
@@ -292,6 +314,9 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Input
     abstract val incrementalLog: Property<Boolean>
+
+    @get:Internal
+    abstract val classpathStructure: ConfigurableFileCollection
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -299,6 +324,7 @@ interface KspAAWorkParameter : WorkParameters {
     var kspClassPath: ConfigurableFileCollection
     var modifiedSources: List<File>
     var removedSources: List<File>
+    var changedClasses: List<String>
     var isInputChangeIncremental: Boolean
 }
 
@@ -322,9 +348,6 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         // Clean stale files for now.
         // TODO: support incremental processing.
         gradleCfg.outputBaseDir.get().deleteRecursively()
-        if (!parameters.isInputChangeIncremental) {
-            gradleCfg.cachesDir.get().deleteRecursively()
-        }
 
         val processorClassloader = URLClassLoader(
             gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
@@ -380,6 +403,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
             modifiedSources = parameters.modifiedSources
             removedSources = parameters.removedSources
+            changedClasses = parameters.changedClasses
         }.build()
         val byteArrayOutputStream = ByteArrayOutputStream()
         val objectOutputStream = ObjectOutputStream(byteArrayOutputStream)

@@ -34,6 +34,8 @@ import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
+import org.gradle.work.ChangeType
+import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -777,6 +779,47 @@ internal fun createIncrementalChangesTransformer(
     options += FilesSubpluginOption("apclasspath", apClasspath)
 
     options
+}
+
+internal fun getCPChanges(
+    inputChanges: InputChanges,
+    incrementalProps: List<FileCollection>,
+    cacheDir: File,
+    classpathStructure: FileCollection,
+    libraries: FileCollection,
+    processorCP: FileCollection,
+): List<String> {
+    val apClasspath = processorCP.files.toList()
+    val changedFiles = if (!inputChanges.isIncremental) {
+        SourcesChanges.Unknown
+    } else {
+        incrementalProps.fold(mutableListOf<File>() to mutableListOf<File>()) { (modified, removed), prop ->
+            inputChanges.getFileChanges(prop).forEach {
+                when (it.changeType) {
+                    ChangeType.ADDED, ChangeType.MODIFIED -> modified.add(it.file)
+                    ChangeType.REMOVED -> removed.add(it.file)
+                    else -> Unit
+                }
+            }
+            modified to removed
+        }.run {
+            SourcesChanges.Known(first, second)
+        }
+    }
+    val classpathChanges = findClasspathChanges(
+        changedFiles,
+        cacheDir,
+        classpathStructure.files,
+        libraries.files.toList(),
+        apClasspath
+    )
+    return if (classpathChanges is KaptClasspathChanges.Known) {
+        classpathChanges.names.map {
+            it.replace('/', '.').replace('$', '.')
+        }
+    } else {
+        emptyList()
+    }
 }
 
 internal fun Configuration.markResolvable(): Configuration = apply {
