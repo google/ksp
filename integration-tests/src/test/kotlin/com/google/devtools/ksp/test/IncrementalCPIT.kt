@@ -42,7 +42,6 @@ class IncrementalCPIT(val useKSP2: Boolean) {
 
     @Test
     fun testCPChanges() {
-        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
