@@ -4,9 +4,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, 1.0.14-release, 1.0.15-release ]
+    branches: [ main, 1.0.16-release, 1.0.15-release ]
   pull_request:
-    branches: [ main, 1.0.14-release, 1.0.15-release ]
+    branches: [ main, 1.0.16-release, 1.0.15-release ]
 
 jobs:
   build-and-test:
