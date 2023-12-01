@@ -22,6 +22,8 @@ plugins {
     signing
 }
 
+val depSourceJars by configurations.creating
+
 dependencies {
     listOf(
         "com.jetbrains.intellij.platform:util-rt",
@@ -37,6 +39,7 @@ dependencies {
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
         implementation("$it:$aaIntellijVersion") { isTransitive = false }
+        depSourceJars("$it:$aaIntellijVersion:sources") { isTransitive = false }
     }
 
     listOf(
@@ -54,6 +57,7 @@ dependencies {
         "org.jetbrains.kotlin:kotlin-compiler-ir-for-ide",
     ).forEach {
         implementation("$it:$aaKotlinBaseVersion") { isTransitive = false }
+        depSourceJars("$it:$aaKotlinBaseVersion:sources") { isTransitive = false }
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
@@ -97,12 +101,18 @@ tasks.withType<org.gradle.jvm.tasks.Jar> {
 tasks.withType<ShadowJar>() {
     archiveClassifier.set("")
     minimize()
+    mergeServiceFiles()
 }
 
 tasks {
     val sourcesJar by creating(Jar::class) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         archiveClassifier.set("sources")
         from(sourceSets.main.get().allSource)
+        from(project(":common-util").sourceSets.main.get().allSource)
+        depSourceJars.resolve().forEach {
+            from(zipTree(it))
+        }
     }
     val dokkaJavadocJar by creating(Jar::class) {
         dependsOn(dokkaJavadoc)
@@ -121,8 +131,8 @@ publishing {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-aa"
             artifact(tasks["shadowJar"])
-            artifact(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
-            artifact(project(":kotlin-analysis-api").tasks["sourcesJar"])
+            artifact(tasks["dokkaJavadocJar"])
+            artifact(tasks["sourcesJar"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-aa")
                 description.set("KSP implementation on Kotlin Analysis API")
@@ -143,6 +153,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+                        addDependency("com.google.devtools.ksp", "common-deps", version)
                     }
                 }
             }
