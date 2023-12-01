@@ -15,11 +15,16 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
+import com.google.devtools.ksp.processing.KSPCommonConfig
+import com.google.devtools.ksp.processing.KSPConfig
+import com.google.devtools.ksp.processing.KSPJsConfig
 import com.google.devtools.ksp.processing.KSPJvmConfig
+import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processing.KspGradleLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -48,9 +53,12 @@ import org.gradle.work.InputChanges
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.kotlin.compilerRunner.konanHome
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -92,19 +100,28 @@ abstract class KspAATask @Inject constructor(
         }
 
         val changedClasses = if (kspConfig.incremental.get()) {
-            getCPChanges(
-                inputChanges,
-                listOf(
-                    kspConfig.sourceRoots,
-                    kspConfig.javaSourceRoots,
-                    kspConfig.commonSourceRoots,
-                    kspConfig.libraries
-                ),
-                kspConfig.cachesDir.get(),
-                kspConfig.classpathStructure,
-                kspConfig.libraries,
-                kspConfig.processorClasspath,
-            )
+            if (kspConfig.platformType.get() == KotlinPlatformType.jvm) {
+                getCPChanges(
+                    inputChanges,
+                    listOf(
+                        kspConfig.sourceRoots,
+                        kspConfig.javaSourceRoots,
+                        kspConfig.commonSourceRoots,
+                        kspConfig.libraries
+                    ),
+                    kspConfig.cachesDir.get(),
+                    kspConfig.classpathStructure,
+                    kspConfig.libraries,
+                    kspConfig.processorClasspath,
+                )
+            } else {
+                if (
+                    !inputChanges.isIncremental ||
+                    inputChanges.getFileChanges(kspConfig.libraries).iterator().hasNext()
+                )
+                    kspConfig.cachesDir.get().deleteRecursively()
+                emptyList()
+            }
         } else {
             kspConfig.cachesDir.get().deleteRecursively()
             emptyList()
@@ -123,7 +140,7 @@ abstract class KspAATask @Inject constructor(
 
     companion object {
         @Internal
-        internal fun registerKspAATaskJvm(
+        internal fun registerKspAATask(
             kotlinCompilation: KotlinCompilation<*>,
             kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>>,
             processorClasspath: Configuration,
@@ -176,11 +193,6 @@ abstract class KspAATask @Inject constructor(
                             }
                         )
                     )
-                    val options = kotlinCompilation.compilerOptions.options
-                    if (options is KotlinJvmCompilerOptions) {
-                        // TODO: set proper jdk home
-                        cfg.jdkHome.value(File(System.getProperty("java.home")))
-                    }
 
                     val compilerOptions = kotlinCompilation.compilerOptions.options
                     val langVer = compilerOptions.languageVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
@@ -220,24 +232,49 @@ abstract class KspAATask @Inject constructor(
                     cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
                     cfg.excludedProcessors.value(kspExtension.excludedProcessors)
 
-                    val jvmDefaultMode = project.provider {
-                        compilerOptions.freeCompilerArgs.get().lastOrNull {
-                            it.startsWith("-Xjvm-default=")
-                        }?.substringAfter("=") ?: "disable"
-                    }
-                    cfg.jvmDefaultMode.value(jvmDefaultMode)
-
-                    val jvmTarget = project.provider {
-                        (compilerOptions as KotlinJvmCompilerOptions).jvmTarget.get().target
-                    }
-                    cfg.jvmTarget.value(jvmTarget)
-
                     cfg.incremental.value(project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true)
                     cfg.incrementalLog.value(
                         project.findProperty("ksp.incremental.log")?.toString()?.toBoolean() ?: false
                     )
 
                     cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
+
+                    if (compilerOptions is KotlinJvmCompilerOptions) {
+                        // TODO: set proper jdk home
+                        cfg.jdkHome.value(File(System.getProperty("java.home")))
+
+                        val jvmDefaultMode = project.provider {
+                            compilerOptions.freeCompilerArgs.get().lastOrNull {
+                                it.startsWith("-Xjvm-default=")
+                            }?.substringAfter("=") ?: "disable"
+                        }
+                        cfg.jvmDefaultMode.value(jvmDefaultMode)
+
+                        val jvmTarget = project.provider {
+                            (compilerOptions as KotlinJvmCompilerOptions).jvmTarget.get().target
+                        }
+                        cfg.jvmTarget.value(jvmTarget)
+                    }
+
+                    cfg.platformType.value(kotlinCompilation.platformType)
+                    if (kotlinCompilation is KotlinNativeCompilation) {
+                        val konanTargetName = kotlinCompilation.target.konanTarget.name
+                        cfg.konanTargetName.value(konanTargetName)
+
+                        // Unlike other platforms, K/N sets up stdlib in the compiler, not KGP,
+                        // meaning that KotlinNativeCompile doesn't have stdlib.
+                        // FIXME: find a solution with KGP, K/N and AA owners
+                        val konanHome = File(project.konanHome)
+                        val klib = File(konanHome, "klib")
+                        val common = File(klib, "common")
+                        val stdlib = File(common, "stdlib")
+                        cfg.libraries.from(stdlib)
+                        val platform = File(klib, "platform")
+                        val target = File(platform, konanTargetName)
+                        cfg.libraries.from(target.listFiles())
+                    }
+
+                    // TODO: pass targets of common
                 }
             }
 
@@ -276,6 +313,7 @@ abstract class KspGradleConfig @Inject constructor() {
     abstract val libraries: ConfigurableFileCollection
 
     @get:Input
+    @get:Optional
     abstract val jdkHome: Property<File>
 
     @get:Internal
@@ -334,6 +372,13 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Internal
     abstract val classpathStructure: ConfigurableFileCollection
+
+    @get:Input
+    abstract val platformType: Property<KotlinPlatformType>
+
+    @get:Input
+    @get:Optional
+    abstract val konanTargetName: Property<String>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -391,18 +436,15 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             )
         }
 
-        val kspConfig = KSPJvmConfig.Builder().apply {
+        fun KSPConfig.Builder.setupSuper() {
             moduleName = gradleCfg.moduleName.get()
             sourceRoots = gradleCfg.sourceRoots.files.toList()
-            javaSourceRoots = gradleCfg.javaSourceRoots.files.toList()
             commonSourceRoots = gradleCfg.commonSourceRoots.files.toList()
             libraries = gradleCfg.libraries.files.toList()
-            this.jdkHome = gradleCfg.jdkHome.get()
             projectBaseDir = gradleCfg.projectBaseDir.get()
             outputBaseDir = gradleCfg.outputBaseDir.get()
             cachesDir = gradleCfg.cachesDir.get()
             kotlinOutputDir = gradleCfg.kotlinOutputDir.get()
-            javaOutputDir = gradleCfg.javaOutputDir.get()
             classOutputDir = gradleCfg.classOutputDir.get()
             resourceOutputDir = gradleCfg.resourceOutputDir.get()
 
@@ -412,16 +454,48 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             processorOptions = gradleCfg.processorOptions.get()
             allWarningsAsErrors = gradleCfg.allWarningsAsErrors.get()
 
-            jvmTarget = gradleCfg.jvmTarget.get()
-            jvmDefaultMode = gradleCfg.jvmDefaultMode.get()
-
             incremental = gradleCfg.incremental.get()
             incrementalLog = gradleCfg.incrementalLog.get()
 
             modifiedSources = parameters.modifiedSources
             removedSources = parameters.removedSources
             changedClasses = parameters.changedClasses
-        }.build()
+        }
+        val platformType = gradleCfg.platformType.get()
+        val kspConfig = when (platformType) {
+            KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
+                KSPJvmConfig.Builder().apply {
+                    this.setupSuper()
+                    javaSourceRoots = gradleCfg.javaSourceRoots.files.toList()
+                    jdkHome = gradleCfg.jdkHome.get()
+                    javaOutputDir = gradleCfg.javaOutputDir.get()
+                    jvmTarget = gradleCfg.jvmTarget.get()
+                    jvmDefaultMode = gradleCfg.jvmDefaultMode.get()
+                }.build()
+            }
+
+            KotlinPlatformType.js, KotlinPlatformType.wasm -> {
+                KSPJsConfig.Builder().apply {
+                    this.setupSuper()
+                    backend = if (platformType == KotlinPlatformType.js) "JS" else "Wasm"
+                }.build()
+            }
+
+            KotlinPlatformType.native -> {
+                KSPNativeConfig.Builder().apply {
+                    this.setupSuper()
+                    target = gradleCfg.konanTargetName.get()
+                }.build()
+            }
+
+            KotlinPlatformType.common -> {
+                KSPCommonConfig.Builder().apply {
+                    this.setupSuper()
+                    // FIXME: targets
+                    targets = emptyList()
+                }.build()
+            }
+        }
         val byteArrayOutputStream = ByteArrayOutputStream()
         val objectOutputStream = ObjectOutputStream(byteArrayOutputStream)
         objectOutputStream.writeObject(kspConfig)

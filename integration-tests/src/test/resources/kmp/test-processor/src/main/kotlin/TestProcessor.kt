@@ -27,7 +27,12 @@ class TestProcessor(
         val list = resolver.getClassDeclarationByName("kotlin.collections.List")
         logger.warn("List has superTypes: ${list!!.superTypes.count() > 0}")
 
-        codeGenerator.createNewFile(Dependencies(false), "", "Foo", "kt").use { output ->
+        codeGenerator.createNewFile(
+            Dependencies(true, *resolver.getAllFiles().toList().toTypedArray()),
+            "",
+            "Foo",
+            "kt"
+        ).use { output ->
             OutputStreamWriter(output).use { writer ->
                 writer.write("package com.example\n\n")
                 writer.write("class Foo {\n")

@@ -165,3 +165,284 @@ class KSPJvmConfig(
         }
     }
 }
+
+class KSPNativeConfig(
+    val targetName: String,
+    moduleName: String,
+    sourceRoots: List<File>,
+    commonSourceRoots: List<File>,
+    libraries: List<File>,
+
+    processorOptions: Map<String, String>,
+
+    projectBaseDir: File,
+    outputBaseDir: File,
+    cachesDir: File,
+
+    classOutputDir: File,
+    kotlinOutputDir: File,
+    resourceOutputDir: File,
+
+    incremental: Boolean,
+    incrementalLog: Boolean,
+    modifiedSources: List<File>,
+    removedSources: List<File>,
+    changedClasses: List<String>,
+
+    languageVersion: String,
+    apiVersion: String,
+
+    allWarningsAsErrors: Boolean,
+    mapAnnotationArgumentsInJava: Boolean,
+) : KSPConfig(
+    moduleName,
+    sourceRoots,
+    commonSourceRoots,
+    libraries,
+
+    processorOptions,
+
+    projectBaseDir,
+    outputBaseDir,
+    cachesDir,
+
+    classOutputDir,
+    kotlinOutputDir,
+    resourceOutputDir,
+
+    incremental,
+    incrementalLog,
+    modifiedSources,
+    removedSources,
+    changedClasses,
+
+    languageVersion,
+    apiVersion,
+
+    allWarningsAsErrors,
+    mapAnnotationArgumentsInJava,
+) {
+    class Builder : KSPConfig.Builder(), Serializable {
+        lateinit var target: String
+
+        fun build(): KSPNativeConfig {
+            return KSPNativeConfig(
+                target,
+                moduleName,
+                sourceRoots,
+                commonSourceRoots,
+                libraries,
+
+                processorOptions,
+
+                projectBaseDir,
+                outputBaseDir,
+                cachesDir,
+                classOutputDir,
+                kotlinOutputDir,
+                resourceOutputDir,
+
+                incremental,
+                incrementalLog,
+                modifiedSources,
+                removedSources,
+                changedClasses,
+
+                languageVersion,
+                apiVersion,
+
+                allWarningsAsErrors,
+                mapAnnotationArgumentsInJava
+            )
+        }
+    }
+}
+
+class KSPJsConfig(
+    val backend: String,
+    moduleName: String,
+    sourceRoots: List<File>,
+    commonSourceRoots: List<File>,
+    libraries: List<File>,
+
+    processorOptions: Map<String, String>,
+
+    projectBaseDir: File,
+    outputBaseDir: File,
+    cachesDir: File,
+
+    classOutputDir: File,
+    kotlinOutputDir: File,
+    resourceOutputDir: File,
+
+    incremental: Boolean,
+    incrementalLog: Boolean,
+    modifiedSources: List<File>,
+    removedSources: List<File>,
+    changedClasses: List<String>,
+
+    languageVersion: String,
+    apiVersion: String,
+
+    allWarningsAsErrors: Boolean,
+    mapAnnotationArgumentsInJava: Boolean,
+) : KSPConfig(
+    moduleName,
+    sourceRoots,
+    commonSourceRoots,
+    libraries,
+
+    processorOptions,
+
+    projectBaseDir,
+    outputBaseDir,
+    cachesDir,
+
+    classOutputDir,
+    kotlinOutputDir,
+    resourceOutputDir,
+
+    incremental,
+    incrementalLog,
+    modifiedSources,
+    removedSources,
+    changedClasses,
+
+    languageVersion,
+    apiVersion,
+
+    allWarningsAsErrors,
+    mapAnnotationArgumentsInJava,
+) {
+    class Builder : KSPConfig.Builder(), Serializable {
+        lateinit var backend: String
+
+        fun build(): KSPJsConfig {
+            return KSPJsConfig(
+                backend,
+                moduleName,
+                sourceRoots,
+                commonSourceRoots,
+                libraries,
+
+                processorOptions,
+
+                projectBaseDir,
+                outputBaseDir,
+                cachesDir,
+                classOutputDir,
+                kotlinOutputDir,
+                resourceOutputDir,
+
+                incremental,
+                incrementalLog,
+                modifiedSources,
+                removedSources,
+                changedClasses,
+
+                languageVersion,
+                apiVersion,
+
+                allWarningsAsErrors,
+                mapAnnotationArgumentsInJava
+            )
+        }
+    }
+}
+
+data class Target(
+    val platform: String,
+    val args: Map<String, String>
+)
+
+class KSPCommonConfig(
+    val targets: List<Target>,
+    moduleName: String,
+    sourceRoots: List<File>,
+    commonSourceRoots: List<File>,
+    libraries: List<File>,
+
+    processorOptions: Map<String, String>,
+
+    projectBaseDir: File,
+    outputBaseDir: File,
+    cachesDir: File,
+
+    classOutputDir: File,
+    kotlinOutputDir: File,
+    resourceOutputDir: File,
+
+    incremental: Boolean,
+    incrementalLog: Boolean,
+    modifiedSources: List<File>,
+    removedSources: List<File>,
+    changedClasses: List<String>,
+
+    languageVersion: String,
+    apiVersion: String,
+
+    allWarningsAsErrors: Boolean,
+    mapAnnotationArgumentsInJava: Boolean,
+) : KSPConfig(
+    moduleName,
+    sourceRoots,
+    commonSourceRoots,
+    libraries,
+
+    processorOptions,
+
+    projectBaseDir,
+    outputBaseDir,
+    cachesDir,
+
+    classOutputDir,
+    kotlinOutputDir,
+    resourceOutputDir,
+
+    incremental,
+    incrementalLog,
+    modifiedSources,
+    removedSources,
+    changedClasses,
+
+    languageVersion,
+    apiVersion,
+
+    allWarningsAsErrors,
+    mapAnnotationArgumentsInJava,
+) {
+    class Builder : KSPConfig.Builder(), Serializable {
+        lateinit var targets: List<Target>
+
+        fun build(): KSPCommonConfig {
+            return KSPCommonConfig(
+                targets,
+                moduleName,
+                sourceRoots,
+                commonSourceRoots,
+                libraries,
+
+                processorOptions,
+
+                projectBaseDir,
+                outputBaseDir,
+                cachesDir,
+                classOutputDir,
+                kotlinOutputDir,
+                resourceOutputDir,
+
+                incremental,
+                incrementalLog,
+                modifiedSources,
+                removedSources,
+                changedClasses,
+
+                languageVersion,
+                apiVersion,
+
+                allWarningsAsErrors,
+                mapAnnotationArgumentsInJava
+            )
+        }
+    }
+}
