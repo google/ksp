@@ -27,7 +27,10 @@ import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.processing.impl.JsPlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
+import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
@@ -101,6 +104,7 @@ import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
@@ -109,14 +113,22 @@ import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProviderImpl
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
+import org.jetbrains.kotlin.platform.CommonPlatforms
+import org.jetbrains.kotlin.platform.JsPlatform
+import org.jetbrains.kotlin.platform.TargetPlatform
+import org.jetbrains.kotlin.platform.js.JsPlatforms
+import org.jetbrains.kotlin.platform.jvm.JdkPlatform
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
+import org.jetbrains.kotlin.platform.konan.NativePlatform
+import org.jetbrains.kotlin.platform.konan.NativePlatforms
+import org.jetbrains.kotlin.platform.wasm.WasmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
 class KotlinSymbolProcessing(
-    val kspConfig: KSPJvmConfig,
+    val kspConfig: KSPConfig,
     val symbolProcessorProviders: List<SymbolProcessorProvider>,
     val logger: KSPLogger
 ) {
@@ -165,7 +177,20 @@ class KotlinSymbolProcessing(
         // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
         val projectStructureProvider = KtModuleProviderBuilder(kotlinCoreProjectEnvironment).apply {
             val compilerConfig = compilerConfiguration
-            val platform = JvmPlatforms.defaultJvmPlatform
+            val platform = when (kspConfig) {
+                is KSPJvmConfig -> {
+                    val jvmTarget = JvmTarget.fromString(kspConfig.jvmTarget) ?: JvmTarget.DEFAULT
+                    JvmPlatforms.jvmPlatformByTargetVersion(jvmTarget)
+                }
+                is KSPJsConfig -> when (kspConfig.backend) {
+                    "WASM" -> WasmPlatforms.Default
+                    "JS" -> JsPlatforms.defaultJsPlatform
+                    else -> throw IllegalArgumentException("Unknown JS backend: ${kspConfig.backend}")
+                }
+                is KSPNativeConfig -> NativePlatforms.nativePlatformByTargetNames(listOf(kspConfig.targetName))
+                is KSPCommonConfig -> CommonPlatforms.defaultCommonPlatform
+                else -> throw IllegalArgumentException("Unknown platform for config: $kspConfig")
+            }
 
             fun KtModuleBuilder.addModuleDependencies(moduleName: String) {
                 val libraryRoots = compilerConfig.jvmModularRoots + compilerConfig.jvmClasspathRoots
@@ -195,8 +220,14 @@ class KotlinSymbolProcessing(
                 addModuleDependencies(moduleName)
 
                 // Single file java source roots are added in reinitJavaFileManager() later.
-                val roots = kspConfig.sourceRoots + kspConfig.commonSourceRoots + kspConfig.javaSourceRoots +
-                    listOf(kspConfig.kotlinOutputDir, kspConfig.javaOutputDir)
+                val roots = mutableListOf<File>()
+                roots.addAll(kspConfig.sourceRoots)
+                roots.addAll(kspConfig.commonSourceRoots)
+                roots.add(kspConfig.kotlinOutputDir)
+                if (kspConfig is KSPJvmConfig) {
+                    roots.addAll(kspConfig.javaSourceRoots)
+                    roots.add(kspConfig.javaOutputDir)
+                }
                 roots.forEach {
                     it.mkdirs()
                 }
@@ -356,14 +387,18 @@ class KotlinSymbolProcessing(
         reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, psiFiles)
 
         val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        val javaRoots = kspConfig.javaSourceRoots + kspConfig.javaOutputDir
-        // Get non-symbolic paths first
-        val javaFiles = javaRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
-            .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
-            // This time is for .java files
-            .sortedBy { Files.isSymbolicLink(it.toPath()) }
-            .distinctBy { it.canonicalPath }
-            .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
+        val javaFiles = if (kspConfig is KSPJvmConfig) {
+            val javaRoots = kspConfig.javaSourceRoots + kspConfig.javaOutputDir
+            // Get non-symbolic paths first
+            javaRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
+                .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
+                // This time is for .java files
+                .sortedBy { Files.isSymbolicLink(it.toPath()) }
+                .distinctBy { it.canonicalPath }
+                .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
+        } else {
+            emptyList()
+        }
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
@@ -376,12 +411,12 @@ class KotlinSymbolProcessing(
         val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
             addKotlinSourceRoots(kspConfig.sourceRoots.map { it.path })
             addKotlinSourceRoot(kspConfig.kotlinOutputDir.path)
-            addJavaSourceRoots(kspConfig.javaSourceRoots)
-            addJavaSourceRoot(kspConfig.javaOutputDir)
-            addJvmClasspathRoots(kspConfig.libraries)
-            put(CommonConfigurationKeys.MODULE_NAME, kspConfig.moduleName)
-            kspConfig.jdkHome?.let {
-                put(JVMConfigurationKeys.JDK_HOME, it)
+            if (kspConfig is KSPJvmConfig) {
+                addJavaSourceRoots(kspConfig.javaSourceRoots)
+                addJavaSourceRoot(kspConfig.javaOutputDir)
+                kspConfig.jdkHome?.let {
+                    put(JVMConfigurationKeys.JDK_HOME, it)
+                }
             }
             val languageVersion = LanguageVersion.fromFullVersionString(kspConfig.languageVersion)!!
             val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
@@ -389,6 +424,8 @@ class KotlinSymbolProcessing(
                 languageVersion,
                 ApiVersion.createByLanguageVersion(apiVersion)
             )
+            addJvmClasspathRoots(kspConfig.libraries)
+            put(CommonConfigurationKeys.MODULE_NAME, kspConfig.moduleName)
         }
 
         val (analysisAPISession, kotlinCoreProjectEnvironment, modules) = createAASession(compilerConfiguration)
@@ -419,7 +456,7 @@ class KotlinSymbolProcessing(
         val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
         val codeGenerator = CodeGeneratorImpl(
             kspConfig.classOutputDir,
-            { kspConfig.javaOutputDir },
+            { if (kspConfig is KSPJvmConfig) kspConfig.javaOutputDir else kspConfig.kotlinOutputDir },
             kspConfig.kotlinOutputDir,
             kspConfig.resourceOutputDir,
             kspConfig.projectBaseDir,
@@ -446,6 +483,7 @@ class KotlinSymbolProcessing(
         val initialDirtySet = allDirtyKSFiles.toSet()
         val allCleanFilePaths = allKSFiles.filterNot { it in initialDirtySet }.map { it.filePath }.toSet()
 
+        val targetPlatform = ResolverAAImpl.ktModule.platform
         val symbolProcessorEnvironment = SymbolProcessorEnvironment(
             kspConfig.processorOptions,
             kspConfig.languageVersion.toKotlinVersion(),
@@ -453,8 +491,7 @@ class KotlinSymbolProcessing(
             logger,
             kspConfig.apiVersion.toKotlinVersion(),
             KotlinCompilerVersion.getVersion().toKotlinVersion(),
-            // TODO: multiplatform
-            listOf(JvmPlatformInfoImpl("JVM", kspConfig.jvmTarget, kspConfig.jvmDefaultMode))
+            targetPlatform.getPlatformInfo(kspConfig)
         )
 
         // Load and instantiate processsors
@@ -669,3 +706,23 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
     org.jetbrains.kotlin.serialization.deserialization.builtins.BuiltInsLoaderImpl::class.java,
 )
+
+fun TargetPlatform.getPlatformInfo(kspConfig: KSPConfig): List<PlatformInfo> =
+    componentPlatforms.map { platform ->
+        when (platform) {
+            is JdkPlatform -> JvmPlatformInfoImpl(
+                platformName = platform.platformName,
+                jvmTarget = platform.targetVersion.toString(),
+                jvmDefaultMode = (kspConfig as? KSPJvmConfig)?.jvmDefaultMode ?: "disable"
+            )
+            is JsPlatform -> JsPlatformInfoImpl(
+                platformName = platform.platformName
+            )
+            is NativePlatform -> NativePlatformInfoImpl(
+                platformName = platform.platformName,
+                targetName = platform.targetName
+            )
+            // Unknown platform; toString() may be more informative than platformName
+            else -> UnknownPlatformInfoImpl(platform.toString())
+        }
+    }

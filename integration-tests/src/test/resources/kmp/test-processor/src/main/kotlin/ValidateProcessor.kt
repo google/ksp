@@ -12,10 +12,12 @@ class ValidateProcessor(val codeGenerator: CodeGenerator, val logger: KSPLogger)
         invoked = true
 
         val toValidate = resolver.getSymbolsWithAnnotation("com.example.MyAnnotation")
-        if (toValidate.firstOrNull() == null || !toValidate.all { it.validate() }) {
-            logger.error("$toValidate.validate(): not ok")
+        toValidate.forEach {
+            if (!it.validate()) {
+                logger.error("$it.validate(): not ok")
+            }
         }
-        if ((toValidate as? KSClassDeclaration)?.asStarProjectedType()?.isError == true) {
+        if ((toValidate.firstOrNull() as? KSClassDeclaration)?.asStarProjectedType()?.isError == true) {
             logger.error("$toValidate.asStarProjectedType(): not ok")
         }
         return emptyList()

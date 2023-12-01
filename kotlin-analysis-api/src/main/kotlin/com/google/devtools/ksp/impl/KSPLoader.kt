@@ -16,7 +16,7 @@
  */
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.processing.KSPJvmConfig
+import com.google.devtools.ksp.processing.KSPConfig
 import com.google.devtools.ksp.processing.KspGradleLogger
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import java.io.ByteArrayInputStream
@@ -31,7 +31,7 @@ class KSPLoader {
             logLevel: Int
         ): Int {
             val objectInputStream = ObjectInputStream(ByteArrayInputStream(kspConfigStream))
-            val kspConfig = objectInputStream.readObject() as KSPJvmConfig
+            val kspConfig = objectInputStream.readObject() as KSPConfig
             val ksp = KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
             return ksp.execute().ordinal
         }
