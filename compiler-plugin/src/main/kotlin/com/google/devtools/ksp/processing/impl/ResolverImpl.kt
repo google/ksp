@@ -544,6 +544,7 @@ class ResolverImpl(
             is KSClassDeclarationImpl -> resolveDeclaration(classDeclaration.ktClassOrObject)
             is KSClassDeclarationDescriptorImpl -> classDeclaration.descriptor
             is KSClassDeclarationJavaImpl -> resolveJavaDeclaration(classDeclaration.psi)
+            is KSClassDeclarationJavaEnumEntryImpl -> resolveJavaDeclaration(classDeclaration.psi)
             else -> throw IllegalStateException("unexpected class: ${classDeclaration.javaClass}")
         } as ClassDescriptor?
     }

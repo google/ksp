@@ -556,7 +556,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
-        runTest("../test-utils/testData/api/signatureMapper.kt")
+        runTest("../kotlin-analysis-api/testData/signatureMapper.kt")
     }
 
     @TestMetadata("superTypes.kt")

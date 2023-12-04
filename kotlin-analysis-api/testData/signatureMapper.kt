@@ -34,7 +34,7 @@
 // DEFAULT: LJavaEnum;
 // values: ()[LJavaEnum;
 // valueOf: (Ljava/lang/String;)LJavaEnum;
-// <init>: (Ljava/lang/String;I)V
+// entries: Lkotlin/enums/EnumEntries;
 // END
 
 // FILE: Cls.kt
