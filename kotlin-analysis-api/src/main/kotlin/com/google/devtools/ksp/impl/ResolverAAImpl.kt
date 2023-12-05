@@ -46,7 +46,16 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
+import org.jetbrains.kotlin.analysis.project.structure.KtBuiltinsModule
+import org.jetbrains.kotlin.analysis.project.structure.KtCodeFragmentModule
+import org.jetbrains.kotlin.analysis.project.structure.KtLibraryModule
+import org.jetbrains.kotlin.analysis.project.structure.KtLibrarySourceModule
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
+import org.jetbrains.kotlin.analysis.project.structure.KtNotUnderContentRootModule
+import org.jetbrains.kotlin.analysis.project.structure.KtScriptDependencyModule
+import org.jetbrains.kotlin.analysis.project.structure.KtScriptModule
+import org.jetbrains.kotlin.analysis.project.structure.KtSdkModule
+import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.types.isRaw
@@ -66,13 +75,13 @@ class ResolverAAImpl(
 ) : Resolver {
     companion object {
         val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
-        private val ktModule_prop: ThreadLocal<KtModule> = ThreadLocal()
+        private val ktModule_prop: ThreadLocal<KtSourceModule> = ThreadLocal()
         var instance
             get() = instance_prop.get()
             set(value) {
                 instance_prop.set(value)
             }
-        var ktModule: KtModule
+        var ktModule: KtSourceModule
             get() = ktModule_prop.get()
             set(value) {
                 ktModule_prop.set(value)
@@ -493,6 +502,11 @@ class ResolverAAImpl(
     @KspExperimental
     override fun getPackagesWithAnnotation(annotationName: String): Sequence<String> {
         TODO("Not yet implemented")
+    }
+
+    @KspExperimental
+    override fun getModuleName(): KSName {
+        return KSNameImpl.getCached((ktModule.stableModuleName ?: ktModule.moduleName).removeSurrounding("<", ">"))
     }
 
     @KspExperimental
