@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
@@ -53,13 +52,13 @@ import org.gradle.work.InputChanges
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import org.jetbrains.kotlin.compilerRunner.konanHome
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
@@ -260,18 +259,7 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinNativeCompilation) {
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
-
-                        // Unlike other platforms, K/N sets up stdlib in the compiler, not KGP,
-                        // meaning that KotlinNativeCompile doesn't have stdlib.
-                        // FIXME: find a solution with KGP, K/N and AA owners
-                        val konanHome = File(project.konanHome)
-                        val klib = File(konanHome, "klib")
-                        val common = File(klib, "common")
-                        val stdlib = File(common, "stdlib")
-                        cfg.libraries.from(stdlib)
-                        val platform = File(klib, "platform")
-                        val target = File(platform, konanTargetName)
-                        cfg.libraries.from(target.listFiles())
+                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
                     }
 
                     // TODO: pass targets of common
@@ -379,6 +367,10 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     @get:Optional
     abstract val konanTargetName: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val konanHome: Property<String>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -485,6 +477,20 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 KSPNativeConfig.Builder().apply {
                     this.setupSuper()
                     target = gradleCfg.konanTargetName.get()
+
+                    // Unlike other platforms, K/N sets up stdlib in the compiler, not KGP,
+                    // meaning that KotlinNativeCompile doesn't have stdlib.
+                    // FIXME: find a solution with KGP, K/N and AA owners
+                    val konanHome = File(gradleCfg.konanHome.get())
+                    val klib = File(konanHome, "klib")
+                    val common = File(klib, "common")
+                    val stdlib = File(common, "stdlib")
+                    libraries += stdlib
+                    val platform = File(klib, "platform")
+                    val targetLibDir = File(platform, target)
+                    targetLibDir.listFiles()?.let {
+                        libraries += it
+                    }
                 }.build()
             }
 
