@@ -48,6 +48,7 @@ class KSTypeReferenceImpl(
         }
     }
 
+    // Remember to recordLookup if the usage is beyond a type reference.
     private val ktType: KtType by lazy {
         analyze { ktTypeReference.getKtType() }
     }
