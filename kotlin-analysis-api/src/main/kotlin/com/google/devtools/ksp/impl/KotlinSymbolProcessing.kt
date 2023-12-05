@@ -469,8 +469,9 @@ class KotlinSymbolProcessing(
         // 2) there is no more new files.
         while (!logger.hasError) {
             logger.logging("round ${++rounds} of processing")
-            // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots to
-            // be resolved. Therefore, due to the implementation
+            // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots
+            // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
+            // are created.
             val firSession = ResolverAAImpl.ktModule.getFirResolveSession(project)
             firSession.useSiteFirSession.registerResolveComponents(dualLookupTracker)
 
