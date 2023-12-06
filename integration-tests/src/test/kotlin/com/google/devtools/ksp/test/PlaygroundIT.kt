@@ -382,7 +382,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
     @Test
     fun testModuleName() {
         File(project.root, "workload/build.gradle.kts")
-        val gradleRunner = GradleRunner.create().withDebug(true).withProjectDir(project.root)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").build().let { result ->
             // TODO figure out why K2 uses the source set name and K1 uses the project name
             val expectedName = if (useKSP2) "workload" else "main"
