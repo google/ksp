@@ -223,6 +223,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
             Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
+        Assert.assertTrue(result.output.contains("w: Language version 2.0 is experimental"))
         project.restore(buildFile.path)
     }
 
@@ -262,6 +263,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
             Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
+        Assert.assertTrue(result.output.contains("w: Language version 2.0 is experimental"))
         project.restore(buildFile.path)
         project.restore(gradleProperties.path)
     }
@@ -281,10 +283,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
         gradleRunner.buildAndCheck("clean", "build") { result ->
             Assert.assertTrue(result.output.contains("language version: 1.5"))
             Assert.assertTrue(result.output.contains("api version: 1.5"))
-            if (!useKSP2) {
-                // In case KSP 1 and KSP 2 uses different compiler versions, ignore this test for KSP 2 for now.
-                Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
-            }
+            Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
         }
         project.restore(buildFile.path)
     }
@@ -300,12 +299,12 @@ class PlaygroundIT(val useKSP2: Boolean) {
         gradleRunner.withArguments("build").buildAndFail().let {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
             Assert.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
-            Assert.assertTrue("Unresolved reference 'AClassBuilder'" in it.output)
+            Assert.assertTrue("Unresolved reference: AClassBuilder" in it.output)
         }
         gradleRunner.withArguments("build").buildAndFail().let {
             Assert.assertEquals(TaskOutcome.UP_TO_DATE, it.task(":workload:kspKotlin")?.outcome)
             Assert.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
-            Assert.assertTrue("Unresolved reference 'AClassBuilder'" in it.output)
+            Assert.assertTrue("Unresolved reference: AClassBuilder" in it.output)
         }
 
         project.restore("workload/build.gradle.kts")

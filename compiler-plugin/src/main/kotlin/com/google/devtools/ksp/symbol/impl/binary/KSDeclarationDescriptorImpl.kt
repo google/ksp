@@ -20,10 +20,10 @@ package com.google.devtools.ksp.symbol.impl.binary
 import com.google.devtools.ksp.memoized
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.backend.common.serialization.findPackage
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.findPackage
 import org.jetbrains.kotlin.load.java.descriptors.JavaClassDescriptor
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parents
@@ -50,7 +50,7 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
             is ClassDescriptor -> KSClassDeclarationDescriptorImpl.getCached(containingDescriptor)
             is FunctionDescriptor -> KSFunctionDeclarationDescriptorImpl.getCached(containingDescriptor)
             else -> null
-        }
+        } as KSDeclaration?
     }
 
     override val parent: KSNode? by lazy {
