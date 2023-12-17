@@ -201,8 +201,10 @@ class ResolverImpl(
 
     // Mitigation for processors with memory leaks
     // https://github.com/google/ksp/issues/1063
+    // https://github.com/google/ksp/issues/1653
     fun tearDown() {
-        KSObjectCacheManager.clear()
+        com.google.devtools.ksp.processing.impl.KSObjectCacheManager.clear()
+        com.google.devtools.ksp.processing.KSObjectCacheManager.clear()
         instance = null
     }
 
