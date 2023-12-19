@@ -80,6 +80,7 @@ import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.computeDefaultRootModules
 import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
@@ -145,8 +146,7 @@ class KotlinSymbolProcessing(
             StandaloneProjectFactory.createProjectEnvironment(
                 projectDisposable,
                 applicationDisposable,
-                false,
-                classLoader = MockProject::class.java.classLoader
+                KotlinCoreApplicationEnvironmentMode.Production
             )
 
         val application: Application = kotlinCoreProjectEnvironment.environment.application
