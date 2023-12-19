@@ -29,6 +29,7 @@
 // intParam: I
 // <init>: (I)V
 // LJavaEnum;
+// <init>: ()V
 // VAL1: LJavaEnum;
 // VAL2: LJavaEnum;
 // DEFAULT: LJavaEnum;
