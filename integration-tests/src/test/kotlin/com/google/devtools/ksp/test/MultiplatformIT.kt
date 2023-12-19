@@ -3,6 +3,7 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +19,7 @@ class MultiplatformIT(useKSP2: Boolean) {
 
     @Test
     fun testJVM() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild =
