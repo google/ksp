@@ -52,6 +52,8 @@
 // parent of Enum: Enum<(RGB..RGB?)>
 // parent of Enum<(RGB..RGB?)>: RGB
 // parent of RGB: File: B.java
+// parent of RGB: synthetic constructor for RGB
+// parent of synthetic constructor for RGB: RGB
 // parent of R: RGB
 // parent of G: RGB
 // parent of B: RGB
