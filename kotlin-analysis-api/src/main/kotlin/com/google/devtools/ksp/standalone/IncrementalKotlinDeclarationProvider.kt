@@ -19,9 +19,10 @@ import org.jetbrains.kotlin.psi.KtScript
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class IncrementalKotlinDeclarationProvider(var del: KotlinDeclarationProvider) : KotlinDeclarationProvider() {
-    override fun computePackageSetWithTopLevelCallableDeclarations(): Set<String>? {
-        return del.computePackageSetWithTopLevelCallableDeclarations()
-    }
+    override val hasSpecificCallablePackageNamesComputation: Boolean
+        get() = del.hasSpecificCallablePackageNamesComputation
+    override val hasSpecificClassifierPackageNamesComputation: Boolean
+        get() = del.hasSpecificClassifierPackageNamesComputation
 
     override fun findFilesForFacade(facadeFqName: FqName): Collection<KtFile> {
         return del.findFilesForFacade(facadeFqName)
