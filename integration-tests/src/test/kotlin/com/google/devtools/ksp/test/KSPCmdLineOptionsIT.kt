@@ -38,7 +38,6 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
         }.maxByOrNull { it.lastModified() }!!
         val compilerArgs = mutableListOf(
             "-no-stdlib",
-            "-language-version", "1.9",
             "-Xplugin=${kspPluginJar.absolutePath}",
             "-Xplugin=${kspApiJar.absolutePath}",
             "-P", "plugin:$kspPluginId:apclasspath=${processorJar.absolutePath}",
