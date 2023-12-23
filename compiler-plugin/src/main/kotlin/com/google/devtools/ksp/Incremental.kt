@@ -411,7 +411,7 @@ class IncrementalContext(
 
         logSourceToOutputs(outputs, sourceToOutputs)
 
-        sourceToOutputsMap.flush()
+        sourceToOutputsMap.flush(false)
     }
 
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
@@ -474,15 +474,15 @@ class IncrementalContext(
             update(symbolsMap, updatedSymbols)
             remove(symbolsMap, removed)
         } else {
-            symbolsMap.clear()
+            symbolsMap.clean()
             update(symbolsMap, updatedSymbols)
 
-            sealedMap.clear()
+            sealedMap.clean()
             update(sealedMap, updatedSealed)
         }
-        symbolsMap.flush()
+        symbolsMap.flush(false)
         symbolsMap.close()
-        sealedMap.flush()
+        sealedMap.flush(false)
         sealedMap.close()
     }
 
