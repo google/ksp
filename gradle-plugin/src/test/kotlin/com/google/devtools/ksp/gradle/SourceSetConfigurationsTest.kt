@@ -180,7 +180,7 @@ class SourceSetConfigurationsTest {
                         val baseVariant = (this as com.android.build.gradle.internal.api.BaseVariantImpl)
                         val variantData = baseVariant::class.java.getMethod("getVariantData").invoke(baseVariant)
                             as com.android.build.gradle.internal.variant.BaseVariantData
-                        variantData.extraGeneratedSourceFoldersOnlyInModel.forEach {
+                        variantData.extraGeneratedSourceFolders.forEach {
                             println("SRC:" + it.relativeTo(buildDir).path)
                         }
                         variantData.allPreJavacGeneratedBytecode.forEach {
@@ -238,6 +238,21 @@ class SourceSetConfigurationsTest {
                 it.path.contains("ksp")
             }
         ).containsExactly(
+            SourceFolder(
+                "debug", "SRC:generated/ksp/debug/java"
+            ),
+            SourceFolder(
+                "release", "SRC:generated/ksp/release/java"
+            ),
+            SourceFolder(
+                "debugAndroidTest", "SRC:generated/ksp/debugAndroidTest/java"
+            ),
+            SourceFolder(
+                "debugUnitTest", "SRC:generated/ksp/debugUnitTest/java"
+            ),
+            SourceFolder(
+                "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/java"
+            ),
             SourceFolder(
                 "debug", "SRC:generated/ksp/debug/kotlin"
             ),
