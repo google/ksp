@@ -528,6 +528,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         kspTask.compilerOptions.freeCompilerArgs.addAll(
                             kotlinCompileTask.compilerOptions.freeCompilerArgs
                         )
+                        kspTask.produceUnpackedKlib.set(false)
                         configureLanguageVersion(kspTask)
                         // Cannot use lambda; See below for details.
                         // https://docs.gradle.org/7.2/userguide/validation_problems.html#implementation_unknown
