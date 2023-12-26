@@ -29,6 +29,7 @@ jobs:
         # A commit is a version bump IFF it touches third_party/prebuilt/repo
         DONT_PICK=$(cat <<EOF
         d44ad7d9824aa0f073ce3c53e79361ae0f030d3b
+        1a4ed56e3dc43f1d075fb2fa1f9f12f29bcd43cd
         EOF
         )
         git config --global user.email "kotlin-symbol-processing@google.com"
