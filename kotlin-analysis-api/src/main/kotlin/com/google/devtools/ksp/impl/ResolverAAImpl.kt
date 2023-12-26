@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
@@ -83,6 +84,9 @@ class ResolverAAImpl(
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     val classBinaryCache = ClsKotlinBinaryClassCache()
+    private val packageInfoFiles by lazy {
+        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
+    }
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
@@ -486,14 +490,24 @@ class ResolverAAImpl(
         return type is KSTypeImpl && (type.type as KtFirType).coneType.isRaw()
     }
 
+    internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement?.annotationList
+        ?.annotations?.map { KSAnnotationJavaImpl.getCached(it, this) } ?: emptyList<KSAnnotation>()
+
     @KspExperimental
     override fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation> {
-        TODO("Not yet implemented")
+        return packageInfoFiles.singleOrNull { it.packageName.asString() == packageName }
+            ?.getPackageAnnotations()?.asSequence() ?: emptySequence()
     }
 
     @KspExperimental
     override fun getPackagesWithAnnotation(annotationName: String): Sequence<String> {
-        TODO("Not yet implemented")
+        return packageInfoFiles.filter {
+            it.getPackageAnnotations().any {
+                (it.annotationType.element as? KSClassifierReference)?.referencedName()
+                    ?.substringAfterLast(".") == annotationName.substringAfterLast(".") &&
+                    it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+            }
+        }.map { it.packageName.asString() }
     }
 
     @KspExperimental
