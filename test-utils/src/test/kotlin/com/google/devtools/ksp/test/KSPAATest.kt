@@ -459,6 +459,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/overridee/overrideOrder.kt")
     }
 
+    @TestMetadata("packageAnnotations.kt")
+    @Test
+    fun testPackageAnnotation() {
+        runTest("../test-utils/testData/api/packageAnnotations.kt")
+    }
+
     @TestMetadata("primaryConstructorOverride.kt")
     @Test
     fun testPrimaryConstructorOverride() {
