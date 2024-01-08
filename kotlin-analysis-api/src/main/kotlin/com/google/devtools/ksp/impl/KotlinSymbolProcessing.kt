@@ -67,16 +67,18 @@ import org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.FirStandaloneServiceRegistrar
+import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.KtStaticProjectStructureProvider
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
+import org.jetbrains.kotlin.analysis.project.structure.KtBinaryModule
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
+import org.jetbrains.kotlin.analysis.project.structure.allDirectDependencies
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.impl.KtModuleProviderImpl
 import org.jetbrains.kotlin.analysis.project.structure.impl.getSourceFilePaths
 import org.jetbrains.kotlin.analysis.providers.*
 import org.jetbrains.kotlin.analysis.providers.impl.*
@@ -160,7 +162,6 @@ class KotlinSymbolProcessing(
         val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment =
             StandaloneProjectFactory.createProjectEnvironment(
                 projectDisposable,
-                applicationDisposable,
                 KotlinCoreApplicationEnvironmentMode.Production
             )
 
@@ -238,7 +239,7 @@ class KotlinSymbolProcessing(
         }.build()
 
         // register services and build session
-        val ktModuleProviderImpl = projectStructureProvider as KtModuleProviderImpl
+        val ktModuleProviderImpl = projectStructureProvider as KtStaticProjectStructureProvider
         val modules = ktModuleProviderImpl.allKtModules
         val allSourceFiles = ktModuleProviderImpl.allSourceFiles
         StandaloneProjectFactory.registerServicesForProjectEnvironment(
@@ -263,7 +264,8 @@ class KotlinSymbolProcessing(
                 KotlinPsiDeclarationProviderFactory::class.java,
                 KotlinStaticPsiDeclarationProviderFactory(
                     this,
-                    ktModuleProviderImpl.binaryModules,
+                    ktModuleProviderImpl.allKtModules.flatMap { it.allDirectDependencies() }
+                        .filterIsInstance<KtBinaryModule>(),
                     kotlinCoreProjectEnvironment.environment.jarFileSystem as CoreJarFileSystem
                 )
             )
