@@ -20,6 +20,7 @@
 // EXPECTED:
 // java.io.IOException,java.util.NoSuchElementException
 // java.io.IOException,java.lang.IndexOutOfBoundsException
+// ThrowsException.method.T
 // java.io.IOException,java.util.NoSuchElementException
 // java.lang.IndexOutOfBoundsException
 // java.io.IOException
@@ -89,6 +90,8 @@ public class ThrowsException {
     public int foo() throws IOException, IndexOutOfBoundsException{
         return 1;
     }
+
+    <T extends Throwable> void method() throws T {}
 }
 // FILE: a.kt
 class ThrowsKt {

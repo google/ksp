@@ -385,7 +385,7 @@ class ResolverAAImpl(
                 val psi = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as PsiMethod
                 psi.throwsList.referencedTypes.asSequence().mapNotNull {
                     analyze {
-                        it.resolve()?.qualifiedName?.let { getClassDeclarationByName(it)?.asStarProjectedType() }
+                        it.asKtType(psi)?.let { KSTypeImpl.getCached(it) }
                     }
                 }
             }

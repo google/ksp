@@ -898,7 +898,8 @@ class ResolverImpl(
         return when (function.origin) {
             Origin.JAVA -> {
                 val psi = (function as KSFunctionDeclarationJavaImpl).psi
-                psi.throwsList.referencedTypes.asSequence().map { getKSTypeCached(resolveJavaType(it)) }
+                psi.throwsList.referencedTypes.asSequence()
+                    .map { KSTypeReferenceJavaImpl.getCached(it, function).resolve() }
             }
             Origin.KOTLIN -> {
                 extractThrowsAnnotation(function)
