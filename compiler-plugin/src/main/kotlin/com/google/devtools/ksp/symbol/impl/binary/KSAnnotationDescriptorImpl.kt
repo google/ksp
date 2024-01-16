@@ -128,8 +128,10 @@ class KSAnnotationDescriptorImpl private constructor(
 }
 
 private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
-    val ksName = KSNameImpl.getCached(this.asSingleFqName().asString().replace("$", "."))
-    return ResolverImpl.instance!!.getClassDeclarationByName(ksName)
+    return ResolverImpl.instance!!.getClassDeclarationByName(this.asSingleFqName().asString()) ?: run {
+        val ksName = KSNameImpl.getCached(asSingleFqName().asString().replace("$", "."))
+        ResolverImpl.instance!!.getClassDeclarationByName(ksName)
+    }
 }
 
 private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProjectedType()
