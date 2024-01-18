@@ -13,9 +13,15 @@ class TypeAnnotationProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val myList = resolver.getClassDeclarationByName("MyClass")!!.getDeclaredProperties().single()
+        val myList = resolver.getClassDeclarationByName("MyClass")!!.getDeclaredProperties().single {
+            it.simpleName.asString() == "myList"
+        }
+        val myAlias = resolver.getClassDeclarationByName("MyClass")!!.getDeclaredProperties().single {
+            it.simpleName.asString() == "myAlias"
+        }
         val myStringClass = resolver.getClassDeclarationByName("MyStringClass")!!.asStarProjectedType()
         result.add(myList.type.resolve().annotations.joinToString())
+        result.add(myAlias.type.resolve().annotations.joinToString())
         result.add(myList.asMemberOf(myStringClass).annotations.joinToString())
         result.add(myList.type.resolve().let { it.replace(it.arguments) }.annotations.joinToString())
         result.add(myList.type.resolve().starProjection().annotations.joinToString())
