@@ -20,13 +20,16 @@
 // TEST PROCESSOR: TypeAnnotationProcessor
 // EXPECTED:
 // @JvmSuppressWildcards
+// @JvmWildcard
 // @JvmSuppressWildcards
 // @JvmSuppressWildcards
 // @JvmSuppressWildcards
 // END
-
+interface MyType
+typealias MyAlias = @JvmWildcard MyType
 class MyClass<T> {
     var myList: @JvmSuppressWildcards List<Foo> = TODO()
+    var myAlias: MyAlias = TODO()
 }
 
 class MyStringClass: MyClass<String> {}
