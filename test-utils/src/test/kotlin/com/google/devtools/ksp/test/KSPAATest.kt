@@ -161,7 +161,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/companion.kt")
     }
 
-    @Disabled
     @TestMetadata("constProperties.kt")
     @Test
     fun testConstProperties() {
