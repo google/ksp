@@ -463,23 +463,37 @@ class ResolverAAImpl(
         }
     }
 
-    // TODO: optimization and type alias handling.
+    // Currently, all annotation types are imlemented by KSTypeReferenceResolvedImpl.
+    // The short-name-check optimization doesn't help.
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
-
-        for (file in getNewFiles()) {
-            file.accept(visitor, Unit)
-        }
-
-        val deferred = deferredSymbols.values.flatten().mapNotNull {
-            it.restore()
-        }.toSet()
-
-        return (visitor.symbols + deferred).asSequence().filter {
+        val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
+        return (newSymbols + deferredSymbolsRestored).asSequence().filter {
             it.annotations.any {
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
             }
         }
+    }
+
+    private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
+        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
+
+        for (file in newKSFiles) {
+            file.accept(visitor, Unit)
+        }
+
+        return visitor.symbols
+    }
+
+    private val deferredSymbolsRestored: Set<KSAnnotated> by lazy {
+        deferredSymbols.values.flatten().mapNotNull { it.restore() }.toSet()
+    }
+
+    private val newAnnotatedSymbols: Collection<KSAnnotated> by lazy {
+        collectAnnotatedSymbols(false)
+    }
+
+    private val newAnnotatedSymbolsWithLocals: Collection<KSAnnotated> by lazy {
+        collectAnnotatedSymbols(true)
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
