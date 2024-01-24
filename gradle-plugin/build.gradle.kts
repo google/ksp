@@ -29,6 +29,8 @@ dependencies {
     compileOnly("com.android.tools.build:gradle:$agpBaseVersion")
     compileOnly(gradleApi())
     compileOnly(project(":kotlin-analysis-api"))
+    // Ensure stdlib version is not inconsistent due to kotlin plugin version.
+    compileOnly(kotlin("stdlib", version = kotlinBaseVersion))
     implementation(project(":api"))
     implementation(project(":common-deps"))
     testImplementation(gradleApi())
