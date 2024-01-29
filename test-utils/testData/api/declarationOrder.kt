@@ -68,6 +68,10 @@
 // overloaded:(I)V
 // overloaded:()V
 // overloaded:(Ljava/lang/String;Ljava/lang/String;)V
+// equals:(Ljava/lang/Object;)Z
+// hashCode:()I
+// toString:()Ljava/lang/String;
+// <init>:()V
 // END
 // MODULE: module1
 // FILE: lib/KotlinClass.kt

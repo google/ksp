@@ -318,8 +318,8 @@ class ResolverAAImpl(
         val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal
             ?: return container.declarations
         val virtualFile = analyze {
-            (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile
-        }!!
+            (fileManager.findClass(classId, analysisScope) as? JavaClassImpl)?.virtualFile
+        } ?: return container.declarations
         val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
