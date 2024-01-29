@@ -37,6 +37,11 @@ class DeclarationOrderProcessor : AbstractTestProcessor() {
                     }
             )
         }
+        result.addAll(
+            resolver.getDeclarationsInSourceOrder(resolver.getClassDeclarationByName("kotlin.Any")!!).map {
+                it.toSignature(resolver)
+            }
+        )
         return emptyList()
     }
 
