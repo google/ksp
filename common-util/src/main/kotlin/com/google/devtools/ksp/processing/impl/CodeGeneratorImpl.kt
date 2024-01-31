@@ -22,6 +22,8 @@ import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -94,6 +96,42 @@ class CodeGeneratorImpl(
         val path = pathOf(packageName, fileName, extensionName)
         val files = classes.map {
             it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
+        }
+        associate(files, path, extensionToDirectory(extensionName))
+    }
+
+    // FIXME: associate with the containing FileKt.
+    // The containing FileKt is unfortunately a backend thing and is not available in Kotlin metadata.
+    // Therefore, the only way to get it seems to be traversing bytecode and find the functions of interest.
+    //
+    // This implementation associates anyChangesWildcard, which is an overkill.
+    override fun associateWithFunctions(
+        functions: List<KSFunctionDeclaration>,
+        packageName: String,
+        fileName: String,
+        extensionName: String
+    ) {
+        val path = pathOf(packageName, fileName, extensionName)
+        val files = functions.map {
+            it.containingFile ?: anyChangesWildcard
+        }
+        associate(files, path, extensionToDirectory(extensionName))
+    }
+
+    // FIXME: associate with the containing FileKt.
+    // The containing FileKt is unfortunately a backend thing and is not available in Kotlin metadata.
+    // Therefore, the only way to get it seems to be traversing bytecode and find the functions of interest.
+    //
+    // This implementation associates anyChangesWildcard, which is an overkill.
+    override fun associateWithProperties(
+        properties: List<KSPropertyDeclaration>,
+        packageName: String,
+        fileName: String,
+        extensionName: String
+    ) {
+        val path = pathOf(packageName, fileName, extensionName)
+        val files = properties.map {
+            it.containingFile ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
