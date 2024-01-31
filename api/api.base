@@ -61,6 +61,8 @@ package com.google.devtools.ksp.processing {
     method public void associate(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
     method public void associateByPath(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String path, @NonNull String extensionName = "kt");
     method public void associateWithClasses(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSClassDeclaration> classes, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method public void associateWithFunctions(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFunctionDeclaration> functions, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method public void associateWithProperties(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSPropertyDeclaration> properties, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
     method @NonNull public java.io.OutputStream createNewFile(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
     method @NonNull public java.io.OutputStream createNewFileByPath(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String path, @NonNull String extensionName = "kt");
     method @NonNull public java.util.Collection<java.io.File> getGeneratedFile();
@@ -81,6 +83,13 @@ package com.google.devtools.ksp.processing {
   public static final class Dependencies.Companion {
     method @NonNull public com.google.devtools.ksp.processing.Dependencies getALL_FILES();
     property @NonNull public final com.google.devtools.ksp.processing.Dependencies ALL_FILES;
+  }
+
+  public enum ExitCode {
+    method @NonNull public static com.google.devtools.ksp.processing.ExitCode valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
+    method @NonNull public static com.google.devtools.ksp.processing.ExitCode[] values();
+    enum_constant public static final com.google.devtools.ksp.processing.ExitCode OK;
+    enum_constant public static final com.google.devtools.ksp.processing.ExitCode PROCESSING_ERROR;
   }
 
   public interface JsPlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
