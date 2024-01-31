@@ -61,6 +61,8 @@ package com.google.devtools.ksp.processing {
     method public void associate(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
     method public void associateByPath(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String path, @NonNull String extensionName = "kt");
     method public void associateWithClasses(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSClassDeclaration> classes, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method public void associateWithFunctions(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFunctionDeclaration> functions, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
+    method public void associateWithProperties(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSPropertyDeclaration> properties, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
     method @NonNull public java.io.OutputStream createNewFile(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
     method @NonNull public java.io.OutputStream createNewFileByPath(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String path, @NonNull String extensionName = "kt");
     method @NonNull public java.util.Collection<java.io.File> getGeneratedFile();

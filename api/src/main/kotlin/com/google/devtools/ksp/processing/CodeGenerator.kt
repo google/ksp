@@ -138,6 +138,42 @@ interface CodeGenerator {
     )
 
     val generatedFile: Collection<File>
+
+    /**
+     * Associate [functions] to an output file.
+     *
+     * @param functions are [KSFunctionDeclaration]s from which this output is built. Only those that are obtained
+     *              directly from [Resolver] are required.
+     * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
+     * @param fileName file name
+     * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
+     *                      Otherwise its creation is only considered in incremental processing.
+     * @see [CodeGenerator] for more details.
+     */
+    fun associateWithFunctions(
+        functions: List<KSFunctionDeclaration>,
+        packageName: String,
+        fileName: String,
+        extensionName: String = "kt"
+    )
+
+    /**
+     * Associate [properties] to an output file.
+     *
+     * @param properties are [KSPropertyDeclaration]s from which this output is built. Only those that are obtained
+     *              directly from [Resolver] are required.
+     * @param packageName corresponds to the relative path of the generated file; using either '.'or '/' as separator.
+     * @param fileName file name
+     * @param extensionName If "kt" or "java", this file will participate in subsequent compilation.
+     *                      Otherwise its creation is only considered in incremental processing.
+     * @see [CodeGenerator] for more details.
+     */
+    fun associateWithProperties(
+        properties: List<KSPropertyDeclaration>,
+        packageName: String,
+        fileName: String,
+        extensionName: String = "kt"
+    )
 }
 
 /**
