@@ -64,17 +64,15 @@ class Validator : SymbolProcessor {
         codeGenerator.createNewFile(Dependencies(false), "p1", "l5", "log")
         codeGenerator.associateWithClasses(listOf(l5), "p1", "l5", "log")
 
-        // create an output from MyTopFunc1, declared in TopFunc1.kt, and k3
+        // create an output from MyTopFunc1, declared in TopFunc1.kt
         val myTopFunc1 = resolver.getFunctionDeclarationsByName("p1.MyTopFunc1", true).single()
         codeGenerator.createNewFile(Dependencies(false), "p1", "MyTopFunc1", "log")
         codeGenerator.associateWithFunctions(listOf(myTopFunc1), "p1", "MyTopFunc1", "log")
-        codeGenerator.associateWithClasses(listOf(k3), "p1", "MyTopFunc1", "log")
 
-        // create an output from MyTopFunc1, declared in TopFunc1.kt, and k3
+        // create an output from MyTopProp1, declared in TopFunc1.kt
         val myTopProp1 = resolver.getPropertyDeclarationByName("p1.MyTopProp1", true)!!
         codeGenerator.createNewFile(Dependencies(false), "p1", "MyTopProp1", "log")
         codeGenerator.associateWithProperties(listOf(myTopProp1), "p1", "MyTopProp1", "log")
-        codeGenerator.associateWithClasses(listOf(k3), "p1", "MyTopProp1", "log")
         logger.warn("processing done")
 
         processed = true
