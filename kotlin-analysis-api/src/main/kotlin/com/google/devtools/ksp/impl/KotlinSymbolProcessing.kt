@@ -498,7 +498,8 @@ class KotlinSymbolProcessing(
             logger,
             kspConfig.apiVersion.toKotlinVersion(),
             KotlinCompilerVersion.getVersion().toKotlinVersion(),
-            targetPlatform.getPlatformInfo(kspConfig)
+            targetPlatform.getPlatformInfo(kspConfig),
+            KotlinVersion(2, 0)
         )
 
         // Load and instantiate processsors

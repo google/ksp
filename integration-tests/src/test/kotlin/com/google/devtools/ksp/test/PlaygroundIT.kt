@@ -284,6 +284,8 @@ class PlaygroundIT(val useKSP2: Boolean) {
                 // In case KSP 1 and KSP 2 uses different compiler versions, ignore this test for KSP 2 for now.
                 Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
             }
+            val expectedKspVersion = if (useKSP2) "2.0" else "1.0"
+            Assert.assertTrue(result.output.contains("ksp version: $expectedKspVersion"))
         }
         project.restore(buildFile.path)
     }

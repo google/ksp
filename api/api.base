@@ -83,6 +83,13 @@ package com.google.devtools.ksp.processing {
     property @NonNull public final com.google.devtools.ksp.processing.Dependencies ALL_FILES;
   }
 
+  public enum ExitCode {
+    method @NonNull public static com.google.devtools.ksp.processing.ExitCode valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
+    method @NonNull public static com.google.devtools.ksp.processing.ExitCode[] values();
+    enum_constant public static final com.google.devtools.ksp.processing.ExitCode OK;
+    enum_constant public static final com.google.devtools.ksp.processing.ExitCode PROCESSING_ERROR;
+  }
+
   public interface JsPlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
   }
 
@@ -187,10 +194,12 @@ package com.google.devtools.ksp.processing {
   public final class SymbolProcessorEnvironment {
     ctor public SymbolProcessorEnvironment(@NonNull java.util.Map<java.lang.String,java.lang.String> options, @NonNull kotlin.KotlinVersion kotlinVersion, @NonNull com.google.devtools.ksp.processing.CodeGenerator codeGenerator, @NonNull com.google.devtools.ksp.processing.KSPLogger logger);
     ctor public SymbolProcessorEnvironment(@NonNull java.util.Map<java.lang.String,java.lang.String> options, @NonNull kotlin.KotlinVersion kotlinVersion, @NonNull com.google.devtools.ksp.processing.CodeGenerator codeGenerator, @NonNull com.google.devtools.ksp.processing.KSPLogger logger, @NonNull kotlin.KotlinVersion apiVersion, @NonNull kotlin.KotlinVersion compilerVersion, @NonNull java.util.List<? extends com.google.devtools.ksp.processing.PlatformInfo> platforms);
+    ctor public SymbolProcessorEnvironment(@NonNull java.util.Map<java.lang.String,java.lang.String> options, @NonNull kotlin.KotlinVersion kotlinVersion, @NonNull com.google.devtools.ksp.processing.CodeGenerator codeGenerator, @NonNull com.google.devtools.ksp.processing.KSPLogger logger, @NonNull kotlin.KotlinVersion apiVersion, @NonNull kotlin.KotlinVersion compilerVersion, @NonNull java.util.List<? extends com.google.devtools.ksp.processing.PlatformInfo> platforms, @NonNull kotlin.KotlinVersion kspVersion);
     method @NonNull public kotlin.KotlinVersion getApiVersion();
     method @NonNull public com.google.devtools.ksp.processing.CodeGenerator getCodeGenerator();
     method @NonNull public kotlin.KotlinVersion getCompilerVersion();
     method @NonNull public kotlin.KotlinVersion getKotlinVersion();
+    method @NonNull public kotlin.KotlinVersion getKspVersion();
     method @NonNull public com.google.devtools.ksp.processing.KSPLogger getLogger();
     method @NonNull public java.util.Map<java.lang.String,java.lang.String> getOptions();
     method @NonNull public java.util.List<com.google.devtools.ksp.processing.PlatformInfo> getPlatforms();
@@ -198,6 +207,7 @@ package com.google.devtools.ksp.processing {
     property @NonNull public final com.google.devtools.ksp.processing.CodeGenerator codeGenerator;
     property @NonNull public final kotlin.KotlinVersion compilerVersion;
     property @NonNull public final kotlin.KotlinVersion kotlinVersion;
+    property @NonNull public final kotlin.KotlinVersion kspVersion;
     property @NonNull public final com.google.devtools.ksp.processing.KSPLogger logger;
     property @NonNull public final java.util.Map<java.lang.String,java.lang.String> options;
     property @NonNull public final java.util.List<com.google.devtools.ksp.processing.PlatformInfo> platforms;

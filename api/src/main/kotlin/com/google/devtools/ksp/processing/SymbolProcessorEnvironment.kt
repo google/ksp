@@ -54,6 +54,11 @@ class SymbolProcessorEnvironment(
      * There can be multiple platforms in a metadata compilation.
      */
     val platforms: List<PlatformInfo>,
+
+    /**
+     * KSP version
+     */
+    val kspVersion: KotlinVersion,
 ) {
     // For compatibility with KSP 1.0.2 and earlier
     constructor(
@@ -68,6 +73,26 @@ class SymbolProcessorEnvironment(
         logger,
         kotlinVersion,
         kotlinVersion,
-        emptyList()
+        emptyList(),
+        KotlinVersion(1, 0)
+    )
+
+    constructor(
+        options: Map<String, String>,
+        kotlinVersion: KotlinVersion,
+        codeGenerator: CodeGenerator,
+        logger: KSPLogger,
+        apiVersion: KotlinVersion,
+        compilerVersion: KotlinVersion,
+        platforms: List<PlatformInfo>,
+    ) : this(
+        options,
+        kotlinVersion,
+        codeGenerator,
+        logger,
+        apiVersion,
+        compilerVersion,
+        platforms,
+        KotlinVersion(1, 0)
     )
 }

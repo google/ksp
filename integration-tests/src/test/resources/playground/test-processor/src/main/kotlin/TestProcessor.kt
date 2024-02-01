@@ -278,6 +278,7 @@ class TestProcessorProvider2 : SymbolProcessorProvider {
             env.logger.warn("language version: ${env.kotlinVersion}")
             env.logger.warn("api version: ${env.apiVersion}")
             env.logger.warn("compiler version: ${env.compilerVersion}")
+            env.logger.warn("ksp version: ${env.kspVersion}")
             env.platforms.filterIsInstance<JvmPlatformInfo>().single().let {
                 env.logger.warn("platform: $it")
                 env.logger.warn("jvm default mode: ${it.jvmDefaultMode}")
