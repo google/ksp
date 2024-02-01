@@ -79,7 +79,6 @@ class IncrementalCPIT(val useKSP2: Boolean) {
 
     val func2Dirty = listOf(
         "l1/src/main/kotlin/p1/TopFunc1.kt" to setOf(
-            "w: [ksp] p1/K3.kt",
             "w: [ksp] processing done",
         ),
     )
@@ -126,7 +125,6 @@ class IncrementalCPIT(val useKSP2: Boolean) {
 
     val prop2Dirty = listOf(
         "l1/src/main/kotlin/p1/TopProp1.kt" to setOf(
-            "w: [ksp] p1/K3.kt",
             "w: [ksp] processing done",
         ),
     )
