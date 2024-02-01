@@ -351,11 +351,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaTypes2.kt")
     }
 
-    @Disabled
     @TestMetadata("javaWildcards2.kt")
     @Test
     fun testJavaWildcards2() {
-        runTest("../test-utils/testData/api/javaWildcards2.kt")
+        runTest("../kotlin-analysis-api/testData/javaWildcards2.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")
