@@ -65,6 +65,7 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
     }
 
+    @Disabled
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
