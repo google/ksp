@@ -36,6 +36,15 @@ class ThrowListProcessor : AbstractTestProcessor() {
                     )
             ).toResult()
         )
+        result.add(
+            resolver.getJvmCheckedException(
+                (
+                    jlass.declarations.single {
+                        it.simpleName.asString() == "method"
+                    } as KSFunctionDeclaration
+                    )
+            ).toResult()
+        )
         val propertyA = klass.declarations.single { it.simpleName.asString() == "a" } as KSPropertyDeclaration
         result.add(resolver.getJvmCheckedException(propertyA.getter!!).toResult())
         result.add(resolver.getJvmCheckedException(propertyA.setter!!).toResult())

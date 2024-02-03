@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
@@ -62,7 +63,8 @@ class ResolverAAImpl(
     val allKSFiles: List<KSFile>,
     val newKSFiles: List<KSFile>,
     val deferredSymbols: Map<SymbolProcessor, List<Restorable>>,
-    val project: Project
+    val project: Project,
+    val incrementalContext: IncrementalContextAA,
 ) : Resolver {
     companion object {
         val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
@@ -82,6 +84,9 @@ class ResolverAAImpl(
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     val classBinaryCache = ClsKotlinBinaryClassCache()
+    private val packageInfoFiles by lazy {
+        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
+    }
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
@@ -313,8 +318,8 @@ class ResolverAAImpl(
         val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal
             ?: return container.declarations
         val virtualFile = analyze {
-            (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile
-        }!!
+            (fileManager.findClass(classId, analysisScope) as? JavaClassImpl)?.virtualFile
+        } ?: return container.declarations
         val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
@@ -380,7 +385,7 @@ class ResolverAAImpl(
                 val psi = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as PsiMethod
                 psi.throwsList.referencedTypes.asSequence().mapNotNull {
                     analyze {
-                        it.resolve()?.qualifiedName?.let { getClassDeclarationByName(it)?.asStarProjectedType() }
+                        it.asKtType(psi)?.let { KSTypeImpl.getCached(it) }
                     }
                 }
             }
@@ -458,23 +463,37 @@ class ResolverAAImpl(
         }
     }
 
-    // TODO: optimization and type alias handling.
+    // Currently, all annotation types are imlemented by KSTypeReferenceResolvedImpl.
+    // The short-name-check optimization doesn't help.
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
-
-        for (file in getNewFiles()) {
-            file.accept(visitor, Unit)
-        }
-
-        val deferred = deferredSymbols.values.flatten().mapNotNull {
-            it.restore()
-        }.toSet()
-
-        return (visitor.symbols + deferred).asSequence().filter {
+        val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
+        return (newSymbols + deferredSymbolsRestored).asSequence().filter {
             it.annotations.any {
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
             }
         }
+    }
+
+    private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
+        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
+
+        for (file in newKSFiles) {
+            file.accept(visitor, Unit)
+        }
+
+        return visitor.symbols
+    }
+
+    private val deferredSymbolsRestored: Set<KSAnnotated> by lazy {
+        deferredSymbols.values.flatten().mapNotNull { it.restore() }.toSet()
+    }
+
+    private val newAnnotatedSymbols: Collection<KSAnnotated> by lazy {
+        collectAnnotatedSymbols(false)
+    }
+
+    private val newAnnotatedSymbolsWithLocals: Collection<KSAnnotated> by lazy {
+        collectAnnotatedSymbols(true)
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -485,14 +504,24 @@ class ResolverAAImpl(
         return type is KSTypeImpl && (type.type as KtFirType).coneType.isRaw()
     }
 
+    internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement?.annotationList
+        ?.annotations?.map { KSAnnotationJavaImpl.getCached(it, this) } ?: emptyList<KSAnnotation>()
+
     @KspExperimental
     override fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation> {
-        TODO("Not yet implemented")
+        return packageInfoFiles.singleOrNull { it.packageName.asString() == packageName }
+            ?.getPackageAnnotations()?.asSequence() ?: emptySequence()
     }
 
     @KspExperimental
     override fun getPackagesWithAnnotation(annotationName: String): Sequence<String> {
-        TODO("Not yet implemented")
+        return packageInfoFiles.filter {
+            it.getPackageAnnotations().any {
+                (it.annotationType.element as? KSClassifierReference)?.referencedName()
+                    ?.substringAfterLast(".") == annotationName.substringAfterLast(".") &&
+                    it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+            }
+        }.map { it.packageName.asString() }
     }
 
     @KspExperimental
@@ -534,6 +563,11 @@ class ResolverAAImpl(
             is KSPropertyDeclarationImpl -> overridee.ktPropertySymbol
             else -> return false
         }
+        overrider.closestClassDeclaration()?.asStarProjectedType()?.let {
+            recordLookupWithSupertypes((it as KSTypeImpl).type)
+        }
+        recordLookupForPropertyOrMethod(overrider)
+        recordLookupForPropertyOrMethod(overridee)
         return analyze {
             overriderSymbol.getAllOverriddenSymbols().contains(overrideeSymbol) ||
                 overriderSymbol.getIntersectionOverriddenSymbols().contains(overrideeSymbol)
@@ -545,8 +579,11 @@ class ResolverAAImpl(
         overridee: KSDeclaration,
         containingClass: KSClassDeclaration
     ): Boolean {
+        recordLookupForPropertyOrMethod(overrider)
+        recordLookupForPropertyOrMethod(overridee)
         return when (overrider) {
             is KSPropertyDeclaration -> containingClass.getAllProperties().singleOrNull {
+                recordLookupForPropertyOrMethod(it)
                 it.simpleName.asString() == overrider.simpleName.asString()
             }?.let { overrides(it, overridee) } ?: false
             is KSFunctionDeclaration -> {
@@ -565,7 +602,10 @@ class ResolverAAImpl(
                         }
                     ).any { overrides(it, overridee) }
                 } else {
-                    candidates.any { overrides(it, overridee) }
+                    candidates.any {
+                        recordLookupForPropertyOrMethod(it)
+                        overrides(it, overridee)
+                    }
                 }
             }
             else -> false
@@ -643,6 +683,8 @@ class ResolverAAImpl(
         return propertyAsMemberOfCache.getOrPut(key) {
             val resolved = property.type.resolve()
             if (containing is KSTypeImpl && resolved is KSTypeImpl) {
+                recordLookupWithSupertypes(containing.type)
+                recordLookupForPropertyOrMethod(property)
                 val isSubTypeOf = analyze {
                     (declaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
                         containing.type.isSubTypeOf(it)
@@ -680,6 +722,8 @@ class ResolverAAImpl(
         val key = function to containing
         return functionAsMemberOfCache.getOrPut(key) {
             if (containing is KSTypeImpl) {
+                recordLookupWithSupertypes(containing.type)
+                recordLookupForPropertyOrMethod(function)
                 val isSubTypeOf = analyze {
                     (propertyDeclaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
                         containing.type.isSubTypeOf(it)

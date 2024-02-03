@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
 import com.google.devtools.ksp.IdKeyTriple
 import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
@@ -58,6 +59,7 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override fun resolve(): KSType {
+        analyze { recordLookup(ktType, parent) }
         // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
         return if (
             analyze {

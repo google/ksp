@@ -40,7 +40,7 @@ class KSClassifierReferenceImpl private constructor(
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        ktUserType.typeArguments.map { KSTypeArgumentImpl.getCached(it) }
+        ktUserType.typeArguments.map { KSTypeArgumentImpl.getCached(it, this) }
         // ktUserType.typeArguments.map { KSTypeArgumentKtImpl.getCached(it) }
     }
 

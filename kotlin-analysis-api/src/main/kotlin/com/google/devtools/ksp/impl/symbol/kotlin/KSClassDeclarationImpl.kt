@@ -19,6 +19,10 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordGetSealedSubclasses
+import com.google.devtools.ksp.impl.recordLookup
+import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
+import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
@@ -99,6 +103,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         if (!modifiers.contains(Modifier.SEALED)) return emptySequence()
+        recordGetSealedSubclasses(this)
         return (ktClassOrObjectSymbol as? KtNamedClassOrObjectSymbol)?.let {
             analyze {
                 it.getSealedClassInheritors().map { getCached(it) }.asSequence()
@@ -107,10 +112,14 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
+        ktClassOrObjectSymbol.superTypes.forEach { recordLookup(it, this) }
+        recordLookupForGetAllFunctions(ktClassOrObjectSymbol.superTypes)
         return ktClassOrObjectSymbol.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
+        ktClassOrObjectSymbol.superTypes.forEach { recordLookup(it, this) }
+        recordLookupForGetAllProperties(ktClassOrObjectSymbol.superTypes)
         return ktClassOrObjectSymbol.getAllProperties()
     }
 

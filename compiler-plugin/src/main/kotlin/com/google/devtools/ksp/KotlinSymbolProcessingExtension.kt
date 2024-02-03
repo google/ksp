@@ -282,7 +282,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                             logger,
                             options.apiVersion,
                             options.compilerVersion,
-                            findTargetInfos(options.languageVersionSettings, module)
+                            findTargetInfos(options.languageVersionSettings, module),
+                            KotlinVersion(1, 0),
                         )
                     )
                 }?.let { analysisResult ->

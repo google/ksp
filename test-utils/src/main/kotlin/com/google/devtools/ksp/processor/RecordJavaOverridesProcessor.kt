@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
@@ -58,12 +59,14 @@ class RecordJavaOverridesProcessor : AbstractTestProcessor() {
         resolver.overrides(A_f1!!, C_f1!!)
         A_f2!!.findOverridee()
 
-        if (resolver is ResolverImpl) {
-            val m = resolver.incrementalContext.dumpLookupRecords().toSortedMap()
-            m.toSortedMap().forEach { symbol, files ->
-                files.filter { it.endsWith(".java") }.sorted().forEach {
-                    results.add("$symbol: $it")
-                }
+        val m = when (resolver) {
+            is ResolverImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
+            is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
+            else -> throw IllegalStateException("Unknown Resolver: $resolver")
+        }
+        m.forEach { symbol, files ->
+            files.filter { it.endsWith(".java") }.sorted().forEach {
+                results.add("$symbol: $it")
             }
         }
         return emptyList()

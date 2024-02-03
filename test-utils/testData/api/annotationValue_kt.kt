@@ -19,6 +19,7 @@
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
 // defaultInNested
+// SomeClass$WithDollarSign
 // Str
 // 42
 // Foo
@@ -49,6 +50,10 @@ class ThrowsClass {
 annotation class Foo(val s: Int) {
     annotation class Nested(val nestedDefault:String = "defaultInNested")
 }
+class `SomeClass$WithDollarSign`
+
+annotation class MyAnnotation(val clazz: KClass<*>)
+
 
 annotation class Bar(
     val argStr: String,
@@ -68,6 +73,7 @@ annotation class Bar(
 
 fun Fun() {
     @Foo.Nested
+    @MyAnnotation(`SomeClass$WithDollarSign`::class)
     @Bar(
         "Str",
         40 + 2,

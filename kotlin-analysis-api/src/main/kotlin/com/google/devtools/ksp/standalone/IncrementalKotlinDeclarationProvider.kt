@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.standalone
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProvider
@@ -19,9 +20,10 @@ import org.jetbrains.kotlin.psi.KtScript
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class IncrementalKotlinDeclarationProvider(var del: KotlinDeclarationProvider) : KotlinDeclarationProvider() {
-    override fun computePackageSetWithTopLevelCallableDeclarations(): Set<String>? {
-        return del.computePackageSetWithTopLevelCallableDeclarations()
-    }
+    override val hasSpecificCallablePackageNamesComputation: Boolean
+        get() = del.hasSpecificCallablePackageNamesComputation
+    override val hasSpecificClassifierPackageNamesComputation: Boolean
+        get() = del.hasSpecificClassifierPackageNamesComputation
 
     override fun findFilesForFacade(facadeFqName: FqName): Collection<KtFile> {
         return del.findFilesForFacade(facadeFqName)
@@ -92,9 +94,9 @@ class IncrementalKotlinDeclarationProviderFactory(
         }
     }
 
-    fun update(files: Collection<KtFile>) {
+    fun update(files: Collection<KtFile>, moduleRoots: List<VirtualFile>) {
         this.files = files
-        this.staticFactory = KotlinStaticDeclarationProviderFactory(project, files)
+        this.staticFactory = KotlinStaticDeclarationProviderFactory(project, files, additionalRoots = moduleRoots)
         provider?.let {
             it.del = createDelegateProvider()
         }

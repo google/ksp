@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.IdKeyPair
 import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -97,6 +98,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         if (that.isError || this.isError) {
             return false
         }
+        recordLookupWithSupertypes((that as KSTypeImpl).type)
         return type.isAssignableFrom((that as KSTypeImpl).type)
     }
 

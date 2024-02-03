@@ -202,7 +202,10 @@ class ResolverImpl(
 
     // Mitigation for processors with memory leaks
     // https://github.com/google/ksp/issues/1063
+    // https://github.com/google/ksp/issues/1653
     fun tearDown() {
+        KSObjectCacheManager.clear()
+        com.google.devtools.ksp.KSObjectCacheManager.clear()
         instance = null
     }
 
@@ -545,6 +548,7 @@ class ResolverImpl(
             is KSClassDeclarationImpl -> resolveDeclaration(classDeclaration.ktClassOrObject)
             is KSClassDeclarationDescriptorImpl -> classDeclaration.descriptor
             is KSClassDeclarationJavaImpl -> resolveJavaDeclaration(classDeclaration.psi)
+            is KSClassDeclarationJavaEnumEntryImpl -> resolveJavaDeclaration(classDeclaration.psi)
             else -> throw IllegalStateException("unexpected class: ${classDeclaration.javaClass}")
         } as ClassDescriptor?
     }
@@ -895,7 +899,8 @@ class ResolverImpl(
         return when (function.origin) {
             Origin.JAVA -> {
                 val psi = (function as KSFunctionDeclarationJavaImpl).psi
-                psi.throwsList.referencedTypes.asSequence().map { getKSTypeCached(resolveJavaType(it)) }
+                psi.throwsList.referencedTypes.asSequence()
+                    .map { KSTypeReferenceJavaImpl.getCached(it, function).resolve() }
             }
             Origin.KOTLIN -> {
                 extractThrowsAnnotation(function)
