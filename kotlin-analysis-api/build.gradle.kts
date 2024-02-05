@@ -153,7 +153,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
-                        addDependency("com.google.devtools.ksp", "common-deps", version)
+                        addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
                 }
             }
