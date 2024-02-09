@@ -25,6 +25,8 @@
 // <no name>:K1.<init>
 // <no name>:K2
 // <no name>:K2.<init>
+// lib:H1
+// lib:H1.<init>
 // test.java.pack:C
 // test.java.pack:C.<init>
 // test.java.pack:Inner
@@ -49,6 +51,10 @@
 // END
 
 // MODULE: module1
+// FILE: H1.kt
+package lib
+class H1
+
 // FILE: K1.kt
 class K1
 
