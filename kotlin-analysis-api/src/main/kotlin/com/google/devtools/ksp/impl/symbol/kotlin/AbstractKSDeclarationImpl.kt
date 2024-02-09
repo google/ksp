@@ -78,8 +78,17 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val packageName: KSName by lazy {
-        ((containingFile?.packageName ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName)?.asString() ?: "")
-            .let { KSNameImpl.getCached(it) }
+        // source
+        containingFile?.packageName
+            // top level declaration
+            ?: when (ktDeclarationSymbol) {
+                is KtClassLikeSymbol -> ktDeclarationSymbol.classIdIfNonLocal?.packageFqName?.asString()
+                is KtCallableSymbol -> ktDeclarationSymbol.callableIdIfNonLocal?.packageName?.asString()
+                else -> null
+            }?.let { KSNameImpl.getCached(it) }
+            //  null -> non top level declaration, find in parent
+            ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
+            ?: throw IllegalStateException("failed to find package name for $this")
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
