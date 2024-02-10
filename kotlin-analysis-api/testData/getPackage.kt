@@ -1,6 +1,6 @@
 /*
- * Copyright 2021 Google LLC
- * Copyright 2010-2021 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2024 Google LLC
+ * Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,20 @@
 // TEST PROCESSOR: GetPackageProcessor
 // EXPECTED:
 // symbols from package lib1
-// lib1.FooInSource KOTLIN
 // lib1.propInSource KOTLIN
-// lib1.Bar JAVA_LIB
-// lib1.Foo KOTLIN_LIB
 // lib1.funcFoo KOTLIN_LIB
+// lib1.Foo KOTLIN_LIB
+// lib1.FooInSource KOTLIN
+// lib1.Bar JAVA_LIB
 // symbols from package lib2
-// lib2.Foo KOTLIN_LIB
 // lib2.a KOTLIN_LIB
+// lib2.Foo KOTLIN_LIB
 // lib2.FooTypeAlias KOTLIN_LIB
 // symbols from package main.test
 // main.test.KotlinMain KOTLIN
 // main.test.C JAVA
 // main.test.D JAVA
+// main.test.L JAVA
 // symbols from package non.exist
 // END
 

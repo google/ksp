@@ -279,15 +279,13 @@ class ResolverAAImpl(
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
         return analyze {
-            val packageNames = packageName.split(".")
+            val packageNames = FqName(packageName).pathSegments().map { it.asString() }
             var packages = listOf(analysisSession.ROOT_PACKAGE_SYMBOL)
             for (curName in packageNames) {
                 packages = packages
                     .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
                     .distinct()
             }
-            // Above steps forfeited root package, adding it back.
-            packages += analysisSession.ROOT_PACKAGE_SYMBOL
             packages.flatMap {
                 it.getPackageScope().getAllSymbols().distinct().mapNotNull { symbol ->
                     when (symbol) {
