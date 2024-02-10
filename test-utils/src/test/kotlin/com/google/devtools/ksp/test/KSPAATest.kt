@@ -261,11 +261,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/getAnnotationByTypeWithInnerDefault.kt")
     }
 
-    @Disabled
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
-        runTest("../test-utils/testData/api/getPackage.kt")
+        runTest("../kotlin-analysis-api/testData/getPackage.kt")
     }
 
     @TestMetadata("getByName.kt")
