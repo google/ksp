@@ -111,6 +111,9 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
+        if (arguments.isNotEmpty() && arguments.size != type.typeArguments().size) {
+            return KSErrorType
+        }
         return analyze {
             analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
                 arguments.forEach { arg -> argument(arg.toKtTypeProjection()) }

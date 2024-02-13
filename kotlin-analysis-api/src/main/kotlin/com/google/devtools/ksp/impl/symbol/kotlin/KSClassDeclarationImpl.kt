@@ -29,6 +29,7 @@ import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtClassOrObject
@@ -124,9 +125,21 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
+        if (typeArguments.isNotEmpty() && typeArguments.size != asStarProjectedType().arguments.size) {
+            return KSErrorType
+        }
         return analyze {
-            analysisSession.buildClassType(ktClassOrObjectSymbol) {
-                typeArguments.forEach { argument(it.toKtTypeProjection()) }
+            if (typeArguments.isEmpty()) {
+                typeParameters.map { buildTypeParameterType((it as KSTypeParameterImpl).ktTypeParameterSymbol) }
+                    .let { typeParameterTypes ->
+                        buildClassType(ktClassOrObjectSymbol) {
+                            typeParameterTypes.forEach { argument(it) }
+                        }
+                    }
+            } else {
+                buildClassType(ktClassOrObjectSymbol) {
+                    typeArguments.forEach { argument(it.toKtTypeProjection()) }
+                }
             }.let { KSTypeImpl.getCached(it) }
         }
     }
