@@ -409,6 +409,9 @@ class ResolverAAImpl(
 
     // TODO: handle @JvmName annotations, mangled names
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
+        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
+            return accessor.receiver.simpleName.asString()
+        }
         val prefix = if (accessor is KSPropertyGetter) {
             "get"
         } else {
