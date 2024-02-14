@@ -537,11 +537,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/referenceElement.kt")
     }
 
-    @Disabled
     @TestMetadata("replaceWithErrorTypeArgs.kt")
     @Test
     fun testReplaceWithErrorTypeArgs() {
-        runTest("../test-utils/testData/api/replaceWithErrorTypeArgs.kt")
+        runTest("../kotlin-analysis-api/testData/replaceWithErrorTypeArgs.kt")
     }
 
     @TestMetadata("resolveJavaType.kt")
