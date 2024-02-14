@@ -60,6 +60,7 @@ dependencies {
         depSourceJars("$it:$aaKotlinBaseVersion:sources") { isTransitive = false }
     }
 
+    implementation("io.javaslang:javaslang:2.0.6")  // needed transitively for `kotlin-compiler-common-for-ide`
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
     implementation(kotlin("stdlib", aaKotlinBaseVersion))
 
