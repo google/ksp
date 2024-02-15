@@ -31,7 +31,6 @@ import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationsList
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 
@@ -111,24 +110,12 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        if (arguments.isNotEmpty() && arguments.size != type.typeArguments().size) {
-            return KSErrorType
-        }
-        return analyze {
-            analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                arguments.forEach { arg -> argument(arg.toKtTypeProjection()) }
-            }.let { getCached(it) }
-        }
+        return type.replace(arguments.map { it.toKtTypeProjection() })?.let { getCached(it) } ?: KSErrorType
     }
 
     override fun starProjection(): KSType {
-        return analyze {
-            analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                type.typeArguments().forEach {
-                    argument(KtStarTypeProjection(type.token))
-                }
-            }.let { getCached(it) }
-        }
+        return type.replace(List(type.typeArguments().size) { KtStarTypeProjection(type.token) })
+            ?.let { getCached(it) } ?: KSErrorType
     }
 
     override fun makeNullable(): KSType {

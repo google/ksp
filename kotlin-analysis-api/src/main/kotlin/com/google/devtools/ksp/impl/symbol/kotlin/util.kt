@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.components.KtSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
@@ -546,6 +547,22 @@ internal fun KtType.isAssignableFrom(that: KtType): Boolean {
     } else {
         analyze {
             that.convertToKotlinType().isSubTypeOf(this@isAssignableFrom.convertToKotlinType())
+        }
+    }
+}
+
+// TODO: fix flexible type creation once upstream available.
+internal fun KtType.replace(newArgs: List<KtTypeProjection>): KtType? {
+    if (newArgs.isNotEmpty() && newArgs.size != this.typeArguments().size) {
+        return null
+    }
+    return analyze {
+        when (val symbol = classifierSymbol()) {
+            is KtClassLikeSymbol -> analysisSession.buildClassType(symbol) {
+                newArgs.forEach { arg -> argument(arg) }
+            }
+            is KtTypeParameterSymbol -> analysisSession.buildTypeParameterType(symbol)
+            else -> throw IllegalStateException("Unexpected type $this")
         }
     }
 }
