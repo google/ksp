@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.jvm.tasks.Jar
+import java.util.zip.ZipFile
 
 evaluationDependsOn(":kotlin-analysis-api")
 
@@ -28,9 +29,28 @@ tasks.withType<Jar> {
 }
 
 val prefixesToRelocate = listOf(
-    "org.jetbrains.kotlin." to "ksp.org.jetbrains.kotlin.",
-    "com.intellij." to "ksp.com.intellij.",
-)
+    "org.jetbrains.",
+    "org.intellij.",
+    "com.intellij.",
+    "it.unimi.dsi.",
+    "com.google.common.",
+    "com.google.errorprone.",
+    "com.google.gwt.",
+    "com.google.j2objc.",
+    "kotlin.sequences.",
+    "kotlin.text.",
+    "org.checkerframework.",
+    "com.github.benmanes.caffeine.",
+    "org.jdom.",
+    "org.picocontainer.",
+    "net.rubygrapefruit.",
+    "com.fasterxml.",
+    "org.codehaus.",
+    "one.util.",
+    "FirNativeForwardDeclarationGetClassCallChecker",
+).map {
+    Pair(it, "ksp." + it)
+}
 
 tasks.withType<ShadowJar> {
     archiveClassifier.set("")
@@ -51,6 +71,46 @@ fun String.replaceWithKsp() =
 
 val DEP_SOURCES_DIR = "$buildDir/source-jar"
 
+val validPaths = prefixesToRelocate.map {
+    it.second.split('.').filter { it.isNotEmpty() }.joinToString("/")
+} + listOf(
+    "com/google/devtools/ksp",
+    "kotlin",
+    "kotlinx",
+    "META-INF",
+    "org/apache/log4j/package-info.class",
+    "ksp/FirNativeForwardDeclarationGetClassCallChecker.class",
+)
+
+class Trie(paths: List<String>) {
+    class TrieNode(val key: String)
+
+    private val terminals = mutableSetOf<TrieNode>()
+
+    private val m = mutableMapOf<Pair<TrieNode?, String>, TrieNode>().apply {
+        paths.forEach { path ->
+            var p: TrieNode? = null
+            for (d in path.split("/")) {
+                p = getOrPut(Pair(p, d)) { TrieNode(d) }
+            }
+            terminals.add(p!!)
+        }
+    }
+
+    fun contains(s: String): Boolean {
+        var p: TrieNode? = null
+        for (d in s.split("/")) {
+            p = m.get(Pair(p, d))?.also {
+                if (it in terminals)
+                    return true
+            } ?: return false
+        }
+        return true
+    }
+}
+
+val validPackages = Trie(validPaths)
+
 tasks {
     val copyDeps by creating(Copy::class) {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -68,10 +128,34 @@ tasks {
         from(DEP_SOURCES_DIR)
         filter { it.replaceWithKsp() }
     }
+
+    // All bundled dependencies should be renamed.
+    val validate by creating(DefaultTask::class) {
+        dependsOn(shadowJar)
+        doLast {
+            val violatingFiles = mutableListOf<String>()
+            shadowJar.get().outputs.files.filter {
+                it.extension == "jar"
+            }.forEach {
+                for (e in ZipFile(it).entries()) {
+                    if (e.name.endsWith(".class") and !validPackages.contains(e.name))
+                        violatingFiles.add(e.name)
+                }
+            }
+            if (violatingFiles.isNotEmpty()) {
+                error(
+                    "Detected unrelocated classes that may cause conflicts: " +
+                        violatingFiles.joinToString(System.lineSeparator())
+                )
+            }
+        }
+    }
+
     publish {
         dependsOn(shadowJar)
         dependsOn(sourcesJar)
         dependsOn(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+        dependsOn(validate)
     }
 }
 
