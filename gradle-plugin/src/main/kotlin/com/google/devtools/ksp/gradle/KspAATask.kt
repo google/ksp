@@ -150,6 +150,7 @@ abstract class KspAATask @Inject constructor(
             val sourceSetName = kotlinCompilation.defaultSourceSet.name
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
             val kspAADepCfg = project.configurations.detachedConfiguration(
+                project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-api:$KSP_VERSION"),
                 project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa:$KSP_VERSION"),
                 project.dependencies.create(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-common-deps:$KSP_VERSION"
