@@ -29,24 +29,23 @@ tasks.withType<Jar> {
 }
 
 val prefixesToRelocate = listOf(
-    "org.jetbrains.",
-    "org.intellij.",
-    "com.intellij.",
-    "it.unimi.dsi.",
+    "com.fasterxml.",
+    "org.codehaus.",
+    "com.github.benmanes.caffeine.",
     "com.google.common.",
     "com.google.errorprone.",
     "com.google.gwt.",
     "com.google.j2objc.",
-    "kotlin.sequences.",
-    "kotlin.text.",
+    "com.intellij.",
+    "it.unimi.dsi.",
+    "kotlinx.collections.immutable.",
     "org.checkerframework.",
-    "com.github.benmanes.caffeine.",
+    "org.intellij.",
+    "org.jetbrains.",
     "org.jdom.",
     "org.picocontainer.",
-    "net.rubygrapefruit.",
-    "com.fasterxml.",
-    "org.codehaus.",
     "one.util.",
+    "net.rubygrapefruit.",
     "FirNativeForwardDeclarationGetClassCallChecker",
 ).map {
     Pair(it, "ksp." + it)
@@ -75,8 +74,6 @@ val validPaths = prefixesToRelocate.map {
     it.second.split('.').filter { it.isNotEmpty() }.joinToString("/")
 } + listOf(
     "com/google/devtools/ksp",
-    "kotlin",
-    "kotlinx",
     "META-INF",
     "org/apache/log4j/package-info.class",
     "ksp/FirNativeForwardDeclarationGetClassCallChecker.class",
