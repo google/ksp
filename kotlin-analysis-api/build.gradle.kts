@@ -61,7 +61,7 @@ dependencies {
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation(kotlin("stdlib", aaKotlinBaseVersion))
+    compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation("com.google.guava:guava:$aaGuavaVersion")
     implementation("one.util:streamex:$aaStreamexVersion")
@@ -75,6 +75,7 @@ dependencies {
     compileOnly(project(":api"))
     implementation(project(":common-util"))
 
+    testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
     testImplementation(project(":api"))
 }
 
