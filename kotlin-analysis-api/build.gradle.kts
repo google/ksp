@@ -72,8 +72,10 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
     compileOnly(project(":common-deps"))
 
-    implementation(project(":api"))
+    compileOnly(project(":api"))
     implementation(project(":common-util"))
+
+    testImplementation(project(":api"))
 }
 
 sourceSets.main {
@@ -153,6 +155,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+                        addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
                 }
