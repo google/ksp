@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
@@ -58,6 +59,11 @@ open class ReplaceWithErrorTypeArgsProcessor : AbstractTestProcessor() {
             results.add("$declName.asType($yargs): ${decl.asType(yargs)}")
             results.add("$declName.asType(emptyList()): ${decl.asType(emptyList())}")
         }
+        val function = resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString("f"), true).single()
+        results.add("default type:${function.parameters.single().type.resolve().replace(emptyList())}")
+        // TODO: fix flexible type creation once upstream available.
+        val js1 = resolver.getClassDeclarationByName("JS1")!!
+        results.add("flexible type star:${js1.getDeclaredProperties().single().type.resolve().starProjection()}")
         return emptyList()
     }
 

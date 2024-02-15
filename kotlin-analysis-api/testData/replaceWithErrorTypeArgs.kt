@@ -98,6 +98,8 @@
 // KLE.E.asType([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
 // KLE.E.asType([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>
 // KLE.E.asType(emptyList()): KLE
+// default type:A
+// flexible type star:T
 // END
 
 // MODULE: lib
@@ -118,12 +120,15 @@ enum class KLE {
 // MODULE: main(lib)
 // FILE: JS.java
 class JS<T1, T2> {}
-class JS1<T> {}
+class JS1<T> {
+    T p;
+}
 enum JSE {
     E
 }
 
 // FILE: KS.kt
+fun <A> f(a: A) = TODO()
 class KS<T1, T2>
 class KS1<T>
 enum class KSE {
