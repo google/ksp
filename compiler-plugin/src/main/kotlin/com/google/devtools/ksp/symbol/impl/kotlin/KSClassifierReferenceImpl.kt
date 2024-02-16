@@ -47,7 +47,14 @@ class KSClassifierReferenceImpl private constructor(val ktUserType: KtUserType) 
     }
 
     override fun referencedName(): String {
-        return ktUserType.referencedName ?: ""
+        val typeArgs = typeArguments
+        return if (typeArgs.isEmpty()) {
+            ktUserType.referencedName ?: ""
+        } else {
+            ktUserType.referencedName + typeArgs.joinToString(prefix = "<", postfix = ">") {
+                it.type?.toString() ?: "*"
+            }
+        }
     }
 
     override val qualifier: KSClassifierReference? by lazy {
