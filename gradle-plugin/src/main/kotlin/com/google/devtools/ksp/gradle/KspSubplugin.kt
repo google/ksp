@@ -410,8 +410,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         } else {
             when (kotlinCompilation.platformType) {
                 KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
-                    KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
-                        it.configure { kspTask ->
+                    KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also { taskProvider ->
+                        taskProvider.configure { kspTask ->
                             val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile
                             maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
@@ -441,6 +441,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                         // Don't support binary generation for non-JVM platforms yet.
                         // FIXME: figure out how to add user generated libraries.
                         kotlinCompilation.output.classesDirs.from(classOutputDir)
+
+                        if (kotlinCompilation is KotlinJvmAndroidCompilation) {
+                            AndroidPluginIntegration.updateKspWithAndroidSourceSets(
+                                kotlinCompilation,
+                                taskProvider
+                            )
+                        }
                     }
                 }
 

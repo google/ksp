@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.api.SourceKind
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
@@ -60,6 +61,19 @@ object AndroidPluginIntegration {
         return kotlinCompilation.androidVariant
             .sourceSets
             .map { it.name }
+    }
+
+    @Suppress("DEPRECATION")
+    fun updateKspWithAndroidSourceSets(
+        kotlinCompilation: KotlinJvmAndroidCompilation,
+        kspTaskProvider: TaskProvider<out KspTaskJvm>
+    ) {
+        kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA).forEach { source ->
+            kspTaskProvider.configure { task ->
+                task.setSource(source)
+                task.dependsOn(source)
+            }
+        }
     }
 
     fun registerGeneratedSources(

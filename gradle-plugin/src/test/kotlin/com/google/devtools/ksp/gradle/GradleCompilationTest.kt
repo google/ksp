@@ -283,6 +283,64 @@ class GradleCompilationTest {
     }
 
     @Test
+    fun applicationCanAccessViewBindingGeneratedCode() {
+        testRule.setupAppAsAndroidApp()
+        testRule.appModule.buildFileAdditions.add(
+            """
+            android {
+                compileSdk = 33
+                buildFeatures {
+                   viewBinding = true
+                }
+            }
+            """.trimIndent()
+        )
+        //testRule.appModule.plugins.add(PluginDeclaration.id("com.google.dagger.hilt.android","2.48"))
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
+                artifact(configuration = "implementation", "androidx.room:room-runtime:2.4.2"),
+                artifact(configuration = "implementation", "androidx.appcompat:appcompat:1.6.1"),
+                artifact(configuration = "implementation", "androidx.constraintlayout:constraintlayout:2.1.4")
+            )
+        )
+        testRule.appModule.addSource(
+            "MainActivity.kt",
+            """
+            import android.os.Bundle
+            import androidx.appcompat.app.AppCompatActivity
+            import com.example.kspandroidtestapp.databinding.ActivityMainBinding
+            class MainActivity : AppCompatActivity() {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    val binding = ActivityMainBinding.inflate(layoutInflater)
+                    setContentView(binding.root)
+                }
+            }
+            """.trimIndent()
+        )
+        testRule.appModule.addResource("activity_main.xml", "layout", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context="MainActivity"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content">
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        """.trimIndent())
+        val result = testRule.runner()
+            .withArguments(":app:testDebugUnitTest")
+            .build()
+
+        val output = result.output.lines()
+        val kspTask = output.filter {
+            it.contains(":app:kspDebugKotlin")
+        }
+        assertThat(kspTask).isNotEmpty()
+    }
+
+    @Test
     fun invalidArguments() {
         testRule.setupAppAsJvmApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
