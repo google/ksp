@@ -65,12 +65,6 @@ class TestModule(
         srcDir.resolve(name).writeText(contents)
     }
 
-    fun addResource(name: String, folder: String, contents: String) {
-        resourceDir.resolve(folder).also {
-            it.mkdirs()
-        }.resolve(name).writeText(contents)
-    }
-
     /**
      * Adds the given source file to the AndroidTest source set.
      */
@@ -128,11 +122,6 @@ class TestModule(
 
     private val servicesDir
         get() = moduleRoot.resolve("src/main/resources/META-INF/services/").also {
-            it.mkdirs()
-        }
-
-    private val resourceDir
-        get() = moduleRoot.resolve("src/main/res/").also {
             it.mkdirs()
         }
 
