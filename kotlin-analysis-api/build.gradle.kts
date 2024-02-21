@@ -72,11 +72,10 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
     compileOnly(project(":common-deps"))
 
-    compileOnly(project(":api"))
+    implementation(project(":api"))
     implementation(project(":common-util"))
 
     testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
-    testImplementation(project(":api"))
 }
 
 sourceSets.main {
@@ -102,6 +101,10 @@ tasks.withType<org.gradle.jvm.tasks.Jar> {
 }
 
 tasks.withType<ShadowJar>() {
+    dependencies {
+        exclude(project(":api"))
+    }
+    exclude("kotlin/**")
     archiveClassifier.set("")
     minimize()
     mergeServiceFiles()
