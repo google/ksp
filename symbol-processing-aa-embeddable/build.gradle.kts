@@ -33,6 +33,7 @@ val prefixesToRelocate = listOf(
     "org.codehaus.",
     "com.github.benmanes.caffeine.",
     "com.google.common.",
+    "com.google.devtools.ksp.common.",
     "com.google.errorprone.",
     "com.google.gwt.",
     "com.google.j2objc.",
@@ -79,8 +80,13 @@ tasks.withType<ShadowJar> {
     }
 }
 
+val prefixesToRelocateStripped = prefixesToRelocate.map {
+    Pair(it.first.trim('.'), it.second.trim('.'))
+}
+
+// TODO: match with Trie
 fun String.replaceWithKsp() =
-    prefixesToRelocate.fold(this) { acc, (f, t) ->
+    prefixesToRelocateStripped.fold(this) { acc, (f, t) ->
         acc.replace("package $f", "package $t")
             .replace("import $f", "import $t")
     }
@@ -131,6 +137,7 @@ tasks {
         project(":kotlin-analysis-api").configurations.getByName("depSourceJars").resolve().forEach {
             from(zipTree(it))
         }
+        from(project(":common-util").sourceSets.main.get().allSource)
         into("$DEP_SOURCES_DIR/ksp")
     }
     val sourcesJar by creating(Jar::class) {
@@ -138,7 +145,6 @@ tasks {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         archiveClassifier.set("sources")
         from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
-        from(project(":common-util").sourceSets.main.get().allSource)
         from(DEP_SOURCES_DIR)
         filter { it.replaceWithKsp() }
     }
