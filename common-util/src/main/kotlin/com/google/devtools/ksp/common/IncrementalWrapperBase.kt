@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
 import com.intellij.util.containers.MultiMap
 import java.io.File

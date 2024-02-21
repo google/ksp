@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
+import com.google.devtools.ksp.isPrivate
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSDeclarationContainer

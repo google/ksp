@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
 import com.google.devtools.ksp.symbol.*
 import java.io.File

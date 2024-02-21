@@ -1,7 +1,7 @@
-package com.google.devtools.ksp.processing.impl
+package com.google.devtools.ksp.common.impl
 
-import com.google.devtools.ksp.IdKey
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.IdKey
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSReferenceElement

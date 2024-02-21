@@ -17,15 +17,15 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordGetSealedSubclasses
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
 import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.processing.impl.KSNameImpl
-import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.components.buildClassType

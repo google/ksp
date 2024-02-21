@@ -18,19 +18,19 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.AnyChanges
-import com.google.devtools.ksp.KSObjectCacheManager
+import com.google.devtools.ksp.common.AnyChanges
+import com.google.devtools.ksp.common.KSObjectCacheManager
+import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.common.impl.JsPlatformInfoImpl
+import com.google.devtools.ksp.common.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.common.impl.NativePlatformInfoImpl
+import com.google.devtools.ksp.common.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
-import com.google.devtools.ksp.processing.impl.JsPlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.buildKspLibraryModule

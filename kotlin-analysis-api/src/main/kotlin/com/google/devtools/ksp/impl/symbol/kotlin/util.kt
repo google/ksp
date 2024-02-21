@@ -19,13 +19,13 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
-import com.google.devtools.ksp.memoized
-import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile

@@ -1,4 +1,4 @@
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.IOUtil

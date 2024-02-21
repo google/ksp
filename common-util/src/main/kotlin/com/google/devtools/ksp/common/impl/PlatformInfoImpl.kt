@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.processing.impl
+package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.processing.JsPlatformInfo
 import com.google.devtools.ksp.processing.JvmPlatformInfo

@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import com.google.devtools.ksp.IdKeyTriple
-import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.common.IdKeyTriple
+import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
