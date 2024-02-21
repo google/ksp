@@ -17,11 +17,11 @@
 
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.FileToSymbolsMap
-import com.google.devtools.ksp.IncrementalContextBase
-import com.google.devtools.ksp.LookupStorageWrapper
-import com.google.devtools.ksp.LookupSymbolWrapper
-import com.google.devtools.ksp.LookupTrackerWrapper
+import com.google.devtools.ksp.common.FileToSymbolsMap
+import com.google.devtools.ksp.common.IncrementalContextBase
+import com.google.devtools.ksp.common.LookupStorageWrapper
+import com.google.devtools.ksp.common.LookupSymbolWrapper
+import com.google.devtools.ksp.common.LookupTrackerWrapper
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl

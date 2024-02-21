@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.processing.impl
+package com.google.devtools.ksp.common.impl
 
-import com.google.devtools.ksp.NoSourceFile
+import com.google.devtools.ksp.common.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSClassDeclaration

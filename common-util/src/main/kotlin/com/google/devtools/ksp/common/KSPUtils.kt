@@ -1,4 +1,4 @@
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSType

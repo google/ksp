@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
 val JVM_STATIC_ANNOTATION_FQN = "kotlin.jvm.JvmStatic"
 val JVM_DEFAULT_ANNOTATION_FQN = "kotlin.jvm.JvmDefault"
