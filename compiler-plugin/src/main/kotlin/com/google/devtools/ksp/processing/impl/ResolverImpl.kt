@@ -18,6 +18,19 @@
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_STRICTFP_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_SYNCHRONIZED_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_TRANSIENT_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_VOLATILE_ANNOTATION_FQN
+import com.google.devtools.ksp.common.extractThrowsAnnotation
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.common.javaModifiers
+import com.google.devtools.ksp.common.memoized
+import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -34,7 +47,6 @@ import com.google.devtools.ksp.symbol.impl.synthetic.KSConstructorSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertyGetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSPropertySetterSyntheticImpl
 import com.google.devtools.ksp.symbol.impl.synthetic.KSValueParameterSyntheticImpl
-import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
@@ -204,7 +216,7 @@ class ResolverImpl(
     // https://github.com/google/ksp/issues/1653
     fun tearDown() {
         KSObjectCacheManager.clear()
-        com.google.devtools.ksp.KSObjectCacheManager.clear()
+        com.google.devtools.ksp.common.KSObjectCacheManager.clear()
         instance = null
     }
 
