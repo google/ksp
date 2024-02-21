@@ -60,6 +60,23 @@ tasks.withType<ShadowJar> {
         relocate(f, t)
     }
     mergeServiceFiles()
+
+    // All bundled dependencies should be renamed.
+    doLast {
+        val violatingFiles = mutableListOf<String>()
+        archiveFile.get().asFile.let {
+            for (e in ZipFile(it).entries()) {
+                if (e.name.endsWith(".class") and !validPackages.contains(e.name))
+                    violatingFiles.add(e.name)
+            }
+        }
+        if (violatingFiles.isNotEmpty()) {
+            error(
+                "Detected unrelocated classes that may cause conflicts: " +
+                    violatingFiles.joinToString(System.lineSeparator())
+            )
+        }
+    }
 }
 
 fun String.replaceWithKsp() =
@@ -126,33 +143,10 @@ tasks {
         filter { it.replaceWithKsp() }
     }
 
-    // All bundled dependencies should be renamed.
-    val validate by creating(DefaultTask::class) {
-        dependsOn(shadowJar)
-        doLast {
-            val violatingFiles = mutableListOf<String>()
-            shadowJar.get().outputs.files.filter {
-                it.extension == "jar"
-            }.forEach {
-                for (e in ZipFile(it).entries()) {
-                    if (e.name.endsWith(".class") and !validPackages.contains(e.name))
-                        violatingFiles.add(e.name)
-                }
-            }
-            if (violatingFiles.isNotEmpty()) {
-                error(
-                    "Detected unrelocated classes that may cause conflicts: " +
-                        violatingFiles.joinToString(System.lineSeparator())
-                )
-            }
-        }
-    }
-
     publish {
         dependsOn(shadowJar)
         dependsOn(sourcesJar)
         dependsOn(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
-        dependsOn(validate)
     }
 }
 
