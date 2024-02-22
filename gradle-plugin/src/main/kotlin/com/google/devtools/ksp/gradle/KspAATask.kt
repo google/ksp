@@ -155,7 +155,6 @@ abstract class KspAATask @Inject constructor(
                 project.dependencies.create(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-common-deps:$KSP_VERSION"
                 ),
-                project.dependencies.create("org.jetbrains.intellij.deps:trove4j:1.0.20200330"),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
             ).apply {
                 isTransitive = false
