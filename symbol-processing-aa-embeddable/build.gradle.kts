@@ -38,14 +38,21 @@ val prefixesToRelocate = listOf(
     "com.google.gwt.",
     "com.google.j2objc.",
     "com.intellij.",
+    "com.sun.jna.",
+    "gnu.trove.",
     "it.unimi.dsi.",
+    "javaslang.",
+    "javax.inject.",
     "kotlinx.collections.immutable.",
+    "kotlinx.coroutines.",
+    "org.apache.log4j.",
     "org.checkerframework.",
     "org.intellij.",
     "org.jetbrains.",
     "org.jdom.",
     "org.picocontainer.",
     "one.util.",
+    "net.jpountz.",
     "net.rubygrapefruit.",
     "FirNativeForwardDeclarationGetClassCallChecker",
 ).map {
@@ -98,7 +105,6 @@ val validPaths = prefixesToRelocate.map {
 } + listOf(
     "com/google/devtools/ksp",
     "META-INF",
-    "org/apache/log4j/package-info.class",
     "ksp/FirNativeForwardDeclarationGetClassCallChecker.class",
 )
 
