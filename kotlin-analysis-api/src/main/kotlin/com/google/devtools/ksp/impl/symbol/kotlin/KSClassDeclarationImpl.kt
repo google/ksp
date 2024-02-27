@@ -33,7 +33,6 @@ import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtClassOrObject
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
     KSClassDeclaration,
@@ -99,7 +98,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val isCompanionObject: Boolean by lazy {
-        (ktClassOrObjectSymbol.psi as? KtObjectDeclaration)?.isCompanion() ?: false
+        ktClassOrObjectSymbol.classKind == KtClassKind.COMPANION_OBJECT
     }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {

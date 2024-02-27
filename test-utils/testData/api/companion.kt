@@ -22,8 +22,17 @@
 // companion:false
 // obj:false
 // K:true
+// A:false
+// Companion:true
 // END
 
+// MODULE: lib
+// FILE: a.kt
+class A {
+    companion object {}
+}
+
+// MODULE: main(lib)
 class Foo {
     object companion {}
     object obj {}
