@@ -574,7 +574,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             AndroidPluginIntegration.syncSourceSets(
                 project = project,
                 kotlinCompilation = kotlinCompilation,
-                kspTaskProvider = kspTaskProvider as TaskProvider<KspTaskJvm>,
+                kspTaskProvider = kspTaskProvider,
                 javaOutputDir = javaOutputDir,
                 kotlinOutputDir = kotlinOutputDir,
                 classOutputDir = classOutputDir,

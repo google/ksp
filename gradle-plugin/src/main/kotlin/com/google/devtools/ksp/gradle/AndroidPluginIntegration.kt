@@ -93,7 +93,7 @@ object AndroidPluginIntegration {
     private fun registerGeneratedSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<KspTaskJvm>,
+        kspTaskProvider: TaskProvider<*>,
         javaOutputDir: File,
         kotlinOutputDir: File,
         classOutputDir: File,
@@ -114,7 +114,7 @@ object AndroidPluginIntegration {
     fun syncSourceSets(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<KspTaskJvm>,
+        kspTaskProvider: TaskProvider<*>,
         javaOutputDir: File,
         kotlinOutputDir: File,
         classOutputDir: File,
