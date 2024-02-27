@@ -610,6 +610,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/typeParameterReference.kt")
     }
 
+    @TestMetadata("typeParameterVariance.kt")
+    @Test
+    fun testTypeParameterVariance() {
+        runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
+    }
+
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {

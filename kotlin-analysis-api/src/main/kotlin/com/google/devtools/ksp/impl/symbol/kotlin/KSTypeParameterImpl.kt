@@ -42,8 +42,8 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
 
     override val variance: Variance by lazy {
         when (ktTypeParameterSymbol.variance) {
-            org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.COVARIANT
-            org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.CONTRAVARIANT
+            org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
+            org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
             org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
         }
     }
