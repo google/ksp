@@ -36,7 +36,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.gradle.util.GradleVersion
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
-import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
@@ -57,6 +56,7 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.gradle.tasks.*
+import org.jetbrains.kotlin.incremental.ChangedFiles
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
@@ -661,7 +661,7 @@ internal fun getClassStructureFiles(
 // Reuse Kapt's infrastructure to compute affected names in classpath.
 // This is adapted from KaptTask.findClasspathChanges.
 internal fun findClasspathChanges(
-    changes: SourcesChanges,
+    changes: ChangedFiles,
     cacheDir: File,
     allDataFiles: Set<File>,
     libs: List<File>,
@@ -669,8 +669,7 @@ internal fun findClasspathChanges(
 ): KaptClasspathChanges {
     cacheDir.mkdirs()
 
-    val changedFiles =
-        (changes as? SourcesChanges.Known)?.let { it.modifiedFiles + it.removedFiles }?.toSet() ?: allDataFiles
+    val changedFiles = (changes as? ChangedFiles.Known)?.let { it.modified + it.removed }?.toSet() ?: allDataFiles
 
     val loadedPrevious = ClasspathSnapshot.ClasspathSnapshotFactory.loadFrom(cacheDir)
     val previousAndCurrentDataFiles = lazy { loadedPrevious.getAllDataFiles() + allDataFiles }
@@ -699,7 +698,7 @@ internal fun findClasspathChanges(
         )
 
     val classpathChanges = currentSnapshot.diff(previousSnapshot, changedFiles)
-    if (classpathChanges is KaptClasspathChanges.Unknown || changes is SourcesChanges.Unknown) {
+    if (classpathChanges is KaptClasspathChanges.Unknown || changes is ChangedFiles.Unknown) {
         cacheDir.deleteRecursively()
         cacheDir.mkdirs()
     }
@@ -708,11 +707,11 @@ internal fun findClasspathChanges(
     return classpathChanges
 }
 
-internal fun SourcesChanges.hasNonSourceChange(): Boolean {
-    if (this !is SourcesChanges.Known)
+internal fun ChangedFiles.hasNonSourceChange(): Boolean {
+    if (this !is ChangedFiles.Known)
         return true
 
-    return !(this.modifiedFiles + this.removedFiles).all {
+    return !(this.modified + this.removed).all {
         it.isKotlinFile(listOf("kt")) || it.isJavaFile()
     }
 }
@@ -727,13 +726,13 @@ fun KaptClasspathChanges.toSubpluginOptions(): List<SubpluginOption> {
     }
 }
 
-fun SourcesChanges.toSubpluginOptions(): List<SubpluginOption> {
-    return if (this is SourcesChanges.Known) {
+fun ChangedFiles.toSubpluginOptions(): List<SubpluginOption> {
+    return if (this is ChangedFiles.Known) {
         val options = mutableListOf<SubpluginOption>()
-        this.modifiedFiles.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
+        this.modified.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
             options += SubpluginOption("knownModified", map { it.path }.joinToString(File.pathSeparator))
         }
-        this.removedFiles.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
+        this.removed.filter { it.isKotlinFile(listOf("kt")) || it.isJavaFile() }.ifNotEmpty {
             options += SubpluginOption("knownRemoved", map { it.path }.joinToString(File.pathSeparator))
         }
         options
@@ -750,7 +749,7 @@ internal fun createIncrementalChangesTransformer(
     classpathStructure: Provider<FileCollection>,
     libraries: Provider<FileCollection>,
     processorCP: Provider<FileCollection>,
-): (SourcesChanges) -> List<SubpluginOption> = { changedFiles ->
+): (ChangedFiles) -> List<SubpluginOption> = { changedFiles ->
     val options = mutableListOf<SubpluginOption>()
     val apClasspath = processorCP.get().files.toList()
     if (isKspIncremental) {
@@ -791,7 +790,7 @@ internal fun getCPChanges(
 ): List<String> {
     val apClasspath = processorCP.files.toList()
     val changedFiles = if (!inputChanges.isIncremental) {
-        SourcesChanges.Unknown
+        ChangedFiles.Unknown()
     } else {
         incrementalProps.fold(mutableListOf<File>() to mutableListOf<File>()) { (modified, removed), prop ->
             inputChanges.getFileChanges(prop).forEach {
@@ -803,7 +802,7 @@ internal fun getCPChanges(
             }
             modified to removed
         }.run {
-            SourcesChanges.Known(first, second)
+            ChangedFiles.Known(first, second)
         }
     }
     val classpathChanges = findClasspathChanges(
