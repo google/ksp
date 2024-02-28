@@ -155,7 +155,7 @@ interface CodeGenerator {
         packageName: String,
         fileName: String,
         extensionName: String = "kt"
-    )
+    ) = Unit
 
     /**
      * Associate [properties] to an output file.
@@ -173,7 +173,7 @@ interface CodeGenerator {
         packageName: String,
         fileName: String,
         extensionName: String = "kt"
-    )
+    ) = Unit
 }
 
 /**
