@@ -213,7 +213,7 @@ fun KSPropertyDeclaration.isAbstract(): Boolean {
         (setter?.modifiers?.contains(Modifier.ABSTRACT) ?: true)
 }
 
-fun KSDeclaration.isOpen() = !this.isLocal() &&
+fun KSDeclaration.isOpen() = !this.isLocal() && !this.modifiers.contains(Modifier.FINAL) &&
     (
         (this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
             this.modifiers.contains(Modifier.OVERRIDE) ||
