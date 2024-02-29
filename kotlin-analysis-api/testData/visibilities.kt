@@ -41,6 +41,7 @@
 // KtEnumWithVal: <init>: PRIVATE
 // KtEnumWithVal: values: PUBLIC
 // KtEnumWithVal: valueOf: PUBLIC
+// JavaAnnotation: value: PUBLIC
 // END
 
 // MODULE: lib
@@ -110,6 +111,11 @@ class C {
     protected int protectedFun() {
         return 1;
     }
+}
+
+// FILE: JavaAnnotation.java
+public @interface JavaAnnotation {
+    String value();
 }
 
 // FILE: Enum.java
