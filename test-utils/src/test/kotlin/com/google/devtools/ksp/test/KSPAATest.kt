@@ -25,7 +25,6 @@ import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
-@Disabled
 @Execution(ExecutionMode.SAME_THREAD)
 @DisabledOnOs(OS.WINDOWS)
 class KSPAATest : AbstractKSPAATest() {
