@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
+import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
@@ -102,9 +104,13 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override fun findOverridee(): KSDeclaration? {
+        closestClassDeclaration()?.asStarProjectedType()?.let {
+            recordLookupWithSupertypes((it as KSTypeImpl).type)
+        }
+        recordLookupForPropertyOrMethod(this)
         return analyze {
             ktFunctionSymbol.getDirectlyOverriddenSymbols().firstOrNull()?.unwrapFakeOverrides?.toKSDeclaration()
-        }
+        }?.also { recordLookupForPropertyOrMethod(it) }
     }
 
     override fun asMemberOf(containing: KSType): KSFunction {

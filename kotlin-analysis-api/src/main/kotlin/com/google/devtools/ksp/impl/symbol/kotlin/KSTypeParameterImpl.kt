@@ -17,11 +17,11 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.processing.impl.KSNameImpl
-import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
 import org.jetbrains.kotlin.psi.KtTypeParameter
@@ -44,8 +44,8 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
 
     override val variance: Variance by lazy {
         when (ktTypeParameterSymbol.variance) {
-            org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.COVARIANT
-            org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.CONTRAVARIANT
+            org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT
+            org.jetbrains.kotlin.types.Variance.OUT_VARIANCE -> Variance.COVARIANT
             org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
         }
     }

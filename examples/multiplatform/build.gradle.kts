@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform") apply false
 }
 
-subprojects {
+allprojects {
     repositories {
         mavenCentral()
     }

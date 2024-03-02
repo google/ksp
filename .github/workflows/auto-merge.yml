@@ -21,18 +21,21 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-        ref: 1.0.15-release
+        ref: 1.0.19-release
 
     - name: merge commits from main to release branch
       run: |
         # Cherry pick new changes from main, except for version bumps.
         # A commit is a version bump IFF it touches third_party/prebuilt/repo
         DONT_PICK=$(cat <<EOF
-        a0ec95f02b561fad1473a36ec7788aa6689db9ed
-        f1a7ae788e1f94df04bcd6d7eebfb0d8f487e429
-        15e9b54fe5b3e1c51e748b2856196e1eed6c4483
-        23a7adb763ca01c24db3a83fa17227ef218d3fdc
-        e951fb9c14defe19072b1d3b78e48eedc1fb1b77
+        d44ad7d9824aa0f073ce3c53e79361ae0f030d3b
+        1a4ed56e3dc43f1d075fb2fa1f9f12f29bcd43cd
+        c65ac57cad85f38b314414489a53a7fcff414c8c
+        3ea749001abc37d4253e58be1861f17222091605
+        17d03d52f3c303da886bd0a9e82a5696ebbe825b
+        ba2bee790da28056c30b0bc30f22c36e83cb7e68
+        f52eef6634a8dcbfca6a335966464702ffbcb3b9
+        dd5a919a0c7d78c5b98ca856339de915cab2ed38
         EOF
         )
         git config --global user.email "kotlin-symbol-processing@google.com"
@@ -106,18 +109,21 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: 1.0.15-release
+          ref: 1.0.19-release
 
       - name: merge commits from main to release branch
         run: |
           # Cherry pick new changes from main, except for version bumps.
           # A commit is a version bump IFF it touches third_party/prebuilt/repo
           DONT_PICK=$(cat <<EOF
-          a0ec95f02b561fad1473a36ec7788aa6689db9ed
-          f1a7ae788e1f94df04bcd6d7eebfb0d8f487e429
-          15e9b54fe5b3e1c51e748b2856196e1eed6c4483
-          23a7adb763ca01c24db3a83fa17227ef218d3fdc
-          e951fb9c14defe19072b1d3b78e48eedc1fb1b77
+          d44ad7d9824aa0f073ce3c53e79361ae0f030d3b
+          1a4ed56e3dc43f1d075fb2fa1f9f12f29bcd43cd
+          c65ac57cad85f38b314414489a53a7fcff414c8c
+          3ea749001abc37d4253e58be1861f17222091605
+          17d03d52f3c303da886bd0a9e82a5696ebbe825b
+          ba2bee790da28056c30b0bc30f22c36e83cb7e68
+          f52eef6634a8dcbfca6a335966464702ffbcb3b9
+          dd5a919a0c7d78c5b98ca856339de915cab2ed38
           EOF
           )
           git config --global user.email "kotlin-symbol-processing@google.com"

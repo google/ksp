@@ -17,12 +17,11 @@
 
 package com.google.devtools.ksp.symbol.impl.binary
 
-import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.toFunctionKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toKSPropertyDeclaration
-import com.google.devtools.ksp.toKSModifiers
 import org.jetbrains.kotlin.descriptors.PropertyAccessorDescriptor
 
 abstract class KSPropertyAccessorDescriptorImpl(val descriptor: PropertyAccessorDescriptor) /*: KSPropertyAccessor*/ {

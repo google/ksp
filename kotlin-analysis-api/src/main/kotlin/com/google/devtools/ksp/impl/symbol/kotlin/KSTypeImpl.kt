@@ -17,9 +17,10 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.IdKeyPair
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.IdKeyPair
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -30,7 +31,6 @@ import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationsList
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 
@@ -97,6 +97,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         if (that.isError || this.isError) {
             return false
         }
+        recordLookupWithSupertypes((that as KSTypeImpl).type)
         return type.isAssignableFrom((that as KSTypeImpl).type)
     }
 
@@ -109,21 +110,12 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return analyze {
-            analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                arguments.forEach { arg -> argument(arg.toKtTypeProjection()) }
-            }.let { getCached(it) }
-        }
+        return type.replace(arguments.map { it.toKtTypeProjection() })?.let { getCached(it) } ?: KSErrorType
     }
 
     override fun starProjection(): KSType {
-        return analyze {
-            analysisSession.buildClassType((type as KtNonErrorClassType).classSymbol) {
-                type.typeArguments().forEach {
-                    argument(KtStarTypeProjection(type.token))
-                }
-            }.let { getCached(it) }
-        }
+        return type.replace(List(type.typeArguments().size) { KtStarTypeProjection(type.token) })
+            ?.let { getCached(it) } ?: KSErrorType
     }
 
     override fun makeNullable(): KSType {

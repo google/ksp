@@ -3,7 +3,6 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,7 +42,6 @@ class IncrementalCPIT(val useKSP2: Boolean) {
 
     @Test
     fun testCPChanges() {
-        Assume.assumeFalse(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
@@ -75,6 +73,98 @@ class IncrementalCPIT(val useKSP2: Boolean) {
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 // Non-signature changes should not affect anything.
                 Assert.assertEquals(emptyMessage, dirties)
+            }
+        }
+    }
+
+    val func2Dirty = listOf(
+        "l1/src/main/kotlin/p1/TopFunc1.kt" to setOf(
+            "w: [ksp] processing done",
+        ),
+    )
+
+    @Test
+    fun testCPChangesForFunctions() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments("clean", "assemble").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+        }
+
+        // Dummy changes
+        func2Dirty.forEach { (src, expectedDirties) ->
+            File(project.root, src).appendText("\n\n")
+            gradleRunner.withArguments("assemble").build().let { result ->
+                // Trivial changes should not result in re-processing.
+                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+            }
+        }
+
+        // Value changes
+        func2Dirty.forEach { (src, expectedDirties) ->
+            File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Int = 1")
+            gradleRunner.withArguments("assemble").withDebug(true).build().let { result ->
+                // Value changes should not result in re-processing.
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+                // Non-signature changes should not affect anything.
+                Assert.assertEquals(emptyMessage, dirties)
+            }
+        }
+
+        // Signature changes
+        func2Dirty.forEach { (src, expectedDirties) ->
+            File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Double = 1.0")
+            gradleRunner.withArguments("assemble").build().let { result ->
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+                Assert.assertEquals(expectedDirties, dirties)
+            }
+        }
+    }
+
+    val prop2Dirty = listOf(
+        "l1/src/main/kotlin/p1/TopProp1.kt" to setOf(
+            "w: [ksp] processing done",
+        ),
+    )
+
+    @Test
+    fun testCPChangesForProperties() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments("clean", "assemble").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+        }
+
+        // Dummy changes
+        prop2Dirty.forEach { (src, expectedDirties) ->
+            File(project.root, src).appendText("\n\n")
+            gradleRunner.withArguments("assemble").build().let { result ->
+                // Trivial changes should not result in re-processing.
+                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+            }
+        }
+
+        // Value changes
+        prop2Dirty.forEach { (src, expectedDirties) ->
+            File(project.root, src).writeText("package p1\n\nval MyTopProp1: Int = 1")
+            gradleRunner.withArguments("assemble").withDebug(true).build().let { result ->
+                // Value changes should not result in re-processing.
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+                // Non-signature changes should not affect anything.
+                Assert.assertEquals(emptyMessage, dirties)
+            }
+        }
+
+        // Signature changes
+        prop2Dirty.forEach { (src, expectedDirties) ->
+            File(project.root, src).writeText("package p1\n\nval MyTopProp1: Double = 1.0")
+            gradleRunner.withArguments("assemble").build().let { result ->
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+                Assert.assertEquals(expectedDirties, dirties)
             }
         }
     }

@@ -18,10 +18,10 @@
 package com.google.devtools.ksp.symbol.impl.binary
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.processing.impl.KSNameImpl
-import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.findPsi
@@ -128,8 +128,10 @@ class KSAnnotationDescriptorImpl private constructor(
 }
 
 private fun ClassId.findKSClassDeclaration(): KSClassDeclaration? {
-    val ksName = KSNameImpl.getCached(this.asSingleFqName().asString().replace("$", "."))
-    return ResolverImpl.instance!!.getClassDeclarationByName(ksName)
+    return ResolverImpl.instance!!.getClassDeclarationByName(this.asSingleFqName().asString()) ?: run {
+        val ksName = KSNameImpl.getCached(asSingleFqName().asString().replace("$", "."))
+        ResolverImpl.instance!!.getClassDeclarationByName(ksName)
+    }
 }
 
 private fun ClassId.findKSType(): KSType? = findKSClassDeclaration()?.asStarProjectedType()
@@ -193,9 +195,10 @@ fun LazyAnnotationDescriptor.getValueArguments(): Map<Name, ConstantValue<*>> {
         override fun toString(): String = "${name.asString()} declared in LazyAnnotations.kt"
     }
 
-    val scope = (c.scope.ownerDescriptor as? PackageFragmentDescriptor)?.let {
-        LexicalScope.Base(c.scope, FileDescriptorForVisibilityChecks(source, it))
-    } ?: c.scope
+    val scope = c.trace.get(BindingContext.LEXICAL_SCOPE, annotationEntry)
+        ?: (c.scope.ownerDescriptor as? PackageFragmentDescriptor)?.let {
+            LexicalScope.Base(c.scope, FileDescriptorForVisibilityChecks(source, it))
+        } ?: c.scope
 
     val resolutionResults = c.annotationResolver.resolveAnnotationCall(annotationEntry, scope, c.trace)
     AnnotationResolverImpl.checkAnnotationType(annotationEntry, c.trace, resolutionResults)

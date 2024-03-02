@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.impl.symbol.util
 
-import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.AbstractKSDeclarationImpl

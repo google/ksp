@@ -6,6 +6,7 @@ description = "Kotlin Symbol Processing Util"
 
 val intellijVersion: String by project
 val junitVersion: String by project
+val kotlinBaseVersion: String by project
 
 tasks.withType<KotlinCompile> {
     compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
@@ -34,6 +35,7 @@ dependencies {
     }
 
     implementation(project(":api"))
+    implementation(kotlin("stdlib", kotlinBaseVersion))
     testImplementation("junit:junit:$junitVersion")
 }
 

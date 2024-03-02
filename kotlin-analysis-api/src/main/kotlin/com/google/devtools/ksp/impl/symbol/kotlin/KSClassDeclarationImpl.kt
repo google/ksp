@@ -17,18 +17,22 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordGetSealedSubclasses
+import com.google.devtools.ksp.impl.recordLookup
+import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
+import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.processing.impl.KSNameImpl
-import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtClassOrObject
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
     KSClassDeclaration,
@@ -96,11 +100,12 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val isCompanionObject: Boolean by lazy {
-        (ktClassOrObjectSymbol.psi as? KtObjectDeclaration)?.isCompanion() ?: false
+        ktClassOrObjectSymbol.classKind == KtClassKind.COMPANION_OBJECT
     }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         if (!modifiers.contains(Modifier.SEALED)) return emptySequence()
+        recordGetSealedSubclasses(this)
         return (ktClassOrObjectSymbol as? KtNamedClassOrObjectSymbol)?.let {
             analyze {
                 it.getSealedClassInheritors().map { getCached(it) }.asSequence()
@@ -109,17 +114,33 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
+        ktClassOrObjectSymbol.superTypes.forEach { recordLookup(it, this) }
+        recordLookupForGetAllFunctions(ktClassOrObjectSymbol.superTypes)
         return ktClassOrObjectSymbol.getAllFunctions()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
+        ktClassOrObjectSymbol.superTypes.forEach { recordLookup(it, this) }
+        recordLookupForGetAllProperties(ktClassOrObjectSymbol.superTypes)
         return ktClassOrObjectSymbol.getAllProperties()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
+        if (typeArguments.isNotEmpty() && typeArguments.size != asStarProjectedType().arguments.size) {
+            return KSErrorType
+        }
         return analyze {
-            analysisSession.buildClassType(ktClassOrObjectSymbol) {
-                typeArguments.forEach { argument(it.toKtTypeProjection()) }
+            if (typeArguments.isEmpty()) {
+                typeParameters.map { buildTypeParameterType((it as KSTypeParameterImpl).ktTypeParameterSymbol) }
+                    .let { typeParameterTypes ->
+                        buildClassType(ktClassOrObjectSymbol) {
+                            typeParameterTypes.forEach { argument(it) }
+                        }
+                    }
+            } else {
+                buildClassType(ktClassOrObjectSymbol) {
+                    typeArguments.forEach { argument(it.toKtTypeProjection()) }
+                }
             }.let { KSTypeImpl.getCached(it) }
         }
     }

@@ -31,6 +31,7 @@
 // main.test.KotlinMain KOTLIN
 // main.test.C JAVA
 // main.test.D JAVA
+// symbols from package non.exist
 // END
 
 // MODULE: lib1

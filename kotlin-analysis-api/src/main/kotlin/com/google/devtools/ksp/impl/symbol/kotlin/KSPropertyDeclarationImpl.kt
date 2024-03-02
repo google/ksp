@@ -17,11 +17,14 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.closestClassDeclaration
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
+import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
-import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
@@ -123,10 +126,14 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override fun findOverridee(): KSPropertyDeclaration? {
+        closestClassDeclaration()?.asStarProjectedType()?.let {
+            recordLookupWithSupertypes((it as KSTypeImpl).type)
+        }
+        recordLookupForPropertyOrMethod(this)
         return analyze {
             ktPropertySymbol.getDirectlyOverriddenSymbols().firstOrNull()
                 ?.unwrapFakeOverrides?.toKSDeclaration() as? KSPropertyDeclaration
-        }
+        }?.also { recordLookupForPropertyOrMethod(it) }
     }
 
     override fun asMemberOf(containing: KSType): KSType {

@@ -28,6 +28,13 @@
 // LJavaAnno;
 // intParam: I
 // <init>: (I)V
+// LJavaEnum;
+// VAL1: LJavaEnum;
+// VAL2: LJavaEnum;
+// DEFAULT: LJavaEnum;
+// values: ()[LJavaEnum;
+// valueOf: (Ljava/lang/String;)LJavaEnum;
+// <init>: (Ljava/lang/String;I)V
 // END
 
 // FILE: Cls.kt
@@ -50,4 +57,11 @@ class JavaClass {
 // FILE: JavaAnno.java
 @interface JavaAnno {
     int intParam();
+}
+
+// FILE: JavaEnum.java
+public enum JavaEnum {
+    VAL1,
+    VAL2,
+    DEFAULT
 }

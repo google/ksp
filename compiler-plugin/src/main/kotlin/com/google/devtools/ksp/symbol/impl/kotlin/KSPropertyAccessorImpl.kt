@@ -17,7 +17,7 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.memoized
+import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.processing.impl.findAnnotationFromUseSiteTarget
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.getKSDeclarations

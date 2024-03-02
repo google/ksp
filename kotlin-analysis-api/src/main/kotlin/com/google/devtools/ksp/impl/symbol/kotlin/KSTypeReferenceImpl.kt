@@ -17,8 +17,9 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
-import com.google.devtools.ksp.IdKeyPair
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.IdKeyPair
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
@@ -47,6 +48,7 @@ class KSTypeReferenceImpl(
         }
     }
 
+    // Remember to recordLookup if the usage is beyond a type reference.
     private val ktType: KtType by lazy {
         analyze { ktTypeReference.getKtType() }
     }
@@ -64,6 +66,7 @@ class KSTypeReferenceImpl(
     }
 
     override fun resolve(): KSType {
+        analyze { recordLookup(ktType, parent) }
         return KSTypeImpl.getCached(ktType)
     }
 

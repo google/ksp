@@ -17,19 +17,23 @@
 
 package com.google.devtools.ksp
 
+import com.google.devtools.ksp.common.AnyChanges
+import com.google.devtools.ksp.common.copyWithTimestamp
+import com.google.devtools.ksp.common.findLocationString
+import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.common.impl.JsPlatformInfoImpl
+import com.google.devtools.ksp.common.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.common.impl.KSPCompilationError
+import com.google.devtools.ksp.common.impl.NativePlatformInfoImpl
+import com.google.devtools.ksp.common.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.PlatformInfo
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
-import com.google.devtools.ksp.processing.impl.JsPlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.KSPCompilationError
+import com.google.devtools.ksp.processing.impl.KSObjectCacheManager
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
-import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
-import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclarationContainer
@@ -281,7 +285,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                             logger,
                             options.apiVersion,
                             options.compilerVersion,
-                            findTargetInfos(options.languageVersionSettings, module)
+                            findTargetInfos(options.languageVersionSettings, module),
+                            KotlinVersion(1, 0),
                         )
                     )
                 }?.let { analysisResult ->

@@ -1,16 +1,18 @@
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.closestClassDeclaration
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
+import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 
-class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldSymbol: KtJavaFieldSymbol) :
+class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: KtJavaFieldSymbol) :
     KSPropertyDeclaration,
     AbstractKSDeclarationImpl(ktJavaFieldSymbol),
     KSExpectActual by KSExpectActualImpl(ktJavaFieldSymbol) {
@@ -45,7 +47,12 @@ class KSPropertyDeclarationJavaImpl private constructor(private val ktJavaFieldS
     }
 
     override fun findOverridee(): KSPropertyDeclaration? {
+        closestClassDeclaration()?.asStarProjectedType()?.let {
+            recordLookupWithSupertypes((it as KSTypeImpl).type)
+        }
+        recordLookupForPropertyOrMethod(this)
         TODO("Not yet implemented")
+        // ?.also { recordLookupForPropertyOrMethod(it) }
     }
 
     override fun asMemberOf(containing: KSType): KSType {

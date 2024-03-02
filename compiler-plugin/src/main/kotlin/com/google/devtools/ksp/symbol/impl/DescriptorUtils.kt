@@ -17,9 +17,9 @@
 
 package com.google.devtools.ksp.symbol.impl
 
-import com.google.devtools.ksp.KSObjectCache
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
@@ -90,7 +90,9 @@ fun MemberDescriptor.toKSModifiers(): Set<Modifier> {
         JavaDescriptorVisibilities.PROTECTED_AND_PACKAGE,
         JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY,
         -> modifiers.add(Modifier.PROTECTED)
-        DescriptorVisibilities.PRIVATE, DescriptorVisibilities.LOCAL -> modifiers.add(Modifier.PRIVATE)
+        DescriptorVisibilities.PRIVATE,
+        DescriptorVisibilities.PRIVATE_TO_THIS,
+        DescriptorVisibilities.LOCAL -> modifiers.add(Modifier.PRIVATE)
         DescriptorVisibilities.INTERNAL -> modifiers.add(Modifier.INTERNAL)
         // Since there is no modifier for package-private, use No modifier to tell if a symbol from binary is package private.
         JavaDescriptorVisibilities.PACKAGE_VISIBILITY, JavaDescriptorVisibilities.PROTECTED_STATIC_VISIBILITY -> Unit

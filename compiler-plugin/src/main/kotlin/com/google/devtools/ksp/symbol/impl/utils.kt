@@ -18,7 +18,7 @@ package com.google.devtools.ksp.symbol.impl
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.Variance

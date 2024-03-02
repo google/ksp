@@ -15,17 +15,11 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.processing.impl
 
 class KSObjectCacheManager {
     companion object {
-        private val caches_prop = object : ThreadLocal<ArrayList<KSObjectCache<*, *>>>() {
-            override fun initialValue(): ArrayList<KSObjectCache<*, *>> {
-                return ArrayList()
-            }
-        }
-        val caches
-            get() = caches_prop.get()
+        val caches = arrayListOf<KSObjectCache<*, *>>()
 
         fun register(cache: KSObjectCache<*, *>) = caches.add(cache)
         fun clear() = caches.forEach { it.clear() }
@@ -33,16 +27,11 @@ class KSObjectCacheManager {
 }
 
 abstract class KSObjectCache<K, V> {
-    private val cache_prop = ThreadLocal<MutableMap<K, V>>()
+    val cache = mutableMapOf<K, V>()
 
-    val cache: MutableMap<K, V>
-        get() {
-            if (cache_prop.get() == null) {
-                KSObjectCacheManager.register(this)
-                cache_prop.set(mutableMapOf())
-            }
-            return cache_prop.get()
-        }
+    init {
+        KSObjectCacheManager.register(this)
+    }
 
     open fun clear() = cache.clear()
 }

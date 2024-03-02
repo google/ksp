@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.common
 
 // TODO: garbage collect underlying sequence after exhaust.
 class MemoizedSequence<T>(sequence: Sequence<T>) : Sequence<T> {

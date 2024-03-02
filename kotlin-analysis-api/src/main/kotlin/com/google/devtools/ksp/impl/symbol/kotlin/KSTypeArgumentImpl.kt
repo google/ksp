@@ -16,8 +16,7 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.findParentOfType
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeArgument
@@ -28,12 +27,11 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
-import org.jetbrains.kotlin.psi.KtUserType
 
-class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection) : KSTypeArgument {
+class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection, override val parent: KSNode) : KSTypeArgument {
     companion object : KSObjectCache<KtTypeProjection, KSTypeArgument>() {
-        fun getCached(ktTypeArgument: KtTypeProjection) = cache.getOrPut(ktTypeArgument) {
-            KSTypeArgumentImpl(ktTypeArgument)
+        fun getCached(ktTypeArgument: KtTypeProjection, parent: KSNode) = cache.getOrPut(ktTypeArgument) {
+            KSTypeArgumentImpl(ktTypeArgument, parent)
         }
     }
 
@@ -41,10 +39,6 @@ class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection) : KSTypeA
 
     override val location: Location by lazy {
         ktTypeArgument.toLocation()
-    }
-
-    override val parent: KSNode? by lazy {
-        ktTypeArgument.findParentOfType<KtUserType>()?.let { KSClassifierReferenceImpl.getCached(it, this) }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

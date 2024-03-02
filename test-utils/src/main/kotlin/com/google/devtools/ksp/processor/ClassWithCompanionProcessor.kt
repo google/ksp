@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -29,6 +30,7 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getNewFiles().forEach { it.accept(CompanionVisitor(), Unit) }
+        resolver.getClassDeclarationByName("A")?.accept(CompanionVisitor(), Unit)
         return emptyList()
     }
 

@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.processing.impl
+package com.google.devtools.ksp.common.impl
 
 import com.intellij.psi.PsiFile
 

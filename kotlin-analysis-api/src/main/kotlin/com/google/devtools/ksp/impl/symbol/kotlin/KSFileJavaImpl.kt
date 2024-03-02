@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -29,7 +29,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 
-class KSFileJavaImpl private constructor(private val psi: PsiJavaFile) : KSFile, Deferrable {
+class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferrable {
     companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }

@@ -16,9 +16,10 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.toKSModifiers
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
-import com.google.devtools.ksp.processing.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -28,7 +29,6 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.toKSModifiers
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJvmModifiersOwner
 import com.intellij.psi.PsiModifierListOwner
@@ -80,8 +80,17 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     open /*override*/ val packageName: KSName by lazy {
-        ((containingFile?.packageName ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName)?.asString() ?: "")
-            .let { KSNameImpl.getCached(it) }
+        // source
+        containingFile?.packageName
+            // top level declaration
+            ?: when (ktDeclarationSymbol) {
+                is KtClassLikeSymbol -> ktDeclarationSymbol.classIdIfNonLocal?.packageFqName?.asString()
+                is KtCallableSymbol -> ktDeclarationSymbol.callableIdIfNonLocal?.packageName?.asString()
+                else -> null
+            }?.let { KSNameImpl.getCached(it) }
+            //  null -> non top level declaration, find in parent
+            ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
+            ?: throw IllegalStateException("failed to find package name for $this")
     }
 
     open /*override*/ val typeParameters: List<KSTypeParameter> by lazy {

@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.api.SourceKind
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
@@ -62,10 +63,37 @@ object AndroidPluginIntegration {
             .map { it.name }
     }
 
-    fun registerGeneratedSources(
+    /**
+     * Support KspTaskJvm and KspAATask tasks
+     */
+    @Suppress("DEPRECATION")
+    private fun tryUpdateKspWithAndroidSourceSets(
+        kotlinCompilation: KotlinJvmAndroidCompilation,
+        kspTaskProvider: TaskProvider<*>
+    ) {
+        kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA).forEach { source ->
+            kspTaskProvider.configure { task ->
+                when (task) {
+                    is KspTaskJvm -> {
+                        task.setSource(source)
+                        task.dependsOn(source)
+                    }
+
+                    is KspAATask -> {
+                        task.kspConfig.javaSourceRoots.from(source)
+                        task.dependsOn(source)
+                    }
+
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+    private fun registerGeneratedSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<KspTaskJvm>,
+        kspTaskProvider: TaskProvider<*>,
         javaOutputDir: File,
         kotlinOutputDir: File,
         classOutputDir: File,
@@ -81,5 +109,30 @@ object AndroidPluginIntegration {
         kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
         kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
         kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
+    }
+
+    fun syncSourceSets(
+        project: Project,
+        kotlinCompilation: KotlinJvmAndroidCompilation,
+        kspTaskProvider: TaskProvider<*>,
+        javaOutputDir: File,
+        kotlinOutputDir: File,
+        classOutputDir: File,
+        resourcesOutputDir: FileCollection
+    ) {
+        // Order is important here as we update task with AGP generated sources and
+        // then update AGP with source that KSP will generate.
+        // Mixing this up will cause circular dependency in Gradle
+        tryUpdateKspWithAndroidSourceSets(kotlinCompilation, kspTaskProvider)
+
+        registerGeneratedSources(
+            project,
+            kotlinCompilation,
+            kspTaskProvider,
+            javaOutputDir,
+            kotlinOutputDir,
+            classOutputDir,
+            resourcesOutputDir
+        )
     }
 }

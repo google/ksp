@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.symbol.impl.kotlin
 
-import com.google.devtools.ksp.KSObjectCache
-import com.google.devtools.ksp.processing.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.processing.impl.KSObjectCache
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.psi.*
 

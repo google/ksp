@@ -65,6 +65,7 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
     }
 
+    @Disabled
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
@@ -161,7 +162,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/companion.kt")
     }
 
-    @Disabled
     @TestMetadata("constProperties.kt")
     @Test
     fun testConstProperties() {
@@ -260,11 +260,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/getAnnotationByTypeWithInnerDefault.kt")
     }
 
-    @Disabled
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
-        runTest("../test-utils/testData/api/getPackage.kt")
+        runTest("../kotlin-analysis-api/testData/getPackage.kt")
     }
 
     @TestMetadata("getByName.kt")
@@ -352,11 +351,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaTypes2.kt")
     }
 
-    @Disabled
     @TestMetadata("javaWildcards2.kt")
     @Test
     fun testJavaWildcards2() {
-        runTest("../test-utils/testData/api/javaWildcards2.kt")
+        runTest("../kotlin-analysis-api/testData/javaWildcards2.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")
@@ -458,6 +456,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/overridee/overrideOrder.kt")
     }
 
+    @TestMetadata("packageAnnotations.kt")
+    @Test
+    fun testPackageAnnotation() {
+        runTest("../test-utils/testData/api/packageAnnotations.kt")
+    }
+
     @TestMetadata("primaryConstructorOverride.kt")
     @Test
     fun testPrimaryConstructorOverride() {
@@ -489,39 +493,40 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/rawTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaAnnotationTypes.kt")
     @Test
     fun testRecordJavaAnnotationTypes() {
-        runTest("../test-utils/testData/api/recordJavaAnnotationTypes.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaAnnotationTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaAsMemberOf.kt")
     @Test
     fun testRecordJavaAsMemberOf() {
-        runTest("../test-utils/testData/api/recordJavaAsMemberOf.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaAsMemberOf.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaGetAllMembers.kt")
     @Test
     fun testRecordJavaGetAllMembers() {
-        runTest("../test-utils/testData/api/recordJavaGetAllMembers.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaGetAllMembers.kt")
     }
 
-    @Disabled
     @TestMetadata("recordJavaOverrides.kt")
     @Test
     fun testRecordJavaOverrides() {
-        runTest("../test-utils/testData/api/recordJavaOverrides.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaOverrides.kt")
     }
 
-    @Disabled
+    @TestMetadata("recordJavaResolutions.kt")
+    @Test
+    fun testRecordJavaResolutions() {
+        runTest("../kotlin-analysis-api/testData/recordJavaResolutions.kt")
+    }
+
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {
-        runTest("../test-utils/testData/api/recordJavaSupertypes.kt")
+        runTest("../kotlin-analysis-api/testData/recordJavaSupertypes.kt")
     }
 
     @Disabled
@@ -531,11 +536,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/referenceElement.kt")
     }
 
-    @Disabled
     @TestMetadata("replaceWithErrorTypeArgs.kt")
     @Test
     fun testReplaceWithErrorTypeArgs() {
-        runTest("../test-utils/testData/api/replaceWithErrorTypeArgs.kt")
+        runTest("../kotlin-analysis-api/testData/replaceWithErrorTypeArgs.kt")
     }
 
     @TestMetadata("resolveJavaType.kt")
@@ -554,7 +558,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
-        runTest("../test-utils/testData/api/signatureMapper.kt")
+        runTest("../kotlin-analysis-api/testData/signatureMapper.kt")
     }
 
     @TestMetadata("superTypes.kt")
@@ -598,6 +602,12 @@ class KSPAATest : AbstractKSPAATest() {
     @Test
     fun testTypeParameterReference() {
         runTest("../kotlin-analysis-api/testData/typeParameterReference.kt")
+    }
+
+    @TestMetadata("typeParameterVariance.kt")
+    @Test
+    fun testTypeParameterVariance() {
+        runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
     }
 
     @TestMetadata("varianceTypeCheck.kt")

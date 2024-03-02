@@ -16,8 +16,8 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.IdKeyPair
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.IdKeyPair
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeArgument
@@ -40,7 +40,7 @@ class KSClassifierReferenceImpl private constructor(
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        ktUserType.typeArguments.map { KSTypeArgumentImpl.getCached(it) }
+        ktUserType.typeArguments.map { KSTypeArgumentImpl.getCached(it, this) }
         // ktUserType.typeArguments.map { KSTypeArgumentKtImpl.getCached(it) }
     }
 
