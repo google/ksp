@@ -23,9 +23,11 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.internal.KaptTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 import java.io.File
+import java.util.concurrent.Callable
 
 /**
  * This helper class handles communication with the android plugin.
@@ -77,26 +79,26 @@ object AndroidPluginIntegration {
         val kaptProvider: TaskProvider<Task>? =
             project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
 
-        kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA).forEach { source ->
-            kspTaskProvider.configure { task ->
-                // this is workaround for KAPT generator that prevents circular dependency
-                val isKaptOutput =
-                    kaptProvider?.let { it.get().outputs.files.toList().any { file -> source.dir == file } } ?: false
-                if (!isKaptOutput) {
-                    when (task) {
-                        is KspTaskJvm -> {
-                            task.setSource(source)
-                            task.dependsOn(source)
-                        }
-
-                        is KspAATask -> {
-                            task.kspConfig.javaSourceRoots.from(source)
-                            task.dependsOn(source)
-                        }
-
-                        else -> Unit
-                    }
+        val sources = kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA)
+        kspTaskProvider.configure { task ->
+            // this is workaround for KAPT generator that prevents circular dependency
+            val filteredSources = Callable {
+                val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
+                val dir = destinationProperty?.get()?.asFile
+                sources.filter { dir?.isParentOf(it.dir) == false }
+            }
+            when (task) {
+                is KspTaskJvm -> {
+                    task.setSource(filteredSources)
+                    task.dependsOn(filteredSources)
                 }
+
+                is KspAATask -> {
+                    task.kspConfig.javaSourceRoots.from(filteredSources)
+                    task.dependsOn(filteredSources)
+                }
+
+                else -> Unit
             }
         }
     }
