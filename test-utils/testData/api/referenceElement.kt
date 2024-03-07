@@ -19,7 +19,7 @@
 // TEST PROCESSOR: ReferenceElementProcessor
 // EXPECTED:
 // KSClassifierReferenceImpl: Qualifier of B is A
-// KSClassifierReferenceImpl: Qualifier of C is A
+// KSClassifierReferenceImpl: Qualifier of C<Int> is A<String>
 // KSClassifierReferenceImpl: Qualifier of Int is null
 // KSClassifierReferenceImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Int is null
