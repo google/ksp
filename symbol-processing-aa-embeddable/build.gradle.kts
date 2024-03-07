@@ -4,7 +4,6 @@ import java.util.zip.ZipFile
 
 evaluationDependsOn(":kotlin-analysis-api")
 
-val kotlinBaseVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
 
@@ -68,6 +67,7 @@ tasks.withType<ShadowJar> {
         relocate(f, t)
     }
     mergeServiceFiles()
+    exclude("META-INF/compiler.version")
 
     // All bundled dependencies should be renamed.
     doLast {
@@ -202,4 +202,31 @@ signing {
     isRequired = hasProperty("signingKey")
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(extensions.getByType<PublishingExtension>().publications)
+}
+
+abstract class WriteVersionSrcTask @Inject constructor(
+    @get:Input val kotlinVersion: String,
+    @get:OutputDirectory val outputResDir: File
+) : DefaultTask() {
+    @TaskAction
+    fun generate() {
+        val metaInfDir = File(outputResDir, "META-INF")
+        metaInfDir.mkdirs()
+        File(metaInfDir, "ksp.compiler.version").writeText(kotlinVersion)
+    }
+}
+
+val kspVersionDir = File(project.buildDir, "generated/ksp-versions/META-INF")
+val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>(
+    "generateKSPVersions",
+    aaKotlinBaseVersion,
+    kspVersionDir
+)
+
+kotlin {
+    sourceSets {
+        main {
+            resources.srcDir(writeVersionSrcTask.map { it.outputResDir })
+        }
+    }
 }
