@@ -85,7 +85,7 @@ object AndroidPluginIntegration {
             val filteredSources = Callable {
                 val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
                 val dir = destinationProperty?.get()?.asFile
-                sources.filter { dir?.isParentOf(it.dir) == false }
+                sources.filter { dir?.isParentOf(it.dir) != true }
             }
             when (task) {
                 is KspTaskJvm -> {
