@@ -387,7 +387,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").build().let { result ->
             // TODO figure out why K2 uses the source set name and K1 uses the project name
-            val expectedName = if (useKSP2) "workload" else "main"
+            val expectedName = if (useKSP2) "main" else "workload"
             Assert.assertTrue(result.output.contains("Module name is $expectedName"))
         }
     }
