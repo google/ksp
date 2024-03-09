@@ -17,8 +17,8 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
-import com.google.devtools.ksp.IdKeyPair
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.IdKeyPair
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations

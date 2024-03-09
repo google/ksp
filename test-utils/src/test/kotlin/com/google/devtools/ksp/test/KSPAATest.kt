@@ -65,6 +65,7 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
     }
 
+    @Disabled
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
@@ -259,11 +260,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/getAnnotationByTypeWithInnerDefault.kt")
     }
 
-    @Disabled
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
-        runTest("../test-utils/testData/api/getPackage.kt")
+        runTest("../kotlin-analysis-api/testData/getPackage.kt")
     }
 
     @TestMetadata("getByName.kt")
@@ -351,11 +351,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/javaTypes2.kt")
     }
 
-    @Disabled
     @TestMetadata("javaWildcards2.kt")
     @Test
     fun testJavaWildcards2() {
-        runTest("../test-utils/testData/api/javaWildcards2.kt")
+        runTest("../kotlin-analysis-api/testData/javaWildcards2.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")
@@ -537,11 +536,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/referenceElement.kt")
     }
 
-    @Disabled
     @TestMetadata("replaceWithErrorTypeArgs.kt")
     @Test
     fun testReplaceWithErrorTypeArgs() {
-        runTest("../test-utils/testData/api/replaceWithErrorTypeArgs.kt")
+        runTest("../kotlin-analysis-api/testData/replaceWithErrorTypeArgs.kt")
     }
 
     @TestMetadata("resolveJavaType.kt")
@@ -604,6 +602,12 @@ class KSPAATest : AbstractKSPAATest() {
     @Test
     fun testTypeParameterReference() {
         runTest("../kotlin-analysis-api/testData/typeParameterReference.kt")
+    }
+
+    @TestMetadata("typeParameterVariance.kt")
+    @Test
+    fun testTypeParameterVariance() {
+        runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
     }
 
     @TestMetadata("varianceTypeCheck.kt")

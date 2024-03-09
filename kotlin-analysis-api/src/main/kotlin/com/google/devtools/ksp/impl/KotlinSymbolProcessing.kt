@@ -18,19 +18,19 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.AnyChanges
-import com.google.devtools.ksp.KSObjectCacheManager
+import com.google.devtools.ksp.common.AnyChanges
+import com.google.devtools.ksp.common.KSObjectCacheManager
+import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
+import com.google.devtools.ksp.common.impl.JsPlatformInfoImpl
+import com.google.devtools.ksp.common.impl.JvmPlatformInfoImpl
+import com.google.devtools.ksp.common.impl.NativePlatformInfoImpl
+import com.google.devtools.ksp.common.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.processing.impl.CodeGeneratorImpl
-import com.google.devtools.ksp.processing.impl.JsPlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.JvmPlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.NativePlatformInfoImpl
-import com.google.devtools.ksp.processing.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
@@ -50,7 +50,6 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
@@ -71,9 +70,8 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.KtSta
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.FirSealedClassInheritorsProcessorFactory
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.LLSealedInheritorsProviderFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
-import org.jetbrains.kotlin.analysis.project.structure.KtBinaryModule
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.allDirectDependencies
@@ -263,12 +261,7 @@ class KotlinSymbolProcessing(
         kotlinCoreProjectEnvironment.project.apply {
             registerService(
                 KotlinPsiDeclarationProviderFactory::class.java,
-                KotlinStaticPsiDeclarationProviderFactory(
-                    this,
-                    ktModuleProviderImpl.allKtModules.flatMap { it.allDirectDependencies() }
-                        .filterIsInstance<KtBinaryModule>(),
-                    kotlinCoreProjectEnvironment.environment.jarFileSystem as CoreJarFileSystem
-                )
+                KotlinStaticPsiDeclarationProviderFactory(this)
             )
         }
 
@@ -344,9 +337,9 @@ class KotlinSymbolProcessing(
             registerService(KotlinPackageProviderFactory::class.java, IncrementalKotlinPackageProviderFactory(project))
 
             registerService(
-                FirSealedClassInheritorsProcessorFactory::class.java,
-                object : FirSealedClassInheritorsProcessorFactory() {
-                    override fun createSealedClassInheritorsProvider(): SealedClassInheritorsProvider {
+                LLSealedInheritorsProviderFactory::class.java,
+                object : LLSealedInheritorsProviderFactory {
+                    override fun createSealedInheritorsProvider(): SealedClassInheritorsProvider {
                         return SealedClassInheritorsProviderImpl
                     }
                 }

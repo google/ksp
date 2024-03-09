@@ -42,7 +42,7 @@ Here are some [sample test processors](compiler-plugin/src/test/kotlin/com/googl
 #### Steps for writing a test
 * KSP needs to be built with JDK 11+, because of some test dependencies.
 * Create a test processor under the sample processor folder.
-it should be extending [AbstractTestProcessor](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/processor/AbstractTestProcessor.kt)
+it should be extending [AbstractTestProcessor](test-utils/src/main/kotlin/com/google/devtools/ksp/processor/AbstractTestProcessor.kt)
 * Write your logic by overriding corresponding functions. 
     * Test is performed by running test processor and get a collection of test results in the form of List<String>.
     * Make sure you override toResult() function to collect test result. 
@@ -50,7 +50,7 @@ it should be extending [AbstractTestProcessor](compiler-plugin/src/test/kotlin/c
     * To help with easy testing, you can create an annotation for test, and annotate the specific part of the code to avoid doing 
     excess filtering when traveling along the program.
 * Write your test case to work with test processor.
-    * Create a test kt file under [testData](compiler-plugin/testData/api) folder. 
+    * Create a test kt file under [testData](test-utils/testData/api) folder. 
     Every kt file under this folder corresponds to a test case.
     * Inside the test file:
         * [optional] Add ```// WITH_RUNTIME``` to the top if you need access to standard library.
@@ -62,8 +62,8 @@ it should be extending [AbstractTestProcessor](compiler-plugin/src/test/kotlin/c
         * Then follows virtual files section till the end of test file.
         * You can use ```// FILE: <file name>``` to create files that will be available at run time of the test.
             * E.g. ```// FILE: a.kt``` will result in a file named ```a.kt``` at run time.
-* Add new test to [test suite](compiler-plugin/src/test/java/com/google/devtools/ksp/test/KotlinKSPTestGenerated.java)
-* Run generated tests with ```:compiler-plugin:test``` gradle task.
+* Add new test to [test suite](test-utils/src/test/kotlin/com/google/devtools/ksp/test/KSPCompilerPluginTest.kt)
+* Run generated tests with ```:test-util:test``` gradle task.
     * This will execute all tests in KSP test suite. To run your test only, specify the test name with 
-    ```--tests "com.google.devtools.ksp.test.KotlinKSPTestGenerated.<name of your generated test>"```
+    ```--tests "com.google.devtools.ksp.test.KSPCompilerPluginTest.<name of your generated test>"```
     * Make sure your change is not breaking any existing test as well :).

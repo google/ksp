@@ -17,6 +17,11 @@
 
 package com.google.devtools.ksp
 
+import com.google.devtools.ksp.common.FileToSymbolsMap
+import com.google.devtools.ksp.common.IncrementalContextBase
+import com.google.devtools.ksp.common.LookupStorageWrapper
+import com.google.devtools.ksp.common.LookupSymbolWrapper
+import com.google.devtools.ksp.common.LookupTrackerWrapper
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.impl.findPsi
 import com.google.devtools.ksp.symbol.impl.java.KSFunctionDeclarationJavaImpl

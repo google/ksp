@@ -47,6 +47,8 @@
 // inlineReturningFun -> inlineReturningFun-HRn7Rpw
 // internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule
 // internalInlineReturningFun -> internalInlineReturningFun-HRn7Rpw$mainModule
+// mainPackage.Anno -> declarations
+// get-a -> a
 // mainPackage.AbstractKotlinClass -> declarations
 // get-abstractVar -> getAbstractVar
 // set-abstractVar -> setAbstractVar
@@ -151,6 +153,7 @@ class Foo {
     internal fun internalInlineReturningFun(): Inline1 = TODO()
 }
 
+annotation class Anno(val a: String)
 abstract class AbstractKotlinClass {
     abstract var abstractVar:String
     abstract val abstractVal:String

@@ -19,6 +19,23 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_STRICTFP_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_SYNCHRONIZED_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_TRANSIENT_ANNOTATION_FQN
+import com.google.devtools.ksp.common.JVM_VOLATILE_ANNOTATION_FQN
+import com.google.devtools.ksp.common.extractThrowsAnnotation
+import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.common.impl.RefPosition
+import com.google.devtools.ksp.common.impl.findOuterMostRef
+import com.google.devtools.ksp.common.impl.findRefPosition
+import com.google.devtools.ksp.common.impl.isReturnTypeOfAnnotationMethod
+import com.google.devtools.ksp.common.javaModifiers
+import com.google.devtools.ksp.common.memoized
+import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
@@ -28,10 +45,7 @@ import com.google.devtools.ksp.impl.symbol.util.hasAnnotation
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
-import com.google.devtools.ksp.processing.impl.KSNameImpl
-import com.google.devtools.ksp.processing.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.symbol.*
-import com.google.devtools.ksp.visitor.CollectAnnotatedSymbolsVisitor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
@@ -47,11 +61,17 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
+import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.types.isRaw
+import org.jetbrains.kotlin.fir.types.typeContext
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
+import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
+import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
@@ -279,15 +299,13 @@ class ResolverAAImpl(
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
         return analyze {
-            val packageNames = packageName.split(".")
+            val packageNames = FqName(packageName).pathSegments().map { it.asString() }
             var packages = listOf(analysisSession.ROOT_PACKAGE_SYMBOL)
             for (curName in packageNames) {
                 packages = packages
                     .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
                     .distinct()
             }
-            // Above steps forfeited root package, adding it back.
-            packages += analysisSession.ROOT_PACKAGE_SYMBOL
             packages.flatMap {
                 it.getPackageScope().getAllSymbols().distinct().mapNotNull { symbol ->
                     when (symbol) {
@@ -349,7 +367,35 @@ class ResolverAAImpl(
     }
 
     override fun getJavaWildcard(reference: KSTypeReference): KSTypeReference {
-        TODO("Not yet implemented")
+        val (ref, indexes) = reference.findOuterMostRef()
+        val type = ref.resolve()
+        if (type.isError)
+            return reference
+        val position = findRefPosition(ref)
+        val ktType = (type as KSTypeImpl).type
+        // cast to FIR internal needed due to missing support in AA for type mapping mode
+        // and corresponding type mapping APIs.
+        val coneType = (ktType as KtFirType).coneType
+        val mode = analyze {
+            val typeContext = analyze { useSiteModule.getFirResolveSession(project).useSiteFirSession.typeContext }
+            when (position) {
+                RefPosition.RETURN_TYPE -> typeContext.getOptimalModeForReturnType(
+                    coneType,
+                    reference.isReturnTypeOfAnnotationMethod()
+                )
+                RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
+                RefPosition.PARAMETER_TYPE -> typeContext.getOptimalModeForValueParameter(coneType)
+            }.updateFromParents(ref)
+        }
+        return analyze {
+            ktType.toWildcard(mode)?.let {
+                var candidate: KtType = it
+                for (i in indexes.reversed()) {
+                    candidate = candidate.typeArguments()[i].type!!
+                }
+                KSTypeReferenceSyntheticImpl.getCached(KSTypeImpl.getCached(candidate), null)
+            }
+        } ?: reference
     }
 
     override fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType> {
@@ -411,6 +457,9 @@ class ResolverAAImpl(
 
     // TODO: handle @JvmName annotations, mangled names
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
+        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
+            return accessor.receiver.simpleName.asString()
+        }
         val prefix = if (accessor is KSPropertyGetter) {
             "get"
         } else {

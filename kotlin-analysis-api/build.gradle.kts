@@ -61,19 +61,36 @@ dependencies {
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation(kotlin("stdlib", aaKotlinBaseVersion))
+    compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation("com.google.guava:guava:$aaGuavaVersion")
     implementation("one.util:streamex:$aaStreamexVersion")
-    implementation("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion")
     implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
     implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
     implementation("com.fasterxml:aalto-xml:$aaAaltoXmlVersion") { isTransitive = false }
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
+    implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
+    implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
+    implementation("org.jetbrains.intellij.deps:trove4j:1.0.20200330") { isTransitive = false }
+    implementation("org.jetbrains.intellij.deps:log4j:1.2.17.2") { isTransitive = false }
+    implementation("org.jetbrains.intellij.deps:jdom:2.0.6") { isTransitive = false }
+    implementation("io.javaslang:javaslang:2.0.6")
+    implementation("javax.inject:javax.inject:1")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
+    implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0") { isTransitive = false }
+    implementation(
+        "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
+    ) {
+        isTransitive = false
+    }
+
     compileOnly(project(":common-deps"))
 
     implementation(project(":api"))
     implementation(project(":common-util"))
+
+    testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
 }
 
 sourceSets.main {
@@ -99,6 +116,10 @@ tasks.withType<org.gradle.jvm.tasks.Jar> {
 }
 
 tasks.withType<ShadowJar>() {
+    dependencies {
+        exclude(project(":api"))
+    }
+    exclude("kotlin/**")
     archiveClassifier.set("")
     minimize()
     mergeServiceFiles()
@@ -153,7 +174,8 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
-                        addDependency("com.google.devtools.ksp", "common-deps", version)
+                        addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
+                        addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
                 }
             }
