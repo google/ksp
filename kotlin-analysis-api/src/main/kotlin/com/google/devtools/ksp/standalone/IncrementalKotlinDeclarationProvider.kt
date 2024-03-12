@@ -96,7 +96,9 @@ class IncrementalKotlinDeclarationProviderFactory(
 
     fun update(files: Collection<KtFile>, moduleRoots: List<VirtualFile>) {
         this.files = files
-        this.staticFactory = KotlinStaticDeclarationProviderFactory(project, files, additionalRoots = moduleRoots)
+        this.staticFactory = KotlinStaticDeclarationProviderFactory(
+            project, files, sharedBinaryRoots = moduleRoots, shouldBuildStubsForBinaryLibraries = true
+        )
         provider?.let {
             it.del = createDelegateProvider()
         }
