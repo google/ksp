@@ -62,7 +62,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("allFunctions_kt_inherits_java.kt")
     @Test
     fun testAllFunctions_kt_inherits_java() {
-        runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
+        runTest("../kotlin-analysis-api/testData/allFunctions_kt_inherits_java.kt")
     }
 
     @Disabled
