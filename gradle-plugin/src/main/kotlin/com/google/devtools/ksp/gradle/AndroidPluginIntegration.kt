@@ -20,10 +20,14 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.internal.KaptTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 import java.io.File
+import java.util.concurrent.Callable
 
 /**
  * This helper class handles communication with the android plugin.
@@ -68,27 +72,47 @@ object AndroidPluginIntegration {
      */
     @Suppress("DEPRECATION")
     private fun tryUpdateKspWithAndroidSourceSets(
+        project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<*>
     ) {
-        kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA).forEach { source ->
-            kspTaskProvider.configure { task ->
-                when (task) {
-                    is KspTaskJvm -> {
-                        task.setSource(source)
-                        task.dependsOn(source)
-                    }
+        val kaptProvider: TaskProvider<Task>? =
+            project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
 
-                    is KspAATask -> {
-                        task.kspConfig.javaSourceRoots.from(source)
-                        task.dependsOn(source)
-                    }
-
-                    else -> Unit
+        val sources = kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA)
+        kspTaskProvider.configure { task ->
+            // this is workaround for KAPT generator that prevents circular dependency
+            val filteredSources = Callable {
+                val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
+                val dir = destinationProperty?.get()?.asFile
+                sources.filter { dir?.isParentOf(it.dir) != true }
+            }
+            when (task) {
+                is KspTaskJvm -> {
+                    task.setSource(filteredSources)
+                    task.dependsOn(filteredSources)
                 }
+
+                is KspAATask -> {
+                    task.kspConfig.javaSourceRoots.from(filteredSources)
+                    task.dependsOn(filteredSources)
+                }
+
+                else -> Unit
             }
         }
     }
+
+    // same logic as in Kapt name generation method
+    private val TaskProvider<*>.kaptTaskName: String
+        get() {
+            val prefix = "kapt"
+            return if (name.startsWith("compile")) {
+                name.replaceFirst("compile", prefix)
+            } else {
+                "$prefix${name.capitalizeAsciiOnly()}"
+            }
+        }
 
     private fun registerGeneratedSources(
         project: Project,
@@ -123,7 +147,7 @@ object AndroidPluginIntegration {
         // Order is important here as we update task with AGP generated sources and
         // then update AGP with source that KSP will generate.
         // Mixing this up will cause circular dependency in Gradle
-        tryUpdateKspWithAndroidSourceSets(kotlinCompilation, kspTaskProvider)
+        tryUpdateKspWithAndroidSourceSets(project, kotlinCompilation, kspTaskProvider)
 
         registerGeneratedSources(
             project,

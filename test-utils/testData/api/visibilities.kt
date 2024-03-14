@@ -108,6 +108,11 @@ class C {
     }
 }
 
+
+// FILE: JavaAnnotation.java
+public @interface JavaAnnotation {
+    String value();
+}
 // FILE: Enum.java
 public enum Enum {
     Y,U,V;

@@ -58,7 +58,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     open /*override*/ val modifiers: Set<Modifier> by lazy {
-        if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB) {
+        if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
             when (ktDeclarationSymbol) {
                 is KtPropertySymbol -> ktDeclarationSymbol.toModifiers()
                 is KtClassOrObjectSymbol -> ktDeclarationSymbol.toModifiers()
