@@ -239,6 +239,15 @@ interface Resolver {
     fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration>
 
     /**
+     * Returns a sequence of subpackage names of the given [packageName].
+     * @param packageName the root package name to search from.
+     * @return A sequence of subpackage names, if any. Does not include the input package name.
+     * This will return declarations from both dependencies and source.
+     */
+    @KspExperimental
+    fun getSubpackagesOf(packageName: String): Sequence<String>
+
+    /**
      * Returns the corresponding Kotlin class with the given Java class.
      *
      * E.g.

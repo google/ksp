@@ -95,6 +95,7 @@ import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameOrNull
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.resolve.descriptorUtil.propertyIfAccessor
@@ -1011,6 +1012,22 @@ class ResolverImpl(
             .asSequence()
             .mapNotNull { (it as? MemberDescriptor)?.toKSDeclaration() }
             .plus(javaPackageToClassMap.getOrDefault(packageName, emptyList()).asSequence())
+    }
+
+    @KspExperimental
+    override fun getSubpackagesOf(packageName: String): Sequence<String> {
+        fun PackageViewDescriptor.subPackages(): Sequence<PackageViewDescriptor> = memberScope
+            .getContributedDescriptors(DescriptorKindFilter.PACKAGES)
+            .asSequence()
+            .filterIsInstance<PackageViewDescriptor>()
+
+        return generateSequence(listOf(module.getPackage(FqName(packageName)))) { subPackages ->
+            subPackages
+                .flatMap { it.subPackages() }
+                .ifEmpty { null }
+        }
+            .flatMap { it.asSequence() }
+            .mapNotNull { it.fqNameOrNull()?.asString() }
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {

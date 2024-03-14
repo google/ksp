@@ -55,6 +55,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KtPackageSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
@@ -343,6 +344,27 @@ class ResolverAAImpl(
                     }
                 }
             }.asSequence()
+        }
+    }
+
+    @KspExperimental
+    override fun getSubpackagesOf(packageName: String): Sequence<String> {
+        return analyze {
+            fun KtPackageSymbol.subPackages(): Sequence<KtPackageSymbol> = getPackageScope()
+                .getPackageSymbols()
+                .distinct()
+
+            val packageNames = FqName(packageName).pathSegments().map { it.asString() }
+            var packages = listOf(analysisSession.ROOT_PACKAGE_SYMBOL)
+            for (curName in packageNames) {
+                packages = packages
+                    .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
+                    .distinct()
+            }
+            packages
+                .asSequence()
+                .flatMap { it.subPackages() }
+                .map { it.fqName.asString() }
         }
     }
 
