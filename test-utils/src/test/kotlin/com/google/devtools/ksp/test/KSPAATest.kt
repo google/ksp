@@ -265,6 +265,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/getPackage.kt")
     }
 
+    @TestMetadata("getSubPackages.kt")
+    @Test
+    fun testGetSubPackages() {
+        runTest("../kotlin-analysis-api/testData/getSubPackages.kt")
+    }
+
     @TestMetadata("getByName.kt")
     @Test
     fun testGetByName() {

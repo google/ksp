@@ -354,16 +354,15 @@ class ResolverAAImpl(
                 .getPackageSymbols()
                 .distinct()
 
-            val packageNames = FqName(packageName).pathSegments().map { it.asString() }
-            var packages = listOf(analysisSession.ROOT_PACKAGE_SYMBOL)
-            for (curName in packageNames) {
-                packages = packages
-                    .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
-                    .distinct()
+            val packages = listOfNotNull(analysisSession.getPackageSymbolIfPackageExists(FqName(packageName)))
+            generateSequence(packages) { subPackages ->
+                subPackages
+                    .flatMap { it.subPackages() }
+                    .ifEmpty { null }
             }
-            packages
-                .asSequence()
-                .flatMap { it.subPackages() }
+                .flatMap { it.asSequence() }
+                // Drop the input package
+                .drop(1)
                 .map { it.fqName.asString() }
         }
     }

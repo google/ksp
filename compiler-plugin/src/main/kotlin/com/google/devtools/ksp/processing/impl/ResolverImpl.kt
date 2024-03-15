@@ -1020,6 +1020,7 @@ class ResolverImpl(
             .getContributedDescriptors(DescriptorKindFilter.PACKAGES)
             .asSequence()
             .filterIsInstance<PackageViewDescriptor>()
+            .filterNot { it == this@subPackages }
 
         return generateSequence(listOf(module.getPackage(FqName(packageName)))) { subPackages ->
             subPackages
@@ -1027,6 +1028,8 @@ class ResolverImpl(
                 .ifEmpty { null }
         }
             .flatMap { it.asSequence() }
+            // Drop the input package
+            .drop(1)
             .mapNotNull { it.fqNameOrNull()?.asString() }
     }
 
