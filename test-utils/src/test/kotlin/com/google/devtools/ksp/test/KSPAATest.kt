@@ -529,11 +529,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/recordJavaSupertypes.kt")
     }
 
-    @Disabled
     @TestMetadata("referenceElement.kt")
     @Test
     fun testReferenceElement() {
-        runTest("../test-utils/testData/api/referenceElement.kt")
+        runTest("../kotlin-analysis-api/testData/referenceElement.kt")
     }
 
     @TestMetadata("replaceWithErrorTypeArgs.kt")
