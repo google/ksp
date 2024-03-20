@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
 // TODO: implement a psi based version of annotation application.
 class KSAnnotationImpl private constructor(
@@ -44,7 +45,17 @@ class KSAnnotationImpl private constructor(
 
     override val annotationType: KSTypeReference by lazy {
         analyze {
-            KSTypeReferenceResolvedImpl.getCached(buildClassType(annotationApplication.classId!!))
+            if (annotationApplication.psi is KtAnnotationEntry) {
+                KSTypeReferenceImpl.getCached(
+                    (annotationApplication.psi as KtAnnotationEntry).typeReference!!,
+                    parent = this@KSAnnotationImpl
+                )
+            } else {
+                KSTypeReferenceResolvedImpl.getCached(
+                    buildClassType(annotationApplication.classId!!),
+                    parent = this@KSAnnotationImpl
+                )
+            }
         }
     }
 
