@@ -47,8 +47,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.analysis.project.structure.KtLibraryModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
-import org.jetbrains.kotlin.codegen.state.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
-import org.jetbrains.kotlin.codegen.state.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
@@ -63,6 +61,8 @@ import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnota
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
+import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
