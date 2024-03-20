@@ -46,7 +46,9 @@ class KSClassifierReferenceResolvedImpl private constructor(
         get() = parent?.location ?: NonExistLocation
 
     override fun toString(): String {
-        return referencedName()
+        return referencedName() + if (typeArguments.isNotEmpty()) "<${
+        typeArguments.map { it.toString() }.joinToString(", ")
+        }>" else ""
     }
 }
 

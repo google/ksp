@@ -16,7 +16,6 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.recordLookup
@@ -32,6 +31,7 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
 import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.psi.KtDynamicType
 import org.jetbrains.kotlin.psi.KtNullableType
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
@@ -57,11 +57,9 @@ class KSTypeReferenceImpl(
         while (typeElement is KtNullableType)
             typeElement = typeElement.innerType
         when (typeElement) {
-            // is KtFunctionType -> KSCallableReferenceImpl.getCached(typeElement)
             is KtUserType -> KSClassifierReferenceImpl.getCached(typeElement, this)
-            // is KtDynamicType -> KSDynamicReferenceImpl.getCached(this)
-            // is KtIntersectionType -> KSDefNonNullReferenceImpl.getCached(typeElement)
-            else -> throw IllegalStateException("Unexpected type element ${typeElement?.javaClass}, $ExceptionMessage")
+            is KtDynamicType -> KSDynamicReferenceImpl.getCached(this)
+            else -> (resolve() as KSTypeImpl).type.toClassifierReference(this)
         }
     }
 
