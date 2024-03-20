@@ -29,10 +29,10 @@
 // foo.T3: false
 // T
 // List<T>
-// (T & Any..T?)
-// (MutableList<(T & Any..T?)>..List<(T & Any..T?)>?)
-// (SelfReferencingJava<(T & Any..T?)>..SelfReferencingJava<(T & Any..T?)>?)
-// (T1 & Any..T1?)
+// (T..T?)
+// (MutableList<(T..T?)>..List<(T..T?)>?)
+// (SelfReferencingJava<(T..T?)>..SelfReferencingJava<(T..T?)>?)
+// (T1..T1?)
 // END
 
 // MODULE: lib

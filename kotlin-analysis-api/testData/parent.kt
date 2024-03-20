@@ -30,13 +30,11 @@
 // parent of Bnno: @Bnno
 // parent of @Bnno: B
 // parent of B: File: B.java
-// parent of T: (T & Any..T?)
-// parent of T & Any: (T & Any..T?)
-// parent of (T & Any..T?): t
+// parent of T: (T..T?)
+// parent of (T..T?): t
 // parent of t: B
-// parent of T: (T & Any..T?)
-// parent of T & Any: (T & Any..T?)
-// parent of (T & Any..T?): t
+// parent of T: (T..T?)
+// parent of (T..T?): t
 // parent of t: foo
 // parent of Int: Int
 // parent of Int: i
