@@ -75,6 +75,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.org.objectweb.asm.Opcodes
 
 @OptIn(KspExperimental::class)
@@ -105,6 +106,31 @@ class ResolverAAImpl(
     val classBinaryCache = ClsKotlinBinaryClassCache()
     private val packageInfoFiles by lazy {
         allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
+    }
+
+    private val aliasingFqNs: MutableMap<String, KSTypeAlias> = mutableMapOf()
+    private val aliasingNames: MutableSet<String> = mutableSetOf()
+
+    init {
+        val visitor = object : KSVisitorVoid() {
+            override fun visitFile(file: KSFile, data: Unit) {
+                file.declarations.forEach { it.accept(this, data) }
+
+                // TODO: evaluate with benchmarks: cost of getContainingFile v.s. name collision
+                // Import aliases are file-scoped. `aliasingNamesByFile` could be faster
+                ((file as? KSFileImpl)?.ktFileSymbol?.psi as? KtFile)?.importDirectives?.forEach {
+                    it.aliasName?.let { aliasingNames.add(it) }
+                }
+            }
+
+            override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
+                typeAlias.qualifiedName?.asString()?.let { fqn ->
+                    aliasingFqNs[fqn] = typeAlias
+                    aliasingNames.add(fqn.substringAfterLast('.'))
+                }
+            }
+        }
+        allKSFiles.forEach { it.accept(visitor, Unit) }
     }
 
     // TODO: fix in upstream for builtin types.
@@ -511,15 +537,38 @@ class ResolverAAImpl(
         }
     }
 
+    internal fun KSTypeReference.resolveToUnderlying(): KSType {
+        var candidate = resolve()
+        var declaration = candidate.declaration
+        while (declaration is KSTypeAlias) {
+            candidate = declaration.type.resolve()
+            declaration = candidate.declaration
+        }
+        return candidate
+    }
+    internal fun checkAnnotation(annotation: KSAnnotation, ksName: KSName, shortName: String): Boolean {
+        val annotationType = annotation.annotationType
+        val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
+        val simpleName = referencedName?.substringAfterLast('.')
+        return (simpleName == shortName || simpleName in aliasingNames) &&
+            annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
+    }
     // Currently, all annotation types are imlemented by KSTypeReferenceResolvedImpl.
     // The short-name-check optimization doesn't help.
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
-        return (newSymbols + deferredSymbolsRestored).asSequence().filter {
-            it.annotations.any {
-                it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+        val realAnnotationName =
+            aliasingFqNs[annotationName]?.type?.resolveToUnderlying()?.declaration?.qualifiedName?.asString()
+                ?: annotationName
+
+        val ksName = KSNameImpl.getCached(realAnnotationName)
+        val shortName = ksName.getShortName()
+        fun checkAnnotated(annotated: KSAnnotated): Boolean {
+            return annotated.annotations.any {
+                checkAnnotation(it, ksName, shortName)
             }
         }
+        val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
+        return (newSymbols + deferredSymbolsRestored).asSequence().filter(::checkAnnotated)
     }
 
     private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
