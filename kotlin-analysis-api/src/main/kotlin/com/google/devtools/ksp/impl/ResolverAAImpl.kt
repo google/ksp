@@ -108,10 +108,8 @@ class ResolverAAImpl(
         allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
     }
 
-    private val aliasingFqNs: MutableMap<String, KSTypeAlias> = mutableMapOf()
-    private val aliasingNames: MutableSet<String> = mutableSetOf()
-
-    init {
+    private val aliasingFqNs: Map<String, KSTypeAlias> by lazy {
+        val result = mutableMapOf<String, KSTypeAlias>()
         val visitor = object : KSVisitorVoid() {
             override fun visitFile(file: KSFile, data: Unit) {
                 file.declarations.forEach { it.accept(this, data) }
@@ -125,13 +123,15 @@ class ResolverAAImpl(
 
             override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
                 typeAlias.qualifiedName?.asString()?.let { fqn ->
-                    aliasingFqNs[fqn] = typeAlias
+                    result[fqn] = typeAlias
                     aliasingNames.add(fqn.substringAfterLast('.'))
                 }
             }
         }
         allKSFiles.forEach { it.accept(visitor, Unit) }
+        result
     }
+    private val aliasingNames: MutableSet<String> = mutableSetOf()
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
