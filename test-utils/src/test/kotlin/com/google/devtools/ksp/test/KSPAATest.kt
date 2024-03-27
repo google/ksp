@@ -547,7 +547,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/resolveJavaType.kt")
     }
 
-    @Disabled
     @TestMetadata("sealedClass.kt")
     @Test
     fun testSealedClass() {

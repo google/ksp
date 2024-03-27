@@ -33,6 +33,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
+import com.google.devtools.ksp.standalone.KspStandaloneDirectInheritorsProvider
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
 import com.google.devtools.ksp.standalone.buildKspSourceModule
 import com.google.devtools.ksp.symbol.KSFile
@@ -70,8 +71,8 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.KtSta
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.LLSealedInheritorsProviderFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
+import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
@@ -110,7 +111,6 @@ import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
-import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProviderImpl
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.platform.CommonPlatforms
@@ -329,18 +329,18 @@ class KotlinSymbolProcessing(
                 IncrementalKotlinDeclarationProviderFactory(this)
             )
             registerService(
+                KotlinDirectInheritorsProvider::class.java,
+                KspStandaloneDirectInheritorsProvider::class.java
+            )
+            registerService(
                 KotlinDeclarationProviderMerger::class.java,
                 KotlinStaticDeclarationProviderMerger(this)
             )
             registerService(KotlinPackageProviderFactory::class.java, IncrementalKotlinPackageProviderFactory(project))
 
             registerService(
-                LLSealedInheritorsProviderFactory::class.java,
-                object : LLSealedInheritorsProviderFactory {
-                    override fun createSealedInheritorsProvider(): SealedClassInheritorsProvider {
-                        return SealedClassInheritorsProviderImpl
-                    }
-                }
+                SealedClassInheritorsProvider::class.java,
+                LLSealedInheritorsProvider::class.java,
             )
 
             registerService(
