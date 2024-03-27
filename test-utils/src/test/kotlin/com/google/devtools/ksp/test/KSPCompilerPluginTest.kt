@@ -255,6 +255,13 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/getPackage.kt")
     }
 
+    @DisabledOnOs(OS.WINDOWS)
+    @TestMetadata("getSubPackages.kt")
+    @Test
+    fun testGetSubPackages() {
+        runTest("../test-utils/testData/api/getSubPackages.kt")
+    }
+
     @TestMetadata("getByName.kt")
     @Test
     fun testGetByName() {
