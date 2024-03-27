@@ -524,10 +524,12 @@ class ResolverImpl(
             is PsiMethod -> {
                 // TODO: get rid of hardcoded check if possible.
                 val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
+                    val propName = psi.name.substring(3).replaceFirstChar(Char::lowercaseChar)
                     moduleClassResolver
                         .resolveContainingClass(psi)
                         ?.findEnclosedDescriptor(
-                            kindFilter = DescriptorKindFilter.CALLABLES
+                            kindFilter = DescriptorKindFilter.CALLABLES,
+                            name = propName
                         ) {
                             (it as? PropertyDescriptor)?.getter?.findPsi() == psi ||
                                 (it as? PropertyDescriptor)?.setter?.findPsi() == psi
@@ -542,6 +544,7 @@ class ResolverImpl(
                         }
                         containingClass.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
+                            name = if (psi.name == containingClass.name.asString()) "<init>" else psi.name,
                             filter = filter
                         )
                     }
@@ -551,6 +554,7 @@ class ResolverImpl(
                     .resolveClass(JavaFieldImpl(psi).containingClass)
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
+                        name = psi.name,
                         filter = { it.findPsi() == psi }
                     )
             }
@@ -747,6 +751,7 @@ class ResolverImpl(
                         moduleClassResolver.resolveContainingClass(owner)
                             ?.findEnclosedDescriptor(
                                 kindFilter = DescriptorKindFilter.FUNCTIONS,
+                                name = owner.name,
                                 filter = { it.findPsi() == owner }
                             ) as FunctionDescriptor
                     } as DeclarationDescriptor
@@ -1403,6 +1408,39 @@ class ResolverImpl(
     }.toMap()
 
     internal fun findPsiJavaFile(path: String): PsiFile? = psiJavaFiles.get(path)
+
+    // Always construct the key on the fly, so that it and value can be reclaimed any time.
+    private val contributedDescriptorsCache =
+        WeakHashMap<Pair<MemberScope, DescriptorKindFilter>, Map<String, List<DeclarationDescriptor>>>()
+
+    private inline fun MemberScope.findEnclosedDescriptor(
+        kindFilter: DescriptorKindFilter,
+        name: String,
+        crossinline filter: (DeclarationDescriptor) -> Boolean,
+    ): DeclarationDescriptor? {
+        val nameToDescriptors = contributedDescriptorsCache.computeIfAbsent(Pair(this, kindFilter)) {
+            getContributedDescriptors(kindFilter).groupBy { it.name.asString() }
+        }
+        return nameToDescriptors.get(name)?.firstOrNull(filter)
+    }
+
+    private inline fun ClassDescriptor.findEnclosedDescriptor(
+        kindFilter: DescriptorKindFilter,
+        name: String,
+        crossinline filter: (DeclarationDescriptor) -> Boolean,
+    ): DeclarationDescriptor? {
+        return this.unsubstitutedMemberScope.findEnclosedDescriptor(
+            kindFilter = kindFilter,
+            name = name,
+            filter = filter
+        ) ?: this.staticScope.findEnclosedDescriptor(
+            kindFilter = kindFilter,
+            name = name,
+            filter = filter
+        ) ?: constructors.firstOrNull {
+            kindFilter.accepts(it) && filter(it)
+        }
+    }
 }
 
 // TODO: cross module resolution
@@ -1467,30 +1505,6 @@ private fun Name.getNonSpecialIdentifier(): String {
         asString().substring(1, asString().length - 1)
     } else {
         asString().substring(1)
-    }
-}
-
-private inline fun MemberScope.findEnclosedDescriptor(
-    kindFilter: DescriptorKindFilter,
-    crossinline filter: (DeclarationDescriptor) -> Boolean,
-): DeclarationDescriptor? {
-    return getContributedDescriptors(
-        kindFilter = kindFilter
-    ).firstOrNull(filter)
-}
-
-private inline fun ClassDescriptor.findEnclosedDescriptor(
-    kindFilter: DescriptorKindFilter,
-    crossinline filter: (DeclarationDescriptor) -> Boolean,
-): DeclarationDescriptor? {
-    return this.unsubstitutedMemberScope.findEnclosedDescriptor(
-        kindFilter = kindFilter,
-        filter = filter
-    ) ?: this.staticScope.findEnclosedDescriptor(
-        kindFilter = kindFilter,
-        filter = filter
-    ) ?: constructors.firstOrNull {
-        kindFilter.accepts(it) && filter(it)
     }
 }
 
