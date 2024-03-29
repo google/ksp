@@ -559,6 +559,11 @@ fun DeclarationDescriptor.findPsi(): PsiElement? {
     return leaf.parentsWithSelf.firstOrNull { psi.manager.areElementsEquivalent(it, psi) }
 }
 
+fun DeclarationDescriptor.correspondsTo(candidate: PsiElement): Boolean {
+    val psi = (this as? DeclarationDescriptorWithSource)?.source?.getPsi() ?: return false
+    return psi.manager.areElementsEquivalent(psi, candidate)
+}
+
 internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement
     ?.annotationList?.annotations?.map { KSAnnotationJavaImpl.getCached(it) } ?: emptyList<KSAnnotation>()
 
