@@ -517,24 +517,28 @@ class ResolverImpl(
         }
     }
 
+    private val synthesizedPropPrefix = mapOf<String, (PropertyDescriptor?) -> PropertyAccessorDescriptor?>(
+        "set" to { it?.setter },
+        "get" to { it?.getter },
+        "is" to { it?.getter },
+    )
+
     // TODO: Resolve Java variables is not supported by this function. Not needed currently.
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
             is PsiMethod -> {
-                // TODO: get rid of hardcoded check if possible.
-                val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
-                    val propName = psi.name.substring(3).replaceFirstChar(Char::lowercaseChar)
-                    moduleClassResolver
-                        .resolveContainingClass(psi)
-                        ?.findEnclosedDescriptor(
-                            kindFilter = DescriptorKindFilter.CALLABLES,
-                            name = propName
-                        ) {
-                            (it as? PropertyDescriptor)?.getter?.findPsi() == psi ||
-                                (it as? PropertyDescriptor)?.setter?.findPsi() == psi
-                        }
-                } else null
+                val property = synthesizedPropPrefix.keys.firstOrNull {
+                    psi.name.startsWith(it) && psi.name.length > it.length && psi.name[it.length].isUpperCase()
+                }?.let { prefix ->
+                    val propName = psi.name.substring(prefix.length).replaceFirstChar(Char::lowercaseChar)
+                    moduleClassResolver.resolveContainingClass(psi)?.findEnclosedDescriptor(
+                        kindFilter = DescriptorKindFilter.VARIABLES,
+                        name = propName
+                    ) {
+                        synthesizedPropPrefix[prefix]!!(it as? PropertyDescriptor)?.findPsi() == psi
+                    }
+                }
                 property ?: moduleClassResolver
                     .resolveContainingClass(psi)?.let { containingClass ->
                         val filter = if (psi is SyntheticElement) {
