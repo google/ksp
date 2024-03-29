@@ -536,7 +536,7 @@ class ResolverImpl(
                         kindFilter = DescriptorKindFilter.VARIABLES,
                         name = propName
                     ) {
-                        synthesizedPropPrefix[prefix]!!(it as? PropertyDescriptor)?.findPsi() == psi
+                        synthesizedPropPrefix[prefix]!!(it as? PropertyDescriptor)?.correspondsTo(psi) == true
                     }
                 }
                 property ?: moduleClassResolver
@@ -544,7 +544,7 @@ class ResolverImpl(
                         val filter = if (psi is SyntheticElement) {
                             { declaration: DeclarationDescriptor -> declaration.name.asString() == psi.name }
                         } else {
-                            { declaration: DeclarationDescriptor -> declaration.findPsi() == psi }
+                            { declaration: DeclarationDescriptor -> declaration.correspondsTo(psi) }
                         }
                         containingClass.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
@@ -559,7 +559,7 @@ class ResolverImpl(
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
                         name = psi.name,
-                        filter = { it.findPsi() == psi }
+                        filter = { it.correspondsTo(psi) }
                     )
             }
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
@@ -756,7 +756,7 @@ class ResolverImpl(
                             ?.findEnclosedDescriptor(
                                 kindFilter = DescriptorKindFilter.FUNCTIONS,
                                 name = owner.name,
-                                filter = { it.findPsi() == owner }
+                                filter = { it.correspondsTo(owner) }
                             ) as FunctionDescriptor
                     } as DeclarationDescriptor
                     val typeParameterDescriptor = LazyJavaTypeParameterDescriptor(
