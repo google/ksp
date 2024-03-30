@@ -130,7 +130,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/asMemberOf.kt")
     }
 
-    @Disabled
     @TestMetadata("backingFields.kt")
     @Test
     fun testBackingFields() {
