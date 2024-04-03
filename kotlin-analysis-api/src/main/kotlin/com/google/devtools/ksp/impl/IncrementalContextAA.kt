@@ -32,6 +32,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 import com.intellij.util.containers.MultiMap
 import com.intellij.util.io.DataExternalizer
@@ -252,8 +253,11 @@ internal fun recordLookupForGetAllFunctions(supers: List<KtType>) =
         it is KtFunctionLikeSymbol
     }
 
-internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) =
-    ResolverAAImpl.instance.incrementalContext.recordGetSealedSubclasses(classDeclaration)
+internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
+    if (classDeclaration.origin == Origin.KOTLIN) {
+        ResolverAAImpl.instance.incrementalContext.recordGetSealedSubclasses(classDeclaration)
+    }
+}
 
 class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker) : LookupTrackerWrapper {
     override val lookups: MultiMap<LookupSymbolWrapper, String>

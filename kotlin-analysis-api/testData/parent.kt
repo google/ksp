@@ -30,13 +30,11 @@
 // parent of Bnno: @Bnno
 // parent of @Bnno: B
 // parent of B: File: B.java
-// parent of T: (T & Any..T?)
-// parent of T & Any: (T & Any..T?)
-// parent of (T & Any..T?): t
+// parent of T: (T..T?)
+// parent of (T..T?): t
 // parent of t: B
-// parent of T: (T & Any..T?)
-// parent of T & Any: (T & Any..T?)
-// parent of (T & Any..T?): t
+// parent of T: (T..T?)
+// parent of (T..T?): t
 // parent of t: foo
 // parent of Int: Int
 // parent of Int: i
@@ -48,8 +46,8 @@
 // parent of synthetic constructor for B: B
 // parent of RGB: (RGB..RGB?)
 // parent of (RGB..RGB?): INVARIANT (RGB..RGB?)
-// parent of INVARIANT (RGB..RGB?): Enum
-// parent of Enum: Enum<(RGB..RGB?)>
+// parent of INVARIANT (RGB..RGB?): Enum<INVARIANT (RGB..RGB?)>
+// parent of Enum<INVARIANT (RGB..RGB?)>: Enum<(RGB..RGB?)>
 // parent of Enum<(RGB..RGB?)>: RGB
 // parent of RGB: File: B.java
 // parent of R: RGB
@@ -78,14 +76,16 @@
 // parent of List<INVARIANT Int>: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: topProp.getter()
 // parent of topProp.getter(): topProp
-// parent of Anno: null
+// parent of Anno: Anno
+// parent of Anno: @Anno
 // parent of @Anno: topProp
 // parent of topProp: File: a.kt
 // parent of T: T
 // parent of T: topFun
 // parent of Any?: T
 // parent of T: topFun
-// parent of Anno: null
+// parent of Anno: Anno
+// parent of Anno: @Anno
 // parent of @Anno: topFun
 // parent of topFun: File: a.kt
 // parent of Annotation: Annotation
@@ -95,11 +95,11 @@
 // parent of synthetic constructor for Anno: Anno
 // parent of Int: Int
 // parent of Int: INVARIANT Int
-// parent of INVARIANT Int: Map
+// parent of INVARIANT Int: Map<INVARIANT Int, INVARIANT T>
 // parent of T: T
 // parent of T: INVARIANT T
-// parent of INVARIANT T: Map
-// parent of Map: Map<Int, T>
+// parent of INVARIANT T: Map<INVARIANT Int, INVARIANT T>
+// parent of Map<INVARIANT Int, INVARIANT T>: Map<Int, T>
 // parent of Map<Int, T>: Alias
 // parent of Any?: T
 // parent of T: File: a.kt
@@ -108,7 +108,8 @@
 // parent of ITF: File: a.kt
 // parent of ITF: ITF
 // parent of ITF: topClass
-// parent of Anno: null
+// parent of Anno: Anno
+// parent of Anno: @Anno
 // parent of @Anno: topClass
 // parent of topClass: File: a.kt
 // parent of Int: Int
@@ -149,8 +150,8 @@
 // parent of synthetic constructor for InnerClass: InnerClass
 // parent of CMYK: CMYK
 // parent of CMYK: INVARIANT CMYK
-// parent of INVARIANT CMYK: Enum
-// parent of Enum: Enum<CMYK>
+// parent of INVARIANT CMYK: Enum<INVARIANT CMYK>
+// parent of Enum<INVARIANT CMYK>: Enum<CMYK>
 // parent of Enum<CMYK>: CMYK
 // parent of CMYK: File: a.kt
 // parent of CMYK: synthetic constructor for CMYK
@@ -171,8 +172,8 @@
 // parent of entries: CMYK
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
-// parent of INVARIANT YUV: Enum
-// parent of Enum: Enum<YUV>
+// parent of INVARIANT YUV: Enum<INVARIANT YUV>
+// parent of Enum<INVARIANT YUV>: Enum<YUV>
 // parent of Enum<YUV>: YUV
 // parent of YUV: null
 // parent of YUV: YUV
@@ -183,8 +184,8 @@
 // parent of V: YUV
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
-// parent of INVARIANT YUV: Array
-// parent of Array: Array<YUV>
+// parent of INVARIANT YUV: Array<INVARIANT YUV>
+// parent of Array<INVARIANT YUV>: Array<YUV>
 // parent of Array<YUV>: values
 // parent of values: YUV
 // parent of String: String
@@ -195,20 +196,20 @@
 // parent of valueOf: YUV
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
-// parent of INVARIANT YUV: EnumEntries
-// parent of EnumEntries: EnumEntries<YUV>
+// parent of INVARIANT YUV: EnumEntries<INVARIANT YUV>
+// parent of EnumEntries<INVARIANT YUV>: EnumEntries<YUV>
 // parent of EnumEntries<YUV>: entries
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
-// parent of INVARIANT YUV: EnumEntries
-// parent of EnumEntries: EnumEntries<YUV>
+// parent of INVARIANT YUV: EnumEntries<INVARIANT YUV>
+// parent of EnumEntries<INVARIANT YUV>: EnumEntries<YUV>
 // parent of EnumEntries<YUV>: entries.getter()
 // parent of entries.getter(): entries
 // parent of entries: YUV
 // parent of HSV: (HSV..HSV?)
 // parent of (HSV..HSV?): INVARIANT (HSV..HSV?)
-// parent of INVARIANT (HSV..HSV?): Enum
-// parent of Enum: Enum<(HSV..HSV?)>
+// parent of INVARIANT (HSV..HSV?): Enum<INVARIANT (HSV..HSV?)>
+// parent of Enum<INVARIANT (HSV..HSV?)>: Enum<(HSV..HSV?)>
 // parent of Enum<(HSV..HSV?)>: HSV
 // parent of HSV: File: HSV.class
 // parent of HSV: HSV

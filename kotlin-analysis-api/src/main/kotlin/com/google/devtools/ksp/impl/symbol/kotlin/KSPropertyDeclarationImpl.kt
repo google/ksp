@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.closestClassDeclaration
@@ -27,8 +29,10 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
+import org.jetbrains.kotlin.analysis.api.KtConstantInitializerValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
@@ -36,6 +40,8 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
@@ -107,13 +113,29 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
     override val hasBackingField: Boolean by lazy {
         if (origin == Origin.KOTLIN_LIB || origin == Origin.JAVA_LIB) {
-            val fileManager = ResolverAAImpl.instance.javaFileManager
-            val parentClass = this.findParentOfType<KSClassDeclaration>()
-            val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
-            val virtualFileContent = analyze {
-                (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+            when {
+                ktPropertySymbol.receiverParameter != null -> false
+                ktPropertySymbol.initializer is KtConstantInitializerValue -> true
+                (ktPropertySymbol as? KtKotlinPropertySymbol)?.isLateInit == true -> true
+                ktPropertySymbol.modality == Modality.ABSTRACT -> false
+                else -> {
+                    val classId = when (
+                        val containerSource =
+                            (ktPropertySymbol as? KtFirKotlinPropertySymbol)?.firSymbol?.containerSource
+                    ) {
+                        is JvmPackagePartSource -> containerSource.classId
+                        is KotlinJvmBinarySourceElement -> containerSource.binaryClass.classId
+                        else -> null
+                    } ?: return@lazy ktPropertySymbol.hasBackingField
+                    val fileManager = ResolverAAImpl.instance.javaFileManager
+                    val virtualFileContent = analyze {
+                        (fileManager.findClass(classId, analysisScope) as JavaClassImpl)
+                            .virtualFile!!.contentsToByteArray()
+                    }
+                    BinaryClassInfoCache.getCached(classId, virtualFileContent)
+                        .fieldAccFlags.containsKey(simpleName.asString())
+                }
             }
-            BinaryClassInfoCache.getCached(classId, virtualFileContent).fieldAccFlags.containsKey(simpleName.asString())
         } else {
             ktPropertySymbol.hasBackingField
         }

@@ -35,7 +35,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.psi.KtFile
 
-class KSFileImpl private constructor(private val ktFileSymbol: KtFileSymbol) : KSFile, Deferrable {
+class KSFileImpl private constructor(internal val ktFileSymbol: KtFileSymbol) : KSFile, Deferrable {
     companion object : KSObjectCache<KtFileSymbol, KSFileImpl>() {
         fun getCached(ktFileSymbol: KtFileSymbol) = cache.getOrPut(ktFileSymbol) { KSFileImpl(ktFileSymbol) }
     }

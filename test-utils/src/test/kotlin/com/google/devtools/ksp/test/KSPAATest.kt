@@ -62,7 +62,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("allFunctions_kt_inherits_java.kt")
     @Test
     fun testAllFunctions_kt_inherits_java() {
-        runTest("../test-utils/testData/api/allFunctions_kt_inherits_java.kt")
+        runTest("../kotlin-analysis-api/testData/allFunctions_kt_inherits_java.kt")
     }
 
     @Disabled
@@ -130,7 +130,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/asMemberOf.kt")
     }
 
-    @Disabled
     @TestMetadata("backingFields.kt")
     @Test
     fun testBackingFields() {
@@ -272,11 +271,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/getByName.kt")
     }
 
-    @Disabled
     @TestMetadata("getSymbolsFromAnnotation.kt")
     @Test
     fun testGetSymbolsFromAnnotation() {
-        runTest("../test-utils/testData/api/getSymbolsFromAnnotation.kt")
+        runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotation.kt")
     }
 
     @TestMetadata("hello.kt")
@@ -529,11 +527,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/recordJavaSupertypes.kt")
     }
 
-    @Disabled
     @TestMetadata("referenceElement.kt")
     @Test
     fun testReferenceElement() {
-        runTest("../test-utils/testData/api/referenceElement.kt")
+        runTest("../kotlin-analysis-api/testData/referenceElement.kt")
     }
 
     @TestMetadata("replaceWithErrorTypeArgs.kt")
@@ -548,7 +545,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/resolveJavaType.kt")
     }
 
-    @Disabled
     @TestMetadata("sealedClass.kt")
     @Test
     fun testSealedClass() {

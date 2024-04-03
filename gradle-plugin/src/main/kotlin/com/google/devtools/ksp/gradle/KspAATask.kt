@@ -166,16 +166,21 @@ abstract class KspAATask @Inject constructor(
                     cfg.moduleName.value(kotlinCompilation.defaultSourceSet.name)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
+                    val filteredTasks =
+                        kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                     kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                         val filtered = sourceSet.kotlin.srcDirs.filter {
-                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it) &&
+                                it !in kspExtension.excludedSources
                         }.map {
                             // @SkipWhenEmpty doesn't work well with File.
                             project.objects.fileTree().from(it)
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
-                        kspAATask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName))
+                        kspAATask.dependsOn(
+                            sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
+                        )
                     }
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
