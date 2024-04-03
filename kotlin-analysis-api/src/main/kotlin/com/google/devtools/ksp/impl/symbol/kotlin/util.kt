@@ -349,7 +349,11 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
 }
 
 internal fun KtType.typeArguments(): List<KtTypeProjection> {
-    return (this as? KtNonErrorClassType)?.qualifiers?.reversed()?.flatMap { it.typeArguments } ?: emptyList()
+    return if (this is KtFlexibleType) {
+        this.lowerBound
+    } else {
+        this
+    }.let { (it as? KtNonErrorClassType)?.qualifiers?.reversed()?.flatMap { it.typeArguments } ?: emptyList() }
 }
 
 internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {
