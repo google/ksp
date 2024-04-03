@@ -231,7 +231,7 @@ internal inline fun <R> analyze(crossinline action: KtAnalysisSession.() -> R): 
 internal fun KtSymbolWithMembers.declarations(): Sequence<KSDeclaration> {
     return analyze {
         this@declarations.let {
-            it.getDeclaredMemberScope().getAllSymbols() + it.getStaticMemberScope().getAllSymbols()
+            it.getDeclaredMemberScope().getAllSymbols() + it.getStaticDeclaredMemberScope().getAllSymbols()
         }.distinct().map { symbol ->
             when (symbol) {
                 is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
