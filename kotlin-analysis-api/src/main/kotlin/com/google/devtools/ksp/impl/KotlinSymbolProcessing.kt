@@ -705,6 +705,16 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
     org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
     org.jetbrains.kotlin.serialization.deserialization.builtins.BuiltInsLoaderImpl::class.java,
+    com.fasterxml.aalto.AaltoInputProperties::class.java,
+    com.google.errorprone.annotations.CheckReturnValue::class.java,
+    com.intellij.openapi.application.JetBrainsProtocolHandler::class.java,
+    com.intellij.openapi.editor.impl.EditorDocumentPriorities::class.java,
+    com.intellij.psi.tree.ChildRoleBase::class.java,
+    com.intellij.util.xmlb.Constants::class.java,
+    com.intellij.xml.CommonXmlStrings::class.java,
+    javax.annotation.ParametersAreNonnullByDefault::class.java,
+    org.codehaus.stax2.XMLInputFactory2::class.java,
+    org.codehaus.stax2.XMLStreamProperties::class.java,
 )
 
 fun TargetPlatform.getPlatformInfo(kspConfig: KSPConfig): List<PlatformInfo> =
