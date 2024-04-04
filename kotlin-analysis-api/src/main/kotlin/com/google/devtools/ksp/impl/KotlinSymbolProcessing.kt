@@ -712,7 +712,6 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     com.intellij.psi.tree.ChildRoleBase::class.java,
     com.intellij.util.xmlb.Constants::class.java,
     com.intellij.xml.CommonXmlStrings::class.java,
-    javax.annotation.ParametersAreNonnullByDefault::class.java,
     org.codehaus.stax2.XMLInputFactory2::class.java,
     org.codehaus.stax2.XMLStreamProperties::class.java,
 )
