@@ -159,11 +159,12 @@ abstract class KspAATask @Inject constructor(
             ).apply {
                 isTransitive = false
             }
+
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
                 kspAATask.kspClasspath.from(kspAADepCfg)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
-                    cfg.moduleName.value(kotlinCompilation.defaultSourceSet.name)
+                    cfg.moduleName.value(project.name)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
                     val filteredTasks =
