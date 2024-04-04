@@ -128,7 +128,9 @@ tasks.withType<ShadowJar>() {
     }
     exclude("kotlin/**")
     archiveClassifier.set("")
-    minimize()
+    minimize {
+        exclude(dependency("org.lz4:lz4-java:.*"))
+    }
     mergeServiceFiles()
 
     doLast {
