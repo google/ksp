@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.io.ByteArrayOutputStream
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
@@ -23,6 +24,7 @@ plugins {
 }
 
 val depSourceJars by configurations.creating
+val depJarsForCheck by configurations.creating
 
 dependencies {
     listOf(
@@ -91,6 +93,10 @@ dependencies {
     implementation(project(":common-util"))
 
     testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
+
+    depJarsForCheck("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+    depJarsForCheck(project(":api"))
+    depJarsForCheck(project(":common-deps"))
 }
 
 sourceSets.main {
@@ -123,6 +129,27 @@ tasks.withType<ShadowJar>() {
     archiveClassifier.set("")
     minimize()
     mergeServiceFiles()
+
+    doLast {
+        // Checks for missing dependencies
+        val jarJar = archiveFile.get().asFile
+        val depJars = depJarsForCheck.resolve().map(File::getPath)
+        val stdout = ByteArrayOutputStream()
+        try {
+            exec {
+                executable = "jdeps"
+                args = listOf(
+                    "--multi-release", "base",
+                    "--missing-deps",
+                    "-cp", depJars.joinToString(":"), jarJar.path
+                )
+                standardOutput = stdout
+            }
+        } catch (e: org.gradle.process.internal.ExecException) {
+            logger.warn(e.message)
+        }
+        logger.warn(stdout.toString())
+    }
 }
 
 tasks {
