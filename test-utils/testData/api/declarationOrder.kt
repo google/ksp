@@ -31,6 +31,10 @@
 // noBackingVarB:Ljava/lang/String;
 // noBackingVarA:Ljava/lang/String;
 // noBackingVarC:Ljava/lang/String;
+// privateFun:()V
+// protectedFun:()V
+// internalFun:()V
+// publicFun:()V
 // overloaded:(Ljava/lang/String;)Ljava/lang/String;
 // overloaded:(I)Ljava/lang/String;
 // overloaded:()Ljava/lang/String;
@@ -56,6 +60,10 @@
 // noBackingVarB:Ljava/lang/String;
 // noBackingVarA:Ljava/lang/String;
 // noBackingVarC:Ljava/lang/String;
+// privateFun:()V
+// protectedFun:()V
+// internalFun:()V
+// publicFun:()V
 // overloaded:(Ljava/lang/String;)Ljava/lang/String;
 // overloaded:(I)Ljava/lang/String;
 // overloaded:()Ljava/lang/String;
@@ -98,6 +106,10 @@ class KotlinClass {
     var noBackingVarC: String
         get() = ""
         set(value) {}
+    private fun privateFun(): Unit = TODO()
+    protected fun protectedFun(): Unit = TODO()
+    internal fun internalFun(): Unit = TODO()
+    fun publicFun(): Unit = TODO()
     fun overloaded(x:String): String = TODO()
     fun overloaded(x:Int): String = TODO()
     fun overloaded(): String = TODO()
@@ -139,6 +151,10 @@ class KotlinClass {
     var noBackingVarC: String
         get() = ""
         set(value) {}
+    private fun privateFun(): Unit = TODO()
+    protected fun protectedFun(): Unit = TODO()
+    internal fun internalFun(): Unit = TODO()
+    fun publicFun(): Unit = TODO()
     fun overloaded(x:String): String = TODO()
     fun overloaded(x:Int): String = TODO()
     fun overloaded(): String = TODO()
