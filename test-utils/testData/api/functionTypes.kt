@@ -18,24 +18,24 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: FunctionTypeProcessor
 // EXPECTED:
-// a: Function0 : true, false
-// b: Function1 : true, false
-// c: Function0 : true, false
-// d: Function2 : true, false
-// e: KFunction0 : true, false
-// f: KSuspendFunction0 : false, true
-// g: KFunction1 : true, false
-// h: KSuspendFunction1 : false, true
-// i: Function1 : true, false
-// j: SuspendFunction1 : false, true
-// k: SuspendFunction0 : false, true
-// l: SuspendFunction1 : false, true
-// m: SuspendFunction0 : false, true
-// n: SuspendFunction2 : false, true
-// o: KFunction0 : true, false
-// p: KSuspendFunction0 : false, true
-// vbar: KSuspendFunction0 : false, true
-// vfoo: KFunction0 : true, false
+// a: Function0 : true, false, kotlin.Function0, kotlin
+// b: Function1 : true, false, kotlin.Function1, kotlin
+// c: Function0 : true, false, kotlin.Function0, kotlin
+// d: Function2 : true, false, kotlin.Function2, kotlin
+// e: KFunction0 : true, false, kotlin.reflect.KFunction0, kotlin.reflect
+// f: KSuspendFunction0 : false, true, kotlin.reflect.KSuspendFunction0, kotlin.reflect
+// g: KFunction1 : true, false, kotlin.reflect.KFunction1, kotlin.reflect
+// h: KSuspendFunction1 : false, true, kotlin.reflect.KSuspendFunction1, kotlin.reflect
+// i: Function1 : true, false, kotlin.Function1, kotlin
+// j: SuspendFunction1 : false, true, kotlin.coroutines.SuspendFunction1, kotlin.coroutines
+// k: SuspendFunction0 : false, true, kotlin.coroutines.SuspendFunction0, kotlin.coroutines
+// l: SuspendFunction1 : false, true, kotlin.coroutines.SuspendFunction1, kotlin.coroutines
+// m: SuspendFunction0 : false, true, kotlin.coroutines.SuspendFunction0, kotlin.coroutines
+// n: SuspendFunction2 : false, true, kotlin.coroutines.SuspendFunction2, kotlin.coroutines
+// o: KFunction0 : true, false, kotlin.reflect.KFunction0, kotlin.reflect
+// p: KSuspendFunction0 : false, true, kotlin.reflect.KSuspendFunction0, kotlin.reflect
+// vbar: KSuspendFunction0 : false, true, kotlin.reflect.KSuspendFunction0, kotlin.reflect
+// vfoo: KFunction0 : true, false, kotlin.reflect.KFunction0, kotlin.reflect
 // END
 
 @file:Suppress("Boolean", "Byte", "Int", "Short", "Double", "Float", "Unit", "Suppress", "C")
