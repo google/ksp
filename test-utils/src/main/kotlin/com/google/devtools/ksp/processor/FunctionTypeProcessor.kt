@@ -37,7 +37,7 @@ open class FunctionTypeProcessor : AbstractTestProcessor() {
                         val type = property.type.resolve()
                         val propertyName = property.simpleName.asString()
                         val typeName = type.declaration.simpleName.asString()
-                        results.add("$propertyName: $typeName : ${type.isFunctionType}, ${type.isSuspendFunctionType}")
+                        results.add("$propertyName: $typeName : ${type.isFunctionType}, ${type.isSuspendFunctionType}, ${type.declaration.qualifiedName!!.asString()}, ${type.declaration.packageName.asString()}")
                     }
                 },
                 Unit
