@@ -70,6 +70,11 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
     }
 
     private fun KSType.toSignature(): String = buildString {
+        annotations.toList().let {
+            if (it.isNotEmpty()) {
+                append(annotations.joinToString(separator = " ", postfix = " ") { "@${it.shortName.asString()}" })
+            }
+        }
         append(declaration.simpleName.asString())
         if (arguments.isNotEmpty()) {
             append("<")
