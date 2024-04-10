@@ -29,8 +29,17 @@
 // myList_B : List<Number>
 // myList_String : MyList_String = MyList<String> = List<T>
 // myList_b_String : MyList_B_String = MyList_B<String> = MyList<R> = List<T>
+// myListOfAlias : MyListOfAlias = List<@JvmSuppressWildcards A>
+// myListOfAliasInLib : MyListOfAliasInLib = List<@JvmSuppressWildcards AInLib>
 // END
 
+// MODULE: module1
+// FILE: KotlinLib.kt
+typealias AInLib = String
+typealias MyListOfAliasInLib = List<@JvmSuppressWildcards AInLib>
+
+// MODULE: main(module1)
+// FILE: KotlinSrc.kt
 typealias A = String
 typealias B = String
 typealias CC = A
@@ -41,6 +50,7 @@ typealias MyList<T> = List<T>
 typealias MyList_B<R> = MyList<R>
 typealias MyList_String = MyList<String>
 typealias MyList_B_String = MyList_B<String>
+typealias MyListOfAlias = List<@JvmSuppressWildcards A>
 
 val a: A = ""
 val b: B = ""
@@ -53,3 +63,5 @@ val myList: MyList<Long> = TODO()
 val myList_B: List<Number> = TODO()
 val myList_String: MyList_String = TODO()
 val myList_b_String: MyList_B_String = TODO()
+val myListOfAlias: MyListOfAlias = TODO()
+val myListOfAliasInLib: MyListOfAliasInLib = TODO()
