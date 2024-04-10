@@ -244,7 +244,7 @@ class LookupStorageWrapperImpl(
 
     override fun close() = impl.close()
 
-    override fun flush() = impl.flush(true)
+    override fun flush() = impl.flush()
 }
 
 object LookupSymbolExternalizer : DataExternalizer<LookupSymbolWrapper> {
