@@ -31,6 +31,22 @@
 // 31
 // [warning1, warning 2]
 // END
+// MODULE: module1
+// FILE: placeholder.kt
+// FILE: TestLib.java
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+@Target({ElementType.TYPE, ElementType.TYPE_USE})
+@interface MyAnnotation {
+    String stringParam() default "1";
+    String stringParam2() default "1";
+    String[] stringArrayParam() default {"3", "5", "7"};
+}
+interface MyInterface {}
+@MyAnnotation(stringParam = "2") class MyClassInLib implements MyInterface {}
+// MODULE: main(module1)
+// FILE: Test.java
+@MyAnnotation(stringParam = "2") class MyClass implements MyInterface {}
 // FILE: a.kt
 
 enum class RGB {
