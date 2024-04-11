@@ -29,6 +29,14 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
     val visitor = ArgumentVisitor()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        listOf("MyClass", "MyClassInLib").forEach { clsName ->
+            resolver.getClassDeclarationByName(clsName)!!.let { cls ->
+                cls.annotations.single().arguments.forEach {
+                    println("${clsName}: ${it.name!!.asString()} = ${it.value}")
+                }
+            }
+        }
+
         resolver.getSymbolsWithAnnotation("Bar", true).forEach {
             it.annotations.forEach { it.arguments.forEach { it.accept(visitor, Unit) } }
         }
