@@ -50,6 +50,8 @@ open class ReplaceWithErrorTypeArgsProcessor : AbstractTestProcessor() {
         val xargs = x.type.element!!.typeArguments
         val y = resolver.getPropertyDeclarationByName(resolver.getKSNameFromString("y"), true)!!
         val yargs = y.type.element!!.typeArguments
+        val z = resolver.getPropertyDeclarationByName(resolver.getKSNameFromString("z"), true)!!
+        val zargs = z.type.element!!.typeArguments
 
         for (decl in decls) {
             val declName = decl.qualifiedName!!.asString()
@@ -64,6 +66,9 @@ open class ReplaceWithErrorTypeArgsProcessor : AbstractTestProcessor() {
         // TODO: fix flexible type creation once upstream available.
         val js1 = resolver.getClassDeclarationByName("JS1")!!
         results.add("flexible type star:${js1.getDeclaredProperties().single().type.resolve().starProjection()}")
+        val javaClass = resolver.getClassDeclarationByName("JavaClass")!!
+        val genericFlexibleProperty = javaClass.getDeclaredProperties().single().type.resolve()
+        results.add("flexible type replace argument:${genericFlexibleProperty.replace(zargs)}")
         return emptyList()
     }
 

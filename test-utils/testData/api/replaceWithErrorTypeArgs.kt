@@ -100,6 +100,7 @@
 // KLE.E.asType(emptyList()): KLE.E
 // default type:A
 // flexible type star:(T..T?)
+// flexible type replace argument:(JS1<Int>..JS1<Int>?)
 // END
 
 // MODULE: lib
@@ -123,6 +124,10 @@ class JS<T1, T2> {}
 class JS1<T> {
     T p;
 }
+
+class JavaClass {
+    JS1<?> p;
+}
 enum JSE {
     E
 }
@@ -137,3 +142,4 @@ enum class KSE {
 
 val x: KS<Int, String> = TODO()
 val y: KS<NotExist1, NotExist2> = TODO()
+val z: KL1<Int> = TODO()
