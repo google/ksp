@@ -381,6 +381,15 @@ class PlaygroundIT(val useKSP2: Boolean) {
         project.restore(buildFile.path)
     }
 
+    @Test
+    fun testModuleName() {
+        File(project.root, "workload/build.gradle.kts").createNewFile()
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.withArguments("build").build().let { result ->
+            Assert.assertTrue(result.output.contains("Module name is workload"))
+        }
+    }
+
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "KSP2={0}")

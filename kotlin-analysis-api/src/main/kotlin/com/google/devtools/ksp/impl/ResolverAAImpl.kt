@@ -62,7 +62,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
-import org.jetbrains.kotlin.analysis.project.structure.KtModule
+import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.types.isRaw
@@ -88,13 +88,13 @@ class ResolverAAImpl(
 ) : Resolver {
     companion object {
         val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
-        private val ktModule_prop: ThreadLocal<KtModule> = ThreadLocal()
+        private val ktModule_prop: ThreadLocal<KtSourceModule> = ThreadLocal()
         var instance
             get() = instance_prop.get()
             set(value) {
                 instance_prop.set(value)
             }
-        var ktModule: KtModule
+        var ktModule: KtSourceModule
             get() = ktModule_prop.get()
             set(value) {
                 ktModule_prop.set(value)
@@ -619,6 +619,11 @@ class ResolverAAImpl(
                     it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
             }
         }.map { it.packageName.asString() }
+    }
+
+    @KspExperimental
+    override fun getModuleName(): KSName {
+        return KSNameImpl.getCached((ktModule.stableModuleName ?: ktModule.moduleName).removeSurrounding("<", ">"))
     }
 
     @KspExperimental

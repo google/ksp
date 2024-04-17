@@ -140,9 +140,10 @@ class ResolverImpl(
     private val functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     private val propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
 
+    private val moduleIdentifier = module.name.getNonSpecialIdentifier()
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
-        module.name.getNonSpecialIdentifier(),
+        moduleIdentifier,
         KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT, // TODO use proper LanguageVersionSettings
         true
     )
@@ -1406,6 +1407,9 @@ class ResolverImpl(
             }
         }.map { it.packageName.asString() }
     }
+
+    @KspExperimental
+    override fun getModuleName(): KSName = KSNameImpl.getCached(moduleIdentifier)
 
     private val psiJavaFiles = allKSFiles.filterIsInstance<KSFileJavaImpl>().map {
         Pair(it.psi.virtualFile.path, it.psi)
