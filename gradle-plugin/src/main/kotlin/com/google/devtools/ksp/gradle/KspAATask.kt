@@ -163,7 +163,7 @@ abstract class KspAATask @Inject constructor(
                 kspAATask.kspClasspath.from(kspAADepCfg)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
-                    cfg.moduleName.value(kotlinCompilation.defaultSourceSet.name)
+                    cfg.moduleName.value(project.name)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
                     val filteredTasks =
@@ -256,7 +256,7 @@ abstract class KspAATask @Inject constructor(
                         cfg.jvmDefaultMode.value(jvmDefaultMode)
 
                         val jvmTarget = project.provider {
-                            (compilerOptions as KotlinJvmCompilerOptions).jvmTarget.get().target
+                            compilerOptions.jvmTarget.get().target
                         }
                         cfg.jvmTarget.value(jvmTarget)
                     }
