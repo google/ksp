@@ -74,6 +74,7 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
+import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
@@ -448,7 +449,8 @@ class KotlinSymbolProcessing(
 
         val psiManager = PsiManager.getInstance(project)
         val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
-        ResolverAAImpl.ktModule = modules.single()
+        // KspModuleBuilder ensures this is always a KtSourceModule
+        ResolverAAImpl.ktModule = modules.single() as KtSourceModule
 
         // Initializing environments
         val allKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration)

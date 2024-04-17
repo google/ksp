@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -6,6 +7,7 @@ import java.io.OutputStream
 class TestProcessor : SymbolProcessor {
     lateinit var codeGenerator: CodeGenerator
     lateinit var file: OutputStream
+    lateinit var logger: KSPLogger
     var invoked = false
 
     fun emit(s: String, indent: String) {
@@ -18,6 +20,7 @@ class TestProcessor : SymbolProcessor {
         codeGenerator: CodeGenerator,
         logger: KSPLogger
     ) {
+        this.logger = logger
         logger.warn("This is a harmless warning.")
         this.codeGenerator = codeGenerator
         file = codeGenerator.createNewFile(Dependencies(false), "", "TestProcessor", "log")
@@ -27,7 +30,9 @@ class TestProcessor : SymbolProcessor {
         javaFile.appendText("class Generated {}")
     }
 
+    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        logger.warn("Module name is ${resolver.getModuleName().asString()}")
         if (invoked) {
             return emptyList()
         }
