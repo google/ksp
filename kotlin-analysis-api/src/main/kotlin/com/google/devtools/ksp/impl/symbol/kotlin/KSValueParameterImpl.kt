@@ -54,7 +54,7 @@ class KSValueParameterImpl private constructor(
             ((ktValueParameterSymbol as KtFirValueParameterSymbol).firSymbol.fir as? FirJavaValueParameter)?.let {
                 // can't get containing class for FirJavaValueParameter, using empty stack for now.
                 it.returnTypeRef =
-                    it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY)
+                    it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY, null)
             }
         }
         (ktValueParameterSymbol.psiIfSource() as? KtParameter)?.typeReference

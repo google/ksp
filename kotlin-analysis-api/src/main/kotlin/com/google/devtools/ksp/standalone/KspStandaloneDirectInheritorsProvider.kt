@@ -3,7 +3,6 @@ package com.google.devtools.ksp.standalone
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.fir.utils.isSubClassOf
-import org.jetbrains.kotlin.analysis.api.standalone.base.providers.KotlinStandaloneDirectInheritorsProvider
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
 import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionCache
 import org.jetbrains.kotlin.analysis.project.structure.KtDanglingFileModule
@@ -30,7 +29,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
             (KotlinDeclarationProviderFactory.getInstance(project) as? IncrementalKotlinDeclarationProviderFactory)
                 ?.staticFactory as? KotlinStaticDeclarationProviderFactory
             ) ?: error(
-            "`${KotlinStandaloneDirectInheritorsProvider::class.simpleName}" +
+            "KotlinStandaloneDirectInheritorsProvider" +
                 "` expects the following declaration provider factory to be" +
                 " registered: `${KotlinStaticDeclarationProviderFactory::class.simpleName}`"
         )

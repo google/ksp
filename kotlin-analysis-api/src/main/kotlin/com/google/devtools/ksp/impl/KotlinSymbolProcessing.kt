@@ -164,7 +164,7 @@ class KotlinSymbolProcessing(
             )
 
         val application: Application = kotlinCoreProjectEnvironment.environment.application
-        val project: Project = kotlinCoreProjectEnvironment.project
+        val project: MockProject = kotlinCoreProjectEnvironment.project
         val configLanguageVersionSettings = compilerConfiguration[CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS]
 
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -248,7 +248,6 @@ class KotlinSymbolProcessing(
         val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment)
         val createPackagePartProvider =
             StandaloneProjectFactory.createPackagePartsProvider(
-                project as MockProject,
                 libraryRoots,
             )
         registerProjectServices(
@@ -665,7 +664,6 @@ private fun reinitJavaFileManager(
         rootsIndex,
         listOf(
             StandaloneProjectFactory.createPackagePartsProvider(
-                project,
                 libraryRoots + jdkRoots,
                 LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST)
             ).invoke(ProjectScope.getLibrariesScope(project))
@@ -704,8 +702,20 @@ fun String?.toKotlinVersion(): KotlinVersion {
 
 // Workaround for ShadowJar's minimize, whose configuration isn't very flexible.
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
+    org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
+    org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider::class.java,
+    org.jetbrains.kotlin.analysis.api.fir.references.ReadWriteAccessCheckerFirImpl::class.java,
+    org.jetbrains.kotlin.analysis.api.standalone.base.providers.KotlinStandaloneDirectInheritorsProvider::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.providers.impl.KotlinProjectMessageBusProvider::class.java,
+    org.jetbrains.kotlin.idea.references.KotlinFirReferenceContributor::class.java,
+    org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,
     org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
     org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
+    org.jetbrains.kotlin.plugin.references.SimpleNameReferenceExtension::class.java,
     org.jetbrains.kotlin.serialization.deserialization.builtins.BuiltInsLoaderImpl::class.java,
     com.fasterxml.aalto.AaltoInputProperties::class.java,
     com.google.errorprone.annotations.CheckReturnValue::class.java,

@@ -461,7 +461,7 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
                     val symbolBuilder = it.builder
                     val expectedTypeRef = it.firSymbol.fir.returnTypeRef
                     val expression = defaultValue
-                        ?.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef)
+                        ?.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
                     expression?.let {
                         FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
                     }
