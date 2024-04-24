@@ -132,6 +132,7 @@ tasks.withType<ShadowJar> {
     }
     mergeServiceFiles()
     exclude("META-INF/compiler.version")
+    exclude("META-INF/*.kotlin_module")
 
     this.transform(AAServiceTransformer())
 
