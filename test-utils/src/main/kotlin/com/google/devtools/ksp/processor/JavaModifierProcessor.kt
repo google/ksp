@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -31,6 +32,12 @@ class JavaModifierProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        listOf("ALib", "ASrc").forEach { clsName ->
+            resolver.getClassDeclarationByName(clsName)!!.let { cls ->
+                println(cls.modifiers.contains(Modifier.FUN))
+            }
+        }
+
         resolver.getSymbolsWithAnnotation("Test")
             .map {
                 it as KSClassDeclaration
