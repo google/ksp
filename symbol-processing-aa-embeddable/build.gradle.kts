@@ -1,5 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
 import org.gradle.jvm.tasks.Jar
+import shadow.org.apache.tools.zip.ZipEntry
+import shadow.org.apache.tools.zip.ZipOutputStream
+import java.io.InputStreamReader
 import java.util.zip.ZipFile
 
 evaluationDependsOn(":kotlin-analysis-api")
@@ -58,16 +62,78 @@ val prefixesToRelocate = listOf(
     Pair(it, "ksp." + it)
 }
 
+class AAServiceTransformer : com.github.jengelman.gradle.plugins.shadow.transformers.Transformer {
+    private val entries = HashMap<String, String>()
+
+    // Names of extension points needs to be relocated, because ShadowJar does that, too.
+    private val regex = Regex("\"((org\\.jetbrains\\.kotlin\\.|com\\.intellij\\.).+)\"")
+
+    override fun canTransformResource(element: FileTreeElement): Boolean {
+        return element.name.startsWith("META-INF/analysis-api/") ||
+            element.name == "META-INF/extensions/compiler.xml"
+    }
+
+    override fun getName(): String {
+        return "AAServiceTransformer"
+    }
+
+    override fun hasTransformedResource(): Boolean {
+        return entries.size > 0
+    }
+
+    override fun modifyOutputStream(os: ZipOutputStream, preserveFileTimestamps: Boolean) {
+        fun putOneEntry(path: String, content: String) {
+            val entry = ZipEntry(path)
+            entry.time = TransformerContext.getEntryTimestamp(preserveFileTimestamps, entry.time)
+            os.putNextEntry(entry)
+            os.write(content.toByteArray())
+            os.closeEntry()
+        }
+
+        entries.forEach { path, original ->
+            val patched = original.replace(regex, "\"ksp.$1\"")
+            when {
+                path.startsWith("META-INF/analysis-api/") -> {
+                    val more = patched.replace(
+                        "\"/META-INF/extensions/compiler.xml\"",
+                        "\"/META-INF/extensions/ksp_compiler.xml\""
+                    )
+                    putOneEntry(path, more)
+                }
+                path == "META-INF/extensions/compiler.xml" -> {
+                    // Keep compiler.xml the same, and patch ksp_compiler.xml.
+                    putOneEntry(path, original)
+                    putOneEntry("META-INF/extensions/ksp_compiler.xml", patched)
+                }
+                else -> {
+                    putOneEntry(path, patched)
+                }
+            }
+        }
+    }
+
+    override fun transform(context: TransformerContext) {
+        val path = context.path
+        val content = InputStreamReader(context.`is`).readText()
+        entries.put(path, content)
+    }
+}
+
 tasks.withType<ShadowJar> {
     archiveClassifier.set("")
     // ShadowJar picks up the `compile` configuration by default and pulls stdlib in.
     // Therefore, specifying another configuration instead.
     configurations = listOf(packedJars)
     prefixesToRelocate.forEach { (f, t) ->
-        relocate(f, t)
+        relocate(f, t) {
+            // Do not rename this hardcoded string in XmlReader.
+            exclude("com.intellij.projectService")
+        }
     }
     mergeServiceFiles()
     exclude("META-INF/compiler.version")
+
+    this.transform(AAServiceTransformer())
 
     // All bundled dependencies should be renamed.
     doLast {
