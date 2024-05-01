@@ -76,18 +76,10 @@ class KSValueArgumentImpl private constructor(
                 }
             }
         } ?: KSErrorType
+        // TODO: handle local classes.
         is KtKClassAnnotationValue -> {
-            val classDeclaration = when (this) {
-                is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> analyze {
-                    (this@toValue.classId.toKtClassSymbol())?.let { KSClassDeclarationImpl.getCached(it) }
-                }
-                is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> analyze {
-                    this@toValue.ktClass.getNamedClassOrObjectSymbol()?.let {
-                        KSClassDeclarationImpl.getCached(it)
-                    }
-                }
-                is KtKClassAnnotationValue.KtErrorClassAnnotationValue -> null
-            }
+            val classDeclaration =
+                (this@toValue.classId?.toKtClassSymbol())?.let { KSClassDeclarationImpl.getCached(it) }
             classDeclaration?.asStarProjectedType() ?: KSErrorType
         }
         is KtConstantAnnotationValue -> this.constantValue.value
