@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
@@ -29,6 +30,7 @@ import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -88,7 +90,9 @@ class KSAnnotationImpl private constructor(
                             valueParameterSymbol.getDefaultValue()?.let { constantValue ->
                                 KSValueArgumentImpl.getCached(
                                     KtNamedAnnotationValue(
-                                        valueParameterSymbol.name, constantValue,
+                                        valueParameterSymbol.name,
+                                        constantValue,
+                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
                                     ),
                                     Origin.SYNTHETIC
                                 )

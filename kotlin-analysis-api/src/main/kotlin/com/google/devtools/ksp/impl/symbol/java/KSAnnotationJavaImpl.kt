@@ -38,6 +38,7 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.impl.source.PsiAnnotationMethodImpl
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KtType
@@ -107,7 +108,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                             valueParameterSymbol.getDefaultValue()?.let { constantValue ->
                                 KSValueArgumentImpl.getCached(
                                     KtNamedAnnotationValue(
-                                        valueParameterSymbol.name, constantValue,
+                                        valueParameterSymbol.name,
+                                        constantValue,
+                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
                                     ),
                                     Origin.SYNTHETIC
                                 )

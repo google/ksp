@@ -20,18 +20,18 @@
 // symbols from package lib1
 // lib1.propInSource KOTLIN
 // lib1.funcFoo KOTLIN_LIB
-// lib1.Foo KOTLIN_LIB
 // lib1.FooInSource KOTLIN
 // lib1.Bar JAVA_LIB
+// lib1.Foo KOTLIN_LIB
 // symbols from package lib2
 // lib2.a KOTLIN_LIB
 // lib2.Foo KOTLIN_LIB
 // lib2.FooTypeAlias KOTLIN_LIB
 // symbols from package main.test
 // main.test.KotlinMain KOTLIN
-// main.test.C JAVA
 // main.test.D JAVA
 // main.test.L JAVA
+// main.test.C JAVA
 // symbols from package non.exist
 // END
 

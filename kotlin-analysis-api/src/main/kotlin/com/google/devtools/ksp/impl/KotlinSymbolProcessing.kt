@@ -709,7 +709,8 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.standalone.base.providers.KotlinStandaloneDirectInheritorsProvider::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased
+        .deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
     org.jetbrains.kotlin.analysis.providers.impl.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.idea.references.KotlinFirReferenceContributor::class.java,
     org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,

@@ -121,9 +121,8 @@ internal fun KtAnnotationValue.render(): String {
         is KtArrayAnnotationValue -> values.joinToString(",", "{", "}") { it.render() }
         is KtConstantAnnotationValue -> constantValue.renderAsKotlinConstant()
         is KtEnumEntryAnnotationValue -> callableId.toString()
-        is KtKClassAnnotationValue.KtErrorClassAnnotationValue -> "<Error class>"
-        is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> "$ktClass::class"
-        is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> "$classId::class"
+        // TODO: handle error classes.
+        is KtKClassAnnotationValue -> "$classId::class"
         is KtUnsupportedAnnotationValue -> throw IllegalStateException("Unsupported annotation value: $this")
     }
 }

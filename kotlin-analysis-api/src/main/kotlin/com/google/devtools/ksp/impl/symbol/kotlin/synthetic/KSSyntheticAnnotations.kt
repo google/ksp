@@ -1,6 +1,8 @@
 package com.google.devtools.ksp.impl.symbol.kotlin.synthetic
 
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
+import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.name.ClassId
 
 fun getExtensionFunctionTypeAnnotation(index: Int) = KtAnnotationApplicationWithArgumentsInfo(
@@ -9,5 +11,6 @@ fun getExtensionFunctionTypeAnnotation(index: Int) = KtAnnotationApplicationWith
     null,
     emptyList(),
     index,
-    null
+    null,
+    KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
 )
