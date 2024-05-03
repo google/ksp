@@ -78,9 +78,7 @@ class KSValueArgumentImpl private constructor(
         } ?: KSErrorType
         // TODO: handle local classes.
         is KtKClassAnnotationValue -> {
-            val classDeclaration =
-                (this@toValue.classId?.toKtClassSymbol())?.let { KSClassDeclarationImpl.getCached(it) }
-            classDeclaration?.asStarProjectedType() ?: KSErrorType
+            KSTypeImpl.getCached(this@toValue.type)
         }
         is KtConstantAnnotationValue -> this.constantValue.value
         is KtUnsupportedAnnotationValue -> null

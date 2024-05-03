@@ -26,6 +26,7 @@ import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiAnnotationMethod
+import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
@@ -76,10 +77,17 @@ class KSAnnotationImpl private constructor(
                 if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null) {
                     (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
-                            annoMethod.defaultValue?.let {
+                            annoMethod.defaultValue?.let { value ->
+                                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
+                                    value.initializers.map {
+                                        calcValue(it)
+                                    }
+                                } else {
+                                    calcValue(value)
+                                }
                                 KSValueArgumentLiteImpl.getCached(
                                     KSNameImpl.getCached(annoMethod.name),
-                                    calcValue(it),
+                                    calculatedValue,
                                     Origin.SYNTHETIC
                                 )
                             }
@@ -92,7 +100,7 @@ class KSAnnotationImpl private constructor(
                                     KtNamedAnnotationValue(
                                         valueParameterSymbol.name,
                                         constantValue,
-                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
+                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                     ),
                                     Origin.SYNTHETIC
                                 )
