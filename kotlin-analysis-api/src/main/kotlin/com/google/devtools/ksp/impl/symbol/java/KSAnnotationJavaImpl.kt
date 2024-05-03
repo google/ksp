@@ -96,9 +96,17 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                         (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethodImpl>()
                             .mapNotNull { annoMethod ->
                                 annoMethod.defaultValue?.let {
+                                    val value = it
+                                    val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
+                                        value.initializers.map {
+                                            calcValue(it)
+                                        }
+                                    } else {
+                                        calcValue(it)
+                                    }
                                     KSValueArgumentLiteImpl.getCached(
                                         KSNameImpl.getCached(annoMethod.name),
-                                        calcValue(it),
+                                        calculatedValue,
                                         Origin.SYNTHETIC
                                     )
                                 }

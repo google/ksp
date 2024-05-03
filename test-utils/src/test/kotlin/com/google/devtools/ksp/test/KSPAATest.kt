@@ -66,7 +66,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/allFunctions_kt_inherits_java.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
@@ -79,7 +78,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationOnConstructorParameter.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {

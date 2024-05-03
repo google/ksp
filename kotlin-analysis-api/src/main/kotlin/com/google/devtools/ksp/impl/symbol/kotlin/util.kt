@@ -16,6 +16,8 @@
  */
 
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+@file:OptIn(KtAnalysisApiInternals::class, KtAnalysisApiInternals::class)
+
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
@@ -29,6 +31,7 @@ import com.google.devtools.ksp.impl.symbol.util.getDocString
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
+import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
@@ -38,6 +41,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.components.KtSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
+import org.jetbrains.kotlin.analysis.api.fir.KtSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
@@ -50,9 +54,20 @@ import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
+import org.jetbrains.kotlin.fir.declarations.getTargetType
+import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirArrayLiteral
+import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
+import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
+import org.jetbrains.kotlin.fir.types.ConeClassLikeType
+import org.jetbrains.kotlin.fir.types.ConeErrorType
+import org.jetbrains.kotlin.fir.types.ConeFlexibleType
+import org.jetbrains.kotlin.fir.types.ConeLookupTagBasedType
+import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.isAny
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
@@ -416,6 +431,43 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
 
 @OptIn(SymbolInternals::class)
 internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
+    fun FirExpression.toValue(builder: KtSymbolByFirBuilder): KtAnnotationValue? {
+        if (this is FirAnnotation) {
+            return KtAnnotationApplicationValue(
+                KtAnnotationApplicationWithArgumentsInfo(
+                    ClassId.fromString((annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()),
+                    null,
+                    null,
+                    emptyList(),
+                    0,
+                    null,
+                    KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                ),
+                KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+            )
+        }
+        if (this is FirArrayLiteral) {
+            return KtArrayAnnotationValue(argumentList.arguments.mapNotNull { it.toValue(builder) }, null, token)
+        }
+        return if (this is FirGetClassCall) {
+            var coneType = this.getTargetType()?.fullyExpandedType(builder.rootSession)
+            // FirAnnotationValueConverter expects fir type, while the type parsed from libraries are modeled
+            // as flexible type, for it to be used in argument of KClass values, it needs to be unwrapped.
+            if (coneType is ConeFlexibleType) {
+                coneType = coneType.lowerBound
+            }
+
+            if (coneType is ConeClassLikeType && coneType !is ConeErrorType) {
+                val classId = coneType.lookupTag.classId
+                val type = builder.typeBuilder.buildKtType(coneType)
+                KtKClassAnnotationValue(type, classId, null, token)
+            } else {
+                null
+            }
+        } else {
+            FirAnnotationValueConverter.toConstantValue(this, builder)
+        }
+    }
     return this.psi.let {
         when (it) {
             is KtParameter -> analyze {
@@ -461,9 +513,7 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
                     val expectedTypeRef = it.firSymbol.fir.returnTypeRef
                     val expression = defaultValue
                         ?.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
-                    expression?.let {
-                        FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
-                    }
+                    expression?.toValue(symbolBuilder)
                 }
             }
             else -> throw IllegalStateException("Unhandled default value type ${it.javaClass}")
