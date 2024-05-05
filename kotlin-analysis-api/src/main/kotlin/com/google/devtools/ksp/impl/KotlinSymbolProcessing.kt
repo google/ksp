@@ -370,12 +370,7 @@ class KotlinSymbolProcessing(
             project.getService(
                 KotlinDeclarationProviderFactory::class.java
             ) as IncrementalKotlinDeclarationProviderFactory
-            )
-            .update(
-                ktFiles,
-                StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment).map { it.file } +
-                    listOfNotNull(VirtualFileManager.getInstance().findFileByNioPath(kspConfig.classOutputDir.toPath()))
-            )
+            ).update(ktFiles)
         (
             project.getService(
                 KotlinPackageProviderFactory::class.java

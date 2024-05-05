@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.standalone
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProvider
@@ -94,11 +93,9 @@ class IncrementalKotlinDeclarationProviderFactory(
         }
     }
 
-    fun update(files: Collection<KtFile>, moduleRoots: List<VirtualFile>) {
+    fun update(files: Collection<KtFile>) {
         this.files = files
-        this.staticFactory = KotlinStaticDeclarationProviderFactory(
-            project, files, sharedBinaryRoots = moduleRoots, shouldBuildStubsForBinaryLibraries = true
-        )
+        this.staticFactory = KotlinStaticDeclarationProviderFactory(project, files)
         provider?.let {
             it.del = createDelegateProvider()
         }
