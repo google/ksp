@@ -34,7 +34,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         listOf("ALib", "ASrc").forEach { clsName ->
             resolver.getClassDeclarationByName(clsName)!!.let { cls ->
-                println(cls.modifiers.contains(Modifier.FUN))
+                assert(cls.modifiers.contains(Modifier.FUN))
             }
         }
 

@@ -211,6 +211,9 @@ internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
         if (visibility != JavaVisibilities.PackageVisibility) {
             result.add(visibility.toModifier())
         }
+        if (isFun) {
+            result.add(Modifier.FUN)
+        }
         if (isInline) {
             result.add(Modifier.INLINE)
         }
