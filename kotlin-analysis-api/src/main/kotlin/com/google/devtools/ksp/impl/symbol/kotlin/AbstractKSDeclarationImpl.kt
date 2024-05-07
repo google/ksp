@@ -79,16 +79,19 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
 
     override val packageName: KSName by lazy {
         // source
-        containingFile?.packageName
+        if (origin == Origin.KOTLIN || origin == Origin.JAVA) {
+            containingFile!!.packageName
+        } else {
             // top level declaration
-            ?: when (ktDeclarationSymbol) {
+            when (ktDeclarationSymbol) {
                 is KtClassLikeSymbol -> ktDeclarationSymbol.classIdIfNonLocal?.packageFqName?.asString()
                 is KtCallableSymbol -> ktDeclarationSymbol.callableIdIfNonLocal?.packageName?.asString()
                 else -> null
             }?.let { KSNameImpl.getCached(it) }
-            //  null -> non top level declaration, find in parent
-            ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
-            ?: throw IllegalStateException("failed to find package name for $this")
+                //  null -> non top level declaration, find in parent
+                ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
+                ?: throw IllegalStateException("failed to find package name for $this")
+        }
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
