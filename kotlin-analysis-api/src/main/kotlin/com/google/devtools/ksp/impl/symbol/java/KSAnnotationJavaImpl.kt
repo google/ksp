@@ -27,6 +27,7 @@ import com.intellij.lang.jvm.JvmClassKind
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMemberValue
+import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
@@ -35,7 +36,6 @@ import com.intellij.psi.PsiLiteralValue
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
-import com.intellij.psi.impl.source.PsiAnnotationMethodImpl
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
@@ -93,7 +93,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
             (type.classifierSymbol() as KtClassOrObjectSymbol).getMemberScope().getConstructors().singleOrNull()
                 ?.let { symbol ->
                     if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null) {
-                        (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethodImpl>()
+                        (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->
                                 annoMethod.defaultValue?.let {
                                     val value = it
