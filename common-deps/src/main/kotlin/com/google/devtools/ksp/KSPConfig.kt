@@ -3,6 +3,8 @@ package com.google.devtools.ksp.processing
 import java.io.File
 import java.io.Serializable
 
+private annotation class KSPArgParserGen(val name: String)
+
 abstract class KSPConfig(
     val moduleName: String,
     val sourceRoots: List<File>,
@@ -121,6 +123,7 @@ class KSPJvmConfig(
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
 ) {
+    @KSPArgParserGen(name = "kspJvmArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         var javaSourceRoots: List<File> = emptyList()
         lateinit var javaOutputDir: File
@@ -222,6 +225,7 @@ class KSPNativeConfig(
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
 ) {
+    @KSPArgParserGen(name = "kspNativeArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         lateinit var target: String
 
@@ -314,6 +318,7 @@ class KSPJsConfig(
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
 ) {
+    @KSPArgParserGen(name = "kspJsArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         lateinit var backend: String
 
@@ -411,6 +416,7 @@ class KSPCommonConfig(
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
 ) {
+    @KSPArgParserGen(name = "kspCommonArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         lateinit var targets: List<Target>
 
@@ -445,4 +451,50 @@ class KSPCommonConfig(
             )
         }
     }
+}
+
+fun parseString(arg: String): String {
+    if (arg.length > 0 && arg[0] == '-')
+        throw IllegalArgumentException("expecting a String arguemnt but got $arg")
+    return arg
+}
+
+fun parseBoolean(arg: String): Boolean {
+    if (arg.length > 0 && arg[0] == '-')
+        throw IllegalArgumentException("expecting a Boolean arguemnt but got $arg")
+    return arg.toBoolean()
+}
+
+fun parseFile(arg: String): File {
+    if (arg.length > 0 && arg[0] == '-')
+        throw IllegalArgumentException("expecting a File arguemnt but got $arg")
+    // FIXME: AA isn't happy relative paths for source roots.
+    return File(arg).absoluteFile
+}
+
+fun <T> parseList(arg: String, transform: (String) -> T): List<T> {
+    if (arg.length > 0 && arg[0] == '-')
+        throw IllegalArgumentException("expecting a List but got $arg")
+    return arg.split(':').map { transform(it) }
+}
+
+fun <T> parseMap(arg: String, transform: (String) -> T): Map<String, T> {
+    if (arg.length > 0 && arg[0] == '-')
+        throw IllegalArgumentException("expecting a Map but got $arg")
+    return arg.split(':').map {
+        val (k, v) = it.split('=')
+        k to transform(v)
+    }.toMap()
+}
+
+fun parseTarget(arg: String): Target {
+    if (arg.length > 0 && arg[0] == '-')
+        throw IllegalArgumentException("expecting a target but got $arg")
+    return Target(arg, emptyMap())
+}
+
+fun getArg(args: Array<String>, i: Int): String {
+    if (i >= args.size || args[i].startsWith("-"))
+        throw IllegalArgumentException("Expecting an argument")
+    return args[i]
 }

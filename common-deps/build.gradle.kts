@@ -18,10 +18,14 @@ plugins {
     `maven-publish`
     signing
     id("org.jetbrains.dokka")
+    id("com.google.devtools.ksp") version "1.9.23-1.0.20"
 }
 
 dependencies {
     compileOnly(project(":api"))
+    testImplementation("junit:junit:$junitVersion")
+
+    ksp(project(":cmdline-parser-gen"))
 }
 
 tasks {
