@@ -32,8 +32,8 @@
 // Array
 // @Foo
 // @Suppress
-// RGB
-// JavaEnum
+// G
+// ONE
 // 31
 // [warning1, warning 2]
 // END
