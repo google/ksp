@@ -4,6 +4,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
@@ -202,10 +203,7 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
                 }?.declarations?.find {
                     it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
                         it.simpleName.asString() == result.name
-                }?.let { (it as KSClassDeclaration).asStarProjectedType() }
-                    ?.let {
-                        return it
-                    }
+                } as? KSClassDeclarationEnumEntryImpl
             } else {
                 null
             }

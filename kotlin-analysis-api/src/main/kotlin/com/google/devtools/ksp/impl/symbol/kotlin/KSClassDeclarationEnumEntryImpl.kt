@@ -102,10 +102,10 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
         ktEnumEntrySymbol.psi.toLocation()
     }
 
-    override val parent: KSNode? by lazy {
+    override val parent: KSNode by lazy {
         analyze {
-            (ktEnumEntrySymbol.getContainingSymbol() as? KtNamedClassOrObjectSymbol)
-                ?.let { KSClassDeclarationImpl.getCached(it) }
+            (ktEnumEntrySymbol.getContainingSymbol() as KtNamedClassOrObjectSymbol)
+                .let { KSClassDeclarationImpl.getCached(it) }
         }
     }
 
