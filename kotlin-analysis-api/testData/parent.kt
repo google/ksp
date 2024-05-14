@@ -50,9 +50,9 @@
 // parent of Enum<INVARIANT (RGB..RGB?)>: Enum<(RGB..RGB?)>
 // parent of Enum<(RGB..RGB?)>: RGB
 // parent of RGB: File: B.java
-// parent of R: RGB
-// parent of G: RGB
-// parent of B: RGB
+// parent of RGB.R: RGB
+// parent of RGB.G: RGB
+// parent of RGB.B: RGB
 // parent of Array<RGB>: values
 // parent of values: RGB
 // parent of String: value
@@ -156,10 +156,10 @@
 // parent of CMYK: File: a.kt
 // parent of CMYK: synthetic constructor for CMYK
 // parent of synthetic constructor for CMYK: CMYK
-// parent of C: CMYK
-// parent of M: CMYK
-// parent of Y: CMYK
-// parent of K: CMYK
+// parent of CMYK.C: CMYK
+// parent of CMYK.M: CMYK
+// parent of CMYK.Y: CMYK
+// parent of CMYK.K: CMYK
 // parent of Array<CMYK>: values
 // parent of values: CMYK
 // parent of String: value
@@ -179,9 +179,9 @@
 // parent of YUV: YUV
 // parent of YUV: <init>
 // parent of <init>: YUV
-// parent of Y: YUV
-// parent of U: YUV
-// parent of V: YUV
+// parent of YUV.Y: YUV
+// parent of YUV.U: YUV
+// parent of YUV.V: YUV
 // parent of YUV: YUV
 // parent of YUV: INVARIANT YUV
 // parent of INVARIANT YUV: Array<INVARIANT YUV>
@@ -215,9 +215,9 @@
 // parent of HSV: HSV
 // parent of HSV: <init>
 // parent of <init>: HSV
-// parent of H: HSV
-// parent of S: HSV
-// parent of V: HSV
+// parent of HSV.H: HSV
+// parent of HSV.S: HSV
+// parent of HSV.V: HSV
 // parent of Array<HSV>: values
 // parent of values: HSV
 // parent of String: value
