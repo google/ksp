@@ -92,7 +92,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
-        runTest("../test-utils/testData/api/annotationValue_kt.kt")
+        runTest("../kotlin-analysis-api/testData/annotationValue/kotlin.kt")
     }
 
     @TestMetadata("annotationWithArrayValue.kt")
