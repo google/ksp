@@ -12,6 +12,10 @@ kotlin {
         browser()
         nodejs()
     }
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
     linuxX64() {
     }
     androidNativeX64() {
