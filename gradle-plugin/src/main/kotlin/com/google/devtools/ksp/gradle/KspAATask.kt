@@ -475,7 +475,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             KotlinPlatformType.js, KotlinPlatformType.wasm -> {
                 KSPJsConfig.Builder().apply {
                     this.setupSuper()
-                    backend = if (platformType == KotlinPlatformType.js) "JS" else "Wasm"
+                    backend = if (platformType == KotlinPlatformType.js) "JS" else "WASM"
                 }.build()
             }
 
