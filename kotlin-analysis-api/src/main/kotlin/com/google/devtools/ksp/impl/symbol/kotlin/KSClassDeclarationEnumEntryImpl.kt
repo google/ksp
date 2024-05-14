@@ -120,6 +120,10 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
         emptySequence()
     }
 
+    override fun toString(): String {
+        return "$parent.${simpleName.asString()}"
+    }
+
     override fun defer(): Restorable? {
         return ktEnumEntrySymbol.defer(Companion::getCached)
     }

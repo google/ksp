@@ -494,6 +494,8 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
             null,
             if (this is KSType) {
                 this.declaration.simpleName.getShortName()
+            } else if (this is KSClassDeclaration) {
+                this.simpleName.getShortName()
             } else {
                 this.toString()
             }

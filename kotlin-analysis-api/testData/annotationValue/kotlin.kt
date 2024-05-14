@@ -1,6 +1,6 @@
 /*
- * Copyright 2023 Google LLC
- * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2020 Google LLC
+ * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,22 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
+// defaultInNested
+// SomeClass$WithDollarSign
 // Str
 // 42
 // Foo
 // File
-// Error type synthetic declaration
+// Local
 // Array
+// Error type synthetic declaration
+// [<ERROR TYPE>, Foo]
 // @Foo
 // @Suppress
 // RGB.G
 // JavaEnum.ONE
 // 31
-// [warning1, warning 2]
+// Throws
 // END
 // FILE: a.kt
 
@@ -37,7 +41,19 @@ enum class RGB {
     R, G, B
 }
 
-annotation class Foo(val s: Int)
+class ThrowsClass {
+    @Throws(Exception::class)
+    protected open fun throwsException() {
+    }
+}
+
+annotation class Foo(val s: Int) {
+    annotation class Nested(val nestedDefault:String = "defaultInNested")
+}
+class `SomeClass$WithDollarSign`
+
+annotation class MyAnnotation(val clazz: KClass<*>)
+
 
 annotation class Bar(
     val argStr: String,
@@ -46,6 +62,8 @@ annotation class Bar(
     val argClsLib: kotlin.reflect.KClass<*>,
     val argClsLocal: kotlin.reflect.KClass<*>,
     val argClsArray: kotlin.reflect.KClass<*>,
+    val argClsMissing: kotlin.reflect.KClass<*>,
+    val argClsMissingInArray: Array<kotlin.reflect.KClass<*>>,
     val argAnnoUser: Foo,
     val argAnnoLib: Suppress,
     val argEnum: RGB,
@@ -53,24 +71,25 @@ annotation class Bar(
     val argDef: Int = 31
 )
 
-// FILE: C.java
-
-@SuppressWarnings({"warning1", "warning 2"})
-class C {
-
+fun Fun() {
+    @Foo.Nested
+    @MyAnnotation(`SomeClass$WithDollarSign`::class)
+    @Bar(
+        "Str",
+        40 + 2,
+        Foo::class,
+        java.io.File::class,
+        Local::class,
+        Array<String>::class,
+        Missing::class,
+        [Missing::class, Foo::class],
+        Foo(17),
+        Suppress("name1", "name2"),
+        RGB.G,
+        JavaEnum.ONE
+    )
+    class Local
 }
-// FILE: JavaAnnotated.java
-@Bar(argStr = "Str",
-    argInt = 40 + 2,
-    argClsUser = Foo.class,
-        argClsLib = java.io.File.class,
-argClsLocal = Local.class, // intentional error type
-argClsArray = kotlin.Array.class,
-argAnnoUser = @Foo(s = 17),
-argAnnoLib = @Suppress(names = {"name1", "name2"}),
-argEnum = RGB.G,
-argJavaNum = JavaEnum.ONE)
-public class JavaAnnotated {}
 
 // FILE: JavaEnum.java
 
