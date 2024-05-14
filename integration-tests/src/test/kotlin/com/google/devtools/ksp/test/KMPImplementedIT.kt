@@ -109,6 +109,30 @@ class KMPImplementedIT(useKSP2: Boolean) {
     }
 
     @Test
+    fun testWasm() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-wasm:build"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-wasm:build")?.outcome)
+            verify(
+                "workload-wasm/build/libs/workload-wasm-wasm-js-1.0-SNAPSHOT.klib",
+                listOf(
+                    "default/ir/types.knt"
+                )
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [wasm-js"))
+            Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
+            checkExecutionOptimizations(it.output)
+        }
+    }
+
+    @Test
     fun testJsErrorLog() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)

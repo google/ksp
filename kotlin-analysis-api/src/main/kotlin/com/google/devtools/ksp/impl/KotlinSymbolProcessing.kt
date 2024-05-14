@@ -182,7 +182,7 @@ class KotlinSymbolProcessing(
                     JvmPlatforms.jvmPlatformByTargetVersion(jvmTarget)
                 }
                 is KSPJsConfig -> when (kspConfig.backend) {
-                    "WASM" -> WasmPlatforms.Default
+                    "WASM" -> WasmPlatforms.wasmJs
                     "JS" -> JsPlatforms.defaultJsPlatform
                     else -> throw IllegalArgumentException("Unknown JS backend: ${kspConfig.backend}")
                 }
