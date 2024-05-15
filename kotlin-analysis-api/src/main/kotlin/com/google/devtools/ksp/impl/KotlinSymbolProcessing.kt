@@ -50,7 +50,6 @@ import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
@@ -125,7 +124,6 @@ import org.jetbrains.kotlin.platform.konan.NativePlatforms
 import org.jetbrains.kotlin.platform.wasm.WasmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
 
 class KotlinSymbolProcessing(
@@ -356,11 +354,10 @@ class KotlinSymbolProcessing(
         compilerConfiguration: CompilerConfiguration
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
-        val psiManager = PsiManager.getInstance(project)
         val ktFiles = createSourceFilesFromSourceRoots(
             compilerConfiguration, project, compilerConfiguration.kotlinSourceRoots
         ).toSet().toList()
-        val psiFiles = getPsiFilesFromPaths<PsiFileSystemItem>(
+        val allJavaFiles = getPsiFilesFromPaths<PsiJavaFile>(
             project,
             getSourceFilePaths(compilerConfiguration, includeDirectoryRoot = true)
         )
@@ -378,21 +375,47 @@ class KotlinSymbolProcessing(
             ).update(ktFiles)
 
         // Update Java providers for newly generated source files.
-        reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, psiFiles)
+        reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, allJavaFiles)
 
-        val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-        val javaFiles = if (kspConfig is KSPJvmConfig) {
-            val javaRoots = kspConfig.javaSourceRoots + kspConfig.javaOutputDir
-            // Get non-symbolic paths first
-            javaRoots.sortedBy { Files.isSymbolicLink(it.toPath()) }
-                .flatMap { root -> root.walk().filter { it.isFile && it.extension == "java" }.toList() }
-                // This time is for .java files
-                .sortedBy { Files.isSymbolicLink(it.toPath()) }
-                .distinctBy { it.canonicalPath }
-                .mapNotNull { localFileSystem.findFileByPath(it.path)?.let { psiManager.findFile(it) } as? PsiJavaFile }
-        } else {
-            emptyList()
-        }
+        return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
+            allJavaFiles.map { KSFileJavaImpl.getCached(it) }
+    }
+
+    private fun prepareNewKSFiles(
+        kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
+        modules: List<KtModule>,
+        compilerConfiguration: CompilerConfiguration,
+        newKotlinFiles: List<File>,
+        newJavaFiles: List<File>,
+    ): List<KSFile> {
+        val project = kotlinCoreProjectEnvironment.project
+        val ktFiles = getPsiFilesFromPaths<KtFile>(
+            project,
+            newKotlinFiles.map { it.toPath() }.toSet()
+        )
+        val javaFiles = getPsiFilesFromPaths<PsiJavaFile>(
+            project,
+            newJavaFiles.map { it.toPath() }.toSet()
+        )
+        val allJavaFiles = getPsiFilesFromPaths<PsiJavaFile>(
+            project,
+            getSourceFilePaths(compilerConfiguration, includeDirectoryRoot = true)
+        )
+
+        // Update Kotlin providers for newly generated source files.
+        (
+            project.getService(
+                KotlinDeclarationProviderFactory::class.java
+            ) as IncrementalKotlinDeclarationProviderFactory
+            ).update(ktFiles)
+        (
+            project.getService(
+                KotlinPackageProviderFactory::class.java
+            ) as IncrementalKotlinPackageProviderFactory
+            ).update(ktFiles)
+
+        // Update Java providers for newly generated source files.
+        reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, allJavaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
@@ -533,7 +556,7 @@ class KotlinSymbolProcessing(
             }
 
             // Drop caches
-            KotlinGlobalModificationService.getInstance(project).publishGlobalModuleStateModification()
+            KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
             KtAnalysisSessionProvider.getInstance(project).clearCaches()
             psiManager.dropResolveCaches()
             psiManager.dropPsiCaches()
@@ -542,10 +565,26 @@ class KotlinSymbolProcessing(
 
             val newFilePaths = codeGenerator.generatedFile.filter { it.extension == "kt" || it.extension == "java" }
                 .map { it.canonicalPath }.toSet()
-            allDirtyKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration).filter {
-                it.filePath !in allCleanFilePaths
-            }
-            newKSFiles = allDirtyKSFiles.filter { it.filePath in newFilePaths }
+            newKSFiles = prepareNewKSFiles(
+                kotlinCoreProjectEnvironment,
+                modules,
+                compilerConfiguration,
+                newFilePaths.filter { it.endsWith(".kt") }.map { File(it) }.toList(),
+                newFilePaths.filter { it.endsWith(".java") }.map { File(it) }.toList(),
+            )
+            // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be re-created from PSI.
+            allDirtyKSFiles = allDirtyKSFiles.map {
+                when (it) {
+                    is KSFileImpl -> {
+                        val ktFile = it.ktFileSymbol.psi!! as KtFile
+                        analyze { KSFileImpl.getCached(ktFile.getFileSymbol()) }
+                    }
+                    is KSFileJavaImpl -> {
+                        KSFileJavaImpl.getCached(it.psi)
+                    }
+                    else -> throw IllegalArgumentException("Unknown KSFile implementation: $it")
+                }
+            } + newKSFiles
             incrementalContext.registerGeneratedFiles(newKSFiles)
             codeGenerator.closeFiles()
         }
@@ -612,7 +651,7 @@ class DirectoriesScope(
 private fun reinitJavaFileManager(
     environment: KotlinCoreProjectEnvironment,
     modules: List<KtModule>,
-    sourceFiles: List<PsiFileSystemItem>,
+    sourceFiles: List<PsiJavaFile>,
 ) {
     val project = environment.project
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
