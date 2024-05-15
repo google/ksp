@@ -24,15 +24,13 @@ import org.jetbrains.kotlin.psi.psiUtil.contains
 // TODO: copied from upstream as a workaround, remove after upstream fixes standalone session builder for KSP.
 @OptIn(LLFirInternals::class, SymbolInternals::class)
 class KspStandaloneDirectInheritorsProvider(private val project: Project) : KotlinDirectInheritorsProvider {
-    private val staticDeclarationProviderFactory by lazy {
-        (
-            (KotlinDeclarationProviderFactory.getInstance(project) as? IncrementalKotlinDeclarationProviderFactory)
-                ?.staticFactory as? KotlinStaticDeclarationProviderFactory
-            ) ?: error(
-            "KotlinStandaloneDirectInheritorsProvider" +
-                "` expects the following declaration provider factory to be" +
-                " registered: `${KotlinStaticDeclarationProviderFactory::class.simpleName}`"
-        )
+    private val declarationProviderFactory by lazy {
+        (KotlinDeclarationProviderFactory.getInstance(project) as? IncrementalKotlinDeclarationProviderFactory)
+            ?: error(
+                "KotlinStandaloneDirectInheritorsProvider" +
+                    "` expects the following declaration provider factory to be" +
+                    " registered: `${KotlinStaticDeclarationProviderFactory::class.simpleName}`"
+            )
     }
 
     override fun getDirectKotlinInheritors(
@@ -45,7 +43,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         val aliases = mutableSetOf(classId.shortClassName)
         calculateAliases(classId.shortClassName, aliases)
 
-        val possibleInheritors = aliases.flatMap { staticDeclarationProviderFactory.getDirectInheritorCandidates(it) }
+        val possibleInheritors = aliases.flatMap { declarationProviderFactory.getDirectInheritorCandidates(it) }
 
         if (possibleInheritors.isEmpty()) {
             return emptyList()
@@ -71,7 +69,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
     }
 
     private fun calculateAliases(aliasedName: Name, aliases: MutableSet<Name>) {
-        staticDeclarationProviderFactory.getInheritableTypeAliases(aliasedName).forEach { alias ->
+        declarationProviderFactory.getInheritableTypeAliases(aliasedName).forEach { alias ->
             val aliasName = alias.nameAsSafeName
             val isNewAliasName = aliases.add(aliasName)
             if (isNewAliasName) {
