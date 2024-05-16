@@ -234,9 +234,7 @@ abstract class IncrementalContextBase(
             symbolLookupCache.get(it).map { File(it) }
         }
 
-        val dirtyFilesBySealed = sealedMap.keys.flatMap { sealedMap[it]!! }.flatMap {
-            symbolLookupCache.get(it).map { File(it) }
-        }
+        val dirtyFilesBySealed = sealedMap.keys
 
         // Calculate dirty files by dirty classes in CP.
         val dirtyFilesByCP = changedClasses.flatMap { fqn ->
