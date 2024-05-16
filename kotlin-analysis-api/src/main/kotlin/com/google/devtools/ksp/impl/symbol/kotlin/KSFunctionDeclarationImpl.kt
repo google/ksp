@@ -107,7 +107,11 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         }
         recordLookupForPropertyOrMethod(this)
         return analyze {
-            ktFunctionSymbol.getDirectlyOverriddenSymbols().firstOrNull()?.unwrapFakeOverrides?.toKSDeclaration()
+            if (ktFunctionSymbol is KtPropertyAccessorSymbol) {
+                (parentDeclaration as? KSPropertyDeclarationImpl)?.ktPropertySymbol
+            } else {
+                ktFunctionSymbol
+            }?.getDirectlyOverriddenSymbols()?.firstOrNull()?.unwrapFakeOverrides?.toKSDeclaration()
         }?.also { recordLookupForPropertyOrMethod(it) }
     }
 

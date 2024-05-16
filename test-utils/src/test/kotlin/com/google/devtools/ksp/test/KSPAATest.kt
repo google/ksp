@@ -410,7 +410,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/overridee/conflictingOverride.kt")
     }
 
-    @Disabled
     @TestMetadata("javaAccessor.kt")
     @Test
     fun testJavaAccessor() {
