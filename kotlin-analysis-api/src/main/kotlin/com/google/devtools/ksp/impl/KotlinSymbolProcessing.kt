@@ -647,6 +647,7 @@ fun String?.toKotlinVersion(): KotlinVersion {
 
 // Workaround for ShadowJar's minimize, whose configuration isn't very flexible.
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
+    kotlinx.coroutines.debug.internal.DebugProbesImpl::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider::class.java,
