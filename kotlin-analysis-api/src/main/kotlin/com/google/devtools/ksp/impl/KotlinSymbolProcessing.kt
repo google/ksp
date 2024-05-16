@@ -31,6 +31,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.standalone.IncrementalJavaFileManager
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.KspStandaloneDirectInheritorsProvider
@@ -40,13 +41,10 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
-import com.intellij.core.CorePackageIndex
-import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
@@ -55,10 +53,8 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
-import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.ProjectScope
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
@@ -83,24 +79,15 @@ import org.jetbrains.kotlin.analysis.providers.impl.*
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.computeDefaultRootModules
 import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
-import org.jetbrains.kotlin.cli.jvm.compiler.getJavaModuleRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
-import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
-import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
-import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
-import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
-import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
-import org.jetbrains.kotlin.cli.jvm.modules.JavaModuleGraph
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -351,7 +338,8 @@ class KotlinSymbolProcessing(
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         modules: List<KtModule>,
-        compilerConfiguration: CompilerConfiguration
+        compilerConfiguration: CompilerConfiguration,
+        javaFileManager: IncrementalJavaFileManager,
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = createSourceFilesFromSourceRoots(
@@ -375,7 +363,7 @@ class KotlinSymbolProcessing(
             ).update(ktFiles)
 
         // Update Java providers for newly generated source files.
-        reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, allJavaFiles)
+        javaFileManager.initialize(modules, allJavaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
             allJavaFiles.map { KSFileJavaImpl.getCached(it) }
@@ -383,8 +371,7 @@ class KotlinSymbolProcessing(
 
     private fun prepareNewKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
-        modules: List<KtModule>,
-        compilerConfiguration: CompilerConfiguration,
+        javaFileManager: IncrementalJavaFileManager,
         newKotlinFiles: List<File>,
         newJavaFiles: List<File>,
     ): List<KSFile> {
@@ -396,10 +383,6 @@ class KotlinSymbolProcessing(
         val javaFiles = getPsiFilesFromPaths<PsiJavaFile>(
             project,
             newJavaFiles.map { it.toPath() }.toSet()
-        )
-        val allJavaFiles = getPsiFilesFromPaths<PsiJavaFile>(
-            project,
-            getSourceFilePaths(compilerConfiguration, includeDirectoryRoot = true)
         )
 
         // Update Kotlin providers for newly generated source files.
@@ -415,7 +398,7 @@ class KotlinSymbolProcessing(
             ).update(ktFiles)
 
         // Update Java providers for newly generated source files.
-        reinitJavaFileManager(kotlinCoreProjectEnvironment, modules, allJavaFiles)
+        javaFileManager.add(javaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
@@ -470,7 +453,9 @@ class KotlinSymbolProcessing(
         ResolverAAImpl.ktModule = modules.single() as KtSourceModule
 
         // Initializing environments
-        val allKSFiles = prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration)
+        val javaFileManager = IncrementalJavaFileManager(kotlinCoreProjectEnvironment)
+        val allKSFiles =
+            prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration, javaFileManager)
         val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
         val codeGenerator = CodeGeneratorImpl(
             kspConfig.classOutputDir,
@@ -499,7 +484,6 @@ class KotlinSymbolProcessing(
         var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
         var newKSFiles = allDirtyKSFiles
         val initialDirtySet = allDirtyKSFiles.toSet()
-        val allCleanFilePaths = allKSFiles.filterNot { it in initialDirtySet }.map { it.filePath }.toSet()
 
         val targetPlatform = ResolverAAImpl.ktModule.platform
         val symbolProcessorEnvironment = SymbolProcessorEnvironment(
@@ -567,8 +551,7 @@ class KotlinSymbolProcessing(
                 .map { it.canonicalPath }.toSet()
             newKSFiles = prepareNewKSFiles(
                 kotlinCoreProjectEnvironment,
-                modules,
-                compilerConfiguration,
+                javaFileManager,
                 newFilePaths.filter { it.endsWith(".kt") }.map { File(it) }.toList(),
                 newFilePaths.filter { it.endsWith(".java") }.map { File(it) }.toList(),
             )
@@ -646,78 +629,6 @@ class DirectoriesScope(
     }
 
     override fun toString() = "All files under: $directories"
-}
-
-private fun reinitJavaFileManager(
-    environment: KotlinCoreProjectEnvironment,
-    modules: List<KtModule>,
-    sourceFiles: List<PsiJavaFile>,
-) {
-    val project = environment.project
-    val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
-    val javaModuleFinder = CliJavaModuleFinder(null, null, javaFileManager, project, null)
-    val javaModuleGraph = JavaModuleGraph(javaModuleFinder)
-    val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
-    val jdkRoots = getDefaultJdkModuleRoots(javaModuleFinder, javaModuleGraph)
-    val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, environment)
-
-    val rootsWithSingleJavaFileRoots = buildList {
-        addAll(libraryRoots)
-        addAll(allSourceFileRoots)
-        addAll(jdkRoots)
-    }
-
-    val (roots, singleJavaFileRoots) = rootsWithSingleJavaFileRoots.partition { (file) ->
-        file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
-    }
-
-    val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
-    val rootsIndex = JvmDependenciesDynamicCompoundIndex().apply {
-        addIndex(JvmDependenciesIndexImpl(roots))
-        indexedRoots.forEach { javaRoot ->
-            if (javaRoot.file.isDirectory) {
-                if (javaRoot.type == JavaRoot.RootType.SOURCE) {
-                    // NB: [JavaCoreProjectEnvironment#addSourcesToClasspath] calls:
-                    //   1) [CoreJavaFileManager#addToClasspath], which is used to look up Java roots;
-                    //   2) [CorePackageIndex#addToClasspath], which populates [PackageIndex]; and
-                    //   3) [FileIndexFacade#addLibraryRoot], which conflicts with this SOURCE root when generating a library scope.
-                    // Thus, here we manually call first two, which are used to:
-                    //   1) create [PsiPackage] as a package resolution result; and
-                    //   2) find directories by package name.
-                    // With both supports, annotations defined in package-info.java can be properly propagated.
-                    javaFileManager.addToClasspath(javaRoot.file)
-                    corePackageIndex.addToClasspath(javaRoot.file)
-                } else {
-                    environment.addSourcesToClasspath(javaRoot.file)
-                }
-            }
-        }
-    }
-
-    javaFileManager.initialize(
-        rootsIndex,
-        listOf(
-            StandaloneProjectFactory.createPackagePartsProvider(
-                libraryRoots + jdkRoots,
-                LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST)
-            ).invoke(ProjectScope.getLibrariesScope(project))
-        ),
-        SingleJavaFileRootsIndex(singleJavaFileRoots),
-        true
-    )
-}
-
-private fun getDefaultJdkModuleRoots(
-    javaModuleFinder: CliJavaModuleFinder,
-    javaModuleGraph: JavaModuleGraph
-): List<JavaRoot> {
-    // In contrast to `ClasspathRootsResolver.addModularRoots`, we do not need to handle automatic Java modules because JDK modules
-    // aren't automatic.
-    return javaModuleGraph.getAllDependencies(javaModuleFinder.computeDefaultRootModules()).flatMap { moduleName ->
-        val module = javaModuleFinder.findModule(moduleName) ?: return@flatMap emptyList<JavaRoot>()
-        val result = module.getJavaModuleRoots()
-        result
-    }
 }
 
 fun String?.toKotlinVersion(): KotlinVersion {
