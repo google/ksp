@@ -67,7 +67,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     override val arguments: List<KSValueArgument> by lazy {
         val annotationConstructor = analyze {
-            (type.classifierSymbol() as KtClassOrObjectSymbol).getMemberScope().getConstructors().singleOrNull()
+            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.getConstructors()?.singleOrNull()
         }
         val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
             val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
@@ -91,7 +91,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
-            (type.classifierSymbol() as KtClassOrObjectSymbol).getMemberScope().getConstructors().singleOrNull()
+            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.getConstructors()?.singleOrNull()
                 ?.let { symbol ->
                     if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null) {
                         (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
