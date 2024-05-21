@@ -24,6 +24,10 @@ Most of the documentation of KSP can be found on [kotlinlang.org](https://kotlin
 
 For debugging and testing processors, as well as KSP itself, please check [DEVELOPMENT.md](DEVELOPMENT.md)
 
+## KSP2 is in Beta!
+KSP2 is a new implementation of the KSP API. It will be faster and easier to use than KSP 1.x. Please refer to the
+[KSP2 introduction](docs/ksp2.md) for more details.
+
 ## Feedback and Bug Reporting
 
 [Please let us know what you think about KSP by filing a Github issue](https://github.com/google/ksp/issues)
@@ -35,8 +39,6 @@ If you are interested in sending PRs, please also check out the [Contributor gui
 ## Ongoing and Future Works
 
 Here are some planned features that have not yet been completely implemented:
-* Support [new Kotlin compiler](https://kotlinlang.org/docs/roadmap.html)
 * Improve support to multiplatform. E.g., running KSP on a subset of targets / sharing computations between targets
 * Improve performance. There are a bunch of optimizations to be done!
-* Make the IDE aware of the generated code
 * Keep fixing bugs!
