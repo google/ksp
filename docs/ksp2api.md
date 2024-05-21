@@ -93,3 +93,7 @@ class OverrideOrder2 : BaseInterface2, GrandBaseInterface1 {
 ##### Synthesized members of data classes
 * KSP1: `componentN` and `copy` are missing if the data class is defined in Kotlin sources
 * KSP2: `componentN` and `copy` are always present
+
+##### Super type of Enum classes
+* KSP1: The super type of Enum classes is `Any`
+* KSP2: The super type of Enum classes is `Enum`
