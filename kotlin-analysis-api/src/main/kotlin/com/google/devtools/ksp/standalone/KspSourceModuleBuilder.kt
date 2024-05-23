@@ -18,9 +18,11 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.standalone
 
-import com.google.devtools.ksp.impl.DirectoriesScope
+import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
@@ -38,7 +40,6 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.io.path.isDirectory
-import kotlin.io.path.pathString
 
 @KtModuleBuilderDsl
 class KspModuleBuilder(
@@ -62,10 +63,7 @@ class KspModuleBuilder(
         val virtualFiles = collectVirtualFilesByRoots()
         val psiManager = PsiManager.getInstance(kotlinCoreProjectEnvironment.project)
         val psiFiles = virtualFiles.mapNotNull { psiManager.findFile(it) }
-        val project = kotlinCoreProjectEnvironment.project
-        val fs = kotlinCoreProjectEnvironment.environment.localFileSystem
-        val contentScope =
-            DirectoriesScope(project, sourceRoots.mapNotNull { fs.findFileByPath(it.pathString) }.toSet())
+        val contentScope = IncrementalGlobalSearchScope(kotlinCoreProjectEnvironment.project, virtualFiles)
         return KtSourceModuleImpl(
             directRegularDependencies,
             directDependsOnDependencies,
@@ -95,6 +93,22 @@ class KspModuleBuilder(
             }
         }
     }
+}
+
+class IncrementalGlobalSearchScope(
+    project: Project,
+    initialSet: Collection<VirtualFile> = emptyList(),
+) : GlobalSearchScope(project) {
+    // TODO: optimize space with trie.
+    val files = mutableSetOf<VirtualFile>().apply { addAll(initialSet) }
+
+    fun addAll(files: Collection<VirtualFile>) = this.files.addAll(files)
+
+    override fun contains(file: VirtualFile): Boolean = file in files
+
+    override fun isSearchInLibraries(): Boolean = false
+
+    override fun isSearchInModuleContent(aModule: Module): Boolean = true
 }
 
 @OptIn(ExperimentalContracts::class)
