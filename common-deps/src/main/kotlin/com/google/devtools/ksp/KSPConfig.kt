@@ -468,8 +468,7 @@ fun parseBoolean(arg: String): Boolean {
 fun parseFile(arg: String): File {
     if (arg.length > 0 && arg[0] == '-')
         throw IllegalArgumentException("expecting a File arguemnt but got $arg")
-    // FIXME: AA isn't happy relative paths for source roots.
-    return File(arg).absoluteFile
+    return File(arg)
 }
 
 fun <T> parseList(arg: String, transform: (String) -> T): List<T> {

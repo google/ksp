@@ -31,6 +31,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.standalone.IncrementalGlobalSearchScope
 import com.google.devtools.ksp.standalone.IncrementalJavaFileManager
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
@@ -47,13 +48,11 @@ import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
-import com.intellij.psi.search.DelegatingGlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
@@ -73,17 +72,13 @@ import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.impl.getSourceFilePaths
+import org.jetbrains.kotlin.analysis.project.structure.impl.KtSourceModuleImpl
 import org.jetbrains.kotlin.analysis.providers.*
 import org.jetbrains.kotlin.analysis.providers.impl.*
-import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
-import org.jetbrains.kotlin.cli.common.config.kotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.createSourceFilesFromSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
-import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
@@ -207,10 +202,8 @@ class KotlinSymbolProcessing(
                 val roots = mutableListOf<File>()
                 roots.addAll(kspConfig.sourceRoots)
                 roots.addAll(kspConfig.commonSourceRoots)
-                roots.add(kspConfig.kotlinOutputDir)
                 if (kspConfig is KSPJvmConfig) {
                     roots.addAll(kspConfig.javaSourceRoots)
-                    roots.add(kspConfig.javaOutputDir)
                 }
                 roots.forEach {
                     it.mkdirs()
@@ -338,17 +331,19 @@ class KotlinSymbolProcessing(
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         modules: List<KtModule>,
-        compilerConfiguration: CompilerConfiguration,
         javaFileManager: IncrementalJavaFileManager,
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
-        val ktFiles = createSourceFilesFromSourceRoots(
-            compilerConfiguration, project, compilerConfiguration.kotlinSourceRoots
-        ).toSet().toList()
-        val allJavaFiles = getPsiFilesFromPaths<PsiJavaFile>(
-            project,
-            getSourceFilePaths(compilerConfiguration, includeDirectoryRoot = true)
-        )
+        val ktFiles = mutableListOf<KtFile>()
+        val javaFiles = mutableListOf<PsiJavaFile>()
+        modules.filterIsInstance<KtSourceModuleImpl>().forEach {
+            it.sourceRoots.forEach {
+                when (it) {
+                    is KtFile -> ktFiles.add(it)
+                    is PsiJavaFile -> javaFiles.add(it)
+                }
+            }
+        }
 
         // Update Kotlin providers for newly generated source files.
         (
@@ -363,10 +358,10 @@ class KotlinSymbolProcessing(
             ).update(ktFiles)
 
         // Update Java providers for newly generated source files.
-        javaFileManager.initialize(modules, allJavaFiles)
+        javaFileManager.initialize(modules, javaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
-            allJavaFiles.map { KSFileJavaImpl.getCached(it) }
+            javaFiles.map { KSFileJavaImpl.getCached(it) }
     }
 
     private fun prepareNewKSFiles(
@@ -384,6 +379,11 @@ class KotlinSymbolProcessing(
             project,
             newJavaFiles.map { it.toPath() }.toSet()
         )
+
+        // Add new files to content scope.
+        val contentScope = ResolverAAImpl.ktModule.contentScope as IncrementalGlobalSearchScope
+        contentScope.addAll(ktFiles.map { it.virtualFile })
+        contentScope.addAll(javaFiles.map { it.virtualFile })
 
         // Update Kotlin providers for newly generated source files.
         (
@@ -410,10 +410,8 @@ class KotlinSymbolProcessing(
         // TODO: CompilerConfiguration is deprecated.
         val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
             addKotlinSourceRoots(kspConfig.sourceRoots.map { it.path })
-            addKotlinSourceRoot(kspConfig.kotlinOutputDir.path)
             if (kspConfig is KSPJvmConfig) {
                 addJavaSourceRoots(kspConfig.javaSourceRoots)
-                addJavaSourceRoot(kspConfig.javaOutputDir)
                 kspConfig.jdkHome?.let {
                     put(JVMConfigurationKeys.JDK_HOME, it)
                 }
@@ -455,7 +453,7 @@ class KotlinSymbolProcessing(
         // Initializing environments
         val javaFileManager = IncrementalJavaFileManager(kotlinCoreProjectEnvironment)
         val allKSFiles =
-            prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, compilerConfiguration, javaFileManager)
+            prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, javaFileManager)
         val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
         val codeGenerator = CodeGeneratorImpl(
             kspConfig.classOutputDir,
@@ -547,13 +545,11 @@ class KotlinSymbolProcessing(
 
             KSObjectCacheManager.clear()
 
-            val newFilePaths = codeGenerator.generatedFile.filter { it.extension == "kt" || it.extension == "java" }
-                .map { it.canonicalPath }.toSet()
             newKSFiles = prepareNewKSFiles(
                 kotlinCoreProjectEnvironment,
                 javaFileManager,
-                newFilePaths.filter { it.endsWith(".kt") }.map { File(it) }.toList(),
-                newFilePaths.filter { it.endsWith(".java") }.map { File(it) }.toList(),
+                codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
+                codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
             )
             // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be re-created from PSI.
             allDirtyKSFiles = allDirtyKSFiles.map {
@@ -610,25 +606,6 @@ private inline fun <reified T : PsiFileSystemItem> getPsiFilesFromPaths(
             psiFileSystemItem?.let { add(it) }
         }
     }
-}
-
-class DirectoriesScope(
-    project: Project,
-    private val directories: Set<VirtualFile>
-) : DelegatingGlobalSearchScope(GlobalSearchScope.allScope(project)) {
-    private val fileSystems = directories.mapTo(hashSetOf(), VirtualFile::getFileSystem)
-
-    override fun contains(file: VirtualFile): Boolean {
-        if (file.fileSystem !in fileSystems) return false
-
-        var parent: VirtualFile = file
-        while (true) {
-            if (parent in directories) return true
-            parent = parent.parent ?: return false
-        }
-    }
-
-    override fun toString() = "All files under: $directories"
 }
 
 fun String?.toKotlinVersion(): KotlinVersion {
