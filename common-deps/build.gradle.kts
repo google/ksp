@@ -18,7 +18,7 @@ plugins {
     `maven-publish`
     signing
     id("org.jetbrains.dokka")
-    id("com.google.devtools.ksp") version "1.9.23-1.0.20"
+    id("com.google.devtools.ksp")
 }
 
 dependencies {

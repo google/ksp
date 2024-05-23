@@ -1,6 +1,14 @@
 rootProject.name = "ksp"
 
 pluginManagement {
+    val buildKotlinVersion: String by settings
+    val buildKspVersion: String by settings
+
+    plugins {
+        kotlin("jvm") version buildKotlinVersion apply false
+        id("com.google.devtools.ksp") version buildKspVersion apply false
+    }
+
     repositories {
         gradlePluginPortal()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")

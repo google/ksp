@@ -20,7 +20,7 @@ repositories {
 }
 
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm")
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 
     // Adding plugins used in multiple places to the classpath for centralized version control
