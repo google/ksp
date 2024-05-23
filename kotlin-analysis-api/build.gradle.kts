@@ -6,6 +6,8 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 val signingKey: String? by project
 val signingPassword: String? by project
 
+val kotlinBaseVersion: String by project
+
 val aaKotlinBaseVersion: String by project
 val aaIntellijVersion: String by project
 val aaGuavaVersion: String by project
@@ -95,7 +97,7 @@ dependencies {
 
     testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
 
-    depJarsForCheck("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+    depJarsForCheck("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
     depJarsForCheck(project(":api"))
     depJarsForCheck(project(":common-deps"))
 }
@@ -203,7 +205,7 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
