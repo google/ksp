@@ -30,7 +30,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
 
     fun initialize(
         modules: List<KtModule>,
-        sourceFiles: List<PsiJavaFile>,
+        sourceFiles: Set<PsiJavaFile>,
     ) {
         val project = environment.project
         val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
@@ -91,7 +91,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         )
     }
 
-    fun add(sourceFiles: List<PsiJavaFile>) {
+    fun add(sourceFiles: Set<PsiJavaFile>) {
         val project = environment.project
         val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
         val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
