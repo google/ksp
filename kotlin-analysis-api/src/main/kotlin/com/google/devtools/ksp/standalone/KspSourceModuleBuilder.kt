@@ -49,7 +49,7 @@ class KspModuleBuilder(
     public var languageVersionSettings: LanguageVersionSettings =
         LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST)
 
-    private val sourceRoots: MutableList<Path> = mutableListOf()
+    private val sourceRoots: MutableSet<Path> = mutableSetOf()
 
     fun addSourceRoot(path: Path) {
         sourceRoots.add(path)
@@ -77,9 +77,9 @@ class KspModuleBuilder(
         )
     }
 
-    private fun collectVirtualFilesByRoots(): List<VirtualFile> {
+    private fun collectVirtualFilesByRoots(): Set<VirtualFile> {
         val localFileSystem = kotlinCoreProjectEnvironment.environment.localFileSystem
-        return buildList {
+        return buildSet {
             for (root in sourceRoots) {
                 val files = when {
                     root.isDirectory() -> collectSourceFilePaths(root)

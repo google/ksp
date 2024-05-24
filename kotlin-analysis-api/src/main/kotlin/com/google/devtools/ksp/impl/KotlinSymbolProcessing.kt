@@ -334,8 +334,8 @@ class KotlinSymbolProcessing(
         javaFileManager: IncrementalJavaFileManager?,
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
-        val ktFiles = mutableListOf<KtFile>()
-        val javaFiles = mutableListOf<PsiJavaFile>()
+        val ktFiles = mutableSetOf<KtFile>()
+        val javaFiles = mutableSetOf<PsiJavaFile>()
         modules.filterIsInstance<KtSourceModuleImpl>().forEach {
             it.sourceRoots.forEach {
                 when (it) {
@@ -357,7 +357,6 @@ class KotlinSymbolProcessing(
             ) as IncrementalKotlinPackageProviderFactory
             ).update(ktFiles)
 
-        // Update Java providers for newly generated source files.
         javaFileManager?.initialize(modules, javaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
@@ -374,13 +373,13 @@ class KotlinSymbolProcessing(
         val ktFiles = getPsiFilesFromPaths<KtFile>(
             project,
             newKotlinFiles.map { it.toPath() }.toSet()
-        )
+        ).toSet()
         val javaFiles = if (javaFileManager != null) {
             getPsiFilesFromPaths<PsiJavaFile>(
                 project,
                 newJavaFiles.map { it.toPath() }.toSet()
-            )
-        } else emptyList()
+            ).toSet()
+        } else emptySet()
 
         // Add new files to content scope.
         val contentScope = ResolverAAImpl.ktModule.contentScope as IncrementalGlobalSearchScope
