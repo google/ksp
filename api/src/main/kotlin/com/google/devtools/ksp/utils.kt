@@ -73,7 +73,7 @@ fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean
 /**
  * Find the containing file of a KSNode.
  * @return KSFile if the given KSNode has a containing file.
- * exmample of symbols without a containing file: symbols from class files, synthetic symbols craeted by user.
+ * exmample of symbols without a containing file: symbols from class files, synthetic symbols created by user.
  */
 val KSNode.containingFile: KSFile?
     get() {
