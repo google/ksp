@@ -22,6 +22,11 @@ class TestProcessor : SymbolProcessor {
         if (options.containsKey("error")) {
             throw IllegalStateException("Error on request")
         }
+        if (rounds++ == 0) {
+            codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Status", "log").use {
+                it.write("OK".toByteArray())
+            }
+        }
         return emptyList()
     }
 }
