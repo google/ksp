@@ -527,8 +527,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 gradleCfg.logLevel.get().ordinal
             ) as Int
             ExitCode.values()[returnCode]
-        } catch (e: Exception) {
-            require(e is InvocationTargetException)
+        } catch (e: InvocationTargetException) {
             kspGradleLogger.exception(e.targetException)
             throw e.targetException
         }
