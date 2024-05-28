@@ -28,6 +28,14 @@ For debugging and testing processors, as well as KSP itself, please check [DEVEL
 KSP2 is a new implementation of the KSP API. It will be faster and easier to use than KSP 1.x. Please refer to the
 [KSP2 introduction](docs/ksp2.md) for more details.
 
+### Nightly Builds
+Nightly builds of KSP for the latest Kotlin stable releases are published
+[here](https://oss.sonatype.org/content/repositories/snapshots/com/google/devtools/ksp/).
+
+```
+maven("https://oss.sonatype.org/content/repositories/snapshots")
+```
+
 ## Feedback and Bug Reporting
 
 [Please let us know what you think about KSP by filing a Github issue](https://github.com/google/ksp/issues)
