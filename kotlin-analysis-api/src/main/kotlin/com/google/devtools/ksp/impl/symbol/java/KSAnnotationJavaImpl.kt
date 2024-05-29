@@ -37,7 +37,10 @@ import com.intellij.psi.PsiLiteralValue
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
+import com.intellij.psi.impl.compiled.ClsClassImpl
+import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
@@ -89,11 +92,13 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
         presentArgs + defaultArguments.filter { it.name?.asString() !in presentValueArgumentNames }
     }
 
+    @OptIn(KtAnalysisApiInternals::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
             (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.getConstructors()?.singleOrNull()
                 ?.let { symbol ->
-                    if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null) {
+                    // ClsClassImpl means psi is decompiled psi.
+                    if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null && symbol.psi !is ClsClassImpl) {
                         (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->
                                 annoMethod.defaultValue?.let {
@@ -113,13 +118,20 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                 }
                             }
                     } else {
-                        symbol.valueParameters.mapNotNull { valueParameterSymbol ->
-                            valueParameterSymbol.getDefaultValue()?.let { constantValue ->
+                        symbol.valueParameters.map { valueParameterSymbol ->
+                            valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
                                     KtNamedAnnotationValue(
                                         valueParameterSymbol.name,
-                                        constantValue,
-                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
+                                        // null will be returned as the `constantValue` for non array annotation values.
+                                        // fallback to unsupported annotation value to indicate such use cases.
+                                        // when seeing unsupported annotation value we return `null` for the value.
+                                        // which might still be incorrect but there might not be a perfect way.
+                                        constantValue
+                                            ?: KtUnsupportedAnnotationValue(
+                                                KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                            ),
+                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                     ),
                                     Origin.SYNTHETIC
                                 )
