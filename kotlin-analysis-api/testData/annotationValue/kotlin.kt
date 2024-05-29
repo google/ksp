@@ -19,6 +19,10 @@
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
 // defaultInNested
+// []
+// null
+// null
+// null
 // SomeClass$WithDollarSign
 // Str
 // 42
@@ -35,6 +39,16 @@
 // 31
 // Throws
 // END
+// MODULE: module1
+// FILE: placeholder.kt
+// FILE: TestLib.java
+@interface Default {
+    Class<?>[] value();
+    int value1();
+    String value2();
+    Class<?> value3();
+}
+// MODULE: main(module1)
 // FILE: a.kt
 
 enum class RGB {
@@ -73,6 +87,7 @@ annotation class Bar(
 
 fun Fun() {
     @Foo.Nested
+    @Default
     @MyAnnotation(`SomeClass$WithDollarSign`::class)
     @Bar(
         "Str",

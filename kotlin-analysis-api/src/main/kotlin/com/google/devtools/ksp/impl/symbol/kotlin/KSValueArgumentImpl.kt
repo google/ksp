@@ -20,14 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtArrayAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtConstantAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtEnumEntryAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtKClassAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
 
 class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KtNamedAnnotationValue,
@@ -61,27 +54,6 @@ class KSValueArgumentImpl private constructor(
 
     override fun toString(): String {
         return "${name?.asString() ?: ""}:$value"
-    }
-
-    private fun KtAnnotationValue.toValue(): Any? = when (this) {
-        is KtArrayAnnotationValue -> this.values.map { it.toValue() }
-        is KtAnnotationApplicationValue -> KSAnnotationImpl.getCached(this.annotationValue)
-        // TODO: Enum entry should return a type, use declaration as a placeholder.
-        is KtEnumEntryAnnotationValue -> this.callableId?.classId?.let {
-            analyze {
-                it.toKtClassSymbol()?.let {
-                    it.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
-                        it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
-                    }
-                }
-            }
-        } ?: KSErrorType
-        // TODO: handle local classes.
-        is KtKClassAnnotationValue -> {
-            KSTypeImpl.getCached(this@toValue.type)
-        }
-        is KtConstantAnnotationValue -> this.constantValue.value
-        is KtUnsupportedAnnotationValue -> null
     }
 
     override fun defer(): Restorable = Restorable { getCached(namedAnnotationValue, origin) }
