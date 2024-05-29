@@ -31,6 +31,7 @@ import com.google.devtools.ksp.impl.symbol.util.getDocString
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.impl.compiled.ClsMemberImpl
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
@@ -71,6 +72,7 @@ import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.isAny
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSignatureParser
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
@@ -429,6 +431,26 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
     return result
 }
 
+internal fun KtAnnotationValue.toValue(): Any? = when (this) {
+    is KtArrayAnnotationValue -> this.values.map { it.toValue() }
+    is KtAnnotationApplicationValue -> KSAnnotationImpl.getCached(this.annotationValue)
+    // TODO: Enum entry should return a type, use declaration as a placeholder.
+    is KtEnumEntryAnnotationValue -> this.callableId?.classId?.let {
+        analyze {
+            it.toKtClassSymbol()?.let {
+                it.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
+                    it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
+                }
+            }
+        }
+    } ?: KSErrorType
+    is KtKClassAnnotationValue -> {
+        KSTypeImpl.getCached(this@toValue.type)
+    }
+    is KtConstantAnnotationValue -> this.constantValue.value
+    is KtUnsupportedAnnotationValue -> null
+}
+
 @OptIn(SymbolInternals::class)
 internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
     fun FirExpression.toValue(builder: KtSymbolByFirBuilder): KtAnnotationValue? {
@@ -473,7 +495,8 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
             is KtParameter -> analyze {
                 it.defaultValue?.evaluateAsAnnotationValue()
             }
-            null -> {
+            // ClsMethodImpl means the psi is decompiled psi.
+            null, is ClsMemberImpl<*> -> {
                 val fileManager = ResolverAAImpl.instance.javaFileManager
                 val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
@@ -511,12 +534,18 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
                     val firSession = it.firSymbol.fir.moduleData.session
                     val symbolBuilder = it.builder
                     val expectedTypeRef = it.firSymbol.fir.returnTypeRef
-                    val expression = defaultValue
-                        ?.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
-                    expression?.toValue(symbolBuilder)
+                    // when no default value is declared in the class file, ideally users should
+                    // apply a value for such property at use site, therefore value obtained here should not be
+                    // returned. In case of a user failed to do so, we try our best to return values
+                    // to ensure no annotation argument is missing from KSP side.
+                    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
+                    // will produce empty array for array type values and `null` for the rest of value types.
+                    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
+                        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+                    expression.toValue(symbolBuilder)
                 }
             }
-            else -> throw IllegalStateException("Unhandled default value type ${it.javaClass}")
+            else -> throw IllegalStateException("Unhandled default value type ${it?.javaClass}")
         }
     }
 }

@@ -24,6 +24,8 @@
 // MyClassInLib: stringParam = 2
 // MyClassInLib: stringParam2 = 1
 // MyClassInLib: stringArrayParam = [3, 5, 7]
+// []
+// null
 // Str
 // 42
 // Foo
@@ -48,6 +50,12 @@ import java.lang.annotation.Target;
     String stringParam2() default "1";
     String[] stringArrayParam() default {"3", "5", "7"};
 }
+
+@interface Default {
+    Class<?>[] value();
+    int value1();
+}
+
 interface MyInterface {}
 @MyAnnotation(stringParam = "2") class MyClassInLib implements MyInterface {}
 // MODULE: main(module1)
@@ -82,6 +90,7 @@ class C {
 
 }
 // FILE: JavaAnnotated.java
+@Default
 @Bar(argStr = "Str",
     argInt = 40 + 2,
     argClsUser = Foo.class,
