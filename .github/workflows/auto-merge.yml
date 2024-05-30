@@ -7,110 +7,20 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  pick-test-push:
     strategy:
       fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-latest ]
 
     # The type of runner that the job will run on
-    runs-on: ${{ matrix.os }}
-
-    steps:
-    # Checkout
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-        ref: 1.0.22-release
-
-    - name: merge commits from main to release branch
-      run: |
-        # Cherry pick new changes from main, except for version bumps.
-        # A commit is a version bump IFF it touches third_party/prebuilt/repo
-        DONT_PICK=$(cat <<EOF
-        d44ad7d9824aa0f073ce3c53e79361ae0f030d3b
-        1a4ed56e3dc43f1d075fb2fa1f9f12f29bcd43cd
-        c65ac57cad85f38b314414489a53a7fcff414c8c
-        3ea749001abc37d4253e58be1861f17222091605
-        17d03d52f3c303da886bd0a9e82a5696ebbe825b
-        ba2bee790da28056c30b0bc30f22c36e83cb7e68
-        f52eef6634a8dcbfca6a335966464702ffbcb3b9
-        dd5a919a0c7d78c5b98ca856339de915cab2ed38
-        EOF
-        )
-        git config --global user.email "kotlin-symbol-processing@google.com"
-        git config --global user.name "KSP Auto Pick"
-        MERGE_BASE=$(git merge-base HEAD origin/main)
-        CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
-        PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
-        VERSION_BUMPS=$(git log $MERGE_BASE..origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
-        TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
-        echo Picking $TO_PICK
-        if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
-
-    - name: Setup Java 9
-      uses: actions/setup-java@v1.4.3
-      with:
-        java-version: '9'
-        java-package: jdk
-        architecture: x64
-    - name: set JDK_9 environment variable for kotlin compiler
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-      run: echo ::set-env name=JDK_9::$(echo $JAVA_HOME)
-    - name: Setup Java 11
-      uses: actions/setup-java@v1.4.3
-      with:
-        java-version: '11'
-        java-package: jdk
-        architecture: x64
-
-    # Build cache
-    - name: Cache Gradle Cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
-        # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-    - name: Cache gradle wrapper
-      uses: actions/cache@v2
-      with:
-        path: ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
-    # Check API compatibility
-    - name: API compatibility check
-      run: ./gradlew :api:checkApi
-
-    # Run ksp generated tests
-    - name: test
-      run: ./gradlew --stacktrace --info test
-
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-reports
-        path: |
-          compiler-plugin/build/reports
-          integration-tests/build/reports
-          gradle-plugin/build/reports
-          common-util/build/reports
-          kotlin-analysis-api/build/reports
-
-  pick-and-push:
-    needs: build-and-test
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout
+    # Checkout
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           ref: 1.0.22-release
-
+  
       - name: merge commits from main to release branch
         run: |
           # Cherry pick new changes from main, except for version bumps.
@@ -132,10 +42,62 @@ jobs:
           CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
           PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
           VERSION_BUMPS=$(git log $MERGE_BASE..origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
-          TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | tac)
+          TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
           echo Picking $TO_PICK
           if [ -n "$TO_PICK" ]; then git cherry-pick -x $TO_PICK; fi
+  
+      - name: Setup Java 9
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: '9'
+          java-package: jdk
+          architecture: x64
+      - name: set JDK_9 environment variable for kotlin compiler
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: echo ::set-env name=JDK_9::$(echo $JAVA_HOME)
+      - name: Setup Java 11
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: '11'
+          java-package: jdk
+          architecture: x64
+  
+      # Build cache
+      - name: Cache Gradle Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+          # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Cache gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+  
+      # Check API compatibility
+      - name: API compatibility check
+        run: ./gradlew :api:checkApi
+  
+      # Run ksp generated tests
+      - name: test
+        run: ./gradlew --stacktrace --info test
 
       - name: push to release branch
+        if: success()
         run: git push origin
 
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: |
+            compiler-plugin/build/reports
+            integration-tests/build/reports
+            gradle-plugin/build/reports
+            common-util/build/reports
+            kotlin-analysis-api/build/reports
