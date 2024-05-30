@@ -32,7 +32,7 @@ for example: `org.gradle.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m`
    pass the system property `-Dorg.gradle.debug=true` in the Gradle command line.
 
 ## Transitioning from KSP1 to KSP2
-KSP1 and KSP2 are supported by an unified KSP Gradle plugin. The current versioning scheme,
+KSP1 and KSP2 are supported by a unified KSP Gradle plugin. The current versioning scheme,
 `<Kotlin Version>-<KSP Version>`, will remain at least until KSP1 is deprecated. This allows switching between KSP1 and
 KSP2 easily with a single `ksp.useKSP2=<true|false>` property in Gradle projects.
 
@@ -58,7 +58,7 @@ The main gaps between KSP2 Beta and KSP2 Stable are:
 * Some type of annotation values are not supported (e.g. nested annotations)
 
 Please check the KSP [2.0](https://github.com/google/ksp/issues?q=is%3Aopen+is%3Aissue+milestone%3A2.0) and
-[2.1](https://github.com/google/ksp/issues?q=is%3Aopen+is%3Aissue+milestone%3A2.1) milestones on github for the complete
+[2.1](https://github.com/google/ksp/issues?q=is%3Aopen+is%3Aissue+milestone%3A2.1) milestones on GitHub for the complete
 lists of known issues.
 
 ## Feedback
