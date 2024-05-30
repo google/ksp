@@ -48,6 +48,7 @@ val prefixesToRelocate = listOf(
     "it.unimi.dsi.",
     "javaslang.",
     "javax.inject.",
+    "javax.annotation.",
     "kotlinx.collections.immutable.",
     "kotlinx.coroutines.",
     "org.apache.log4j.",
