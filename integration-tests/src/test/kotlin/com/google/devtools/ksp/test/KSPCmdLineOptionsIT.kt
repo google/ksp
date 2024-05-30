@@ -139,6 +139,7 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
 
     fun testKsp2(mainClassName: String, platformArgs: List<String>) {
         Assume.assumeTrue(useKSP2)
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
 
         val sharedArgs = getKsp2SharedArgs()
         val kspMain = getKsp2Main(mainClassName)
