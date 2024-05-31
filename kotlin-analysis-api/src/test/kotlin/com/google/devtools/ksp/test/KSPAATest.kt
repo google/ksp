@@ -146,6 +146,18 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/builtInTypes.kt")
     }
 
+    @TestMetadata("A.kt")
+    @Test
+    fun testA() {
+        runTest("../test-utils/testData/api/A.kt")
+    }
+
+    @TestMetadata("B.kt")
+    @Test
+    fun testB() {
+        runTest("../test-utils/testData/api/B.kt")
+    }
+
     @Disabled
     @TestMetadata("checkOverride.kt")
     @Test
