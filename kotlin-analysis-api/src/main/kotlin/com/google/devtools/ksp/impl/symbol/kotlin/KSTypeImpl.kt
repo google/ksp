@@ -51,11 +51,11 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
                     }
                 }
                 is KtTypeParameterType -> KSTypeParameterImpl.getCached(symbol)
-                is KtClassErrorType -> KSErrorTypeClassDeclaration
+                is KtClassErrorType -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
                 is KtFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()
                 is KtDefinitelyNotNullType -> this@toDeclaration.original.toDeclaration()
-                else -> KSErrorTypeClassDeclaration
+                else -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
             }
         }
     }
@@ -110,12 +110,12 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return type.replace(arguments.map { it.toKtTypeProjection() })?.let { getCached(it) } ?: KSErrorType
+        return type.replace(arguments.map { it.toKtTypeProjection() })?.let { getCached(it) } ?: KSErrorType()
     }
 
     override fun starProjection(): KSType {
         return type.replace(List(type.typeArguments().size) { KtStarTypeProjection(type.token) })
-            ?.let { getCached(it) } ?: KSErrorType
+            ?.let { getCached(it) } ?: KSErrorType()
     }
 
     override fun makeNullable(): KSType {
@@ -134,7 +134,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         get() = type.nullability == KtTypeNullability.NULLABLE
 
     override val isError: Boolean
-        get() = type is KtClassErrorType
+        get() = type is KtErrorType
 
     override val isFunctionType: Boolean
         get() = type is KtFunctionalType && !type.isSuspend

@@ -28,7 +28,7 @@
 // 42
 // Foo
 // File
-// Error type synthetic declaration
+// <ERROR TYPE: Local>
 // Array
 // @Foo
 // @Suppress

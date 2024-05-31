@@ -16,15 +16,13 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeArgument
-import com.google.devtools.ksp.symbol.Nullability
+import com.google.devtools.ksp.symbol.*
 
-object KSErrorType : KSType {
+class KSErrorType(
+    private val hint: String? = null,
+) : KSType {
     override val declaration: KSDeclaration
-        get() = KSErrorTypeClassDeclaration
+        get() = KSErrorTypeClassDeclaration(this)
 
     override val nullability: Nullability
         get() = Nullability.NULLABLE
@@ -57,7 +55,25 @@ object KSErrorType : KSType {
 
     override val isSuspendFunctionType: Boolean = false
 
-    override fun toString(): String {
-        return "<ERROR TYPE>"
+    override fun toString(): String = hint?.let { "<ERROR TYPE: $it>" } ?: "<ERROR TYPE>"
+
+    override fun hashCode() = hint.hashCode()
+
+    override fun equals(other: Any?): Boolean {
+        return this === other || other is KSErrorType && other.hint == hint
+    }
+
+    companion object {
+        // As KSTypeImpl can also be `isError`, this function returns a KSType
+        // TODO: Make return exclusively KSErrorType
+        fun fromReferenceBestEffort(reference: KSTypeReference?): KSType {
+            return when (val type = reference?.resolve()) {
+                is KSErrorType -> type
+                null -> KSErrorType(hint = reference?.element?.toString())
+                else -> {
+                    type.takeIf { it.isError } ?: KSErrorType(hint = type.toString())
+                }
+            }
+        }
     }
 }

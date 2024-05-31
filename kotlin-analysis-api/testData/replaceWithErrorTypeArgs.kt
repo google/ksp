@@ -19,24 +19,24 @@
 // TEST PROCESSOR: ReplaceWithErrorTypeArgsProcessor
 // EXPECTED:
 // KS.star.replace([INVARIANT Int, INVARIANT String]): KS<Int, String>
-// KS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): KS<<ERROR TYPE>, <ERROR TYPE>>
+// KS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): KS<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // KS.asType([INVARIANT Int, INVARIANT String]): KS<Int, String>
-// KS.asType([INVARIANT NotExist1, INVARIANT NotExist2]): KS<<ERROR TYPE>, <ERROR TYPE>>
+// KS.asType([INVARIANT NotExist1, INVARIANT NotExist2]): KS<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // KS.asType(emptyList()): KS<T1, T2>
 // KL.star.replace([INVARIANT Int, INVARIANT String]): KL<Int, String>
-// KL.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): KL<<ERROR TYPE>, <ERROR TYPE>>
+// KL.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): KL<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // KL.asType([INVARIANT Int, INVARIANT String]): KL<Int, String>
-// KL.asType([INVARIANT NotExist1, INVARIANT NotExist2]): KL<<ERROR TYPE>, <ERROR TYPE>>
+// KL.asType([INVARIANT NotExist1, INVARIANT NotExist2]): KL<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // KL.asType(emptyList()): KL<T1, T2>
 // JS.star.replace([INVARIANT Int, INVARIANT String]): JS<Int, String>
-// JS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): JS<<ERROR TYPE>, <ERROR TYPE>>
+// JS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): JS<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // JS.asType([INVARIANT Int, INVARIANT String]): JS<Int, String>
-// JS.asType([INVARIANT NotExist1, INVARIANT NotExist2]): JS<<ERROR TYPE>, <ERROR TYPE>>
+// JS.asType([INVARIANT NotExist1, INVARIANT NotExist2]): JS<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // JS.asType(emptyList()): JS<T1, T2>
 // JL.star.replace([INVARIANT Int, INVARIANT String]): JL<Int, String>
-// JL.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): JL<<ERROR TYPE>, <ERROR TYPE>>
+// JL.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): JL<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // JL.asType([INVARIANT Int, INVARIANT String]): JL<Int, String>
-// JL.asType([INVARIANT NotExist1, INVARIANT NotExist2]): JL<<ERROR TYPE>, <ERROR TYPE>>
+// JL.asType([INVARIANT NotExist1, INVARIANT NotExist2]): JL<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // JL.asType(emptyList()): JL<T1, T2>
 // KS1.star.replace([INVARIANT Int, INVARIANT String]): <ERROR TYPE>
 // KS1.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): <ERROR TYPE>

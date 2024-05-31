@@ -692,7 +692,8 @@ class ResolverImpl(
                 builtIns.arrayType.replace(typeArgs)
             }
             else -> {
-                getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType()
+                    ?: KSErrorType(psiType.canonicalText)
             }
         }
     }
@@ -1054,7 +1055,7 @@ class ResolverImpl(
             }
         }
         // if substitution fails, fallback to the type from the property
-        return KSErrorType
+        return KSErrorType.fromReferenceBestEffort(property.type)
     }
 
     internal fun asMemberOf(
@@ -1247,7 +1248,7 @@ class ResolverImpl(
     }
 
     // Convert type arguments for Java wildcard, recursively.
-    private fun KotlinType.toWildcard(mode: TypeMappingMode): KotlinType? {
+    private fun KotlinType.toWildcard(mode: TypeMappingMode): KotlinType {
         val parameters = constructor.parameters
         val arguments = arguments
 
@@ -1258,8 +1259,10 @@ class ResolverImpl(
                 argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
             ) {
                 // conflicting variances
-                // TODO: error message
-                return null
+                throw IllegalArgumentException(
+                    "Conflicting variance: variance '${parameter.variance.label}' vs projection " +
+                        "'${argument.projectionKind.label}'"
+                )
             }
 
             val argMode = mode.updateFromAnnotations(argument.type)
@@ -1267,7 +1270,7 @@ class ResolverImpl(
             val genericMode = argMode.toGenericArgumentMode(
                 getEffectiveVariance(parameter.variance, argument.projectionKind)
             )
-            TypeProjectionImpl(variance, argument.type.toWildcard(genericMode) ?: return null)
+            TypeProjectionImpl(variance, argument.type.toWildcard(genericMode))
         }
 
         return replace(wildcardArguments)
@@ -1369,19 +1372,17 @@ class ResolverImpl(
             if (position == RefPosition.SUPER_TYPE &&
                 argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
             ) {
-                // Type projection isn't allowed in immediate arguments to supertypes.
-                // TODO: error message
-                return KSTypeReferenceSyntheticImpl.getCached(KSErrorType, null)
+                throw IllegalArgumentException("Type projection isn't allowed in immediate arguments to supertypes")
             }
         }
 
-        val wildcardType = kotlinType.toWildcard(typeMappingMode)?.let {
+        val wildcardType = kotlinType.toWildcard(typeMappingMode).let {
             var candidate: KotlinType = it
             for (i in indexes.reversed()) {
                 candidate = candidate.arguments[i].type
             }
             getKSTypeCached(candidate)
-        } ?: KSErrorType
+        }
 
         return KSTypeReferenceSyntheticImpl.getCached(wildcardType, null)
     }

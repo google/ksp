@@ -55,6 +55,45 @@ class KSValueArgumentImpl private constructor(
     override fun toString(): String {
         return "${name?.asString() ?: ""}:$value"
     }
+//
+//    private fun KtAnnotationValue.toValue(): Any? = when (this) {
+//        is KtArrayAnnotationValue -> this.values.map { it.toValue() }
+//        is KtAnnotationApplicationValue -> KSAnnotationImpl.getCached(this.annotationValue)
+//        // TODO: Enum entry should return a type, use declaration as a placeholder.
+//        is KtEnumEntryAnnotationValue -> this.callableId?.classId?.let {
+//            analyze {
+//                it.toKtClassSymbol()?.let {
+//                    it.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
+//                        it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
+//                    }
+//                }
+//            }
+//        } ?: KSErrorType(callableId?.toString())
+//        is KtKClassAnnotationValue -> {
+//            val classDeclaration = when (this) {
+//                is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> analyze {
+//                    (this@toValue.classId.toKtClassSymbol())?.let { KSClassDeclarationImpl.getCached(it) }
+//                }
+//                is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> analyze {
+//                    this@toValue.ktClass.getNamedClassOrObjectSymbol()?.let {
+//                        KSClassDeclarationImpl.getCached(it)
+//                    }
+//                }
+//                is KtKClassAnnotationValue.KtErrorClassAnnotationValue -> null
+//            }
+//            classDeclaration?.asStarProjectedType() ?: KSErrorType(
+//                when (this) {
+//                    is KtKClassAnnotationValue.KtErrorClassAnnotationValue -> unresolvedQualifierName
+//                    is KtKClassAnnotationValue.KtLocalKClassAnnotationValue -> ktClass.run {
+//                        fqName?.asString() ?: name
+//                    }
+//                    is KtKClassAnnotationValue.KtNonLocalKClassAnnotationValue -> classId.asFqNameString()
+//                } ?: sourcePsi?.text
+//            )
+//        }
+//        is KtConstantAnnotationValue -> this.constantValue.value
+//        is KtUnsupportedAnnotationValue -> null
+//    }
 
     override fun defer(): Restorable = Restorable { getCached(namedAnnotationValue, origin) }
 }
