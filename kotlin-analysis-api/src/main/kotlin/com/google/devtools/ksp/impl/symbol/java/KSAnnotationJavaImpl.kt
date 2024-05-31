@@ -179,18 +179,19 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         is PsiPrimitiveType -> {
             result.boxedTypeName?.let {
                 ResolverAAImpl.instance
-                    .getClassDeclarationByName(result.boxedTypeName!!)?.asStarProjectedType() ?: KSErrorType
-            }
+                    .getClassDeclarationByName(it)?.asStarProjectedType()
+            } ?: KSErrorType(result.boxedTypeName)
         }
         is PsiArrayType -> {
             val componentType = when (val component = result.componentType) {
-                is PsiPrimitiveType -> component.boxedTypeName?.let {
+                is PsiPrimitiveType -> component.boxedTypeName?.let { boxedTypeName ->
                     ResolverAAImpl.instance
-                        .getClassDeclarationByName(component.boxedTypeName!!)?.asStarProjectedType()
-                } ?: KSErrorType
+                        .getClassDeclarationByName(boxedTypeName)?.asStarProjectedType()
+                } ?: KSErrorType(component.boxedTypeName)
                 else -> {
                     ResolverAAImpl.instance
-                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
+                        ?: KSErrorType(component.canonicalText)
                 }
             }
             val componentTypeRef = ResolverAAImpl.instance.createKSTypeReferenceFromKSType(componentType)
@@ -200,7 +201,8 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         }
         is PsiType -> {
             ResolverAAImpl.instance
-                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
+                ?: KSErrorType(result.canonicalText)
         }
         is PsiLiteralValue -> {
             result.value

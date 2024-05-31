@@ -416,14 +416,14 @@ class ResolverAAImpl(
             }.updateFromParents(ref)
         }
         return analyze {
-            ktType.toWildcard(mode)?.let {
+            ktType.toWildcard(mode).let {
                 var candidate: KtType = it
                 for (i in indexes.reversed()) {
                     candidate = candidate.typeArguments()[i].type!!
                 }
                 KSTypeReferenceSyntheticImpl.getCached(KSTypeImpl.getCached(candidate), null)
             }
-        } ?: reference
+        }
     }
 
     override fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType> {
@@ -832,7 +832,7 @@ class ResolverAAImpl(
                     }
                 }
             } else {
-                KSErrorType
+                return if (resolved.isError) resolved else KSErrorType(resolved.toString())
             }
         }
     }

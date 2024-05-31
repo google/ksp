@@ -157,13 +157,13 @@ class KSClassDeclarationJavaImpl private constructor(val psi: PsiClass) :
             it.defaultType.replaceTypeArguments(typeArguments)?.let {
                 getKSTypeCached(it, typeArguments)
             }
-        } ?: KSErrorType
+        } ?: KSErrorType()
     }
 
     override fun asStarProjectedType(): KSType {
         return descriptor?.let {
             getKSTypeCached(it.defaultType.replaceArgumentsWithStarProjections())
-        } ?: KSErrorType
+        } ?: KSErrorType()
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

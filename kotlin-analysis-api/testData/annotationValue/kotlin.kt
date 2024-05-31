@@ -30,8 +30,8 @@
 // File
 // Local
 // Array
-// Error type synthetic declaration
-// [<ERROR TYPE>, Foo]
+// <ERROR TYPE: Missing>
+// [<ERROR TYPE: Missing>, Foo]
 // @Foo
 // @Suppress
 // RGB.G

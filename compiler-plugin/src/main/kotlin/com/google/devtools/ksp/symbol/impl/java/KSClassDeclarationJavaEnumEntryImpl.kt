@@ -97,7 +97,7 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
     // Enum can't have type parameters.
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
         if (typeArguments.isNotEmpty())
-            return KSErrorType
+            return KSErrorType()
         return asStarProjectedType()
     }
 

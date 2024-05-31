@@ -125,7 +125,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
         if (typeArguments.isNotEmpty() && typeArguments.size != asStarProjectedType().arguments.size) {
-            return KSErrorType
+            return KSErrorType()
         }
         return analyze {
             if (typeArguments.isEmpty()) {

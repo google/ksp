@@ -29,18 +29,19 @@ class KSFunctionErrorImpl(
 ) : KSFunction {
     override val isError: Boolean = true
 
-    override val returnType: KSType = KSErrorType
+    override val returnType: KSType
+        get() = KSErrorType.fromReferenceBestEffort(declaration.returnType)
 
     override val parameterTypes: List<KSType?>
         get() = declaration.parameters.map {
-            KSErrorType
+            KSErrorType.fromReferenceBestEffort(it.type)
         }
     override val typeParameters: List<KSTypeParameter>
         get() = emptyList()
 
     override val extensionReceiverType: KSType?
         get() = declaration.extensionReceiver?.let {
-            KSErrorType
+            KSErrorType.fromReferenceBestEffort(it)
         }
 
     override fun equals(other: Any?): Boolean {

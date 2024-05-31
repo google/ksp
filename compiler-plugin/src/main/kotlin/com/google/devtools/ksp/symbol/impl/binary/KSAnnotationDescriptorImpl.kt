@@ -62,7 +62,9 @@ import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.psi.KtClassLiteralExpression
 import org.jetbrains.kotlin.psi.KtCollectionLiteralExpression
+import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.AnnotationResolverImpl
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -161,7 +163,7 @@ private fun <T> ConstantValue<T>.toValue(parent: KSNode): Any? = when (this) {
         } else classValue.classId.findKSType()
         is KClassValue.Value.LocalClass -> getKSTypeCached(classValue.type)
     }
-    is ErrorValue -> KSErrorType
+    is ErrorValue -> KSErrorType(toString())
     is NullValue -> null
     else -> value
 }
@@ -211,7 +213,7 @@ fun LazyAnnotationDescriptor.getValueArguments(): Map<Name, ConstantValue<*>> {
         } else if (resolvedArgument is DefaultValueArgument) {
             valueParameter.name to DefaultConstantValue
         } else {
-            c.annotationResolver.getAnnotationArgumentValue(c.trace, valueParameter, resolvedArgument)?.let { value ->
+            c.annotationResolver.getAnnotationArgumentValue(c.trace, valueParameter, resolvedArgument).let { value ->
                 val argExp = resolvedArgument.arguments.lastOrNull()?.getArgumentExpression()
                 // When some elements are not available, the expected and actual size of an array argument will
                 // be different. In such case, we need to reconstruct the array.
@@ -224,15 +226,20 @@ fun LazyAnnotationDescriptor.getValueArguments(): Map<Name, ConstantValue<*>> {
                     val bc = ResolverImpl.instance!!.bindingTrace.bindingContext
                     val args = argExp.innerExpressions.map {
                         bc.get(BindingContext.COMPILE_TIME_VALUE, it)?.toConstantValue(value.type)
-                            ?: ErrorValue.create("<ERROR VALUE>")
+                            ?: it.asErrorValue()
                     }
                     valueParameter.name to TypedArrayValue(args, value.type)
                 } else {
-                    valueParameter.name to value
+                    valueParameter.name to (value ?: argExp?.asErrorValue() ?: ErrorValue.create("ERROR VALUE"))
                 }
-            } ?: (valueParameter.name to ErrorValue.create("<ERROR VALUE>"))
+            }
         }
     }.toMap()
+}
+
+private fun KtExpression.asErrorValue(): ErrorValue {
+    val reprExpr = (this as? KtClassLiteralExpression)?.receiverExpression ?: this
+    return ErrorValue.create(reprExpr.text)
 }
 
 fun AnnotationDescriptor.createKSValueArguments(ownerAnnotation: KSAnnotation): List<KSValueArgument> {
@@ -419,14 +426,14 @@ fun ValueParameterDescriptor.getDefaultValue(ownerAnnotation: KSAnnotation): Any
                 if (!this.type.isError) {
                     defaultValue?.convert(this.type)?.toValue(ownerAnnotation)
                 } else {
-                    KSErrorType
+                    KSErrorType.fromKtErrorType(type)
                 }
             }
         }
         is KtParameter -> if (!this.type.isError) {
             ResolverImpl.instance!!.evaluateConstant(psi.defaultValue, this.type)?.toValue(ownerAnnotation)
         } else {
-            KSErrorType
+            KSErrorType.fromKtErrorType(type)
         }
         is PsiAnnotationMethod -> {
             when (psi.defaultValue) {

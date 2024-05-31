@@ -18,28 +18,28 @@
 // TEST PROCESSOR: MultipleroundProcessor
 // EXPECTED:
 // Round 0:
-// K : <Error>, <Error>, <Error>, <Error>, <Error>, <Error>
-// J : <Error>, <Error>, <Error>, <Error>, <Error>, <Error>
+// K : <ERROR TYPE: I0>, <ERROR TYPE: I1>, <ERROR TYPE: I2>, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
+// J : <ERROR TYPE: I0>, <ERROR TYPE: I1>, <ERROR TYPE: I2>, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
 // +J.java, +K.kt
 // Round 1:
-// K : I0, <Error>, <Error>, <Error>, <Error>, <Error>
-// J : I0, <Error>, <Error>, <Error>, <Error>, <Error>
+// K : I0, <ERROR TYPE: I1>, <ERROR TYPE: I2>, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
+// J : I0, <ERROR TYPE: I1>, <ERROR TYPE: I2>, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
 // +I0.kt, J.java, K.kt
 // Round 2:
-// K : I0, I1, <Error>, <Error>, <Error>, <Error>
-// J : I0, I1, <Error>, <Error>, <Error>, <Error>
+// K : I0, I1, <ERROR TYPE: I2>, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
+// J : I0, I1, <ERROR TYPE: I2>, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
 // +I1.java, I0.kt, J.java, K.kt
 // Round 3:
-// K : I0, I1, I2, <Error>, <Error>, <Error>
-// J : I0, I1, I2, <Error>, <Error>, <Error>
+// K : I0, I1, I2, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
+// J : I0, I1, I2, <ERROR TYPE: I3>, <ERROR TYPE: I4>, <ERROR TYPE: I5>
 // +I2.kt, I0.kt, I1.java, J.java, K.kt
 // Round 4:
-// K : I0, I1, I2, I3, <Error>, <Error>
-// J : I0, I1, I2, I3, <Error>, <Error>
+// K : I0, I1, I2, I3, <ERROR TYPE: I4>, <ERROR TYPE: I5>
+// J : I0, I1, I2, I3, <ERROR TYPE: I4>, <ERROR TYPE: I5>
 // +I3.java, I0.kt, I1.java, I2.kt, J.java, K.kt
 // Round 5:
-// K : I0, I1, I2, I3, I4, <Error>
-// J : I0, I1, I2, I3, I4, <Error>
+// K : I0, I1, I2, I3, I4, <ERROR TYPE: I5>
+// J : I0, I1, I2, I3, I4, <ERROR TYPE: I5>
 // +I4.kt, I0.kt, I1.java, I2.kt, I3.java, J.java, K.kt
 // Round 6:
 // K : I0, I1, I2, I3, I4, I5
