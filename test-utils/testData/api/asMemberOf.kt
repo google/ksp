@@ -23,7 +23,7 @@
 // baseTypeArg1: kotlin.Int!!
 // baseTypeArg2: kotlin.String?
 // typePair: kotlin.Pair!!<kotlin.String?, kotlin.Int!!>
-// errorType: <Error>?
+// errorType: <ERROR TYPE: NonExistType>?
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
 // returnArg1: () -> kotlin.Int!!
@@ -40,7 +40,7 @@
 // baseTypeArg1: kotlin.Any?
 // baseTypeArg2: kotlin.Any?
 // typePair: kotlin.Pair!!<kotlin.Any?, kotlin.Any?>
-// errorType: <Error>?
+// errorType: <ERROR TYPE: NonExistType>?
 // extensionProperty: kotlin.Any?
 // returnInt: () -> kotlin.Int!!
 // returnArg1: () -> kotlin.Any?
@@ -57,7 +57,7 @@
 // baseTypeArg1: kotlin.String!!
 // baseTypeArg2: kotlin.String?
 // typePair: kotlin.Pair!!<kotlin.String?, kotlin.String!!>
-// errorType: <Error>?
+// errorType: <ERROR TYPE: NonExistType>?
 // extensionProperty: kotlin.String?
 // returnInt: () -> kotlin.Int!!
 // returnArg1: () -> kotlin.String!!
@@ -96,7 +96,7 @@
 // intType: kotlin.Int!!
 // typeArg1: kotlin.String
 // typeArg2: kotlin.Int
-// errorType: <Error>?
+// errorType: <ERROR TYPE: NonExist>?
 // returnArg1: () -> kotlin.Int
 // receiveArgs: (kotlin.String, kotlin.Int, kotlin.Int!!) -> kotlin.Unit!!
 // methodArgType: <BaseTypeArg1: kotlin.Any>(JavaBase.methodArgType.BaseTypeArg1, kotlin.Int) -> kotlin.Unit!!
@@ -104,7 +104,7 @@
 // fileLevelFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelExtensionFunction: java.lang.IllegalArgumentException: Cannot call asMemberOf with a function that is not declared in a class or an interface
 // fileLevelProperty: java.lang.IllegalArgumentException: Cannot call asMemberOf with a property that is not declared in a class or an interface
-// errorType: (<Error>?) -> <Error>?
+// errorType: (<ERROR TYPE: Int>?) -> <ERROR TYPE: E>?
 // expected comparison failures
 // <BaseTypeArg1: kotlin.Any?>(Base.functionArgType.BaseTypeArg1?) -> kotlin.String?
 // () -> kotlin.Int!!

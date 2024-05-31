@@ -62,6 +62,7 @@ import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
+import org.jetbrains.kotlin.fir.resolve.diagnostics.ConeUnresolvedError
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
@@ -138,9 +139,28 @@ internal fun KtAnnotationValue.render(): String {
         is KtArrayAnnotationValue -> values.joinToString(",", "{", "}") { it.render() }
         is KtConstantAnnotationValue -> constantValue.renderAsKotlinConstant()
         is KtEnumEntryAnnotationValue -> callableId.toString()
-        // TODO: handle error classes.
-        is KtKClassAnnotationValue -> "$classId::class"
+        is KtKClassAnnotationValue -> {
+            val type = KSTypeImpl.getCached(type)
+            // KSTypeImpl takes care of the error types, if applicable
+            if (type.isError) type.toString() else "$type::class"
+        }
         is KtUnsupportedAnnotationValue -> throw IllegalStateException("Unsupported annotation value: $this")
+    }
+}
+
+internal fun KtClassErrorType.getNameHint(): String {
+    return when (val coneType = (this as KtFirType).coneType) {
+        is ConeErrorType -> when (val diagnostic = coneType.diagnostic) {
+            is ConeUnresolvedError -> diagnostic.qualifier
+            else -> throw IllegalStateException("Unexpected diagnostic: ${diagnostic.reason}")
+        }
+        is ConeClassLikeType -> {
+            coneType.lookupTag.name.asString()
+        }
+        else -> {
+            // KtFirClassErrorType has `coneType: ConeClassLikeType`, so we're safe as long as that doesn't change
+            throw IllegalStateException("Unexpected coneType: $coneType")
+        }
     }
 }
 
@@ -174,7 +194,8 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
                         }
                     }
                 }
-                is KtClassErrorType, is KtTypeErrorType -> "<ERROR TYPE>"
+                is KtClassErrorType -> KSErrorType(getNameHint()).toString()
+                is KtTypeErrorType -> KSErrorType().toString()
                 is KtCapturedType -> asStringForDebugging()
                 is KtDefinitelyNotNullType -> original.render(inFunctionType) + " & Any"
                 is KtDynamicType -> "<dynamic type>"

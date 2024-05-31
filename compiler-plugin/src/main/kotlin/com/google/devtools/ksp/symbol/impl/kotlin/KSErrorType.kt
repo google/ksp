@@ -19,17 +19,28 @@ package com.google.devtools.ksp.symbol.impl.kotlin
 
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.synthetic.KSErrorTypeClassDeclaration
+import org.jetbrains.kotlin.types.FlexibleType
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.error.ErrorType
+import org.jetbrains.kotlin.types.error.ErrorTypeKind
 
-object KSErrorType : KSType {
-    override val annotations: Sequence<KSAnnotation> = emptySequence()
+class KSErrorType(
+    val nameHint: String? = null,
+) : KSType {
+    override val annotations: Sequence<KSAnnotation>
+        get() = emptySequence()
 
-    override val arguments: List<KSTypeArgument> = emptyList()
+    override val arguments: List<KSTypeArgument>
+        get() = emptyList()
 
-    override val declaration: KSDeclaration = KSErrorTypeClassDeclaration
+    override val declaration: KSDeclaration
+        get() = KSErrorTypeClassDeclaration(this)
 
-    override val isError: Boolean = true
+    override val isError: Boolean
+        get() = true
 
-    override val nullability: Nullability = Nullability.NULLABLE
+    override val nullability: Nullability
+        get() = Nullability.NULLABLE
 
     override fun isAssignableFrom(that: KSType): Boolean {
         return false
@@ -51,7 +62,8 @@ object KSErrorType : KSType {
         return this
     }
 
-    override val isMarkedNullable: Boolean = false
+    override val isMarkedNullable: Boolean
+        get() = false
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
         return this
@@ -61,11 +73,51 @@ object KSErrorType : KSType {
         return this
     }
 
-    override fun toString(): String {
-        return "<ERROR TYPE>"
+    override fun toString(): String = nameHint?.let { "<ERROR TYPE: $it>" } ?: "<ERROR TYPE>"
+
+    override val isFunctionType: Boolean
+        get() = false
+
+    override val isSuspendFunctionType: Boolean
+        get() = false
+
+    override fun hashCode() = nameHint.hashCode()
+
+    override fun equals(other: Any?): Boolean {
+        return this === other || other is KSErrorType && other.nameHint == nameHint
     }
 
-    override val isFunctionType: Boolean = false
+    companion object {
+        fun fromReferenceBestEffort(reference: KSTypeReference?): KSErrorType {
+            return when (val type = reference?.resolve()) {
+                is KSErrorType -> type
+                null -> KSErrorType(reference?.element?.toString())
+                else -> KSErrorType(type.toString())
+            }
+        }
 
-    override val isSuspendFunctionType: Boolean = false
+        fun fromKtErrorType(ktType: KotlinType): KSErrorType {
+            // Logic is in sync with `KotlinType.isError`
+            val errorType: ErrorType = when (val unwrapped = ktType.unwrap()) {
+                is ErrorType -> unwrapped
+                is FlexibleType -> unwrapped.delegate as? ErrorType
+                else -> null
+            } ?: throw IllegalArgumentException("Not an error type: $ktType")
+
+            val hint = when (errorType.kind) {
+                // Handle "Unresolved types" group
+                ErrorTypeKind.UNRESOLVED_TYPE,
+                ErrorTypeKind.UNRESOLVED_CLASS_TYPE,
+                ErrorTypeKind.UNRESOLVED_JAVA_CLASS,
+                ErrorTypeKind.UNRESOLVED_DECLARATION,
+                ErrorTypeKind.UNRESOLVED_KCLASS_CONSTANT_VALUE,
+                ErrorTypeKind.UNRESOLVED_TYPE_ALIAS -> errorType.formatParams.first()
+
+                // TODO: Handle more ErrorTypeKinds where it's possible to extract a name for the error type.
+                else -> errorType.debugMessage
+            }
+
+            return KSErrorType(hint)
+        }
+    }
 }

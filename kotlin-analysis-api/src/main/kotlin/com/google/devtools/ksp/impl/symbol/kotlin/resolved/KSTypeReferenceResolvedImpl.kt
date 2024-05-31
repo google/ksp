@@ -29,6 +29,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.getNameHint
 import com.google.devtools.ksp.impl.symbol.kotlin.render
 import com.google.devtools.ksp.impl.symbol.kotlin.toClassifierReference
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -66,7 +67,13 @@ class KSTypeReferenceResolvedImpl private constructor(
                 ktType is KtClassErrorType || (ktType.classifierSymbol() == null)
             }
         ) {
-            KSErrorType
+            KSErrorType(
+                when (ktType) {
+                    is KtClassErrorType -> ktType.getNameHint()
+                    is KtTypeErrorType -> null // No info available
+                    else -> ktType.render()
+                }
+            )
         } else {
             KSTypeImpl.getCached(ktType)
         }

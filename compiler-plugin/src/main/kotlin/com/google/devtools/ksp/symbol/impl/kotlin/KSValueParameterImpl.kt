@@ -112,7 +112,7 @@ class KSValueParameterImpl private constructor(val ktParameter: KtParameter) : K
 
     override val type: KSTypeReference by lazy {
         ktParameter.typeReference?.let { KSTypeReferenceImpl.getCached(it) }
-            ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType, this)
+            ?: findPropertyForAccessor()?.type ?: KSTypeReferenceSyntheticImpl.getCached(KSErrorType(), this)
     }
 
     override val hasDefault: Boolean = ktParameter.hasDefaultValue()
