@@ -114,7 +114,7 @@ class KSErrorTypeClassDeclaration(
         return this === other || other is KSErrorTypeClassDeclaration && other.type == type
     }
 
-    override fun hashCode(): Int = type.hashCode()
+    override fun hashCode(): Int = type.hashCode() * 2
 
     override val docString
         get() = null

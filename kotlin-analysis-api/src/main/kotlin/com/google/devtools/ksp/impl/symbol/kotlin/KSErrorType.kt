@@ -19,8 +19,12 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.symbol.*
 
 class KSErrorType(
-    private val hint: String? = null,
+    private val hint: String?,
 ) : KSType {
+    constructor(name: String, message: String?) : this(
+        hint = listOfNotNull(name, message).takeIf { it.isNotEmpty() }?.joinToString(" % ")
+    )
+
     override val declaration: KSDeclaration
         get() = KSErrorTypeClassDeclaration(this)
 
