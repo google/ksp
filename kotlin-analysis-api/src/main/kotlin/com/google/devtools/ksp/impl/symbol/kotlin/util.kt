@@ -62,7 +62,6 @@ import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
-import org.jetbrains.kotlin.fir.resolve.diagnostics.ConeUnresolvedError
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
@@ -148,22 +147,6 @@ internal fun KtAnnotationValue.render(): String {
     }
 }
 
-internal fun KtClassErrorType.getNameHint(): String {
-    return when (val coneType = (this as KtFirType).coneType) {
-        is ConeErrorType -> when (val diagnostic = coneType.diagnostic) {
-            is ConeUnresolvedError -> diagnostic.qualifier
-            else -> throw IllegalStateException("Unexpected diagnostic: ${diagnostic.reason}")
-        }
-        is ConeClassLikeType -> {
-            coneType.lookupTag.name.asString()
-        }
-        else -> {
-            // KtFirClassErrorType has `coneType: ConeClassLikeType`, so we're safe as long as that doesn't change
-            throw IllegalStateException("Unexpected coneType: $coneType")
-        }
-    }
-}
-
 internal fun KtType.render(inFunctionType: Boolean = false): String {
     return buildString {
         annotations.forEach {
@@ -194,8 +177,8 @@ internal fun KtType.render(inFunctionType: Boolean = false): String {
                         }
                     }
                 }
-                is KtClassErrorType -> KSErrorType(getNameHint()).toString()
-                is KtTypeErrorType -> KSErrorType().toString()
+                is KtClassErrorType -> KSErrorType(qualifiers.joinToString(".") { it.name.asString() }).toString()
+                is KtTypeErrorType -> KSErrorType(tryRenderAsNonErrorType()).toString()
                 is KtCapturedType -> asStringForDebugging()
                 is KtDefinitelyNotNullType -> original.render(inFunctionType) + " & Any"
                 is KtDynamicType -> "<dynamic type>"
@@ -661,10 +644,8 @@ internal fun KtType.isAssignableFrom(that: KtType): Boolean {
 }
 
 // TODO: fix flexible type creation once upstream available.
-internal fun KtType.replace(newArgs: List<KtTypeProjection>): KtType? {
-    if (newArgs.isNotEmpty() && newArgs.size != this.typeArguments().size) {
-        return null
-    }
+internal fun KtType.replace(newArgs: List<KtTypeProjection>): KtType {
+    require(newArgs.isEmpty() || newArgs.size == this.typeArguments().size)
     return analyze {
         when (val symbol = classifierSymbol()) {
             is KtClassLikeSymbol -> analysisSession.buildClassType(symbol) {

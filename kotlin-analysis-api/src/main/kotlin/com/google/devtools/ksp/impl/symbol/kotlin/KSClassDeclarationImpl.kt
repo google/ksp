@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
@@ -124,9 +125,12 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        if (typeArguments.isNotEmpty() && typeArguments.size != asStarProjectedType().arguments.size) {
-            return KSErrorType()
-        }
+        errorTypeOnInconsistentArguments(
+            arguments = typeArguments,
+            placeholdersProvider = { asStarProjectedType().arguments },
+            withCorrectedArguments = ::asType,
+            errorType = ::KSErrorType,
+        )?.let { error -> return error }
         return analyze {
             if (typeArguments.isEmpty()) {
                 typeParameters.map { buildTypeParameterType((it as KSTypeParameterImpl).ktTypeParameterSymbol) }

@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.symbol.impl.java
 
+import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.toKSModifiers
 import com.google.devtools.ksp.processing.impl.KSObjectCache
@@ -96,8 +97,10 @@ class KSClassDeclarationJavaEnumEntryImpl private constructor(val psi: PsiEnumCo
 
     // Enum can't have type parameters.
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        if (typeArguments.isNotEmpty())
-            return KSErrorType()
+        errorTypeOnInconsistentArguments(
+            arguments = typeArguments, placeholdersProvider = ::emptyList,
+            withCorrectedArguments = ::asType, errorType = ::KSErrorType,
+        )?.let { error -> return error }
         return asStarProjectedType()
     }
 

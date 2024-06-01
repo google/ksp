@@ -25,8 +25,12 @@ import org.jetbrains.kotlin.types.error.ErrorType
 import org.jetbrains.kotlin.types.error.ErrorTypeKind
 
 class KSErrorType(
-    val nameHint: String? = null,
+    val nameHint: String?,
 ) : KSType {
+    constructor(name: String, message: String?) : this(
+        nameHint = listOfNotNull(name, message).takeIf { it.isNotEmpty() }?.joinToString(" % ")
+    )
+
     override val annotations: Sequence<KSAnnotation>
         get() = emptySequence()
 

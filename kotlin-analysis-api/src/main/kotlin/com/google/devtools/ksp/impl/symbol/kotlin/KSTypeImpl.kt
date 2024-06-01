@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
@@ -110,12 +111,17 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return type.replace(arguments.map { it.toKtTypeProjection() })?.let { getCached(it) } ?: KSErrorType()
+        errorTypeOnInconsistentArguments(
+            arguments = arguments,
+            placeholdersProvider = { type.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it) } },
+            withCorrectedArguments = ::replace,
+            errorType = ::KSErrorType,
+        )?.let { error -> return error }
+        return getCached(type.replace(arguments.map { it.toKtTypeProjection() }))
     }
 
     override fun starProjection(): KSType {
-        return type.replace(List(type.typeArguments().size) { KtStarTypeProjection(type.token) })
-            ?.let { getCached(it) } ?: KSErrorType()
+        return getCached(type.replace(List(type.typeArguments().size) { KtStarTypeProjection(type.token) }))
     }
 
     override fun makeNullable(): KSType {
@@ -134,7 +140,8 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         get() = type.nullability == KtTypeNullability.NULLABLE
 
     override val isError: Boolean
-        get() = type is KtErrorType
+        // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
+        get() = type is KtErrorType || type.classifierSymbol() == null
 
     override val isFunctionType: Boolean
         get() = type is KtFunctionalType && !type.isSuspend
