@@ -18,6 +18,7 @@ package com.google.devtools.ksp.symbol.impl
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
@@ -136,10 +137,18 @@ fun org.jetbrains.kotlin.types.Variance.toKSVariance(): Variance {
 
 private fun KSTypeReference.toKotlinType() = (resolve() as? KSTypeImpl)?.kotlinType
 
-// returns null if error
-internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>): KotlinType? {
-    if (newArguments.isNotEmpty() && this.arguments.size != newArguments.size)
-        return null
+// returns KSErrorType if error
+internal fun KotlinType.replaceTypeArguments(
+    newArguments: List<KSTypeArgument>,
+    annotations: Sequence<KSAnnotation> = emptySequence(),
+): KSType {
+    errorTypeOnInconsistentArguments(
+        arguments = newArguments,
+        placeholdersProvider = { arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, Origin.SYNTHETIC, null) } },
+        withCorrectedArguments = ::replaceTypeArguments,
+        errorType = ::KSErrorType,
+    )?.let { error -> return error }
+
     return replace(
         newArguments.mapIndexed { index, ksTypeArgument ->
             val variance = when (ksTypeArgument.variance) {
@@ -155,11 +164,11 @@ internal fun KotlinType.replaceTypeArguments(newArguments: List<KSTypeArgument>)
                 else -> throw IllegalStateException(
                     "Unexpected psi for type argument: ${ksTypeArgument.javaClass}, $ExceptionMessage"
                 )
-            }.toKotlinType() ?: return null
+            }.let { it.toKotlinType() ?: return KSErrorType.fromReferenceBestEffort(it) }
 
             TypeProjectionImpl(variance, type)
         }
-    )
+    ).let { KSTypeImpl.getCached(it, newArguments, annotations) }
 }
 
 internal fun FunctionDescriptor.toKSDeclaration(): KSDeclaration {

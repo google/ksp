@@ -22,14 +22,11 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
-import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
-import com.google.devtools.ksp.impl.symbol.kotlin.getNameHint
 import com.google.devtools.ksp.impl.symbol.kotlin.render
 import com.google.devtools.ksp.impl.symbol.kotlin.toClassifierReference
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -61,22 +58,7 @@ class KSTypeReferenceResolvedImpl private constructor(
 
     override fun resolve(): KSType {
         analyze { recordLookup(ktType, parent) }
-        // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
-        return if (
-            analyze {
-                ktType is KtClassErrorType || (ktType.classifierSymbol() == null)
-            }
-        ) {
-            KSErrorType(
-                when (ktType) {
-                    is KtClassErrorType -> ktType.getNameHint()
-                    is KtTypeErrorType -> null // No info available
-                    else -> ktType.render()
-                }
-            )
-        } else {
-            KSTypeImpl.getCached(ktType)
-        }
+        return KSTypeImpl.getCached(ktType)
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {

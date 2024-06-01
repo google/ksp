@@ -95,9 +95,7 @@ class KSTypeImpl private constructor(
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return kotlinType.replaceTypeArguments(arguments)?.let {
-            getKSTypeCached(it, arguments, annotations)
-        } ?: KSErrorType()
+        return kotlinType.replaceTypeArguments(arguments, annotations)
     }
 
     override fun starProjection(): KSType {
