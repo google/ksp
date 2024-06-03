@@ -18,19 +18,31 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: LateinitPropertiesProcessor
 // EXPECTED:
+// getter, [PRIVATE, FINAL], prop1
+// getter, [PRIVATE, FINAL], propSource1
+// getter, [PUBLIC, FINAL], prop2
+// getter, [PUBLIC, FINAL], prop3
+// getter, [PUBLIC, FINAL], propSource2
+// getter, [PUBLIC, FINAL], propSource3
 // prop1
 // prop2
 // prop3
 // propSource1
 // propSource2
 // propSource3
+// setter, [PRIVATE, FINAL], prop1
+// setter, [PRIVATE, FINAL], propSource1
+// setter, [PUBLIC, FINAL], prop2
+// setter, [PUBLIC, FINAL], prop3
+// setter, [PUBLIC, FINAL], propSource2
+// setter, [PUBLIC, FINAL], propSource3
 // END
 // MODULE: lib
 // FILE: compiledProperties.kt
 package test.compiled
 
 open class Foo {
-    lateinit var prop1: Any
+    lateinit private var prop1: Any
     companion object {
         lateinit var prop2: Any
     }
@@ -45,7 +57,7 @@ object Bar : Foo() {
 package test.source
 
 open class FooSource {
-    lateinit var propSource1: Any
+    lateinit private var propSource1: Any
     companion object {
         lateinit var propSource2: Any
     }

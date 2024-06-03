@@ -238,6 +238,14 @@ internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {
                 result.add(Modifier.OVERRIDE)
             }
         }
+        is KtPropertyAccessorSymbol -> {
+            if (visibility != JavaVisibilities.PackageVisibility) {
+                result.add(visibility.toModifier())
+            }
+            if (modality != Modality.OPEN) {
+                result.add(modality.toModifier())
+            }
+        }
         else -> Unit
     }
     return result
