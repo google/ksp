@@ -50,7 +50,13 @@ abstract class KSPropertyAccessorImpl(
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        ((ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()).let {
+        (
+            if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
+                (ktPropertyAccessorSymbol.toModifiers())
+            } else {
+                (ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()
+            }
+            ).let {
             if (origin == Origin.SYNTHETIC &&
                 (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
             ) {
