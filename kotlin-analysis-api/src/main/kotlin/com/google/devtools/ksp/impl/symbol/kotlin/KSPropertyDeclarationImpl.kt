@@ -29,10 +29,10 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
-import org.jetbrains.kotlin.analysis.api.KtConstantInitializerValue
+import org.jetbrains.kotlin.analysis.api.KaConstantInitializerValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
 import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirKotlinPropertySymbol
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
@@ -115,13 +115,13 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         if (origin == Origin.KOTLIN_LIB || origin == Origin.JAVA_LIB) {
             when {
                 ktPropertySymbol.receiverParameter != null -> false
-                ktPropertySymbol.initializer is KtConstantInitializerValue -> true
+                ktPropertySymbol.initializer is KaConstantInitializerValue -> true
                 (ktPropertySymbol as? KtKotlinPropertySymbol)?.isLateInit == true -> true
                 ktPropertySymbol.modality == Modality.ABSTRACT -> false
                 else -> {
                     val classId = when (
                         val containerSource =
-                            (ktPropertySymbol as? KtFirKotlinPropertySymbol)?.firSymbol?.containerSource
+                            (ktPropertySymbol as? KaFirKotlinPropertySymbol)?.firSymbol?.containerSource
                     ) {
                         is JvmPackagePartSource -> containerSource.classId
                         is KotlinJvmBinarySourceElement -> containerSource.binaryClass.classId
