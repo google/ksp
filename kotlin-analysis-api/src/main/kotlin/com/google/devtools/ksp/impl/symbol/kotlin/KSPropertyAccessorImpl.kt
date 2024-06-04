@@ -43,7 +43,9 @@ abstract class KSPropertyAccessorImpl(
             .plus(findAnnotationFromUseSiteTarget())
     }
 
-    internal val originalAnnotations = ktPropertyAccessorSymbol.annotations(this)
+    internal val originalAnnotations: Sequence<KSAnnotation> by lazy {
+        ktPropertyAccessorSymbol.annotations(this)
+    }
 
     override val location: Location by lazy {
         ktPropertyAccessorSymbol.psi?.toLocation() ?: NonExistLocation
