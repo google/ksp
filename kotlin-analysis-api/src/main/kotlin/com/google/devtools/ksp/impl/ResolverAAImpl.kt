@@ -50,7 +50,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
-import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
+import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
@@ -403,7 +403,7 @@ class ResolverAAImpl(
         val ktType = (type as KSTypeImpl).type
         // cast to FIR internal needed due to missing support in AA for type mapping mode
         // and corresponding type mapping APIs.
-        val coneType = (ktType as KtFirType).coneType
+        val coneType = (ktType as KaFirType).coneType
         val mode = analyze {
             val typeContext = analyze { useSiteModule.getFirResolveSession(project).useSiteFirSession.typeContext }
             when (position) {
@@ -624,7 +624,7 @@ class ResolverAAImpl(
     }
 
     override fun isJavaRawType(type: KSType): Boolean {
-        return type is KSTypeImpl && (type.type as KtFirType).coneType.isRaw()
+        return type is KSTypeImpl && (type.type as KaFirType).coneType.isRaw()
     }
 
     internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement?.annotationList

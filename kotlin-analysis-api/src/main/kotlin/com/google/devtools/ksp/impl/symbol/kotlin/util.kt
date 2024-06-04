@@ -42,10 +42,10 @@ import org.jetbrains.kotlin.analysis.api.annotations.*
 import org.jetbrains.kotlin.analysis.api.components.KtSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
-import org.jetbrains.kotlin.analysis.api.fir.KtSymbolByFirBuilder
+import org.jetbrains.kotlin.analysis.api.fir.KaSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
-import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
+import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
@@ -457,7 +457,7 @@ internal fun KtAnnotationValue.toValue(): Any? = when (this) {
 
 @OptIn(SymbolInternals::class)
 internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
-    fun FirExpression.toValue(builder: KtSymbolByFirBuilder): KtAnnotationValue? {
+    fun FirExpression.toValue(builder: KaSymbolByFirBuilder): KtAnnotationValue? {
         if (this is FirAnnotation) {
             return KtAnnotationApplicationValue(
                 KtAnnotationApplicationWithArgumentsInfo(
@@ -539,7 +539,7 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
                     },
                     ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
                 )
-                (this as? KtFirValueParameterSymbol)?.let {
+                (this as? KaFirValueParameterSymbol)?.let {
                     val firSession = it.firSymbol.fir.moduleData.session
                     val symbolBuilder = it.builder
                     val expectedTypeRef = it.firSymbol.fir.returnTypeRef
@@ -680,7 +680,7 @@ internal fun getVarianceForWildcard(
     }
     if (projectionKind == Variance.INVARIANT || projectionKind == parameterVariance) {
         if (mode.skipDeclarationSiteWildcardsIfPossible && projection !is KtStarTypeProjection) {
-            val coneType = (projection.type as KtFirType).coneType
+            val coneType = (projection.type as KaFirType).coneType
             // TODO: fix most precise covariant argument case.
             if (parameterVariance == Variance.OUT_VARIANCE) {
                 return Variance.INVARIANT
