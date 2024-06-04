@@ -26,7 +26,8 @@ class IncrementalKotlinDeclarationProviderFactory(
     }
 
     fun update(files: Collection<KtFile>) {
-        val staticFactory = KotlinStaticDeclarationProviderFactory(project, files)
+        val skipBuiltIns = staticFactories.isNotEmpty()
+        val staticFactory = KotlinStaticDeclarationProviderFactory(project, files, skipBuiltins = skipBuiltIns)
         staticFactories.add(staticFactory)
     }
 
