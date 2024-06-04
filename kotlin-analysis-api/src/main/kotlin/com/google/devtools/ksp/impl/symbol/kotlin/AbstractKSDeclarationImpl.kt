@@ -119,10 +119,12 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     override val docString: String?
         get() = ktDeclarationSymbol.toDocString()
 
-    internal val originalAnnotations = if (ktDeclarationSymbol.psi is KtElement || ktDeclarationSymbol.psi == null) {
-        ktDeclarationSymbol.annotations(this)
-    } else {
-        (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
-            .annotations.map { KSAnnotationJavaImpl.getCached(it, this) }.asSequence()
+    internal val originalAnnotations: Sequence<KSAnnotation> by lazy {
+        if (ktDeclarationSymbol.psi is KtElement || ktDeclarationSymbol.psi == null) {
+            ktDeclarationSymbol.annotations(this)
+        } else {
+            (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
+                .annotations.map { KSAnnotationJavaImpl.getCached(it, this) }.asSequence()
+        }
     }
 }
