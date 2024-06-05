@@ -110,6 +110,7 @@ class KMPImplementedIT(useKSP2: Boolean) {
 
     @Test
     fun testWasm() {
+        Assume.assumeTrue(project.useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
