@@ -83,6 +83,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithArbitraryClassValue.kt")
     }
 
+    @TestMetadata("defaultKClassValue.kt")
+    @Test
+    fun testAnnotationValue_defaultKClassValue() {
+        runTest("../kotlin-analysis-api/testData/annotationValue/defaultKClassValue.kt")
+    }
+
     @TestMetadata("annotationValue_java.kt")
     @Test
     fun testAnnotationValue_java() {
