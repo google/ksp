@@ -461,7 +461,11 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
         if (this is FirAnnotation) {
             return KtAnnotationApplicationValue(
                 KtAnnotationApplicationWithArgumentsInfo(
-                    ClassId.fromString((annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()),
+                    JavaToKotlinClassMap.mapJavaToKotlinIncludingClassMapping(
+                        ClassId.fromString(
+                            (annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()
+                        ).asSingleFqName()
+                    ),
                     null,
                     null,
                     emptyList(),
@@ -484,8 +488,9 @@ internal fun KtValueParameterSymbol.getDefaultValue(): KtAnnotationValue? {
             }
 
             if (coneType is ConeClassLikeType && coneType !is ConeErrorType) {
-                val classId = coneType.lookupTag.classId
-                val type = builder.typeBuilder.buildKtType(coneType)
+                val classId = JavaToKotlinClassMap
+                    .mapJavaToKotlinIncludingClassMapping(coneType.lookupTag.classId.asSingleFqName())
+                val type = builder.typeBuilder.buildKtType(coneType).convertToKotlinType()
                 KtKClassAnnotationValue(type, classId, null, token)
             } else {
                 null
