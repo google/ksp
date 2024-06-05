@@ -12,7 +12,7 @@ Calling KSP2 consists of just 4 steps:
 4. Call `KotlinSymbolProcessing(kspConfig, processors, kspLogger).execute()`
 
 
-```
+```kotlin
 // Implement a logger or use KspGradleLogger
 val logger = KspGradleLogger(KspGradleLogger.LOGGING_LEVEL_WARN)
 
@@ -27,9 +27,9 @@ val processorProviders = ServiceLoader.load(
 val kspConfig = KSPJvmConfig.Builder().apply {
   // All configurations happen here. See KSPConfig.kt for all available options.
   moduleName = "main"
-  sourceRoots = listOf(File("/path/to/src1), File("/path/to/src2"))
+  sourceRoots = listOf(File("/path/to/src1"), File("/path/to/src2"))
   kotlinOutputDir = File("/path/to/kotlin/out")
-  ...
+  // ...
 }.build()
 
 // Run!
