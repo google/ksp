@@ -18,14 +18,14 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaProcessor
 // EXPECTED:
-// kotlin.Annotation: main/p1/J.java
-// kotlin.Any: main/p1/J.java
-// kotlin.collections.List: main/p1/J.java
-// kotlin.collections.MutableList: main/p1/J.java
-// p1.Anno: main/p1/J.java
-// p1.Bnno: main/p1/J.java
-// p1.J: main/p1/J.java
-// p1.K: main/p1/J.java
+// kotlin.Annotation: javaSrc/p1/J.java
+// kotlin.Any: javaSrc/p1/J.java
+// kotlin.collections.List: javaSrc/p1/J.java
+// kotlin.collections.MutableList: javaSrc/p1/J.java
+// p1.Anno: javaSrc/p1/J.java
+// p1.Bnno: javaSrc/p1/J.java
+// p1.J: javaSrc/p1/J.java
+// p1.K: javaSrc/p1/J.java
 // END
 
 // FILE: p1/J.java
