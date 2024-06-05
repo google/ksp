@@ -33,5 +33,5 @@ val kspConfig = KSPJvmConfig.Builder().apply {
 }.build()
 
 // Run!
-val exitCode = KotlinSymbolProcessing(kspConfig, listOfProcessors, kspLoggerImpl).execute()
+val exitCode = KotlinSymbolProcessing(kspConfig, processorProviders, kspLoggerImpl).execute()
 ```
