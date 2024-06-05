@@ -18,10 +18,10 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaSupertypesProcessor
 // EXPECTED:
-// <anonymous>.A: main/A.java
-// <anonymous>.B: main/A.java
-// <anonymous>.C: main/A.java
-// <anonymous>.D: main/C.java
+// <anonymous>.A: javaSrc/A.java
+// <anonymous>.B: javaSrc/A.java
+// <anonymous>.C: javaSrc/A.java
+// <anonymous>.D: javaSrc/C.java
 // END
 
 // FILE: A.java

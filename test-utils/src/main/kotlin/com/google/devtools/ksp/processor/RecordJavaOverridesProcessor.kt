@@ -66,8 +66,7 @@ class RecordJavaOverridesProcessor : AbstractTestProcessor() {
         }
         m.forEach { symbol, files ->
             files.filter { it.endsWith(".java") }.sorted().forEach {
-                val fn = it.substringAfterLast("java-sources/")
-                results.add("$symbol: $fn")
+                results.add("$symbol: $it")
             }
         }
         return emptyList()
