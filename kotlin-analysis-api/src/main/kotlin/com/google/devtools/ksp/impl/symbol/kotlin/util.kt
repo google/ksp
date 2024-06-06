@@ -655,7 +655,10 @@ internal fun KtType.replace(newArgs: List<KtTypeProjection>): KtType {
         when (val symbol = classifierSymbol()) {
             is KtClassLikeSymbol -> analysisSession.buildClassType(symbol) {
                 newArgs.forEach { arg -> argument(arg) }
+                nullability = this@replace.nullability
             }
+            // No need to copy nullability for type parameters
+            // because it is overridden to be always nullable in compiler.
             is KtTypeParameterSymbol -> analysisSession.buildTypeParameterType(symbol)
             else -> throw IllegalStateException("Unexpected type $this")
         }

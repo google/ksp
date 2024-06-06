@@ -101,6 +101,8 @@
 // default type:A
 // flexible type star:T
 // flexible type replace argument:JS1<Int>
+// [COVARIANT P], [P]
+// [COVARIANT Int?], [Int?]
 // END
 
 // MODULE: lib
@@ -119,6 +121,12 @@ enum class KLE {
 }
 
 // MODULE: main(lib)
+// FILE: foo.kt
+class Foo<P: Any?> {
+    val barFoo: Bar<out P!!> = TODO()
+    val barNullableFoo: Bar<out Int?> = TODO()
+}
+class Bar<T>
 // FILE: JS.java
 class JS<T1, T2> {}
 class JS1<T> {
