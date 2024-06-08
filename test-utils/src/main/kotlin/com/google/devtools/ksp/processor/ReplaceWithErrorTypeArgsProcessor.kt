@@ -77,6 +77,9 @@ open class ReplaceWithErrorTypeArgsProcessor : AbstractTestProcessor() {
                 )
             }
         }
+        resolver.getClassDeclarationByName("ErrorSuper")?.let {
+            results.add("replace error type get: ${it.superTypes.single().resolve().replace(emptyList())}")
+        }
         return emptyList()
     }
 
