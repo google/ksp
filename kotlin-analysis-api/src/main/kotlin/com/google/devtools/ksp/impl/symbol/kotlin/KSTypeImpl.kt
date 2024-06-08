@@ -111,6 +111,10 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
+        // Do not replace for already error types.
+        if (isError) {
+            return this
+        }
         errorTypeOnInconsistentArguments(
             arguments = arguments,
             placeholdersProvider = { type.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it) } },
