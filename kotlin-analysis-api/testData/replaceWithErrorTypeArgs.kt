@@ -103,6 +103,7 @@
 // flexible type replace argument:JS1<Int>
 // [COVARIANT P], [P]
 // [COVARIANT Int?], [Int?]
+// replace error type get: <ERROR TYPE: Err>
 // END
 
 // MODULE: lib
@@ -127,6 +128,8 @@ class Foo<P: Any?> {
     val barNullableFoo: Bar<out Int?> = TODO()
 }
 class Bar<T>
+
+class ErrorSuper : Err {}
 // FILE: JS.java
 class JS<T1, T2> {}
 class JS1<T> {

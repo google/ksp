@@ -3,6 +3,7 @@ package com.google.devtools.ksp.common
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 
+// This does not work when the type is already error AND args are either empty or matches actual size.
 inline fun <E> errorTypeOnInconsistentArguments(
     arguments: List<KSTypeArgument>,
     placeholdersProvider: () -> List<KSTypeArgument>,
