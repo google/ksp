@@ -6,7 +6,6 @@ import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
 import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSExpectActual
@@ -46,7 +45,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     override val isCompanionObject: Boolean = false
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
-        TODO("Not yet implemented")
+        return emptySequence()
     }
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
@@ -112,8 +111,6 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitClassDeclaration(this, data)
     }
-
-    override val annotations: Sequence<KSAnnotation> = emptySequence()
 
     override val declarations: Sequence<KSDeclaration> by lazy {
         // TODO: fix after .getDeclaredMemberScope() works for enum entry with no initializer.
