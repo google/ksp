@@ -30,6 +30,7 @@
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// RGB.B:KSClassDeclaration
 // ==== Anno in depth ====
 // Foo:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
@@ -44,6 +45,7 @@
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// RGB.B:KSClassDeclaration
 // ==== Bnno superficial====
 // File: Foo.kt:KSFile
 // propertyFoo.getter():KSPropertyAccessorImpl
@@ -67,6 +69,7 @@
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// RGB.B:KSClassDeclaration
 // ==== A1 in depth ====
 // Foo:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
@@ -81,6 +84,7 @@
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// RGB.B:KSClassDeclaration
 // ==== A2 superficial====
 // Foo:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
@@ -94,6 +98,7 @@
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// RGB.B:KSClassDeclaration
 // ==== A2 in depth ====
 // Foo:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
@@ -108,6 +113,7 @@
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// RGB.B:KSClassDeclaration
 // ==== Cnno in depth ====
 // constructorParameterFoo:KSPropertyDeclaration
 // <set-?>:KSValueParameter
@@ -160,3 +166,10 @@ class Burp
 
 @Anno
 typealias Flux = String
+
+enum class RGB{
+    R,
+    G,
+    @Anno
+    B
+}
