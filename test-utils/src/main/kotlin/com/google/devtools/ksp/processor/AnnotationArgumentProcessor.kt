@@ -78,6 +78,13 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
                 }
             }
         }
+
+        resolver.getClassDeclarationByName("TestJavaLib")!!.let { cls ->
+            cls.annotations.single().arguments.single().let { ksValueArg ->
+                results.add("TestJavaLib: " + (ksValueArg.value as KSAnnotation).shortName.asString())
+            }
+        }
+
         return emptyList()
     }
 
