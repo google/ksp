@@ -58,6 +58,18 @@ annotation class ClsA(val b: ClsB)
 @ClsA(b = ClsB(i = 42))
 class Cls
 
+// FILE: OtherAnnotation.java
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+@Retention(RetentionPolicy.RUNTIME)
+public @interface OtherAnnotation {
+    String value();
+}
+// FILE: JavaAnnotationWithDefaults.java
+public @interface JavaAnnotationWithDefaults {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
 // MODULE: main(module1)
 // FILE: a.kt
 
@@ -132,3 +144,7 @@ annotation class B (val a: A)
 interface Parent
 
 class Sub : @B(a = A(i = 42)) Parent
+
+// FILE: TestJavaLib.kt
+@JavaAnnotationWithDefaults
+class TestJavaLib
