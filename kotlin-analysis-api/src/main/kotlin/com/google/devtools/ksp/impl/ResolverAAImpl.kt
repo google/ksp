@@ -428,7 +428,7 @@ class ResolverAAImpl(
 
     override fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType> {
         return when (accessor.origin) {
-            Origin.KOTLIN -> {
+            Origin.KOTLIN, Origin.SYNTHETIC -> {
                 extractThrowsAnnotation(accessor)
             }
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
