@@ -68,6 +68,7 @@ import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
+import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightAccessorMethod
 import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightSimpleMethod
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
@@ -488,8 +489,13 @@ class ResolverAAImpl(
         (
             (accessor.receiver.closestClassDeclaration() as? KSClassDeclarationImpl)
                 ?.ktClassOrObjectSymbol?.psi as? KtClassOrObject
-            )?.toLightClass()?.allMethods?.filterIsInstance<SymbolLightSimpleMethod>()
-            ?.singleOrNull {
+            )?.toLightClass()?.allMethods
+            ?.let {
+                // If there are light accessors, information in light accessors are more accurate.
+                // check light accessor first, if not found then default to light simple method.
+                it.filterIsInstance<SymbolLightAccessorMethod>() + it.filterIsInstance<SymbolLightSimpleMethod>()
+            }
+            ?.firstOrNull {
                 (it.parameters.isNotEmpty() xor (accessor is KSPropertyGetter)) &&
                     it.kotlinOrigin == (accessor.receiver as? KSPropertyDeclarationImpl)?.ktPropertySymbol?.psi
             }?.let {
