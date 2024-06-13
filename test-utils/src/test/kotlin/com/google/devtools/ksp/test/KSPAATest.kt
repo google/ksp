@@ -360,6 +360,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/javaWildcards2.kt")
     }
 
+    @TestMetadata("jvmName.kt")
+    @Test
+    fun testJvmName() {
+        runTest("../kotlin-analysis-api/testData/jvmName.kt")
+    }
+
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
