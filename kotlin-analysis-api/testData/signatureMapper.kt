@@ -20,6 +20,7 @@
 // LCls;
 // a: I
 // foo: ()Ljava/lang/String;
+// f: ()I
 // <init>: ()V
 // LJavaIntefaceWithVoid;
 // getVoid: ()Ljava/lang/Void;
@@ -38,10 +39,15 @@
 // END
 
 // FILE: Cls.kt
+@JvmInline
+value class MyInlineClass(val value: Int)
+
 class Cls {
     val a: Int = 1
 
     fun foo(): String { return "1" }
+
+    fun f(): MyInlineClass = 1
 }
 
 // FILE: JavaIntefaceWithVoid.java
