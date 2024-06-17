@@ -51,14 +51,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
-import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
@@ -757,7 +750,18 @@ class ResolverAAImpl(
         fun KSType.toSignature(): String {
             return if (this is KSTypeImpl) {
                 analyze {
-                    this@toSignature.type.toSignature()
+                    val decl = (this@toSignature.declaration as? KSClassDeclaration)
+                    // special handling for single parameter inline value class
+                    // unwrap the underlying for jvm signature.
+                    if (
+                        decl != null &&
+                        (decl.modifiers.contains(Modifier.INLINE) || decl.modifiers.contains(Modifier.VALUE)) &&
+                        decl.primaryConstructor?.parameters?.size == 1
+                    ) {
+                        decl.primaryConstructor!!.parameters.single().type.resolve().toSignature()
+                    } else {
+                        this@toSignature.type.toSignature()
+                    }
                 }
             } else {
                 "<ERROR>"
