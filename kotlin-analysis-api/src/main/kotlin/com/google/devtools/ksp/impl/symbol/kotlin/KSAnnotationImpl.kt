@@ -34,7 +34,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWith
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -78,7 +78,7 @@ class KSAnnotationImpl private constructor(
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
             annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
-                if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null && symbol.psi !is ClsClassImpl) {
+                if (symbol.origin == KtSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
                     (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
                             annoMethod.defaultValue?.let { value ->
@@ -97,7 +97,7 @@ class KSAnnotationImpl private constructor(
                             }
                         }
                 } else {
-                    symbol.getMemberScope().getConstructors().singleOrNull()?.let {
+                    symbol.getMemberScope().constructors.singleOrNull()?.let {
                         it.valueParameters.map { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
@@ -105,9 +105,9 @@ class KSAnnotationImpl private constructor(
                                         valueParameterSymbol.name,
                                         constantValue
                                             ?: KtUnsupportedAnnotationValue(
-                                                KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             ),
-                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                        KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                     ),
                                     Origin.SYNTHETIC
                                 )

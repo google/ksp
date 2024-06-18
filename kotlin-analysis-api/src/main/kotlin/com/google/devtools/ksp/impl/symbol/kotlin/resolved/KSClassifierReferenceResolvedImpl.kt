@@ -4,18 +4,18 @@ import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.IdKeyTriple
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.types.KtClassType
 import org.jetbrains.kotlin.analysis.api.types.KtClassTypeQualifier
+import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
 
 class KSClassifierReferenceResolvedImpl private constructor(
-    internal val ktType: KtClassType,
+    internal val ktType: KtNonErrorClassType,
     internal val index: Int,
     override val parent: KSTypeReference?
 ) : KSClassifierReference {
     companion object :
-        KSObjectCache<IdKeyTriple<KtClassType, Int, KSTypeReference?>, KSClassifierReferenceResolvedImpl>() {
-        fun getCached(ktType: KtClassType, index: Int, parent: KSTypeReference?) =
+        KSObjectCache<IdKeyTriple<KtNonErrorClassType, Int, KSTypeReference?>, KSClassifierReferenceResolvedImpl>() {
+        fun getCached(ktType: KtNonErrorClassType, index: Int, parent: KSTypeReference?) =
             cache.getOrPut(IdKeyTriple(ktType, index, parent)) {
                 KSClassifierReferenceResolvedImpl(ktType, index, parent)
             }
