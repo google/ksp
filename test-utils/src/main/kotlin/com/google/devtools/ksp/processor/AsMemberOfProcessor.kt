@@ -95,6 +95,13 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         results.add(getX.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
         results.add(getY.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
         results.add(setY.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
+
+        resolver.getClassDeclarationByName("Baz")!!.let { cls ->
+            cls.getDeclaredFunctions().single { it.simpleName.asString() == "method1" }.let { f ->
+                val usage = resolver.getClassDeclarationByName("Usage")!!.asType(emptyList())
+                results.add(f.asMemberOf(usage).returnType!!.toSignature())
+            }
+        }
         return emptyList()
     }
 

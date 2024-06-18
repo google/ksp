@@ -110,6 +110,7 @@
 // () -> kotlin.Int!!
 // () -> kotlin.Int!!
 // (kotlin.Int!!) -> kotlin.Unit!!
+// Baz!!<kotlin.Long!!, kotlin.Number!!>
 // END
 // FILE: Input.kt
 open class Base<BaseTypeArg1, BaseTypeArg2> {
@@ -154,6 +155,16 @@ val errorType: NonExistingType
 interface KotlinInterface {
     val x:Int
     var y:Int
+}
+
+interface Usage : Foo<Long, Integer> {
+    fun foo(param: Foo<Double, Integer>): Foo<String, Integer>
+}
+interface Foo<V1, V2: Integer> : Bar<Baz<V1, Number>, V2> {}
+interface Bar<U1, U2: Integer> : Baz<U1, U2> {}
+interface Baz<T1, T2: Number> {
+    fun method1(): T1
+    fun method2(): T2
 }
 
 // FILE: JavaInput.java
