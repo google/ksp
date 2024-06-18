@@ -42,7 +42,7 @@ import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
 import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeToken
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KtType
@@ -70,7 +70,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     override val arguments: List<KSValueArgument> by lazy {
         val annotationConstructor = analyze {
-            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.getConstructors()?.singleOrNull()
+            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.constructors?.singleOrNull()
         }
         val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
             val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
@@ -95,10 +95,10 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     @OptIn(KtAnalysisApiInternals::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
-            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.getConstructors()?.singleOrNull()
+            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.constructors?.singleOrNull()
                 ?.let { symbol ->
                     // ClsClassImpl means psi is decompiled psi.
-                    if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null && symbol.psi !is ClsClassImpl) {
+                    if (symbol.origin == KtSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
                         (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->
                                 annoMethod.defaultValue?.let {
@@ -129,9 +129,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                         // which might still be incorrect but there might not be a perfect way.
                                         constantValue
                                             ?: KtUnsupportedAnnotationValue(
-                                                KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             ),
-                                        KtAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                        KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                     ),
                                     Origin.SYNTHETIC
                                 )
