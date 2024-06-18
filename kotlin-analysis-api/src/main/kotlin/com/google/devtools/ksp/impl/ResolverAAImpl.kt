@@ -831,8 +831,15 @@ class ResolverAAImpl(
                         // recursively substitute to ensure transitive substitution works.
                         // should fix in upstream as well.
                         var result = resolved.type
+                        var cnt = 0
                         while (it.substitute(result) != result) {
+                            if (cnt > 100) {
+                                throw IllegalStateException(
+                                    "Potential infinite loop in type substitution for computeAsMemberOf"
+                                )
+                            }
                             result = it.substitute(result)
+                            cnt += 1
                         }
                         KSTypeImpl.getCached(result)
                     }
@@ -865,10 +872,32 @@ class ResolverAAImpl(
                     )
                 }
                 analyze {
-                    // TODO: recursive substitution does not solve fix point problem for signatures, probably needs fix in upstream.
                     buildSubstitutor {
                         fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
-                    }.let { (function as KSFunctionDeclarationImpl).ktFunctionSymbol.substitute(it) }.let {
+                    }.let {
+                        // recursively substitute to ensure transitive substitution works.
+                        // should fix in upstream as well.
+                        // for functions we need to test both returnType and value parameters converges.
+                        var funcToSub = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.substitute(it)
+                        var next = funcToSub.substitute(it)
+                        var cnt = 0
+                        while (
+                            funcToSub.returnType != next.returnType ||
+                            funcToSub.valueParameters.zip(next.valueParameters)
+                                .any { it.first.returnType != it.second.returnType } ||
+                            funcToSub.receiverType != next.receiverType
+                        ) {
+                            if (cnt > 100) {
+                                throw IllegalStateException(
+                                    "Potential infinite loop in type substitution for computeAsMemberOf"
+                                )
+                            }
+                            funcToSub = next
+                            next = funcToSub.substitute(it)
+                            cnt += 1
+                        }
+                        funcToSub
+                    }.let {
                         KSFunctionImpl(it)
                     }
                 }
