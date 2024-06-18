@@ -39,6 +39,8 @@ dependencies {
         "com.jetbrains.intellij.platform:core",
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.java:java-frontback-psi",
+        "com.jetbrains.intellij.java:java-frontback-psi-impl",
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
@@ -50,7 +52,7 @@ dependencies {
         "org.jetbrains.kotlin:high-level-api-fir-for-ide",
         "org.jetbrains.kotlin:high-level-api-for-ide",
         "org.jetbrains.kotlin:low-level-api-fir-for-ide",
-        "org.jetbrains.kotlin:analysis-api-providers-for-ide",
+        "org.jetbrains.kotlin:analysis-api-platform-interface-for-ide",
         "org.jetbrains.kotlin:analysis-project-structure-for-ide",
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",

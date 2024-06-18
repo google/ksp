@@ -44,7 +44,6 @@ import org.jetbrains.kotlin.analysis.api.types.KtDefinitelyNotNullType
 import org.jetbrains.kotlin.analysis.api.types.KtDynamicType
 import org.jetbrains.kotlin.analysis.api.types.KtErrorType
 import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
-import org.jetbrains.kotlin.analysis.api.types.KtIntegerLiteralType
 import org.jetbrains.kotlin.analysis.api.types.KtIntersectionType
 import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
 import org.jetbrains.kotlin.analysis.api.types.KtType
@@ -131,7 +130,7 @@ class IncrementalContextAA(
             is KtDefinitelyNotNullType -> {
                 recordWithArgs(type.original, file)
             }
-            is KtErrorType, is KtIntegerLiteralType, is KtDynamicType, is KtTypeParameterType -> {}
+            is KtErrorType, is KtDynamicType, is KtTypeParameterType -> {}
         }
     }
 
@@ -195,12 +194,12 @@ class IncrementalContextAA(
     private val KtType.psiJavaFiles: List<PsiJavaFile>
         get() {
             return when (this) {
-                is KtNonErrorClassType -> classSymbol.psiJavaFile?.let { listOf(it) } ?: emptyList()
+                is KtNonErrorClassType -> symbol.psiJavaFile?.let { listOf(it) } ?: emptyList()
                 is KtFlexibleType -> lowerBound.psiJavaFiles + upperBound.psiJavaFiles
                 is KtIntersectionType -> conjuncts.flatMap { it.psiJavaFiles }
                 is KtCapturedType -> projection.type?.psiJavaFiles ?: emptyList()
                 is KtDefinitelyNotNullType -> original.psiJavaFiles
-                is KtErrorType, is KtIntegerLiteralType, is KtDynamicType, is KtTypeParameterType -> emptyList()
+                is KtErrorType, is KtDynamicType, is KtTypeParameterType -> emptyList()
             }
         }
 

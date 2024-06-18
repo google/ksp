@@ -152,7 +152,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     override val origin: Origin by lazy {
         // Override origin for java synthetic constructors.
         if (
-            ktFunctionSymbol.origin == KtSymbolOrigin.JAVA &&
+            ktFunctionSymbol.origin == KtSymbolOrigin.JAVA_SOURCE &&
             (ktFunctionSymbol.psi == null || ktFunctionSymbol.psi is PsiClass)
         ) {
             Origin.SYNTHETIC
