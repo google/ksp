@@ -28,6 +28,7 @@ dependencies {
         "com.jetbrains.intellij.platform:core",
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.java:java-frontback-psi",
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {

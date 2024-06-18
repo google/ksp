@@ -1,13 +1,11 @@
 package com.google.devtools.ksp.impl
 
-import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
-import org.jetbrains.kotlin.analysis.api.lifetime.KtAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenFactory
-import org.jetbrains.kotlin.analysis.api.lifetime.KtLifetimeTokenProvider
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeTokenFactory
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinLifetimeTokenProvider
 
-@OptIn(KtAnalysisApiInternals::class)
-public class KtAlwaysAccessibleLifeTimeTokenProvider : KtLifetimeTokenProvider() {
+public class KtAlwaysAccessibleLifeTimeTokenProvider : KotlinLifetimeTokenProvider() {
     override fun getLifetimeTokenFactory(): KtLifetimeTokenFactory {
-        return KtAlwaysAccessibleLifetimeTokenFactory
+        return KotlinAlwaysAccessibleLifetimeTokenFactory
     }
 }

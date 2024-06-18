@@ -3,14 +3,14 @@ package com.google.devtools.ksp.standalone
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.fir.utils.isSubClassOf
+import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderFactory
+import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDirectInheritorsProvider
+import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
 import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionCache
 import org.jetbrains.kotlin.analysis.project.structure.KtDanglingFileModule
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
-import org.jetbrains.kotlin.analysis.providers.KotlinDeclarationProviderFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinDirectInheritorsProvider
-import org.jetbrains.kotlin.analysis.providers.impl.KotlinStaticDeclarationProviderFactory
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
@@ -29,7 +29,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
             ?: error(
                 "KotlinStandaloneDirectInheritorsProvider" +
                     "` expects the following declaration provider factory to be" +
-                    " registered: `${KotlinStaticDeclarationProviderFactory::class.simpleName}`"
+                    " registered: `${KotlinStandaloneDeclarationProviderFactory::class.simpleName}`"
             )
     }
 

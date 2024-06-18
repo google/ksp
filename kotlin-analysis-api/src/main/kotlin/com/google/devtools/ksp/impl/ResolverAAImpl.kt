@@ -49,6 +49,7 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.symbols.*
@@ -318,6 +319,7 @@ class ResolverAAImpl(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
         return analyze {

@@ -59,11 +59,11 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
-        if (ktClassOrObjectSymbol.origin == KtSymbolOrigin.JAVA) {
+        if (ktClassOrObjectSymbol.origin == KtSymbolOrigin.JAVA_SOURCE) {
             null
         } else {
             analyze {
-                ktClassOrObjectSymbol.getMemberScope().getConstructors().singleOrNull { it.isPrimary }?.let {
+                ktClassOrObjectSymbol.getMemberScope().constructors.singleOrNull { it.isPrimary }?.let {
                     KSFunctionDeclarationImpl.getCached(it)
                 }
             }
