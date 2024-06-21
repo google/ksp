@@ -78,10 +78,10 @@ abstract class IncrementalContextBase(
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is saved across processing.
-    protected abstract val sealedMap: FileToSymbolsMap
+    protected val sealedMap = FileToSymbolsMap(File(cachesDir, "sealed"))
 
     // Symbols defined in each file. This is saved across processing.
-    protected abstract val symbolsMap: FileToSymbolsMap
+    protected val symbolsMap = FileToSymbolsMap(File(cachesDir, "symbols"))
 
     private val cachesUpToDateFile = File(cachesDir, "caches.uptodate")
     private val rebuild = !cachesUpToDateFile.exists()
@@ -313,11 +313,11 @@ abstract class IncrementalContextBase(
         removedOutputs.forEach {
             sourceToOutputsMap.removeRecursively(it)
         }
-        sourceToOutputsMap[removedOutputsKey] = removedOutputs
+        sourceToOutputsMap.put(removedOutputsKey, removedOutputs)
 
         // Update source-to-outputs map from those reprocessed.
         sourceToOutputs.forEach { src, outs ->
-            sourceToOutputsMap[src] = outs.toList()
+            sourceToOutputsMap.put(src, outs.toList())
         }
 
         logSourceToOutputs(outputs, sourceToOutputs)
@@ -367,7 +367,7 @@ abstract class IncrementalContextBase(
         fun <K : Comparable<K>, V> update(m: PersistentMap<K, List<V>>, u: MultiMap<K, V>) {
             // Update symbol caches from modified files.
             u.keySet().forEach {
-                m.set(it, u[it].toList())
+                m.put(it, u[it].toList())
             }
         }
 
@@ -392,9 +392,7 @@ abstract class IncrementalContextBase(
             update(sealedMap, updatedSealed)
         }
         symbolsMap.flush()
-        symbolsMap.close()
         sealedMap.flush()
-        sealedMap.close()
     }
 
     fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
@@ -408,11 +406,11 @@ abstract class IncrementalContextBase(
         try {
             return f()
         } catch (e: Exception) {
-            symbolsMap.close()
-            sealedMap.close()
+            symbolsMap.flush()
+            sealedMap.flush()
             symbolLookupCache.close()
             classLookupCache.close()
-            sourceToOutputsMap.close()
+            sourceToOutputsMap.flush()
             throw e
         }
     }
@@ -476,7 +474,7 @@ abstract class IncrementalContextBase(
             if (!isDirty(source))
                 cleanOutputs.addAll(sourceToOutputsMap[source]!!)
         }
-        sourceToOutputsMap.close()
+        sourceToOutputsMap.flush()
         updateOutputs(dirtyOutputs, cleanOutputs)
 
         cachesUpToDateFile.createNewFile()

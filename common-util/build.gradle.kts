@@ -36,6 +36,7 @@ dependencies {
 
     implementation(project(":api"))
     implementation(kotlin("stdlib", kotlinBaseVersion))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     testImplementation("junit:junit:$junitVersion")
 }
 
