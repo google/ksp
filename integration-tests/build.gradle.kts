@@ -17,6 +17,7 @@ dependencies {
     testImplementation(project(":gradle-plugin"))
     testImplementation(project(":symbol-processing"))
     testImplementation(project(":symbol-processing-cmdline"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
 
 tasks.withType<Test> {

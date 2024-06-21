@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp
 
-import com.google.devtools.ksp.common.FileToSymbolsMap
 import com.google.devtools.ksp.common.IncrementalContextBase
 import com.google.devtools.ksp.common.LookupStorageWrapper
 import com.google.devtools.ksp.common.LookupSymbolWrapper
@@ -35,8 +34,6 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWildcardType
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.util.containers.MultiMap
-import com.intellij.util.io.DataExternalizer
-import com.intellij.util.io.IOUtil
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
@@ -53,8 +50,6 @@ import org.jetbrains.kotlin.incremental.update
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperclassesWithoutAny
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.supertypes
-import java.io.DataInput
-import java.io.DataOutput
 import java.io.File
 
 class IncrementalContext(
@@ -90,10 +85,6 @@ class IncrementalContext(
     override val classLookupTracker =
         LookupTrackerWrapperImpl((lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING)
     override val classLookupCache = LookupStorageWrapperImpl(LookupStorage(classLookupCacheDir, icContext))
-
-    override val sealedMap = FileToSymbolsMap(File(cachesDir, "sealed"), LookupSymbolExternalizer)
-
-    override val symbolsMap = FileToSymbolsMap(File(cachesDir, "symbols"), LookupSymbolExternalizer)
 
     // Debugging and testing only.
     fun dumpLookupRecords(): Map<String, List<String>> {
@@ -245,16 +236,6 @@ class LookupStorageWrapperImpl(
     override fun close() = impl.close()
 
     override fun flush() = impl.flush()
-}
-
-object LookupSymbolExternalizer : DataExternalizer<LookupSymbolWrapper> {
-    override fun read(input: DataInput): LookupSymbolWrapper =
-        LookupSymbolWrapper(IOUtil.readString(input), IOUtil.readString(input))
-
-    override fun save(output: DataOutput, value: LookupSymbolWrapper) {
-        IOUtil.writeString(value.name, output)
-        IOUtil.writeString(value.scope, output)
-    }
 }
 
 internal class RelativeFileToPathConverter(val baseDir: File) : FileToPathConverter {

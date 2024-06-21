@@ -1,94 +1,74 @@
 package com.google.devtools.ksp.common
 
-import com.intellij.util.io.DataExternalizer
-import com.intellij.util.io.IOUtil
-import com.intellij.util.io.KeyDescriptor
-import com.intellij.util.io.PersistentHashMap
-import java.io.DataInput
-import java.io.DataInputStream
-import java.io.DataOutput
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 import java.io.File
 
+private object FileSerializer : KSerializer<File> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("File", PrimitiveKind.STRING)
+    override fun serialize(encoder: Encoder, value: File) = encoder.encodeString(value.path)
+    override fun deserialize(decoder: Decoder): File = File(decoder.decodeString())
+}
+
+private object SymbolSerializer : KSerializer<LookupSymbolWrapper> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("LookupSymbolWrapper", PrimitiveKind.STRING)
+    override fun serialize(encoder: Encoder, value: LookupSymbolWrapper) =
+        encoder.encodeString("${value.name}:${value.scope}")
+    override fun deserialize(decoder: Decoder): LookupSymbolWrapper {
+        val (name, scope) = decoder.decodeString().split(':')
+        return LookupSymbolWrapper(name, scope)
+    }
+}
+
+private val fileToFilesMapSerializer = MapSerializer(FileSerializer, ListSerializer(FileSerializer))
+private val fileToSymbolsMapSerializer = MapSerializer(FileSerializer, ListSerializer(SymbolSerializer))
+
 abstract class PersistentMap<K, V>(
-    storageFile: File,
-    keyDescriptor: KeyDescriptor<K>,
-    dataExternalizer: DataExternalizer<V>
-) : PersistentHashMap<K, V>(
-    storageFile,
-    keyDescriptor,
-    dataExternalizer
-) {
-    val keys: Collection<K>
-        get() = mutableListOf<K>().also { list ->
-            this.processKeysWithExistingMapping { key -> list.add(key) }
-        }
+    private val serializer: KSerializer<Map<K, V>>,
+    private val storage: File,
+    private val m: MutableMap<K, V>,
+) : MutableMap<K, V> by m {
 
-    operator fun set(key: K, value: V) = put(key, value)
-
-    fun clear() {
-        keys.forEach {
-            remove(it)
+    @OptIn(ExperimentalSerializationApi::class)
+    fun flush() {
+        storage.outputStream().use {
+            Json.encodeToStream(serializer, m.toMap(), it)
         }
     }
+    override fun toString() = m.toString()
 
-    fun flush() = force()
-}
-
-object FileKeyDescriptor : KeyDescriptor<File> {
-    override fun read(input: DataInput): File {
-        return File(IOUtil.readString(input))
-    }
-
-    override fun save(output: DataOutput, value: File) {
-        IOUtil.writeString(value.path, output)
-    }
-
-    override fun getHashCode(value: File): Int = value.hashCode()
-
-    override fun isEqual(val1: File, val2: File): Boolean = val1 == val2
-}
-
-object FileExternalizer : DataExternalizer<File> {
-    override fun read(input: DataInput): File = File(IOUtil.readString(input))
-
-    override fun save(output: DataOutput, value: File) {
-        IOUtil.writeString(value.path, output)
-    }
-}
-
-class ListExternalizer<T>(
-    private val elementExternalizer: DataExternalizer<T>,
-) : DataExternalizer<List<T>> {
-
-    override fun save(output: DataOutput, value: List<T>) {
-        value.forEach { elementExternalizer.save(output, it) }
-    }
-
-    override fun read(input: DataInput): List<T> {
-        val result = mutableListOf<T>()
-        val stream = input as DataInputStream
-
-        while (stream.available() > 0) {
-            result.add(elementExternalizer.read(stream))
+    companion object {
+        @JvmStatic
+        @OptIn(ExperimentalSerializationApi::class)
+        protected fun <K, V> deserialize(serializer: KSerializer<Map<K, V>>, storage: File): MutableMap<K, V> {
+            return if (storage.exists()) {
+                Json.decodeFromStream(serializer, storage.inputStream()).toMutableMap()
+            } else {
+                mutableMapOf()
+            }
         }
-
-        return result
     }
 }
 
 class FileToFilesMap(
-    storageFile: File,
-) : PersistentMap<File, List<File>>(
-    storageFile,
-    FileKeyDescriptor,
-    ListExternalizer(FileExternalizer)
-)
+    storage: File
+) : PersistentMap<File, List<File>>(fileToFilesMapSerializer, storage, deserialize(fileToFilesMapSerializer, storage))
 
 class FileToSymbolsMap(
-    storageFile: File,
-    lookupSymbolExternalizer: DataExternalizer<LookupSymbolWrapper>
+    storage: File
 ) : PersistentMap<File, List<LookupSymbolWrapper>>(
-    storageFile,
-    FileKeyDescriptor,
-    ListExternalizer(lookupSymbolExternalizer),
+    fileToSymbolsMapSerializer,
+    storage,
+    deserialize(fileToSymbolsMapSerializer, storage)
 )

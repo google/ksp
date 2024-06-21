@@ -51,6 +51,7 @@ val prefixesToRelocate = listOf(
     "javax.annotation.",
     "kotlinx.collections.immutable.",
     "kotlinx.coroutines.",
+    "kotlinx.serialization.",
     "org.apache.log4j.",
     "org.checkerframework.",
     "org.intellij.",
