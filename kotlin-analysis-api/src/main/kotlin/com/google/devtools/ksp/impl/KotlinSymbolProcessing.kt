@@ -245,13 +245,6 @@ class KotlinSymbolProcessing(
             createPackagePartProvider,
         )
 
-        // kotlinCoreProjectEnvironment.project.apply {
-        //     registerService(
-        //         KotlinPsiDeclarationProviderFactory::class.java,
-        //         KotlinStaticPsiDeclarationProviderFactory(this)
-        //     )
-        // }
-        //
         project.registerService(
             LLFirLibrarySymbolProviderFactory::class.java,
             LLFirStandaloneLibrarySymbolProviderFactory::class.java
