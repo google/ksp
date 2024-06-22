@@ -611,6 +611,7 @@ fun ClassId.toKSName() = KSNameImpl.getCached(asSingleFqName().toString())
 // or kotlin functional type (in the case of Java functional type).
 internal fun KtClassLikeSymbol.shouldMapToKotlinForAssignabilityCheck(): Boolean {
     return this.origin == KtSymbolOrigin.JAVA_SOURCE ||
+        this.origin == KtSymbolOrigin.JAVA_LIBRARY ||
         this.classIdIfNonLocal?.packageFqName?.asString() == "kotlin.jvm.functions"
 }
 

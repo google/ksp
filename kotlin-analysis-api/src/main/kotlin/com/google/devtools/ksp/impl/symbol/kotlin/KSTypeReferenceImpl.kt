@@ -50,7 +50,9 @@ class KSTypeReferenceImpl(
 
     // Remember to recordLookup if the usage is beyond a type reference.
     private val ktType: KtType by lazy {
-        analyze { ktTypeReference.getKtType() }
+        analyze {
+            ktTypeReference.getKtType().let { it.abbreviatedType ?: it }
+        }
     }
     override val element: KSReferenceElement? by lazy {
         var typeElement = ktTypeReference.typeElement
