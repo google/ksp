@@ -46,6 +46,7 @@ import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
 import org.jetbrains.kotlin.analysis.api.fir.KaSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
+import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionalType
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaAnnotationImpl
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
@@ -70,6 +71,8 @@ import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.ConeErrorType
 import org.jetbrains.kotlin.fir.types.ConeFlexibleType
 import org.jetbrains.kotlin.fir.types.ConeLookupTagBasedType
+import org.jetbrains.kotlin.fir.types.abbreviatedType
+import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.isAny
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
@@ -346,6 +349,12 @@ internal fun ClassId.toKtClassSymbol(): KtClassOrObjectSymbol? {
     }
 }
 
+internal fun ClassId.toTypeAlias(): KtTypeAliasSymbol? {
+    return analyze {
+        getTypeAliasByClassId(this@toTypeAlias)
+    }
+}
+
 internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
     return try {
         when (this) {
@@ -353,7 +362,7 @@ internal fun KtType.classifierSymbol(): KtClassifierSymbol? {
             // TODO: upstream is not exposing enough information for captured types.
             is KtCapturedType -> TODO("fix in upstream")
             is KtClassErrorType, is KtTypeErrorType -> null
-            is KtFunctionalType -> classSymbol
+            is KtFunctionalType -> (this as? KaFirFunctionalType)?.abbreviatedSymbol() ?: symbol
             is KtUsualClassType -> classSymbol
             is KtDefinitelyNotNullType -> original.classifierSymbol()
             is KtDynamicType -> null
@@ -797,4 +806,9 @@ internal fun TypeMappingMode.updateFromAnnotations(
     } else {
         this
     }
+}
+
+internal fun KaFunctionalType.abbreviatedSymbol(): KtTypeAliasSymbol? {
+    val classId = (this as? KaFirFunctionalType)?.coneType?.abbreviatedType?.classId ?: return null
+    return classId.toTypeAlias()
 }
