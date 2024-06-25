@@ -39,6 +39,7 @@ dependencies {
         "com.jetbrains.intellij.platform:core",
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.platform:diagnostic",
         "com.jetbrains.intellij.java:java-frontback-psi",
         "com.jetbrains.intellij.java:java-frontback-psi-impl",
         "com.jetbrains.intellij.java:java-psi",
