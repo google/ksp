@@ -643,7 +643,9 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased
         .deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
+    org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
     org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,
     org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
@@ -652,6 +654,7 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.serialization.deserialization.builtins.BuiltInsLoaderImpl::class.java,
     com.fasterxml.aalto.AaltoInputProperties::class.java,
     com.google.errorprone.annotations.CheckReturnValue::class.java,
+    com.intellij.diagnostic.ActivityCategory::class.java,
     com.intellij.openapi.application.JetBrainsProtocolHandler::class.java,
     com.intellij.openapi.editor.impl.EditorDocumentPriorities::class.java,
     com.intellij.psi.tree.ChildRoleBase::class.java,
