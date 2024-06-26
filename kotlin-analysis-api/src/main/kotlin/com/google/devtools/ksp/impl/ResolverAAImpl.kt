@@ -51,20 +51,25 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
+import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
+import org.jetbrains.kotlin.asJava.findFacadeClass
 import org.jetbrains.kotlin.asJava.toLightClass
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
+import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
 import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightAccessorMethod
 import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightSimpleMethod
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
@@ -534,12 +539,30 @@ class ResolverAAImpl(
         return newKSFiles.asSequence()
     }
 
+    private fun getOwnerJvmClassNameHelper(declaration: KSDeclaration): String? {
+        return declaration.closestClassDeclaration()?.let {
+            // Find classId for JvmClassName for member callables.
+            (it as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classIdIfNonLocal
+                ?.asString()?.replace(".", "$")?.replace("/", ".")
+        } ?: declaration.containingFile?.let {
+            // Find containing file facade class name from file symbol
+            (it as? KSFileImpl)?.let {
+                ((it.ktFileSymbol.psi as? KtFile)?.findFacadeClass() as? KtLightClassForFacade)
+                    ?.facadeClassFqName?.asString()
+            }
+            // Down cast to fir symbol for library symbols as light facade class for libraries not available in AA.
+        } ?: (
+            ((declaration as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol as? KaFirSymbol<FirCallableSymbol<*>>)
+                ?.firSymbol?.containerSource as? JvmPackagePartSource
+            )?.classId?.asFqNameString()
+    }
+
     override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
-        TODO("Not yet implemented")
+        return getOwnerJvmClassNameHelper(declaration)
     }
 
     override fun getOwnerJvmClassName(declaration: KSPropertyDeclaration): String? {
-        TODO("Not yet implemented")
+        return getOwnerJvmClassNameHelper(declaration)
     }
 
     override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
