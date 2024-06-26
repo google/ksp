@@ -578,7 +578,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/throwList.kt")
     }
 
-    @Disabled
     @TestMetadata("topLevelMembers.kt")
     @Test
     fun testTopLevelMembers() {
