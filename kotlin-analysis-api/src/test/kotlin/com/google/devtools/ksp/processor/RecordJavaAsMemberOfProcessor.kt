@@ -19,10 +19,9 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 
-class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
+class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -32,15 +31,29 @@ class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val types = mutableSetOf<KSType>()
+        var function: KSFunctionDeclaration? = null
+        var type: KSType? = null
         resolver.getAllFiles().forEach {
-            it.accept(TypeCollectorNoAccessor(), types)
+            if (it.fileName == "C.kt") {
+                type = (
+                    it.declarations.single {
+                        it is KSPropertyDeclaration && it.simpleName.asString() == "a"
+                    } as KSPropertyDeclaration
+                    ).type.resolve()
+            } else if (it.fileName == "B.java") {
+                function = (
+                    it.declarations.single {
+                        it is KSClassDeclaration && it.simpleName.asString() == "B"
+                    } as KSClassDeclaration
+                    ).declarations.single {
+                    it is KSFunctionDeclaration && it.simpleName.asString() == "f"
+                } as KSFunctionDeclaration
+            }
         }
-        types.forEach {
-            resolver.builtIns.anyType.isAssignableFrom(it)
-        }
+
+        function!!.asMemberOf(type!!)
+
         val m = when (resolver) {
-            is ResolverImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             else -> throw IllegalStateException("Unknown Resolver: $resolver")
         }

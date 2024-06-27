@@ -7,6 +7,12 @@ description = "Kotlin Symbol Processing"
 val intellijVersion: String by project
 val kotlinBaseVersion: String by project
 
+val junitVersion: String by project
+val junit5Version: String by project
+val junitPlatformVersion: String by project
+val libsForTesting by configurations.creating
+val libsForTestingCommon by configurations.creating
+
 tasks.withType<KotlinCompile> {
     compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
 }
@@ -36,6 +42,8 @@ dependencies {
         "com.jetbrains.intellij.platform:core",
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.java:java-frontback-psi",
+        "com.jetbrains.intellij.java:java-frontback-psi-impl",
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
@@ -48,6 +56,20 @@ dependencies {
 
     implementation(project(":api"))
     implementation(project(":common-util"))
+
+    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
+    testImplementation(project(":test-utils"))
+
+    libsForTesting(kotlin("stdlib", kotlinBaseVersion))
+    libsForTesting(kotlin("test", kotlinBaseVersion))
+    libsForTesting(kotlin("script-runtime", kotlinBaseVersion))
+    libsForTestingCommon(kotlin("stdlib-common", kotlinBaseVersion))
 }
 
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
@@ -56,4 +78,47 @@ val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
     from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     from(project(":common-util").tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
+}
+
+tasks.register<Copy>("CopyLibsForTesting") {
+    from(configurations.get("libsForTesting"))
+    into("dist/kotlinc/lib")
+    val escaped = Regex.escape(kotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+tasks.register<Copy>("CopyLibsForTestingCommon") {
+    from(configurations.get("libsForTestingCommon"))
+    into("dist/common")
+    val escaped = Regex.escape(kotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+tasks.test {
+    dependsOn("CopyLibsForTesting")
+    dependsOn("CopyLibsForTestingCommon")
+    maxHeapSize = "2g"
+
+    useJUnitPlatform()
+
+    systemProperty("idea.is.unit.test", "true")
+    systemProperty("java.awt.headless", "true")
+    environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+
+    lateinit var tempTestDir: File
+    doFirst {
+        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
+        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("idea.home.path", ideaHomeDir))
+
+        tempTestDir = createTempDir()
+        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("java.io.tmpdir", tempTestDir))
+    }
+
+    doLast {
+        delete(tempTestDir)
+    }
 }
