@@ -17,12 +17,11 @@
 
 package com.google.devtools.ksp.processor
 
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 
-class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
+class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -32,31 +31,15 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        var function: KSFunctionDeclaration? = null
-        var type: KSType? = null
+        val types = mutableSetOf<KSType>()
         resolver.getAllFiles().forEach {
-            if (it.fileName == "C.kt") {
-                type = (
-                    it.declarations.single {
-                        it is KSPropertyDeclaration && it.simpleName.asString() == "a"
-                    } as KSPropertyDeclaration
-                    ).type.resolve()
-            } else if (it.fileName == "B.java") {
-                function = (
-                    it.declarations.single {
-                        it is KSClassDeclaration && it.simpleName.asString() == "B"
-                    } as KSClassDeclaration
-                    ).declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f"
-                } as KSFunctionDeclaration
-            }
+            it.accept(TypeCollectorNoAccessor(), types)
         }
-
-        function!!.asMemberOf(type!!)
-
+        types.forEach {
+            resolver.builtIns.anyType.isAssignableFrom(it)
+        }
         val m = when (resolver) {
             is ResolverImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
-            is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             else -> throw IllegalStateException("Unknown Resolver: $resolver")
         }
         m.forEach { symbol, files ->

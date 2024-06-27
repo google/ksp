@@ -19,10 +19,9 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 
-class RecordJavaGetAllMembersProcessor : AbstractTestProcessor() {
+class RecordJavaSupertypesProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -32,24 +31,21 @@ class RecordJavaGetAllMembersProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        val types = mutableSetOf<KSType>()
         resolver.getAllFiles().forEach {
-            if (it.fileName == "A.kt") {
-                val c = it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "A"
-                } as KSClassDeclaration
-                c.getAllFunctions()
-                c.getAllProperties()
-            }
+            it.accept(TypeCollectorNoAccessor(), types)
         }
-
+        types.forEach {
+            resolver.builtIns.anyType.isAssignableFrom(it)
+        }
         val m = when (resolver) {
-            is ResolverImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             else -> throw IllegalStateException("Unknown Resolver: $resolver")
         }
         m.forEach { symbol, files ->
             files.filter { it.endsWith(".java") }.sorted().forEach {
-                results.add("$symbol: $it")
+                val fn = it.substringAfterLast("java-sources/")
+                results.add("$symbol: $fn")
             }
         }
         return emptyList()
