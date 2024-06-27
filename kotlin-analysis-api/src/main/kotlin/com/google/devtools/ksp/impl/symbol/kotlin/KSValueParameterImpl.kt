@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.psi.KtParameter
 
 class KSValueParameterImpl private constructor(
-    private val ktValueParameterSymbol: KtValueParameterSymbol,
+    internal val ktValueParameterSymbol: KtValueParameterSymbol,
     override val parent: KSAnnotated
 ) : KSValueParameter, Deferrable {
     companion object : KSObjectCache<KtValueParameterSymbol, KSValueParameterImpl>() {

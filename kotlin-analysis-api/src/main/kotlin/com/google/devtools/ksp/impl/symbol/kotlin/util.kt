@@ -25,6 +25,7 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
@@ -85,6 +86,7 @@ import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
+import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
@@ -305,8 +307,20 @@ internal fun KtSymbolWithMembers.getAllFunctions(): Sequence<KSFunctionDeclarati
     }
 }
 
-internal fun KtAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
-    return this.annotations.asSequence().map { KSAnnotationImpl.getCached(it, parent) }
+internal fun KaAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
+    return this.annotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, parent) }
+}
+
+internal fun KtAnnotated.annotations(
+    kaAnnotated: KaAnnotated,
+    parent: KSNode? = null,
+    candidates: List<KaAnnotation> = kaAnnotated.annotations
+): Sequence<KSAnnotation> {
+    return annotationEntries.filter { !it.isUseSiteTargetAnnotation() }.asSequence().map { annotationEntry ->
+        KSAnnotationImpl.getCached(annotationEntry, parent) {
+            candidates.single { it.psi == annotationEntry }
+        }
+    }
 }
 
 internal fun KtSymbol.getContainingKSSymbol(): KSDeclaration? {
@@ -418,6 +432,47 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotatio
     } ?: emptySequence()
 }
 
+internal fun KSAnnotated.findAnnotationApplicationFromUseSiteTarget(): Sequence<KtAnnotationApplication> {
+    return when (this) {
+        is KSPropertyGetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let {
+            it.ktDeclarationSymbol.annotations.filter {
+                it.useSiteTarget == org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_GETTER
+            }.asSequence()
+        }
+        is KSPropertySetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let {
+            it.ktDeclarationSymbol.annotations.filter {
+                it.useSiteTarget == org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_SETTER
+            }.asSequence()
+        }
+        is KSValueParameter -> {
+            var parent = this.parent
+            // TODO: eliminate annotationsFromParents to make this fully sequence.
+            val annotationsFromParents = mutableListOf<KtAnnotationApplication>()
+            (parent as? KSPropertyAccessorImpl)?.let {
+                annotationsFromParents.addAll(
+                    it.ktPropertyAccessorSymbol.annotations
+                        .filter {
+                            it.useSiteTarget ==
+                                org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER
+                        }.asSequence()
+                )
+                parent = (parent as KSPropertyAccessorImpl).receiver
+            }
+            (parent as? KSPropertyDeclarationImpl)?.let {
+                annotationsFromParents.addAll(
+                    it.ktPropertySymbol.annotations
+                        .filter {
+                            it.useSiteTarget ==
+                                org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER
+                        }.asSequence()
+                )
+            }
+            annotationsFromParents.asSequence()
+        }
+        else -> emptySequence()
+    } ?: emptySequence()
+}
+
 internal fun org.jetbrains.kotlin.descriptors.Visibility.toModifier(): Modifier {
     return when (this) {
         Visibilities.Public -> Modifier.PUBLIC
@@ -448,7 +503,7 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
 
 internal fun KtAnnotationValue.toValue(): Any? = when (this) {
     is KtArrayAnnotationValue -> this.values.map { it.toValue() }
-    is KtAnnotationApplicationValue -> KSAnnotationImpl.getCached(this.annotationValue)
+    is KtAnnotationApplicationValue -> KSAnnotationResolvedImpl.getCached(this.annotationValue)
     // TODO: Enum entry should return a type, use declaration as a placeholder.
     is KtEnumEntryAnnotationValue -> this.callableId?.classId?.let {
         analyze {

@@ -30,6 +30,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDynamicType
 import org.jetbrains.kotlin.psi.KtNullableType
 import org.jetbrains.kotlin.psi.KtTypeReference
@@ -70,7 +71,19 @@ class KSTypeReferenceImpl(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktType.annotations.map { KSAnnotationImpl.getCached(it) }.asSequence()
+        val innerAnnotations = mutableListOf<Sequence<KtAnnotationEntry>>()
+        visitNullableType {
+            innerAnnotations.add(it.annotationEntries.asSequence())
+        }
+
+        (ktTypeReference.annotationEntries.asSequence() + innerAnnotations.asSequence().flatten())
+            .map { annotationEntry ->
+                KSAnnotationImpl.getCached(annotationEntry, this@KSTypeReferenceImpl) {
+                    ktType.annotations.single {
+                        it.psi == annotationEntry
+                    }
+                }
+            }
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
