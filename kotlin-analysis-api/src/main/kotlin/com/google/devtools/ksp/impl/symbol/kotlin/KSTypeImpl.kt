@@ -22,6 +22,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -88,9 +89,11 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     override val annotations: Sequence<KSAnnotation>
         get() = type.annotations() +
             if (type is KtFunctionalType && type.receiverType != null) {
-                sequenceOf(KSAnnotationImpl.getCached(getExtensionFunctionTypeAnnotation(type.annotations.size)))
+                sequenceOf(
+                    KSAnnotationResolvedImpl.getCached(getExtensionFunctionTypeAnnotation(type.annotations.size))
+                )
             } else {
-                emptySequence<KSAnnotation>()
+                emptySequence()
             }
 
     override fun isAssignableFrom(that: KSType): Boolean {

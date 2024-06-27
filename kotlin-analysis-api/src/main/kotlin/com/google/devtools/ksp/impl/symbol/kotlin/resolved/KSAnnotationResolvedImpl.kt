@@ -1,21 +1,4 @@
-/*
- * Copyright 2022 Google LLC
- * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package com.google.devtools.ksp.impl.symbol.kotlin
+package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
@@ -23,52 +6,52 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
+import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
+import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Location
+import com.google.devtools.ksp.symbol.NonExistLocation
+import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaAnalysisApiInternals
+import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KaUnsupportedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
-import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.components.buildClassType
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
-// TODO: implement a psi based version of annotation application.
-class KSAnnotationImpl private constructor(
-    private val ktAnnotationEntry: KtAnnotationEntry,
-    override val parent: KSNode?,
-    private val resolveToAnnotationApplication: () -> KtAnnotationApplicationWithArgumentsInfo
+class KSAnnotationResolvedImpl private constructor(
+    private val annotationApplication: KtAnnotationApplicationWithArgumentsInfo,
+    override val parent: KSNode?
 ) : KSAnnotation {
-    companion object : KSObjectCache<IdKeyPair<KtAnnotationEntry, KSNode?>, KSAnnotationImpl>() {
-        fun getCached(
-            ktAnnotationEntry: KtAnnotationEntry,
-            parent: KSNode? = null,
-            resolveToAnnotationApplication: () -> KtAnnotationApplicationWithArgumentsInfo
-        ) =
-            cache.getOrPut(IdKeyPair(ktAnnotationEntry, parent)) {
-                KSAnnotationImpl(ktAnnotationEntry, parent, resolveToAnnotationApplication)
+    companion object :
+        KSObjectCache<IdKeyPair<KtAnnotationApplicationWithArgumentsInfo, KSNode?>, KSAnnotationResolvedImpl>() {
+        fun getCached(annotationApplication: KtAnnotationApplicationWithArgumentsInfo, parent: KSNode? = null) =
+            cache.getOrPut(IdKeyPair(annotationApplication, parent)) {
+                KSAnnotationResolvedImpl(annotationApplication, parent)
             }
     }
-
-    private val annotationApplication by lazy {
-        resolveToAnnotationApplication()
-    }
-
     override val annotationType: KSTypeReference by lazy {
         analyze {
-            ktAnnotationEntry.typeReference!!.let {
-                KSTypeReferenceImpl.getCached(
-                    it,
-                    this@KSAnnotationImpl
-                )
-            }
+            KSTypeReferenceResolvedImpl.getCached(
+                buildClassType(annotationApplication.classId!!),
+                parent = this@KSAnnotationResolvedImpl
+            )
         }
     }
-
     override val arguments: List<KSValueArgument> by lazy {
         val presentArgs = annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it, Origin.KOTLIN) }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
@@ -82,7 +65,7 @@ class KSAnnotationImpl private constructor(
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
             annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
-                if (symbol.origin == KtSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
+                if (symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
                     (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
                             annoMethod.defaultValue?.let { value ->
@@ -105,10 +88,10 @@ class KSAnnotationImpl private constructor(
                         it.valueParameters.map { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
-                                    KtNamedAnnotationValue(
+                                    KaNamedAnnotationValue(
                                         valueParameterSymbol.name,
                                         constantValue
-                                            ?: KtUnsupportedAnnotationValue(
+                                            ?: KaUnsupportedAnnotationValue(
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             ),
                                         KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
@@ -124,11 +107,11 @@ class KSAnnotationImpl private constructor(
     }
 
     override val shortName: KSName by lazy {
-        KSNameImpl.getCached(ktAnnotationEntry.shortName!!.asString())
+        KSNameImpl.getCached(annotationApplication.classId!!.shortClassName.asString())
     }
 
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
-        when (ktAnnotationEntry.useSiteTarget?.getAnnotationUseSiteTarget()) {
+        when (annotationApplication.useSiteTarget) {
             null -> null
             FILE -> AnnotationUseSiteTarget.FILE
             PROPERTY -> AnnotationUseSiteTarget.PROPERTY
@@ -142,10 +125,10 @@ class KSAnnotationImpl private constructor(
         }
     }
 
-    override val origin: Origin = Origin.KOTLIN
+    override val origin: Origin = Origin.KOTLIN_LIB
 
     override val location: Location by lazy {
-        annotationApplication.psi?.toLocation() ?: NonExistLocation
+        NonExistLocation
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
