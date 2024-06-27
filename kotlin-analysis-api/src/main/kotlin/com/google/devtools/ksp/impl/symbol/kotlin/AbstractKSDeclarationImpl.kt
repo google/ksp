@@ -35,7 +35,7 @@ import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
-import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
 abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationSymbol) : KSDeclaration, Deferrable {
@@ -119,8 +119,10 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     override val docString: String?
         get() = ktDeclarationSymbol.toDocString()
 
-    internal val originalAnnotations: Sequence<KSAnnotation> by lazy {
-        if (ktDeclarationSymbol.psi is KtElement || ktDeclarationSymbol.psi == null) {
+    internal open val originalAnnotations: Sequence<KSAnnotation> by lazy {
+        if (ktDeclarationSymbol.psi is KtAnnotated) {
+            (ktDeclarationSymbol.psi as KtAnnotated).annotations(ktDeclarationSymbol, this)
+        } else if (ktDeclarationSymbol.psi == null) {
             ktDeclarationSymbol.annotations(this)
         } else {
             (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
