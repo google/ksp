@@ -19,10 +19,9 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
 
-class RecordJavaOverridesProcessor : AbstractTestProcessor() {
+class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -32,41 +31,36 @@ class RecordJavaOverridesProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        var A_f1: KSFunctionDeclaration? = null
-        var A_f2: KSFunctionDeclaration? = null
-        var C_f1: KSFunctionDeclaration? = null
+        var function: KSFunctionDeclaration? = null
+        var type: KSType? = null
         resolver.getAllFiles().forEach {
-            if (it.fileName == "A.java") {
-                val c = it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "A"
-                } as KSClassDeclaration
-                A_f1 = c.declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f1"
-                } as KSFunctionDeclaration
-                A_f2 = c.declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f2"
-                } as KSFunctionDeclaration
-            } else if (it.fileName == "C.java") {
-                val c = it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "C"
-                } as KSClassDeclaration
-                C_f1 = c.declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f1"
+            if (it.fileName == "C.kt") {
+                type = (
+                    it.declarations.single {
+                        it is KSPropertyDeclaration && it.simpleName.asString() == "a"
+                    } as KSPropertyDeclaration
+                    ).type.resolve()
+            } else if (it.fileName == "B.java") {
+                function = (
+                    it.declarations.single {
+                        it is KSClassDeclaration && it.simpleName.asString() == "B"
+                    } as KSClassDeclaration
+                    ).declarations.single {
+                    it is KSFunctionDeclaration && it.simpleName.asString() == "f"
                 } as KSFunctionDeclaration
             }
         }
 
-        resolver.overrides(A_f1!!, C_f1!!)
-        A_f2!!.findOverridee()
+        function!!.asMemberOf(type!!)
 
         val m = when (resolver) {
-            is ResolverImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             else -> throw IllegalStateException("Unknown Resolver: $resolver")
         }
         m.forEach { symbol, files ->
             files.filter { it.endsWith(".java") }.sorted().forEach {
-                results.add("$symbol: $it")
+                val fn = it.substringAfterLast("java-sources/")
+                results.add("$symbol: $fn")
             }
         }
         return emptyList()
