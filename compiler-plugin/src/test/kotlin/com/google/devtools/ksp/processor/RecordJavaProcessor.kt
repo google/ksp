@@ -17,12 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.validate
 
-class RecordJavaOverridesProcessor : AbstractTestProcessor() {
+class RecordJavaProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -32,36 +32,13 @@ class RecordJavaOverridesProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        var A_f1: KSFunctionDeclaration? = null
-        var A_f2: KSFunctionDeclaration? = null
-        var C_f1: KSFunctionDeclaration? = null
         resolver.getAllFiles().forEach {
-            if (it.fileName == "A.java") {
-                val c = it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "A"
-                } as KSClassDeclaration
-                A_f1 = c.declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f1"
-                } as KSFunctionDeclaration
-                A_f2 = c.declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f2"
-                } as KSFunctionDeclaration
-            } else if (it.fileName == "C.java") {
-                val c = it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "C"
-                } as KSClassDeclaration
-                C_f1 = c.declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f1"
-                } as KSFunctionDeclaration
+            it.declarations.forEach {
+                it.validate()
             }
         }
-
-        resolver.overrides(A_f1!!, C_f1!!)
-        A_f2!!.findOverridee()
-
         val m = when (resolver) {
             is ResolverImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
-            is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
             else -> throw IllegalStateException("Unknown Resolver: $resolver")
         }
         m.forEach { symbol, files ->
