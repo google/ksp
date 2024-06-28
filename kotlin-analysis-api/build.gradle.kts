@@ -75,6 +75,7 @@ dependencies {
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation("com.google.guava:guava:$aaGuavaVersion")
