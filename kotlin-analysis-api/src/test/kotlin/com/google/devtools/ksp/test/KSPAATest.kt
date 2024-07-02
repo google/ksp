@@ -146,16 +146,16 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/builtInTypes.kt")
     }
 
-    @TestMetadata("A.kt")
+    @TestMetadata("objCacheA.kt")
     @Test
-    fun testA() {
-        runTest("../test-utils/testData/api/A.kt")
+    fun testObjCacheA() {
+        runTest("../test-utils/testData/api/objCacheA.kt")
     }
 
-    @TestMetadata("B.kt")
+    @TestMetadata("objCacheB.kt")
     @Test
-    fun testB() {
-        runTest("../test-utils/testData/api/B.kt")
+    fun testObjCacheB() {
+        runTest("../test-utils/testData/api/objCacheB.kt")
     }
 
     @Disabled
