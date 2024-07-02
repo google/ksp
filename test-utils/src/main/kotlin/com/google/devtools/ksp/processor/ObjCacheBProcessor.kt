@@ -6,7 +6,7 @@ import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-open class AProcessor : AbstractTestProcessor() {
+open class ObjCacheBProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     override fun toResult(): List<String> {
         return results
@@ -15,7 +15,7 @@ open class AProcessor : AbstractTestProcessor() {
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getClassDeclarationByName("BaseClass")!!.let { cls ->
-            println(cls.getDeclaredProperties().map { "${it.simpleName.asString()}(${it.hasBackingField})" }.toList())
+            results.addAll(cls.getDeclaredProperties().map { "${it.simpleName.asString()}(${it.hasBackingField})" })
         }
         return emptyList()
     }

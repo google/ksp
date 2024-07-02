@@ -16,17 +16,18 @@
  */
 
 // WITH_RUNTIME
-// TEST PROCESSOR: BProcessor
+// TEST PROCESSOR: ObjCacheAProcessor
 // EXPECTED:
+// genericProp(true)
 // END
 // MODULE: lib
 // FILE: Test.kt
-open class BaseClass(
-    open val value : List<Int>
-)
-class SubClass(
-    override val value : MutableList<Int>
-) : BaseClass(value)
+open class BaseClass<T>(val genericProp : T) {
+    fun baseMethod(input: T) {}
+}
+class SubClass(x : Int) : BaseClass<Int>(x) {
+    val subClassProp : String = "abc"
+}
 // MODULE: main(lib)
 // FILE: Main.kt
 class Main

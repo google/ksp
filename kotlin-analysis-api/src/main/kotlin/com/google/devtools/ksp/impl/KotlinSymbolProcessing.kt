@@ -541,10 +541,6 @@ class KotlinSymbolProcessing(
                 }
             }
 
-            if (logger.hasError || codeGenerator.generatedFile.isEmpty()) {
-                break
-            }
-
             // Drop caches
             KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
             KtAnalysisSessionProvider.getInstance(project).clearCaches()
@@ -552,6 +548,10 @@ class KotlinSymbolProcessing(
             psiManager.dropPsiCaches()
 
             KSObjectCacheManager.clear()
+
+            if (logger.hasError || codeGenerator.generatedFile.isEmpty()) {
+                break
+            }
 
             newKSFiles = prepareNewKSFiles(
                 kotlinCoreProjectEnvironment,
