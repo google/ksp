@@ -97,3 +97,17 @@ public class JavaAnnotated {}
 // FILE: JavaEnum.java
 
 enum JavaEnum { ONE, TWO, THREE }
+
+// FILE: Nested.java
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+@Target({ElementType.TYPE, ElementType.TYPE_USE})
+@interface A {
+    int i();
+}
+@Target({ElementType.TYPE, ElementType.TYPE_USE})
+@interface B {
+    A a();
+}
+interface Parent {}
+class Sub implements @B(a = @A(i = 42)) Parent {}
