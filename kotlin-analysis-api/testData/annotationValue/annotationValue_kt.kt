@@ -111,3 +111,14 @@ data class DataClass
 // FILE: JavaEnum.java
 
 enum JavaEnum { ONE, TWO, THREE }
+
+// FILE: Nested.kt
+@Target(AnnotationTarget.TYPE)
+annotation class A (val i: Int)
+
+@Target(AnnotationTarget.TYPE)
+annotation class B (val a: A)
+
+interface Parent
+
+class Sub : @B(a = A(i = 42)) Parent
