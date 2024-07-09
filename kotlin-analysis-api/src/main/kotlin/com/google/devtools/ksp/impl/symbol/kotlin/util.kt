@@ -354,7 +354,7 @@ internal fun KtSymbol.toKSNode(): KSNode {
 internal fun ClassId.toKtClassSymbol(): KtClassOrObjectSymbol? {
     return analyze {
         if (this@toKtClassSymbol.isLocal) {
-            this@toKtClassSymbol.outerClassId?.toKtClassSymbol()?.getDeclaredMemberScope()?.getClassifierSymbols {
+            this@toKtClassSymbol.outerClassId?.toKtClassSymbol()?.getDeclaredMemberScope()?.classifiers {
                 it.asString() == this@toKtClassSymbol.shortClassName.asString()
             }?.singleOrNull() as? KtClassOrObjectSymbol
         } else {

@@ -77,9 +77,22 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                 null
             } else {
                 (ktFunctionSymbol.psiIfSource() as? KtFunction)?.receiverTypeReference
-                    ?.let { KSTypeReferenceImpl.getCached(it, this@KSFunctionDeclarationImpl) }
+                    ?.let {
+                        // receivers are modeled as parameter in AA therefore annotations are stored in
+                        // the corresponding receiver parameter, need to pass it to the `KSTypeReferenceImpl`
+                        KSTypeReferenceImpl.getCached(
+                            it,
+                            this@KSFunctionDeclarationImpl,
+                            ktFunctionSymbol.receiverParameter?.annotations ?: emptyList()
+                        )
+                    }
                     ?: ktFunctionSymbol.receiverType?.let {
-                        KSTypeReferenceResolvedImpl.getCached(it, this@KSFunctionDeclarationImpl)
+                        KSTypeReferenceResolvedImpl.getCached(
+                            it,
+                            this@KSFunctionDeclarationImpl,
+                            -1,
+                            ktFunctionSymbol.receiverParameter?.annotations ?: emptyList()
+                        )
                     }
             }
         }
