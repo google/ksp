@@ -29,6 +29,7 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDynamicType
@@ -38,12 +39,17 @@ import org.jetbrains.kotlin.psi.KtUserType
 
 class KSTypeReferenceImpl(
     private val ktTypeReference: KtTypeReference,
-    override val parent: KSNode?
+    override val parent: KSNode?,
+    private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference {
     companion object : KSObjectCache<IdKeyPair<KtTypeReference, KSNode?>, KSTypeReference>() {
-        fun getCached(ktTypeReference: KtTypeReference, parent: KSNode? = null): KSTypeReference {
+        fun getCached(
+            ktTypeReference: KtTypeReference,
+            parent: KSNode? = null,
+            additionalAnnotations: List<KaAnnotation> = emptyList()
+        ): KSTypeReference {
             return cache.getOrPut(IdKeyPair(ktTypeReference, parent)) {
-                KSTypeReferenceImpl(ktTypeReference, parent)
+                KSTypeReferenceImpl(ktTypeReference, parent, additionalAnnotations)
             }
         }
     }
@@ -79,7 +85,7 @@ class KSTypeReferenceImpl(
         (ktTypeReference.annotationEntries.asSequence() + innerAnnotations.asSequence().flatten())
             .map { annotationEntry ->
                 KSAnnotationImpl.getCached(annotationEntry, this@KSTypeReferenceImpl) {
-                    ktType.annotations.single {
+                    (ktType.annotations + additionalAnnotations).single {
                         it.psi == annotationEntry
                     }
                 }

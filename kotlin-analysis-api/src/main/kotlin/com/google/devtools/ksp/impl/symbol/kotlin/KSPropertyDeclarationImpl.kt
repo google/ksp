@@ -102,9 +102,23 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
     override val extensionReceiver: KSTypeReference? by lazy {
         (ktPropertySymbol.psiIfSource() as? KtProperty)?.receiverTypeReference
-            ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: ktPropertySymbol.receiverType
-                ?.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) }
+            ?.let {
+                // receivers are modeled as parameter in AA therefore annotations are stored in
+                // the corresponding receiver parameter, need to pass it to the `KSTypeReferenceImpl`
+                KSTypeReferenceImpl.getCached(
+                    it,
+                    this,
+                    ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
+                )
+            }
+            ?: ktPropertySymbol.receiverType?.let {
+                KSTypeReferenceResolvedImpl.getCached(
+                    it,
+                    this@KSPropertyDeclarationImpl,
+                    -1,
+                    ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
+                )
+            }
     }
 
     override val type: KSTypeReference by lazy {

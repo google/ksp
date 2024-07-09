@@ -76,6 +76,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationOnConstructorParameter.kt")
     }
 
+    @TestMetadata("annotationOnReceiver.kt")
+    @Test
+    fun testAnnotationOnReceiver() {
+        runTest("../test-utils/testData/api/annotationOnReceiver.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
