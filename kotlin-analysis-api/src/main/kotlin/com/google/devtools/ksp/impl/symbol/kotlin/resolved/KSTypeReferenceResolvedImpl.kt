@@ -34,6 +34,7 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtTypeParameter
@@ -41,11 +42,19 @@ import org.jetbrains.kotlin.psi.KtTypeParameter
 class KSTypeReferenceResolvedImpl private constructor(
     private val ktType: KtType,
     override val parent: KSNode?,
-    private val index: Int
+    private val index: Int,
+    private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
     companion object : KSObjectCache<IdKeyTriple<KtType, KSNode?, Int>, KSTypeReference>() {
-        fun getCached(type: KtType, parent: KSNode? = null, index: Int = -1): KSTypeReference =
-            cache.getOrPut(IdKeyTriple(type, parent, index)) { KSTypeReferenceResolvedImpl(type, parent, index) }
+        fun getCached(
+            type: KtType,
+            parent: KSNode? = null,
+            index: Int = -1,
+            additionalAnnotations: List<KaAnnotation> = emptyList()
+        ): KSTypeReference =
+            cache.getOrPut(IdKeyTriple(type, parent, index)) {
+                KSTypeReferenceResolvedImpl(type, parent, index, additionalAnnotations)
+            }
     }
 
     override val element: KSReferenceElement? by lazy {
@@ -62,7 +71,8 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktType.annotations(this)
+        ktType.annotations(this) +
+            additionalAnnotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, this) }
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
