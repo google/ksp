@@ -18,10 +18,10 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaProcessor
 // EXPECTED:
-// java.util.List: javaSrc/p1/J.java
-// p1.Anno: javaSrc/p1/J.java
-// p1.Bnno: javaSrc/p1/J.java
-// p1.K: javaSrc/p1/J.java
+// java.util.List: main/p1/J.java
+// p1.Anno: main/p1/J.java
+// p1.Bnno: main/p1/J.java
+// p1.K: main/p1/J.java
 // END
 
 // FILE: p1/J.java
