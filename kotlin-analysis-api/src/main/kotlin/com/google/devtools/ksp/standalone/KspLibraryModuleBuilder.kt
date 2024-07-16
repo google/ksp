@@ -19,12 +19,12 @@
 package com.google.devtools.ksp.standalone
 
 import com.intellij.psi.search.ProjectScope
-import org.jetbrains.kotlin.analysis.project.structure.KtLibraryModule
-import org.jetbrains.kotlin.analysis.project.structure.KtLibrarySourceModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibrarySourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtBinaryModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.analysis.project.structure.impl.KtLibraryModuleImpl
+import org.jetbrains.kotlin.analysis.project.structure.impl.KaLibraryModuleImpl
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -35,12 +35,12 @@ class KspLibraryModuleBuilder(
     private val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment
 ) : KtBinaryModuleBuilder() {
     public lateinit var libraryName: String
-    public var librarySources: KtLibrarySourceModule? = null
+    public var librarySources: KaLibrarySourceModule? = null
 
-    override fun build(): KtLibraryModule {
+    override fun build(): KaLibraryModule {
         val binaryRoots = getBinaryRoots()
         val contentScope = ProjectScope.getLibrariesScope(kotlinCoreProjectEnvironment.project)
-        return KtLibraryModuleImpl(
+        return KaLibraryModuleImpl(
             directRegularDependencies,
             directDependsOnDependencies,
             directFriendDependencies,
@@ -50,12 +50,13 @@ class KspLibraryModuleBuilder(
             binaryRoots,
             libraryName,
             librarySources,
+            false
         )
     }
 }
 
 @OptIn(ExperimentalContracts::class)
-inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleBuilder.() -> Unit): KtLibraryModule {
+inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleBuilder.() -> Unit): KaLibraryModule {
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }

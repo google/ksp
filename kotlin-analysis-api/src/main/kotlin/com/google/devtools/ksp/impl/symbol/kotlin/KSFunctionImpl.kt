@@ -20,11 +20,13 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
-import org.jetbrains.kotlin.analysis.api.signatures.KtFunctionLikeSignature
-import org.jetbrains.kotlin.analysis.api.symbols.KtDeclarationSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.signatures.KaFunctionSignature
+import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.typeParameters
 
-class KSFunctionImpl(val ktFunctionLikeSymbol: KtFunctionLikeSignature<KtFunctionLikeSymbol>) : KSFunction {
+class KSFunctionImpl(val ktFunctionLikeSymbol: KaFunctionSignature<KaFunctionSymbol>) : KSFunction {
 
     override val returnType: KSType? by lazy {
         ktFunctionLikeSymbol.returnType.let { KSTypeImpl.getCached(it) }
@@ -34,8 +36,9 @@ class KSFunctionImpl(val ktFunctionLikeSymbol: KtFunctionLikeSignature<KtFunctio
         ktFunctionLikeSymbol.valueParameters.map { it.returnType.let { KSTypeImpl.getCached(it) } }
     }
 
+    @OptIn(KaExperimentalApi::class)
     override val typeParameters: List<KSTypeParameter> by lazy {
-        (ktFunctionLikeSymbol as? KtDeclarationSymbol)?.typeParameters?.map { KSTypeParameterImpl.getCached(it) }
+        (ktFunctionLikeSymbol as? KaDeclarationSymbol)?.typeParameters?.map { KSTypeParameterImpl.getCached(it) }
             ?: emptyList()
     }
 

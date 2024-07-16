@@ -22,10 +22,9 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedI
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyAccessorSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertyGetterSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySetterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyAccessorSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyGetterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySetterSymbol
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtModifierListOwner
@@ -33,7 +32,7 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(
-    internal val ktPropertyAccessorSymbol: KtPropertyAccessorSymbol,
+    internal val ktPropertyAccessorSymbol: KaPropertyAccessorSymbol,
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor, Deferrable {
 
@@ -91,7 +90,7 @@ abstract class KSPropertyAccessorImpl(
         } else {
             psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
                 analyze {
-                    it.getSymbol().toKSDeclaration()
+                    it.symbol.toKSDeclaration()
                 }
             } ?: emptySequence()
         }
@@ -100,10 +99,10 @@ abstract class KSPropertyAccessorImpl(
 
 class KSPropertySetterImpl private constructor(
     owner: KSPropertyDeclaration,
-    setter: KtPropertySetterSymbol
+    setter: KaPropertySetterSymbol
 ) : KSPropertyAccessorImpl(setter, owner), KSPropertySetter {
-    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KtPropertySetterSymbol>, KSPropertySetterImpl>() {
-        fun getCached(owner: KSPropertyDeclaration, setter: KtPropertySetterSymbol) =
+    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KaPropertySetterSymbol>, KSPropertySetterImpl>() {
+        fun getCached(owner: KSPropertyDeclaration, setter: KaPropertySetterSymbol) =
             cache.getOrPut(Pair(owner, setter)) { KSPropertySetterImpl(owner, setter) }
     }
 
@@ -123,17 +122,17 @@ class KSPropertySetterImpl private constructor(
         val other = (receiver as Deferrable).defer() ?: return null
         return ktPropertyAccessorSymbol.defer {
             val owner = other.restore() ?: return@defer null
-            getCached(owner as KSPropertyDeclaration, it as KtPropertySetterSymbol)
+            getCached(owner as KSPropertyDeclaration, it as KaPropertySetterSymbol)
         }
     }
 }
 
 class KSPropertyGetterImpl private constructor(
     owner: KSPropertyDeclaration,
-    getter: KtPropertyGetterSymbol
+    getter: KaPropertyGetterSymbol
 ) : KSPropertyAccessorImpl(getter, owner), KSPropertyGetter {
-    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KtPropertyGetterSymbol>, KSPropertyGetterImpl>() {
-        fun getCached(owner: KSPropertyDeclaration, getter: KtPropertyGetterSymbol) =
+    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KaPropertyGetterSymbol>, KSPropertyGetterImpl>() {
+        fun getCached(owner: KSPropertyDeclaration, getter: KaPropertyGetterSymbol) =
             cache.getOrPut(Pair(owner, getter)) { KSPropertyGetterImpl(owner, getter) }
     }
 
@@ -155,7 +154,7 @@ class KSPropertyGetterImpl private constructor(
         val other = (receiver as Deferrable).defer() ?: return null
         return ktPropertyAccessorSymbol.defer {
             val owner = other.restore() ?: return@defer null
-            getCached(owner as KSPropertyDeclaration, it as KtPropertyGetterSymbol)
+            getCached(owner as KSPropertyDeclaration, it as KaPropertyGetterSymbol)
         }
     }
 }

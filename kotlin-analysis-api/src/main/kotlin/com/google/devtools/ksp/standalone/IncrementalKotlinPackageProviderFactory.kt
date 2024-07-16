@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.psi.KtFile
 
 class IncrementalKotlinPackageProviderFactory(
     private val project: Project,
-) : KotlinPackageProviderFactory() {
+) : KotlinPackageProviderFactory {
     private val staticFactories: MutableList<KotlinStandalonePackageProviderFactory> = mutableListOf()
 
     override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
