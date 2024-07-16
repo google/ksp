@@ -23,11 +23,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.analysis.project.structure.impl.KtSourceModuleImpl
+import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
 import org.jetbrains.kotlin.analysis.project.structure.impl.collectSourceFilePaths
 import org.jetbrains.kotlin.analysis.project.structure.impl.hasSuitableExtensionToAnalyse
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
@@ -59,12 +59,12 @@ class KspModuleBuilder(
         sourceRoots.addAll(paths)
     }
 
-    override fun build(): KtSourceModule {
+    override fun build(): KaSourceModule {
         val virtualFiles = collectVirtualFilesByRoots()
         val psiManager = PsiManager.getInstance(kotlinCoreProjectEnvironment.project)
         val psiFiles = virtualFiles.mapNotNull { psiManager.findFile(it) }
         val contentScope = IncrementalGlobalSearchScope(kotlinCoreProjectEnvironment.project, virtualFiles)
-        return KtSourceModuleImpl(
+        return KaSourceModuleImpl(
             directRegularDependencies,
             directDependsOnDependencies,
             directFriendDependencies,
@@ -114,7 +114,7 @@ class IncrementalGlobalSearchScope(
 @OptIn(ExperimentalContracts::class)
 public inline fun KtModuleProviderBuilder.buildKspSourceModule(
     init: KspModuleBuilder.() -> Unit
-): KtSourceModule {
+): KaSourceModule {
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }

@@ -24,22 +24,21 @@ import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
-import org.jetbrains.kotlin.analysis.api.KaAnalysisApiInternals
-import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KaUnsupportedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplicationWithArgumentsInfo
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 
 class KSAnnotationResolvedImpl private constructor(
-    private val annotationApplication: KtAnnotationApplicationWithArgumentsInfo,
+    private val annotationApplication: KaAnnotation,
     override val parent: KSNode?
 ) : KSAnnotation {
     companion object :
-        KSObjectCache<IdKeyPair<KtAnnotationApplicationWithArgumentsInfo, KSNode?>, KSAnnotationResolvedImpl>() {
-        fun getCached(annotationApplication: KtAnnotationApplicationWithArgumentsInfo, parent: KSNode? = null) =
+        KSObjectCache<IdKeyPair<KaAnnotation, KSNode?>, KSAnnotationResolvedImpl>() {
+        fun getCached(annotationApplication: KaAnnotation, parent: KSNode? = null) =
             cache.getOrPut(IdKeyPair(annotationApplication, parent)) {
                 KSAnnotationResolvedImpl(annotationApplication, parent)
             }
@@ -61,7 +60,7 @@ class KSAnnotationResolvedImpl private constructor(
         presentArgs + absentArgs
     }
 
-    @OptIn(KaAnalysisApiInternals::class)
+    @OptIn(KaImplementationDetail::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
             annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
@@ -84,17 +83,16 @@ class KSAnnotationResolvedImpl private constructor(
                             }
                         }
                 } else {
-                    symbol.getMemberScope().constructors.singleOrNull()?.let {
+                    symbol.memberScope.constructors.singleOrNull()?.let {
                         it.valueParameters.map { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
-                                    KaNamedAnnotationValue(
+                                    KaBaseNamedAnnotationValue(
                                         valueParameterSymbol.name,
                                         constantValue
-                                            ?: KaUnsupportedAnnotationValue(
+                                            ?: KaUnsupportedAnnotationValueImpl(
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-                                            ),
-                                        KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                            )
                                     ),
                                     Origin.SYNTHETIC
                                 )

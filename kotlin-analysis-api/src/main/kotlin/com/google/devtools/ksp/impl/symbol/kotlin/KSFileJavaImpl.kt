@@ -43,7 +43,7 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
     override val declarations: Sequence<KSDeclaration> by lazy {
         psi.classes.asSequence().mapNotNull { psi ->
             analyze {
-                psi.getNamedClassSymbol()?.let { KSClassDeclarationImpl.getCached(it) }
+                psi.namedClassSymbol?.let { KSClassDeclarationImpl.getCached(it) }
             }
         }
     }

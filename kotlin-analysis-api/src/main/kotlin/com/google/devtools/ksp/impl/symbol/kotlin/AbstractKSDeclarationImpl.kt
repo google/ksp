@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJvmModifiersOwner
 import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
 import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
@@ -58,10 +59,10 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     override val modifiers: Set<Modifier> by lazy {
         if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
             when (ktDeclarationSymbol) {
-                is KtPropertySymbol -> ktDeclarationSymbol.toModifiers()
-                is KtClassOrObjectSymbol -> ktDeclarationSymbol.toModifiers()
-                is KtFunctionLikeSymbol -> ktDeclarationSymbol.toModifiers()
-                is KtJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
+                is KaPropertySymbol -> ktDeclarationSymbol.toModifiers()
+                is KaClassSymbol -> ktDeclarationSymbol.toModifiers()
+                is KaFunctionSymbol -> ktDeclarationSymbol.toModifiers()
+                is KaJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
                 else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
             }
         } else {
@@ -84,8 +85,8 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
         } else {
             // top level declaration
             when (ktDeclarationSymbol) {
-                is KtClassLikeSymbol -> ktDeclarationSymbol.classIdIfNonLocal?.packageFqName?.asString()
-                is KtCallableSymbol -> ktDeclarationSymbol.callableIdIfNonLocal?.packageName?.asString()
+                is KaClassLikeSymbol -> ktDeclarationSymbol.classId?.packageFqName?.asString()
+                is KaCallableSymbol -> ktDeclarationSymbol.callableId?.packageName?.asString()
                 else -> null
             }?.let { KSNameImpl.getCached(it) }
                 //  null -> non top level declaration, find in parent
@@ -94,6 +95,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     override val typeParameters: List<KSTypeParameter> by lazy {
         ktDeclarationSymbol.typeParameters.map { KSTypeParameterImpl.getCached(it) }
     }
@@ -104,9 +106,9 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
 
     override val parent: KSNode? by lazy {
         analyze {
-            ktDeclarationSymbol.getContainingSymbol()?.let {
+            ktDeclarationSymbol.containingSymbol?.let {
                 ktDeclarationSymbol.getContainingKSSymbol()
-            } ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>())?.getNamedClassSymbol()?.let {
+            } ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>())?.namedClassSymbol?.let {
                 KSClassDeclarationImpl.getCached(it)
             } ?: ktDeclarationSymbol.toContainingFile()
         }

@@ -5,16 +5,16 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
-import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
+import org.jetbrains.kotlin.analysis.api.symbols.KaJavaFieldSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
 
-class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: KtJavaFieldSymbol) :
+class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: KaJavaFieldSymbol) :
     KSPropertyDeclaration,
     AbstractKSDeclarationImpl(ktJavaFieldSymbol),
     KSExpectActual by KSExpectActualImpl(ktJavaFieldSymbol) {
-    companion object : KSObjectCache<KtJavaFieldSymbol, KSPropertyDeclaration>() {
-        fun getCached(ktJavaFieldSymbol: KtJavaFieldSymbol): KSPropertyDeclaration =
+    companion object : KSObjectCache<KaJavaFieldSymbol, KSPropertyDeclaration>() {
+        fun getCached(ktJavaFieldSymbol: KaJavaFieldSymbol): KSPropertyDeclaration =
             cache.getOrPut(ktJavaFieldSymbol) { KSPropertyDeclarationJavaImpl(ktJavaFieldSymbol) }
     }
     override val getter: KSPropertyGetter?
@@ -56,7 +56,7 @@ class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: K
     }
 
     override val packageName: KSName
-        get() = KSNameImpl.getCached(ktJavaFieldSymbol.callableIdIfNonLocal?.packageName?.asString() ?: "")
+        get() = KSNameImpl.getCached(ktJavaFieldSymbol.callableId?.packageName?.asString() ?: "")
 
     override val origin: Origin
         get() = mapAAOrigin(ktJavaFieldSymbol)
@@ -70,9 +70,9 @@ class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: K
     }
 }
 
-internal fun KtJavaFieldSymbol.toModifiers(): Set<Modifier> {
+internal fun KaJavaFieldSymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
-    if (visibility != JavaVisibilities.PackageVisibility) {
+    if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
         result.add(visibility.toModifier())
     }
     if (isStatic) {
@@ -80,7 +80,7 @@ internal fun KtJavaFieldSymbol.toModifiers(): Set<Modifier> {
         result.add(Modifier.FINAL)
     }
     // Analysis API returns open for static members which should be ignored.
-    if (!isStatic || modality != Modality.OPEN) {
+    if (!isStatic || modality != KaSymbolModality.OPEN) {
         result.add(modality.toModifier())
     }
     return result
