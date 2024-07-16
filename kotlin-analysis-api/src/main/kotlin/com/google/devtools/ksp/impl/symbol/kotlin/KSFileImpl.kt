@@ -28,16 +28,16 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiFile
-import org.jetbrains.kotlin.analysis.api.symbols.KtFileSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtTypeAliasSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaFileSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaNamedClassSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaNamedFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
 import org.jetbrains.kotlin.psi.KtFile
 
-class KSFileImpl private constructor(internal val ktFileSymbol: KtFileSymbol) : KSFile, Deferrable {
-    companion object : KSObjectCache<KtFileSymbol, KSFileImpl>() {
-        fun getCached(ktFileSymbol: KtFileSymbol) = cache.getOrPut(ktFileSymbol) { KSFileImpl(ktFileSymbol) }
+class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : KSFile, Deferrable {
+    companion object : KSObjectCache<KaFileSymbol, KSFileImpl>() {
+        fun getCached(ktFileSymbol: KaFileSymbol) = cache.getOrPut(ktFileSymbol) { KSFileImpl(ktFileSymbol) }
     }
 
     private val psi: PsiFile
@@ -60,12 +60,12 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KtFileSymbol) : 
 
     override val declarations: Sequence<KSDeclaration> by lazy {
         analyze {
-            ktFileSymbol.getFileScope().getAllSymbols().map {
+            ktFileSymbol.fileScope.declarations.map {
                 when (it) {
-                    is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(it)
-                    is KtFunctionSymbol -> KSFunctionDeclarationImpl.getCached(it)
-                    is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
-                    is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(it)
+                    is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(it)
+                    is KaNamedFunctionSymbol -> KSFunctionDeclarationImpl.getCached(it)
+                    is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
+                    is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(it)
                     else -> throw IllegalStateException("Unhandled ${it.javaClass}")
                 }
             }
@@ -96,7 +96,7 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KtFileSymbol) : 
         val psi = this.psi
         return Restorable {
             when (psi) {
-                is KtFile -> analyze { getCached(psi.getFileSymbol()) }
+                is KtFile -> analyze { getCached(psi.symbol) }
                 else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
             }
         }
