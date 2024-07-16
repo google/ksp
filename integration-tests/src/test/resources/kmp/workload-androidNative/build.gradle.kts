@@ -11,12 +11,12 @@ kotlin {
     }
     androidNativeX64() {
         binaries {
-            executable()
+            sharedLib()
         }
     }
     androidNativeArm64() {
         binaries {
-            executable()
+            sharedLib()
         }
     }
     sourceSets {

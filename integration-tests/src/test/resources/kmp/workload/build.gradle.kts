@@ -24,12 +24,12 @@ kotlin {
     }
     androidNativeX64() {
         binaries {
-            executable()
+            sharedLib()
         }
     }
     androidNativeArm64() {
         binaries {
-            executable()
+            sharedLib()
         }
     }
     // TODO: Enable after CI's Xcode version catches up.
