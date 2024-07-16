@@ -20,15 +20,15 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
-import org.jetbrains.kotlin.analysis.api.symbols.KtEnumEntrySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtNamedClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaNamedClassSymbol
 
-class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntrySymbol: KtEnumEntrySymbol) :
+class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntrySymbol: KaEnumEntrySymbol) :
     KSClassDeclaration,
     AbstractKSDeclarationImpl(ktEnumEntrySymbol),
     KSExpectActual by KSExpectActualImpl(ktEnumEntrySymbol) {
-    companion object : KSObjectCache<KtEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
-        fun getCached(ktEnumEntrySymbol: KtEnumEntrySymbol) =
+    companion object : KSObjectCache<KaEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
+        fun getCached(ktEnumEntrySymbol: KaEnumEntrySymbol) =
             cache.getOrPut(ktEnumEntrySymbol) { KSClassDeclarationEnumEntryImpl(ktEnumEntrySymbol) }
     }
 
@@ -87,8 +87,8 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     override val parentDeclaration: KSDeclaration? by lazy {
         analyze {
             (
-                ktEnumEntrySymbol.getContainingSymbol()
-                    as? KtNamedClassOrObjectSymbol
+                ktEnumEntrySymbol.containingSymbol
+                    as? KaNamedClassSymbol
                 )?.let { KSClassDeclarationImpl.getCached(it) }
         }
     }
@@ -103,7 +103,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val parent: KSNode by lazy {
         analyze {
-            (ktEnumEntrySymbol.getContainingSymbol() as KtNamedClassOrObjectSymbol)
+            (ktEnumEntrySymbol.containingSymbol as KaNamedClassSymbol)
                 .let { KSClassDeclarationImpl.getCached(it) }
         }
     }

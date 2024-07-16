@@ -28,33 +28,32 @@ import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
 import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.components.buildTypeParameterType
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
-import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtClassOrObject
 
-class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KtClassOrObjectSymbol) :
+class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KaClassSymbol) :
     KSClassDeclaration,
     AbstractKSDeclarationImpl(ktClassOrObjectSymbol),
     KSExpectActual by KSExpectActualImpl(ktClassOrObjectSymbol) {
-    companion object : KSObjectCache<KtClassOrObjectSymbol, KSClassDeclarationImpl>() {
-        fun getCached(ktClassOrObjectSymbol: KtClassOrObjectSymbol) =
+    companion object : KSObjectCache<KaClassSymbol, KSClassDeclarationImpl>() {
+        fun getCached(ktClassOrObjectSymbol: KaClassSymbol) =
             cache.getOrPut(ktClassOrObjectSymbol) { KSClassDeclarationImpl(ktClassOrObjectSymbol) }
     }
 
     override val qualifiedName: KSName? by lazy {
-        ktClassOrObjectSymbol.classIdIfNonLocal?.asFqNameString()?.let { KSNameImpl.getCached(it) }
+        ktClassOrObjectSymbol.classId?.asFqNameString()?.let { KSNameImpl.getCached(it) }
     }
 
     override val classKind: ClassKind by lazy {
         when (ktClassOrObjectSymbol.classKind) {
-            KtClassKind.CLASS -> ClassKind.CLASS
-            KtClassKind.ENUM_CLASS -> ClassKind.ENUM_CLASS
-            KtClassKind.ANNOTATION_CLASS -> ClassKind.ANNOTATION_CLASS
-            KtClassKind.INTERFACE -> ClassKind.INTERFACE
-            KtClassKind.COMPANION_OBJECT, KtClassKind.ANONYMOUS_OBJECT, KtClassKind.OBJECT -> ClassKind.OBJECT
+            KaClassKind.CLASS -> ClassKind.CLASS
+            KaClassKind.ENUM_CLASS -> ClassKind.ENUM_CLASS
+            KaClassKind.ANNOTATION_CLASS -> ClassKind.ANNOTATION_CLASS
+            KaClassKind.INTERFACE -> ClassKind.INTERFACE
+            KaClassKind.COMPANION_OBJECT, KaClassKind.ANONYMOUS_OBJECT, KaClassKind.OBJECT -> ClassKind.OBJECT
         }
     }
 
@@ -63,7 +62,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             null
         } else {
             analyze {
-                ktClassOrObjectSymbol.getMemberScope().constructors.singleOrNull { it.isPrimary }?.let {
+                ktClassOrObjectSymbol.memberScope.constructors.singleOrNull { it.isPrimary }?.let {
                     KSFunctionDeclarationImpl.getCached(it)
                 }
             }
@@ -99,15 +98,15 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val isCompanionObject: Boolean by lazy {
-        ktClassOrObjectSymbol.classKind == KtClassKind.COMPANION_OBJECT
+        ktClassOrObjectSymbol.classKind == KaClassKind.COMPANION_OBJECT
     }
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> {
         if (!modifiers.contains(Modifier.SEALED)) return emptySequence()
         recordGetSealedSubclasses(this)
-        return (ktClassOrObjectSymbol as? KtNamedClassOrObjectSymbol)?.let {
+        return (ktClassOrObjectSymbol as? KaNamedClassSymbol)?.let {
             analyze {
-                it.getSealedClassInheritors().map { getCached(it) }.asSequence()
+                it.sealedClassInheritors.map { getCached(it) }.asSequence()
             }
         } ?: emptySequence()
     }
@@ -147,15 +146,16 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         }
     }
 
+    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class)
     override fun asStarProjectedType(): KSType {
         return analyze {
             KSTypeImpl.getCached(
-                analysisSession.buildClassType(ktClassOrObjectSymbol) {
+                useSiteSession.buildClassType(ktClassOrObjectSymbol) {
                     var current: KSNode? = this@KSClassDeclarationImpl
                     while (current is KSClassDeclarationImpl) {
                         current.ktClassOrObjectSymbol.typeParameters.forEach {
                             argument(
-                                KtStarTypeProjection(
+                                KaBaseStarTypeProjection(
                                     (current as KSClassDeclarationImpl).ktClassOrObjectSymbol.token
                                 )
                             )
@@ -180,7 +180,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         if (origin == Origin.JAVA && classKind != ClassKind.ANNOTATION_CLASS) {
             buildList {
                 decls.forEach { decl ->
-                    if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KtSyntheticJavaPropertySymbol) {
+                    if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KaSyntheticJavaPropertySymbol) {
                         decl.getter?.let {
                             add(
                                 KSFunctionDeclarationImpl.getCached(
@@ -208,11 +208,11 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 }
 
-internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
+internal fun KaClassSymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
-    if (this is KtNamedClassOrObjectSymbol) {
+    if (this is KaNamedClassSymbol) {
         result.add(modality.toModifier())
-        if (visibility != JavaVisibilities.PackageVisibility) {
+        if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
             result.add(visibility.toModifier())
         }
         if (isFun) {
@@ -231,7 +231,7 @@ internal fun KtClassOrObjectSymbol.toModifiers(): Set<Modifier> {
             result.add(Modifier.INNER)
         }
     }
-    if (classKind == KtClassKind.ENUM_CLASS) {
+    if (classKind == KaClassKind.ENUM_CLASS) {
         result.add(Modifier.ENUM)
     }
     return result

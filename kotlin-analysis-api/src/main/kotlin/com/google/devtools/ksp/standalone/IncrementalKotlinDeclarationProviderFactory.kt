@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class IncrementalKotlinDeclarationProviderFactory(
     private val project: Project,
-) : KotlinDeclarationProviderFactory() {
+) : KotlinDeclarationProviderFactory {
     private val staticFactories: MutableList<KotlinStandaloneDeclarationProviderFactory> = mutableListOf()
 
     override fun createDeclarationProvider(

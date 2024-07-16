@@ -54,38 +54,39 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.platform.KotlinMessageBusProvider
+import org.jetbrains.kotlin.analysis.api.platform.KotlinPlatformSettings
 import org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider
 import org.jetbrains.kotlin.analysis.api.platform.declarations.*
-import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinLifetimeTokenProvider
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeTokenFactory
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinGlobalModificationService
 import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinModificationTrackerFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackageProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinByModulesResolutionScopeProvider
 import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinResolutionScopeProvider
-import org.jetbrains.kotlin.analysis.api.resolve.extensions.KtResolveExtensionProvider
-import org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
+import org.jetbrains.kotlin.analysis.api.resolve.extensions.KaResolveExtensionProvider
+import org.jetbrains.kotlin.analysis.api.session.KaSessionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.api.standalone.base.KotlinStandalonePlatformSettings
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneAnnotationsResolverFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneGlobalModificationService
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneModificationTrackerFactory
-import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.FirStandaloneServiceRegistrar
-import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.KtStaticProjectStructureProvider
-import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.LLFirStandaloneLibrarySymbolProviderFactory
-import org.jetbrains.kotlin.analysis.api.standalone.base.project.structure.StandaloneProjectFactory
+import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirStandaloneServiceRegistrar
+import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
-import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
-import org.jetbrains.kotlin.analysis.project.structure.KtModule
-import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.impl.KtSourceModuleImpl
+import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
@@ -142,12 +143,12 @@ class KotlinSymbolProcessing(
         setupIdeaStandaloneExecution()
     }
 
-    @OptIn(KtAnalysisApiInternals::class)
+    @OptIn(KaExperimentalApi::class)
     private fun createAASession(
         compilerConfiguration: CompilerConfiguration,
         applicationDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.application"),
         projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project"),
-    ): Triple<StandaloneAnalysisAPISession, KotlinCoreProjectEnvironment, List<KtModule>> {
+    ): Triple<StandaloneAnalysisAPISession, KotlinCoreProjectEnvironment, List<KaModule>> {
         val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment =
             StandaloneProjectFactory.createProjectEnvironment(
                 projectDisposable,
@@ -160,8 +161,8 @@ class KotlinSymbolProcessing(
 
         CoreApplicationEnvironment.registerExtensionPoint(
             project.extensionArea,
-            KtResolveExtensionProvider.EP_NAME.name,
-            KtResolveExtensionProvider::class.java
+            KaResolveExtensionProvider.EP_NAME.name,
+            KaResolveExtensionProvider::class.java
         )
 
         // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
@@ -196,7 +197,7 @@ class KotlinSymbolProcessing(
                         buildKtSdkModule {
                             this.platform = platform
                             addBinaryRootsFromJdkHome(jdkHome.toPath(), isJre = false)
-                            sdkName = "JDK for $moduleName"
+                            libraryName = "JDK for $moduleName"
                         }
                     )
                 }
@@ -226,8 +227,8 @@ class KotlinSymbolProcessing(
         }.build()
 
         // register services and build session
-        val ktModuleProviderImpl = projectStructureProvider as KtStaticProjectStructureProvider
-        val modules = ktModuleProviderImpl.allKtModules
+        val ktModuleProviderImpl = projectStructureProvider
+        val modules = ktModuleProviderImpl.allModules
         val allSourceFiles = ktModuleProviderImpl.allSourceFiles
         StandaloneProjectFactory.registerServicesForProjectEnvironment(
             kotlinCoreProjectEnvironment,
@@ -245,10 +246,6 @@ class KotlinSymbolProcessing(
             createPackagePartProvider,
         )
 
-        project.registerService(
-            LLFirLibrarySymbolProviderFactory::class.java,
-            LLFirStandaloneLibrarySymbolProviderFactory::class.java
-        )
         CoreApplicationEnvironment.registerExtensionPoint(
             project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
         )
@@ -265,7 +262,6 @@ class KotlinSymbolProcessing(
     }
 
     // TODO: org.jetbrains.kotlin.analysis.providers.impl.KotlinStatic*
-    @OptIn(KtAnalysisApiInternals::class)
     private fun registerProjectServices(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         ktFiles: List<KtFile>,
@@ -293,8 +289,8 @@ class KotlinSymbolProcessing(
                 KotlinStandaloneGlobalModificationService::class.java
             )
             registerService(
-                KotlinLifetimeTokenProvider::class.java,
-                KtAlwaysAccessibleLifeTimeTokenProvider::class.java
+                KotlinLifetimeTokenFactory::class.java,
+                KotlinAlwaysAccessibleLifetimeTokenFactory::class.java
             )
 
             // Despite being a static implementation, this is only used by IDE tests
@@ -329,18 +325,23 @@ class KotlinSymbolProcessing(
                 KotlinPackagePartProviderFactory::class.java,
                 KotlinStaticPackagePartProviderFactory(packagePartProvider)
             )
+
+            registerService(
+                KotlinPlatformSettings::class.java,
+                KotlinStandalonePlatformSettings()
+            )
         }
     }
 
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
-        modules: List<KtModule>,
+        modules: List<KaModule>,
         javaFileManager: IncrementalJavaFileManager?,
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
-        modules.filterIsInstance<KtSourceModuleImpl>().forEach {
+        modules.filterIsInstance<KaSourceModuleImpl>().forEach {
             it.sourceRoots.forEach {
                 when (it) {
                     is KtFile -> ktFiles.add(it)
@@ -410,7 +411,7 @@ class KotlinSymbolProcessing(
     }
 
     // TODO: performance
-    @OptIn(KtAnalysisApiInternals::class)
+    @OptIn(KaImplementationDetail::class)
     fun execute(): ExitCode {
         // TODO: CompilerConfiguration is deprecated.
         val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
@@ -453,7 +454,7 @@ class KotlinSymbolProcessing(
         val psiManager = PsiManager.getInstance(project)
         val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
         // KspModuleBuilder ensures this is always a KtSourceModule
-        ResolverAAImpl.ktModule = modules.single() as KtSourceModule
+        ResolverAAImpl.ktModule = modules.single() as KaSourceModule
 
         // Initializing environments
         val javaFileManager = if (kspConfig is KSPJvmConfig) {
@@ -543,7 +544,7 @@ class KotlinSymbolProcessing(
 
             // Drop caches
             KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
-            KtAnalysisSessionProvider.getInstance(project).clearCaches()
+            KaSessionProvider.getInstance(project).clearCaches()
             psiManager.dropResolveCaches()
             psiManager.dropPsiCaches()
 
@@ -632,9 +633,11 @@ fun String?.toKotlinVersion(): KotlinVersion {
 
 // Workaround for ShadowJar's minimize, whose configuration isn't very flexible.
 /* ktlint-disable */
+@OptIn(KaImplementationDetail::class)
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     kotlinx.coroutines.debug.internal.DebugProbesImpl::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseModuleProvider::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.KaFirSessionProvider::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.ReadWriteAccessCheckerFirImpl::class.java,

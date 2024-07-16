@@ -29,20 +29,21 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
-import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
 
-class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbol: KtFunctionLikeSymbol) :
+class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbol: KaFunctionSymbol) :
     KSFunctionDeclaration,
     AbstractKSDeclarationImpl(ktFunctionSymbol),
     KSExpectActual by KSExpectActualImpl(ktFunctionSymbol) {
-    companion object : KSObjectCache<KtFunctionLikeSymbol, KSFunctionDeclarationImpl>() {
-        fun getCached(ktFunctionSymbol: KtFunctionLikeSymbol) =
+    companion object : KSObjectCache<KaFunctionSymbol, KSFunctionDeclarationImpl>() {
+        fun getCached(ktFunctionSymbol: KaFunctionSymbol) =
             cache.getOrPut(ktFunctionSymbol) { KSFunctionDeclarationImpl(ktFunctionSymbol) }
     }
 
+    // TODO: upstream deprecated `KtSymbolKind` in favor of `KaSymbolLocation` but they are
+    // semantically different as the new location does not suggest if the function is a lambda or not.
+    // This is a breaking change in upstream deprecation.
     override val functionKind: FunctionKind by lazy {
         when (ktFunctionSymbol.symbolKind) {
             KtSymbolKind.CLASS_MEMBER -> FunctionKind.MEMBER
@@ -53,7 +54,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 
     override val isAbstract: Boolean by lazy {
-        (ktFunctionSymbol as? KtFunctionSymbol)?.modality == Modality.ABSTRACT
+        (ktFunctionSymbol as? KaNamedFunctionSymbol)?.modality == KaSymbolModality.ABSTRACT
     }
 
     override val modifiers: Set<Modifier> by lazy {
@@ -102,7 +103,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         (ktFunctionSymbol.psiIfSource() as? KtFunction)?.typeReference?.let { KSTypeReferenceImpl.getCached(it, this) }
             ?: analyze {
                 // Constructors
-                if (ktFunctionSymbol is KtConstructorSymbol) {
+                if (ktFunctionSymbol is KaConstructorSymbol) {
                     ((parentDeclaration as KSClassDeclaration).asStarProjectedType() as KSTypeImpl).type
                 } else {
                     ktFunctionSymbol.returnType
@@ -120,11 +121,11 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         }
         recordLookupForPropertyOrMethod(this)
         return analyze {
-            if (ktFunctionSymbol is KtPropertyAccessorSymbol) {
+            if (ktFunctionSymbol is KaPropertyAccessorSymbol) {
                 (parentDeclaration as? KSPropertyDeclarationImpl)?.ktPropertySymbol
             } else {
                 ktFunctionSymbol
-            }?.getDirectlyOverriddenSymbols()?.firstOrNull()?.unwrapFakeOverrides?.toKSDeclaration()
+            }?.directlyOverriddenSymbols?.firstOrNull()?.fakeOverrideOriginal?.toKSDeclaration()
         }?.also { recordLookupForPropertyOrMethod(it) }
     }
 
@@ -134,15 +135,15 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
     override val simpleName: KSName by lazy {
         when (ktFunctionSymbol) {
-            is KtFunctionSymbol -> KSNameImpl.getCached(ktFunctionSymbol.name.asString())
-            is KtPropertyAccessorSymbol -> KSNameImpl.getCached((ktFunctionSymbol.psi as PsiMethod).name)
-            is KtConstructorSymbol -> KSNameImpl.getCached("<init>")
+            is KaNamedFunctionSymbol -> KSNameImpl.getCached(ktFunctionSymbol.name.asString())
+            is KaPropertyAccessorSymbol -> KSNameImpl.getCached((ktFunctionSymbol.psi as PsiMethod).name)
+            is KaConstructorSymbol -> KSNameImpl.getCached("<init>")
             else -> throw IllegalStateException("Unexpected function symbol type ${ktFunctionSymbol.javaClass}")
         }
     }
 
     override val qualifiedName: KSName? by lazy {
-        ktFunctionSymbol.callableIdIfNonLocal?.asSingleFqName()?.asString()?.let { KSNameImpl.getCached(it) }
+        ktFunctionSymbol.callableId?.asSingleFqName()?.asString()?.let { KSNameImpl.getCached(it) }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
@@ -156,7 +157,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         } else {
             psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
                 analyze {
-                    it.getSymbol().toKSDeclaration()
+                    it.symbol.toKSDeclaration()
                 }
             } ?: emptySequence()
         }
@@ -165,7 +166,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     override val origin: Origin by lazy {
         // Override origin for java synthetic constructors.
         if (
-            ktFunctionSymbol.origin == KtSymbolOrigin.JAVA_SOURCE &&
+            ktFunctionSymbol.origin == KaSymbolOrigin.JAVA_SOURCE &&
             (ktFunctionSymbol.psi == null || ktFunctionSymbol.psi is PsiClass)
         ) {
             Origin.SYNTHETIC
@@ -212,20 +213,20 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     }
 }
 
-internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {
+internal fun KaFunctionSymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
     when (this) {
-        is KtConstructorSymbol -> {
-            if (visibility != JavaVisibilities.PackageVisibility) {
+        is KaConstructorSymbol -> {
+            if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
                 result.add(visibility.toModifier())
             }
             result.add(Modifier.FINAL)
         }
-        is KtFunctionSymbol -> {
-            if (visibility != JavaVisibilities.PackageVisibility) {
+        is KaNamedFunctionSymbol -> {
+            if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
                 result.add(visibility.toModifier())
             }
-            if (!isStatic || modality != Modality.OPEN) {
+            if (!isStatic || modality != KaSymbolModality.OPEN) {
                 result.add(modality.toModifier())
             }
             if (isExternal) {
@@ -251,11 +252,11 @@ internal fun KtFunctionLikeSymbol.toModifiers(): Set<Modifier> {
                 result.add(Modifier.OVERRIDE)
             }
         }
-        is KtPropertyAccessorSymbol -> {
-            if (visibility != JavaVisibilities.PackageVisibility) {
+        is KaPropertyAccessorSymbol -> {
+            if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
                 result.add(visibility.toModifier())
             }
-            if (modality != Modality.OPEN) {
+            if (modality != KaSymbolModality.OPEN) {
                 result.add(modality.toModifier())
             }
         }

@@ -38,12 +38,11 @@ import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.compiled.ClsClassImpl
-import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
-import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.annotations.KtUnsupportedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
-import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.name.ClassId
@@ -70,7 +69,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     override val arguments: List<KSValueArgument> by lazy {
         val annotationConstructor = analyze {
-            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.constructors?.singleOrNull()
+            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
         }
         val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
             val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
@@ -92,10 +91,10 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
         presentArgs + defaultArguments.filter { it.name?.asString() !in presentValueArgumentNames }
     }
 
-    @OptIn(KtAnalysisApiInternals::class)
+    @OptIn(KaImplementationDetail::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
-            (type.classifierSymbol() as? KtClassOrObjectSymbol)?.getMemberScope()?.constructors?.singleOrNull()
+            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
                 ?.let { symbol ->
                     // ClsClassImpl means psi is decompiled psi.
                     if (
@@ -123,17 +122,16 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                         symbol.valueParameters.map { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
-                                    KtNamedAnnotationValue(
+                                    KaBaseNamedAnnotationValue(
                                         valueParameterSymbol.name,
                                         // null will be returned as the `constantValue` for non array annotation values.
                                         // fallback to unsupported annotation value to indicate such use cases.
                                         // when seeing unsupported annotation value we return `null` for the value.
                                         // which might still be incorrect but there might not be a perfect way.
                                         constantValue
-                                            ?: KtUnsupportedAnnotationValue(
+                                            ?: KaUnsupportedAnnotationValueImpl(
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-                                            ),
-                                        KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                            )
                                     ),
                                     Origin.SYNTHETIC
                                 )

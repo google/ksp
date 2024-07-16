@@ -2,15 +2,17 @@ package com.google.devtools.ksp.standalone
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.api.fir.utils.isSubClassOf
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDirectInheritorsProvider
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaModuleProvider
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
 import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionCache
-import org.jetbrains.kotlin.analysis.project.structure.KtDanglingFileModule
-import org.jetbrains.kotlin.analysis.project.structure.KtModule
-import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
@@ -33,6 +35,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
             )
     }
 
+    @OptIn(KaPlatformInterface::class)
     override fun getDirectKotlinInheritors(
         ktClass: KtClass,
         scope: GlobalSearchScope,
@@ -58,9 +61,9 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         // Note that this means we don't support providing inheritors based on the dangling file yet, for example if an inheritor was added
         // or removed only in the dangling file.
         val baseKtModule = when (
-            val ktModule = ProjectStructureProvider.getModule(project, ktClass, contextualModule = null)
+            val ktModule = KaModuleProvider.getModule(project, ktClass, useSiteModule = null)
         ) {
-            is KtDanglingFileModule -> ktModule.contextModule
+            is KaDanglingFileModule -> ktModule.contextModule
             else -> ktModule
         }
 
@@ -78,6 +81,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         }
     }
 
+    @OptIn(KaImplementationDetail::class)
     private fun isValidInheritor(
         candidate: KtClassOrObject,
         baseFirClass: FirClass,
@@ -93,7 +97,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         }
 
         val candidateClassId = candidate.getClassId() ?: return false
-        val candidateKtModule = ProjectStructureProvider.getModule(project, candidate, contextualModule = null)
+        val candidateKtModule = KaModuleProvider.getModule(project, candidate, useSiteModule = null)
         val candidateFirSymbol = candidate.toFirSymbol(candidateClassId, candidateKtModule) ?: return false
         val candidateFirClass = candidateFirSymbol.fir as? FirClass ?: return false
 
@@ -105,7 +109,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         )
     }
 
-    private fun KtClassOrObject.toFirSymbol(classId: ClassId, ktModule: KtModule): FirClassLikeSymbol<*>? {
+    private fun KtClassOrObject.toFirSymbol(classId: ClassId, ktModule: KaModule): FirClassLikeSymbol<*>? {
         val session = LLFirSessionCache.getInstance(project).getSession(ktModule, preferBinary = true)
         return session.symbolProvider.getClassLikeSymbolByClassId(classId)
     }

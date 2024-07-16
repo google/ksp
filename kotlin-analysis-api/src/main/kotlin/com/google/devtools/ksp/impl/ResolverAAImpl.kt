@@ -197,7 +197,7 @@ class ResolverAAImpl(
                 (declaration as? KSClassDeclarationImpl)?.let {
                     analyze {
                         if (
-                            it.ktClassOrObjectSymbol.getStaticMemberScope()
+                            it.ktClassOrObjectSymbol.staticMemberScope
                                 .getAllSymbols().contains(declaration.ktDeclarationSymbol)
                         )
                             modifiers.add(Modifier.JAVA_STATIC)
@@ -307,10 +307,10 @@ class ResolverAAImpl(
             return (findClass(KSNameImpl.getCached(name.getQualifier())) as? KtNamedClassOrObjectSymbol)?.let {
                 analyze {
                     (
-                        it.getStaticMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
-                            ?: it.getMemberScope().getClassifierSymbols { it.asString() == simpleName }.singleOrNull()
-                        ) as? KtNamedClassOrObjectSymbol
-                        ?: it.getStaticMemberScope().getCallableSymbols { it.asString() == simpleName }.singleOrNull()
+                        it.staticMemberScope.classifiers { it.asString() == simpleName }.singleOrNull()
+                            ?: it.memberScope.classifiers { it.asString() == simpleName }.singleOrNull()
+                        ) as? KaNamedClassSymbol
+                        ?: it.staticMemberScope.callables { it.asString() == simpleName }.singleOrNull()
                             as? KtEnumEntrySymbol
                 }
             }
@@ -332,17 +332,17 @@ class ResolverAAImpl(
             var packages = listOf(analysisSession.ROOT_PACKAGE_SYMBOL)
             for (curName in packageNames) {
                 packages = packages
-                    .flatMap { it.getPackageScope().getPackageSymbols { it.asString() == curName } }
+                    .flatMap { it.packageScope.getPackageSymbols { it.asString() == curName } }
                     .distinct()
             }
             packages.flatMap {
-                it.getPackageScope().getAllSymbols().distinct().mapNotNull { symbol ->
+                it.packageScope.declarations.distinct().mapNotNull { symbol ->
                     when (symbol) {
-                        is KtNamedClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
-                        is KtFunctionLikeSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
-                        is KtPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
-                        is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
-                        is KtJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
+                        is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                        is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
+                        is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
+                        is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
+                        is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
                         else -> null
                     }
                 }
@@ -454,13 +454,14 @@ class ResolverAAImpl(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
         return when (function.origin) {
             Origin.JAVA -> {
                 val psi = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as PsiMethod
                 psi.throwsList.referencedTypes.asSequence().mapNotNull {
                     analyze {
-                        it.asKtType(psi)?.let { KSTypeImpl.getCached(it) }
+                        it.asKaType(psi)?.let { KSTypeImpl.getCached(it) }
                     }
                 }
             }
@@ -510,7 +511,7 @@ class ResolverAAImpl(
             "set"
         }
         val mangledName = if (accessor.modifiers.contains(Modifier.INTERNAL)) {
-            "\$${ktModule.moduleName}"
+            "\$${ktModule.name}"
         } else ""
         return "${prefix}${accessor.receiver.simpleName.asString().capitalize()}$mangledName"
     }
@@ -525,7 +526,7 @@ class ResolverAAImpl(
             return it.name
         }
         val mangledName = if (declaration.modifiers.contains(Modifier.INTERNAL)) {
-            "\$${ktModule.moduleName}"
+            "\$${ktModule.name}"
         } else ""
         return declaration.simpleName.asString() + mangledName
     }
@@ -542,7 +543,7 @@ class ResolverAAImpl(
     private fun getOwnerJvmClassNameHelper(declaration: KSDeclaration): String? {
         return declaration.closestClassDeclaration()?.let {
             // Find classId for JvmClassName for member callables.
-            (it as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classIdIfNonLocal
+            (it as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classId
                 ?.asString()?.replace(".", "$")?.replace("/", ".")
         } ?: declaration.containingFile?.let {
             // Find containing file facade class name from file symbol
@@ -575,8 +576,8 @@ class ResolverAAImpl(
         } else {
             val topLevelResult = (
                 analyze {
-                    getTopLevelCallableSymbols(FqName(qualifier), Name.identifier(propertyName)).singleOrNull {
-                        it is KtPropertySymbol
+                    findTopLevelCallables(FqName(qualifier), Name.identifier(propertyName)).singleOrNull {
+                        it is KaPropertySymbol
                     }?.toKSDeclaration() as? KSPropertyDeclaration
                 }
                 )
@@ -671,9 +672,10 @@ class ResolverAAImpl(
         }.map { it.packageName.asString() }
     }
 
+    @OptIn(KaExperimentalApi::class)
     @KspExperimental
     override fun getModuleName(): KSName {
-        return KSNameImpl.getCached((ktModule.stableModuleName ?: ktModule.moduleName).removeSurrounding("<", ">"))
+        return KSNameImpl.getCached((ktModule.stableModuleName ?: ktModule.name).removeSurrounding("<", ">"))
     }
 
     @KspExperimental
@@ -716,8 +718,8 @@ class ResolverAAImpl(
         recordLookupForPropertyOrMethod(overrider)
         recordLookupForPropertyOrMethod(overridee)
         return analyze {
-            overriderSymbol.getAllOverriddenSymbols().contains(overrideeSymbol) ||
-                overriderSymbol.getIntersectionOverriddenSymbols().contains(overrideeSymbol)
+            overriderSymbol.allOverriddenSymbols.contains(overrideeSymbol) ||
+                overriderSymbol.intersectionOverriddenSymbols.contains(overrideeSymbol)
         }
     }
 
@@ -759,10 +761,11 @@ class ResolverAAImpl(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     internal fun mapToJvmSignatureInternal(ksAnnotated: KSAnnotated): String? {
         fun KtType.toSignature(): String {
             return analyze {
-                this@toSignature.mapTypeToJvmType().descriptor.let {
+                this@toSignature.mapToJvmType().descriptor.let {
                     when (it) {
                         "Ljava.lang.Void;" -> "Ljava/lang/Void;"
                         "Lkotlin/Unit;" -> "V"
@@ -832,6 +835,7 @@ class ResolverAAImpl(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     internal fun computeAsMemberOf(property: KSPropertyDeclaration, containing: KSType): KSType {
         val declaredIn = property.closestClassDeclaration()
             ?: throw IllegalArgumentException(
@@ -845,7 +849,7 @@ class ResolverAAImpl(
                 recordLookupForPropertyOrMethod(property)
                 val isSubTypeOf = analyze {
                     (declaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
-                        containing.type.isSubTypeOf(it)
+                        containing.type.isSubtypeOf(it)
                     } ?: false
                 }
                 if (!isSubTypeOf) {
@@ -879,6 +883,7 @@ class ResolverAAImpl(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     internal fun computeAsMemberOf(function: KSFunctionDeclaration, containing: KSType): KSFunction {
         val propertyDeclaredIn = function.closestClassDeclaration()
             ?: throw IllegalArgumentException(

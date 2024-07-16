@@ -34,20 +34,22 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 import com.intellij.util.containers.MultiMap
-import org.jetbrains.kotlin.analysis.api.symbols.KtFunctionLikeSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtJavaFieldSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithMembers
-import org.jetbrains.kotlin.analysis.api.types.KtCapturedType
-import org.jetbrains.kotlin.analysis.api.types.KtDefinitelyNotNullType
-import org.jetbrains.kotlin.analysis.api.types.KtDynamicType
-import org.jetbrains.kotlin.analysis.api.types.KtErrorType
-import org.jetbrains.kotlin.analysis.api.types.KtFlexibleType
-import org.jetbrains.kotlin.analysis.api.types.KtIntersectionType
-import org.jetbrains.kotlin.analysis.api.types.KtNonErrorClassType
-import org.jetbrains.kotlin.analysis.api.types.KtType
-import org.jetbrains.kotlin.analysis.api.types.KtTypeParameterType
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaJavaFieldSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KaDeclarationContainerSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.typeParameters
+import org.jetbrains.kotlin.analysis.api.types.KaCapturedType
+import org.jetbrains.kotlin.analysis.api.types.KaClassType
+import org.jetbrains.kotlin.analysis.api.types.KaDefinitelyNotNullType
+import org.jetbrains.kotlin.analysis.api.types.KaDynamicType
+import org.jetbrains.kotlin.analysis.api.types.KaErrorType
+import org.jetbrains.kotlin.analysis.api.types.KaFlexibleType
+import org.jetbrains.kotlin.analysis.api.types.KaIntersectionType
+import org.jetbrains.kotlin.analysis.api.types.KaType
+import org.jetbrains.kotlin.analysis.api.types.KaTypeParameterType
 import org.jetbrains.kotlin.incremental.IncrementalCompilationContext
 import org.jetbrains.kotlin.incremental.LookupStorage
 import org.jetbrains.kotlin.incremental.LookupSymbol
@@ -104,47 +106,48 @@ class IncrementalContextAA(
         return map
     }
 
-    private fun recordWithArgs(type: KtType, file: PsiJavaFile) {
+    private fun recordWithArgs(type: KaType, file: PsiJavaFile) {
         type.typeArguments().forEach {
             it.type?.let { recordWithArgs(it, file) }
         }
         when (type) {
-            is KtNonErrorClassType -> {
+            is KaClassType -> {
                 val fqn = type.classId.asFqNameString()
                 recordLookup(file, fqn)
             }
-            is KtFlexibleType -> {
+            is KaFlexibleType -> {
                 recordWithArgs(type.lowerBound, file)
                 recordWithArgs(type.upperBound, file)
             }
-            is KtIntersectionType -> {
+            is KaIntersectionType -> {
                 type.conjuncts.forEach {
                     recordWithArgs(it, file)
                 }
             }
-            is KtCapturedType -> {
+            is KaCapturedType -> {
                 type.projection.type?.let {
                     recordWithArgs(it, file)
                 }
             }
-            is KtDefinitelyNotNullType -> {
+            is KaDefinitelyNotNullType -> {
                 recordWithArgs(type.original, file)
             }
-            is KtErrorType, is KtDynamicType, is KtTypeParameterType -> {}
+            is KaErrorType, is KaDynamicType, is KaTypeParameterType -> {}
         }
     }
 
-    fun recordLookup(type: KtType, context: KSNode?) {
+    fun recordLookup(type: KaType, context: KSNode?) {
         val file = (context?.containingFile as? KSFileJavaImpl)?.psi ?: return
 
         recordWithArgs(type, file)
     }
 
-    private fun recordLookupForDeclaration(symbol: KtSymbol, file: PsiJavaFile) {
+    @OptIn(KaExperimentalApi::class)
+    private fun recordLookupForDeclaration(symbol: KaSymbol, file: PsiJavaFile) {
         when (symbol) {
-            is KtJavaFieldSymbol -> recordWithArgs(symbol.returnType, file)
-            is KtPropertySymbol -> recordWithArgs(symbol.returnType, file)
-            is KtFunctionLikeSymbol -> {
+            is KaJavaFieldSymbol -> recordWithArgs(symbol.returnType, file)
+            is KaPropertySymbol -> recordWithArgs(symbol.returnType, file)
+            is KaFunctionSymbol -> {
                 recordWithArgs(symbol.returnType, file)
                 symbol.valueParameters.forEach { recordWithArgs(it.returnType, file) }
                 symbol.typeParameters.forEach {
@@ -168,15 +171,15 @@ class IncrementalContextAA(
         recordLookupForDeclaration(symbol, file)
     }
 
-    internal fun recordLookupForGetAll(supers: List<KtType>, predicate: (KtSymbol) -> Boolean) {
-        val visited: MutableSet<KtType> = mutableSetOf()
+    internal fun recordLookupForGetAll(supers: List<KaType>, predicate: (KaSymbol) -> Boolean) {
+        val visited: MutableSet<KaType> = mutableSetOf()
         analyze {
             supers.forEach {
                 recordLookupWithSupertypes(it, visited) { type, file ->
-                    if (type is KtNonErrorClassType) {
-                        (type.classSymbol as? KtSymbolWithMembers)?.let {
-                            val declared = it.getDeclaredMemberScope().getAllSymbols() +
-                                it.getStaticDeclaredMemberScope().getAllSymbols()
+                    if (type is KaClassType) {
+                        (type.symbol as? KaDeclarationContainerSymbol)?.let {
+                            val declared = it.declaredMemberScope.declarations +
+                                it.staticDeclaredMemberScope.declarations
                             declared.forEach {
                                 if (predicate(it))
                                     recordLookupForDeclaration(it, file)
@@ -188,28 +191,29 @@ class IncrementalContextAA(
         }
     }
 
-    private val KtSymbol.psiJavaFile: PsiJavaFile?
+    private val KaSymbol.psiJavaFile: PsiJavaFile?
         get() = psi?.containingFile as? PsiJavaFile
 
-    private val KtType.psiJavaFiles: List<PsiJavaFile>
+    private val KaType.psiJavaFiles: List<PsiJavaFile>
         get() {
             return when (this) {
-                is KtNonErrorClassType -> symbol.psiJavaFile?.let { listOf(it) } ?: emptyList()
-                is KtFlexibleType -> lowerBound.psiJavaFiles + upperBound.psiJavaFiles
-                is KtIntersectionType -> conjuncts.flatMap { it.psiJavaFiles }
-                is KtCapturedType -> projection.type?.psiJavaFiles ?: emptyList()
-                is KtDefinitelyNotNullType -> original.psiJavaFiles
-                is KtErrorType, is KtDynamicType, is KtTypeParameterType -> emptyList()
+                is KaClassType -> symbol.psiJavaFile?.let { listOf(it) } ?: emptyList()
+                is KaFlexibleType -> lowerBound.psiJavaFiles + upperBound.psiJavaFiles
+                is KaIntersectionType -> conjuncts.flatMap { it.psiJavaFiles }
+                is KaCapturedType -> projection.type?.psiJavaFiles ?: emptyList()
+                is KaDefinitelyNotNullType -> original.psiJavaFiles
+                is KaErrorType, is KaDynamicType, is KaTypeParameterType -> emptyList()
+                else -> TODO()
             }
         }
 
-    fun recordLookupWithSupertypes(ktType: KtType, visited: MutableSet<KtType>, extra: (KtType, PsiJavaFile) -> Unit) {
+    fun recordLookupWithSupertypes(ktType: KaType, visited: MutableSet<KaType>, extra: (KaType, PsiJavaFile) -> Unit) {
         analyze {
-            fun record(type: KtType) {
+            fun record(type: KaType) {
                 if (type in visited)
                     return
                 visited.add(type)
-                for (superType in type.getDirectSuperTypes()) {
+                for (superType in type.directSupertypes(false)) {
                     for (file in type.psiJavaFiles) {
                         recordWithArgs(superType, file)
                     }
@@ -224,23 +228,23 @@ class IncrementalContextAA(
     }
 }
 
-internal fun recordLookup(ktType: KtType, context: KSNode?) =
+internal fun recordLookup(ktType: KaType, context: KSNode?) =
     ResolverAAImpl.instance.incrementalContext.recordLookup(ktType, context)
 
-internal fun recordLookupWithSupertypes(ktType: KtType, extra: (KtType, PsiJavaFile) -> Unit = { _, _ -> }) =
+internal fun recordLookupWithSupertypes(ktType: KaType, extra: (KaType, PsiJavaFile) -> Unit = { _, _ -> }) =
     ResolverAAImpl.instance.incrementalContext.recordLookupWithSupertypes(ktType, mutableSetOf(), extra)
 
 internal fun recordLookupForPropertyOrMethod(declaration: KSDeclaration) =
     ResolverAAImpl.instance.incrementalContext.recordLookupForPropertyOrMethod(declaration)
 
-internal fun recordLookupForGetAllProperties(supers: List<KtType>) =
+internal fun recordLookupForGetAllProperties(supers: List<KaType>) =
     ResolverAAImpl.instance.incrementalContext.recordLookupForGetAll(supers) {
-        it is KtPropertySymbol || it is KtJavaFieldSymbol
+        it is KaPropertySymbol || it is KaJavaFieldSymbol
     }
 
-internal fun recordLookupForGetAllFunctions(supers: List<KtType>) =
+internal fun recordLookupForGetAllFunctions(supers: List<KaType>) =
     ResolverAAImpl.instance.incrementalContext.recordLookupForGetAll(supers) {
-        it is KtFunctionLikeSymbol
+        it is KaFunctionSymbol
     }
 
 internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
