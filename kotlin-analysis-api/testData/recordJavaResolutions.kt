@@ -18,30 +18,30 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaProcessor
 // EXPECTED:
-// kotlin.Any: main/p1/J1.java
-// kotlin.Any: main/p1/J2.java
-// kotlin.Any: main/p1/TestJ2J.java
-// kotlin.Any: main/p1/TestJ2K.java
-// kotlin.Any: main/p2/J2.java
-// kotlin.Any: main/p3/J1.java
-// kotlin.Any: main/p3/J2.java
-// kotlin.Any: main/p3/J3.java
-// p1.J1: main/p1/J1.java
-// p1.J1: main/p1/TestJ2J.java
-// p1.J2: main/p1/J2.java
-// p1.J3: main/p1/TestJ2J.java
-// p1.K1: main/p1/TestJ2K.java
-// p1.K3: main/p1/TestJ2K.java
-// p1.TestJ2J: main/p1/TestJ2J.java
-// p1.TestJ2K: main/p1/TestJ2K.java
-// p2.J2: main/p1/TestJ2J.java
-// p2.J2: main/p2/J2.java
-// p2.K2: main/p1/TestJ2K.java
-// p3.J1: main/p3/J1.java
-// p3.J2: main/p3/J2.java
-// p3.J3: main/p1/TestJ2J.java
-// p3.J3: main/p3/J3.java
-// p3.K3: main/p1/TestJ2K.java
+// kotlin.Any: javaSrc/p1/J1.java
+// kotlin.Any: javaSrc/p1/J2.java
+// kotlin.Any: javaSrc/p1/TestJ2J.java
+// kotlin.Any: javaSrc/p1/TestJ2K.java
+// kotlin.Any: javaSrc/p2/J2.java
+// kotlin.Any: javaSrc/p3/J1.java
+// kotlin.Any: javaSrc/p3/J2.java
+// kotlin.Any: javaSrc/p3/J3.java
+// p1.J1: javaSrc/p1/J1.java
+// p1.J1: javaSrc/p1/TestJ2J.java
+// p1.J2: javaSrc/p1/J2.java
+// p1.J3: javaSrc/p1/TestJ2J.java
+// p1.K1: javaSrc/p1/TestJ2K.java
+// p1.K3: javaSrc/p1/TestJ2K.java
+// p1.TestJ2J: javaSrc/p1/TestJ2J.java
+// p1.TestJ2K: javaSrc/p1/TestJ2K.java
+// p2.J2: javaSrc/p1/TestJ2J.java
+// p2.J2: javaSrc/p2/J2.java
+// p2.K2: javaSrc/p1/TestJ2K.java
+// p3.J1: javaSrc/p3/J1.java
+// p3.J2: javaSrc/p3/J2.java
+// p3.J3: javaSrc/p1/TestJ2J.java
+// p3.J3: javaSrc/p3/J3.java
+// p3.K3: javaSrc/p1/TestJ2K.java
 // END
 
 // FILE: p1/TestJ2K.java

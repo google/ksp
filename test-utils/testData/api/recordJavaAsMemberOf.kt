@@ -18,12 +18,12 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaAsMemberOfProcessor
 // EXPECTED:
-// p1.A: main/p1/B.java
-// p1.B: main/p1/A.java
-// p1.C: main/p1/B.java
-// p1.D: main/p1/A.java
-// p1.D: main/p1/B.java
-// p1.E: main/p1/B.java
+// p1.A: javaSrc/p1/B.java
+// p1.B: javaSrc/p1/A.java
+// p1.C: javaSrc/p1/B.java
+// p1.D: javaSrc/p1/A.java
+// p1.D: javaSrc/p1/B.java
+// p1.E: javaSrc/p1/B.java
 // END
 
 // FILE: p1/A.java

@@ -18,14 +18,14 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaGetAllMembersProcessor
 // EXPECTED:
-// p1.B: main/p1/B.java
-// p1.C: main/p1/B.java
-// p1.C: main/p1/C.java
-// p1.D: main/p1/C.java
-// p1.R2: main/p1/B.java
-// p1.R3: main/p1/C.java
-// p1.V2: main/p1/B.java
-// p1.V3: main/p1/C.java
+// p1.B: javaSrc/p1/B.java
+// p1.C: javaSrc/p1/B.java
+// p1.C: javaSrc/p1/C.java
+// p1.D: javaSrc/p1/C.java
+// p1.R2: javaSrc/p1/B.java
+// p1.R3: javaSrc/p1/C.java
+// p1.V2: javaSrc/p1/B.java
+// p1.V3: javaSrc/p1/C.java
 // END
 
 // FILE: p1/A.kt

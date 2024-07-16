@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
+import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.languageVersionSettings
@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
+import org.jetbrains.kotlin.test.services.javaFiles
 import java.io.File
 
 abstract class AbstractKSPCompilerPluginTest : AbstractKSPTest(FrontendKinds.ClassicFrontend) {
@@ -30,6 +31,10 @@ abstract class AbstractKSPCompilerPluginTest : AbstractKSPTest(FrontendKinds.Cla
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(mainModule)
         compilerConfiguration.put(CommonConfigurationKeys.MODULE_NAME, mainModule.name)
         compilerConfiguration.put(CommonConfigurationKeys.LOOKUP_TRACKER, DualLookupTracker())
+        if (!mainModule.javaFiles.isEmpty()) {
+            mainModule.writeJavaFiles()
+            compilerConfiguration.addJavaSourceRoot(mainModule.javaDir)
+        }
 
         // TODO: other platforms
         val kotlinCoreEnvironment = KotlinCoreEnvironment.createForTests(
@@ -50,7 +55,9 @@ abstract class AbstractKSPCompilerPluginTest : AbstractKSPTest(FrontendKinds.Cla
         val analysisExtension =
             KotlinSymbolProcessingExtension(
                 KspOptions.Builder().apply {
-                    javaSourceRoots.addAll(compilerConfiguration.javaSourceRoots.map { File(it) })
+                    if (!mainModule.javaFiles.isEmpty()) {
+                        javaSourceRoots.add(mainModule.javaDir)
+                    }
                     classOutputDir = File(testRoot, "kspTest/classes/main")
                     javaOutputDir = File(testRoot, "kspTest/src/main/java")
                     kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")

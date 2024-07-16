@@ -128,6 +128,8 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         defaultDirectives {
             +JvmEnvironmentConfigurationDirectives.FULL_JDK
             JvmEnvironmentConfigurationDirectives.JVM_TARGET with JvmTarget.DEFAULT
+            // SourceFileProviderImpl doesn't group files by module. Let's load them manually.
+            +JvmEnvironmentConfigurationDirectives.SKIP_JAVA_SOURCES
             +ConfigurationDirectives.WITH_STDLIB
             +LanguageSettingsDirectives.ALLOW_KOTLIN_PACKAGE
         }
@@ -196,10 +198,6 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             path,
             testConfiguration.directives,
         )
-        val dependencyProvider = DependencyProviderImpl(testServices, moduleStructure.modules)
-        testServices.registerDependencyProvider(dependencyProvider)
-        testServices.register(TestModuleStructure::class, moduleStructure)
-
         val mainModule = moduleStructure.modules.last()
         val libModules = moduleStructure.modules.dropLast(1)
 
