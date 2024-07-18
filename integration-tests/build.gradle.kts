@@ -31,7 +31,6 @@ tasks.withType<Test> {
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
-    dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 
     // JDK_9 environment property is required.

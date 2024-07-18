@@ -18,13 +18,7 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
-import com.google.devtools.ksp.processing.ExitCode
-import com.google.devtools.ksp.processing.KSPCommonConfig
-import com.google.devtools.ksp.processing.KSPConfig
-import com.google.devtools.ksp.processing.KSPJsConfig
-import com.google.devtools.ksp.processing.KSPJvmConfig
-import com.google.devtools.ksp.processing.KSPNativeConfig
-import com.google.devtools.ksp.processing.KspGradleLogger
+import com.google.devtools.ksp.processing.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
@@ -32,20 +26,8 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.IgnoreEmptyDirectories
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.*
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
@@ -64,7 +46,7 @@ import java.io.File
 import java.io.ObjectOutputStream
 import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
-import java.util.ServiceLoader
+import java.util.*
 import java.util.concurrent.Callable
 import javax.inject.Inject
 
@@ -93,6 +75,7 @@ abstract class KspAATask @Inject constructor(
                     when (it.changeType) {
                         ChangeType.ADDED, ChangeType.MODIFIED -> modifiedSources.add(it.file)
                         ChangeType.REMOVED -> removedSources.add(it.file)
+                        else -> {}
                     }
                 }
             }
@@ -129,7 +112,7 @@ abstract class KspAATask @Inject constructor(
         val workerQueue = workerExecutor.noIsolation()
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config = kspConfig
-            it.kspClassPath = kspClasspath
+            it.kspClasspath = kspClasspath
             it.modifiedSources = modifiedSources
             it.removedSources = removedSources
             it.isInputChangeIncremental = inputChanges.isIncremental
@@ -151,9 +134,11 @@ abstract class KspAATask @Inject constructor(
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
             val kspAADepCfg = project.configurations.detachedConfiguration(
                 project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-api:$KSP_VERSION"),
-                project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa:$KSP_VERSION"),
                 project.dependencies.create(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-common-deps:$KSP_VERSION"
+                ),
+                project.dependencies.create(
+                    "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
                 ),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
             ).apply {
@@ -381,7 +366,7 @@ abstract class KspGradleConfig @Inject constructor() {
 
 interface KspAAWorkParameter : WorkParameters {
     var config: KspGradleConfig
-    var kspClassPath: ConfigurableFileCollection
+    var kspClasspath: ConfigurableFileCollection
     var modifiedSources: List<File>
     var removedSources: List<File>
     var changedClasses: List<String>
@@ -393,12 +378,12 @@ var isolatedClassLoaderCache = mutableMapOf<String, URLClassLoader>()
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config
-        val kspClassPath = parameters.kspClassPath
-        val key = kspClassPath.files.map { it.toURI().toURL() }.joinToString { it.path }
+        val kspClasspath = parameters.kspClasspath
+        val key = kspClasspath.files.map { it.toURI().toURL() }.joinToString { it.path }
         synchronized(isolatedClassLoaderCache) {
             if (isolatedClassLoaderCache[key] == null) {
                 isolatedClassLoaderCache[key] = URLClassLoader(
-                    kspClassPath.files.map { it.toURI().toURL() }.toTypedArray(),
+                    kspClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
                     ClassLoader.getPlatformClassLoader()
                 )
             }
@@ -449,7 +434,9 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             languageVersion = gradleCfg.languageVersion.get()
             apiVersion = gradleCfg.apiVersion.get()
 
-            processorOptions = gradleCfg.processorOptions.get()
+            // Gradle's MapProperty returns a Guava map and forces the deserializer to depend on Guava.
+            // Let's convert to Kotlin's choice of map instead.
+            processorOptions = gradleCfg.processorOptions.get().toMap()
             allWarningsAsErrors = gradleCfg.allWarningsAsErrors.get()
 
             incremental = gradleCfg.incremental.get()
