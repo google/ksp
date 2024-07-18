@@ -144,7 +144,7 @@ tasks.named<Test>("test").configure {
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
-    dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
+    dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 
 abstract class WriteVersionSrcTask @Inject constructor(
