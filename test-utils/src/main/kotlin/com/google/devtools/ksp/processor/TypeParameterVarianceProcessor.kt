@@ -14,7 +14,7 @@ class TypeParameterVarianceProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         fun KSDeclaration.printTypeParams(): String {
             val params = typeParameters.joinToString {
-                "${it.variance} ${it.name.asString()}"
+                "${it.variance} ${it.name.asString()} ${it.bounds.joinToString { it.resolve().toString() }}"
             }
             return "${simpleName.asString()} $params"
         }
@@ -22,6 +22,7 @@ class TypeParameterVarianceProcessor : AbstractTestProcessor() {
         results.add(resolver.getClassDeclarationByName("Bar")!!.printTypeParams())
         results.add(resolver.getClassDeclarationByName("BarIn")!!.printTypeParams())
         results.add(resolver.getClassDeclarationByName("BarOut")!!.printTypeParams())
+        results.add(resolver.getClassDeclarationByName("BarBounds")!!.printTypeParams())
 
         return emptyList()
     }

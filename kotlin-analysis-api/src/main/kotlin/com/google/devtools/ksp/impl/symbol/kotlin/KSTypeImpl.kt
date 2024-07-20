@@ -19,8 +19,10 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.getExtensionFunctionTypeAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -28,15 +30,15 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
-import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationsList
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationList
+import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 
-class KSTypeImpl private constructor(internal val type: KtType) : KSType {
-    companion object : KSObjectCache<IdKeyPair<KtType, KtAnnotationsList>, KSTypeImpl>() {
-        fun getCached(type: KtType): KSTypeImpl = cache.getOrPut(IdKeyPair(type, type.annotationsList)) {
+class KSTypeImpl private constructor(internal val type: KaType) : KSType {
+    companion object : KSObjectCache<IdKeyPair<KaType, KaAnnotationList>, KSTypeImpl>() {
+        fun getCached(type: KaType): KSTypeImpl = cache.getOrPut(IdKeyPair(type, type.annotations)) {
             KSTypeImpl(type)
         }
     }
@@ -44,29 +46,29 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     private fun KtType.toDeclaration(): KSDeclaration {
         return analyze {
             when (this@toDeclaration) {
-                is KtNonErrorClassType -> {
+                is KaClassType -> {
                     when (val symbol = this@toDeclaration.classSymbol) {
-                        is KtTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
-                        is KtClassOrObjectSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                        is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
+                        is KaClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
                     }
                 }
-                is KtTypeParameterType -> KSTypeParameterImpl.getCached(symbol)
-                is KtClassErrorType -> KSErrorTypeClassDeclaration
-                is KtFlexibleType ->
+                is KaTypeParameterType -> KSTypeParameterImpl.getCached(symbol)
+                is KaClassErrorType -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
+                is KaFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()
-                is KtDefinitelyNotNullType -> this@toDeclaration.original.toDeclaration()
-                else -> KSErrorTypeClassDeclaration
+                is KaDefinitelyNotNullType -> this@toDeclaration.original.toDeclaration()
+                else -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
             }
         }
     }
 
     override val declaration: KSDeclaration by lazy {
-        type.toDeclaration()
+        (type as? KaFunctionType)?.abbreviatedSymbol()?.toKSDeclaration() ?: type.toDeclaration()
     }
 
     override val nullability: Nullability by lazy {
         when {
-            type is KtFlexibleType && type.lowerBound.nullability != type.upperBound.nullability -> Nullability.PLATFORM
+            type is KaFlexibleType && type.lowerBound.nullability != type.upperBound.nullability -> Nullability.PLATFORM
             analyze { type.canBeNull } -> Nullability.NULLABLE
             else -> Nullability.NOT_NULL
         }
@@ -76,21 +78,24 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
         if (ResolverAAImpl.instance.isJavaRawType(this)) {
             emptyList()
         } else {
-            if (type is KtFlexibleType) {
+            if (type is KaFlexibleType) {
                 type.upperBound.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it) }
             } else {
-                (type as? KtNonErrorClassType)?.typeArguments()?.map { KSTypeArgumentResolvedImpl.getCached(it) }
+                (type as? KaClassType)?.typeArguments()?.map { KSTypeArgumentResolvedImpl.getCached(it) }
                     ?: emptyList()
             }
         }
     }
 
+    @OptIn(KaImplementationDetail::class)
     override val annotations: Sequence<KSAnnotation>
         get() = type.annotations() +
-            if (type is KtFunctionalType && type.receiverType != null) {
-                sequenceOf(KSAnnotationImpl.getCached(getExtensionFunctionTypeAnnotation(type.annotations.size)))
+            if (type is KaFunctionType && type.receiverType != null) {
+                sequenceOf(
+                    KSAnnotationResolvedImpl.getCached(getExtensionFunctionTypeAnnotation(type.annotations.size))
+                )
             } else {
-                emptySequence<KSAnnotation>()
+                emptySequence()
             }
 
     override fun isAssignableFrom(that: KSType): Boolean {
@@ -98,7 +103,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
             return false
         }
         recordLookupWithSupertypes((that as KSTypeImpl).type)
-        return type.isAssignableFrom((that as KSTypeImpl).type)
+        return type.isAssignableFrom(that.type)
     }
 
     override fun isMutabilityFlexible(): Boolean {
@@ -110,37 +115,48 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return type.replace(arguments.map { it.toKtTypeProjection() })?.let { getCached(it) } ?: KSErrorType
+        // Do not replace for already error types.
+        if (isError) {
+            return this
+        }
+        errorTypeOnInconsistentArguments(
+            arguments = arguments,
+            placeholdersProvider = { type.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it) } },
+            withCorrectedArguments = ::replace,
+            errorType = ::KSErrorType,
+        )?.let { error -> return error }
+        return getCached(type.replace(arguments.map { it.toKtTypeProjection() }))
     }
 
+    @OptIn(KaImplementationDetail::class)
     override fun starProjection(): KSType {
-        return type.replace(List(type.typeArguments().size) { KtStarTypeProjection(type.token) })
-            ?.let { getCached(it) } ?: KSErrorType
+        return getCached(type.replace(List(type.typeArguments().size) { KaBaseStarTypeProjection(type.token) }))
     }
 
     override fun makeNullable(): KSType {
         return analyze {
-            getCached(type.withNullability(KtTypeNullability.NULLABLE))
+            getCached(type.withNullability(KaTypeNullability.NULLABLE))
         }
     }
 
     override fun makeNotNullable(): KSType {
         return analyze {
-            getCached(type.withNullability(KtTypeNullability.NON_NULLABLE))
+            getCached(type.withNullability(KaTypeNullability.NON_NULLABLE))
         }
     }
 
     override val isMarkedNullable: Boolean
-        get() = type.nullability == KtTypeNullability.NULLABLE
+        get() = type.nullability == KaTypeNullability.NULLABLE
 
     override val isError: Boolean
-        get() = type is KtClassErrorType
+        // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
+        get() = type is KaErrorType || type.classifierSymbol() == null
 
     override val isFunctionType: Boolean
-        get() = type is KtFunctionalType && !type.isSuspend
+        get() = type is KaFunctionType && !type.isSuspend
 
     override val isSuspendFunctionType: Boolean
-        get() = type is KtFunctionalType && type.isSuspend
+        get() = type is KaFunctionType && type.isSuspend
 
     override fun hashCode(): Int {
         return type.toAbbreviatedType().hashCode()
@@ -151,7 +167,7 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
             return false
         }
         return analyze {
-            type.isEqualTo(other.type)
+            type.semanticallyEquals(other.type)
         }
     }
 
@@ -160,10 +176,10 @@ class KSTypeImpl private constructor(internal val type: KtType) : KSType {
     }
 }
 
-internal fun KtType.toAbbreviatedType(): KtType {
+internal fun KaType.toAbbreviatedType(): KaType {
     val symbol = this.classifierSymbol()
     return when (symbol) {
-        is KtTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
+        is KaTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
         else -> this
     }
 }

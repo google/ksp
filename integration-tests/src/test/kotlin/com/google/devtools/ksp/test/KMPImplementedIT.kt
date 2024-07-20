@@ -109,6 +109,30 @@ class KMPImplementedIT(useKSP2: Boolean) {
     }
 
     @Test
+    fun testWasm() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-wasm:build"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-wasm:build")?.outcome)
+            verify(
+                "workload-wasm/build/libs/workload-wasm-wasm-js-1.0-SNAPSHOT.klib",
+                listOf(
+                    "default/ir/types.knt"
+                )
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [wasm-js"))
+            Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
+            checkExecutionOptimizations(it.output)
+        }
+    }
+
+    @Test
     fun testJsErrorLog() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -150,16 +174,16 @@ class KMPImplementedIT(useKSP2: Boolean) {
         ).build().let {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-androidNative:build")?.outcome)
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeX64/debugExecutable/workload-androidNative.kexe"
+                "workload-androidNative/build/bin/androidNativeX64/debugShared/libworkload_androidNative.so"
             )
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeX64/releaseExecutable/workload-androidNative.kexe"
+                "workload-androidNative/build/bin/androidNativeX64/releaseShared/libworkload_androidNative.so"
             )
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeArm64/debugExecutable/workload-androidNative.kexe"
+                "workload-androidNative/build/bin/androidNativeArm64/debugShared/libworkload_androidNative.so"
             )
             verifyKexe(
-                "workload-androidNative/build/bin/androidNativeArm64/releaseExecutable/workload-androidNative.kexe"
+                "workload-androidNative/build/bin/androidNativeArm64/releaseShared/libworkload_androidNative.so"
             )
             Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
             Assert.assertTrue(it.output.contains("w: [ksp] platforms: [Native"))
@@ -281,10 +305,10 @@ class KMPImplementedIT(useKSP2: Boolean) {
 
         verifyKexe("workload/build/bin/linuxX64/debugExecutable/workload.kexe")
         verifyKexe("workload/build/bin/linuxX64/releaseExecutable/workload.kexe")
-        verifyKexe("workload/build/bin/androidNativeX64/debugExecutable/workload.kexe")
-        verifyKexe("workload/build/bin/androidNativeX64/releaseExecutable/workload.kexe")
-        verifyKexe("workload/build/bin/androidNativeArm64/debugExecutable/workload.kexe")
-        verifyKexe("workload/build/bin/androidNativeArm64/releaseExecutable/workload.kexe")
+        verifyKexe("workload/build/bin/androidNativeX64/debugShared/libworkload.so")
+        verifyKexe("workload/build/bin/androidNativeX64/releaseShared/libworkload.so")
+        verifyKexe("workload/build/bin/androidNativeArm64/debugShared/libworkload.so")
+        verifyKexe("workload/build/bin/androidNativeArm64/releaseShared/libworkload.so")
 
         // TODO: Enable after CI's Xcode version catches up.
         // Assert.assertTrue(

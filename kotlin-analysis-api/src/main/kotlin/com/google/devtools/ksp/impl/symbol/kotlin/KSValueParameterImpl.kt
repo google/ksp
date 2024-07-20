@@ -22,7 +22,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirValueParameterSymbol
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.declarations.FirJavaValueParameter
@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.psi.KtParameter
 
 class KSValueParameterImpl private constructor(
-    private val ktValueParameterSymbol: KtValueParameterSymbol,
+    internal val ktValueParameterSymbol: KtValueParameterSymbol,
     override val parent: KSAnnotated
 ) : KSValueParameter, Deferrable {
     companion object : KSObjectCache<KtValueParameterSymbol, KSValueParameterImpl>() {
@@ -51,10 +51,10 @@ class KSValueParameterImpl private constructor(
     override val type: KSTypeReference by lazy {
         // FIXME: temporary workaround before upstream fixes java type refs.
         if (origin == Origin.JAVA || origin == Origin.JAVA_LIB) {
-            ((ktValueParameterSymbol as KtFirValueParameterSymbol).firSymbol.fir as? FirJavaValueParameter)?.let {
+            ((ktValueParameterSymbol as KaFirValueParameterSymbol).firSymbol.fir as? FirJavaValueParameter)?.let {
                 // can't get containing class for FirJavaValueParameter, using empty stack for now.
                 it.returnTypeRef =
-                    it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY)
+                    it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY, null)
             }
         }
         (ktValueParameterSymbol.psiIfSource() as? KtParameter)?.typeReference

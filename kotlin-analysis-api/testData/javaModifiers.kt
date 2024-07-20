@@ -102,6 +102,10 @@
 // OuterKotlinClass: OPEN : PUBLIC
 // END
 // MODULE: module1
+// FILE: ALib.kt
+fun interface ALib {
+    fun test(): Boolean
+}
 // FILE: DependencyOuterJavaClass.java
 public class DependencyOuterJavaClass {
     public class DependencyInnerJavaClass {}
@@ -152,6 +156,10 @@ open class DependencyOuterKotlinClass {
     fun synchronizedFun(): String = ""
 }
 // MODULE: main(module1)
+// FILE: ASrc.kt
+fun interface ASrc {
+    fun test(): Boolean
+}
 // FILE: a.kt
 annotation class Test
 

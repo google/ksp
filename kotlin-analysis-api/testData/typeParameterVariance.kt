@@ -17,9 +17,10 @@
 
 // TEST PROCESSOR: TypeParameterVarianceProcessor
 // EXPECTED:
-// Bar INVARIANT T
-// BarIn CONTRAVARIANT T
-// BarOut COVARIANT T
+// Bar INVARIANT T Any?
+// BarIn CONTRAVARIANT T Any?
+// BarOut COVARIANT T Any?
+// BarBounds INVARIANT T Bar<T>, BarIn<T>
 // END
 
 // FILE: main.kt
@@ -28,3 +29,4 @@ interface Bar<T>
 interface BarIn<in T>
 interface BarOut<out T>
 
+interface BarBounds<T> where T: Bar<T>, T: BarIn<T>

@@ -1,9 +1,18 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.io.ByteArrayOutputStream
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
 val signingKey: String? by project
 val signingPassword: String? by project
+
+val kotlinBaseVersion: String by project
+
+val junitVersion: String by project
+val junit5Version: String by project
+val junitPlatformVersion: String by project
+val libsForTesting by configurations.creating
+val libsForTestingCommon by configurations.creating
 
 val aaKotlinBaseVersion: String by project
 val aaIntellijVersion: String by project
@@ -23,6 +32,8 @@ plugins {
 }
 
 val depSourceJars by configurations.creating
+val depJarsForCheck by configurations.creating
+val compilerJar by configurations.creating
 
 dependencies {
     listOf(
@@ -35,6 +46,9 @@ dependencies {
         "com.jetbrains.intellij.platform:core",
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
+        "com.jetbrains.intellij.platform:diagnostic",
+        "com.jetbrains.intellij.java:java-frontback-psi",
+        "com.jetbrains.intellij.java:java-frontback-psi-impl",
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
@@ -46,8 +60,7 @@ dependencies {
         "org.jetbrains.kotlin:high-level-api-fir-for-ide",
         "org.jetbrains.kotlin:high-level-api-for-ide",
         "org.jetbrains.kotlin:low-level-api-fir-for-ide",
-        "org.jetbrains.kotlin:analysis-api-providers-for-ide",
-        "org.jetbrains.kotlin:analysis-project-structure-for-ide",
+        "org.jetbrains.kotlin:analysis-api-platform-interface-for-ide",
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
         "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
@@ -61,6 +74,7 @@ dependencies {
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation("com.google.guava:guava:$aaGuavaVersion")
@@ -84,6 +98,7 @@ dependencies {
     ) {
         isTransitive = false
     }
+    implementation("org.jetbrains:annotations:24.1.0")
 
     compileOnly(project(":common-deps"))
 
@@ -91,6 +106,26 @@ dependencies {
     implementation(project(":common-util"))
 
     testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
+    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
+    testImplementation(project(":common-deps"))
+    testImplementation(project(":test-utils"))
+
+    libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
+    libsForTesting(kotlin("test", aaKotlinBaseVersion))
+    libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
+    libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
+
+    depJarsForCheck("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+    depJarsForCheck(project(":api"))
+    depJarsForCheck(project(":common-deps"))
+
+    compilerJar("org.jetbrains.kotlin:kotlin-compiler-common-for-ide:$aaKotlinBaseVersion")
 }
 
 sourceSets.main {
@@ -121,8 +156,31 @@ tasks.withType<ShadowJar>() {
     }
     exclude("kotlin/**")
     archiveClassifier.set("")
-    minimize()
+    minimize {
+        exclude(dependency("org.lz4:lz4-java:.*"))
+    }
     mergeServiceFiles()
+
+    doLast {
+        // Checks for missing dependencies
+        val jarJar = archiveFile.get().asFile
+        val depJars = depJarsForCheck.resolve().map(File::getPath)
+        val stdout = ByteArrayOutputStream()
+        try {
+            exec {
+                executable = "jdeps"
+                args = listOf(
+                    "--multi-release", "base",
+                    "--missing-deps",
+                    "-cp", depJars.joinToString(":"), jarJar.path
+                )
+                standardOutput = stdout
+            }
+        } catch (e: org.gradle.process.internal.ExecException) {
+            logger.warn(e.message)
+        }
+        logger.warn(stdout.toString())
+    }
 }
 
 tasks {
@@ -173,7 +231,7 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", aaKotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
@@ -192,5 +250,48 @@ signing {
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xcontext-receivers")
+    }
+}
+
+tasks.register<Copy>("CopyLibsForTesting") {
+    from(configurations.get("libsForTesting"))
+    into("dist/kotlinc/lib")
+    val escaped = Regex.escape(aaKotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+tasks.register<Copy>("CopyLibsForTestingCommon") {
+    from(configurations.get("libsForTestingCommon"))
+    into("dist/common")
+    val escaped = Regex.escape(aaKotlinBaseVersion)
+    rename("(.+)-$escaped\\.jar", "$1.jar")
+}
+
+tasks.test {
+    dependsOn("CopyLibsForTesting")
+    dependsOn("CopyLibsForTestingCommon")
+    maxHeapSize = "2g"
+
+    useJUnitPlatform()
+
+    systemProperty("idea.is.unit.test", "true")
+    systemProperty("java.awt.headless", "true")
+    environment("NO_FS_ROOTS_ACCESS_CHECK", "true")
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+
+    lateinit var tempTestDir: File
+    doFirst {
+        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
+        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("idea.home.path", ideaHomeDir))
+
+        tempTestDir = createTempDir()
+        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("java.io.tmpdir", tempTestDir))
+    }
+
+    doLast {
+        delete(tempTestDir)
     }
 }

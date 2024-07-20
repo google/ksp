@@ -76,3 +76,13 @@ class D {
 
     final int finalField;
 }
+
+// FILE: JavaBase.java
+
+class JavaBase {
+    static String staticField;
+}
+
+// FILE: JavaDerived.java
+class JavaDerived extends JavaBase {
+}

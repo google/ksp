@@ -13,6 +13,10 @@ kotlin {
         browser()
         nodejs()
     }
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
     linuxX64() {
         binaries {
             executable()
@@ -20,12 +24,12 @@ kotlin {
     }
     androidNativeX64() {
         binaries {
-            executable()
+            sharedLib()
         }
     }
     androidNativeArm64() {
         binaries {
-            executable()
+            sharedLib()
         }
     }
     // TODO: Enable after CI's Xcode version catches up.

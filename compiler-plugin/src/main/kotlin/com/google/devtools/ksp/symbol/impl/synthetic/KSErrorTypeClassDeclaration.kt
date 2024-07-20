@@ -18,54 +18,73 @@
 package com.google.devtools.ksp.symbol.impl.synthetic
 
 import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.processing.impl.ResolverImpl
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.impl.kotlin.KSErrorType
 
-object KSErrorTypeClassDeclaration : KSClassDeclaration {
-    override val annotations: Sequence<KSAnnotation> = emptySequence()
+class KSErrorTypeClassDeclaration(
+    private val type: KSErrorType,
+) : KSClassDeclaration {
+    override val annotations: Sequence<KSAnnotation>
+        get() = emptySequence()
 
-    override val classKind: ClassKind = ClassKind.CLASS
+    override val classKind: ClassKind
+        get() = ClassKind.CLASS
 
-    override val containingFile: KSFile? = null
+    override val containingFile: KSFile?
+        get() = null
 
-    override val declarations: Sequence<KSDeclaration> = emptySequence()
+    override val declarations: Sequence<KSDeclaration>
+        get() = emptySequence()
 
-    override val isActual: Boolean = false
+    override val isActual: Boolean
+        get() = false
 
-    override val isExpect: Boolean = false
+    override val isExpect: Boolean
+        get() = false
 
-    override val isCompanionObject: Boolean = false
+    override val isCompanionObject: Boolean
+        get() = false
 
-    override val location: Location = NonExistLocation
+    override val location: Location
+        get() = NonExistLocation
 
-    override val parent: KSNode? = null
+    override val parent: KSNode?
+        get() = null
 
-    override val modifiers: Set<Modifier> = emptySet()
+    override val modifiers: Set<Modifier>
+        get() = emptySet()
 
-    override val origin: Origin = Origin.SYNTHETIC
+    override val origin: Origin
+        get() = Origin.SYNTHETIC
 
-    override val packageName: KSName = KSNameImpl.getCached("")
+    override val packageName: KSName
+        get() = KSNameImpl.getCached("")
 
-    override val parentDeclaration: KSDeclaration? = null
+    override val parentDeclaration: KSDeclaration?
+        get() = null
 
-    override val primaryConstructor: KSFunctionDeclaration? = null
+    override val primaryConstructor: KSFunctionDeclaration?
+        get() = null
 
-    override val qualifiedName: KSName? = null
+    override val qualifiedName: KSName?
+        get() = null
 
-    override val simpleName: KSName = KSNameImpl.getCached("<Error>")
+    override val simpleName: KSName = KSNameImpl.getCached(type.toString())
 
-    override val superTypes: Sequence<KSTypeReference> = emptySequence()
+    override val superTypes: Sequence<KSTypeReference>
+        get() = emptySequence()
 
-    override val typeParameters: List<KSTypeParameter> = emptyList()
+    override val typeParameters: List<KSTypeParameter>
+        get() = emptyList()
 
     override fun getSealedSubclasses(): Sequence<KSClassDeclaration> = emptySequence()
 
     override fun asStarProjectedType(): KSType {
-        return ResolverImpl.instance!!.builtIns.nothingType
+        return type
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-        return ResolverImpl.instance!!.builtIns.nothingType
+        return type
     }
 
     override fun findActuals(): Sequence<KSDeclaration> {
@@ -89,8 +108,15 @@ object KSErrorTypeClassDeclaration : KSClassDeclaration {
     }
 
     override fun toString(): String {
-        return "Error type synthetic declaration"
+        return simpleName.asString()
     }
 
-    override val docString = null
+    override fun equals(other: Any?): Boolean {
+        return this === other || other is KSErrorTypeClassDeclaration && other.type == type
+    }
+
+    override fun hashCode(): Int = type.hashCode()
+
+    override val docString
+        get() = null
 }

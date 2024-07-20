@@ -124,11 +124,13 @@ class KSTypeReferenceJavaImpl private constructor(val psi: PsiType, override val
             .mapNotNull {
                 (it.annotationType.resolve() as? KSTypeImpl)?.kotlinType?.constructor?.declarationDescriptor?.fqNameSafe
             }
-        val resolved = if ((resolvedType.declaration as? KSClassDeclarationDescriptorImpl)
-            ?.descriptor is NotFoundClasses.MockClassDescriptor
-        ) {
-            KSErrorType
-        } else resolvedType
+        val resolved = when (val declaration = resolvedType.declaration) {
+            is KSClassDeclarationDescriptorImpl -> when (val descriptor = declaration.descriptor) {
+                is NotFoundClasses.MockClassDescriptor -> KSErrorType(descriptor.name.asString())
+                else -> resolvedType
+            }
+            else -> resolvedType
+        }
         val hasNotNull = relatedAnnotations.any { it in NOT_NULL_ANNOTATIONS }
         val hasNullable = relatedAnnotations.any { it in NULLABLE_ANNOTATIONS }
         return if (hasNullable && !hasNotNull) {

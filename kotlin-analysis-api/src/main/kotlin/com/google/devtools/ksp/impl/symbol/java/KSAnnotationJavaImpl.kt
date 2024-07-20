@@ -4,6 +4,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
@@ -27,6 +28,7 @@ import com.intellij.lang.jvm.JvmClassKind
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMemberValue
+import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
@@ -35,10 +37,12 @@ import com.intellij.psi.PsiLiteralValue
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
-import com.intellij.psi.impl.source.PsiAnnotationMethodImpl
-import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.components.buildClassType
-import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
+import com.intellij.psi.impl.compiled.ClsClassImpl
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
+import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.name.ClassId
@@ -65,7 +69,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     override val arguments: List<KSValueArgument> by lazy {
         val annotationConstructor = analyze {
-            (type.classifierSymbol() as KtClassOrObjectSymbol).getMemberScope().getConstructors().singleOrNull()
+            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
         }
         val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
             val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
@@ -87,27 +91,47 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
         presentArgs + defaultArguments.filter { it.name?.asString() !in presentValueArgumentNames }
     }
 
+    @OptIn(KaImplementationDetail::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
-            (type.classifierSymbol() as KtClassOrObjectSymbol).getMemberScope().getConstructors().singleOrNull()
+            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
                 ?.let { symbol ->
-                    if (symbol.origin == KtSymbolOrigin.JAVA && symbol.psi != null) {
-                        (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethodImpl>()
+                    // ClsClassImpl means psi is decompiled psi.
+                    if (
+                        symbol.origin == KtSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl
+                    ) {
+                        (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->
                                 annoMethod.defaultValue?.let {
+                                    val value = it
+                                    val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
+                                        value.initializers.map {
+                                            calcValue(it)
+                                        }
+                                    } else {
+                                        calcValue(it)
+                                    }
                                     KSValueArgumentLiteImpl.getCached(
                                         KSNameImpl.getCached(annoMethod.name),
-                                        calcValue(it),
+                                        calculatedValue,
                                         Origin.SYNTHETIC
                                     )
                                 }
                             }
                     } else {
-                        symbol.valueParameters.mapNotNull { valueParameterSymbol ->
-                            valueParameterSymbol.getDefaultValue()?.let { constantValue ->
+                        symbol.valueParameters.map { valueParameterSymbol ->
+                            valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
-                                    KtNamedAnnotationValue(
-                                        valueParameterSymbol.name, constantValue,
+                                    KaBaseNamedAnnotationValue(
+                                        valueParameterSymbol.name,
+                                        // null will be returned as the `constantValue` for non array annotation values.
+                                        // fallback to unsupported annotation value to indicate such use cases.
+                                        // when seeing unsupported annotation value we return `null` for the value.
+                                        // which might still be incorrect but there might not be a perfect way.
+                                        constantValue
+                                            ?: KaUnsupportedAnnotationValueImpl(
+                                                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+                                            )
                                     ),
                                     Origin.SYNTHETIC
                                 )
@@ -155,18 +179,19 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         is PsiPrimitiveType -> {
             result.boxedTypeName?.let {
                 ResolverAAImpl.instance
-                    .getClassDeclarationByName(result.boxedTypeName!!)?.asStarProjectedType() ?: KSErrorType
-            }
+                    .getClassDeclarationByName(it)?.asStarProjectedType()
+            } ?: KSErrorType(result.boxedTypeName)
         }
         is PsiArrayType -> {
             val componentType = when (val component = result.componentType) {
-                is PsiPrimitiveType -> component.boxedTypeName?.let {
+                is PsiPrimitiveType -> component.boxedTypeName?.let { boxedTypeName ->
                     ResolverAAImpl.instance
-                        .getClassDeclarationByName(component.boxedTypeName!!)?.asStarProjectedType()
-                } ?: KSErrorType
+                        .getClassDeclarationByName(boxedTypeName)?.asStarProjectedType()
+                } ?: KSErrorType(component.boxedTypeName)
                 else -> {
                     ResolverAAImpl.instance
-                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
+                        ?: KSErrorType(component.canonicalText)
                 }
             }
             val componentTypeRef = ResolverAAImpl.instance.createKSTypeReferenceFromKSType(componentType)
@@ -176,7 +201,8 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         }
         is PsiType -> {
             ResolverAAImpl.instance
-                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
+                ?: KSErrorType(result.canonicalText)
         }
         is PsiLiteralValue -> {
             result.value
@@ -191,10 +217,7 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
                 }?.declarations?.find {
                     it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
                         it.simpleName.asString() == result.name
-                }?.let { (it as KSClassDeclaration).asStarProjectedType() }
-                    ?.let {
-                        return it
-                    }
+                } as? KSClassDeclarationEnumEntryImpl
             } else {
                 null
             }

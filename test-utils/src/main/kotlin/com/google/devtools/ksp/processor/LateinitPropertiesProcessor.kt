@@ -31,6 +31,8 @@ class LateinitPropertiesProcessor : AbstractTestProcessor() {
         }
 
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+            lateinitPropertiesNames.add("setter, ${property.setter?.modifiers?.sorted()}, $property")
+            lateinitPropertiesNames.add("getter, ${property.getter?.modifiers?.sorted()}, $property")
             if (Modifier.LATEINIT in property.modifiers) {
                 lateinitPropertiesNames += property.simpleName.asString()
             }

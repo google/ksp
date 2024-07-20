@@ -310,12 +310,18 @@ interface Resolver {
     @KspExperimental
     fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation>
 
-    @KspExperimental
     /**
      * Returns name of packages with given annotation.
      *
      * @param annotationName name of the annotation to be queried.
      * @return a sequence of package names with corresponding annotation name.
      */
+    @KspExperimental
     fun getPackagesWithAnnotation(annotationName: String): Sequence<String>
+
+    /**
+     * @return the name of the kotlin module this resolver is running on.
+     */
+    @KspExperimental
+    fun getModuleName(): KSName
 }

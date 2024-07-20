@@ -58,8 +58,6 @@ import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
 import org.jetbrains.kotlin.codegen.OwnerKind
-import org.jetbrains.kotlin.codegen.state.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
-import org.jetbrains.kotlin.codegen.state.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -83,6 +81,8 @@ import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaMethod
 import org.jetbrains.kotlin.load.kotlin.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
+import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
+import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
@@ -140,9 +140,10 @@ class ResolverImpl(
     private val functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     private val propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
 
+    private val moduleIdentifier = module.name.getNonSpecialIdentifier()
     private val typeMapper = KotlinTypeMapper(
         BindingContext.EMPTY, ClassBuilderMode.LIGHT_CLASSES,
-        module.name.getNonSpecialIdentifier(),
+        moduleIdentifier,
         KotlinTypeMapper.LANGUAGE_VERSION_SETTINGS_DEFAULT, // TODO use proper LanguageVersionSettings
         true
     )
@@ -517,31 +518,38 @@ class ResolverImpl(
         }
     }
 
+    private val synthesizedPropPrefix = mapOf<String, (PropertyDescriptor?) -> PropertyAccessorDescriptor?>(
+        "set" to { it?.setter },
+        "get" to { it?.getter },
+        "is" to { it?.getter },
+    )
+
     // TODO: Resolve Java variables is not supported by this function. Not needed currently.
     fun resolveJavaDeclaration(psi: PsiElement): DeclarationDescriptor? {
         return when (psi) {
             is PsiClass -> moduleClassResolver.resolveClass(JavaClassImpl(psi))
             is PsiMethod -> {
-                // TODO: get rid of hardcoded check if possible.
-                val property = if (psi.name.startsWith("set") || psi.name.startsWith("get")) {
-                    moduleClassResolver
-                        .resolveContainingClass(psi)
-                        ?.findEnclosedDescriptor(
-                            kindFilter = DescriptorKindFilter.CALLABLES
-                        ) {
-                            (it as? PropertyDescriptor)?.getter?.findPsi() == psi ||
-                                (it as? PropertyDescriptor)?.setter?.findPsi() == psi
-                        }
-                } else null
+                val property = synthesizedPropPrefix.keys.firstOrNull {
+                    psi.name.startsWith(it) && psi.name.length > it.length && psi.name[it.length].isUpperCase()
+                }?.let { prefix ->
+                    val propName = psi.name.substring(prefix.length).replaceFirstChar(Char::lowercaseChar)
+                    moduleClassResolver.resolveContainingClass(psi)?.findEnclosedDescriptor(
+                        kindFilter = DescriptorKindFilter.VARIABLES,
+                        name = propName
+                    ) {
+                        synthesizedPropPrefix[prefix]!!(it as? PropertyDescriptor)?.correspondsTo(psi) == true
+                    }
+                }
                 property ?: moduleClassResolver
                     .resolveContainingClass(psi)?.let { containingClass ->
                         val filter = if (psi is SyntheticElement) {
                             { declaration: DeclarationDescriptor -> declaration.name.asString() == psi.name }
                         } else {
-                            { declaration: DeclarationDescriptor -> declaration.findPsi() == psi }
+                            { declaration: DeclarationDescriptor -> declaration.correspondsTo(psi) }
                         }
                         containingClass.findEnclosedDescriptor(
                             kindFilter = DescriptorKindFilter.FUNCTIONS,
+                            name = if (psi.name == containingClass.name.asString()) "<init>" else psi.name,
                             filter = filter
                         )
                     }
@@ -551,7 +559,8 @@ class ResolverImpl(
                     .resolveClass(JavaFieldImpl(psi).containingClass)
                     ?.findEnclosedDescriptor(
                         kindFilter = DescriptorKindFilter.VARIABLES,
-                        filter = { it.findPsi() == psi }
+                        name = psi.name,
+                        filter = { it.correspondsTo(psi) }
                     )
             }
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
@@ -688,7 +697,8 @@ class ResolverImpl(
                 builtIns.arrayType.replace(typeArgs)
             }
             else -> {
-                getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType() ?: KSErrorType
+                getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType()
+                    ?: KSErrorType(psiType.canonicalText)
             }
         }
     }
@@ -752,7 +762,8 @@ class ResolverImpl(
                         moduleClassResolver.resolveContainingClass(owner)
                             ?.findEnclosedDescriptor(
                                 kindFilter = DescriptorKindFilter.FUNCTIONS,
-                                filter = { it.findPsi() == owner }
+                                name = owner.name,
+                                filter = { it.correspondsTo(owner) }
                             ) as FunctionDescriptor
                     } as DeclarationDescriptor
                     val typeParameterDescriptor = LazyJavaTypeParameterDescriptor(
@@ -1049,7 +1060,7 @@ class ResolverImpl(
             }
         }
         // if substitution fails, fallback to the type from the property
-        return KSErrorType
+        return KSErrorType.fromReferenceBestEffort(property.type)
     }
 
     internal fun asMemberOf(
@@ -1244,7 +1255,7 @@ class ResolverImpl(
     }
 
     // Convert type arguments for Java wildcard, recursively.
-    private fun KotlinType.toWildcard(mode: TypeMappingMode): KotlinType? {
+    private fun KotlinType.toWildcard(mode: TypeMappingMode): Result<KotlinType> {
         val parameters = constructor.parameters
         val arguments = arguments
 
@@ -1254,9 +1265,12 @@ class ResolverImpl(
                 parameter.variance != org.jetbrains.kotlin.types.Variance.INVARIANT &&
                 argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
             ) {
-                // conflicting variances
-                // TODO: error message
-                return null
+                return Result.failure(
+                    IllegalArgumentException(
+                        "Conflicting variance: variance '${parameter.variance.label}' vs projection " +
+                            "'${argument.projectionKind.label}'"
+                    )
+                )
             }
 
             val argMode = mode.updateFromAnnotations(argument.type)
@@ -1264,10 +1278,10 @@ class ResolverImpl(
             val genericMode = argMode.toGenericArgumentMode(
                 getEffectiveVariance(parameter.variance, argument.projectionKind)
             )
-            TypeProjectionImpl(variance, argument.type.toWildcard(genericMode) ?: return null)
+            TypeProjectionImpl(variance, argument.type.toWildcard(genericMode).getOrElse { return Result.failure(it) })
         }
 
-        return replace(wildcardArguments)
+        return Result.success(replace(wildcardArguments))
     }
 
     private val JVM_SUPPRESS_WILDCARDS_NAME = KSNameImpl.getCached("kotlin.jvm.JvmSuppressWildcards")
@@ -1366,19 +1380,24 @@ class ResolverImpl(
             if (position == RefPosition.SUPER_TYPE &&
                 argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
             ) {
-                // Type projection isn't allowed in immediate arguments to supertypes.
-                // TODO: error message
-                return KSTypeReferenceSyntheticImpl.getCached(KSErrorType, null)
+                val errorType = KSErrorType(
+                    name = type.toString(),
+                    message = "Type projection isn't allowed in immediate arguments to supertypes"
+                )
+                return KSTypeReferenceSyntheticImpl.getCached(errorType, null)
             }
         }
 
-        val wildcardType = kotlinType.toWildcard(typeMappingMode)?.let {
-            var candidate: KotlinType = it
+        val wildcardType = kotlinType.toWildcard(typeMappingMode).let {
+            var candidate: KotlinType = it.getOrElse { error ->
+                val errorType = KSErrorType(name = type.toString(), message = error.message)
+                return KSTypeReferenceSyntheticImpl.getCached(errorType, null)
+            }
             for (i in indexes.reversed()) {
                 candidate = candidate.arguments[i].type
             }
             getKSTypeCached(candidate)
-        } ?: KSErrorType
+        }
 
         return KSTypeReferenceSyntheticImpl.getCached(wildcardType, null)
     }
@@ -1405,11 +1424,47 @@ class ResolverImpl(
         }.map { it.packageName.asString() }
     }
 
+    @KspExperimental
+    override fun getModuleName(): KSName = KSNameImpl.getCached(moduleIdentifier)
+
     private val psiJavaFiles = allKSFiles.filterIsInstance<KSFileJavaImpl>().map {
         Pair(it.psi.virtualFile.path, it.psi)
     }.toMap()
 
     internal fun findPsiJavaFile(path: String): PsiFile? = psiJavaFiles.get(path)
+
+    // Always construct the key on the fly, so that it and value can be reclaimed any time.
+    private val contributedDescriptorsCache =
+        WeakHashMap<Pair<MemberScope, DescriptorKindFilter>, Map<String, List<DeclarationDescriptor>>>()
+
+    private inline fun MemberScope.findEnclosedDescriptor(
+        kindFilter: DescriptorKindFilter,
+        name: String,
+        crossinline filter: (DeclarationDescriptor) -> Boolean,
+    ): DeclarationDescriptor? {
+        val nameToDescriptors = contributedDescriptorsCache.computeIfAbsent(Pair(this, kindFilter)) {
+            getContributedDescriptors(kindFilter).groupBy { it.name.asString() }
+        }
+        return nameToDescriptors.get(name)?.firstOrNull(filter)
+    }
+
+    private inline fun ClassDescriptor.findEnclosedDescriptor(
+        kindFilter: DescriptorKindFilter,
+        name: String,
+        crossinline filter: (DeclarationDescriptor) -> Boolean,
+    ): DeclarationDescriptor? {
+        return this.unsubstitutedMemberScope.findEnclosedDescriptor(
+            kindFilter = kindFilter,
+            name = name,
+            filter = filter
+        ) ?: this.staticScope.findEnclosedDescriptor(
+            kindFilter = kindFilter,
+            name = name,
+            filter = filter
+        ) ?: constructors.firstOrNull {
+            kindFilter.accepts(it) && filter(it)
+        }
+    }
 }
 
 // TODO: cross module resolution
@@ -1474,30 +1529,6 @@ private fun Name.getNonSpecialIdentifier(): String {
         asString().substring(1, asString().length - 1)
     } else {
         asString().substring(1)
-    }
-}
-
-private inline fun MemberScope.findEnclosedDescriptor(
-    kindFilter: DescriptorKindFilter,
-    crossinline filter: (DeclarationDescriptor) -> Boolean,
-): DeclarationDescriptor? {
-    return getContributedDescriptors(
-        kindFilter = kindFilter
-    ).firstOrNull(filter)
-}
-
-private inline fun ClassDescriptor.findEnclosedDescriptor(
-    kindFilter: DescriptorKindFilter,
-    crossinline filter: (DeclarationDescriptor) -> Boolean,
-): DeclarationDescriptor? {
-    return this.unsubstitutedMemberScope.findEnclosedDescriptor(
-        kindFilter = kindFilter,
-        filter = filter
-    ) ?: this.staticScope.findEnclosedDescriptor(
-        kindFilter = kindFilter,
-        filter = filter
-    ) ?: constructors.firstOrNull {
-        kindFilter.accepts(it) && filter(it)
     }
 }
 

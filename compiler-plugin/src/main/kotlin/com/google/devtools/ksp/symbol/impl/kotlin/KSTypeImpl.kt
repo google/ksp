@@ -95,9 +95,7 @@ class KSTypeImpl private constructor(
     }
 
     override fun replace(arguments: List<KSTypeArgument>): KSType {
-        return kotlinType.replaceTypeArguments(arguments)?.let {
-            getKSTypeCached(it, arguments, annotations)
-        } ?: KSErrorType
+        return kotlinType.replaceTypeArguments(arguments, annotations)
     }
 
     override fun starProjection(): KSType {
@@ -136,10 +134,12 @@ fun getKSTypeCached(
     ksTypeArguments: List<KSTypeArgument>? = null,
     annotations: Sequence<KSAnnotation> = sequenceOf()
 ): KSType {
-    return if (kotlinType.isError ||
-        kotlinType.constructor.declarationDescriptor is NotFoundClasses.MockClassDescriptor
-    ) {
-        KSErrorType
+    if (kotlinType.isError) {
+        return KSErrorType.fromKtErrorType(kotlinType)
+    }
+    val descriptor = kotlinType.constructor.declarationDescriptor
+    return if (descriptor is NotFoundClasses.MockClassDescriptor) {
+        KSErrorType(descriptor.name.asString())
     } else {
         KSTypeImpl.getCached(
             kotlinType,

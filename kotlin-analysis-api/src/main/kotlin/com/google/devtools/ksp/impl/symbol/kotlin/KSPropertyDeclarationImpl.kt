@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.closestClassDeclaration
@@ -23,36 +25,45 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
-import org.jetbrains.kotlin.analysis.api.annotations.KtAnnotationApplication
-import org.jetbrains.kotlin.analysis.api.annotations.annotations
-import org.jetbrains.kotlin.analysis.api.symbols.KtKotlinPropertySymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtPropertySymbol
+import org.jetbrains.kotlin.analysis.api.KaConstantInitializerValue
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirKotlinPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaKotlinPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
-import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
-import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
+import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 
-class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KtPropertySymbol) :
+class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KaPropertySymbol) :
     KSPropertyDeclaration,
     AbstractKSDeclarationImpl(ktPropertySymbol),
     KSExpectActual by KSExpectActualImpl(ktPropertySymbol) {
-    companion object : KSObjectCache<KtPropertySymbol, KSPropertyDeclarationImpl>() {
-        fun getCached(ktPropertySymbol: KtPropertySymbol) =
+    companion object : KSObjectCache<KaPropertySymbol, KSPropertyDeclarationImpl>() {
+        fun getCached(ktPropertySymbol: KaPropertySymbol) =
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
     }
 
     override fun asKSDeclaration(): KSDeclaration = this
 
+    override val originalAnnotations: Sequence<KSAnnotation>
+        get() = annotations
+
     override val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
-            .map { KSAnnotationImpl.getCached(it, this) }
+            .map { KSAnnotationResolvedImpl.getCached(it, this) }
             .plus(
                 if (ktPropertySymbol.isFromPrimaryConstructor) {
                     (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters
@@ -70,8 +81,9 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                     } ?: false
                 }
             }.plus(
+                // TODO: optimize for psi
                 ktPropertySymbol.backingFieldSymbol?.annotations
-                    ?.map { KSAnnotationImpl.getCached(it) } ?: emptyList()
+                    ?.map { KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) } ?: emptyList()
             )
     }
 
@@ -93,9 +105,23 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
     override val extensionReceiver: KSTypeReference? by lazy {
         (ktPropertySymbol.psiIfSource() as? KtProperty)?.receiverTypeReference
-            ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: ktPropertySymbol.receiverType
-                ?.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) }
+            ?.let {
+                // receivers are modeled as parameter in AA therefore annotations are stored in
+                // the corresponding receiver parameter, need to pass it to the `KSTypeReferenceImpl`
+                KSTypeReferenceImpl.getCached(
+                    it,
+                    this,
+                    ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
+                )
+            }
+            ?: ktPropertySymbol.receiverType?.let {
+                KSTypeReferenceResolvedImpl.getCached(
+                    it,
+                    this@KSPropertyDeclarationImpl,
+                    -1,
+                    ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
+                )
+            }
     }
 
     override val type: KSTypeReference by lazy {
@@ -107,15 +133,32 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         !ktPropertySymbol.isVal
     }
 
+    @OptIn(KaExperimentalApi::class)
     override val hasBackingField: Boolean by lazy {
         if (origin == Origin.KOTLIN_LIB || origin == Origin.JAVA_LIB) {
-            val fileManager = ResolverAAImpl.instance.javaFileManager
-            val parentClass = this.findParentOfType<KSClassDeclaration>()
-            val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
-            val virtualFileContent = analyze {
-                (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
+            when {
+                ktPropertySymbol.receiverParameter != null -> false
+                ktPropertySymbol.initializer is KaConstantInitializerValue -> true
+                (ktPropertySymbol as? KaKotlinPropertySymbol)?.isLateInit == true -> true
+                ktPropertySymbol.modality == KaSymbolModality.ABSTRACT -> false
+                else -> {
+                    val classId = when (
+                        val containerSource =
+                            (ktPropertySymbol as? KaFirKotlinPropertySymbol)?.firSymbol?.containerSource
+                    ) {
+                        is JvmPackagePartSource -> containerSource.classId
+                        is KotlinJvmBinarySourceElement -> containerSource.binaryClass.classId
+                        else -> null
+                    } ?: return@lazy ktPropertySymbol.hasBackingField
+                    val fileManager = ResolverAAImpl.instance.javaFileManager
+                    val virtualFileContent = analyze {
+                        (fileManager.findClass(classId, analysisScope) as JavaClassImpl)
+                            .virtualFile!!.contentsToByteArray()
+                    }
+                    BinaryClassInfoCache.getCached(classId, virtualFileContent)
+                        .fieldAccFlags.containsKey(simpleName.asString())
+                }
             }
-            BinaryClassInfoCache.getCached(classId, virtualFileContent).fieldAccFlags.containsKey(simpleName.asString())
         } else {
             ktPropertySymbol.hasBackingField
         }
@@ -131,7 +174,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         }
         recordLookupForPropertyOrMethod(this)
         return analyze {
-            ktPropertySymbol.getDirectlyOverriddenSymbols().firstOrNull()
+            ktPropertySymbol.directlyOverriddenSymbols.firstOrNull()
                 ?.unwrapFakeOverrides?.toKSDeclaration() as? KSPropertyDeclaration
         }?.also { recordLookupForPropertyOrMethod(it) }
     }
@@ -153,7 +196,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 }
 
-internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {
+internal fun KaAnnotation.isUseSiteTargetAnnotation(): Boolean {
     return this.useSiteTarget?.let {
         it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
             it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
@@ -161,10 +204,18 @@ internal fun KtAnnotationApplication.isUseSiteTargetAnnotation(): Boolean {
             it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
     } ?: false
 }
-
-internal fun KtPropertySymbol.toModifiers(): Set<Modifier> {
+internal fun KtAnnotationEntry.isUseSiteTargetAnnotation(): Boolean {
+    return this.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
+        it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
+            it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
+            it == AnnotationUseSiteTarget.SETTER_PARAMETER ||
+            it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER ||
+            it == AnnotationUseSiteTarget.FIELD
+    } ?: false
+}
+internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
-    if (visibility != JavaVisibilities.PackageVisibility) {
+    if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
         result.add(visibility.toModifier())
     }
     if (isOverride) {
@@ -175,11 +226,11 @@ internal fun KtPropertySymbol.toModifiers(): Set<Modifier> {
         result.add(Modifier.FINAL)
     }
     // Analysis API returns open for static members which should be ignored.
-    if (!isStatic || modality != Modality.OPEN) {
+    if (!isStatic || modality != KaSymbolModality.OPEN) {
         result.add(modality.toModifier())
     }
 
-    if (this is KtKotlinPropertySymbol) {
+    if (this is KaKotlinPropertySymbol) {
         if (isLateInit) {
             result.add(Modifier.LATEINIT)
         }

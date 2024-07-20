@@ -170,6 +170,7 @@ package com.google.devtools.ksp.processing {
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getJvmName(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration declaration);
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getJvmName(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor);
     method @NonNull public com.google.devtools.ksp.symbol.KSName getKSNameFromString(@NonNull String name);
+    method @NonNull @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName getModuleName();
     method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFile> getNewFiles();
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration declaration);
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration declaration);

@@ -22,7 +22,7 @@
 // kotlin.collections.Map
 // kotlin.String
 // ERROR TYPE
-// errorInComponent is assignable from errorAtTop: true
+// errorInComponent is assignable from errorAtTop: false
 // errorInComponent is assignable from class C: false
 // Any is assignable from errorInComponent: true
 // class C is assignable from errorInComponent: false

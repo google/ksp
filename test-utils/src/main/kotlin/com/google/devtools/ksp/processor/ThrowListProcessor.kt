@@ -48,6 +48,12 @@ class ThrowListProcessor : AbstractTestProcessor() {
         val propertyA = klass.declarations.single { it.simpleName.asString() == "a" } as KSPropertyDeclaration
         result.add(resolver.getJvmCheckedException(propertyA.getter!!).toResult())
         result.add(resolver.getJvmCheckedException(propertyA.setter!!).toResult())
+        klass.declarations.filter { it.simpleName.asString() == "syntheticAccessors" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).getter!!).toResult()
+        }.sorted().forEach { result.add(it) }
+        klass.declarations.filter { it.simpleName.asString() == "syntheticAccessors" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).setter!!).toResult()
+        }.sorted().forEach { result.add(it) }
         val jlib = resolver.getClassDeclarationByName("JavaLib")!!
         val klib = resolver.getClassDeclarationByName("KtLib")!!
         klib.declarations.filter { it.simpleName.asString() == "throwsLibKt" }.map {
@@ -63,6 +69,12 @@ class ThrowListProcessor : AbstractTestProcessor() {
             resolver.getJvmCheckedException((it as KSPropertyDeclaration).getter!!).toResult()
         }.sorted().forEach { result.add(it) }
         klib.declarations.filter { it.simpleName.asString() == "bothThrows" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).setter!!).toResult()
+        }.sorted().forEach { result.add(it) }
+        klib.declarations.filter { it.simpleName.asString() == "syntheticAccessors" }.map {
+            resolver.getJvmCheckedException((it as KSPropertyDeclaration).getter!!).toResult()
+        }.sorted().forEach { result.add(it) }
+        klib.declarations.filter { it.simpleName.asString() == "syntheticAccessors" }.map {
             resolver.getJvmCheckedException((it as KSPropertyDeclaration).setter!!).toResult()
         }.sorted().forEach { result.add(it) }
         jlib.declarations.filter { it.simpleName.asString() == "foo" }.map {

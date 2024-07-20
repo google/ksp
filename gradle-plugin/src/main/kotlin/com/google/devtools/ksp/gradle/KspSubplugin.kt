@@ -318,13 +318,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     )
                 }
             } else {
+                val filteredTasks =
+                    kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                 kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                     kspTask.setSource(
                         sourceSet.kotlin.srcDirs.filter {
-                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it) &&
+                                it !in kspExtension.excludedSources
                         }
                     )
-                    kspTask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName))
+                    kspTask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks })
                 }
             }
 

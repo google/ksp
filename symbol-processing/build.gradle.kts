@@ -72,6 +72,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.6.3")
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                     }
                 }

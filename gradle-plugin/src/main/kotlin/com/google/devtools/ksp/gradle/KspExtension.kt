@@ -18,12 +18,17 @@
 package com.google.devtools.ksp.gradle
 
 import org.gradle.api.GradleException
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.process.CommandLineArgumentProvider
 
-open class KspExtension {
+abstract class KspExtension {
     internal val apOptions = mutableMapOf<String, String>()
     internal val commandLineArgumentProviders = mutableListOf<CommandLineArgumentProvider>()
     internal val excludedProcessors = mutableSetOf<String>()
+
+    // Specify sources that should be excluded from KSP.
+    // If you have a task that generates sources, you can call `ksp.excludedSources.from(task)`.
+    abstract val excludedSources: ConfigurableFileCollection
 
     open val arguments: Map<String, String> get() = apOptions.toMap()
 

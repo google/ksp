@@ -18,9 +18,9 @@
 // TEST PROCESSOR: ParameterTypeProcessor
 // EXPECTED:
 // a: Int
-// b: <ERROR TYPE>
+// b: <ERROR TYPE: NonExist>
 // c: <ERROR TYPE>
-// errorValue: <ERROR TYPE>
+// errorValue: <ERROR TYPE: ErrorType>
 // v: String
 // value: Int
 // END
