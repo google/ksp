@@ -172,7 +172,7 @@ tasks.withType<ShadowJar>() {
                 args = listOf(
                     "--multi-release", "base",
                     "--missing-deps",
-                    "-cp", depJars.joinToString(":"), jarJar.path
+                    "-cp", depJars.joinToString(File.pathSeparator), jarJar.path
                 )
                 standardOutput = stdout
             }
