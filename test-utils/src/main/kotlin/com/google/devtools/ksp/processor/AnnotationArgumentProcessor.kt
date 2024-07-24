@@ -19,10 +19,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSValueArgument
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.symbol.*
 
 class AnnotationArgumentProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -34,6 +31,14 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
                 cls.annotations.single().arguments.forEach {
                     results.add("$clsName: ${it.name!!.asString()} = ${it.value}")
                 }
+            }
+        }
+
+        resolver.getClassDeclarationByName("DataClass")?.let { cls ->
+            cls.declarations.filterIsInstance<KSFunctionDeclaration>().single {
+                it.simpleName.asString() == "copy"
+            }.annotations.forEach {
+                it.arguments
             }
         }
 
