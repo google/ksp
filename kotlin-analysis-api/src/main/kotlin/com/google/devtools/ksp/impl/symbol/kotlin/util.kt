@@ -323,6 +323,8 @@ internal fun KtAnnotated.annotations(
     parent: KSNode? = null,
     candidates: List<KaAnnotation> = kaAnnotated.annotations
 ): Sequence<KSAnnotation> {
+    if (candidates.isEmpty())
+        return emptySequence()
     return annotationEntries.filter { !it.isUseSiteTargetAnnotation() }.asSequence().map { annotationEntry ->
         KSAnnotationImpl.getCached(annotationEntry, parent) {
             candidates.single { it.psi == annotationEntry }
