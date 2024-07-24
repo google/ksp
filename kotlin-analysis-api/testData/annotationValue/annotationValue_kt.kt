@@ -106,6 +106,8 @@ fun Fun() {
     class Local
 }
 
+data class DataClass
+
 // FILE: JavaEnum.java
 
 enum JavaEnum { ONE, TWO, THREE }
