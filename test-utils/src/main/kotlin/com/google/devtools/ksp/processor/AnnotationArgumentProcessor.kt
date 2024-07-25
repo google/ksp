@@ -63,6 +63,21 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
                 println(a.arguments)
             }
         }
+
+        resolver.getClassDeclarationByName("Cls")?.let { cls ->
+            cls.annotations.single().arguments.forEach { argToA ->
+                results.add("Cls: argToA: ${argToA.name!!.asString()}")
+                argToA.value.let { argBVal ->
+                    if (argBVal is KSAnnotation) {
+                        argBVal.arguments.forEach { argToB ->
+                            results.add("Cls: argToB: " + argToB.value)
+                        }
+                    } else {
+                        results.add("Cls: argBVal unknown: $argBVal")
+                    }
+                }
+            }
+        }
         return emptyList()
     }
 
