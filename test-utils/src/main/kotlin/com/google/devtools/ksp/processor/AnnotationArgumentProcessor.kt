@@ -57,10 +57,10 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
             }
         }
 
-        resolver.getClassDeclarationByName("Sub")!!.let { cls ->
+        resolver.getClassDeclarationByName("Sub")?.let { cls ->
             cls.superTypes.single().annotations.single().let { typeAnnotation ->
                 val a = typeAnnotation.arguments.single().value as KSAnnotation
-                println(a.arguments)
+                results.add("Sub: ${a.arguments}")
             }
         }
 
@@ -79,7 +79,7 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
             }
         }
 
-        resolver.getClassDeclarationByName("TestJavaLib")!!.let { cls ->
+        resolver.getClassDeclarationByName("TestJavaLib")?.let { cls ->
             cls.annotations.single().arguments.single().let { ksValueArg ->
                 results.add("TestJavaLib: " + (ksValueArg.value as KSAnnotation).shortName.asString())
             }

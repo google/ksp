@@ -35,6 +35,21 @@
 // 31
 // Throws
 // END
+// MODULE: module1
+// FILE: placeholder.kt
+// FILE: OtherAnnotation.java
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+@Retention(RetentionPolicy.RUNTIME)
+public @interface OtherAnnotation {
+    String value();
+}
+// FILE: JavaAnnotationWithDefaults.java
+public @interface JavaAnnotationWithDefaults {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
+// MODULE: main(module1)
 // FILE: a.kt
 
 enum class RGB {

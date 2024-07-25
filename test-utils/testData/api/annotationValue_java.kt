@@ -36,6 +36,8 @@
 // ONE
 // 31
 // [warning1, warning 2]
+// Sub: [i:42]
+// TestJavaLib: OtherAnnotation
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -50,6 +52,19 @@ import java.lang.annotation.Target;
 }
 interface MyInterface {}
 @MyAnnotation(stringParam = "2") class MyClassInLib implements MyInterface {}
+
+// FILE: OtherAnnotation.java
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+@Retention(RetentionPolicy.RUNTIME)
+public @interface OtherAnnotation {
+    String value();
+}
+// FILE: JavaAnnotationWithDefaults.java
+public @interface JavaAnnotationWithDefaults {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
 // MODULE: main(module1)
 // FILE: Test.java
 @MyAnnotation(stringParam = "2") class MyClass implements MyInterface {}
@@ -111,3 +126,7 @@ import java.lang.annotation.Target;
 }
 interface Parent {}
 class Sub implements @B(a = @A(i = 42)) Parent {}
+
+// FILE: TestJavaLib.java
+@JavaAnnotationWithDefaults
+class TestJavaLib {}
