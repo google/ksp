@@ -535,13 +535,14 @@ internal fun KaAnnotationValue.toValue(): Any? = when (this) {
 internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
     fun FirExpression.toValue(builder: KaSymbolByFirBuilder): KaAnnotationValue? {
         if (this is FirAnnotation) {
+            val classId = ClassId.fromString(
+                (annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()
+            )
             return KaNestedAnnotationAnnotationValueImpl(
                 KaAnnotationImpl(
                     JavaToKotlinClassMap.mapJavaToKotlinIncludingClassMapping(
-                        ClassId.fromString(
-                            (annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()
-                        ).asSingleFqName()
-                    ),
+                        classId.asSingleFqName()
+                    ) ?: classId,
                     null,
                     null,
                     false,

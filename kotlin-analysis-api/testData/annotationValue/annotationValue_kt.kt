@@ -38,8 +38,10 @@
 // JavaEnum.ONE
 // 31
 // Throws
+// Sub: [i:42]
 // Cls: argToA: b
 // Cls: argToB: 42
+// TestJavaLib: OtherAnnotation
 // END
 // MODULE: module1
 // FILE: placeholder.kt
