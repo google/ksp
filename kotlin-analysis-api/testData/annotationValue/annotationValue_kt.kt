@@ -38,6 +38,8 @@
 // JavaEnum.ONE
 // 31
 // Throws
+// Cls: argToA: b
+// Cls: argToB: 42
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -48,6 +50,14 @@
     String value2();
     Class<?> value3();
 }
+
+// FILE: Cls.kt
+annotation class ClsB(val i: Int)
+annotation class ClsA(val b: ClsB)
+
+@ClsA(b = ClsB(i = 42))
+class Cls
+
 // MODULE: main(module1)
 // FILE: a.kt
 
