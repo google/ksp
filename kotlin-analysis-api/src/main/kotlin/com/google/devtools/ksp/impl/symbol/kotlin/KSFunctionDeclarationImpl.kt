@@ -41,6 +41,8 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             cache.getOrPut(ktFunctionSymbol) { KSFunctionDeclarationImpl(ktFunctionSymbol) }
     }
 
+    override fun asKSDeclaration(): KSDeclaration = this
+
     // TODO: upstream deprecated `KtSymbolKind` in favor of `KaSymbolLocation` but they are
     // semantically different as the new location does not suggest if the function is a lambda or not.
     // This is a breaking change in upstream deprecation.
