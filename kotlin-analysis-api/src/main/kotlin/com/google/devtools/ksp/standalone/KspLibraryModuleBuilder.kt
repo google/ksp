@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.standalone
 
 import com.intellij.psi.search.ProjectScope
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibrarySourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtBinaryModuleBuilder
@@ -37,6 +38,7 @@ class KspLibraryModuleBuilder(
     public lateinit var libraryName: String
     public var librarySources: KaLibrarySourceModule? = null
 
+    @OptIn(KaExperimentalApi::class)
     override fun build(): KaLibraryModule {
         val binaryRoots = getBinaryRoots()
         val contentScope = ProjectScope.getLibrariesScope(kotlinCoreProjectEnvironment.project)
@@ -48,6 +50,7 @@ class KspLibraryModuleBuilder(
             platform,
             kotlinCoreProjectEnvironment.project,
             binaryRoots,
+            emptyList(),
             libraryName,
             librarySources,
             false
