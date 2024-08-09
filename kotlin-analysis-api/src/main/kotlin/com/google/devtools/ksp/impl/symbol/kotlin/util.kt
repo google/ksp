@@ -42,7 +42,7 @@ import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.KaSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionalType
+import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaAnnotationImpl
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaArrayAnnotationValueImpl
@@ -385,7 +385,7 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             // TODO: upstream is not exposing enough information for captured types.
             is KaCapturedType -> TODO("fix in upstream")
             is KaClassErrorType, is KaErrorType -> null
-            is KaFunctionType -> (this as? KaFirFunctionalType)?.abbreviatedSymbol() ?: symbol
+            is KaFunctionType -> (this as? KaFirFunctionType)?.abbreviatedSymbol() ?: symbol
             is KaUsualClassType -> symbol
             is KaDefinitelyNotNullType -> original.classifierSymbol()
             is KaDynamicType -> null
@@ -545,9 +545,7 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
                     ) ?: classId,
                     null,
                     null,
-                    false,
                     lazyOf(emptyList()),
-                    0,
                     null,
                     KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                 ),
@@ -878,6 +876,6 @@ internal fun TypeMappingMode.updateFromAnnotations(
 }
 
 internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? {
-    val classId = (this as? KaFirFunctionalType)?.coneType?.abbreviatedType?.classId ?: return null
+    val classId = (this as? KaFirFunctionType)?.coneType?.abbreviatedType?.classId ?: return null
     return classId.toTypeAlias()
 }

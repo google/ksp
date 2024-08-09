@@ -11,9 +11,7 @@ fun getExtensionFunctionTypeAnnotation(index: Int) = KaAnnotationImpl(
     ClassId.fromString(ExtensionFunctionType::class.qualifiedName!!),
     null,
     null,
-    false,
     lazyOf(emptyList()),
-    index,
     null,
     KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
 )
