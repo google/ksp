@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
@@ -170,19 +171,24 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
                     }
-                    // FIXME: figure out how to filter or set variant attributes correctly.
-                    // cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
-                    val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
-                    cfg.libraries.from(
-                        project.files(
-                            Callable {
-                                kotlinCompileProvider.get().libraries.filter {
-                                    !kspOutputDir.isParentOf(it) &&
-                                        !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+
+                    if (kotlinCompilation is KotlinJvmAndroidCompilation) {
+                        // Workaround of a dependency resolution issue of AGP.
+                        // FIXME: figure out how to filter or set variant attributes correctly.
+                        val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
+                        cfg.libraries.from(
+                            project.files(
+                                Callable {
+                                    kotlinCompileProvider.get().libraries.filter {
+                                        !kspOutputDir.isParentOf(it) &&
+                                            !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                                    }
                                 }
-                            }
+                            )
                         )
-                    )
+                    } else {
+                        cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
+                    }
 
                     val compilerOptions = kotlinCompilation.compilerOptions.options
                     val langVer = compilerOptions.languageVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
