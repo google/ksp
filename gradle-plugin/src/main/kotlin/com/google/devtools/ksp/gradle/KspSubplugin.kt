@@ -296,8 +296,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourceOutputDir
             )
 
-            val kotlinCompileTask = kotlinCompileProvider.get()
             if (kspExtension.allowSourcesFromOtherPlugins) {
+                val kotlinCompileTask = kotlinCompileProvider.get()
                 fun setSource(source: FileCollection) {
                     // kspTask.setSource(source) would create circular dependency.
                     // Therefore we need to manually extract input deps, filter them, and tell kspTask.
@@ -331,18 +331,24 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             }
 
-            kspTask.libraries.setFrom(
-                kotlinCompileTask.project.files(
-                    Callable {
-                        kotlinCompileTask.libraries.filter {
-                            // manually exclude KAPT generated class folder from class path snapshot.
-                            // TODO: remove in 1.9.0.
+            if (kotlinCompilation is KotlinJvmAndroidCompilation) {
+                // Workaround of a dependency resolution issue of AGP.
+                kspTask.libraries.setFrom(
+                    project.files(
+                        Callable {
+                            kotlinCompileProvider.get().libraries.filter {
+                                // manually exclude KAPT generated class folder from class path snapshot.
+                                // TODO: remove in 1.9.0.
 
-                            !kspOutputDir.isParentOf(it) && !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                                !kspOutputDir.isParentOf(it) && !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                            }
                         }
-                    }
+                    )
                 )
-            )
+            } else {
+                kspTask.libraries.setFrom(kotlinCompilation.compileDependencyFiles)
+            }
+
             // kotlinc's incremental compilation isn't compatible with symbol processing in a few ways:
             // * It doesn't consider private / internal changes when computing dirty sets.
             // * It compiles iteratively; Sources can be compiled in different rounds.
