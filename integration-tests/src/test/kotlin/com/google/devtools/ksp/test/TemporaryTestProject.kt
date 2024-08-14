@@ -30,6 +30,7 @@ class TemporaryTestProject(
         appendProperty("org.gradle.unsafe.configuration-cache=true")
         appendProperty("kotlin.jvm.target.validation.mode=warning")
         appendProperty("ksp.incremental.log=true")
+        appendProperty("android.useAndroidX=true")
 
         appendProperty("org.gradle.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m")
         appendProperty("kotlin.daemon.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m")
