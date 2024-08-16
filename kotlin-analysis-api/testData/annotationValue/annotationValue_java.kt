@@ -21,9 +21,11 @@
 // MyClass: MyAnnotation: stringParam = 2
 // MyClass: MyAnnotation: stringParam2 = 1
 // MyClass: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClass: MyAnnotation: Containing.Nested
 // MyClassInLib: MyAnnotation: stringParam = 2
 // MyClassInLib: MyAnnotation: stringParam2 = 1
 // MyClassInLib: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClassInLib: MyAnnotation: Containing.Nested
 // Str
 // 42
 // Foo
@@ -60,8 +62,12 @@ import java.lang.annotation.Target;
     int value1();
 }
 
+@interface Containing {
+    @interface Nested {}
+}
+
 interface MyInterface {}
-@MyAnnotation(stringParam = "2") class MyClassInLib implements MyInterface {}
+@MyAnnotation(stringParam = "2") @Containing.Nested class MyClassInLib implements MyInterface {}
 
 // FILE: OtherAnnotation.java
 import java.lang.annotation.Retention;
@@ -80,7 +86,7 @@ annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotati
 
 // MODULE: main(module1)
 // FILE: Test.java
-@MyAnnotation(stringParam = "2") class MyClass implements MyInterface {}
+@MyAnnotation(stringParam = "2") @Containing.Nested class MyClass implements MyInterface {}
 
 // FILE: a.kt
 enum class RGB {
