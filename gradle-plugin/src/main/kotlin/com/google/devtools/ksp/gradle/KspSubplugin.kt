@@ -126,14 +126,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             options += SubpluginOption("incremental", isIncremental.toString())
             options += SubpluginOption(
                 "incrementalLog",
-                project.findProperty("ksp.incremental.log")?.toString() ?: "false"
+                project.providers.gradleProperty("ksp.incremental.log").orNull ?: "false"
             )
             options += InternalSubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
             options += SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
             // Turn this on by default to work KT-30172 around. It is off by default in the compiler plugin.
             options += SubpluginOption(
                 "returnOkOnError",
-                project.findProperty("ksp.return.ok.on.error")?.toString() ?: "true"
+                project.providers.gradleProperty("ksp.return.ok.on.error").orNull ?: "true"
             )
             commonSources.ifNotEmpty {
                 options += FilesSubpluginOption("commonSources", this)
@@ -148,7 +148,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
             options += SubpluginOption(
                 "mapAnnotationArgumentsInJava",
-                project.findProperty("ksp.map.annotation.arguments.in.java")?.toString() ?: "false"
+                project.providers.gradleProperty("ksp.map.annotation.arguments.in.java").orNull ?: "false"
             )
             commandLineArgumentProviders.get().forEach {
                 it.asArguments().forEach { argument ->
@@ -176,7 +176,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinVersion = ApiVersion.parse(project.getKotlinPluginVersion())!!
 
         // Check version and show warning by default.
-        val noVersionCheck = project.findProperty("ksp.version.check")?.toString()?.toBoolean() == false
+        val noVersionCheck = project.providers.gradleProperty("ksp.version.check").orNull?.toBoolean() == false
         if (!noVersionCheck) {
             if (kspVersion < kotlinVersion) {
                 project.logger.warn(
@@ -255,7 +255,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             javaCompile.classpath += project.files(classOutputDir)
         }
 
-        val processingModel = project.findProperty("ksp.experimental.processing.model")?.toString() ?: "traditional"
+        val processingModel = project.providers.gradleProperty("ksp.experimental.processing.model").orNull ?: "traditional"
 
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
@@ -403,10 +403,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
         }
 
-        val isIncremental = project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true
+        val isIncremental = project.providers.gradleProperty("ksp.incremental").orNull?.toBoolean() ?: true
         val isIntermoduleIncremental =
-            (project.findProperty("ksp.incremental.intermodule")?.toString()?.toBoolean() ?: true) && isIncremental
-        val useKSP2 = project.findProperty("ksp.useKSP2")?.toString()?.toBoolean() ?: false
+            (project.providers.gradleProperty("ksp.incremental.intermodule").orNull?.toBoolean() ?: true) && isIncremental
+        val useKSP2 = project.providers.gradleProperty("ksp.useKSP2").orNull?.toBoolean() ?: false
 
         // Create and configure KSP tasks.
         val kspTaskProvider = if (useKSP2) {
@@ -507,8 +507,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             configureAsKspTask(kspTask, false)
                             configureAsAbstractKotlinCompileTool(kspTask)
 
-                            val useEmbeddable = project.findProperty("kotlin.native.useEmbeddableCompilerJar")
-                                ?.toString()?.toBoolean() ?: true
+                            val useEmbeddable = project.providers.gradleProperty("kotlin.native.useEmbeddableCompilerJar")
+                                .orNull
+                                ?.toBoolean()
+                                ?: true
                             val classpathCfg = if (useEmbeddable) {
                                 kspClasspathCfg
                             } else {
