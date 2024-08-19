@@ -131,7 +131,9 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             errorType = ::KSErrorType,
         )?.let { error -> return error }
         return analyze {
+            ktClassOrObjectSymbol.tryResolveToTypePhase()
             if (typeArguments.isEmpty()) {
+                // Resolving a class symbol also resolves its type parameters.
                 typeParameters.map { buildTypeParameterType((it as KSTypeParameterImpl).ktTypeParameterSymbol) }
                     .let { typeParameterTypes ->
                         buildClassType(ktClassOrObjectSymbol) {
@@ -150,7 +152,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     override fun asStarProjectedType(): KSType {
         return analyze {
             KSTypeImpl.getCached(
-                useSiteSession.buildClassType(ktClassOrObjectSymbol) {
+                useSiteSession.buildClassType(ktClassOrObjectSymbol.tryResolveToTypePhase()) {
                     var current: KSNode? = this@KSClassDeclarationImpl
                     while (current is KSClassDeclarationImpl) {
                         current.ktClassOrObjectSymbol.typeParameters.forEach {
