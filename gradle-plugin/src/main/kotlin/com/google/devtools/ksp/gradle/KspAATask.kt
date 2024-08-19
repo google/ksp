@@ -209,18 +209,22 @@ abstract class KspAATask @Inject constructor(
                             target
                         )
                     )
-                    val apOptions = mutableMapOf<String, String>()
-                    apOptions.putAll(kspExtension.apOptions)
-                    kspExtension.commandLineArgumentProviders.forEach { provider ->
-                        provider.asArguments().forEach { argument ->
-                            val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
-                            if (kv == null || kv.size != 3) {
-                                throw IllegalArgumentException("KSP apoption does not match (\\S+)=(\\S+): $argument")
+                    cfg.processorOptions.putAll(kspExtension.apOptions)
+                    cfg.processorOptions.putAll(
+                        kspExtension.commandLineArgumentProviders.map { providers ->
+                            buildMap {
+                                for (provider in providers) {
+                                    provider.asArguments().forEach { argument ->
+                                        val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
+                                        require(kv != null && kv.size == 3) {
+                                            "KSP apoption does not match (\\S+)=(\\S+): $argument"
+                                        }
+                                        put(kv[1], kv[2])
+                                    }
+                                }
                             }
-                            apOptions.put(kv[1], kv[2])
                         }
-                    }
-                    cfg.processorOptions.value(apOptions)
+                    )
                     val logLevel = LogLevel.values().first {
                         project.logger.isEnabled(it)
                     }
@@ -454,6 +458,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             removedSources = parameters.removedSources
             changedClasses = parameters.changedClasses
         }
+
         val platformType = gradleCfg.platformType.get()
         val kspConfig = when (platformType) {
             KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
