@@ -106,58 +106,85 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             sourceSetName: String,
             target: String,
             isIncremental: Boolean,
-            allWarningsAsErrors: Boolean,
+            allWarningsAsErrors: Provider<Boolean>,
             commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>,
-            commonSources: List<File>,
-        ): List<SubpluginOption> {
-            val options = mutableListOf<SubpluginOption>()
-            options +=
+            commonSources: Provider<List<File>>,
+        ): Provider<List<SubpluginOption>> {
+            val options = project.objects.listProperty(SubpluginOption::class.java)
+            options.add(
                 InternalSubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
-            options +=
+            )
+            options.add(
                 InternalSubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName, target).path)
-            options +=
+            )
+            options.add(
                 InternalSubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName, target).path)
-            options += InternalSubpluginOption(
-                "resourceOutputDir",
-                getKspResourceOutputDir(project, sourceSetName, target).path
             )
-            options += InternalSubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName, target).path)
-            options += InternalSubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName, target).path)
-            options += SubpluginOption("incremental", isIncremental.toString())
-            options += SubpluginOption(
-                "incrementalLog",
-                project.providers.gradleProperty("ksp.incremental.log").orNull ?: "false"
+            options.add(
+                InternalSubpluginOption(
+                    "resourceOutputDir",
+                    getKspResourceOutputDir(project, sourceSetName, target).path
+                )
             )
-            options += InternalSubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
-            options += SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
-            // Turn this on by default to work KT-30172 around. It is off by default in the compiler plugin.
-            options += SubpluginOption(
-                "returnOkOnError",
-                project.providers.gradleProperty("ksp.return.ok.on.error").orNull ?: "true"
+            options.add(
+                InternalSubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName, target).path)
             )
-            commonSources.ifNotEmpty {
-                options += FilesSubpluginOption("commonSources", this)
-            }
-
-            kspExtension.apOptions.forEach {
-                options += SubpluginOption("apoption", "${it.key}=${it.value}")
-            }
-            options += SubpluginOption(
-                "excludedProcessors",
-                kspExtension.excludedProcessors.joinToString(":")
+            options.add(
+                InternalSubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName, target).path)
             )
-            options += SubpluginOption(
-                "mapAnnotationArgumentsInJava",
-                project.providers.gradleProperty("ksp.map.annotation.arguments.in.java").orNull ?: "false"
+            options.add(
+                SubpluginOption("incremental", isIncremental.toString())
             )
-            commandLineArgumentProviders.get().forEach {
-                it.asArguments().forEach { argument ->
-                    if (!argument.matches(Regex("\\S+=\\S+"))) {
-                        throw IllegalArgumentException("KSP apoption does not match \\S+=\\S+: $argument")
-                    }
-                    options += InternalSubpluginOption("apoption", argument)
+            options.add(
+                project.providers.gradleProperty("ksp.incremental.log")
+                    .orElse("false")
+                    .map { SubpluginOption("incrementalLog", it) }
+            )
+            options.add(
+                InternalSubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
+            )
+            options.add(
+                project.provider {
+                    SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
                 }
-            }
+            )
+            // Turn this on by default to work KT-30172 around. It is off by default in the compiler plugin.
+            options.add(
+                project.providers.gradleProperty("ksp.return.ok.on.error")
+                    .orElse("true")
+                    .map { SubpluginOption("returnOkOnError", it) }
+            )
+            options.addAll(
+                commonSources.map { sources ->
+                    if (sources.isNotEmpty()) {
+                        listOf(FilesSubpluginOption("commonSources", sources))
+                    } else {
+                        emptyList()
+                    }
+                }
+            )
+            options.addAll(
+                kspExtension.apOptions.map { apOptions ->
+                    apOptions.map { (k, v) -> SubpluginOption("apoption", "$k=$v") }
+                }
+            )
+            options.add(
+                project.providers.gradleProperty("ksp.map.annotation.arguments.in.java")
+                    .orElse("false")
+                    .map { SubpluginOption("mapAnnotationArgumentsInJava", it) }
+            )
+            options.addAll(
+                commandLineArgumentProviders.map { providers ->
+                    providers.flatMap { provider ->
+                        provider.asArguments().map { argument ->
+                            require(argument.matches(Regex("\\S+=\\S+"))) {
+                                "KSP apoption does not match \\S+=\\S+: $argument"
+                            }
+                            InternalSubpluginOption("apoption", argument)
+                        }
+                    }
+                }
+            )
             return options
         }
     }
@@ -270,20 +297,18 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
 
             kspTask.options.addAll(
-                kspTask.project.provider {
-                    getSubpluginOptions(
-                        project,
-                        kspExtension,
-                        sourceSetName,
-                        target,
-                        isIncremental,
-                        kspExtension.allWarningsAsErrors,
-                        kspTask.commandLineArgumentProviders,
-                        emptyList(),
-                    )
-                }
+                getSubpluginOptions(
+                    project = project,
+                    kspExtension = kspExtension,
+                    sourceSetName = sourceSetName,
+                    target = target,
+                    isIncremental = isIncremental,
+                    allWarningsAsErrors = project.provider { kspExtension.allWarningsAsErrors },
+                    commandLineArgumentProviders = kspTask.commandLineArgumentProviders,
+                    commonSources = project.provider { emptyList() },
+                )
             )
-            kspTask.inputs.property("apOptions", kspExtension.arguments)
+            kspTask.inputs.property("apOptions", kspExtension.apOptions)
             kspTask.inputs.files(processorClasspath).withNormalizer(ClasspathNormalizer::class.java)
         }
 
