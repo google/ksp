@@ -17,22 +17,34 @@
 
 package com.google.devtools.ksp.gradle
 
+import javax.inject.Inject
 import org.gradle.api.GradleException
+import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.process.CommandLineArgumentProvider
 
-abstract class KspExtension {
-    internal val apOptions = mutableMapOf<String, String>()
-    internal val commandLineArgumentProviders = mutableListOf<CommandLineArgumentProvider>()
-    internal val excludedProcessors = mutableSetOf<String>()
+abstract class KspExtension @Inject constructor(project: Project) {
+    internal val apOptions = project.objects.mapProperty(String::class.java, String::class.java)
+    internal val commandLineArgumentProviders = project.objects.listProperty(CommandLineArgumentProvider::class.java)
+        .also { it.finalizeValueOnRead() }
+    internal val excludedProcessors = project.objects.setProperty(String::class.java)
+        .also { it.finalizeValueOnRead() }
 
     // Specify sources that should be excluded from KSP.
     // If you have a task that generates sources, you can call `ksp.excludedSources.from(task)`.
     abstract val excludedSources: ConfigurableFileCollection
 
-    open val arguments: Map<String, String> get() = apOptions.toMap()
+    open val arguments: Map<String, String> get() = apOptions.get()
 
     open fun arg(k: String, v: String) {
+        if ('=' in k) {
+            throw GradleException("'=' is not allowed in custom option's name.")
+        }
+        apOptions.put(k, v)
+    }
+
+    open fun arg(k: String, v: Provider<String>) {
         if ('=' in k) {
             throw GradleException("'=' is not allowed in custom option's name.")
         }
