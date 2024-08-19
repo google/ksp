@@ -32,15 +32,14 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsMemberImpl
-import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
-import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.analysis.api.analyze
-import org.jetbrains.kotlin.analysis.api.annotations.*
+import org.jetbrains.kotlin.analysis.api.*
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.KaSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
@@ -56,6 +55,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KaDeclarationContainerSymbol
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
+import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.getTargetType
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirArrayLiteral
@@ -65,14 +65,8 @@ import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.fir.types.ConeClassLikeType
-import org.jetbrains.kotlin.fir.types.ConeErrorType
-import org.jetbrains.kotlin.fir.types.ConeFlexibleType
-import org.jetbrains.kotlin.fir.types.ConeLookupTagBasedType
-import org.jetbrains.kotlin.fir.types.abbreviatedType
-import org.jetbrains.kotlin.fir.types.classId
-import org.jetbrains.kotlin.fir.types.coneType
-import org.jetbrains.kotlin.fir.types.isAny
+import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
+import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
@@ -89,11 +83,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
-import org.jetbrains.org.objectweb.asm.AnnotationVisitor
-import org.jetbrains.org.objectweb.asm.ClassReader
-import org.jetbrains.org.objectweb.asm.ClassVisitor
-import org.jetbrains.org.objectweb.asm.MethodVisitor
-import org.jetbrains.org.objectweb.asm.Opcodes
+import org.jetbrains.org.objectweb.asm.*
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
@@ -703,7 +693,7 @@ internal fun KaType.convertToKotlinType(): KaType {
             ?: declaration
     } else declaration
     return analyze {
-        buildClassType(base) {
+        buildClassType(base.tryResolveToTypePhase()) {
             this@convertToKotlinType.typeArguments().forEach { typeProjection ->
                 if (typeProjection is KaTypeArgumentWithVariance) {
                     argument(typeProjection.type.convertToKotlinType(), typeProjection.variance)
@@ -731,7 +721,7 @@ internal fun KaType.isAssignableFrom(that: KaType): Boolean {
 internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
     require(newArgs.isEmpty() || newArgs.size == this.typeArguments().size)
     return analyze {
-        when (val symbol = classifierSymbol()) {
+        when (val symbol = classifierSymbol().tryResolveToTypePhase()) {
             is KaClassLikeSymbol -> useSiteSession.buildClassType(symbol) {
                 newArgs.forEach { arg -> argument(arg) }
                 nullability = this@replace.nullability
@@ -784,7 +774,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KtType {
         when (this@toWildcard) {
             is KaClassType -> {
                 // TODO: missing annotations from original type.
-                buildClassType(this@toWildcard.expandedSymbol!!) {
+                buildClassType(this@toWildcard.expandedSymbol!!.tryResolveToTypePhase()) {
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
                         val variance = getVarianceForWildcard(param, arg, argMode)
@@ -802,7 +792,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KtType {
                 }
             }
             is KaTypeParameterType -> {
-                buildTypeParameterType(this@toWildcard.symbol)
+                buildTypeParameterType(this@toWildcard.symbol.tryResolveToTypePhase())
             }
             else -> throw IllegalStateException("Unexpected type ${this@toWildcard}")
         }
@@ -878,4 +868,9 @@ internal fun TypeMappingMode.updateFromAnnotations(
 internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? {
     val classId = (this as? KaFirFunctionType)?.coneType?.abbreviatedType?.classId ?: return null
     return classId.toTypeAlias()
+}
+
+fun <T : KaSymbol?> T.tryResolveToTypePhase(): T {
+    (this as? KaFirSymbol<*>)?.firSymbol?.lazyResolveToPhase(FirResolvePhase.TYPES)
+    return this
 }

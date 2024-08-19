@@ -592,6 +592,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/typeArgumentVariance.kt")
     }
 
+    @TestMetadata("typeComparison2.kt")
+    @Test
+    fun testTypeComparison2() {
+        runTest("../test-utils/testData/api/typeComparison2.kt")
+    }
+
     @TestMetadata("typeComposure.kt")
     @Test
     fun testTypeComposure() {
