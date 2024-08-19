@@ -625,6 +625,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/typeComposure.kt")
     }
 
+    @TestMetadata("typeComparison2.kt")
+    @Test
+    fun testTypeComparison2() {
+        runTest("../test-utils/testData/api/typeComparison2.kt")
+    }
+
     @TestMetadata("typeParameterReference.kt")
     @Test
     fun testTypeParameterReference() {
