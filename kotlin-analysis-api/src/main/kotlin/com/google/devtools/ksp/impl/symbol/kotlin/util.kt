@@ -304,14 +304,59 @@ internal fun KaDeclarationContainerSymbol.getAllFunctions(): Sequence<KSFunction
     }
 }
 
+private val jvmRepeatableClassId = ClassId.fromString("java/lang/annotation/Repeatable")
+private val repeatableClassId = ClassId.fromString("kotlin/annotation/Repeatable")
+
+private fun KaClassSymbol.isRepeatableAnnotation(container: KaAnnotation): Boolean {
+    return this.classKind == KaClassKind.ANNOTATION_CLASS && annotations.any {
+        when (it.classId) {
+            jvmRepeatableClassId -> {
+                it.arguments.singleOrNull()?.let {
+                    val expression = it.expression as? KaAnnotationValue.ClassLiteralValue ?: return@let null
+                    it.name.asString() == "value" && expression.classId == container.classId
+                } ?: false
+            }
+
+            repeatableClassId -> {
+                container.classId?.asFqNameString() == "${this.classId?.asFqNameString()}.Container"
+            }
+
+            else -> false
+        }
+    }
+}
+
+private fun KaAnnotated.annotationsWithRepeatableUnfolded(): List<KaAnnotation> {
+    return if (
+        this is KaSymbol && (this.origin == KaSymbolOrigin.LIBRARY || this.origin == KaSymbolOrigin.JAVA_LIBRARY)
+    ) {
+        annotations.flatMap { container ->
+            // Try to unwrapper repeatable containers
+            // https://github.com/Kotlin/KEEP/blob/master/proposals/repeatable-annotations.md
+            val containedAnnotations: List<KaAnnotation>? =
+                (container.arguments.singleOrNull()?.expression as? KaAnnotationValue.ArrayValue)?.values?.map {
+                    (it as? KaAnnotationValue.NestedAnnotationValue)?.annotation ?: return@flatMap listOf(container)
+                }
+            val containedAnnotationClassId: ClassId =
+                containedAnnotations?.first()?.classId ?: return@flatMap listOf(container)
+            val containedClass = containedAnnotationClassId.toKtClassSymbol() ?: return@flatMap listOf(container)
+            if (containedClass.isRepeatableAnnotation(container)) {
+                containedAnnotations
+            } else {
+                listOf(container)
+            }
+        }
+    } else annotations
+}
+
 internal fun KaAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
-    return this.annotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, parent) }
+    return annotationsWithRepeatableUnfolded().asSequence().map { KSAnnotationResolvedImpl.getCached(it, parent) }
 }
 
 internal fun KtAnnotated.annotations(
     kaAnnotated: KaAnnotated,
     parent: KSNode? = null,
-    candidates: List<KaAnnotation> = kaAnnotated.annotations
+    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded()
 ): Sequence<KSAnnotation> {
     if (candidates.isEmpty())
         return emptySequence()
