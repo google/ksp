@@ -30,6 +30,10 @@ class KSValueArgumentLiteImpl private constructor(
     override val parent: KSNode?
         get() = TODO("Not yet implemented")
 
+    override fun toString(): String {
+        return "${name?.asString() ?: ""}:$value"
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitValueArgument(this, data)
     }
