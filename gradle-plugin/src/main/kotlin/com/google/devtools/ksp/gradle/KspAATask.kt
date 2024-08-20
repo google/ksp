@@ -228,7 +228,9 @@ abstract class KspAATask @Inject constructor(
                     cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
                     cfg.excludedProcessors.value(kspExtension.excludedProcessors)
 
-                    cfg.incremental.value(project.providers.gradleProperty("ksp.incremental").orNull?.toBoolean() ?: true)
+                    cfg.incremental.value(
+                        project.providers.gradleProperty("ksp.incremental").orNull?.toBoolean() ?: true
+                    )
                     cfg.incrementalLog.value(
                         project.providers.gradleProperty("ksp.incremental.log").orNull?.toBoolean() ?: false
                     )
