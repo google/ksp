@@ -17,12 +17,12 @@
 
 package com.google.devtools.ksp.gradle
 
-import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.process.CommandLineArgumentProvider
+import javax.inject.Inject
 
 abstract class KspExtension @Inject constructor(project: Project) {
     internal val apOptions = project.objects.mapProperty(String::class.java, String::class.java)
