@@ -255,7 +255,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             javaCompile.classpath += project.files(classOutputDir)
         }
 
-        val processingModel = project.providers.gradleProperty("ksp.experimental.processing.model").orNull ?: "traditional"
+        val processingModel = project.providers.gradleProperty("ksp.experimental.processing.model").orNull
+            ?: "traditional"
 
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
@@ -405,7 +406,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         val isIncremental = project.providers.gradleProperty("ksp.incremental").orNull?.toBoolean() ?: true
         val isIntermoduleIncremental =
-            (project.providers.gradleProperty("ksp.incremental.intermodule").orNull?.toBoolean() ?: true) && isIncremental
+            (project.providers.gradleProperty("ksp.incremental.intermodule").orNull?.toBoolean() ?: true) &&
+                isIncremental
         val useKSP2 = project.providers.gradleProperty("ksp.useKSP2").orNull?.toBoolean() ?: false
 
         // Create and configure KSP tasks.
@@ -507,7 +509,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             configureAsKspTask(kspTask, false)
                             configureAsAbstractKotlinCompileTool(kspTask)
 
-                            val useEmbeddable = project.providers.gradleProperty("kotlin.native.useEmbeddableCompilerJar")
+                            val useEmbeddable = project.providers
+                                .gradleProperty("kotlin.native.useEmbeddableCompilerJar")
                                 .orNull
                                 ?.toBoolean()
                                 ?: true
