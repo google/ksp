@@ -74,6 +74,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/annotationOnConstructorParameter.kt")
     }
 
+    @TestMetadata("annotationsRepeatable.kt")
+    @Test
+    fun testAnnotationsRepeatable() {
+        runTest("../test-utils/testData/api/annotationsRepeatable.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
