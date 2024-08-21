@@ -39,14 +39,14 @@
 package lib;
 import java.lang.annotation.Repeatable;
 @Repeatable(A.C.class)
-    @interface A {
-        int value();
-        @interface C {
-            A[] value();
-        }
+@interface A {
+    int value();
+    @interface C {
+        A[] value();
     }
+}
 // FILE: lib/KA.kt
-    package lib
+package lib
 @Repeatable
 annotation class KA(val value: Int)
 
