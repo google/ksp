@@ -143,11 +143,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             options.add(
                 InternalSubpluginOption("projectBaseDir", project.project.projectDir.canonicalPath)
             )
-            options.add(
-                project.provider {
-                    SubpluginOption("allWarningsAsErrors", allWarningsAsErrors.toString())
-                }
-            )
+            options.add(allWarningsAsErrors.map { SubpluginOption("allWarningsAsErrors", it.toString()) })
             // Turn this on by default to work KT-30172 around. It is off by default in the compiler plugin.
             options.add(
                 project.providers.gradleProperty("ksp.return.ok.on.error")
@@ -166,6 +162,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             options.addAll(
                 kspExtension.apOptions.map { apOptions ->
                     apOptions.map { (k, v) -> SubpluginOption("apoption", "$k=$v") }
+                }
+            )
+            options.add(
+                kspExtension.excludedProcessors.map {
+                    SubpluginOption("excludedProcessors", it.joinToString(":"))
                 }
             )
             options.add(
