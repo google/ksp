@@ -233,10 +233,16 @@ abstract class KspAATask @Inject constructor(
                     cfg.excludedProcessors.value(kspExtension.excludedProcessors)
 
                     cfg.incremental.value(
-                        project.providers.gradleProperty("ksp.incremental").orNull?.toBoolean() ?: true
+                        project.providers
+                            .gradleProperty("ksp.incremental")
+                            .map { it.toBoolean() }
+                            .orElse(true)
                     )
                     cfg.incrementalLog.value(
-                        project.providers.gradleProperty("ksp.incremental.log").orNull?.toBoolean() ?: false
+                        project.providers
+                            .gradleProperty("ksp.incremental.log")
+                            .map { it.toBoolean() }
+                            .orElse(false)
                     )
 
                     cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
