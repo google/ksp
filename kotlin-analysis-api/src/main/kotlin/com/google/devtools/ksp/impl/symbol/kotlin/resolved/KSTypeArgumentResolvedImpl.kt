@@ -22,14 +22,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.KSTypeArgument
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
-import com.google.devtools.ksp.symbol.Location
-import com.google.devtools.ksp.symbol.Origin
-import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.KtTypeProjection
@@ -67,8 +60,7 @@ class KSTypeArgumentResolvedImpl private constructor(
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
 
-    override val location: Location
-        get() = TODO("Not yet implemented")
+    override val location: Location = NonExistLocation
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitTypeArgument(this, data)
