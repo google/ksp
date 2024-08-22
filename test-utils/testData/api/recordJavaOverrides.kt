@@ -18,16 +18,16 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaOverridesProcessor
 // EXPECTED:
-// p1.B: javaSrc/p1/A.java
-// p1.C: javaSrc/p1/B.java
-// p1.R1: javaSrc/p1/A.java
-// p1.R1: javaSrc/p1/C.java
-// p1.R2: javaSrc/p1/A.java
-// p1.R2: javaSrc/p1/C.java
-// p1.V1: javaSrc/p1/A.java
-// p1.V1: javaSrc/p1/C.java
-// p1.V2: javaSrc/p1/A.java
-// p1.V2: javaSrc/p1/C.java
+// p1.B: main/p1/A.java
+// p1.C: main/p1/B.java
+// p1.R1: main/p1/A.java
+// p1.R1: main/p1/C.java
+// p1.R2: main/p1/A.java
+// p1.R2: main/p1/C.java
+// p1.V1: main/p1/A.java
+// p1.V1: main/p1/C.java
+// p1.V2: main/p1/A.java
+// p1.V2: main/p1/C.java
 // END
 
 // FILE: p1/A.java

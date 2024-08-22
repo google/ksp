@@ -18,14 +18,14 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: RecordJavaSupertypesProcessor
 // EXPECTED:
-// <anonymous>.A: javaSrc/A.java
-// <anonymous>.B: javaSrc/A.java
-// <anonymous>.C: javaSrc/A.java
-// <anonymous>.C: javaSrc/C.java
-// <anonymous>.D: javaSrc/C.java
-// <anonymous>.D: javaSrc/D.java
-// kotlin.Any: javaSrc/C.java
-// kotlin.Any: javaSrc/D.java
+// <anonymous>.A: main/A.java
+// <anonymous>.B: main/A.java
+// <anonymous>.C: main/A.java
+// <anonymous>.C: main/C.java
+// <anonymous>.D: main/C.java
+// <anonymous>.D: main/D.java
+// kotlin.Any: main/C.java
+// kotlin.Any: main/D.java
 // END
 
 // FILE: A.java
