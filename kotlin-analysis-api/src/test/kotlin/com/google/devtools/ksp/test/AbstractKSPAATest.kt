@@ -22,6 +22,7 @@ import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
+import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
@@ -34,7 +35,6 @@ import org.jetbrains.kotlin.test.services.JUnit5Assertions
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.isKtFile
-import org.jetbrains.kotlin.test.services.javaFiles
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.jetbrains.kotlin.utils.PathUtil
 import java.io.ByteArrayOutputStream
@@ -111,18 +111,13 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         // Therefore, this doesn't work:
         //  val ktFiles = mainModule.loadKtFiles(kotlinCoreEnvironment.project)
         mainModule.writeKtFiles()
-        if (!mainModule.javaFiles.isEmpty()) {
-            mainModule.writeJavaFiles()
-        }
 
         val testRoot = mainModule.testRoot
 
         val kspConfig = KSPJvmConfig.Builder().apply {
             moduleName = mainModule.name
             sourceRoots = listOf(mainModule.kotlinSrc)
-            if (!mainModule.javaFiles.isEmpty()) {
-                javaSourceRoots = listOf(mainModule.javaDir)
-            }
+            javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
             jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
             jvmTarget = compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)!!.description
             languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
