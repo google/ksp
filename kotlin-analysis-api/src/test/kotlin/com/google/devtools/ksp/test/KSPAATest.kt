@@ -679,7 +679,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/deferredSymbols.kt")
     }
 
-    @Disabled
     @TestMetadata("deferredJavaSymbols.kt")
     @Test
     fun testDeferredJavaSymbols() {
