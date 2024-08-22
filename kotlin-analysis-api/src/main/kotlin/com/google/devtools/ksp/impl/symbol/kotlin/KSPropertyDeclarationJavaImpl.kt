@@ -66,7 +66,7 @@ class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: K
     }
 
     override fun defer(): Restorable? {
-        TODO("Not yet implemented")
+        return ktJavaFieldSymbol.defer(::getCached)
     }
 }
 
