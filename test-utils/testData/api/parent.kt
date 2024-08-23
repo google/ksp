@@ -23,6 +23,7 @@
 // parent of T: B
 // parent of Anno: Anno
 // parent of Anno: @Anno
+// parent of param:: @Anno
 // parent of @Anno: B
 // parent of p: Bnno
 // parent of p.Bnno: Bnno
@@ -74,8 +75,15 @@
 // parent of File: a.kt: null
 // parent of Any: Anno
 // parent of Anno: File: a.kt
-// parent of Anno: synthetic constructor for Anno
-// parent of synthetic constructor for Anno: Anno
+// parent of String: String
+// parent of String: param
+// parent of param: <init>
+// parent of Anno: <init>
+// parent of <init>: Anno
+// parent of String: String
+// parent of String: param.getter()
+// parent of param.getter(): param
+// parent of param: <init>
 // parent of Int: Int
 // parent of Int: INVARIANT Int
 // parent of INVARIANT Int: Map
@@ -246,7 +254,7 @@ enum HSV {
 // MODULE: main(lib)
 
 // FILE: a.kt
-annotation class Anno
+annotation class Anno(val param: String = "")
 
 typealias Alias<T> = Map<Int, T>
 

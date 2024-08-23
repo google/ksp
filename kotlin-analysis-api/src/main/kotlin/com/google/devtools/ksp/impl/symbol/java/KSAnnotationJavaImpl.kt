@@ -133,6 +133,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             )
                                     ),
+                                    this@KSAnnotationJavaImpl,
                                     Origin.SYNTHETIC
                                 )
                             }
