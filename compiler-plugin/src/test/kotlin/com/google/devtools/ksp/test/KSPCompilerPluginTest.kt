@@ -363,6 +363,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/libOrigins.kt")
     }
 
+    @TestMetadata("locations.kt")
+    @Test
+    fun testLocations() {
+        runTest("../test-utils/testData/api/locations.kt")
+    }
+
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
