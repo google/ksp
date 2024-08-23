@@ -80,6 +80,7 @@ class KSAnnotationResolvedImpl private constructor(
                                 KSValueArgumentLiteImpl.getCached(
                                     KSNameImpl.getCached(annoMethod.name),
                                     calculatedValue,
+                                    this@KSAnnotationResolvedImpl,
                                     Origin.SYNTHETIC
                                 )
                             }
