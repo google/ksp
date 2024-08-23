@@ -82,7 +82,7 @@ class KspModuleBuilder(
         return buildSet {
             for (root in sourceRoots) {
                 val files = when {
-                    root.isDirectory() -> collectSourceFilePaths(root)
+                    root.isDirectory() -> listOf(root) + collectSourceFilePaths(root)
                     root.hasSuitableExtensionToAnalyse() -> listOf(root)
                     else -> emptyList()
                 }
