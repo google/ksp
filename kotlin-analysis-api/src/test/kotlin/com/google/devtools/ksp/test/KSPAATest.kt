@@ -401,6 +401,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/libOrigins.kt")
     }
 
+    @TestMetadata("locations.kt")
+    @Test
+    fun testLocations() {
+        runTest("../kotlin-analysis-api/testData/locations.kt")
+    }
+
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
