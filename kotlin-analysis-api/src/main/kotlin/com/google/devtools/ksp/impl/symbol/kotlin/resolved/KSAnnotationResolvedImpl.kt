@@ -6,7 +6,7 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
-import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
@@ -81,7 +81,8 @@ class KSAnnotationResolvedImpl private constructor(
                                     KSNameImpl.getCached(annoMethod.name),
                                     calculatedValue,
                                     this@KSAnnotationResolvedImpl,
-                                    Origin.SYNTHETIC
+                                    Origin.SYNTHETIC,
+                                    value.toLocation()
                                 )
                             }
                         }
