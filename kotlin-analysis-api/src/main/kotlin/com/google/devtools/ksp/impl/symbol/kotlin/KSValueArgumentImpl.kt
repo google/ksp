@@ -24,11 +24,11 @@ import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
 
 class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KtNamedAnnotationValue,
-    override val parent: KSNode,
+    override val parent: KSNode?,
     override val origin: Origin
 ) : KSValueArgument, Deferrable {
     companion object : KSObjectCache<KtNamedAnnotationValue, KSValueArgumentImpl>() {
-        fun getCached(namedAnnotationValue: KtNamedAnnotationValue, parent: KSNode, origin: Origin) =
+        fun getCached(namedAnnotationValue: KtNamedAnnotationValue, parent: KSNode?, origin: Origin) =
             cache.getOrPut(namedAnnotationValue) {
                 KSValueArgumentImpl(namedAnnotationValue, parent, origin)
             }
@@ -56,5 +56,8 @@ class KSValueArgumentImpl private constructor(
         return "${name?.asString() ?: ""}:$value"
     }
 
-    override fun defer(): Restorable = Restorable { getCached(namedAnnotationValue, parent, origin) }
+    override fun defer(): Restorable {
+        val parent = if (parent is Deferrable) parent.defer() else null
+        return Restorable { getCached(namedAnnotationValue, parent?.restore(), origin) }
+    }
 }
