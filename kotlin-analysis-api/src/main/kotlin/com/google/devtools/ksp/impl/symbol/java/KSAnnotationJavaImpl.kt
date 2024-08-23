@@ -85,7 +85,8 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 name?.let { KSNameImpl.getCached(it) },
                 calculatedValue,
                 this,
-                Origin.JAVA
+                Origin.JAVA,
+                it.toLocation()
             )
         }
         val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
@@ -116,7 +117,8 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                         KSNameImpl.getCached(annoMethod.name),
                                         calculatedValue,
                                         this@KSAnnotationJavaImpl,
-                                        Origin.SYNTHETIC
+                                        Origin.SYNTHETIC,
+                                        it.toLocation()
                                     )
                                 }
                             }

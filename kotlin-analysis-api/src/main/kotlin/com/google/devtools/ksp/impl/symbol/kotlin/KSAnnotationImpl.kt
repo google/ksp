@@ -99,7 +99,8 @@ class KSAnnotationImpl private constructor(
                                     KSNameImpl.getCached(annoMethod.name),
                                     calculatedValue,
                                     this@KSAnnotationImpl,
-                                    Origin.SYNTHETIC
+                                    Origin.SYNTHETIC,
+                                    value.toLocation()
                                 )
                             }
                         }
