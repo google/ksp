@@ -70,7 +70,9 @@ class KSAnnotationImpl private constructor(
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        val presentArgs = annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it, Origin.KOTLIN) }
+        val presentArgs = annotationApplication.arguments.map {
+            KSValueArgumentImpl.getCached(it, this, Origin.KOTLIN)
+        }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = defaultArguments.filter {
             it.name?.asString() !in presentNames
@@ -112,6 +114,7 @@ class KSAnnotationImpl private constructor(
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             )
                                     ),
+                                    this@KSAnnotationImpl,
                                     Origin.SYNTHETIC
                                 )
                             }
