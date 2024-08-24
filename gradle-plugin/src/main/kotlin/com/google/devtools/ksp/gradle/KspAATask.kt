@@ -22,6 +22,7 @@ import com.google.devtools.ksp.processing.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -92,7 +93,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.commonSourceRoots,
                         kspConfig.libraries
                     ),
-                    kspConfig.cachesDir.get(),
+                    kspConfig.cachesDir.asFile.get(),
                     kspConfig.classpathStructure,
                     kspConfig.libraries,
                     kspConfig.processorClasspath,
@@ -102,11 +103,11 @@ abstract class KspAATask @Inject constructor(
                     !inputChanges.isIncremental ||
                     inputChanges.getFileChanges(kspConfig.libraries).iterator().hasNext()
                 )
-                    kspConfig.cachesDir.get().deleteRecursively()
+                    kspConfig.cachesDir.get().asFile.deleteRecursively()
                 emptyList()
             }
         } else {
-            kspConfig.cachesDir.get().deleteRecursively()
+            kspConfig.cachesDir.get().asFile.deleteRecursively()
             emptyList()
         }
 
@@ -319,8 +320,8 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Internal
     abstract val outputBaseDir: Property<File>
 
-    @get:Internal
-    abstract val cachesDir: Property<File>
+    @get:LocalState
+    abstract val cachesDir: DirectoryProperty
 
     @get:OutputDirectory
     abstract val kotlinOutputDir: Property<File>
@@ -444,7 +445,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             libraries = gradleCfg.libraries.files.toList()
             projectBaseDir = gradleCfg.projectBaseDir.get()
             outputBaseDir = gradleCfg.outputBaseDir.get()
-            cachesDir = gradleCfg.cachesDir.get()
+            cachesDir = gradleCfg.cachesDir.get().asFile
             kotlinOutputDir = gradleCfg.kotlinOutputDir.get()
             classOutputDir = gradleCfg.classOutputDir.get()
             resourceOutputDir = gradleCfg.resourceOutputDir.get()
