@@ -24,6 +24,7 @@ import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
@@ -97,7 +98,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         @JvmStatic
         fun getKspCachesDir(project: Project, sourceSetName: String, target: String) =
-            File(project.project.buildDir, "kspCaches/$target/$sourceSetName")
+            project.layout.buildDirectory.dir("kspCaches/$target/$sourceSetName")
 
         @JvmStatic
         private fun getSubpluginOptions(
@@ -109,6 +110,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             allWarningsAsErrors: Provider<Boolean>,
             commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>,
             commonSources: Provider<List<File>>,
+            cachesDir: Provider<Directory>
         ): Provider<List<SubpluginOption>> {
             val options = project.objects.listProperty(SubpluginOption::class.java)
             options.add(
@@ -127,7 +129,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 )
             )
             options.add(
-                InternalSubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName, target).path)
+                cachesDir.map {
+                    InternalSubpluginOption("cachesDir", it.asFile.path)
+                }
             )
             options.add(
                 InternalSubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName, target).path)
@@ -292,10 +296,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
             .extendsFrom(*nonEmptyKspConfigurations.toTypedArray()).markResolvable()
 
+        val kspCachesDir = getKspCachesDir(project, sourceSetName, target)
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
+            kspTask.localState.register(kspCachesDir)
 
             kspTask.options.addAll(
                 getSubpluginOptions(
@@ -307,6 +313,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     allWarningsAsErrors = project.provider { kspExtension.allWarningsAsErrors },
                     commandLineArgumentProviders = kspTask.commandLineArgumentProviders,
                     commonSources = project.provider { emptyList() },
+                    cachesDir = kspCachesDir
                 )
             )
             kspTask.inputs.property("apOptions", kspExtension.apOptions)
@@ -468,7 +475,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 createIncrementalChangesTransformer(
                                     isIncremental,
                                     isIntermoduleIncremental,
-                                    getKspCachesDir(project, sourceSetName, target),
+                                    kspCachesDir.get().asFile,
                                     project.provider { classStructureFiles },
                                     project.provider { kspTask.libraries },
                                     project.provider { processorClasspath }
@@ -495,7 +502,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 createIncrementalChangesTransformer(
                                     isIncremental,
                                     false,
-                                    getKspCachesDir(project, sourceSetName, target),
+                                    kspCachesDir.get().asFile,
                                     project.provider { project.files() },
                                     project.provider { project.files() },
                                     project.provider { processorClasspath }
@@ -518,7 +525,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 createIncrementalChangesTransformer(
                                     isIncremental,
                                     false,
-                                    getKspCachesDir(project, sourceSetName, target),
+                                    kspCachesDir.get().asFile,
                                     project.provider { project.files() },
                                     project.provider { project.files() },
                                     project.provider { processorClasspath }
