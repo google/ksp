@@ -33,7 +33,48 @@
 // GetAnno
 // <init>
 // synthetic constructor for ImplictConstructorJava
+// Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// lib.Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
 // END
+// MODULE: lib
+// FILE: lib/MyJavaAnnotation.java
+package lib;
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.MODULE;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target({FIELD})
+public @interface MyJavaAnnotation {}
+
+// FILE: lib/MyKotlinAnnotation.kt
+package lib
+@Target(AnnotationTarget.PROPERTY)
+annotation class MyKotlinAnnotation
+
+// FILE: lib/Test.kt
+package lib
+class Test(
+    @MyKotlinAnnotation
+    @MyJavaAnnotation
+    val p: Int
+)
+
+// MODULE: main(lib)
+// FILE: Test.kt
+import lib.*
+class Test(
+    @MyKotlinAnnotation
+    @MyJavaAnnotation
+    val p: Int
+)
 // FILE: a.kt
 annotation class GetAnno
 annotation class SetAnno

@@ -114,6 +114,11 @@ class KSAnnotationResolvedImpl private constructor(
     }
 
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
+        // Do not use compiler hard-coded use-site target.
+        // FIXME: use origin after it is fixed.
+        if (parent?.origin == Origin.KOTLIN_LIB || parent?.origin == Origin.JAVA_LIB)
+            return@lazy null
+
         when (annotationApplication.useSiteTarget) {
             null -> null
             FILE -> AnnotationUseSiteTarget.FILE
@@ -128,6 +133,7 @@ class KSAnnotationResolvedImpl private constructor(
         }
     }
 
+    // FIXME: use parent.origin
     override val origin: Origin = Origin.KOTLIN_LIB
 
     override val location: Location by lazy {
