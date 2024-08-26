@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -89,6 +90,18 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         )
         val ImplictConstructorJava = resolver.getClassDeclarationByName("ImplictConstructorJava")!!
         result.add(ImplictConstructorJava.getConstructors().map { it.toString() }.joinToString(","))
+
+        listOf("Test", "lib.Test").forEach { clsName ->
+            resolver.getClassDeclarationByName(clsName)!!.let { cls ->
+                cls.getDeclaredProperties().single().let { annotated ->
+                    result.add(
+                        "$clsName, $annotated: ${annotated.annotations.toList().map {
+                            "${it.shortName.asString()}: ${ it.useSiteTarget }"
+                        }}"
+                    )
+                }
+            }
+        }
         return emptyList()
     }
 }
