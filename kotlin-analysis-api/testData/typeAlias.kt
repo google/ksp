@@ -29,7 +29,7 @@
 // myList_B : List<Number>
 // myList_String : MyList_String = MyList<String> = List<T>
 // myList_b_String : MyList_B_String = MyList_B<String> = MyList<R> = List<T>
-// myListOfAlias : MyListOfAlias = List<A>
+// myListOfAlias : MyListOfAlias = List<@JvmSuppressWildcards A>
 // myListOfAliasInLib : MyListOfAliasInLib = List<@JvmSuppressWildcards AInLib>
 // END
 
@@ -63,6 +63,5 @@ val myList: MyList<Long> = TODO()
 val myList_B: List<Number> = TODO()
 val myList_String: MyList_String = TODO()
 val myList_b_String: MyList_B_String = TODO()
-// FIXME: type annotation is missing
 val myListOfAlias: MyListOfAlias = TODO()
 val myListOfAliasInLib: MyListOfAliasInLib = TODO()
