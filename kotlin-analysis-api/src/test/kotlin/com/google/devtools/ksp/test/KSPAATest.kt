@@ -622,7 +622,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("typeAlias.kt")
     @Test
     fun testTypeAlias() {
-        runTest("../test-utils/testData/api/typeAlias.kt")
+        runTest("../kotlin-analysis-api/testData/typeAlias.kt")
     }
 
     @TestMetadata("typeAliasComparison.kt")

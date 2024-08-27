@@ -63,7 +63,8 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
     }
 
     override val declaration: KSDeclaration by lazy {
-        (type as? KaFunctionType)?.abbreviatedSymbol()?.toKSDeclaration() ?: type.toDeclaration()
+        (type as? KaFunctionType)?.abbreviatedSymbol()?.toKSDeclaration()
+            ?: type.abbreviation?.toDeclaration() ?: type.toDeclaration()
     }
 
     override val nullability: Nullability by lazy {
