@@ -47,6 +47,13 @@ class MangledNamesProcessor : AbstractTestProcessor() {
         override fun defaultHandler(node: KSNode, data: MutableMap<String, String?>) {
         }
 
+        override fun visitDeclarationContainer(
+            declarationContainer: KSDeclarationContainer,
+            data: MutableMap<String, String?>
+        ) {
+            declarationContainer.declarations.sortedBy { it.simpleName.asString() }.forEach { it.accept(this, data) }
+        }
+
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableMap<String, String?>) {
             if (classDeclaration.modifiers.contains(Modifier.INLINE)) {
                 // do not visit inline classes
