@@ -125,8 +125,10 @@ internal fun KaAnnotation.render(): String {
             append(this@render.useSiteTarget!!.renderName + ":")
         }
         append(this@render.classId!!.shortClassName.asString())
-        this@render.arguments.forEach {
-            append(it.expression.render())
+        if (arguments.isNotEmpty()) {
+            append("(")
+            append(arguments.map { it.expression.render() }.joinToString(", "))
+            append(")")
         }
     }
 }
@@ -149,8 +151,10 @@ internal fun KaAnnotationValue.render(): String {
 @OptIn(KaNonPublicApi::class)
 internal fun KaType.render(inFunctionType: Boolean = false): String {
     return buildString {
-        annotations.forEach {
-            append("[${it.render()}] ")
+        if (annotations.isNotEmpty()) {
+            append("[")
+            append(annotations.map { it.render() }.joinToString(", "))
+            append("] ")
         }
         append(
             when (this@render) {
