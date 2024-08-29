@@ -2,8 +2,6 @@ import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinTopLevelExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -68,7 +66,7 @@ subprojects {
             }
             maven {
                 name = "test"
-                url = uri("${layout.buildDirectory.get().asFile}/repos/test")
+                url = uri("${rootProject.layout.buildDirectory.get().asFile}/repos/test")
             }
         }
         publishExtension.publications.whenObjectAdded {

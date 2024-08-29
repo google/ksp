@@ -99,7 +99,7 @@ signing {
  * Create a properties file with that can be read from the gradle-plugin tests to setup test
  * projects.
  */
-val testPropsOutDir = project.layout.buildDirectory.dir("test-config")
+val testPropsOutDir = layout.buildDirectory.dir("test-config")
 val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfiguration") {
     description = "Generates a properties file with the current environment for gradle integration tests"
     destinationFile = testPropsOutDir.map { it.file("testprops.properties") }
@@ -157,8 +157,8 @@ abstract class WriteVersionSrcTask : DefaultTask() {
         outputSrcDir.file("KSPVersions.kt").get().asFile.writeText(
             """
             package com.google.devtools.ksp.gradle
-            val KSP_KOTLIN_BASE_VERSION = "$kotlinVersion"
-            val KSP_VERSION = "$kspVersion"
+            val KSP_KOTLIN_BASE_VERSION = "${kotlinVersion.get()}"
+            val KSP_VERSION = "${kspVersion.get()}"
             """.trimIndent()
         )
     }

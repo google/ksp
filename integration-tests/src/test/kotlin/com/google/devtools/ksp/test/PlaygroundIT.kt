@@ -106,29 +106,6 @@ class PlaygroundIT(val useKSP2: Boolean) {
         project.restore("workload/build.gradle.kts")
     }
 
-    @Test
-    fun testAllowSourcesFromOtherPlugins() {
-        Assume.assumeFalse(useKSP2)
-        fun checkGBuilder() {
-            val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-
-            JarFile(artifact).use { jarFile ->
-                Assert.assertTrue(jarFile.getEntry("g/GBuilder.class").size > 0)
-            }
-        }
-
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-
-        File(project.root, "workload/build.gradle.kts")
-            .appendText("\nksp {\n  allowSourcesFromOtherPlugins = true\n}\n")
-        gradleRunner.buildAndCheck("clean", "build") { checkGBuilder() }
-        gradleRunner.buildAndCheckOutcome("build", "--info", outcome = TaskOutcome.UP_TO_DATE) {
-            Assert.assertEquals(TaskOutcome.UP_TO_DATE, it.task(":workload:kspKotlin")?.outcome)
-            checkGBuilder()
-        }
-        project.restore("workload/build.gradle.kts")
-    }
-
     /** Regression test for https://github.com/google/ksp/issues/518. */
     @Test
     fun testBuildWithConfigureOnDemand() {

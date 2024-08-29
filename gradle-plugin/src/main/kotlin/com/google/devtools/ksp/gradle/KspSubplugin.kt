@@ -323,13 +323,14 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourceOutputDir
             )
 
+            @Suppress("DEPRECATION")
             if (kspExtension.allowSourcesFromOtherPlugins) {
                 val kotlinCompileTask = kotlinCompileProvider.get()
                 fun setSource(source: FileCollection) {
                     // kspTask.setSource(source) would create circular dependency.
                     // Therefore we need to manually extract input deps, filter them, and tell kspTask.
-                    kspTask.setSource(project.provider { source.files })
-                    kspTask.dependsOn(project.provider { source.nonSelfDeps(kspTaskName) })
+                    kspTask.setSource(project.provider { source.files.onEach { println(it) } })
+                    kspTask.dependsOn(project.provider { source.nonSelfDeps(kspTaskName).onEach { println(it) } })
                 }
 
                 setSource(
