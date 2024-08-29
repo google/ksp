@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.devtools.ksp.RelativizingPathProvider
 import java.io.ByteArrayOutputStream
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
@@ -132,11 +133,11 @@ sourceSets.main {
     java.srcDirs("src/main/kotlin")
 }
 
-fun Project.javaPluginConvention(): JavaPluginConvention = the()
-val JavaPluginConvention.testSourceSet: SourceSet
+fun Project.javaPluginExtension(): JavaPluginExtension = the()
+val JavaPluginExtension.testSourceSet: SourceSet
     get() = sourceSets.getByName("test")
 val Project.testSourceSet: SourceSet
-    get() = javaPluginConvention().testSourceSet
+    get() = javaPluginExtension().testSourceSet
 
 repositories {
     flatDir {
@@ -282,16 +283,10 @@ tasks.test {
         events("passed", "skipped", "failed")
     }
 
-    lateinit var tempTestDir: File
+    val ideaHomeDir = layout.buildDirectory.dir("tmp/ideaHome").get().asFile
+    jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
+    jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", temporaryDir))
     doFirst {
-        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
-        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("idea.home.path", ideaHomeDir))
-
-        tempTestDir = createTempDir()
-        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("java.io.tmpdir", tempTestDir))
-    }
-
-    doLast {
-        delete(tempTestDir)
+        if (!ideaHomeDir.exists()) ideaHomeDir.mkdirs()
     }
 }

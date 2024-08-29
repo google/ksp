@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.RelativizingPathProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
@@ -110,16 +111,12 @@ tasks.test {
         events("passed", "skipped", "failed")
     }
 
-    lateinit var tempTestDir: File
+    val ideaHomeDir = layout.buildDirectory.file("tmp/ideaHome")
+        .get()
+        .asFile
+    jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
+    jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", temporaryDir))
     doFirst {
-        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
-        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("idea.home.path", ideaHomeDir))
-
-        tempTestDir = createTempDir()
-        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("java.io.tmpdir", tempTestDir))
-    }
-
-    doLast {
-        delete(tempTestDir)
+        if (!ideaHomeDir.exists()) ideaHomeDir.mkdirs()
     }
 }

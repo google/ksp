@@ -102,14 +102,10 @@ signing {
 val testPropsOutDir = project.layout.buildDirectory.dir("test-config")
 val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfiguration") {
     description = "Generates a properties file with the current environment for gradle integration tests"
-    this.setOutputFile(
-        testPropsOutDir.map {
-            it.file("testprops.properties")
-        }
-    )
+    destinationFile = testPropsOutDir.map { it.file("testprops.properties") }
     property("kspVersion", version)
-    property("mavenRepoDir", File(rootProject.buildDir, "repos/test").absolutePath)
-    property("kspProjectRootDir", rootProject.projectDir.absolutePath)
+    property("mavenRepoDir", rootProject.layout.buildDirectory.dir("repos/test").get().asFile.absolutePath)
+    property("kspProjectRootDir", rootDir.absolutePath)
     property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
 }
 
@@ -147,14 +143,18 @@ tasks.named<Test>("test").configure {
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 
-abstract class WriteVersionSrcTask @Inject constructor(
-    @get:Input val kspVersion: String,
-    @get:Input val kotlinVersion: String,
-    @get:org.gradle.api.tasks.OutputDirectory val outputSrcDir: File
-) : DefaultTask() {
+abstract class WriteVersionSrcTask : DefaultTask() {
+    @get:Input
+    abstract val kspVersion: Property<String>
+    @get:Input
+    abstract val kotlinVersion: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputSrcDir: DirectoryProperty
+
     @TaskAction
     fun generate() {
-        File(outputSrcDir, "KSPVersions.kt").writeText(
+        outputSrcDir.file("KSPVersions.kt").get().asFile.writeText(
             """
             package com.google.devtools.ksp.gradle
             val KSP_KOTLIN_BASE_VERSION = "$kotlinVersion"
@@ -164,18 +164,16 @@ abstract class WriteVersionSrcTask @Inject constructor(
     }
 }
 
-val kspVersionDir = File(project.buildDir, "generated/ksp-versions")
-val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>(
-    "generateKSPVersions",
-    version.toString(),
-    kotlinBaseVersion,
-    kspVersionDir
-)
+val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
+    kspVersion = version.toString()
+    kotlinVersion = kotlinBaseVersion
+    outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
+}
 
 kotlin {
     sourceSets {
         main {
-            kotlin.srcDir(writeVersionSrcTask.map { it.outputSrcDir })
+            kotlin.srcDir(writeVersionSrcTask)
         }
     }
 }

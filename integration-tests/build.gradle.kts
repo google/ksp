@@ -25,7 +25,12 @@ tasks.withType<Test> {
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
     systemProperty("agpVersion", agpBaseVersion)
-    jvmArgumentProviders.add(RelativizingInternalPathProvider("testRepo", File(rootProject.buildDir, "repos/test")))
+    jvmArgumentProviders.add(
+        RelativizingInternalPathProvider(
+            "testRepo",
+            rootProject.layout.buildDirectory.dir("repos/test").get().asFile
+        )
+    )
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")

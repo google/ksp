@@ -1,5 +1,9 @@
 import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinTopLevelExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -64,7 +68,7 @@ subprojects {
             }
             maven {
                 name = "test"
-                url = uri("${rootProject.buildDir}/repos/test")
+                url = uri("${layout.buildDirectory.get().asFile}/repos/test")
             }
         }
         publishExtension.publications.whenObjectAdded {
@@ -94,12 +98,25 @@ subprojects {
         }
     }
 
+    val compileJavaVersion = JavaLanguageVersion.of(17)
+
+    pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        configure<KotlinJvmProjectExtension> {
+            compilerOptions {
+                jvmTarget = JvmTarget.JVM_1_8
+            }
+            jvmToolchain {
+                languageVersion = compileJavaVersion
+            }
+        }
+    }
+
     tasks.withType<JavaCompile>().configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()
         javaCompiler.set(
             javaToolchains.compilerFor {
-                languageVersion.set(JavaLanguageVersion.of(17))
+                languageVersion = compileJavaVersion
             }
         )
     }
@@ -114,7 +131,7 @@ subprojects {
     }
 
     tasks.withType<JavaExec>().configureEach {
-        // Java 11 is required to run
+        // Java 17 is required to run
         javaLauncher.set(
             javaToolchains.launcherFor {
                 languageVersion.set(JavaLanguageVersion.of(17))
