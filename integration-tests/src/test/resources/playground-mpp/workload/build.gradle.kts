@@ -12,7 +12,7 @@ kotlin {
     linuxX64()
     mingwX64()
     macosX64()
-    ios()
+    iosX64()
     js(IR) {
         browser()
         nodejs()
