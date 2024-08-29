@@ -9,6 +9,7 @@ abstract class KSPConfig(
     val moduleName: String,
     val sourceRoots: List<File>,
     val commonSourceRoots: List<File>,
+    val resourceRoots: List<File>,
     val libraries: List<File>,
 
     val processorOptions: Map<String, String>,
@@ -36,6 +37,7 @@ abstract class KSPConfig(
     abstract class Builder {
         lateinit var moduleName: String
         lateinit var sourceRoots: List<File>
+        lateinit var resourceRoots: List<File>
         var commonSourceRoots: List<File> = emptyList()
         var libraries: List<File> = emptyList()
 
@@ -72,6 +74,7 @@ class KSPJvmConfig(
     moduleName: String,
     sourceRoots: List<File>,
     commonSourceRoots: List<File>,
+    resourceRoots: List<File>,
     libraries: List<File>,
 
     processorOptions: Map<String, String>,
@@ -99,6 +102,7 @@ class KSPJvmConfig(
     moduleName,
     sourceRoots,
     commonSourceRoots,
+    resourceRoots,
     libraries,
 
     processorOptions,
@@ -142,6 +146,7 @@ class KSPJvmConfig(
                 moduleName,
                 sourceRoots,
                 commonSourceRoots,
+                resourceRoots,
                 libraries,
 
                 processorOptions,
@@ -174,6 +179,7 @@ class KSPNativeConfig(
     moduleName: String,
     sourceRoots: List<File>,
     commonSourceRoots: List<File>,
+    resourceRoots: List<File>,
     libraries: List<File>,
 
     processorOptions: Map<String, String>,
@@ -201,6 +207,7 @@ class KSPNativeConfig(
     moduleName,
     sourceRoots,
     commonSourceRoots,
+    resourceRoots,
     libraries,
 
     processorOptions,
@@ -235,6 +242,7 @@ class KSPNativeConfig(
                 moduleName,
                 sourceRoots,
                 commonSourceRoots,
+                resourceRoots,
                 libraries,
 
                 processorOptions,
@@ -267,6 +275,7 @@ class KSPJsConfig(
     moduleName: String,
     sourceRoots: List<File>,
     commonSourceRoots: List<File>,
+    resourceRoots: List<File>,
     libraries: List<File>,
 
     processorOptions: Map<String, String>,
@@ -294,6 +303,7 @@ class KSPJsConfig(
     moduleName,
     sourceRoots,
     commonSourceRoots,
+    resourceRoots,
     libraries,
 
     processorOptions,
@@ -328,6 +338,7 @@ class KSPJsConfig(
                 moduleName,
                 sourceRoots,
                 commonSourceRoots,
+                resourceRoots,
                 libraries,
 
                 processorOptions,
@@ -365,6 +376,7 @@ class KSPCommonConfig(
     moduleName: String,
     sourceRoots: List<File>,
     commonSourceRoots: List<File>,
+    resourceRoots: List<File>,
     libraries: List<File>,
 
     processorOptions: Map<String, String>,
@@ -392,6 +404,7 @@ class KSPCommonConfig(
     moduleName,
     sourceRoots,
     commonSourceRoots,
+    resourceRoots,
     libraries,
 
     processorOptions,
@@ -426,6 +439,7 @@ class KSPCommonConfig(
                 moduleName,
                 sourceRoots,
                 commonSourceRoots,
+                resourceRoots,
                 libraries,
 
                 processorOptions,

@@ -219,11 +219,18 @@ abstract class AbstractKotlinSymbolProcessingExtension(
 
         // dirtyFiles cannot be reused because they are created in the old container.
         val resolver = ResolverImpl(
-            module,
-            ksFiles.filterNot {
+            module = module,
+            allKSFiles = ksFiles.filterNot {
                 it.filePath in cleanFilenames
             },
-            newFiles, deferredSymbols, bindingTrace, project, componentProvider, incrementalContext, options
+            newKSFiles = newFiles,
+            resourceRoots = options.resourceRoots,
+            deferredSymbols = deferredSymbols,
+            bindingTrace = bindingTrace,
+            project = project,
+            componentProvider = componentProvider,
+            incrementalContext = incrementalContext,
+            options = options
         )
 
         if (!initialized) {

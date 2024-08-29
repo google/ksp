@@ -18,22 +18,13 @@
 package com.google.devtools.ksp.processing.impl
 
 import com.google.devtools.ksp.*
-import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STRICTFP_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_SYNCHRONIZED_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_TRANSIENT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_VOLATILE_ANNOTATION_FQN
-import com.google.devtools.ksp.common.extractThrowsAnnotation
+import com.google.devtools.ksp.common.*
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.common.impl.RefPosition
 import com.google.devtools.ksp.common.impl.findOuterMostRef
 import com.google.devtools.ksp.common.impl.findRefPosition
 import com.google.devtools.ksp.common.impl.isReturnTypeOfAnnotationMethod
-import com.google.devtools.ksp.common.javaModifiers
-import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
@@ -114,12 +105,14 @@ import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 import org.jetbrains.org.objectweb.asm.Opcodes
 import java.io.File
+import java.io.InputStream
 import java.util.*
 
 class ResolverImpl(
     val module: ModuleDescriptor,
     val allKSFiles: Collection<KSFile>,
     val newKSFiles: Collection<KSFile>,
+    val resourceRoots: Collection<File>,
     private val deferredSymbols: Map<SymbolProcessor, List<KSAnnotated>>,
     val bindingTrace: BindingTrace,
     val project: Project,
@@ -232,6 +225,10 @@ class ResolverImpl(
     override fun getAllFiles(): Sequence<KSFile> {
         return allKSFiles.asSequence()
     }
+
+    override fun getResource(path: String): InputStream? = resourceRoots.getResource(path)
+
+    override fun getAllResources(): Sequence<String> = resourceRoots.getAllResources()
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
         nameToKSMap[name]?.let { return it }
@@ -364,9 +361,11 @@ class ResolverImpl(
                 else -> throw IllegalStateException("Unexpected descriptor type for declaration: $declaration")
             }
         }
+
         is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)?.let {
             typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
         }
+
         else -> null
     }
 
@@ -426,6 +425,7 @@ class ResolverImpl(
             is KSPropertyDeclaration -> resolvePropertyDeclaration(original)
             is KSFunctionDeclaration ->
                 (resolveFunctionDeclaration(original) as? FunctionDescriptor)?.propertyIfAccessor
+
             else -> return false
         }
 
@@ -447,6 +447,7 @@ class ResolverImpl(
             is KSPropertyDeclaration -> containingClass.getAllProperties().singleOrNull {
                 it.simpleName.asString() == overrider.simpleName.asString() && isOriginal(overrider, it)
             }?.let { overrides(it, overridee) } ?: false
+
             is KSFunctionDeclaration -> {
                 val candidates = containingClass.getAllFunctions().filter {
                     it.simpleName.asString() == overridee.simpleName.asString()
@@ -467,6 +468,7 @@ class ResolverImpl(
                     candidates.singleOrNull { isOriginal(overrider, it) }?.let { overrides(it, overridee) } ?: false
                 }
             }
+
             else -> false
         }
     }
@@ -554,6 +556,7 @@ class ResolverImpl(
                         )
                     }
             }
+
             is PsiField -> {
                 moduleClassResolver
                     .resolveClass(JavaFieldImpl(psi).containingClass)
@@ -563,6 +566,7 @@ class ResolverImpl(
                         filter = { it.correspondsTo(psi) }
                     )
             }
+
             else -> throw IllegalStateException("unhandled psi element kind: ${psi.javaClass}")
         }
     }
@@ -593,6 +597,7 @@ class ResolverImpl(
                     descriptor
                 }
             }
+
             is KSConstructorSyntheticImpl -> {
                 // we might create synthetic constructor when it is not declared in code
                 // it is either for kotlin, where we can use primary constructor, or for java
@@ -600,6 +605,7 @@ class ResolverImpl(
                 val resolved = resolveClassDeclaration(function.ksClassDeclaration)
                 resolved?.unsubstitutedPrimaryConstructor ?: resolved?.constructors?.singleOrNull()
             }
+
             else -> throw IllegalStateException("unexpected class: ${function.javaClass}")
         } as? CallableDescriptor
     }
@@ -652,6 +658,7 @@ class ResolverImpl(
                             if (e.psi.isConstructor) JavaConstructorImpl(e.psi) else JavaMethodImpl(e.psi)
                         )
                 }
+
                 is KSClassDeclarationJavaImpl -> {
                     resolverContext = resolverContext
                         .childForClassOrPackage(resolveJavaDeclaration(e.psi) as ClassDescriptor, JavaClassImpl(e.psi))
@@ -685,12 +692,14 @@ class ResolverImpl(
             is PsiPrimitiveType -> {
                 getClassDeclarationByName(psiType.boxedTypeName!!)!!.asStarProjectedType()
             }
+
             is PsiArrayType -> {
                 val componentType = resolveJavaTypeInAnnotations(psiType.componentType)
                 val componentTypeRef = createKSTypeReferenceFromKSType(componentType)
                 val typeArgs = listOf(getTypeArgument(componentTypeRef, Variance.INVARIANT))
                 builtIns.arrayType.replace(typeArgs)
             }
+
             else -> {
                 getClassDeclarationByName(psiType.canonicalText)?.asStarProjectedType()
                     ?: KSErrorType(psiType.canonicalText)
@@ -736,9 +745,11 @@ class ResolverImpl(
                     getKSTypeCached(it, type.element.typeArguments, type.annotations)
                 }
             }
+
             is KSTypeReferenceDescriptorImpl -> {
                 return getKSTypeCached(type.kotlinType)
             }
+
             is KSTypeReferenceJavaImpl -> {
                 val psi = (type.psi as? PsiClassReferenceType)?.resolve()
                 if (psi is PsiTypeParameter) {
@@ -783,6 +794,7 @@ class ResolverImpl(
                     }
                 }
             }
+
             else -> throw IllegalStateException("Unable to resolve type for $type, $ExceptionMessage")
         }
     }
@@ -809,6 +821,7 @@ class ResolverImpl(
                 } else {
                     KSTypeParameterDescriptorImpl.getCached(descriptor)
                 }
+
                 is TypeAliasDescriptor -> KSTypeAliasDescriptorImpl.getCached(descriptor)
                 null -> throw IllegalStateException("Failed to resolve descriptor for $kotlinType")
                 else -> throw IllegalStateException(
@@ -928,9 +941,11 @@ class ResolverImpl(
                 psi.throwsList.referencedTypes.asSequence()
                     .map { KSTypeReferenceJavaImpl.getCached(it, function).resolve() }
             }
+
             Origin.KOTLIN -> {
                 extractThrowsAnnotation(function)
             }
+
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val descriptor = (function as KSFunctionDeclarationDescriptorImpl).descriptor
                 val jvmDesc = this.mapToJvmSignature(function)
@@ -948,6 +963,7 @@ class ResolverImpl(
                 }
                 extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
             }
+
             else -> emptySequence()
         }
     }
@@ -958,6 +974,7 @@ class ResolverImpl(
             Origin.KOTLIN, Origin.SYNTHETIC -> {
                 extractThrowsAnnotation(accessor)
             }
+
             Origin.KOTLIN_LIB -> {
                 val descriptor = (accessor as KSPropertyAccessorDescriptorImpl).descriptor
                 val jvmDesc = typeMapper.mapAsmMethod(descriptor).descriptor
@@ -975,6 +992,7 @@ class ResolverImpl(
                 }
                 extractThrowsFromClassFile(virtualFileContent, jvmDesc, getJvmName(accessor))
             }
+
             else -> emptySequence()
         }
     }
@@ -1191,6 +1209,7 @@ class ResolverImpl(
                 if (declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE)
                     modifiers.add(Modifier.ABSTRACT)
             }
+
             Origin.KOTLIN -> {
                 addVisibilityModifiers()
                 if (!declaration.isOpen())
@@ -1216,16 +1235,19 @@ class ResolverImpl(
                         if (declaration.classKind == ClassKind.INTERFACE)
                             modifiers.add(Modifier.ABSTRACT)
                     }
+
                     is KSPropertyDeclaration -> {
                         if (declaration.isAbstract())
                             modifiers.add(Modifier.ABSTRACT)
                     }
+
                     is KSFunctionDeclaration -> {
                         if (declaration.isAbstract)
                             modifiers.add(Modifier.ABSTRACT)
                     }
                 }
             }
+
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 when (declaration) {
                     is KSPropertyDeclaration -> {
@@ -1234,6 +1256,7 @@ class ResolverImpl(
                         if (declaration.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0)
                             modifiers.add(Modifier.JAVA_VOLATILE)
                     }
+
                     is KSFunctionDeclaration -> {
                         if (declaration.jvmAccessFlag and Opcodes.ACC_STRICT != 0)
                             modifiers.add(Modifier.JAVA_STRICT)
@@ -1242,6 +1265,7 @@ class ResolverImpl(
                     }
                 }
             }
+
             else -> Unit
         }
         return modifiers
@@ -1363,6 +1387,7 @@ class ResolverImpl(
             RefPosition.PARAMETER_TYPE -> typeSystem.getOptimalModeForValueParameter(kotlinType)
             RefPosition.RETURN_TYPE ->
                 typeSystem.getOptimalModeForReturnType(kotlinType, ref.isReturnTypeOfAnnotationMethod())
+
             RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
         }.updateFromParents(ref)
 
@@ -1530,9 +1555,11 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotatio
         is KSPropertyGetter -> (this.receiver as? KSDeclarationImpl)?.let {
             it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.GET }
         }
+
         is KSPropertySetter -> (this.receiver as? KSDeclarationImpl)?.let {
             it.originalAnnotations.asSequence().filter { it.useSiteTarget == AnnotationUseSiteTarget.SET }
         }
+
         is KSValueParameter -> {
             var parent = when (this) {
                 is KSValueParameterSyntheticImpl -> this.owner
@@ -1556,6 +1583,7 @@ internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotatio
             }
             annotationsFromParents.asSequence()
         }
+
         else -> emptySequence()
     } ?: emptySequence()
 }

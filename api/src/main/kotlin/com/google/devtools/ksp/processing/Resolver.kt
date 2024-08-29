@@ -18,6 +18,7 @@ package com.google.devtools.ksp.processing
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.symbol.*
+import java.io.InputStream
 
 /**
  * [Resolver] provides [SymbolProcessor] with access to compiler details such as Symbols.
@@ -36,6 +37,9 @@ interface Resolver {
      * @return all input files including generated files from previous rounds, note when incremental is enabled, only dirty files up for processing will be returned.
      */
     fun getAllFiles(): Sequence<KSFile>
+
+    fun getResource(path: String): InputStream?
+    fun getAllResources(): Sequence<String>
 
     /**
      * Get all symbols with specified annotation.

@@ -20,6 +20,7 @@
 package com.google.devtools.ksp.gradle
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -187,6 +188,12 @@ interface KspTask : Task {
 
     @get:Internal
     val incrementalChangesTransformers: ListProperty<(SourcesChanges) -> List<SubpluginOption>>
+
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    @get:IgnoreEmptyDirectories
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val resourceRoots: ListProperty<Directory>
 }
 
 @CacheableTask
@@ -227,7 +234,9 @@ abstract class KspTaskJvm @Inject constructor(
         super.callCompilerAsync(args, inputChanges, taskOutputsBackup)
     }
 
-    override fun skipCondition(): Boolean = sources.isEmpty && javaSources.isEmpty
+    override fun skipCondition(): Boolean = sources.isEmpty &&
+        javaSources.isEmpty &&
+        resourceRoots.get().all { r -> r.asFileTree.isEmpty }
 
     @get:InputFiles
     @get:SkipWhenEmpty
