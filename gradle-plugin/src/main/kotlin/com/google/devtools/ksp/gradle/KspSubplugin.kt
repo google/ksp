@@ -103,7 +103,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         private fun getSubpluginOptions(
             project: Project,
             kspExtension: KspExtension,
-            sourceSetName: String,
+            sourceSet: KotlinSourceSet,
             target: String,
             isIncremental: Boolean,
             allWarningsAsErrors: Provider<Boolean>,
@@ -112,25 +112,38 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         ): Provider<List<SubpluginOption>> {
             val options = project.objects.listProperty(SubpluginOption::class.java)
             options.add(
-                InternalSubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
+                InternalSubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSet.name, target).path)
             )
             options.add(
-                InternalSubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName, target).path)
+                InternalSubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSet.name, target).path)
             )
             options.add(
-                InternalSubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName, target).path)
+                InternalSubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSet.name, target).path)
+            )
+            val resourceOutputDir = getKspResourceOutputDir(project, sourceSet.name, target)
+            options.addAll(
+                project.provider {
+                    sourceSet.resources.srcDirs
+                        .filter { !resourceOutputDir.isParentOf(it) && it !in kspExtension.excludedSources }
+                        .map { resource ->
+                            InternalSubpluginOption(
+                                "resourceRoot",
+                                resource.path
+                            )
+                        }
+                }
             )
             options.add(
                 InternalSubpluginOption(
                     "resourceOutputDir",
-                    getKspResourceOutputDir(project, sourceSetName, target).path
+                    resourceOutputDir.path
                 )
             )
             options.add(
                 InternalSubpluginOption("cachesDir", getKspCachesDir(project, sourceSetName, target).path)
             )
             options.add(
-                InternalSubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName, target).path)
+                InternalSubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSet.name, target).path)
             )
             options.add(
                 SubpluginOption("incremental", isIncremental.toString())
@@ -245,12 +258,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         val target = kotlinCompilation.target.name
-        val sourceSetName = kotlinCompilation.defaultSourceSet.name
-        val classOutputDir = getKspClassOutputDir(project, sourceSetName, target)
-        val javaOutputDir = getKspJavaOutputDir(project, sourceSetName, target)
-        val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSetName, target)
-        val resourceOutputDir = getKspResourceOutputDir(project, sourceSetName, target)
-        val kspOutputDir = getKspOutputDir(project, sourceSetName, target)
+        val sourceSet = kotlinCompilation.defaultSourceSet
+        val classOutputDir = getKspClassOutputDir(project, sourceSet.name, target)
+        val javaOutputDir = getKspJavaOutputDir(project, sourceSet.name, target)
+        val kotlinOutputDir = getKspKotlinOutputDir(project, sourceSet.name, target)
+        val resourceOutputDir = getKspResourceOutputDir(project, sourceSet.name, target)
+        val kspOutputDir = getKspOutputDir(project, sourceSet.name, target)
 
         val kspClasspathCfg = project.configurations.maybeCreate(
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME
@@ -296,12 +309,20 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
-
+            kspTask.resourceRoots.addAll(
+                sourceSet.resources.srcDirs
+                    .filter {
+                        !resourceOutputDir.isParentOf(it) && it !in kspExtension.excludedSources
+                    }
+                    .map {
+                        project.layout.dir(project.provider { it }).get()
+                    }
+            )
             kspTask.options.addAll(
                 getSubpluginOptions(
                     project = project,
                     kspExtension = kspExtension,
-                    sourceSetName = sourceSetName,
+                    sourceSet = sourceSet,
                     target = target,
                     isIncremental = isIncremental,
                     allWarningsAsErrors = project.provider { kspExtension.allWarningsAsErrors },

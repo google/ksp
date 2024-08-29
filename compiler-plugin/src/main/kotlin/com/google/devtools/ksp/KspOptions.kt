@@ -27,6 +27,7 @@ class KspOptions(
     val projectBaseDir: File,
     val compileClasspath: List<File>,
     val javaSourceRoots: List<File>,
+    val resourceRoots: List<File>,
 
     val classOutputDir: File,
     val javaOutputDir: File,
@@ -66,6 +67,7 @@ class KspOptions(
         var projectBaseDir: File? = null
         val compileClasspath: MutableList<File> = mutableListOf()
         val javaSourceRoots: MutableList<File> = mutableListOf()
+        val resourceRoots: MutableList<File> = mutableListOf()
 
         var classOutputDir: File? = null
         var javaOutputDir: File? = null
@@ -103,6 +105,7 @@ class KspOptions(
                 requireNotNull(projectBaseDir) { "A non-null projectBaseDir must be provided" },
                 compileClasspath,
                 javaSourceRoots,
+                resourceRoots,
                 requireNotNull(classOutputDir) { "A non-null classOutputDir must be provided" },
                 requireNotNull(javaOutputDir) { "A non-null javaOutputDir must be provided" },
                 requireNotNull(kotlinOutputDir) { "A non-null kotlinOutputDir must be provided" },
@@ -172,6 +175,14 @@ enum class KspCliOption(
         "<kotlinOutputDir>",
         "Dir of generated Kotlin sources",
         false
+    ),
+
+    RESOURCE_ROOT_OPTION(
+        "resourceRoot",
+        "<resourceRoot>",
+        "a root directory for resources",
+        false,
+        allowMultipleOccurrences = true
     ),
 
     RESOURCE_OUTPUT_DIR_OPTION(
@@ -322,6 +333,7 @@ fun KspOptions.Builder.processOption(option: KspCliOption, value: String) = when
     KspCliOption.CLASS_OUTPUT_DIR_OPTION -> classOutputDir = File(value)
     KspCliOption.JAVA_OUTPUT_DIR_OPTION -> javaOutputDir = File(value)
     KspCliOption.KOTLIN_OUTPUT_DIR_OPTION -> kotlinOutputDir = File(value)
+    KspCliOption.RESOURCE_ROOT_OPTION -> resourceRoots.add(File(value))
     KspCliOption.RESOURCE_OUTPUT_DIR_OPTION -> resourceOutputDir = File(value)
     KspCliOption.CACHES_DIR_OPTION -> cachesDir = File(value)
     KspCliOption.KSP_OUTPUT_DIR_OPTION -> kspOutputDir = File(value)

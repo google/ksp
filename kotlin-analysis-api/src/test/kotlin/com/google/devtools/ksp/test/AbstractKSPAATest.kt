@@ -46,10 +46,23 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")
 
+    val TestModule.resources
+        get() = File(testRoot, "resources")
+
     fun TestModule.writeKtFiles() {
         kotlinSrc.mkdirs()
         files.filter { it.isKtFile }.forEach { file ->
             File(kotlinSrc, file.relativePath).let {
+                it.parentFile.mkdirs()
+                it.writeText(file.originalContent)
+            }
+        }
+    }
+
+    fun TestModule.writeResourceFiles() {
+        resources.mkdirs()
+        files.filter { it.isAdditional }.forEach { file ->
+            File(resources, file.relativePath).let {
                 it.parentFile.mkdirs()
                 it.writeText(file.originalContent)
             }
@@ -84,6 +97,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
 
     override fun compileModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
+        module.writeResourceFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }
         compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir)
@@ -111,6 +125,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         // Therefore, this doesn't work:
         //  val ktFiles = mainModule.loadKtFiles(kotlinCoreEnvironment.project)
         mainModule.writeKtFiles()
+        mainModule.writeResourceFiles()
 
         val testRoot = mainModule.testRoot
 
@@ -118,6 +133,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             moduleName = mainModule.name
             sourceRoots = listOf(mainModule.kotlinSrc)
             javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
+            resourceRoots = listOf(mainModule.resources)
             jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
             jvmTarget = compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)!!.description
             languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString

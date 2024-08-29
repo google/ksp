@@ -22,7 +22,9 @@ import com.google.devtools.ksp.processing.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
@@ -152,6 +154,7 @@ abstract class KspAATask @Inject constructor(
                     cfg.moduleName.value(project.name)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
+                    val resourceOutputDir = KspGradleSubplugin.getKspResourceOutputDir(project, sourceSetName, target)
                     val filteredTasks =
                         kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                     kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
@@ -164,8 +167,20 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
+                        cfg.resourceRoots.addAll(
+                            sourceSet.resources.srcDirs
+                                .filter {
+                                    !resourceOutputDir.isParentOf(it) && it !in kspExtension.excludedSources
+                                }
+                                .map {
+                                    project.layout.dir(project.provider { it }).get()
+                                }
+                        )
                         kspAATask.dependsOn(
                             sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
+                        )
+                        kspAATask.dependsOn(
+                            sourceSet.resources.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
                         )
                     }
                     if (kotlinCompilation is KotlinCommonCompilation) {
@@ -305,6 +320,12 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val javaSourceRoots: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    @get:IgnoreEmptyDirectories
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val resourceRoots: ListProperty<Directory>
+
     @get:Incremental
     @get:Classpath
     abstract val libraries: ConfigurableFileCollection
@@ -441,6 +462,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             moduleName = gradleCfg.moduleName.get()
             sourceRoots = gradleCfg.sourceRoots.files.toList()
             commonSourceRoots = gradleCfg.commonSourceRoots.files.toList()
+            resourceRoots = gradleCfg.resourceRoots.get().map { it.asFile }
             libraries = gradleCfg.libraries.files.toList()
             projectBaseDir = gradleCfg.projectBaseDir.get()
             outputBaseDir = gradleCfg.outputBaseDir.get()

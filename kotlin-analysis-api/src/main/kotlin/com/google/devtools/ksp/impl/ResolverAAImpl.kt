@@ -19,25 +19,17 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
-import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STRICTFP_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_SYNCHRONIZED_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_TRANSIENT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_VOLATILE_ANNOTATION_FQN
-import com.google.devtools.ksp.common.extractThrowsAnnotation
+import com.google.devtools.ksp.common.*
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.common.impl.RefPosition
 import com.google.devtools.ksp.common.impl.findOuterMostRef
 import com.google.devtools.ksp.common.impl.findRefPosition
 import com.google.devtools.ksp.common.impl.isReturnTypeOfAnnotationMethod
-import com.google.devtools.ksp.common.javaModifiers
-import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
+import com.google.devtools.ksp.impl.symbol.kotlin.findParentOfType
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
 import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
@@ -80,11 +72,14 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.org.objectweb.asm.Opcodes
+import java.io.File
+import java.io.InputStream
 
 @OptIn(KspExperimental::class)
 class ResolverAAImpl(
     val allKSFiles: List<KSFile>,
     val newKSFiles: List<KSFile>,
+    val resourceRoots: List<File>,
     val deferredSymbols: Map<SymbolProcessor, List<Restorable>>,
     val project: Project,
     val incrementalContext: IncrementalContextAA,
@@ -292,6 +287,10 @@ class ResolverAAImpl(
     override fun getAllFiles(): Sequence<KSFile> {
         return allKSFiles.asSequence()
     }
+
+    override fun getResource(path: String): InputStream? = resourceRoots.getResource(path)
+
+    override fun getAllResources(): Sequence<String> = resourceRoots.getAllResources()
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
         fun findClass(name: KSName): KtSymbol? {

@@ -493,6 +493,7 @@ class KotlinSymbolProcessing(
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
             var newKSFiles = allDirtyKSFiles
             val initialDirtySet = allDirtyKSFiles.toSet()
+            val resourceRoots = kspConfig.resourceRoots
 
             val targetPlatform = ResolverAAImpl.ktModule.platform
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
@@ -527,6 +528,7 @@ class KotlinSymbolProcessing(
                 val resolver = ResolverAAImpl(
                     allDirtyKSFiles,
                     newKSFiles,
+                    resourceRoots,
                     deferredSymbols,
                     project,
                     incrementalContext,
