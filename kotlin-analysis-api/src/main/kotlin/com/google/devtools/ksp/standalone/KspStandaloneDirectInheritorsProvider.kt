@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
-import org.jetbrains.kotlin.analysis.api.fir.utils.isSubClassOf
+import org.jetbrains.kotlin.analysis.api.fir.utils.isSubclassOf
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDirectInheritorsProvider
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileModule
@@ -101,7 +101,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         val candidateFirSymbol = candidate.toFirSymbol(candidateClassId, candidateKtModule) ?: return false
         val candidateFirClass = candidateFirSymbol.fir as? FirClass ?: return false
 
-        return isSubClassOf(
+        return isSubclassOf(
             candidateFirClass,
             baseFirClass,
             candidateFirClass.moduleData.session,
