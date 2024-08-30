@@ -51,6 +51,8 @@ import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjectio
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibrarySourceModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KaDeclarationContainerSymbol
 import org.jetbrains.kotlin.analysis.api.types.*
@@ -988,3 +990,29 @@ internal fun KaCallableSymbol.explictJvmName(): String? {
         it.classId == jvmNameClassId
     }?.arguments?.single()?.expression?.toValue() as? String
 }
+
+internal val KaDeclarationSymbol.internalSuffix: String
+    get() = analyze {
+        if (visibility != KaSymbolVisibility.INTERNAL)
+            return@analyze ""
+
+        // Skip top level functions and properties
+        when (this@internalSuffix) {
+            is KaPropertyAccessorSymbol -> {
+                if (containingDeclaration?.containingDeclaration == null)
+                    return@analyze ""
+            }
+            is KaFunctionSymbol -> {
+                if (containingDeclaration == null)
+                    return@analyze ""
+            }
+            else -> {}
+        }
+
+        fun String.toSuffix(): String = "\$$this"
+        when (val module = containingModule) {
+            is KaSourceModule -> module.name.toSuffix()
+            is KaLibraryModule -> module.libraryName.toSuffix()
+            else -> ""
+        }
+    }
