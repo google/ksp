@@ -510,10 +510,14 @@ class ResolverAAImpl(
         } else {
             "set"
         }
+        val inlineSuffix = when (accessor) {
+            is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol.inlineSuffix
+            else -> ""
+        }
         val mangledName = if (accessor.modifiers.contains(Modifier.INTERNAL)) {
             "\$${ktModule.name}"
         } else ""
-        return "${prefix}${accessor.receiver.simpleName.asString().capitalize()}$mangledName"
+        return "${prefix}${accessor.receiver.simpleName.asString().capitalize()}$inlineSuffix$mangledName"
     }
 
     // TODO: handle library symbols
@@ -525,10 +529,14 @@ class ResolverAAImpl(
         }?.let {
             return it.name
         }
+        val inlineSuffix = when (declaration) {
+            is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol.inlineSuffix
+            else -> ""
+        }
         val mangledName = if (declaration.modifiers.contains(Modifier.INTERNAL)) {
             "\$${ktModule.name}"
         } else ""
-        return declaration.simpleName.asString() + mangledName
+        return declaration.simpleName.asString() + inlineSuffix + mangledName
     }
 
     override fun getKSNameFromString(name: String): KSName {
