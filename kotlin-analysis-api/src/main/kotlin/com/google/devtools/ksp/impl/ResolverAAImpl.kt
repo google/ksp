@@ -522,9 +522,7 @@ class ResolverAAImpl(
         }
 
         val inlineSuffix = symbol?.inlineSuffix ?: ""
-        val mangledName = if (accessor.modifiers.contains(Modifier.INTERNAL)) {
-            "\$${ktModule.name}"
-        } else ""
+        val mangledName = symbol?.internalSuffix ?: ""
         return "${prefix}${accessor.receiver.simpleName.asString().capitalize()}$inlineSuffix$mangledName"
     }
 
@@ -548,9 +546,7 @@ class ResolverAAImpl(
         }
 
         val inlineSuffix = symbol?.inlineSuffix ?: ""
-        val mangledName = if (declaration.modifiers.contains(Modifier.INTERNAL)) {
-            "\$${ktModule.name}"
-        } else ""
+        val mangledName = symbol?.internalSuffix ?: ""
         return declaration.simpleName.asString() + inlineSuffix + mangledName
     }
 
