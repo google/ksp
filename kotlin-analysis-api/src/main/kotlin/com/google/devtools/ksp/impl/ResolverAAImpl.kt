@@ -505,15 +505,23 @@ class ResolverAAImpl(
         if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
             return accessor.receiver.simpleName.asString()
         }
+
+        val symbol: KaPropertyAccessorSymbol? = when (accessor) {
+            is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol
+            else -> null
+        }
+
+        symbol?.explictJvmName()?.let {
+            return it
+        }
+
         val prefix = if (accessor is KSPropertyGetter) {
             "get"
         } else {
             "set"
         }
-        val inlineSuffix = when (accessor) {
-            is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol.inlineSuffix
-            else -> ""
-        }
+
+        val inlineSuffix = symbol?.inlineSuffix ?: ""
         val mangledName = if (accessor.modifiers.contains(Modifier.INTERNAL)) {
             "\$${ktModule.name}"
         } else ""
@@ -529,10 +537,17 @@ class ResolverAAImpl(
         }?.let {
             return it.name
         }
-        val inlineSuffix = when (declaration) {
-            is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol.inlineSuffix
-            else -> ""
+
+        val symbol: KaFunctionSymbol? = when (declaration) {
+            is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol
+            else -> null
         }
+
+        symbol?.explictJvmName()?.let {
+            return it
+        }
+
+        val inlineSuffix = symbol?.inlineSuffix ?: ""
         val mangledName = if (declaration.modifiers.contains(Modifier.INTERNAL)) {
             "\$${ktModule.name}"
         } else ""
