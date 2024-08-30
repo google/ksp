@@ -55,6 +55,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KaDeclarationContainerSymbol
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
+import org.jetbrains.kotlin.codegen.state.InfoForMangling
+import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
+import org.jetbrains.kotlin.codegen.state.md5base64
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.getTargetType
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
@@ -923,3 +926,56 @@ fun <T : KaSymbol?> T.tryResolveToTypePhase(): T {
     (this as? KaFirSymbol<*>)?.firSymbol?.lazyResolveToPhase(FirResolvePhase.TYPES)
     return this
 }
+
+private val KaType.upperBoundIfFlexible: KaType
+    get() = (this as? KaFlexibleType)?.upperBound ?: this
+
+private fun KaType.requiresMangling(): Boolean = (symbol as? KaNamedClassSymbol)?.isInline ?: false
+
+private fun KaType.asInfoForMangling(): InfoForMangling? {
+    val upperBound = upperBoundIfFlexible
+    val fqName = upperBound.symbol?.classId?.asSingleFqName()?.toUnsafe() ?: return null
+    val isValue = upperBound.requiresMangling()
+    val isNullable = upperBound.nullability.isNullable
+    return InfoForMangling(fqName = fqName, isValue = isValue, isNullable = isNullable)
+}
+
+private fun mangleInlineSuffix(
+    parameters: List<KaType>,
+    returnType: KaType?,
+    shouldMangleReturnType: Boolean
+): String {
+    val signature = collectFunctionSignatureForManglingSuffix(
+        false,
+        parameters.any { it.requiresMangling() },
+        parameters.map { it.asInfoForMangling() },
+        if (shouldMangleReturnType) returnType?.asInfoForMangling() else null
+    ) ?: return ""
+    return "-${md5base64(signature)}"
+}
+
+private val KaSymbol.isKotlin: Boolean
+    get() = when (origin) {
+        KaSymbolOrigin.SOURCE, KaSymbolOrigin.LIBRARY -> true
+        else -> false
+    }
+
+internal val KaFunctionSymbol.inlineSuffix: String
+    get() = mangleInlineSuffix(
+        valueParameters.map { it.returnType },
+        returnType,
+        analyze {
+            returnType.requiresMangling() && isKotlin && this@inlineSuffix.containingSymbol is KaClassSymbol
+        }
+    )
+
+internal val KaPropertyAccessorSymbol.inlineSuffix: String
+    get() = when (this) {
+        is KaPropertyGetterSymbol ->
+            mangleInlineSuffix(
+                emptyList(),
+                returnType,
+                returnType.requiresMangling() && isKotlin
+            )
+        is KaPropertySetterSymbol -> mangleInlineSuffix(listOf(parameter.returnType), null, false)
+    }
