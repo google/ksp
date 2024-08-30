@@ -965,7 +965,7 @@ internal val KaFunctionSymbol.inlineSuffix: String
         valueParameters.map { it.returnType },
         returnType,
         analyze {
-            returnType.requiresMangling() && isKotlin && this@inlineSuffix.containingSymbol is KaClassSymbol
+            returnType.requiresMangling() && isKotlin && containingDeclaration != null
         }
     )
 
@@ -975,7 +975,16 @@ internal val KaPropertyAccessorSymbol.inlineSuffix: String
             mangleInlineSuffix(
                 emptyList(),
                 returnType,
-                returnType.requiresMangling() && isKotlin
+                analyze {
+                    returnType.requiresMangling() && isKotlin && containingDeclaration?.containingDeclaration != null
+                }
             )
         is KaPropertySetterSymbol -> mangleInlineSuffix(listOf(parameter.returnType), null, false)
     }
+
+private val jvmNameClassId = ClassId.fromString("kotlin/jvm/JvmName")
+internal fun KaCallableSymbol.explictJvmName(): String? {
+    return annotations.singleOrNull() {
+        it.classId == jvmNameClassId
+    }?.arguments?.single()?.expression?.toValue() as? String
+}
