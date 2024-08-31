@@ -60,14 +60,11 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.project.structure.KtSourceModule
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.findFacadeClass
-import org.jetbrains.kotlin.asJava.toLightClass
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
-import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightAccessorMethod
-import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightSimpleMethod
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
@@ -77,7 +74,6 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.org.objectweb.asm.Opcodes
 
@@ -487,21 +483,6 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
-        (
-            (accessor.receiver.closestClassDeclaration() as? KSClassDeclarationImpl)
-                ?.ktClassOrObjectSymbol?.psi as? KtClassOrObject
-            )?.toLightClass()?.allMethods
-            ?.let {
-                // If there are light accessors, information in light accessors are more accurate.
-                // check light accessor first, if not found then default to light simple method.
-                it.filterIsInstance<SymbolLightAccessorMethod>() + it.filterIsInstance<SymbolLightSimpleMethod>()
-            }
-            ?.firstOrNull {
-                (it.parameters.isNotEmpty() xor (accessor is KSPropertyGetter)) &&
-                    it.kotlinOrigin == (accessor.receiver as? KSPropertyDeclarationImpl)?.ktPropertySymbol?.psi
-            }?.let {
-                return it.name
-            }
         if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
             return accessor.receiver.simpleName.asString()
         }
@@ -528,14 +509,6 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(declaration: KSFunctionDeclaration): String? {
-        (declaration.closestClassDeclaration() as? KSClassDeclarationImpl)?.ktDeclarationSymbol?.psi?.let {
-            (it as? KtClassOrObject)?.toLightClass()
-        }?.allMethods?.filterIsInstance<SymbolLightSimpleMethod>()?.singleOrNull {
-            it.kotlinOrigin == (declaration as KSFunctionDeclarationImpl).ktFunctionSymbol.psi
-        }?.let {
-            return it.name
-        }
-
         val symbol: KaFunctionSymbol? = when (declaration) {
             is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol
             else -> null
