@@ -30,7 +30,6 @@
 // comp1.get(): SYNTHETIC
 // comp2.get(): SYNTHETIC
 // comp2.set(): SYNTHETIC
-// GetAnno
 // <init>
 // synthetic constructor for ImplictConstructorJava
 // Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]

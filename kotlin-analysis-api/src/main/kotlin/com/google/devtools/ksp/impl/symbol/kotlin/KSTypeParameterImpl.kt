@@ -23,14 +23,14 @@ import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.symbols.KtTypeParameterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaTypeParameterSymbol
 
-class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol: KtTypeParameterSymbol) :
+class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol: KaTypeParameterSymbol) :
     KSTypeParameter,
     AbstractKSDeclarationImpl(ktTypeParameterSymbol),
     KSExpectActual by KSExpectActualImpl(ktTypeParameterSymbol) {
-    companion object : KSObjectCache<KtTypeParameterSymbol, KSTypeParameterImpl>() {
-        fun getCached(ktTypeParameterSymbol: KtTypeParameterSymbol) =
+    companion object : KSObjectCache<KaTypeParameterSymbol, KSTypeParameterImpl>() {
+        fun getCached(ktTypeParameterSymbol: KaTypeParameterSymbol) =
             cache.getOrPut(ktTypeParameterSymbol) { KSTypeParameterImpl(ktTypeParameterSymbol) }
     }
 

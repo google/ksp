@@ -30,13 +30,13 @@ open class TypeComparisonProcessor : AbstractTestProcessor() {
         val files = resolver.getNewFiles()
         val ignoredNames = mutableSetOf<String>()
 
-        files.forEach {
-            it.accept(typeCollector, types)
-            it.annotations.forEach {
-                if (it.shortName.asString() == "Suppress") {
-                    it.arguments.forEach {
-                        (it.value as List<String>).forEach {
-                            ignoredNames.add(it)
+        files.forEach { file ->
+            file.accept(typeCollector, types)
+            file.annotations.forEach { annotation ->
+                if (annotation.shortName.asString() == "Suppress") {
+                    annotation.arguments.forEach { argument ->
+                        (argument.value as List<*>).forEach {
+                            ignoredNames.add(it as String)
                         }
                     }
                 }

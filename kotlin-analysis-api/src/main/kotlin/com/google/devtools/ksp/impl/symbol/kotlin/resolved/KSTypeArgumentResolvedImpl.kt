@@ -23,23 +23,23 @@ import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.KtStarTypeProjection
-import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
-import org.jetbrains.kotlin.analysis.api.KtTypeProjection
+import org.jetbrains.kotlin.analysis.api.types.KaStarTypeProjection
+import org.jetbrains.kotlin.analysis.api.types.KaTypeArgumentWithVariance
+import org.jetbrains.kotlin.analysis.api.types.KaTypeProjection
 
 class KSTypeArgumentResolvedImpl private constructor(
-    private val ktTypeProjection: KtTypeProjection,
+    private val ktTypeProjection: KaTypeProjection,
     override val parent: KSNode?
 ) : KSTypeArgument, Deferrable {
-    companion object : KSObjectCache<IdKeyPair<KtTypeProjection, KSNode?>, KSTypeArgumentResolvedImpl>() {
-        fun getCached(ktTypeProjection: KtTypeProjection, parent: KSNode? = null) =
+    companion object : KSObjectCache<IdKeyPair<KaTypeProjection, KSNode?>, KSTypeArgumentResolvedImpl>() {
+        fun getCached(ktTypeProjection: KaTypeProjection, parent: KSNode? = null) =
             cache.getOrPut(IdKeyPair(ktTypeProjection, parent)) { KSTypeArgumentResolvedImpl(ktTypeProjection, parent) }
     }
 
     override val variance: Variance by lazy {
         when (ktTypeProjection) {
-            is KtStarTypeProjection -> Variance.STAR
-            is KtTypeArgumentWithVariance -> {
+            is KaStarTypeProjection -> Variance.STAR
+            is KaTypeArgumentWithVariance -> {
                 when (ktTypeProjection.variance) {
                     org.jetbrains.kotlin.types.Variance.INVARIANT -> Variance.INVARIANT
                     org.jetbrains.kotlin.types.Variance.IN_VARIANCE -> Variance.CONTRAVARIANT

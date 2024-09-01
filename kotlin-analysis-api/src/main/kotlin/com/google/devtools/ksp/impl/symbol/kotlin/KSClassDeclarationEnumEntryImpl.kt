@@ -50,10 +50,10 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
         analyze {
-            ktEnumEntrySymbol.returnType.getDirectSuperTypes().forEach {
+            ktEnumEntrySymbol.returnType.directSupertypes.forEach {
                 recordLookup(it, this@KSClassDeclarationEnumEntryImpl)
             }
-            recordLookupForGetAllFunctions(ktEnumEntrySymbol.returnType.getDirectSuperTypes())
+            recordLookupForGetAllFunctions(ktEnumEntrySymbol.returnType.directSupertypes.toList())
         }
         return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSFunctionDeclaration>()
             ?: emptySequence()
@@ -61,10 +61,10 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
         analyze {
-            ktEnumEntrySymbol.returnType.getDirectSuperTypes().forEach {
+            ktEnumEntrySymbol.returnType.directSupertypes.forEach {
                 recordLookup(it, this@KSClassDeclarationEnumEntryImpl)
             }
-            recordLookupForGetAllProperties(ktEnumEntrySymbol.returnType.getDirectSuperTypes())
+            recordLookupForGetAllProperties(ktEnumEntrySymbol.returnType.directSupertypes.toList())
         }
         return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSPropertyDeclaration>()
             ?: emptySequence()

@@ -55,11 +55,7 @@ class KSValueParameterJavaImpl private constructor(val psi: PsiParameter, overri
     override val isVar: Boolean = false
 
     override val name: KSName? by lazy {
-        if (psi.name != null) {
-            KSNameImpl.getCached(psi.name!!)
-        } else {
-            null
-        }
+        KSNameImpl.getCached(psi.name)
     }
 
     override val type: KSTypeReference by lazy {

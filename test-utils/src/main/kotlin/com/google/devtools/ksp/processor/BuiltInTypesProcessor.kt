@@ -27,13 +27,12 @@ open class BuiltInTypesProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getNewFiles()
-        val ignoredNames = mutableSetOf<String>()
 
         files.forEach {
             it.accept(typeCollector, types)
         }
 
-        val builtInTypes = listOf<KSType>(
+        val builtInTypes = listOf(
             resolver.builtIns.annotationType,
             resolver.builtIns.anyType,
             resolver.builtIns.arrayType,

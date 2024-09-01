@@ -379,7 +379,7 @@ class GradleCompilationTest {
             override fun process(resolver: Resolver): List<KSAnnotated> = emptyList()
         }
 
-        class Provider : TestSymbolProcessorProvider({ env -> DummyProcessor() })
+        class Provider : TestSymbolProcessorProvider({ DummyProcessor() })
 
         testRule.addProvider(Provider::class)
 

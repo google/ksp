@@ -45,7 +45,7 @@ data class BinaryClassInfo(
 )
 
 /**
- * Lookup cache for field names names for deserialized classes.
+ * Lookup cache for field names for deserialized classes.
  * To check if a field has backing field, we need to look for binary field names, hence they are cached here.
  */
 object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
@@ -68,7 +68,7 @@ object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
                     value: Any?
                 ): FieldVisitor? {
                     if (name != null) {
-                        fieldAccFlags.put(name, access)
+                        fieldAccFlags[name] = access
                     }
                     return null
                 }
@@ -81,7 +81,7 @@ object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
                     exceptions: Array<out String>?
                 ): MethodVisitor? {
                     if (name != null) {
-                        methodAccFlags.put(name + descriptor, access)
+                        methodAccFlags[name + descriptor] = access
                     }
                     return null
                 }
@@ -163,25 +163,25 @@ internal class DeclarationOrdering(
                     // might be a property without backing field. Use method ordering instead
                     decl.getter?.let { getter ->
                         return@getOrPut findMethodOrder(
-                            ResolverAAImpl.instance!!.getJvmName(getter).toString()
+                            ResolverAAImpl.instance.getJvmName(getter)
                         ) {
-                            ResolverAAImpl.instance!!.mapToJvmSignature(getter)
+                            ResolverAAImpl.instance.mapToJvmSignature(getter)
                         }
                     }
                     decl.setter?.let { setter ->
                         return@getOrPut findMethodOrder(
-                            ResolverAAImpl.instance!!.getJvmName(setter).toString()
+                            ResolverAAImpl.instance.getJvmName(setter)
                         ) {
-                            ResolverAAImpl.instance!!.mapToJvmSignature(setter)
+                            ResolverAAImpl.instance.mapToJvmSignature(setter)
                         }
                     }
                     orderProvider.next(decl)
                 }
                 is KSFunctionDeclarationImpl -> {
                     findMethodOrder(
-                        ResolverAAImpl.instance!!.getJvmName(decl).toString()
+                        ResolverAAImpl.instance.getJvmName(decl)
                     ) {
-                        ResolverAAImpl.instance!!.mapToJvmSignature(decl).toString()
+                        ResolverAAImpl.instance.mapToJvmSignature(decl).toString()
                     }
                 }
                 else -> orderProvider.nextIgnoreSealed()
@@ -232,7 +232,7 @@ internal class DeclarationOrdering(
     ): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
         methodOrdering.getOrPut(name.asString()) {
             mutableMapOf()
-        }.put(desc, orderProvider.next(name))
+        }[desc] = orderProvider.next(name)
         return null
     }
 
@@ -258,7 +258,7 @@ internal class DeclarationOrdering(
         /**
          * Returns the next available order value.
          *
-         * @param ref Used for logging if the data is sealed and we shouldn't provide a new order.
+         * @param ref Used for logging if the data is sealed, and we shouldn't provide a new order.
          */
         fun next(ref: Any): Int {
             check(!sealed || !STRICT_MODE) {

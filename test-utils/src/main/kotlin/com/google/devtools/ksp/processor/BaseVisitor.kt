@@ -6,8 +6,8 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
 open class BaseVisitor : KSVisitorVoid() {
-    override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
-        for (declaration in type.declarations) {
+    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+        for (declaration in classDeclaration.declarations) {
             declaration.accept(this, Unit)
         }
     }
