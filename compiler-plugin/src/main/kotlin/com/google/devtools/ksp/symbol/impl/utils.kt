@@ -71,7 +71,7 @@ fun PsiElement.findParentAnnotated(): KSAnnotated? {
     }
 
     while (parent != null && parent !is KtDeclaration && parent !is KtFile && parent !is PsiClass &&
-        parent !is PsiMethod && parent !is PsiJavaFile && parent !is KtTypeAlias
+        parent !is PsiMethod && parent !is PsiJavaFile
     ) {
         parent = parent.parent
     }
@@ -463,6 +463,7 @@ internal class DeclarationOrdering(
  *
  * Note that this is SLOW. AVOID IF POSSIBLE.
  */
+@Suppress("UNCHECKED_CAST")
 @KspExperimental
 internal val KSDeclarationContainer.declarationsInSourceOrder: Sequence<KSDeclaration>
     get() {

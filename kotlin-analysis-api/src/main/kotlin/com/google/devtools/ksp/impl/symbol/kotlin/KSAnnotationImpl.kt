@@ -33,7 +33,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
@@ -84,7 +84,7 @@ class KSAnnotationImpl private constructor(
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
             annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
-                if (symbol.origin == KtSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
+                if (symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
                     (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
                             annoMethod.defaultValue?.let { value ->

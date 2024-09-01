@@ -80,7 +80,6 @@ class HmppIT(val useKSP2: Boolean) {
             gradleRunner.withArguments(
                 "--configuration-cache-problems=warn",
                 "--rerun-tasks",
-                "-Pksp.experimental.processing.model=hierarchical",
                 task,
             ).build().let { result ->
                 val logs = result.output.lines().filter { it.startsWith("w: [ksp] EchoProcessor: ") }.toSet()

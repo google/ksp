@@ -27,7 +27,6 @@ open class MakeNullableProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val files = resolver.getNewFiles()
-        val ignoredNames = mutableSetOf<String>()
 
         files.forEach {
             it.accept(typeCollector, types)

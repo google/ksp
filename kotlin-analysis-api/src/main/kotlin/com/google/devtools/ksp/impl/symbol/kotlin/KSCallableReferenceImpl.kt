@@ -5,16 +5,16 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeArgumentResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.types.KtFunctionalType
-import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.analysis.api.types.KaFunctionType
+import org.jetbrains.kotlin.analysis.api.types.KaType
 
 // TODO: implement a psi based version, rename this class to resolved Impl.
 class KSCallableReferenceImpl private constructor(
-    private val ktFunctionalType: KtFunctionalType,
+    private val ktFunctionalType: KaFunctionType,
     override val parent: KSNode?
 ) : KSCallableReference {
-    companion object : KSObjectCache<IdKeyPair<KtType, KSNode?>, KSCallableReference>() {
-        fun getCached(ktFunctionalType: KtFunctionalType, parent: KSNode?): KSCallableReference =
+    companion object : KSObjectCache<IdKeyPair<KaType, KSNode?>, KSCallableReference>() {
+        fun getCached(ktFunctionalType: KaFunctionType, parent: KSNode?): KSCallableReference =
             cache.getOrPut(IdKeyPair(ktFunctionalType, parent)) { KSCallableReferenceImpl(ktFunctionalType, parent) }
     }
     override val receiverType: KSTypeReference?

@@ -86,6 +86,7 @@ class KotlinFactories {
             kotlinCompilation: KotlinCompilation<*>,
         ): TaskProvider<out KspTaskJvm> {
             return project.tasks.register(taskName, KspTaskJvm::class.java).also { kspTaskProvider ->
+                @Suppress("UNCHECKED_CAST")
                 KotlinCompileConfig(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<KotlinCompile>)
 
@@ -113,6 +114,7 @@ class KotlinFactories {
             kotlinCompilation: KotlinCompilation<*>,
         ): TaskProvider<out KspTaskJS> {
             return project.tasks.register(taskName, KspTaskJS::class.java).also { kspTaskProvider ->
+                @Suppress("UNCHECKED_CAST")
                 BaseKotlin2JsCompileConfig<Kotlin2JsCompile>(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<Kotlin2JsCompile>)
                 kspTaskProvider.configure {
@@ -133,6 +135,7 @@ class KotlinFactories {
             kotlinCompilation: KotlinCompilation<*>,
         ): TaskProvider<out KspTaskMetadata> {
             return project.tasks.register(taskName, KspTaskMetadata::class.java).also { kspTaskProvider ->
+                @Suppress("UNCHECKED_CAST")
                 KotlinCompileCommonConfig(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<KotlinCompileCommon>)
 
@@ -213,7 +216,7 @@ abstract class KspTaskJvm @Inject constructor(
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
-    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE", "FunctionName", "unused")
     fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JVMCompilerArguments,
         inputChanges: InputChanges,
@@ -251,7 +254,7 @@ abstract class KspTaskJS @Inject constructor(
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
-    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE", "FunctionName", "unused")
     fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2JSCompilerArguments,
         inputChanges: InputChanges,
@@ -279,7 +282,7 @@ abstract class KspTaskMetadata @Inject constructor(
 
     // Overrding an internal function is hacky.
     // TODO: Ask upstream to open it.
-    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE")
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "EXPOSED_PARAMETER_TYPE", "FunctionName", "unused")
     fun `callCompilerAsync$kotlin_gradle_plugin_common`(
         args: K2MetadataCompilerArguments,
         inputChanges: InputChanges,

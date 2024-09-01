@@ -34,12 +34,12 @@ import com.intellij.psi.PsiJvmModifiersOwner
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.symbols.*
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtNamedSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.markers.KaNamedSymbol
 import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
-abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationSymbol) : KSDeclaration, Deferrable {
+abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationSymbol) : KSDeclaration, Deferrable {
     override val origin: Origin by lazy {
         mapAAOrigin(ktDeclarationSymbol)
     }
@@ -49,7 +49,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KtDeclarationS
     }
 
     override val simpleName: KSName by lazy {
-        KSNameImpl.getCached((ktDeclarationSymbol as? KtNamedSymbol)?.name?.asString() ?: "")
+        KSNameImpl.getCached((ktDeclarationSymbol as? KaNamedSymbol)?.name?.asString() ?: "")
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
