@@ -37,7 +37,7 @@ class VisibilityProcessor : AbstractTestProcessor() {
         val symbolA = resolver.getSymbolsWithAnnotation("TestA").single() as KSClassDeclaration
         val symbolB = resolver.getSymbolsWithAnnotation("TestB").single() as KSClassDeclaration
         val symbolD = resolver.getSymbolsWithAnnotation("TestD").single() as KSClassDeclaration
-        val allFunctions = (symbolA.superTypes.single().resolve()!!.declaration as KSClassDeclaration)
+        val allFunctions = (symbolA.superTypes.single().resolve().declaration as KSClassDeclaration)
             .declarations.filterIsInstance<KSFunctionDeclaration>()
         allFunctions.map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +

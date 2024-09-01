@@ -283,9 +283,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             javaCompile.classpath += project.files(classOutputDir)
         }
 
-        val processingModel = project.providers.gradleProperty("ksp.experimental.processing.model").orNull
-            ?: "traditional"
-
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
@@ -436,7 +433,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val useKSP2 = project.providers.gradleProperty("ksp.useKSP2").orNull?.toBoolean() ?: false
 
         // Create and configure KSP tasks.
-        val kspTaskProvider = if (useKSP2) {
+        @Suppress("DEPRECATION") val kspTaskProvider = if (useKSP2) {
             KspAATask.registerKspAATask(
                 kotlinCompilation,
                 kotlinCompileProvider,
@@ -483,7 +480,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 KotlinPlatformType.js, KotlinPlatformType.wasm -> {
                     KotlinFactories.registerKotlinJSCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
-                            val kotlinCompileTask = kotlinCompileProvider.get() as Kotlin2JsCompile
                             maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
@@ -632,7 +628,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             version = KSP_VERSION
         )
 
-    override fun getPluginArtifactForNative(): SubpluginArtifact? =
+    override fun getPluginArtifactForNative(): SubpluginArtifact =
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
             artifactId = KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE,

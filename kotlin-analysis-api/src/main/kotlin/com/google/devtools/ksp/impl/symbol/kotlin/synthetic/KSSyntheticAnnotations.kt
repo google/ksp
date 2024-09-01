@@ -7,11 +7,11 @@ import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibl
 import org.jetbrains.kotlin.name.ClassId
 
 @OptIn(KaImplementationDetail::class)
-fun getExtensionFunctionTypeAnnotation(index: Int) = KaAnnotationImpl(
+fun getExtensionFunctionTypeAnnotation() = KaAnnotationImpl(
     ClassId.fromString(ExtensionFunctionType::class.qualifiedName!!),
     null,
     null,
     lazyOf(emptyList()),
     null,
-    KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project!!)
+    KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
 )

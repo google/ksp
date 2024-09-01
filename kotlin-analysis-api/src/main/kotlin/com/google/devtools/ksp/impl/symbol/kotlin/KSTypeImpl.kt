@@ -43,19 +43,21 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         }
     }
 
-    private fun KtType.toDeclaration(): KSDeclaration {
+    private fun KaType.toDeclaration(): KSDeclaration {
         return analyze {
             when (this@toDeclaration) {
                 is KaClassType -> {
-                    when (val symbol = this@toDeclaration.classSymbol) {
+                    when (val symbol = this@toDeclaration.symbol) {
                         is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
                         is KaClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
                     }
                 }
+
                 is KaTypeParameterType -> KSTypeParameterImpl.getCached(symbol)
                 is KaClassErrorType -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
                 is KaFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()
+
                 is KaDefinitelyNotNullType -> this@toDeclaration.original.toDeclaration()
                 else -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
             }
@@ -93,7 +95,7 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         get() = type.annotations() +
             if (type is KaFunctionType && type.receiverType != null) {
                 sequenceOf(
-                    KSAnnotationResolvedImpl.getCached(getExtensionFunctionTypeAnnotation(type.annotations.size))
+                    KSAnnotationResolvedImpl.getCached(getExtensionFunctionTypeAnnotation())
                 )
             } else {
                 emptySequence()
@@ -177,10 +179,8 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
     }
 }
 
-internal fun KaType.toAbbreviatedType(): KaType {
-    val symbol = this.classifierSymbol()
-    return when (symbol) {
+internal fun KaType.toAbbreviatedType(): KaType =
+    when (val symbol = this.classifierSymbol()) {
         is KaTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
         else -> this
     }
-}

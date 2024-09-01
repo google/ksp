@@ -465,8 +465,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             changedClasses = parameters.changedClasses
         }
 
-        val platformType = gradleCfg.platformType.get()
-        val kspConfig = when (platformType) {
+        val kspConfig = when (val platformType = gradleCfg.platformType.get()) {
             KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
                 KSPJvmConfig.Builder().apply {
                     this.setupSuper()

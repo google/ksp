@@ -6,8 +6,8 @@ import com.intellij.openapi.roots.PackageIndex
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.ProjectScope
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
-import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
@@ -29,7 +29,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
     val singleJavaFileRoots = mutableListOf<JavaRoot>()
 
     fun initialize(
-        modules: List<KtModule>,
+        modules: List<KaModule>,
         sourceFiles: Set<PsiJavaFile>,
     ) {
         val project = environment.project

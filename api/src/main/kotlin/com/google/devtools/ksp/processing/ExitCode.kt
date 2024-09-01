@@ -1,6 +1,9 @@
 package com.google.devtools.ksp.processing
 
-enum class ExitCode(code: Int) {
+enum class ExitCode(
+    @Suppress("UNUSED_PARAMETER")
+    code: Int
+) {
     OK(0),
 
     // Whenever there are some error messages.

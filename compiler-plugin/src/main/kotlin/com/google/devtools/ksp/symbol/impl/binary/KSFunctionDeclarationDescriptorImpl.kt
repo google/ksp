@@ -38,7 +38,7 @@ class KSFunctionDeclarationDescriptorImpl private constructor(val descriptor: Fu
     }
 
     override fun findOverridee(): KSDeclaration? {
-        return descriptor?.findClosestOverridee()?.toKSDeclaration()
+        return descriptor.findClosestOverridee()?.toKSDeclaration()
     }
 
     override val typeParameters: List<KSTypeParameter> by lazy {
