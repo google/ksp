@@ -413,11 +413,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/makeNullable.kt")
     }
 
-    @Disabled
     @TestMetadata("mangledNames.kt")
     @Test
     fun testMangledNames() {
-        runTest("../test-utils/testData/api/mangledNames.kt")
+        runTest("../kotlin-analysis-api/testData/mangledNames.kt")
     }
 
     @TestMetadata("multipleModules.kt")

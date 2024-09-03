@@ -56,7 +56,13 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         }
     }
 
-    private fun compileKotlin(dependencies: List<File>, sourcesPath: String, javaSourcePath: String, outDir: File) {
+    private fun compileKotlin(
+        dependencies: List<File>,
+        sourcesPath: String,
+        javaSourcePath: String,
+        outDir: File,
+        moduleName: String
+    ) {
         val classpath = mutableListOf<String>()
         classpath.addAll(dependencies.map { it.canonicalPath })
         if (File(sourcesPath).isDirectory) {
@@ -69,6 +75,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             javaSourcePath,
             "-d", outDir.absolutePath,
             "-no-stdlib",
+            "-module-name", moduleName,
             "-classpath", classpath.joinToString(File.pathSeparator)
         )
         runJvmCompiler(args)
@@ -86,7 +93,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }
-        compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir)
+        compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name)
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
             .joinToString(File.pathSeparator) { it.absolutePath }
         val options = listOf(
