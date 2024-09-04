@@ -23,20 +23,20 @@ class BuildCacheIncrementalIT(useKSP2: Boolean) {
         val k1 = "workload/src/main/kotlin/p1/K1.kt"
         val k2 = "workload/src/main/kotlin/p1/K2.kt"
 
-        gradleRunner.withArguments("assemble").build()
+        gradleRunner.withArguments("assemble", "--stacktrace").build()
 
         File(project.root, k2).writeText(
             "package p1\n\n@MyAnnotation\nclass K2\n"
         )
-        gradleRunner.withArguments("assemble").build()
+        gradleRunner.withArguments("assemble", "--stacktrace").build()
 
         File(project.root, k2).delete()
-        gradleRunner.withArguments("assemble").build()
+        gradleRunner.withArguments("assemble", "--stacktrace").build()
 
         File(project.root, k1).writeText(
             "package p1\n\nclass K1(val foo: String)\n"
         )
-        gradleRunner.withArguments("assemble").build()
+        gradleRunner.withArguments("assemble", "--stacktrace").build()
     }
 
     companion object {
