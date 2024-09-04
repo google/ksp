@@ -27,7 +27,7 @@ plugins {
 
     // Adding plugins used in multiple places to the classpath for centralized version control
     id("com.github.johnrengelman.shadow") version "7.1.2" apply false
-    id("org.jetbrains.dokka") version "1.8.10" apply false
+    id("org.jetbrains.dokka") version "1.9.20" apply false
 }
 
 nexusPublishing {
@@ -101,7 +101,7 @@ subprojects {
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         configure<KotlinJvmProjectExtension> {
             compilerOptions {
-                jvmTarget = JvmTarget.JVM_1_8
+                jvmTarget = JvmTarget.JVM_11
             }
             jvmToolchain {
                 languageVersion = compileJavaVersion
@@ -110,8 +110,8 @@ subprojects {
     }
 
     tasks.withType<JavaCompile>().configureEach {
-        sourceCompatibility = JavaVersion.VERSION_1_8.toString()
-        targetCompatibility = JavaVersion.VERSION_1_8.toString()
+        sourceCompatibility = JavaVersion.VERSION_11.toString()
+        targetCompatibility = JavaVersion.VERSION_11.toString()
         javaCompiler.set(
             javaToolchains.compilerFor {
                 languageVersion = compileJavaVersion
