@@ -53,7 +53,9 @@ abstract class PersistentMap<K, V>(
         @OptIn(ExperimentalSerializationApi::class)
         protected fun <K, V> deserialize(serializer: KSerializer<Map<K, V>>, storage: File): MutableMap<K, V> {
             return if (storage.exists()) {
-                Json.decodeFromStream(serializer, storage.inputStream()).toMutableMap()
+                storage.inputStream().use {
+                    Json.decodeFromStream(serializer, it).toMutableMap()
+                }
             } else {
                 mutableMapOf()
             }
