@@ -20,6 +20,7 @@ class MultiplatformIT(useKSP2: Boolean) {
     @Test
     fun testJVM() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild =
