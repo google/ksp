@@ -24,8 +24,6 @@
 // MyClassInLib: stringParam = 2
 // MyClassInLib: stringParam2 = 1
 // MyClassInLib: stringArrayParam = [3, 5, 7]
-// []
-// null
 // Str
 // 42
 // Foo
