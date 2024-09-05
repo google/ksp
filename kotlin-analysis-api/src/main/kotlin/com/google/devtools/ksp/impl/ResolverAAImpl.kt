@@ -498,9 +498,10 @@ class ResolverAAImpl(
             "set"
         }
 
+        val name = accessor.receiver.simpleName.asString().replaceFirstChar(Char::uppercaseChar)
         val inlineSuffix = symbol?.inlineSuffix ?: ""
         val mangledName = symbol?.internalSuffix ?: ""
-        return "${prefix}${accessor.receiver.simpleName.asString().replaceFirstChar(Char::uppercaseChar)}$inlineSuffix$mangledName"
+        return "$prefix$name$inlineSuffix$mangledName"
     }
 
     // TODO: handle library symbols
