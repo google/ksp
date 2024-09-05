@@ -56,8 +56,13 @@ class KSAnnotationResolvedImpl private constructor(
             KSValueArgumentImpl.getCached(it, this, Origin.KOTLIN)
         }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
-        val absentArgs = defaultArguments.filter {
-            it.name?.asString() !in presentNames
+        val absentArgs = analyze {
+            val annotationClass = annotationApplication.classId?.toKtClassSymbol()
+            val annotationConstructor = annotationClass?.memberScope?.constructors?.singleOrNull()
+            val params = annotationConstructor?.valueParameters
+            defaultArguments.filterIndexed { idx, arg ->
+                arg.name?.asString() !in presentNames && params?.get(idx)?.hasDefaultValue == true
+            }
         }
         presentArgs + absentArgs
     }
