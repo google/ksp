@@ -68,29 +68,33 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        val annotationConstructor = analyze {
-            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
-        }
-        val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
-            val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
-            val value = it.value
-            val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                value.initializers.map {
-                    calcValue(it)
+        analyze {
+            val annotationConstructor =
+                (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
+            val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
+                val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
+                val value = it.value
+                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
+                    value.initializers.map {
+                        calcValue(it)
+                    }
+                } else {
+                    calcValue(it.value)
                 }
-            } else {
-                calcValue(it.value)
+                KSValueArgumentLiteImpl.getCached(
+                    name?.let { KSNameImpl.getCached(it) },
+                    calculatedValue,
+                    this@KSAnnotationJavaImpl,
+                    Origin.JAVA,
+                    it.toLocation()
+                )
             }
-            KSValueArgumentLiteImpl.getCached(
-                name?.let { KSNameImpl.getCached(it) },
-                calculatedValue,
-                this,
-                Origin.JAVA,
-                it.toLocation()
-            )
+            val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
+            presentArgs + defaultArguments.filterIndexed { idx, ksValueArgument ->
+                ksValueArgument.name?.asString() !in presentValueArgumentNames &&
+                    annotationConstructor?.valueParameters?.get(idx)?.hasDefaultValue == true
+            }
         }
-        val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
-        presentArgs + defaultArguments.filter { it.name?.asString() !in presentValueArgumentNames }
     }
 
     @OptIn(KaImplementationDetail::class)
