@@ -17,14 +17,24 @@
 
 package com.google.devtools.ksp.gradle
 
+import com.google.devtools.ksp.KspExperimental
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.process.CommandLineArgumentProvider
 import javax.inject.Inject
 
 abstract class KspExtension @Inject constructor(project: Project) {
+    /**
+     * Enables or disables KSP 2, defaults to the `ksp.useKsp2` gradle property or `false` if that's not set.
+     *
+     * This API is temporary and will be removed once KSP1 is removed.
+     */
+    @KspExperimental
+    abstract val useKsp2: Property<Boolean>
+
     internal val apOptions = project.objects.mapProperty(String::class.java, String::class.java)
     internal val commandLineArgumentProviders = project.objects.listProperty(CommandLineArgumentProvider::class.java)
         .also { it.finalizeValueOnRead() }

@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -56,8 +57,17 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
-import org.jetbrains.kotlin.gradle.plugin.mpp.*
-import org.jetbrains.kotlin.gradle.tasks.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinSharedNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
+import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
@@ -65,6 +75,7 @@ import java.io.File
 import java.util.concurrent.Callable
 import javax.inject.Inject
 
+@OptIn(KspExperimental::class)
 class KspGradleSubplugin @Inject internal constructor(private val registry: ToolingModelBuilderRegistry) :
     KotlinCompilerPluginSupportPlugin {
     companion object {
@@ -197,7 +208,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     private lateinit var kspConfigurations: KspConfigurations
 
     override fun apply(target: Project) {
-        target.extensions.create("ksp", KspExtension::class.java)
+        val ksp = target.extensions.create("ksp", KspExtension::class.java)
+        ksp.useKsp2.convention(
+            target.providers
+                .gradleProperty("ksp.useKSP2")
+                .map { it.toBoolean() }
+                .orElse(false)
+        )
         kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
     }
@@ -430,7 +447,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val isIntermoduleIncremental =
             (project.providers.gradleProperty("ksp.incremental.intermodule").orNull?.toBoolean() ?: true) &&
                 isIncremental
-        val useKSP2 = project.providers.gradleProperty("ksp.useKSP2").orNull?.toBoolean() ?: false
+        val useKSP2 = kspExtension.useKsp2
+            .apply { finalizeValue() }
+            .get()
 
         // Create and configure KSP tasks.
         @Suppress("DEPRECATION") val kspTaskProvider = if (useKSP2) {
