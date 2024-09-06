@@ -58,6 +58,7 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override val element: KSReferenceElement? by lazy {
+        // FIXME: synthetic elements can have non-synthetic annotations via use-site targets
         if (parent == null || parent.origin == Origin.SYNTHETIC) {
             null
         } else {

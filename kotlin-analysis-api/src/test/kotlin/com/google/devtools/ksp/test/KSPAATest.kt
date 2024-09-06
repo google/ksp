@@ -82,6 +82,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationOnReceiver.kt")
     }
 
+    @TestMetadata("annotationsRepeatable.kt")
+    @Test
+    fun testAnnotationsRepeatable() {
+        runTest("../kotlin-analysis-api/testData/annotationsRepeatable.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
@@ -97,13 +103,13 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("annotationValue_java.kt")
     @Test
     fun testAnnotationValue_java() {
-        runTest("../kotlin-analysis-api/testData/annotationValue/java.kt")
+        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java.kt")
     }
 
     @TestMetadata("annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
-        runTest("../kotlin-analysis-api/testData/annotationValue/kotlin.kt")
+        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_kt.kt")
     }
 
     @TestMetadata("annotationWithArrayValue.kt")
@@ -395,17 +401,22 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/libOrigins.kt")
     }
 
+    @TestMetadata("locations.kt")
+    @Test
+    fun testLocations() {
+        runTest("../kotlin-analysis-api/testData/locations.kt")
+    }
+
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
         runTest("../test-utils/testData/api/makeNullable.kt")
     }
 
-    @Disabled
     @TestMetadata("mangledNames.kt")
     @Test
     fun testMangledNames() {
-        runTest("../test-utils/testData/api/mangledNames.kt")
+        runTest("../kotlin-analysis-api/testData/mangledNames.kt")
     }
 
     @TestMetadata("multipleModules.kt")
@@ -610,7 +621,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("typeAlias.kt")
     @Test
     fun testTypeAlias() {
-        runTest("../test-utils/testData/api/typeAlias.kt")
+        runTest("../kotlin-analysis-api/testData/typeAlias.kt")
     }
 
     @TestMetadata("typeAliasComparison.kt")
@@ -623,6 +634,12 @@ class KSPAATest : AbstractKSPAATest() {
     @Test
     fun testTypeComposure() {
         runTest("../test-utils/testData/api/typeComposure.kt")
+    }
+
+    @TestMetadata("typeComparison2.kt")
+    @Test
+    fun testTypeComparison2() {
+        runTest("../test-utils/testData/api/typeComparison2.kt")
     }
 
     @TestMetadata("typeParameterReference.kt")
@@ -667,7 +684,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/deferredSymbols.kt")
     }
 
-    @Disabled
     @TestMetadata("deferredJavaSymbols.kt")
     @Test
     fun testDeferredJavaSymbols() {

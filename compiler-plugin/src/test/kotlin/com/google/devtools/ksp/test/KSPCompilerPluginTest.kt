@@ -74,6 +74,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/annotationOnConstructorParameter.kt")
     }
 
+    @TestMetadata("annotationsRepeatable.kt")
+    @Test
+    fun testAnnotationsRepeatable() {
+        runTest("../test-utils/testData/api/annotationsRepeatable.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
@@ -357,6 +363,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/libOrigins.kt")
     }
 
+    @TestMetadata("locations.kt")
+    @Test
+    fun testLocations() {
+        runTest("../test-utils/testData/api/locations.kt")
+    }
+
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
@@ -590,6 +602,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
     @Test
     fun testTypeArgumentVariance() {
         runTest("../test-utils/testData/api/typeArgumentVariance.kt")
+    }
+
+    @TestMetadata("typeComparison2.kt")
+    @Test
+    fun testTypeComparison2() {
+        runTest("../test-utils/testData/api/typeComparison2.kt")
     }
 
     @TestMetadata("typeComposure.kt")

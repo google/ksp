@@ -38,6 +38,10 @@
 // JavaEnum.ONE
 // 31
 // Throws
+// Sub: [i:42]
+// Cls: argToA: b
+// Cls: argToB: 42
+// TestJavaLib: OtherAnnotation
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -48,6 +52,26 @@
     String value2();
     Class<?> value3();
 }
+
+// FILE: Cls.kt
+annotation class ClsB(val i: Int)
+annotation class ClsA(val b: ClsB)
+
+@ClsA(b = ClsB(i = 42))
+class Cls
+
+// FILE: OtherAnnotation.java
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+@Retention(RetentionPolicy.RUNTIME)
+public @interface OtherAnnotation {
+    String value();
+}
+// FILE: JavaAnnotationWithDefaults.java
+public @interface JavaAnnotationWithDefaults {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
 // MODULE: main(module1)
 // FILE: a.kt
 
@@ -106,6 +130,23 @@ fun Fun() {
     class Local
 }
 
+data class DataClass
+
 // FILE: JavaEnum.java
 
 enum JavaEnum { ONE, TWO, THREE }
+
+// FILE: Nested.kt
+@Target(AnnotationTarget.TYPE)
+annotation class A (val i: Int)
+
+@Target(AnnotationTarget.TYPE)
+annotation class B (val a: A)
+
+interface Parent
+
+class Sub : @B(a = A(i = 42)) Parent
+
+// FILE: TestJavaLib.kt
+@JavaAnnotationWithDefaults
+class TestJavaLib

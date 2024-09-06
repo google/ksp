@@ -22,6 +22,7 @@ import com.google.devtools.ksp.processing.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -38,6 +39,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
@@ -91,7 +93,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.commonSourceRoots,
                         kspConfig.libraries
                     ),
-                    kspConfig.cachesDir.get(),
+                    kspConfig.cachesDir.asFile.get(),
                     kspConfig.classpathStructure,
                     kspConfig.libraries,
                     kspConfig.processorClasspath,
@@ -101,11 +103,11 @@ abstract class KspAATask @Inject constructor(
                     !inputChanges.isIncremental ||
                     inputChanges.getFileChanges(kspConfig.libraries).iterator().hasNext()
                 )
-                    kspConfig.cachesDir.get().deleteRecursively()
+                    kspConfig.cachesDir.get().asFile.deleteRecursively()
                 emptyList()
             }
         } else {
-            kspConfig.cachesDir.get().deleteRecursively()
+            kspConfig.cachesDir.get().asFile.deleteRecursively()
             emptyList()
         }
 
@@ -170,19 +172,24 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
                     }
-                    // FIXME: figure out how to filter or set variant attributes correctly.
-                    // cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
-                    val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
-                    cfg.libraries.from(
-                        project.files(
-                            Callable {
-                                kotlinCompileProvider.get().libraries.filter {
-                                    !kspOutputDir.isParentOf(it) &&
-                                        !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+
+                    if (kotlinCompilation is KotlinJvmAndroidCompilation) {
+                        // Workaround of a dependency resolution issue of AGP.
+                        // FIXME: figure out how to filter or set variant attributes correctly.
+                        val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
+                        cfg.libraries.from(
+                            project.files(
+                                Callable {
+                                    kotlinCompileProvider.get().libraries.filter {
+                                        !kspOutputDir.isParentOf(it) &&
+                                            !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                                    }
                                 }
-                            }
+                            )
                         )
-                    )
+                    } else {
+                        cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
+                    }
 
                     val compilerOptions = kotlinCompilation.compilerOptions.options
                     val langVer = compilerOptions.languageVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
@@ -203,18 +210,22 @@ abstract class KspAATask @Inject constructor(
                             target
                         )
                     )
-                    val apOptions = mutableMapOf<String, String>()
-                    apOptions.putAll(kspExtension.apOptions)
-                    kspExtension.commandLineArgumentProviders.forEach { provider ->
-                        provider.asArguments().forEach { argument ->
-                            val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
-                            if (kv == null || kv.size != 3) {
-                                throw IllegalArgumentException("KSP apoption does not match (\\S+)=(\\S+): $argument")
+                    cfg.processorOptions.putAll(kspExtension.apOptions)
+                    cfg.processorOptions.putAll(
+                        kspExtension.commandLineArgumentProviders.map { providers ->
+                            buildMap {
+                                for (provider in providers) {
+                                    provider.asArguments().forEach { argument ->
+                                        val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
+                                        require(kv != null && kv.size == 3) {
+                                            "KSP apoption does not match (\\S+)=(\\S+): $argument"
+                                        }
+                                        put(kv[1], kv[2])
+                                    }
+                                }
                             }
-                            apOptions.put(kv[1], kv[2])
                         }
-                    }
-                    cfg.processorOptions.value(apOptions)
+                    )
                     val logLevel = LogLevel.values().first {
                         project.logger.isEnabled(it)
                     }
@@ -222,9 +233,17 @@ abstract class KspAATask @Inject constructor(
                     cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
                     cfg.excludedProcessors.value(kspExtension.excludedProcessors)
 
-                    cfg.incremental.value(project.findProperty("ksp.incremental")?.toString()?.toBoolean() ?: true)
+                    cfg.incremental.value(
+                        project.providers
+                            .gradleProperty("ksp.incremental")
+                            .map { it.toBoolean() }
+                            .orElse(true)
+                    )
                     cfg.incrementalLog.value(
-                        project.findProperty("ksp.incremental.log")?.toString()?.toBoolean() ?: false
+                        project.providers
+                            .gradleProperty("ksp.incremental.log")
+                            .map { it.toBoolean() }
+                            .orElse(false)
                     )
 
                     cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
@@ -301,8 +320,8 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Internal
     abstract val outputBaseDir: Property<File>
 
-    @get:Internal
-    abstract val cachesDir: Property<File>
+    @get:LocalState
+    abstract val cachesDir: DirectoryProperty
 
     @get:OutputDirectory
     abstract val kotlinOutputDir: Property<File>
@@ -426,7 +445,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             libraries = gradleCfg.libraries.files.toList()
             projectBaseDir = gradleCfg.projectBaseDir.get()
             outputBaseDir = gradleCfg.outputBaseDir.get()
-            cachesDir = gradleCfg.cachesDir.get()
+            cachesDir = gradleCfg.cachesDir.get().asFile
             kotlinOutputDir = gradleCfg.kotlinOutputDir.get()
             classOutputDir = gradleCfg.classOutputDir.get()
             resourceOutputDir = gradleCfg.resourceOutputDir.get()
@@ -446,6 +465,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             removedSources = parameters.removedSources
             changedClasses = parameters.changedClasses
         }
+
         val platformType = gradleCfg.platformType.get()
         val kspConfig = when (platformType) {
             KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {

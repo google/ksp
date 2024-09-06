@@ -84,7 +84,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
             KSValueArgumentLiteImpl.getCached(
                 name?.let { KSNameImpl.getCached(it) },
                 calculatedValue,
-                Origin.JAVA
+                this,
+                Origin.JAVA,
+                it.toLocation()
             )
         }
         val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
@@ -114,7 +116,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                     KSValueArgumentLiteImpl.getCached(
                                         KSNameImpl.getCached(annoMethod.name),
                                         calculatedValue,
-                                        Origin.SYNTHETIC
+                                        this@KSAnnotationJavaImpl,
+                                        Origin.SYNTHETIC,
+                                        it.toLocation()
                                     )
                                 }
                             }
@@ -133,6 +137,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             )
                                     ),
+                                    this@KSAnnotationJavaImpl,
                                     Origin.SYNTHETIC
                                 )
                             }

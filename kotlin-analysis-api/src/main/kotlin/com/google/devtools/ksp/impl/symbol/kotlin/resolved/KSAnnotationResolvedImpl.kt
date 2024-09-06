@@ -6,7 +6,7 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
-import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
@@ -52,7 +52,9 @@ class KSAnnotationResolvedImpl private constructor(
         }
     }
     override val arguments: List<KSValueArgument> by lazy {
-        val presentArgs = annotationApplication.arguments.map { KSValueArgumentImpl.getCached(it, Origin.KOTLIN) }
+        val presentArgs = annotationApplication.arguments.map {
+            KSValueArgumentImpl.getCached(it, this, Origin.KOTLIN)
+        }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = defaultArguments.filter {
             it.name?.asString() !in presentNames
@@ -78,7 +80,9 @@ class KSAnnotationResolvedImpl private constructor(
                                 KSValueArgumentLiteImpl.getCached(
                                     KSNameImpl.getCached(annoMethod.name),
                                     calculatedValue,
-                                    Origin.SYNTHETIC
+                                    this@KSAnnotationResolvedImpl,
+                                    Origin.SYNTHETIC,
+                                    value.toLocation()
                                 )
                             }
                         }
@@ -94,6 +98,7 @@ class KSAnnotationResolvedImpl private constructor(
                                                 KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                                             )
                                     ),
+                                    this@KSAnnotationResolvedImpl,
                                     Origin.SYNTHETIC
                                 )
                             }
@@ -109,6 +114,11 @@ class KSAnnotationResolvedImpl private constructor(
     }
 
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
+        // Do not use compiler hard-coded use-site target.
+        // FIXME: use origin after it is fixed.
+        if (parent?.origin == Origin.KOTLIN_LIB || parent?.origin == Origin.JAVA_LIB)
+            return@lazy null
+
         when (annotationApplication.useSiteTarget) {
             null -> null
             FILE -> AnnotationUseSiteTarget.FILE
@@ -123,6 +133,7 @@ class KSAnnotationResolvedImpl private constructor(
         }
     }
 
+    // FIXME: use parent.origin
     override val origin: Origin = Origin.KOTLIN_LIB
 
     override val location: Location by lazy {

@@ -32,17 +32,16 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsMemberImpl
-import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
-import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.analysis.api.analyze
-import org.jetbrains.kotlin.analysis.api.annotations.*
+import org.jetbrains.kotlin.analysis.api.*
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.KaSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
+import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionalType
+import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaAnnotationImpl
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaArrayAnnotationValueImpl
@@ -52,11 +51,19 @@ import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjectio
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KaDeclarationContainerSymbol
 import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
+import org.jetbrains.kotlin.codegen.state.InfoForMangling
+import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
+import org.jetbrains.kotlin.codegen.state.md5base64
+import org.jetbrains.kotlin.fir.analysis.checkers.getContainingClassSymbol
+import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.getTargetType
+import org.jetbrains.kotlin.fir.declarations.utils.moduleName
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirArrayLiteral
 import org.jetbrains.kotlin.fir.expressions.FirExpression
@@ -65,14 +72,8 @@ import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.fir.types.ConeClassLikeType
-import org.jetbrains.kotlin.fir.types.ConeErrorType
-import org.jetbrains.kotlin.fir.types.ConeFlexibleType
-import org.jetbrains.kotlin.fir.types.ConeLookupTagBasedType
-import org.jetbrains.kotlin.fir.types.abbreviatedType
-import org.jetbrains.kotlin.fir.types.classId
-import org.jetbrains.kotlin.fir.types.coneType
-import org.jetbrains.kotlin.fir.types.isAny
+import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
+import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
@@ -89,11 +90,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
-import org.jetbrains.org.objectweb.asm.AnnotationVisitor
-import org.jetbrains.org.objectweb.asm.ClassReader
-import org.jetbrains.org.objectweb.asm.ClassVisitor
-import org.jetbrains.org.objectweb.asm.MethodVisitor
-import org.jetbrains.org.objectweb.asm.Opcodes
+import org.jetbrains.org.objectweb.asm.*
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
@@ -135,8 +132,10 @@ internal fun KaAnnotation.render(): String {
             append(this@render.useSiteTarget!!.renderName + ":")
         }
         append(this@render.classId!!.shortClassName.asString())
-        this@render.arguments.forEach {
-            append(it.expression.render())
+        if (arguments.isNotEmpty()) {
+            append("(")
+            append(arguments.map { it.expression.render() }.joinToString(", "))
+            append(")")
         }
     }
 }
@@ -159,8 +158,10 @@ internal fun KaAnnotationValue.render(): String {
 @OptIn(KaNonPublicApi::class)
 internal fun KaType.render(inFunctionType: Boolean = false): String {
     return buildString {
-        annotations.forEach {
-            append("[${it.render()}] ")
+        if (annotations.isNotEmpty()) {
+            append("[")
+            append(annotations.map { it.render() }.joinToString(", "))
+            append("] ")
         }
         append(
             when (this@render) {
@@ -314,15 +315,62 @@ internal fun KaDeclarationContainerSymbol.getAllFunctions(): Sequence<KSFunction
     }
 }
 
+private val jvmRepeatableClassId = ClassId.fromString("java/lang/annotation/Repeatable")
+private val repeatableClassId = ClassId.fromString("kotlin/annotation/Repeatable")
+
+private fun KaClassSymbol.isRepeatableAnnotation(container: KaAnnotation): Boolean {
+    return this.classKind == KaClassKind.ANNOTATION_CLASS && annotations.any {
+        when (it.classId) {
+            jvmRepeatableClassId -> {
+                it.arguments.singleOrNull()?.let {
+                    val expression = it.expression as? KaAnnotationValue.ClassLiteralValue ?: return@let null
+                    it.name.asString() == "value" && expression.classId == container.classId
+                } ?: false
+            }
+
+            repeatableClassId -> {
+                container.classId?.asFqNameString() == "${this.classId?.asFqNameString()}.Container"
+            }
+
+            else -> false
+        }
+    }
+}
+
+private fun KaAnnotated.annotationsWithRepeatableUnfolded(): List<KaAnnotation> {
+    return if (
+        this is KaSymbol && (this.origin == KaSymbolOrigin.LIBRARY || this.origin == KaSymbolOrigin.JAVA_LIBRARY)
+    ) {
+        annotations.flatMap { container ->
+            // Try to unwrapper repeatable containers
+            // https://github.com/Kotlin/KEEP/blob/master/proposals/repeatable-annotations.md
+            val containedAnnotations: List<KaAnnotation>? =
+                (container.arguments.singleOrNull()?.expression as? KaAnnotationValue.ArrayValue)?.values?.map {
+                    (it as? KaAnnotationValue.NestedAnnotationValue)?.annotation ?: return@flatMap listOf(container)
+                }
+            val containedAnnotationClassId: ClassId =
+                containedAnnotations?.first()?.classId ?: return@flatMap listOf(container)
+            val containedClass = containedAnnotationClassId.toKtClassSymbol() ?: return@flatMap listOf(container)
+            if (containedClass.isRepeatableAnnotation(container)) {
+                containedAnnotations
+            } else {
+                listOf(container)
+            }
+        }
+    } else annotations
+}
+
 internal fun KaAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
-    return this.annotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, parent) }
+    return annotationsWithRepeatableUnfolded().asSequence().map { KSAnnotationResolvedImpl.getCached(it, parent) }
 }
 
 internal fun KtAnnotated.annotations(
     kaAnnotated: KaAnnotated,
     parent: KSNode? = null,
-    candidates: List<KaAnnotation> = kaAnnotated.annotations
+    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded()
 ): Sequence<KSAnnotation> {
+    if (candidates.isEmpty())
+        return emptySequence()
     return annotationEntries.filter { !it.isUseSiteTargetAnnotation() }.asSequence().map { annotationEntry ->
         KSAnnotationImpl.getCached(annotationEntry, parent) {
             candidates.single { it.psi == annotationEntry }
@@ -383,7 +431,7 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             // TODO: upstream is not exposing enough information for captured types.
             is KaCapturedType -> TODO("fix in upstream")
             is KaClassErrorType, is KaErrorType -> null
-            is KaFunctionType -> (this as? KaFirFunctionalType)?.abbreviatedSymbol() ?: symbol
+            is KaFunctionType -> (this as? KaFirFunctionType)?.abbreviatedSymbol() ?: symbol
             is KaUsualClassType -> symbol
             is KaDefinitelyNotNullType -> original.classifierSymbol()
             is KaDynamicType -> null
@@ -533,18 +581,17 @@ internal fun KaAnnotationValue.toValue(): Any? = when (this) {
 internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
     fun FirExpression.toValue(builder: KaSymbolByFirBuilder): KaAnnotationValue? {
         if (this is FirAnnotation) {
+            val classId = ClassId.fromString(
+                (annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()
+            )
             return KaNestedAnnotationAnnotationValueImpl(
                 KaAnnotationImpl(
                     JavaToKotlinClassMap.mapJavaToKotlinIncludingClassMapping(
-                        ClassId.fromString(
-                            (annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()
-                        ).asSingleFqName()
-                    ),
+                        classId.asSingleFqName()
+                    ) ?: classId,
                     null,
                     null,
-                    false,
                     lazyOf(emptyList()),
-                    0,
                     null,
                     KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
                 ),
@@ -702,7 +749,7 @@ internal fun KaType.convertToKotlinType(): KaType {
             ?: declaration
     } else declaration
     return analyze {
-        buildClassType(base) {
+        buildClassType(base.tryResolveToTypePhase()) {
             this@convertToKotlinType.typeArguments().forEach { typeProjection ->
                 if (typeProjection is KaTypeArgumentWithVariance) {
                     argument(typeProjection.type.convertToKotlinType(), typeProjection.variance)
@@ -730,7 +777,7 @@ internal fun KaType.isAssignableFrom(that: KaType): Boolean {
 internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
     require(newArgs.isEmpty() || newArgs.size == this.typeArguments().size)
     return analyze {
-        when (val symbol = classifierSymbol()) {
+        when (val symbol = classifierSymbol().tryResolveToTypePhase()) {
             is KaClassLikeSymbol -> useSiteSession.buildClassType(symbol) {
                 newArgs.forEach { arg -> argument(arg) }
                 nullability = this@replace.nullability
@@ -783,7 +830,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KtType {
         when (this@toWildcard) {
             is KaClassType -> {
                 // TODO: missing annotations from original type.
-                buildClassType(this@toWildcard.expandedSymbol!!) {
+                buildClassType(this@toWildcard.expandedSymbol!!.tryResolveToTypePhase()) {
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
                         val variance = getVarianceForWildcard(param, arg, argMode)
@@ -801,7 +848,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KtType {
                 }
             }
             is KaTypeParameterType -> {
-                buildTypeParameterType(this@toWildcard.symbol)
+                buildTypeParameterType(this@toWildcard.symbol.tryResolveToTypePhase())
             }
             else -> throw IllegalStateException("Unexpected type ${this@toWildcard}")
         }
@@ -875,6 +922,107 @@ internal fun TypeMappingMode.updateFromAnnotations(
 }
 
 internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? {
-    val classId = (this as? KaFirFunctionalType)?.coneType?.abbreviatedType?.classId ?: return null
+    val classId = (this as? KaFirFunctionType)?.coneType?.abbreviatedType?.classId ?: return null
     return classId.toTypeAlias()
 }
+
+fun <T : KaSymbol?> T.tryResolveToTypePhase(): T {
+    (this as? KaFirSymbol<*>)?.firSymbol?.lazyResolveToPhase(FirResolvePhase.TYPES)
+    return this
+}
+
+private val KaType.upperBoundIfFlexible: KaType
+    get() = (this as? KaFlexibleType)?.upperBound ?: this
+
+private fun KaType.requiresMangling(): Boolean = (symbol as? KaNamedClassSymbol)?.isInline ?: false
+
+private fun KaType.asInfoForMangling(): InfoForMangling? {
+    val upperBound = upperBoundIfFlexible
+    val fqName = upperBound.symbol?.classId?.asSingleFqName()?.toUnsafe() ?: return null
+    val isValue = upperBound.requiresMangling()
+    val isNullable = upperBound.nullability.isNullable
+    return InfoForMangling(fqName = fqName, isValue = isValue, isNullable = isNullable)
+}
+
+private fun mangleInlineSuffix(
+    parameters: List<KaType>,
+    returnType: KaType?,
+    shouldMangleReturnType: Boolean
+): String {
+    val signature = collectFunctionSignatureForManglingSuffix(
+        false,
+        parameters.any { it.requiresMangling() },
+        parameters.map { it.asInfoForMangling() },
+        if (shouldMangleReturnType) returnType?.asInfoForMangling() else null
+    ) ?: return ""
+    return "-${md5base64(signature)}"
+}
+
+private val KaSymbol.isKotlin: Boolean
+    get() = when (origin) {
+        KaSymbolOrigin.SOURCE, KaSymbolOrigin.LIBRARY -> true
+        else -> false
+    }
+
+internal val KaFunctionSymbol.inlineSuffix: String
+    get() = mangleInlineSuffix(
+        valueParameters.map { it.returnType },
+        returnType,
+        analyze {
+            returnType.requiresMangling() && isKotlin && containingDeclaration != null
+        }
+    )
+
+internal val KaPropertyAccessorSymbol.inlineSuffix: String
+    get() = when (this) {
+        is KaPropertyGetterSymbol ->
+            mangleInlineSuffix(
+                emptyList(),
+                returnType,
+                analyze {
+                    returnType.requiresMangling() && isKotlin && containingDeclaration?.containingDeclaration != null
+                }
+            )
+        is KaPropertySetterSymbol -> mangleInlineSuffix(listOf(parameter.returnType), null, false)
+    }
+
+private val jvmNameClassId = ClassId.fromString("kotlin/jvm/JvmName")
+internal fun KaCallableSymbol.explictJvmName(): String? {
+    return annotations.singleOrNull() {
+        it.classId == jvmNameClassId
+    }?.arguments?.single()?.expression?.toValue() as? String
+}
+
+@OptIn(SymbolInternals::class)
+internal val KaDeclarationSymbol.internalSuffix: String
+    get() = analyze {
+        if (visibility != KaSymbolVisibility.INTERNAL)
+            return@analyze ""
+
+        // Skip top level functions and properties
+        when (this@internalSuffix) {
+            is KaPropertyAccessorSymbol -> {
+                if (containingDeclaration?.containingDeclaration == null)
+                    return@analyze ""
+            }
+            is KaFunctionSymbol -> {
+                if (containingDeclaration == null)
+                    return@analyze ""
+            }
+            else -> {}
+        }
+
+        fun String.toSuffix(): String = "\$$this"
+        when (val module = containingModule) {
+            is KaSourceModule -> module.name.toSuffix()
+            is KaLibraryModule -> {
+                // Read module name from metadata.
+                // FIXME: need an API in AA.
+                val firSymbol = (this@internalSuffix as? KaFirSymbol<*>)?.firSymbol
+                val firClassSymbol = firSymbol?.getContainingClassSymbol()
+                val moduleName = (firClassSymbol?.fir as? FirRegularClass)?.moduleName
+                (moduleName ?: module.libraryName.toSuffix()).toSuffix()
+            }
+            else -> ""
+        }
+    }

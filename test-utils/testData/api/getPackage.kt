@@ -32,6 +32,10 @@
 // main.test.C JAVA
 // main.test.D JAVA
 // symbols from package non.exist
+// symbols from package test
+// test.TestJava JAVA
+// symbols from package testlib
+// testlib.TestJavaLib JAVA_LIB
 // END
 
 // MODULE: lib1
@@ -62,6 +66,10 @@ val a = 0
 // FILE: Bar.java
 
 class Bar {}
+
+// FILE: testlib/Test.java
+package testlib;
+class TestJavaLib {}
 
 // MODULE: main(lib1, lib2)
 // FILE: a.kt
@@ -101,3 +109,7 @@ package main.test;
 public class L {
 
 }
+
+// FILE: test/Test.java
+package test;
+class TestJava {}

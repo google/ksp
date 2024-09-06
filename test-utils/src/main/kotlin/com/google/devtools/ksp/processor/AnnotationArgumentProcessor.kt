@@ -19,10 +19,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSValueArgument
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.symbol.*
 
 class AnnotationArgumentProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -34,6 +31,14 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
                 cls.annotations.single().arguments.forEach {
                     results.add("$clsName: ${it.name!!.asString()} = ${it.value}")
                 }
+            }
+        }
+
+        resolver.getClassDeclarationByName("DataClass")?.let { cls ->
+            cls.declarations.filterIsInstance<KSFunctionDeclaration>().single {
+                it.simpleName.asString() == "copy"
+            }.annotations.forEach {
+                it.arguments
             }
         }
 
@@ -51,6 +56,35 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
                 results.add(it.toString())
             }
         }
+
+        resolver.getClassDeclarationByName("Sub")?.let { cls ->
+            cls.superTypes.single().annotations.single().let { typeAnnotation ->
+                val a = typeAnnotation.arguments.single().value as KSAnnotation
+                results.add("Sub: ${a.arguments}")
+            }
+        }
+
+        resolver.getClassDeclarationByName("Cls")?.let { cls ->
+            cls.annotations.single().arguments.forEach { argToA ->
+                results.add("Cls: argToA: ${argToA.name!!.asString()}")
+                argToA.value.let { argBVal ->
+                    if (argBVal is KSAnnotation) {
+                        argBVal.arguments.forEach { argToB ->
+                            results.add("Cls: argToB: " + argToB.value)
+                        }
+                    } else {
+                        results.add("Cls: argBVal unknown: $argBVal")
+                    }
+                }
+            }
+        }
+
+        resolver.getClassDeclarationByName("TestJavaLib")?.let { cls ->
+            cls.annotations.single().arguments.single().let { ksValueArg ->
+                results.add("TestJavaLib: " + (ksValueArg.value as KSAnnotation).shortName.asString())
+            }
+        }
+
         return emptyList()
     }
 
