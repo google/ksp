@@ -225,7 +225,7 @@ abstract class KspAATask @Inject constructor(
                             }
                         }
                     )
-                    val logLevel = LogLevel.values().first {
+                    val logLevel = LogLevel.entries.first {
                         project.logger.isEnabled(it)
                     }
                     cfg.logLevel.value(logLevel)
@@ -251,17 +251,13 @@ abstract class KspAATask @Inject constructor(
                         // TODO: set proper jdk home
                         cfg.jdkHome.value(File(System.getProperty("java.home")))
 
-                        val jvmDefaultMode = project.provider {
-                            compilerOptions.freeCompilerArgs.get().lastOrNull {
-                                it.startsWith("-Xjvm-default=")
-                            }?.substringAfter("=") ?: "disable"
-                        }
+                        val jvmDefaultMode = compilerOptions.freeCompilerArgs
+                            .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
+                            .map { it.lastOrNull()?.substringAfter("=") ?: "disable" }
+
                         cfg.jvmDefaultMode.value(jvmDefaultMode)
 
-                        val jvmTarget = project.provider {
-                            compilerOptions.jvmTarget.get().target
-                        }
-                        cfg.jvmTarget.value(jvmTarget)
+                        cfg.jvmTarget.value(compilerOptions.jvmTarget.map { it.target })
                     }
 
                     cfg.platformType.value(kotlinCompilation.platformType)

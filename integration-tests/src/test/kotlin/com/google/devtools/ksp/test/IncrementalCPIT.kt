@@ -170,7 +170,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
     }
 
     private fun toggleFlags(vararg extras: String) {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
             *extras,

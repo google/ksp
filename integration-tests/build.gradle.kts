@@ -37,13 +37,4 @@ tasks.withType<Test> {
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
-
-    // JDK_9 environment property is required.
-    // To add a custom location (if not detected automatically) follow https://docs.gradle.org/current/userguide/toolchains.html#sec:custom_loc
-    if (System.getenv("JDK_9") == null) {
-        val launcher9 = javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(9))
-        }
-        environment["JDK_9"] = launcher9.map { it.metadata.installationPath }
-    }
 }

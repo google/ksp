@@ -245,18 +245,23 @@ class PlaygroundIT(val useKSP2: Boolean) {
 
     @Test
     fun testVersions() {
-        val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
         val buildFile = File(project.root, "workload/build.gradle.kts")
-        buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
-        buildFile.appendText("\n    kotlinOptions.apiVersion = \"1.5\"")
-        buildFile.appendText("\n    kotlinOptions.languageVersion = \"1.5\"")
-        buildFile.appendText("\n}")
+        buildFile.appendText(
+            """
+            kotlin {
+              compilerOptions {
+                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_6)
+                languageVersion.set(compilerOptions.apiVersion)
+               }
+            }
+            """.trimIndent()
+        )
 
         val kotlinVersion = System.getProperty("kotlinVersion").split('-').first()
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("language version: 1.5"))
-            Assert.assertTrue(result.output.contains("api version: 1.5"))
+            Assert.assertTrue(result.output.contains("language version: 1.6"))
+            Assert.assertTrue(result.output.contains("api version: 1.6"))
             if (!useKSP2) {
                 // In case KSP 1 and KSP 2 uses different compiler versions, ignore this test for KSP 2 for now.
                 Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
@@ -299,7 +304,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
         val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
         val buildFile = File(project.root, "workload/build.gradle.kts")
         buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
-        buildFile.appendText("\n    kotlinOptions.freeCompilerArgs += \"-Xjvm-default=all\"")
+        buildFile.appendText("\n    compilerOptions.freeCompilerArgs.add(\"-Xjvm-default=all\")")
         buildFile.appendText("\n}")
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)

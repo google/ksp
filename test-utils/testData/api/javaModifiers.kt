@@ -22,7 +22,6 @@
 // C.InnerC: PUBLIC : PUBLIC
 // C.NestedC.<init>: FINAL PUBLIC : FINAL PUBLIC
 // C.NestedC: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
-// C.foo: ABSTRACT JAVA_STRICT : ABSTRACT JAVA_STRICT
 // C.i1: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
 // C.intFun: JAVA_DEFAULT JAVA_SYNCHRONIZED : JAVA_DEFAULT JAVA_SYNCHRONIZED
 // C.s1: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
@@ -41,7 +40,6 @@
 // DependencyOuterJavaClass.staticProtectedMethod: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
-// DependencyOuterJavaClass.strictfpFun: JAVA_STRICT OPEN : JAVA_STRICT
 // DependencyOuterJavaClass.synchronizedFun: JAVA_SYNCHRONIZED OPEN : JAVA_SYNCHRONIZED
 // DependencyOuterJavaClass.transientField: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
 // DependencyOuterJavaClass.volatileField: FINAL JAVA_VOLATILE : FINAL JAVA_VOLATILE
@@ -61,7 +59,6 @@
 // DependencyOuterKotlinClass.DependencyInnerKotlinClass: FINAL INNER PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass: OPEN PUBLIC : PUBLIC
-// DependencyOuterKotlinClass.strictfpFun: FINAL PUBLIC : FINAL JAVA_STRICT PUBLIC
 // DependencyOuterKotlinClass.synchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
 // DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
 // DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL JAVA_VOLATILE PUBLIC
@@ -95,7 +92,6 @@
 // OuterKotlinClass.InnerKotlinClass: INNER : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass: OPEN : PUBLIC
-// OuterKotlinClass.strictfpFun: : FINAL JAVA_STRICT PUBLIC
 // OuterKotlinClass.synchronizedFun: : FINAL JAVA_SYNCHRONIZED PUBLIC
 // OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
 // OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
@@ -121,7 +117,6 @@ public class DependencyOuterJavaClass {
     transient String transientField = "";
     volatile String volatileField = "";
     synchronized String synchronizedFun() { return ""; }
-    strictfp String strictfpFun() { return ""; }
 }
 // FILE: DependencyOuterKotlinClass.kt
 typealias DependencyCustomJvmStatic=JvmStatic
@@ -148,9 +143,6 @@ open class DependencyOuterKotlinClass {
 
     @Volatile
     var volatileProperty: String = ""
-
-    @Strictfp
-    fun strictfpFun(): String = ""
 
     @Synchronized
     fun synchronizedFun(): String = ""
@@ -193,8 +185,6 @@ public abstract class C {
     default synchronized int intFun() {
         return 1;
     }
-
-    abstract strictfp void foo() {}
 
     public static class NestedC {
 
@@ -243,9 +233,6 @@ open class OuterKotlinClass {
 
     @Volatile
     var volatileProperty: String = ""
-
-    @Strictfp
-    fun strictfpFun(): String = ""
 
     @Synchronized
     fun synchronizedFun(): String = ""

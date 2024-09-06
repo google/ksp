@@ -36,7 +36,7 @@ class KotlinConstsInJavaIT(useKSP2: Boolean) {
     fun testKotlinConstsInJava() {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck(":workload:kspKotlin")
 
         File(project.root, "workload/src/main/java/com/example/JavaClass.java").appendText("\n")

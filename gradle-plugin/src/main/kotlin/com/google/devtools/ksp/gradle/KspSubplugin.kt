@@ -77,7 +77,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
-            File(project.project.buildDir, "generated/ksp/$target/$sourceSetName")
+            project.layout.buildDirectory.file("generated/ksp/$target/$sourceSetName").get().asFile
 
         @JvmStatic
         fun getKspClassOutputDir(project: Project, sourceSetName: String, target: String) =
@@ -97,7 +97,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         @JvmStatic
         fun getKspCachesDir(project: Project, sourceSetName: String, target: String) =
-            File(project.project.buildDir, "kspCaches/$target/$sourceSetName")
+            project.layout.buildDirectory.file("kspCaches/$target/$sourceSetName").get().asFile
 
         @JvmStatic
         private fun getSubpluginOptions(

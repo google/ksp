@@ -2,6 +2,7 @@ import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -99,42 +100,21 @@ subprojects {
     val compileJavaVersion = JavaLanguageVersion.of(17)
 
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        configure<JavaPluginExtension> {
+            toolchain.languageVersion.set(compileJavaVersion)
+            sourceCompatibility = JavaVersion.VERSION_11
+            targetCompatibility = JavaVersion.VERSION_11
+        }
         configure<KotlinJvmProjectExtension> {
             compilerOptions {
                 jvmTarget = JvmTarget.JVM_11
+                languageVersion.set(KotlinVersion.KOTLIN_1_9)
+                apiVersion.set(languageVersion)
             }
             jvmToolchain {
                 languageVersion = compileJavaVersion
             }
         }
-    }
-
-    tasks.withType<JavaCompile>().configureEach {
-        sourceCompatibility = JavaVersion.VERSION_11.toString()
-        targetCompatibility = JavaVersion.VERSION_11.toString()
-        javaCompiler.set(
-            javaToolchains.compilerFor {
-                languageVersion = compileJavaVersion
-            }
-        )
-    }
-
-    tasks.withType<Test>().configureEach {
-        // Java 11 is required to run tests
-        javaLauncher.set(
-            javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(11))
-            }
-        )
-    }
-
-    tasks.withType<JavaExec>().configureEach {
-        // Java 17 is required to run
-        javaLauncher.set(
-            javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(17))
-            }
-        )
     }
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
