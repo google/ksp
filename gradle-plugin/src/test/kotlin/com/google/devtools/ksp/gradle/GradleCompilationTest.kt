@@ -387,4 +387,17 @@ class GradleCompilationTest {
         assertThat(result.output).contains("HAS LIBRARY: ")
         assertThat(result.output).doesNotContain("app/build/generated/ksp/main/classes")
     }
+
+    @Test
+    fun changingKsp2AtRuntime() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.buildFileAdditions.add(
+            """
+                @OptIn(com.google.devtools.ksp.KspExperimental::class)
+                ksp { useKsp2.set(true) }
+            """.trimIndent()
+        )
+
+        testRule.runner().withArguments().build()
+    }
 }
