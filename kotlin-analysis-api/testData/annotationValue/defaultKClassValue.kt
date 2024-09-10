@@ -1,8 +1,8 @@
 // TEST PROCESSOR: DefaultKClassValueProcessor
 // EXPECTED:
+// java.lang.String
 // kotlin.String
-// kotlin.String
-// kotlin.String
+// java.lang.String
 // kotlin.Int
 // END
 // MODULE: lib1

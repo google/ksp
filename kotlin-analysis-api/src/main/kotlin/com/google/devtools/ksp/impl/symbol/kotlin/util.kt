@@ -37,16 +37,11 @@ import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
-import org.jetbrains.kotlin.analysis.api.fir.KaSymbolByFirBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaAnnotationImpl
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaArrayAnnotationValueImpl
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaClassLiteralAnnotationValueImpl
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaNestedAnnotationAnnotationValueImpl
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
@@ -62,15 +57,9 @@ import org.jetbrains.kotlin.codegen.state.md5base64
 import org.jetbrains.kotlin.fir.analysis.checkers.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
-import org.jetbrains.kotlin.fir.declarations.getTargetType
 import org.jetbrains.kotlin.fir.declarations.utils.moduleName
-import org.jetbrains.kotlin.fir.expressions.FirAnnotation
-import org.jetbrains.kotlin.fir.expressions.FirArrayLiteral
-import org.jetbrains.kotlin.fir.expressions.FirExpression
-import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
-import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.*
@@ -551,48 +540,6 @@ internal fun KaAnnotationValue.toValue(): Any? = when (this) {
 
 @OptIn(SymbolInternals::class, KaImplementationDetail::class, KaExperimentalApi::class)
 internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
-    fun FirExpression.toValue(builder: KaSymbolByFirBuilder): KaAnnotationValue? {
-        if (this is FirAnnotation) {
-            val classId = ClassId.fromString(
-                (annotationTypeRef.coneType as? ConeLookupTagBasedType)?.lookupTag.toString()
-            )
-            return KaNestedAnnotationAnnotationValueImpl(
-                KaAnnotationImpl(
-                    JavaToKotlinClassMap.mapJavaToKotlinIncludingClassMapping(
-                        classId.asSingleFqName()
-                    ) ?: classId,
-                    null,
-                    null,
-                    lazyOf(emptyList()),
-                    null,
-                    KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-                ),
-                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-            )
-        }
-        if (this is FirArrayLiteral) {
-            return KaArrayAnnotationValueImpl(argumentList.arguments.mapNotNull { it.toValue(builder) }, null, token)
-        }
-        return if (this is FirGetClassCall) {
-            var coneType = this.getTargetType()?.fullyExpandedType(builder.rootSession)
-            // FirAnnotationValueConverter expects fir type, while the type parsed from libraries are modeled
-            // as flexible type, for it to be used in argument of KClass values, it needs to be unwrapped.
-            if (coneType is ConeFlexibleType) {
-                coneType = coneType.lowerBound
-            }
-
-            if (coneType is ConeClassLikeType && coneType !is ConeErrorType) {
-                val classId = JavaToKotlinClassMap
-                    .mapJavaToKotlinIncludingClassMapping(coneType.lookupTag.classId.asSingleFqName())
-                val type = builder.typeBuilder.buildKtType(coneType).convertToKotlinType()
-                KaClassLiteralAnnotationValueImpl(type, classId, null, token)
-            } else {
-                null
-            }
-        } else {
-            FirAnnotationValueConverter.toConstantValue(this, builder)
-        }
-    }
     return this.psi.let { psiElement ->
         when (psiElement) {
             is KtParameter -> analyze {
@@ -645,7 +592,7 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
                     // will produce empty array for array type values and `null` for the rest of value types.
                     val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
                         .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
-                    expression.toValue(symbolBuilder)
+                    FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
                 }
             }
 
