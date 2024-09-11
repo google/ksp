@@ -660,7 +660,7 @@ class ResolverImpl(
                 is KSTypeParameter, is KSFile, is KSPropertyGetter, is KSPropertySetter, is KSTypeArgument,
                 is KSTypeReference, is KSValueArgument, is KSValueParameter, is KSAnnotation, is KSCallableReference,
                 is KSClassifierReference, is KSDefNonNullReference, is KSDynamicReference, is KSParenthesizedReference,
-                    -> Unit
+                -> Unit
             }
         }
         return if (javaType is JavaArrayTypeImpl)

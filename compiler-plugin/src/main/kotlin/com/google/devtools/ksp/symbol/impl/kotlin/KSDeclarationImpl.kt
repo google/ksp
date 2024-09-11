@@ -25,9 +25,9 @@ import com.google.devtools.ksp.symbol.impl.*
 import org.jetbrains.kotlin.psi.*
 
 abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) /*: KSDeclaration*/ {
-    open /*override*/ val origin: Origin = Origin.KOTLIN
+    /*override*/ val origin: Origin = Origin.KOTLIN
 
-    open /*override*/ val location: Location by lazy {
+    /*override*/ val location: Location by lazy {
         ktDeclaration.toLocation()
     }
 
@@ -43,7 +43,7 @@ abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) /*: KSDeclara
         ktDeclaration.annotationEntries.asSequence().map { KSAnnotationImpl.getCached(it) }.memoized()
     }
 
-    open /*override*/ val modifiers: Set<Modifier> by lazy {
+    /*override*/ val modifiers: Set<Modifier> by lazy {
         // we do not check for JVM_STATIC here intentionally as it actually means static in parent class,
         // not in this class.
         // see: https://github.com/google/ksp/issues/378
@@ -56,11 +56,11 @@ abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) /*: KSDeclara
         }
     }
 
-    open /*override*/ val containingFile: KSFile? by lazy {
+    /*override*/ val containingFile: KSFile? by lazy {
         KSFileImpl.getCached(ktDeclaration.containingKtFile)
     }
 
-    open /*override*/ val packageName: KSName by lazy {
+    /*override*/ val packageName: KSName by lazy {
         this.containingFile!!.packageName
     }
 
@@ -74,7 +74,7 @@ abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) /*: KSDeclara
         ktDeclaration.findParentDeclaration()
     }
 
-    open /*override*/ val parent: KSNode? by lazy {
+    /*override*/ val parent: KSNode? by lazy {
         ktDeclaration.findParentAnnotated()
     }
 
@@ -86,7 +86,7 @@ abstract class KSDeclarationImpl(val ktDeclaration: KtDeclaration) /*: KSDeclara
         ktDeclaration.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }
 
-    open /*override*/ val docString by lazy {
+    /*override*/ val docString by lazy {
         ktDeclaration.getDocString()
     }
 }

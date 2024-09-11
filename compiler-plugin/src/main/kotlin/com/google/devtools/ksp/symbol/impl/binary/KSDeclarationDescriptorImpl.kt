@@ -33,13 +33,13 @@ import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDescriptor) /*: KSDeclaration*/ {
     abstract fun asKSDeclaration(): KSDeclaration
 
-    open /*override*/ val origin by lazy {
+    /*override*/ val origin by lazy {
         descriptor.origin
     }
 
-    open /*override*/ val containingFile: KSFile? = null
+    /*override*/ val containingFile: KSFile? = null
 
-    open /*override*/ val location: Location = NonExistLocation
+    /*override*/ val location: Location = NonExistLocation
 
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
         descriptor.annotations.asSequence().map { KSAnnotationDescriptorImpl.getCached(it, this.asKSDeclaration()) }
@@ -55,19 +55,19 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
         }
     }
 
-    open /*override*/ val parent: KSNode? by lazy {
+    /*override*/ val parent: KSNode? by lazy {
         parentDeclaration
     }
 
-    open /*override*/ val packageName: KSName by lazy {
+    /*override*/ val packageName: KSName by lazy {
         KSNameImpl.getCached(descriptor.findPackage().fqName.asString())
     }
 
-    open /*override*/ val qualifiedName: KSName by lazy {
+    /*override*/ val qualifiedName: KSName by lazy {
         KSNameImpl.getCached(descriptor.fqNameSafe.asString())
     }
 
-    open /*override*/ val simpleName: KSName by lazy {
+    /*override*/ val simpleName: KSName by lazy {
         KSNameImpl.getCached(descriptor.name.asString())
     }
 
@@ -75,7 +75,7 @@ abstract class KSDeclarationDescriptorImpl(private val descriptor: DeclarationDe
         return this.simpleName.asString()
     }
 
-    open /*override*/ val docString: String? = null
+    /*override*/ val docString: String? = null
 }
 
 val DeclarationDescriptor.origin: Origin

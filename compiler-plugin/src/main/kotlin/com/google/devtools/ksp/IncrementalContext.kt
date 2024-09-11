@@ -207,7 +207,7 @@ class IncrementalContext(
             is KSFunctionDeclarationJavaImpl -> recordLookupForJavaMethod(declaration.psi)
             is KSClassDeclaration, is KSFunctionDeclaration, is KSPropertyDeclaration, is KSTypeAlias,
             is KSTypeParameter,
-                -> Unit
+            -> Unit
         }
     }
 }

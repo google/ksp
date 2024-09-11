@@ -28,7 +28,7 @@ import com.intellij.psi.PsiElement
 abstract class KSDeclarationJavaImpl(private val psi: PsiElement) /*: KSDeclaration*/ {
     protected abstract fun asKSDeclaration(): KSDeclaration
 
-    open /*override*/ val packageName: KSName by lazy {
+    /*override*/ val packageName: KSName by lazy {
         this.asKSDeclaration().containingFile!!.packageName
     }
 
@@ -36,7 +36,7 @@ abstract class KSDeclarationJavaImpl(private val psi: PsiElement) /*: KSDeclarat
         return this.asKSDeclaration().simpleName.asString()
     }
 
-    open /*override*/ val docString by lazy {
+    /*override*/ val docString by lazy {
         psi.getDocString()
     }
 
@@ -44,7 +44,7 @@ abstract class KSDeclarationJavaImpl(private val psi: PsiElement) /*: KSDeclarat
         psi.findParentDeclaration()
     }
 
-    open /*override*/ val parent: KSNode? by lazy {
+    /*override*/ val parent: KSNode? by lazy {
         psi.findParentAnnotated()
     }
 }
