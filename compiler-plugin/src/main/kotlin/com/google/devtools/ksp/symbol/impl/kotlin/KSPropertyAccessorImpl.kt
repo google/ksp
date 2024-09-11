@@ -69,10 +69,6 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
 
     /*override*/ val origin: Origin = Origin.KOTLIN
 
-    open /*override*/ fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
-        return visitor.visitPropertyAccessor(this.asKSPropertyAccessor(), data)
-    }
-
     internal val originalAnnotations: List<KSAnnotation> by lazy {
         ktPropertyAccessor.annotationEntries.map { KSAnnotationImpl.getCached(it) }
     }
