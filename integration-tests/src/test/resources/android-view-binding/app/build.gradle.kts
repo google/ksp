@@ -10,8 +10,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
 android {
+    namespace = "com.example.kspandroidtestapp"
     defaultConfig {
-        minSdkVersion(24)
+        minSdk = 24
     }
     compileSdk = 34
     buildFeatures { 

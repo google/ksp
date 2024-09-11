@@ -123,6 +123,10 @@ subprojects {
     }
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions.freeCompilerArgs.add("-Xskip-prerelease-check")
+        compilerOptions {
+            freeCompilerArgs.add("-Xskip-prerelease-check")
+            // This should match JavaCompile's targetCompatibility (above)
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        }
     }
 }

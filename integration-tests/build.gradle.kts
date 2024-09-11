@@ -1,4 +1,5 @@
 import com.google.devtools.ksp.RelativizingInternalPathProvider
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import kotlin.math.max
 
 val junitVersion: String by project
@@ -20,7 +21,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
 
-tasks.withType<Test> {
+tasks.withType<Test>().configureEach {
     maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
@@ -33,12 +34,23 @@ tasks.withType<Test> {
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 
-    // JDK_9 environment property is required.
-    // To add a custom location (if not detected automatically) follow https://docs.gradle.org/current/userguide/toolchains.html#sec:custom_loc
-    if (System.getenv("JDK_9") == null) {
-        val launcher9 = javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(9))
+    // Java 17 is required to run tests with AGP
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(17))
         }
-        environment["JDK_9"] = launcher9.map { it.metadata.installationPath }
+    )
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    // ":gradle-plugin" dependency requires VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    targetCompatibility = JavaVersion.VERSION_11.toString()
+}
+
+tasks.withType<KotlinCompile> {
+    compilerOptions {
+        // ":gradle-plugin" dependency requires JVM_11 here
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }

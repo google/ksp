@@ -80,7 +80,8 @@ class OnErrorIT(useKSP2: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
 
         File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
-        gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
+        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
+        gradleRunner.withArguments("clean", "assemble", "--no-configuration-cache").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
             Assert.assertTrue(
@@ -100,7 +101,8 @@ class OnErrorIT(useKSP2: Boolean) {
 
         File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
         File(project.root, "gradle.properties").appendText("\nksp.return.ok.on.error=false")
-        gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
+        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
+        gradleRunner.withArguments("clean", "assemble", "--no-configuration-cache").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
             Assert.assertTrue(

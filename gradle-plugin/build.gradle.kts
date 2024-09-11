@@ -10,7 +10,11 @@ val signingKey: String? by project
 val signingPassword: String? by project
 
 tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    compilerOptions {
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+        // AGP dependency requires JVM_11 here
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }
 
 plugins {
@@ -179,3 +183,19 @@ kotlin {
         }
     }
 }
+
+tasks.withType<JavaCompile>().configureEach {
+    // AGP dependency requires VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    targetCompatibility = JavaVersion.VERSION_11.toString()
+}
+
+tasks.withType<Test>().configureEach {
+    // Java 17 is required to run tests with AGP
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
+    )
+}
+

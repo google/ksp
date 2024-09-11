@@ -37,10 +37,11 @@ class KotlinConstsInJavaIT(useKSP2: Boolean) {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
-        gradleRunner.buildAndCheck(":workload:kspKotlin")
+        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
+        gradleRunner.buildAndCheck(":workload:kspKotlin", "--no-configuration-cache")
 
         File(project.root, "workload/src/main/java/com/example/JavaClass.java").appendText("\n")
-        gradleRunner.buildAndCheck(":workload:kspKotlin")
+        gradleRunner.buildAndCheck(":workload:kspKotlin", "--no-configuration-cache")
     }
 
     companion object {

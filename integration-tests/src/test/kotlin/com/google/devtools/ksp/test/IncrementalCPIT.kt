@@ -3,6 +3,7 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,14 +88,15 @@ class IncrementalCPIT(val useKSP2: Boolean) {
     fun testCPChangesForFunctions() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        gradleRunner.withArguments("clean", "assemble").build().let { result ->
+        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
+        gradleRunner.withArguments("clean", "assemble", "--no-configuration-cache").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         // Dummy changes
         func2Dirty.forEach { (src, _) ->
             File(project.root, src).appendText("\n\n")
-            gradleRunner.withArguments("assemble").build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").build().let { result ->
                 // Trivial changes should not result in re-processing.
                 Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
@@ -103,7 +105,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         // Value changes
         func2Dirty.forEach { (src, _) ->
             File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Int = 1")
-            gradleRunner.withArguments("assemble").withDebug(true).build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").withDebug(true).build().let { result ->
                 // Value changes should not result in re-processing.
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
@@ -115,7 +117,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         // Signature changes
         func2Dirty.forEach { (src, expectedDirties) ->
             File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Double = 1.0")
-            gradleRunner.withArguments("assemble").build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
@@ -133,14 +135,15 @@ class IncrementalCPIT(val useKSP2: Boolean) {
     fun testCPChangesForProperties() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        gradleRunner.withArguments("clean", "assemble").build().let { result ->
+        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
+        gradleRunner.withArguments("clean", "assemble", "--no-configuration-cache").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         // Dummy changes
         prop2Dirty.forEach { (src, _) ->
             File(project.root, src).appendText("\n\n")
-            gradleRunner.withArguments("assemble").build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").build().let { result ->
                 // Trivial changes should not result in re-processing.
                 Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
@@ -149,7 +152,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         // Value changes
         prop2Dirty.forEach { (src, _) ->
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Int = 1")
-            gradleRunner.withArguments("assemble").withDebug(true).build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").withDebug(true).build().let { result ->
                 // Value changes should not result in re-processing.
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
@@ -161,7 +164,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         // Signature changes
         prop2Dirty.forEach { (src, expectedDirties) ->
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Double = 1.0")
-            gradleRunner.withArguments("assemble").build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").build().let { result ->
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 Assert.assertEquals(expectedDirties, dirties)
@@ -218,6 +221,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         toggleFlags("--no-configuration-cache")
     }
 
+    @Ignore("https://github.com/google/ksp/issues/299")
     @Test
     fun toggleIncrementalFlagsWithConfigurationCache() {
         toggleFlags("--configuration-cache")

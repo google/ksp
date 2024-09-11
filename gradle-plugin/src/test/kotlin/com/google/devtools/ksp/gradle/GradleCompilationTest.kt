@@ -387,4 +387,19 @@ class GradleCompilationTest {
         assertThat(result.output).contains("HAS LIBRARY: ")
         assertThat(result.output).doesNotContain("app/build/generated/ksp/main/classes")
     }
+
+    /**
+     * Regression test for b/362279380
+     */
+    @Test
+    fun androidGradlePluginBuiltInKotlin() {
+        testRule.setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport = true)
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
+                artifact(configuration = "kspTest", "androidx.room:room-compiler:2.4.2")
+            )
+        )
+        testRule.runner().withDebug(true).withArguments(":app:assembleDebug").build()
+    }
 }

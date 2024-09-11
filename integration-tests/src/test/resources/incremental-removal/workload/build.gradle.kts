@@ -22,6 +22,6 @@ dependencies {
     kspTest(project(":validator"))
 }
 
-application {
-    mainClassName = "p1.MainKt"
+tasks.named<JavaExec>("run") {
+    mainClass.set("p1.MainKt")
 }
