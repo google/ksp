@@ -175,7 +175,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         recordLookupForPropertyOrMethod(this)
         return analyze {
             ktPropertySymbol.directlyOverriddenSymbols.firstOrNull()
-                ?.unwrapFakeOverrides?.toKSDeclaration() as? KSPropertyDeclaration
+                ?.fakeOverrideOriginal?.toKSDeclaration() as? KSPropertyDeclaration
         }?.also { recordLookupForPropertyOrMethod(it) }
     }
 
@@ -184,7 +184,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override val qualifiedName: KSName? by lazy {
-        ktPropertySymbol.callableIdIfNonLocal?.asSingleFqName()?.asString()?.let { KSNameImpl.getCached(it) }
+        ktPropertySymbol.callableId?.asSingleFqName()?.asString()?.let { KSNameImpl.getCached(it) }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

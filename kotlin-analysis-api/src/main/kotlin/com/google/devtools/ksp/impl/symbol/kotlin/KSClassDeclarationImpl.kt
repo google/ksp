@@ -60,7 +60,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val primaryConstructor: KSFunctionDeclaration? by lazy {
-        if (ktClassOrObjectSymbol.origin == KtSymbolOrigin.JAVA_SOURCE) {
+        if (ktClassOrObjectSymbol.origin == KaSymbolOrigin.JAVA_SOURCE) {
             null
         } else {
             analyze {
@@ -72,11 +72,11 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val superTypes: Sequence<KSTypeReference> by lazy {
-        (ktClassOrObjectSymbol.psiIfSource() as? KtClassOrObject)?.let {
+        (ktClassOrObjectSymbol.psiIfSource() as? KtClassOrObject)?.let { classOrObject ->
             if (classKind == ClassKind.ANNOTATION_CLASS || classKind == ClassKind.ENUM_CLASS) {
                 null
             } else {
-                it.superTypeListEntries.map {
+                classOrObject.superTypeListEntries.map {
                     KSTypeReferenceImpl.getCached(it.typeReference!!, this)
                 }.asSequence().ifEmpty {
                     sequenceOf(
@@ -157,7 +157,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
                 useSiteSession.buildClassType(ktClassOrObjectSymbol.tryResolveToTypePhase()) {
                     var current: KSNode? = this@KSClassDeclarationImpl
                     while (current is KSClassDeclarationImpl) {
-                        current.ktClassOrObjectSymbol.typeParameters.forEach {
+                        current.ktClassOrObjectSymbol.typeParameters.forEach { _ ->
                             argument(
                                 KaBaseStarTypeProjection(
                                     (current as KSClassDeclarationImpl).ktClassOrObjectSymbol.token

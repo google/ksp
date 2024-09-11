@@ -40,7 +40,7 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
         val iRefs = refs.filterNot {
             it.origin != Origin.KOTLIN || it.annotations.all { it.shortName.asString() !in interesting }
         }
-        val types = iRefs.map { it.resolve()!! }.flatMap { it.aliases() }
+        val types = iRefs.map { it.resolve() }.flatMap { it.aliases() }
 
         for (i in types) {
             for (j in types) {

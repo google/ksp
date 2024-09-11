@@ -23,7 +23,7 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaValueParameterSymbol
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.declarations.FirJavaValueParameter
 import org.jetbrains.kotlin.fir.java.resolveIfJavaType
@@ -31,11 +31,11 @@ import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.psi.KtParameter
 
 class KSValueParameterImpl private constructor(
-    internal val ktValueParameterSymbol: KtValueParameterSymbol,
+    private val ktValueParameterSymbol: KaValueParameterSymbol,
     override val parent: KSAnnotated
 ) : KSValueParameter, Deferrable {
-    companion object : KSObjectCache<KtValueParameterSymbol, KSValueParameterImpl>() {
-        fun getCached(ktValueParameterSymbol: KtValueParameterSymbol, parent: KSAnnotated) =
+    companion object : KSObjectCache<KaValueParameterSymbol, KSValueParameterImpl>() {
+        fun getCached(ktValueParameterSymbol: KaValueParameterSymbol, parent: KSAnnotated) =
             cache.getOrPut(ktValueParameterSymbol) { KSValueParameterImpl(ktValueParameterSymbol, parent) }
     }
 
@@ -108,8 +108,8 @@ class KSValueParameterImpl private constructor(
 
     override fun defer(): Restorable? {
         val other = (parent as Deferrable).defer() ?: return null
-        return ktValueParameterSymbol.defer {
-            getCached(it, other.restore() ?: return@defer null)
+        return ktValueParameterSymbol.defer inner@{
+            getCached(it, other.restore() ?: return@inner null)
         }
     }
 }

@@ -132,7 +132,7 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     }
 
     override fun visitValueParameter(valueParameter: KSValueParameter, data: D): R {
-        valueParameter.type?.accept(data)
+        valueParameter.type.accept(data)
         return super.visitValueParameter(valueParameter, data)
     }
 }

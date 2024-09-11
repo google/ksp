@@ -5,12 +5,12 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.analysis.api.types.KaType
 
-class KSValueParameterLiteImpl private constructor(private val ktType: KtType, override val parent: KSNode) :
+class KSValueParameterLiteImpl private constructor(ktType: KaType, override val parent: KSNode) :
     KSValueParameter {
-    companion object : KSObjectCache<IdKeyPair<KtType, KSNode>, KSValueParameter>() {
-        fun getCached(ktType: KtType, parent: KSNode): KSValueParameter = cache.getOrPut(IdKeyPair(ktType, parent)) {
+    companion object : KSObjectCache<IdKeyPair<KaType, KSNode>, KSValueParameter>() {
+        fun getCached(ktType: KaType, parent: KSNode): KSValueParameter = cache.getOrPut(IdKeyPair(ktType, parent)) {
             KSValueParameterLiteImpl(ktType, parent)
         }
     }

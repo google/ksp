@@ -36,8 +36,8 @@ class HelloProcessor : AbstractTestProcessor() {
     }
 
     inner class HelloVisitor : KSVisitorVoid() {
-        override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
-            results.add(type.qualifiedName?.asString() ?: "<error>")
+        override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+            results.add(classDeclaration.qualifiedName?.asString() ?: "<error>")
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {

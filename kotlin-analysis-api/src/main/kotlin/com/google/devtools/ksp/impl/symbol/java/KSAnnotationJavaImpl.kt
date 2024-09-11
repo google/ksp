@@ -43,8 +43,8 @@ import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnota
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.KtSymbolOrigin
-import org.jetbrains.kotlin.analysis.api.types.KtType
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 
@@ -55,7 +55,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
             KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi, parent) }
     }
 
-    private val type: KtType by lazy {
+    private val type: KaType by lazy {
         // TODO: local class annotations?
         analyze {
             buildClassType(ClassId.topLevel(FqName(psi.qualifiedName!!)))
@@ -63,34 +63,38 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 
     override val annotationType: KSTypeReference by lazy {
-        // TODO: repleace with psi based implementation once `PsiType -> KtType` is supported in AA.
+        // TODO: replace with psi based implementation once `PsiType -> KtType` is supported in AA.
         KSTypeReferenceResolvedImpl.getCached(type, this)
     }
 
     override val arguments: List<KSValueArgument> by lazy {
-        val annotationConstructor = analyze {
-            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
-        }
-        val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
-            val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
-            val value = it.value
-            val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                value.initializers.map {
-                    calcValue(it)
+        analyze {
+            val annotationConstructor =
+                (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
+            val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
+                val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
+                val value = it.value
+                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
+                    value.initializers.map {
+                        calcValue(it)
+                    }
+                } else {
+                    calcValue(it.value)
                 }
-            } else {
-                calcValue(it.value)
+                KSValueArgumentLiteImpl.getCached(
+                    name?.let { KSNameImpl.getCached(it) },
+                    calculatedValue,
+                    this@KSAnnotationJavaImpl,
+                    Origin.JAVA,
+                    it.toLocation()
+                )
             }
-            KSValueArgumentLiteImpl.getCached(
-                name?.let { KSNameImpl.getCached(it) },
-                calculatedValue,
-                this,
-                Origin.JAVA,
-                it.toLocation()
-            )
+            val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
+            presentArgs + defaultArguments.filterIndexed { idx, ksValueArgument ->
+                ksValueArgument.name?.asString() !in presentValueArgumentNames &&
+                    annotationConstructor?.valueParameters?.get(idx)?.hasDefaultValue == true
+            }
         }
-        val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
-        presentArgs + defaultArguments.filter { it.name?.asString() !in presentValueArgumentNames }
     }
 
     @OptIn(KaImplementationDetail::class)
@@ -100,25 +104,24 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 ?.let { symbol ->
                     // ClsClassImpl means psi is decompiled psi.
                     if (
-                        symbol.origin == KtSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl
+                        symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl
                     ) {
                         (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->
-                                annoMethod.defaultValue?.let {
-                                    val value = it
+                                annoMethod.defaultValue?.let { value ->
                                     val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
                                         value.initializers.map {
                                             calcValue(it)
                                         }
                                     } else {
-                                        calcValue(it)
+                                        calcValue(value)
                                     }
                                     KSValueArgumentLiteImpl.getCached(
                                         KSNameImpl.getCached(annoMethod.name),
                                         calculatedValue,
                                         this@KSAnnotationJavaImpl,
                                         Origin.SYNTHETIC,
-                                        it.toLocation()
+                                        value.toLocation()
                                     )
                                 }
                             }
@@ -215,6 +218,7 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         is PsiField -> {
             // manually handle enums as constant expression evaluator does not seem to be resolving them.
             val containingClass = result.containingClass
+            @Suppress("UnstableApiUsage")
             if (containingClass?.classKind == JvmClassKind.ENUM) {
                 // this is an enum entry
                 containingClass.qualifiedName?.let {

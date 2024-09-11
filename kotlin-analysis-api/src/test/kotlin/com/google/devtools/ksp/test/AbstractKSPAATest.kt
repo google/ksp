@@ -84,7 +84,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     private fun runJvmCompiler(args: List<String>) {
         val outStream = ByteArrayOutputStream()
         val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
-        val compiler = compilerClass.newInstance()
+        val compiler = compilerClass.getDeclaredConstructor().newInstance()
         val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
         execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
     }

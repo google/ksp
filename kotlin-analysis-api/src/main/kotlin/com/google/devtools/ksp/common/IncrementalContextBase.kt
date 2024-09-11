@@ -31,7 +31,7 @@ import com.intellij.util.containers.MultiMap
 import java.io.File
 import java.util.Date
 
-object symbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>() {
+object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>() {
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {
@@ -59,6 +59,7 @@ object symbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>()
     }
 }
 
+@Suppress("MemberVisibilityCanBePrivate", "CanBeParameter")
 abstract class IncrementalContextBase(
     protected val anyChangesWildcard: File,
     protected val incrementalLog: Boolean,
@@ -108,7 +109,7 @@ abstract class IncrementalContextBase(
 
     private fun collectDefinedSymbols(ksFiles: Collection<KSFile>) {
         ksFiles.forEach { file ->
-            file.accept(symbolCollector) {
+            file.accept(SymbolCollector) {
                 updatedSymbols.putValue(file.relativeFile, it)
             }
         }
@@ -117,7 +118,7 @@ abstract class IncrementalContextBase(
     private val removedOutputsKey = File("<This is a virtual key for removed outputs; DO NOT USE>")
 
     private fun updateFromRemovedOutputs() {
-        val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: return
+        val removedOutputs = sourceToOutputsMap[removedOutputsKey] ?: return
 
         symbolLookupCache.removeLookupsFrom(removedOutputs.asSequence())
         classLookupCache.removeLookupsFrom(removedOutputs.asSequence())
@@ -224,14 +225,14 @@ abstract class IncrementalContextBase(
 
         // Parse and add newly defined symbols in modified files.
         ksFiles.filter { it.relativeFile in modified }.forEach { file ->
-            file.accept(symbolCollector) {
+            file.accept(SymbolCollector) {
                 updatedSymbols.putValue(file.relativeFile, it)
                 newSyms.add(it)
             }
         }
 
         val dirtyFilesByNewSyms = newSyms.flatMap {
-            symbolLookupCache.get(it).map { File(it) }
+            symbolLookupCache[it].map(::File)
         }
 
         val dirtyFilesBySealed = sealedMap.keys
@@ -240,12 +241,12 @@ abstract class IncrementalContextBase(
         val dirtyFilesByCP = changedClasses.flatMap { fqn ->
             val name = fqn.substringAfterLast('.')
             val scope = fqn.substringBeforeLast('.', "<anonymous>")
-            classLookupCache.get(LookupSymbolWrapper(name, scope)).map { File(it) } +
-                symbolLookupCache.get(LookupSymbolWrapper(name, scope)).map { File(it) }
+            classLookupCache[LookupSymbolWrapper(name, scope)].map { File(it) } +
+                symbolLookupCache[LookupSymbolWrapper(name, scope)].map { File(it) }
         }.toSet()
 
         // output files that exist in CURR~2 but not in CURR~1
-        val removedOutputs = sourceToOutputsMap.get(removedOutputsKey) ?: emptyList()
+        val removedOutputs = sourceToOutputsMap[removedOutputsKey] ?: emptyList()
 
         val noSourceFiles = changedClasses.map { fqn ->
             NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
@@ -314,11 +315,11 @@ abstract class IncrementalContextBase(
         removedOutputs.forEach {
             sourceToOutputsMap.removeRecursively(it)
         }
-        sourceToOutputsMap.put(removedOutputsKey, removedOutputs)
+        sourceToOutputsMap[removedOutputsKey] = removedOutputs
 
         // Update source-to-outputs map from those reprocessed.
-        sourceToOutputs.forEach { src, outs ->
-            sourceToOutputsMap.put(src, outs.toList())
+        sourceToOutputs.forEach { (src, outs) ->
+            sourceToOutputsMap[src] = outs.toList()
         }
 
         logSourceToOutputs(outputs, sourceToOutputs)
@@ -368,7 +369,7 @@ abstract class IncrementalContextBase(
         fun <K : Comparable<K>, V> update(m: PersistentMap<K, List<V>>, u: MultiMap<K, V>) {
             // Update symbol caches from modified files.
             u.keySet().forEach {
-                m.put(it, u[it].toList())
+                m[it] = u[it].toList()
             }
         }
 
@@ -444,7 +445,7 @@ abstract class IncrementalContextBase(
         val dirties = HashSet(unassociated)
         fun markDirty(file: File) {
             dirties.add(file)
-            sourceToOutputs.get(file)?.forEach {
+            sourceToOutputs[file]?.forEach {
                 markDirty(it)
             }
         }
@@ -463,7 +464,7 @@ abstract class IncrementalContextBase(
             markDirty(it)
         }
 
-        val dirtySourceToOutputs = sourceToOutputs.filter { (src, outs) ->
+        val dirtySourceToOutputs = sourceToOutputs.filter { (src, _) ->
             isDirty(src)
         }
         val dirtyOutputs = outputs.filter(::isDirty).toSet()
@@ -511,7 +512,7 @@ abstract class IncrementalContextBase(
     fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
         val name = classDeclaration.simpleName.asString()
         val scope = classDeclaration.qualifiedName?.asString()
-            ?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) } ?: return
+            ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
         updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
     }
 }
@@ -541,7 +542,7 @@ internal class DirtinessPropagator(
             return
         visitedSyms.add(sym)
 
-        lookupCache.get(sym).forEach {
+        lookupCache[sym].forEach {
             visit(File(it))
         }
     }

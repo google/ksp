@@ -20,15 +20,15 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.annotations.KtNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
 
 class KSValueArgumentImpl private constructor(
-    private val namedAnnotationValue: KtNamedAnnotationValue,
+    private val namedAnnotationValue: KaNamedAnnotationValue,
     override val parent: KSNode?,
     override val origin: Origin
 ) : KSValueArgument, Deferrable {
-    companion object : KSObjectCache<KtNamedAnnotationValue, KSValueArgumentImpl>() {
-        fun getCached(namedAnnotationValue: KtNamedAnnotationValue, parent: KSNode?, origin: Origin) =
+    companion object : KSObjectCache<KaNamedAnnotationValue, KSValueArgumentImpl>() {
+        fun getCached(namedAnnotationValue: KaNamedAnnotationValue, parent: KSNode?, origin: Origin) =
             cache.getOrPut(namedAnnotationValue) {
                 KSValueArgumentImpl(namedAnnotationValue, parent, origin)
             }

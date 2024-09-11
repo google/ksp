@@ -37,10 +37,13 @@ internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSP
     val (config, classpath) = parse(args)
     val processorClassloader = URLClassLoader(classpath.map { File(it).toURI().toURL() }.toTypedArray())
 
-    val processorProviders = ServiceLoader.load(
-        processorClassloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
-        processorClassloader
-    ).toList() as List<SymbolProcessorProvider>
+    @Suppress("UNCHECKED_CAST")
+    val processorProviders = ServiceLoader
+        .load(
+            processorClassloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
+            processorClassloader
+        )
+        .toList() as List<SymbolProcessorProvider>
 
     KotlinSymbolProcessing(config, processorProviders, logger).execute()
 }

@@ -33,9 +33,9 @@ class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
         val classCollector = object : BaseVisitor() {
-            override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
-                if (classes.add(type)) {
-                    super.visitClassDeclaration(type, data)
+            override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+                if (classes.add(classDeclaration)) {
+                    super.visitClassDeclaration(classDeclaration, data)
                 }
             }
 

@@ -23,7 +23,6 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.impl.getKSDeclarations
 import com.google.devtools.ksp.symbol.impl.toKSModifiers
 import com.google.devtools.ksp.symbol.impl.toLocation
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor) /*: KSPropertyAccessor*/ {
@@ -40,7 +39,7 @@ abstract class KSPropertyAccessorImpl(val ktPropertyAccessor: KtPropertyAccessor
     protected abstract fun asKSPropertyAccessor(): KSPropertyAccessor
 
     open /*override*/ val receiver: KSPropertyDeclaration by lazy {
-        KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property as KtProperty)
+        KSPropertyDeclarationImpl.getCached(ktPropertyAccessor.property)
     }
     open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
         ktPropertyAccessor.filterUseSiteTargetAnnotations().map { KSAnnotationImpl.getCached(it) }

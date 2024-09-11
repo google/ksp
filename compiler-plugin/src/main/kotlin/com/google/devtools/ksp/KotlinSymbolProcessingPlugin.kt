@@ -43,7 +43,7 @@ private val KSP_OPTIONS = CompilerConfigurationKey.create<KspOptions.Builder>("K
 class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
     override val pluginId = "com.google.devtools.ksp.symbol-processing"
 
-    override val pluginOptions: Collection<AbstractCliOption> = KspCliOption.values().asList()
+    override val pluginOptions: Collection<AbstractCliOption> = KspCliOption.entries
 
     override fun processOption(option: AbstractCliOption, value: String, configuration: CompilerConfiguration) {
         if (option !is KspCliOption) {

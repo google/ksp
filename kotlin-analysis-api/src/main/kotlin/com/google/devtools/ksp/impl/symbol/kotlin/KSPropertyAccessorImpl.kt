@@ -123,8 +123,8 @@ class KSPropertySetterImpl private constructor(
 
     override fun defer(): Restorable? {
         val other = (receiver as Deferrable).defer() ?: return null
-        return ktPropertyAccessorSymbol.defer {
-            val owner = other.restore() ?: return@defer null
+        return ktPropertyAccessorSymbol.defer inner@{
+            val owner = other.restore() ?: return@inner null
             getCached(owner as KSPropertyDeclaration, it as KaPropertySetterSymbol)
         }
     }
@@ -157,8 +157,8 @@ class KSPropertyGetterImpl private constructor(
 
     override fun defer(): Restorable? {
         val other = (receiver as Deferrable).defer() ?: return null
-        return ktPropertyAccessorSymbol.defer {
-            val owner = other.restore() ?: return@defer null
+        return ktPropertyAccessorSymbol.defer inner@{
+            val owner = other.restore() ?: return@inner null
             getCached(owner as KSPropertyDeclaration, it as KaPropertyGetterSymbol)
         }
     }

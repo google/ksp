@@ -28,7 +28,6 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.analysis.api.symbols.*
-import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
 
@@ -43,15 +42,11 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
     override fun asKSDeclaration(): KSDeclaration = this
 
-    // TODO: upstream deprecated `KtSymbolKind` in favor of `KaSymbolLocation` but they are
-    // semantically different as the new location does not suggest if the function is a lambda or not.
-    // This is a breaking change in upstream deprecation.
     override val functionKind: FunctionKind by lazy {
-        when (ktFunctionSymbol.symbolKind) {
-            KtSymbolKind.CLASS_MEMBER -> FunctionKind.MEMBER
-            KtSymbolKind.TOP_LEVEL -> FunctionKind.TOP_LEVEL
-            KtSymbolKind.SAM_CONSTRUCTOR -> FunctionKind.LAMBDA
-            else -> throw IllegalStateException("Unexpected symbol kind ${ktFunctionSymbol.symbolKind}")
+        when (ktFunctionSymbol.location) {
+            KaSymbolLocation.CLASS -> FunctionKind.MEMBER
+            KaSymbolLocation.TOP_LEVEL -> FunctionKind.TOP_LEVEL
+            else -> throw IllegalStateException("Unexpected location ${ktFunctionSymbol.location}")
         }
     }
 

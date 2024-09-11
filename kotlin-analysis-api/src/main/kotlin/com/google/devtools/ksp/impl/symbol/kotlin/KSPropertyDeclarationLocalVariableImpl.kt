@@ -11,16 +11,16 @@ import com.google.devtools.ksp.symbol.KSPropertySetter
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
-import org.jetbrains.kotlin.analysis.api.symbols.KtLocalVariableSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaLocalVariableSymbol
 import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationLocalVariableImpl private constructor(
-    private val ktLocalVariableSymbol: KtLocalVariableSymbol
+    private val ktLocalVariableSymbol: KaLocalVariableSymbol
 ) : KSPropertyDeclaration,
     AbstractKSDeclarationImpl(ktLocalVariableSymbol),
     KSExpectActual by KSExpectActualImpl(ktLocalVariableSymbol) {
-    companion object : KSObjectCache<KtLocalVariableSymbol, KSPropertyDeclarationLocalVariableImpl>() {
-        fun getCached(ktLocalVariableSymbol: KtLocalVariableSymbol) =
+    companion object : KSObjectCache<KaLocalVariableSymbol, KSPropertyDeclarationLocalVariableImpl>() {
+        fun getCached(ktLocalVariableSymbol: KaLocalVariableSymbol) =
             cache.getOrPut(ktLocalVariableSymbol) { KSPropertyDeclarationLocalVariableImpl(ktLocalVariableSymbol) }
     }
 

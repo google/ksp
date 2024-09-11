@@ -29,7 +29,8 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
         gradleRunner.withArguments("clean", ":processors:build").build()
         val processorJar = File(project.root, "processors/build/libs/processors-1.0-SNAPSHOT.jar")
         val classLoader = URLClassLoader(arrayOf(processorJar.toURI().toURL()), javaClass.classLoader)
-        val compiler = classLoader.loadClass(K2JVMCompiler::class.java.name).newInstance() as K2JVMCompiler
+        val compiler = classLoader.loadClass(K2JVMCompiler::class.java.name).getDeclaredConstructor()
+            .newInstance() as K2JVMCompiler
         val repoPath = "../build/repos/test/com/google/devtools/ksp/"
         val kspPluginId = "com.google.devtools.ksp.symbol-processing"
         val kspPluginJar = File("$repoPath/symbol-processing-cmdline/2.0.255-SNAPSHOT").listFiles()!!.filter {

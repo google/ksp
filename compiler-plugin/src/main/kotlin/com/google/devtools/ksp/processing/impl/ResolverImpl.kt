@@ -122,7 +122,7 @@ class ResolverImpl(
     val newKSFiles: Collection<KSFile>,
     private val deferredSymbols: Map<SymbolProcessor, List<KSAnnotated>>,
     val bindingTrace: BindingTrace,
-    val project: Project,
+    project: Project,
     componentProvider: ComponentProvider,
     val incrementalContext: IncrementalContext,
     val options: KspOptions,
@@ -660,7 +660,7 @@ class ResolverImpl(
                 is KSTypeParameter, is KSFile, is KSPropertyGetter, is KSPropertySetter, is KSTypeArgument,
                 is KSTypeReference, is KSValueArgument, is KSValueParameter, is KSAnnotation, is KSCallableReference,
                 is KSClassifierReference, is KSDefNonNullReference, is KSDynamicReference, is KSParenthesizedReference,
-                -> Unit
+                    -> Unit
             }
         }
         return if (javaType is JavaArrayTypeImpl)
@@ -724,7 +724,7 @@ class ResolverImpl(
             is KSTypeReferenceImpl -> {
                 val typeReference = type.ktTypeReference
                 typeReference.lookup()?.let {
-                    return getKSTypeCached(it, type.element.typeArguments, type.annotations)
+                    return getKSTypeCached(it, type.element.typeArguments)
                 }
                 KtStubbedPsiUtil.getContainingDeclaration(typeReference)?.let { containingDeclaration ->
                     resolveDeclaration(containingDeclaration)?.let {
@@ -733,12 +733,12 @@ class ResolverImpl(
                     }
                     // TODO: Fix resolution look up to avoid fallback to file scope.
                     typeReference.lookup()?.let {
-                        return getKSTypeCached(it, type.element.typeArguments, type.annotations)
+                        return getKSTypeCached(it, type.element.typeArguments)
                     }
                 }
                 val scope = typeReference.findLexicalScope()
                 return resolveSession.typeResolver.resolveType(scope, typeReference, bindingTrace, false).let {
-                    getKSTypeCached(it, type.element.typeArguments, type.annotations)
+                    getKSTypeCached(it, type.element.typeArguments)
                 }
             }
             is KSTypeReferenceDescriptorImpl -> {
@@ -776,8 +776,7 @@ class ResolverImpl(
                 }
                 val resolved = getKSTypeCached(
                     resolveJavaType(type.psi, type),
-                    type.element.typeArguments,
-                    type.annotations
+                    type.element.typeArguments
                 )
                 return if (type.psi is PsiArrayType) {
                     resolved
@@ -1056,7 +1055,7 @@ class ResolverImpl(
             val typeSubstitutor = containing.kotlinType.createTypeSubstitutor()
             val substituted = declaration.substitute(typeSubstitutor) as? ValueDescriptor
             substituted?.let {
-                return getKSTypeCached(substituted.type, annotations = property.type.resolve().annotations)
+                return getKSTypeCached(substituted.type)
             }
         }
         // if substitution fails, fallback to the type from the property
@@ -1370,13 +1369,11 @@ class ResolverImpl(
             RefPosition.PARAMETER_TYPE -> typeSystem.getOptimalModeForValueParameter(kotlinType)
             RefPosition.RETURN_TYPE ->
                 typeSystem.getOptimalModeForReturnType(kotlinType, ref.isReturnTypeOfAnnotationMethod())
+
             RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
         }.updateFromParents(ref)
 
-        val parameters = kotlinType.constructor.parameters
-        val arguments = kotlinType.arguments
-
-        parameters.zip(arguments).forEach { (parameter, argument) ->
+        kotlinType.arguments.forEach { argument ->
             if (position == RefPosition.SUPER_TYPE &&
                 argument.projectionKind != org.jetbrains.kotlin.types.Variance.INVARIANT
             ) {

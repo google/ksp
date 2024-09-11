@@ -40,14 +40,14 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtTypeParameter
 
 class KSTypeReferenceResolvedImpl private constructor(
-    private val ktType: KtType,
+    private val ktType: KaType,
     override val parent: KSNode?,
     private val index: Int,
     private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
-    companion object : KSObjectCache<IdKeyTriple<KtType, KSNode?, Int>, KSTypeReference>() {
+    companion object : KSObjectCache<IdKeyTriple<KaType, KSNode?, Int>, KSTypeReference>() {
         fun getCached(
-            type: KtType,
+            type: KaType,
             parent: KSNode? = null,
             index: Int = -1,
             additionalAnnotations: List<KaAnnotation> = emptyList()
@@ -79,13 +79,13 @@ class KSTypeReferenceResolvedImpl private constructor(
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
 
     override val location: Location by lazy {
-        if (index != -1) {
+        if (index <= -1) {
             parent?.location ?: NonExistLocation
         } else {
             when (parent) {
                 is KSClassDeclarationImpl -> {
                     when (val psi = parent.ktClassOrObjectSymbol.psi) {
-                        is KtClassOrObject -> psi.superTypeListEntries.get(index).toLocation()
+                        is KtClassOrObject -> psi.superTypeListEntries[index].toLocation()
                         is PsiClass -> (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
                         else -> NonExistLocation
                     }
@@ -108,7 +108,7 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override val modifiers: Set<Modifier>
-        get() = if (ktType is KtFunctionalType && ktType.isSuspend) {
+        get() = if (ktType is KaFunctionType && ktType.isSuspend) {
             setOf(Modifier.SUSPEND)
         } else {
             emptySet()
