@@ -41,7 +41,7 @@ class KSValueParameterImpl private constructor(
 
     override val name: KSName? by lazy {
         if (origin == Origin.SYNTHETIC && parent is KSPropertySetter) {
-            KSNameImpl.getCached("<set-?>")
+            KSNameImpl.getCached("value")
         } else {
             KSNameImpl.getCached(ktValueParameterSymbol.name.asString())
         }
