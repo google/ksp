@@ -227,7 +227,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
-        runTest("../test-utils/testData/api/declarationOrder.kt")
+        runTest("../kotlin-analysis-api/testData/declarationOrder.kt")
     }
 
     @TestMetadata("declarationUtil.kt")

@@ -19,22 +19,8 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
-import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STRICTFP_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_SYNCHRONIZED_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_TRANSIENT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_VOLATILE_ANNOTATION_FQN
-import com.google.devtools.ksp.common.extractThrowsAnnotation
-import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
-import com.google.devtools.ksp.common.impl.RefPosition
-import com.google.devtools.ksp.common.impl.findOuterMostRef
-import com.google.devtools.ksp.common.impl.findRefPosition
-import com.google.devtools.ksp.common.impl.isReturnTypeOfAnnotationMethod
-import com.google.devtools.ksp.common.javaModifiers
-import com.google.devtools.ksp.common.memoized
+import com.google.devtools.ksp.common.*
+import com.google.devtools.ksp.common.impl.*
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
@@ -359,8 +345,18 @@ class ResolverAAImpl(
         ) {
             parentClass = parentClass.parent!!
         }
-        val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-            ?: return container.declarations
+
+        if (parentClass !is KSClassDeclarationImpl) {
+            return container.declarations
+        }
+
+        // Members of Foo's companion object are compiled into Foo and Foo$Companion. Total ordering is not recoverable
+        // from class files. Let's give up and rely on AA for now.
+        if (parentClass.isCompanionObject) {
+            return container.declarations
+        }
+
+        val classId = parentClass.ktClassOrObjectSymbol.classId ?: return container.declarations
         val virtualFile = analyze {
             (fileManager.findClass(classId, analysisScope) as? JavaClassImpl)?.virtualFile
         } ?: return container.declarations
