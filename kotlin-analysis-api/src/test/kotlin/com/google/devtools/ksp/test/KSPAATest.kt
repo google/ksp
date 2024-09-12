@@ -169,11 +169,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/objCacheB.kt")
     }
 
-    @Disabled
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
-        runTest("../test-utils/testData/api/checkOverride.kt")
+        runTest("../kotlin-analysis-api/testData/checkOverride.kt")
     }
 
     @TestMetadata("classKinds.kt")
