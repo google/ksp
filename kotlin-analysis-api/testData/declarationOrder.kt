@@ -87,9 +87,9 @@
 // lib.KotlinCompanion.Companion
 // companionObjectProperty:Ljava/lang/String;
 // companionObjectPropertyJvmStatic:Ljava/lang/String;
+// companionObjectPropertyJvmField:Ljava/lang/String;
 // companionObjectPropertyLateinit:Ljava/lang/String;
 // companionObjectPropertyConst:Ljava/lang/String;
-// companionObjectPropertyJvmField:Ljava/lang/String;
 // companionObjectFunction:(Ljava/lang/String;)V
 // companionObjectFunctionJvmStatic:(Ljava/lang/String;)V
 // equals:(Ljava/lang/Object;)Z
