@@ -19,10 +19,10 @@
 // EXPECTED:
 // privateGetterVal.getter(): Int
 // privateGetterVar.getter(): String
-// privateGetterVar.setter()(<set-?>: String)
+// privateGetterVar.setter()(value: String)
 // val1.getter(): Int
 // var2.getter(): String
-// var2.setter()(<set-?>: String)
+// var2.setter()(value: String)
 // END
 // MODULE: lib
 // FILE: lib/Bar.kt

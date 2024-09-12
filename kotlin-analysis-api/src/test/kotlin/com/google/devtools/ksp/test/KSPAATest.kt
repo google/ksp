@@ -67,7 +67,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
-        runTest("../test-utils/testData/api/annotationInDependencies.kt")
+        runTest("../kotlin-analysis-api/testData/annotationInDependencies.kt")
     }
 
     @TestMetadata("annotationOnConstructorParameter.kt")
@@ -318,7 +318,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("implicitPropertyAccessors.kt")
     @Test
     fun testImplicitPropertyAccessors() {
-        runTest("../test-utils/testData/api/implicitPropertyAccessors.kt")
+        runTest("../kotlin-analysis-api/testData/implicitPropertyAccessors.kt")
     }
 
     @TestMetadata("inheritedTypeAlias.kt")
