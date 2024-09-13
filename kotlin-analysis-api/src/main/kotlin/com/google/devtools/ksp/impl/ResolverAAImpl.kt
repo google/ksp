@@ -867,7 +867,7 @@ class ResolverAAImpl(
     internal fun computeAsMemberOf(function: KSFunctionDeclaration, containing: KSType): KSFunction {
         val propertyDeclaredIn = function.closestClassDeclaration()
             ?: throw IllegalArgumentException(
-                "Cannot call asMemberOf with a property that is not declared in a class or an interface"
+                "Cannot call asMemberOf with a function that is not declared in a class or an interface"
             )
         val key = function to containing
         return functionAsMemberOfCache.getOrPut(key) {
@@ -910,9 +910,7 @@ class ResolverAAImpl(
                             next = funcToSub.substitute(it)
                             cnt += 1
                         }
-                        funcToSub
-                    }.let {
-                        KSFunctionImpl(it)
+                        KSFunctionImpl(funcToSub, it)
                     }
                 }
             } else KSFunctionErrorImpl(function)
