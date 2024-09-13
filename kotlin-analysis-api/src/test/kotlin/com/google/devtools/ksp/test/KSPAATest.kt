@@ -138,11 +138,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithJavaTypeValue.kt")
     }
 
-    @Disabled
     @TestMetadata("asMemberOf.kt")
     @Test
     fun testAsMemberOf() {
-        runTest("../test-utils/testData/api/asMemberOf.kt")
+        runTest("../kotlin-analysis-api/testData/asMemberOf.kt")
     }
 
     @TestMetadata("backingFields.kt")
