@@ -614,8 +614,9 @@ internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubsti
     if (parameters.size != arguments.size) {
         throw IllegalStateException("invalid substitution for $context")
     }
-    parameters.zip(arguments).forEach {
-        substitutorBuilder.substitution(it.first, it.second.type ?: it.first.upperBounds.first())
+    parameters.zip(arguments).forEach { (param, projection) ->
+        val arg = projection.type ?: param.upperBounds.firstOrNull() ?: analyze { useSiteSession.builtinTypes.any }
+        substitutorBuilder.substitution(param, arg)
     }
     (context.symbol as? KaClassSymbol)?.superTypes?.forEach {
         fillInDeepSubstitutor(it, substitutorBuilder)
