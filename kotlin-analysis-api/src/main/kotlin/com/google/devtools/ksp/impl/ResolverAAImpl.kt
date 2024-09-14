@@ -24,10 +24,8 @@ import com.google.devtools.ksp.common.impl.*
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
-import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
+import com.google.devtools.ksp.impl.symbol.util.*
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
-import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
-import com.google.devtools.ksp.impl.symbol.util.hasAnnotation
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -51,7 +49,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
@@ -60,6 +57,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.platform.jvm.JvmPlatform
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.org.objectweb.asm.Opcodes
 
@@ -247,11 +245,8 @@ class ResolverAAImpl(
                 val fileManager = instance.javaFileManager
                 val parentClass = this.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
-                BinaryClassInfoCache.getCached(classId, virtualFileContent)
-                    .fieldAccFlags[this.simpleName.asString()] ?: 0
+                BinaryClassInfoCache.getCached(classId, fileManager)
+                    ?.fieldAccFlags?.get(this.simpleName.asString()) ?: 0
             }
             else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
         }
@@ -263,11 +258,8 @@ class ResolverAAImpl(
                 val fileManager = instance.javaFileManager
                 val parentClass = this.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
-                BinaryClassInfoCache.getCached(classId, virtualFileContent)
-                    .methodAccFlags[this.simpleName.asString() + jvmDesc] ?: 0
+                BinaryClassInfoCache.getCached(classId, fileManager)
+                    ?.methodAccFlags?.get(this.simpleName.asString() + jvmDesc) ?: 0
             }
             else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
         }
@@ -337,6 +329,12 @@ class ResolverAAImpl(
         if (container.origin != Origin.KOTLIN_LIB) {
             return container.declarations
         }
+
+        // TODO: multiplatform
+        if (!isJvm) {
+            return container.declarations
+        }
+
         require(container is AbstractKSDeclarationImpl)
         val fileManager = instance.javaFileManager
         var parentClass: KSNode = container
@@ -357,9 +355,7 @@ class ResolverAAImpl(
         }
 
         val classId = parentClass.ktClassOrObjectSymbol.classId ?: return container.declarations
-        val virtualFile = analyze {
-            (fileManager.findClass(classId, analysisScope) as? JavaClassImpl)?.virtualFile
-        } ?: return container.declarations
+        val virtualFile = classId.getVirtualFile(fileManager) ?: return container.declarations
         val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
@@ -429,10 +425,9 @@ class ResolverAAImpl(
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = accessor.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                    ?: return emptySequence()
+                val virtualFileContent = classId.getFileContent(fileManager) ?: return emptySequence()
                 val jvmDesc = this.mapToJvmSignatureInternal(accessor)
                 extractThrowsFromClassFile(
                     virtualFileContent,
@@ -462,10 +457,9 @@ class ResolverAAImpl(
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = function.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                    ?: return emptySequence()
+                val virtualFileContent = classId.getFileContent(fileManager) ?: return emptySequence()
                 val jvmDesc = this.mapToJvmSignature(function)
                 extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
             }
@@ -924,4 +918,6 @@ class ResolverAAImpl(
             } else KSFunctionErrorImpl(function)
         }
     }
+
+    internal val isJvm = ktModule.targetPlatform.all { it is JvmPlatform }
 }
