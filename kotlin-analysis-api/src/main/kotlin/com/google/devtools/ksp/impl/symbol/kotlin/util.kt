@@ -28,6 +28,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedI
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
+import com.google.devtools.ksp.impl.symbol.util.getFileContent
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -64,7 +65,6 @@ import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSignatureParser
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
@@ -547,14 +547,16 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
             }
             // ClsMethodImpl means the psi is decompiled psi.
             null, is ClsMemberImpl<*> -> {
+                // TODO: multiplatform
+                if (!ResolverAAImpl.instance.isJvm)
+                    return@let null
                 val fileManager = ResolverAAImpl.instance.javaFileManager
                 val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val file = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                    ?: return@let null
+                val fileContent = classId.getFileContent(fileManager) ?: return@let null
                 var defaultValue: JavaAnnotationArgument? = null
-                ClassReader(file).accept(
+                ClassReader(fileContent).accept(
                     object : ClassVisitor(Opcodes.API_VERSION) {
                         override fun visitMethod(
                             access: Int,
