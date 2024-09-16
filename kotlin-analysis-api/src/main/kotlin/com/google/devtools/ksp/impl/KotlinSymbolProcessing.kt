@@ -547,6 +547,8 @@ class KotlinSymbolProcessing(
                     }
                 }
 
+                val allKSFilesPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
+
                 // Drop caches
                 KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
                 KaSessionProvider.getInstance(project).clearCaches()
@@ -565,21 +567,10 @@ class KotlinSymbolProcessing(
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
                 )
-                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be re-created from PSI.
-                allDirtyKSFiles = allDirtyKSFiles.map {
-                    when (it) {
-                        is KSFileImpl -> {
-                            val ktFile = it.ktFileSymbol.psi!! as KtFile
-                            analyze { KSFileImpl.getCached(ktFile.symbol) }
-                        }
-
-                        is KSFileJavaImpl -> {
-                            KSFileJavaImpl.getCached(it.psi)
-                        }
-
-                        else -> throw IllegalArgumentException("Unknown KSFile implementation: $it")
-                    }
-                } + newKSFiles
+                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be restored from deferred.
+                // Do not replace `!!` with `?.`. Implementations of KSFile in KSP2 must implement Deferrable and
+                // return non-null.
+                allDirtyKSFiles = allKSFilesPointers.map { it!!.restore() as KSFile } + newKSFiles
                 incrementalContext.registerGeneratedFiles(newKSFiles)
                 codeGenerator.closeFiles()
             }
