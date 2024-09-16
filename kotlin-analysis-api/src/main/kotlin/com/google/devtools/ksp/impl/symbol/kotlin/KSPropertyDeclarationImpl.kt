@@ -143,7 +143,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                         return@lazy ktPropertySymbol.hasBackingField
                     val classId = when (
                         val containerSource =
-                            (ktPropertySymbol as? KaFirKotlinPropertySymbol)?.firSymbol?.containerSource
+                            (ktPropertySymbol as? KaFirKotlinPropertySymbol<*>)?.firSymbol?.containerSource
                     ) {
                         is JvmPackagePartSource -> containerSource.classId
                         is KotlinJvmBinarySourceElement -> containerSource.binaryClass.classId
