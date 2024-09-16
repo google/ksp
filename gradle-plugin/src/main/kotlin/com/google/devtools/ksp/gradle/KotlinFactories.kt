@@ -56,12 +56,9 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformCommonCompilerOptionsH
 import org.jetbrains.kotlin.gradle.dsl.KotlinNativeCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinNativeCompilerOptionsDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinNativeCompilerOptionsHelper
-import org.jetbrains.kotlin.gradle.internal.ClassLoadersCachingBuildService
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationInfo
-import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.Companion.kotlinPropertiesProvider
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
-import org.jetbrains.kotlin.gradle.targets.native.KonanPropertiesBuildService
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -169,7 +166,7 @@ class KotlinFactories {
                         from = compilerOptions,
                         into = kspTask.compilerOptions
                     )
-                    kspTask.produceUnpackedKlib.set(false)
+                    kspTask.produceUnpackagedKlib.set(false)
                     kspTask.onlyIf {
                         // KonanTarget is not properly serializable, hence we should check by name
                         // see https://youtrack.jetbrains.com/issue/KT-61657.
@@ -178,15 +175,6 @@ class KotlinFactories {
                             it.name == konanTargetName
                         }
                     }
-                    kspTask.kotlinCompilerArgumentsLogLevel
-                        .value(project.kotlinPropertiesProvider.kotlinCompilerArgumentsLogLevel)
-                        .finalizeValueOnRead()
-                    kspTask.konanPropertiesService
-                        .value(KonanPropertiesBuildService.registerIfAbsent(project))
-                        .disallowChanges()
-                    kspTask.classLoadersCachingService
-                        .value(ClassLoadersCachingBuildService.registerIfAbsent(project))
-                        .disallowChanges()
                 }
             }
         }
