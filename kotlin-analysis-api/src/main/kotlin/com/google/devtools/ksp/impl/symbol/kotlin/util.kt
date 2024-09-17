@@ -70,6 +70,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSigna
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
 import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
+import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
@@ -948,7 +949,7 @@ internal val KaDeclarationSymbol.internalSuffix: String
                 val firSymbol = (this@internalSuffix as? KaFirSymbol<*>)?.firSymbol
                 val firClassSymbol = firSymbol?.getContainingClassSymbol()
                 val moduleName = (firClassSymbol?.fir as? FirRegularClass)?.moduleName
-                (moduleName ?: module.libraryName.toSuffix()).toSuffix()
+                (moduleName ?: JvmProtoBufUtil.DEFAULT_MODULE_NAME).toSuffix()
             }
             else -> ""
         }
