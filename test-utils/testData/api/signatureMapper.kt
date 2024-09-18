@@ -21,6 +21,7 @@
 // a: I
 // foo: ()Ljava/lang/String;
 // f: ()I
+// g: ()I
 // <init>: ()V
 // LJavaIntefaceWithVoid;
 // getVoid: ()Ljava/lang/Void;
@@ -47,7 +48,10 @@ class Cls {
 
     fun foo(): String { return "1" }
 
-    fun f(): MyInlineClass = 1
+    @JvmName("f")
+    fun f(): MyInlineClass = TODO()
+
+    fun g(): MyInlineClass = TODO()
 }
 
 // FILE: JavaIntefaceWithVoid.java
