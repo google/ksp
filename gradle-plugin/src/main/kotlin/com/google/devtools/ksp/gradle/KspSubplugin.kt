@@ -409,7 +409,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         fun configureLanguageVersion(kspTask: KotlinCompilationTask<*>) {
-            kspTask.compilerOptions.useK2.value(false)
             val languageVersion = kotlinCompilation.compilerOptions.options.languageVersion
             val progressiveMode = kotlinCompilation.compilerOptions.options.progressiveMode
             kspTask.compilerOptions.languageVersion.value(
