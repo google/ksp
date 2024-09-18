@@ -106,6 +106,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java.kt")
     }
 
+    @TestMetadata("annotationValue_java2.kt")
+    @Test
+    fun testAnnotationValue_java2() {
+        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java2.kt")
+    }
+
     @TestMetadata("annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
