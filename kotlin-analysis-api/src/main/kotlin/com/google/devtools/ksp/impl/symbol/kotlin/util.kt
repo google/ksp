@@ -606,11 +606,13 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
 
 @OptIn(KaExperimentalApi::class)
 internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubstitutorBuilder) {
-    if (context !is KaClassType) {
-        return
+    val unwrappedType = when (context) {
+        is KaClassType -> context
+        is KaFlexibleType -> context.lowerBound as? KaClassType ?: return
+        else -> return
     }
-    val parameters = context.symbol.typeParameters
-    val arguments = context.typeArguments
+    val parameters = unwrappedType.symbol.typeParameters
+    val arguments = unwrappedType.typeArguments
     if (parameters.size != arguments.size) {
         throw IllegalStateException("invalid substitution for $context")
     }
