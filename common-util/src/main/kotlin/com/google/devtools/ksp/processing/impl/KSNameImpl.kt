@@ -13,10 +13,12 @@ class KSNameImpl private constructor(val name: String) : KSName {
     }
 
     override fun getQualifier(): String {
-        return name.dropLastWhile { it != '.' }.dropLast(1)
+        val lastIndex = name.lastIndexOf('.')
+        return if (lastIndex != -1) name.substring(0, lastIndex) else ""
     }
 
     override fun getShortName(): String {
-        return name.takeLastWhile { it != '.' }
+        val lastIndex = name.lastIndexOf('.')
+        return if (lastIndex != -1) name.substring(lastIndex + 1) else name
     }
 }
