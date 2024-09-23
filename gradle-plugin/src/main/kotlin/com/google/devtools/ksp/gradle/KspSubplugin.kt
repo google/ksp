@@ -280,13 +280,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE:$KSP_VERSION"
         )
 
-        findJavaTaskForKotlinCompilation(kotlinCompilation)?.configure { javaCompile ->
-            val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir)
-            generatedJavaSources.include("**/*.java")
-            javaCompile.source(generatedJavaSources)
-            javaCompile.classpath += project.files(classOutputDir)
-        }
-
         assert(kotlinCompileProvider.name.startsWith("compile"))
         val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
 
@@ -603,6 +596,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 is AbstractKotlinCompile<*> -> kotlinCompile.libraries.from(project.files(classOutputDir))
                 // is KotlinNativeCompile -> TODO: support binary generation?
             }
+        }
+
+        findJavaTaskForKotlinCompilation(kotlinCompilation)?.configure { javaCompile ->
+            val generatedJavaSources = javaCompile.project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
+            generatedJavaSources.include("**/*.java")
+            javaCompile.source(generatedJavaSources)
+            javaCompile.classpath += project.files(classOutputDir)
         }
 
         val processResourcesTaskName =
