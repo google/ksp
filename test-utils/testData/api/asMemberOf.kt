@@ -112,6 +112,21 @@
 // (kotlin.Int!!) -> kotlin.Unit!!
 // Baz!!<kotlin.Long!!, kotlin.Number!!>
 // END
+// MODULE: lib
+// FILE: Test.java
+package lib;
+import java.util.List;
+class Test {
+    List<String> f() {
+        throw new RuntimeException("stub");
+    }
+}
+// FILE: TestKt.kt
+package lib
+class TestKt {
+    fun f(): MutableList<String> = TODO()
+}
+// MODULE: main(lib)
 // FILE: Input.kt
 open class Base<BaseTypeArg1, BaseTypeArg2> {
     val intType: Int = 0
@@ -196,4 +211,18 @@ class JavaImpl implements KotlinInterface {
     }
     public void setY(int value) {
     }
+}
+
+// FILE: main/Test.java
+package main;
+import java.util.List;
+class Test {
+    List<String> f() {
+        throw new RuntimeException("stub");
+    }
+}
+// FILE: TestKt.kt
+package main
+class TestKt {
+    fun f(): MutableList<String> = TODO()
 }
