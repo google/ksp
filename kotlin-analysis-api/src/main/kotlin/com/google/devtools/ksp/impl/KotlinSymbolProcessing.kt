@@ -515,6 +515,15 @@ class KotlinSymbolProcessing(
                 provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
             }
 
+            fun dropCaches() {
+                KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
+                KaSessionProvider.getInstance(project).clearCaches()
+                psiManager.dropResolveCaches()
+                psiManager.dropPsiCaches()
+
+                KSObjectCacheManager.clear()
+            }
+
             var rounds = 0
             // Run processors until either
             // 1) there is an error
@@ -549,17 +558,11 @@ class KotlinSymbolProcessing(
 
                 val allKSFilesPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
 
-                // Drop caches
-                KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
-                KaSessionProvider.getInstance(project).clearCaches()
-                psiManager.dropResolveCaches()
-                psiManager.dropPsiCaches()
-
-                KSObjectCacheManager.clear()
-
                 if (logger.hasError || codeGenerator.generatedFile.isEmpty()) {
                     break
                 }
+
+                dropCaches()
 
                 newKSFiles = prepareNewKSFiles(
                     kotlinCoreProjectEnvironment,
@@ -590,6 +593,7 @@ class KotlinSymbolProcessing(
                 )
             }
 
+            dropCaches()
             codeGenerator.closeFiles()
         } finally {
             Disposer.dispose(projectDisposable)

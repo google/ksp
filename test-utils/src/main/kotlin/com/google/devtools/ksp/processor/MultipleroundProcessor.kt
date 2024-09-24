@@ -5,6 +5,8 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.validate
 
 class MultipleroundProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
@@ -46,8 +48,18 @@ class MultipleroundProcessor : AbstractTestProcessor() {
         val allFiles = resolver.getAllFiles().map { it.fileName }
         result.add(allFiles.map { if (it in newFiles) "+$it" else it }.sorted().joinToString())
 
+        filesFromLastRound = resolver.getAllFiles()
         round++
         return emptyList()
+    }
+
+    lateinit var filesFromLastRound: Sequence<KSFile>
+
+    override fun finish() {
+        val allFiles = filesFromLastRound.map { it.fileName }.joinToString(", ")
+        result.add("Finish: $allFiles")
+        assert(filesFromLastRound.all { it.validate() })
+        super.finish()
     }
 
     lateinit var env: SymbolProcessorEnvironment
