@@ -16,6 +16,20 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+
+        listOf("main.Test", "lib.Test", "main.TestKt", "lib.TestKt").forEach { clsName ->
+            resolver.getClassDeclarationByName(clsName)!!.let { cls ->
+                val listType = cls.getAllFunctions().single {it.simpleName.asString() == "f"}.returnType!!.resolve()
+                val listDecl = listType.declaration as KSClassDeclaration
+                val iterator = listDecl.getAllFunctions().single { it.simpleName.asString() == "iterator" }
+                println("$clsName: ${iterator.asMemberOf(listType).returnType}")
+                val listIterator = resolver.getClassDeclarationByName("kotlin.collections.List")!!.getDeclaredFunctions().single { it.simpleName.asString() == "iterator" }
+                println("$clsName: ${listIterator.asMemberOf(listType).returnType}")
+                val mutableListIterator = resolver.getClassDeclarationByName("kotlin.collections.MutableCollection")!!.getDeclaredFunctions().single { it.simpleName.asString() == "iterator" }
+                println("$clsName: ${mutableListIterator.asMemberOf(listType).returnType}")
+            }
+        }
+
         val base = resolver.getClassDeclarationByName("Base")!!
         val child1 = resolver.getClassDeclarationByName("Child1")!!
         addToResults(resolver, base, child1.asStarProjectedType())
