@@ -474,13 +474,13 @@ fun parseFile(arg: String): File {
 fun <T> parseList(arg: String, transform: (String) -> T): List<T> {
     if (arg.length > 0 && arg[0] == '-')
         throw IllegalArgumentException("expecting a List but got $arg")
-    return arg.split(':').map { transform(it) }
+    return arg.split(File.pathSeparatorChar).map { transform(it) }
 }
 
 fun <T> parseMap(arg: String, transform: (String) -> T): Map<String, T> {
     if (arg.length > 0 && arg[0] == '-')
         throw IllegalArgumentException("expecting a Map but got $arg")
-    return arg.split(':').map {
+    return arg.split(File.pathSeparatorChar).map {
         val (k, v) = it.split('=')
         k to transform(v)
     }.toMap()
