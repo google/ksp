@@ -38,7 +38,7 @@ class AGP731IT(useKSP2: Boolean) {
 
         File(project.root, "gradle.properties").appendText("\nagpVersion=7.3.1")
         gradleRunner.withArguments(":workload:compileDebugKotlin").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task("::workload:kspDebugKotlin")?.outcome)
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome)
         }
     }
 
