@@ -142,8 +142,8 @@
 // parent of String: String
 // parent of String: b.getter()
 // parent of b.getter(): b
-// parent of String: <set-?>
-// parent of <set-?>: b.setter()
+// parent of String: value
+// parent of value: b.setter()
 // parent of b.setter(): b
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass

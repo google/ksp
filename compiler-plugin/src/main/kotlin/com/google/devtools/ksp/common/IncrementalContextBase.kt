@@ -440,6 +440,7 @@ abstract class IncrementalContextBase(
         // Assuming that the processors are deterministic, we are throwing away outputs from clean inputs, and
         // recovering them from the backup as a workaround for processors.
 
+        @Suppress("ConvertArgumentToSet")
         val unassociated = outputs - sourceToOutputs.values.flatten()
         val dirties = HashSet(unassociated)
         fun markDirty(file: File) {
@@ -463,7 +464,7 @@ abstract class IncrementalContextBase(
             markDirty(it)
         }
 
-        val dirtySourceToOutputs = sourceToOutputs.filter { (src, outs) ->
+        val dirtySourceToOutputs = sourceToOutputs.filter { (src, _) ->
             isDirty(src)
         }
         val dirtyOutputs = outputs.filter(::isDirty).toSet()

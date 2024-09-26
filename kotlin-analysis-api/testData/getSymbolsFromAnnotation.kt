@@ -116,7 +116,7 @@
 // RGB.B:KSClassDeclaration
 // ==== Cnno in depth ====
 // constructorParameterFoo:KSPropertyDeclaration
-// <set-?>:KSValueParameter
+// value:KSValueParameter
 // constructorParameterFoo:KSValueParameter
 // x:KSPropertyDeclaration
 // x:KSValueParameter

@@ -24,8 +24,6 @@
 // MyClassInLib: stringParam = 2
 // MyClassInLib: stringParam2 = 1
 // MyClassInLib: stringArrayParam = [3, 5, 7]
-// []
-// null
 // Str
 // 42
 // Foo
@@ -40,6 +38,10 @@
 // [warning1, warning 2]
 // Sub: [i:42]
 // TestJavaLib: OtherAnnotation
+// TestNestedAnnotationDefaults: def
+// TestNestedAnnotationDefaults: hij
+// TestNestedAnnotationDefaults: def
+// TestNestedAnnotationDefaults: hij
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -72,6 +74,9 @@ public @interface OtherAnnotation {
 public @interface JavaAnnotationWithDefaults {
     OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
 }
+
+// FILE: KotlinAnnotationWithDefaults.kt
+annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
 
 // MODULE: main(module1)
 // FILE: Test.java
@@ -139,3 +144,18 @@ class Sub implements @B(a = @A(i = 42)) Parent {}
 // FILE: TestJavaLib.java
 @JavaAnnotationWithDefaults
 class TestJavaLib {}
+
+// FILE: JavaAnnotationWithDefaultsInSource.java
+public @interface JavaAnnotationWithDefaultsInSource {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
+// FILE: KotlinAnnotationWithDefaults.kt
+annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+
+// FILE: KotlinClient.kt
+@JavaAnnotationWithDefaultsInSource
+@KotlinAnnotationWithDefaultsInSource
+@JavaAnnotationWithDefaults
+@KotlinAnnotationWithDefaults
+class TestNestedAnnotationDefaults

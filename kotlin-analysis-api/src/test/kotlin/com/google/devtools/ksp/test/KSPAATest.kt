@@ -67,7 +67,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
-        runTest("../test-utils/testData/api/annotationInDependencies.kt")
+        runTest("../kotlin-analysis-api/testData/annotationInDependencies.kt")
     }
 
     @TestMetadata("annotationOnConstructorParameter.kt")
@@ -138,11 +138,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithJavaTypeValue.kt")
     }
 
-    @Disabled
     @TestMetadata("asMemberOf.kt")
     @Test
     fun testAsMemberOf() {
-        runTest("../test-utils/testData/api/asMemberOf.kt")
+        runTest("../kotlin-analysis-api/testData/asMemberOf.kt")
     }
 
     @TestMetadata("backingFields.kt")
@@ -169,11 +168,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/objCacheB.kt")
     }
 
-    @Disabled
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
-        runTest("../test-utils/testData/api/checkOverride.kt")
+        runTest("../kotlin-analysis-api/testData/checkOverride.kt")
     }
 
     @TestMetadata("classKinds.kt")
@@ -227,7 +225,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
-        runTest("../test-utils/testData/api/declarationOrder.kt")
+        runTest("../kotlin-analysis-api/testData/declarationOrder.kt")
     }
 
     @TestMetadata("declarationUtil.kt")
@@ -319,7 +317,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("implicitPropertyAccessors.kt")
     @Test
     fun testImplicitPropertyAccessors() {
-        runTest("../test-utils/testData/api/implicitPropertyAccessors.kt")
+        runTest("../kotlin-analysis-api/testData/implicitPropertyAccessors.kt")
     }
 
     @TestMetadata("inheritedTypeAlias.kt")
@@ -413,11 +411,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/makeNullable.kt")
     }
 
-    @Disabled
     @TestMetadata("mangledNames.kt")
     @Test
     fun testMangledNames() {
-        runTest("../test-utils/testData/api/mangledNames.kt")
+        runTest("../kotlin-analysis-api/testData/mangledNames.kt")
     }
 
     @TestMetadata("multipleModules.kt")

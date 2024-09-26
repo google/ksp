@@ -23,6 +23,13 @@ class JvmNameProcessor : AbstractTestProcessor() {
                 )
             }
         }
+        listOf("MyAnnotationUser", "MyAnnotationUserLib").forEach { clsName ->
+            resolver.getClassDeclarationByName(clsName)!!.let { cls ->
+                cls.annotations.single().let { annotation ->
+                    results.add(annotation.arguments.joinToString { it.name!!.asString() })
+                }
+            }
+        }
         return emptyList()
     }
 }

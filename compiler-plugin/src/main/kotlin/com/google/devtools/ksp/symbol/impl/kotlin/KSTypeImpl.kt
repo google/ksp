@@ -99,7 +99,7 @@ class KSTypeImpl private constructor(
     }
 
     override fun starProjection(): KSType {
-        return getKSTypeCached(kotlinType.replaceArgumentsWithStarProjections(), annotations = annotations)
+        return getKSTypeCached(kotlinType.replaceArgumentsWithStarProjections())
     }
 
     private val meNullable: KSType by lazy { getKSTypeCached(kotlinType.makeNullable()) }
@@ -131,8 +131,7 @@ class KSTypeImpl private constructor(
 
 fun getKSTypeCached(
     kotlinType: KotlinType,
-    ksTypeArguments: List<KSTypeArgument>? = null,
-    annotations: Sequence<KSAnnotation> = sequenceOf()
+    ksTypeArguments: List<KSTypeArgument>? = null
 ): KSType {
     if (kotlinType.isError) {
         return KSErrorType.fromKtErrorType(kotlinType)

@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.gradle.model.builder
 
-import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.model.Ksp
 import com.google.devtools.ksp.gradle.model.impl.KspImpl
 import org.gradle.api.Project
@@ -33,11 +32,9 @@ class KspModelBuilder : ToolingModelBuilder {
         return modelName == Ksp::class.java.name
     }
 
-    override fun buildAll(modelName: String, project: Project): Any? {
-        if (modelName == Ksp::class.java.name) {
-            val extension = project.extensions.getByType(KspExtension::class.java)
-            return KspImpl(project.name)
+    override fun buildAll(modelName: String, project: Project): Any =
+        when (modelName) {
+            Ksp::class.java.name -> KspImpl(project.name)
+            else -> error("Unknown model name: $modelName")
         }
-        return null
-    }
 }

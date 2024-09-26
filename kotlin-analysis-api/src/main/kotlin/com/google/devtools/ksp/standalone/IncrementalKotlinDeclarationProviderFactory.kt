@@ -5,8 +5,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinCompositeDeclarationProvider
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProvider
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderFactory
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderFactory
-import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
@@ -19,7 +19,7 @@ class IncrementalKotlinDeclarationProviderFactory(
 
     override fun createDeclarationProvider(
         scope: GlobalSearchScope,
-        contextualModule: KtModule?
+        contextualModule: KaModule?
     ): KotlinDeclarationProvider {
         val providers = staticFactories.map { it.createDeclarationProvider(scope, contextualModule) }
         return KotlinCompositeDeclarationProvider.create(providers)

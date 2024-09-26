@@ -3,14 +3,14 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.types.KtDefinitelyNotNullType
+import org.jetbrains.kotlin.analysis.api.types.KaDefinitelyNotNullType
 
 class KSDefNonNullReferenceImpl private constructor(
-    val ktDefinitelyNotNullType: KtDefinitelyNotNullType,
+    private val ktDefinitelyNotNullType: KaDefinitelyNotNullType,
     override val parent: KSTypeReference?
 ) : KSDefNonNullReference {
-    companion object : KSObjectCache<IdKeyPair<KtDefinitelyNotNullType, KSTypeReference?>, KSDefNonNullReference>() {
-        fun getCached(ktType: KtDefinitelyNotNullType, parent: KSTypeReference?) =
+    companion object : KSObjectCache<IdKeyPair<KaDefinitelyNotNullType, KSTypeReference?>, KSDefNonNullReference>() {
+        fun getCached(ktType: KaDefinitelyNotNullType, parent: KSTypeReference?) =
             KSDefNonNullReferenceImpl.cache
                 .getOrPut(IdKeyPair(ktType, parent)) { KSDefNonNullReferenceImpl(ktType, parent) }
     }

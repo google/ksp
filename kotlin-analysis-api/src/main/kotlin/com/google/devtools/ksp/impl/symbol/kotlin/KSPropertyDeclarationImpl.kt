@@ -40,7 +40,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -140,6 +139,8 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 (ktPropertySymbol as? KaKotlinPropertySymbol)?.isLateInit == true -> true
                 ktPropertySymbol.modality == KaSymbolModality.ABSTRACT -> false
                 else -> {
+                    if (!ResolverAAImpl.instance.isJvm)
+                        return@lazy ktPropertySymbol.hasBackingField
                     val classId = when (
                         val containerSource =
                             (ktPropertySymbol as? KaFirKotlinPropertySymbol)?.firSymbol?.containerSource
@@ -149,12 +150,8 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                         else -> null
                     } ?: return@lazy ktPropertySymbol.hasBackingField
                     val fileManager = ResolverAAImpl.instance.javaFileManager
-                    val virtualFileContent = analyze {
-                        (fileManager.findClass(classId, analysisScope) as JavaClassImpl)
-                            .virtualFile!!.contentsToByteArray()
-                    }
-                    BinaryClassInfoCache.getCached(classId, virtualFileContent)
-                        .fieldAccFlags.containsKey(simpleName.asString())
+                    BinaryClassInfoCache.getCached(classId, fileManager)
+                        ?.fieldAccFlags?.containsKey(simpleName.asString()) ?: ktPropertySymbol.hasBackingField
                 }
             }
         } else {
@@ -173,7 +170,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         recordLookupForPropertyOrMethod(this)
         return analyze {
             ktPropertySymbol.directlyOverriddenSymbols.firstOrNull()
-                ?.unwrapFakeOverrides?.toKSDeclaration() as? KSPropertyDeclaration
+                ?.fakeOverrideOriginal?.toKSDeclaration() as? KSPropertyDeclaration
         }?.also { recordLookupForPropertyOrMethod(it) }
     }
 
@@ -182,7 +179,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     }
 
     override val qualifiedName: KSName? by lazy {
-        ktPropertySymbol.callableIdIfNonLocal?.asSingleFqName()?.asString()?.let { KSNameImpl.getCached(it) }
+        ktPropertySymbol.callableId?.asSingleFqName()?.asString()?.let { KSNameImpl.getCached(it) }
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

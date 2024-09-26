@@ -22,7 +22,7 @@ class KspConfigurations(private val project: Project) {
             ?.toBoolean()
             ?: true
 
-    // The "ksp" configuration, applied to every compilations.
+    // The "ksp" configuration, applied to every compilation.
     private val configurationForAll = project.configurations.create(PREFIX).apply {
         isCanBeConsumed = false
         isCanBeResolved = false
@@ -30,12 +30,11 @@ class KspConfigurations(private val project: Project) {
     }
 
     private fun configurationNameOf(vararg parts: String): String {
-        return parts.joinToString("") {
-            it.replaceFirstChar { it.uppercase() }
+        return parts.joinToString("") { part ->
+            part.replaceFirstChar { it.uppercase() }
         }.replaceFirstChar { it.lowercase() }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun createConfiguration(
         name: String,
         readableSetName: String,
@@ -61,13 +60,13 @@ class KspConfigurations(private val project: Project) {
 
     private fun getKotlinConfigurationName(compilation: KotlinCompilation<*>, sourceSet: KotlinSourceSet): String {
         val isMain = compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
-        val isDefault = sourceSet.name == compilation.defaultSourceSetName && compilation !is KotlinCommonCompilation
+        val isDefault = sourceSet.name == compilation.defaultSourceSet.name && compilation !is KotlinCommonCompilation
         // Note: on single-platform, target name is conveniently set to "".
         val name = if (isMain && isDefault) {
             // For js(IR), js(LEGACY), the target "js" is created.
             //
             // When js(BOTH) is used, target "jsLegacy" and "jsIr" are created.
-            // Both targets share the same source set. Therefore configurations other than main compilation
+            // Both targets share the same source set. Therefore, configurations other than main compilation
             // are shared. E.g., "kspJsTest".
             // For simplicity and consistency, let's not distinguish them.
             when (val targetName = compilation.target.name) {
@@ -75,7 +74,7 @@ class KspConfigurations(private val project: Project) {
                 else -> targetName
             }
         } else if (compilation is KotlinCommonCompilation) {
-            sourceSet.name + compilation.target.name.capitalize()
+            sourceSet.name + compilation.target.name.replaceFirstChar(Char::uppercaseChar)
         } else {
             sourceSet.name
         }

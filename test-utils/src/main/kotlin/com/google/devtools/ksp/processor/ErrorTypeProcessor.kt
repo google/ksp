@@ -36,8 +36,8 @@ class ErrorTypeProcessor : AbstractTestProcessor() {
             as KSPropertyDeclaration
         val errorInComponent = classC.declarations.single { it.simpleName.asString() == "errorInComponent" }
             as KSPropertyDeclaration
-        result.add(errorAtTop.type.resolve().print() ?: "")
-        result.add(errorInComponent.type.resolve().print() ?: "")
+        result.add(errorAtTop.type.resolve().print())
+        result.add(errorInComponent.type.resolve().print())
         errorInComponent.type.resolve().arguments.forEach { result.add(it.type!!.resolve().print()) }
         result.add(
             "errorInComponent is assignable from errorAtTop: ${

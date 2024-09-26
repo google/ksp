@@ -43,9 +43,9 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
             file.declarations.forEach { it.accept(this, Unit) }
         }
 
-        override fun visitClassDeclaration(type: KSClassDeclaration, data: Unit) {
-            results.add("${type.simpleName.asString()}:${type.isCompanionObject}")
-            type.declarations.forEach { it.accept(this, Unit) }
+        override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+            results.add("${classDeclaration.simpleName.asString()}:${classDeclaration.isCompanionObject}")
+            classDeclaration.declarations.forEach { it.accept(this, Unit) }
         }
     }
 }

@@ -44,7 +44,6 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
@@ -120,12 +119,15 @@ import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 import java.nio.file.Path
 
+@Suppress("UnstableApiUsage")
 class KotlinSymbolProcessing(
     val kspConfig: KSPConfig,
     val symbolProcessorProviders: List<SymbolProcessorProvider>,
     val logger: KSPLogger
 ) {
-    enum class ExitCode(code: Int) {
+    enum class ExitCode(
+        @Suppress("UNUSED_PARAMETER") code: Int
+    ) {
         OK(0),
 
         // Whenever there are some error messages.
@@ -154,10 +156,10 @@ class KotlinSymbolProcessing(
                 KotlinCoreApplicationEnvironmentMode.Production
             )
 
-        val application: Application = kotlinCoreProjectEnvironment.environment.application
         val project: MockProject = kotlinCoreProjectEnvironment.project
         val configLanguageVersionSettings = compilerConfiguration[CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS]
 
+        @Suppress("UnstableApiUsage")
         CoreApplicationEnvironment.registerExtensionPoint(
             project.extensionArea,
             KaResolveExtensionProvider.EP_NAME.name,
@@ -363,7 +365,7 @@ class KotlinSymbolProcessing(
 
         javaFileManager?.initialize(modules, javaFiles)
 
-        return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
+        return ktFiles.map { analyze { KSFileImpl.getCached(it.symbol) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
     }
 
@@ -405,7 +407,7 @@ class KotlinSymbolProcessing(
         // Update Java providers for newly generated source files.
         javaFileManager?.add(javaFiles)
 
-        return ktFiles.map { analyze { KSFileImpl.getCached(it.getFileSymbol()) } } +
+        return ktFiles.map { analyze { KSFileImpl.getCached(it.symbol) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
     }
 
@@ -451,7 +453,8 @@ class KotlinSymbolProcessing(
             val (analysisAPISession, kotlinCoreProjectEnvironment, modules) =
                 createAASession(compilerConfiguration, projectDisposable)
             val project = analysisAPISession.project
-            val kspCoreEnvironment = KSPCoreEnvironment(project as MockProject)
+            // Initializes it
+            KSPCoreEnvironment(project as MockProject)
 
             val psiManager = PsiManager.getInstance(project)
             val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
@@ -494,7 +497,7 @@ class KotlinSymbolProcessing(
             var newKSFiles = allDirtyKSFiles
             val initialDirtySet = allDirtyKSFiles.toSet()
 
-            val targetPlatform = ResolverAAImpl.ktModule.platform
+            val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
                 kspConfig.processorOptions,
                 kspConfig.languageVersion.toKotlinVersion(),
@@ -544,6 +547,8 @@ class KotlinSymbolProcessing(
                     }
                 }
 
+                val allKSFilesPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
+
                 // Drop caches
                 KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
                 KaSessionProvider.getInstance(project).clearCaches()
@@ -562,21 +567,10 @@ class KotlinSymbolProcessing(
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
                 )
-                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be re-created from PSI.
-                allDirtyKSFiles = allDirtyKSFiles.map {
-                    when (it) {
-                        is KSFileImpl -> {
-                            val ktFile = it.ktFileSymbol.psi!! as KtFile
-                            analyze { KSFileImpl.getCached(ktFile.getFileSymbol()) }
-                        }
-
-                        is KSFileJavaImpl -> {
-                            KSFileJavaImpl.getCached(it.psi)
-                        }
-
-                        else -> throw IllegalArgumentException("Unknown KSFile implementation: $it")
-                    }
-                } + newKSFiles
+                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be restored from deferred.
+                // Do not replace `!!` with `?.`. Implementations of KSFile in KSP2 must implement Deferrable and
+                // return non-null.
+                allDirtyKSFiles = allKSFilesPointers.map { it!!.restore() as KSFile } + newKSFiles
                 incrementalContext.registerGeneratedFiles(newKSFiles)
                 codeGenerator.closeFiles()
             }
@@ -640,6 +634,7 @@ fun String?.toKotlinVersion(): KotlinVersion {
 
 // Workaround for ShadowJar's minimize, whose configuration isn't very flexible.
 /* ktlint-disable */
+@Suppress("unused")
 @OptIn(KaImplementationDetail::class)
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     kotlinx.coroutines.debug.internal.DebugProbesImpl::class.java,

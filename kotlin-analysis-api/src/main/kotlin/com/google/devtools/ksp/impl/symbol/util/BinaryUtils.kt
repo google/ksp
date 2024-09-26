@@ -24,12 +24,15 @@ import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.AbstractKSDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.intellij.openapi.vfs.VirtualFile
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
+import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
-import org.jetbrains.kotlin.load.kotlin.VirtualFileKotlinClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.org.objectweb.asm.ClassReader
@@ -45,19 +48,14 @@ data class BinaryClassInfo(
 )
 
 /**
- * Lookup cache for field names names for deserialized classes.
+ * Lookup cache for field names for deserialized classes.
  * To check if a field has backing field, we need to look for binary field names, hence they are cached here.
  */
-object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
-    fun getCached(
-        kotlinJvmBinaryClass: KotlinJvmBinaryClass,
-    ) = getCached(
-        kotlinJvmBinaryClass.classId, (kotlinJvmBinaryClass as? VirtualFileKotlinClass)?.file?.contentsToByteArray()
-    )
-
-    fun getCached(classId: ClassId, virtualFileContent: ByteArray?) = cache.getOrPut(classId) {
+object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo?>() {
+    fun getCached(classId: ClassId, fileManager: KotlinCliJavaFileManagerImpl) = cache.getOrPut(classId) {
         val fieldAccFlags = mutableMapOf<String, Int>()
         val methodAccFlags = mutableMapOf<String, Int>()
+        val virtualFileContent = classId.getFileContent(fileManager) ?: return@getOrPut null
         ClassReader(virtualFileContent).accept(
             object : ClassVisitor(Opcodes.API_VERSION) {
                 override fun visitField(
@@ -68,7 +66,7 @@ object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
                     value: Any?
                 ): FieldVisitor? {
                     if (name != null) {
-                        fieldAccFlags.put(name, access)
+                        fieldAccFlags[name] = access
                     }
                     return null
                 }
@@ -81,7 +79,7 @@ object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo>() {
                     exceptions: Array<out String>?
                 ): MethodVisitor? {
                     if (name != null) {
-                        methodAccFlags.put(name + descriptor, access)
+                        methodAccFlags[name + descriptor] = access
                     }
                     return null
                 }
@@ -163,25 +161,25 @@ internal class DeclarationOrdering(
                     // might be a property without backing field. Use method ordering instead
                     decl.getter?.let { getter ->
                         return@getOrPut findMethodOrder(
-                            ResolverAAImpl.instance!!.getJvmName(getter).toString()
+                            ResolverAAImpl.instance.getJvmName(getter)
                         ) {
-                            ResolverAAImpl.instance!!.mapToJvmSignature(getter)
+                            ResolverAAImpl.instance.mapToJvmSignature(getter)
                         }
                     }
                     decl.setter?.let { setter ->
                         return@getOrPut findMethodOrder(
-                            ResolverAAImpl.instance!!.getJvmName(setter).toString()
+                            ResolverAAImpl.instance.getJvmName(setter)
                         ) {
-                            ResolverAAImpl.instance!!.mapToJvmSignature(setter)
+                            ResolverAAImpl.instance.mapToJvmSignature(setter)
                         }
                     }
                     orderProvider.next(decl)
                 }
                 is KSFunctionDeclarationImpl -> {
                     findMethodOrder(
-                        ResolverAAImpl.instance!!.getJvmName(decl).toString()
+                        ResolverAAImpl.instance.getJvmName(decl)
                     ) {
-                        ResolverAAImpl.instance!!.mapToJvmSignature(decl).toString()
+                        ResolverAAImpl.instance.mapToJvmSignature(decl).toString()
                     }
                 }
                 else -> orderProvider.nextIgnoreSealed()
@@ -232,7 +230,7 @@ internal class DeclarationOrdering(
     ): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
         methodOrdering.getOrPut(name.asString()) {
             mutableMapOf()
-        }.put(desc, orderProvider.next(name))
+        }[desc] = orderProvider.next(name)
         return null
     }
 
@@ -258,7 +256,7 @@ internal class DeclarationOrdering(
         /**
          * Returns the next available order value.
          *
-         * @param ref Used for logging if the data is sealed and we shouldn't provide a new order.
+         * @param ref Used for logging if the data is sealed, and we shouldn't provide a new order.
          */
         fun next(ref: Any): Int {
             check(!sealed || !STRICT_MODE) {
@@ -283,3 +281,12 @@ internal class DeclarationOrdering(
         var STRICT_MODE = false
     }
 }
+
+// Expensive; Use with caution.
+internal fun ClassId.getFileContent(fileManager: KotlinCliJavaFileManagerImpl): ByteArray? =
+    getVirtualFile(fileManager)?.contentsToByteArray()
+
+internal fun ClassId.getVirtualFile(fileManager: KotlinCliJavaFileManagerImpl): VirtualFile? =
+    analyze {
+        (fileManager.findClass(this@getVirtualFile, analysisScope) as? JavaClassImpl)?.virtualFile
+    }
