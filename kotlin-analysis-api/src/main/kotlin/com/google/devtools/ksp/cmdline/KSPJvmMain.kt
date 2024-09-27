@@ -28,8 +28,8 @@ internal fun printHelpMsg(optionsList: String) {
     println(optionsList)
     println("where:")
     println(" * is required")
-    println(" List is colon separated. E.g., arg1:arg2:arg3")
-    println(" Map is in the form key1=value1:key2=value2")
+    println(" List is <path-separator> separated. E.g., arg1:arg2:arg3 on Linux/Mac, or arg1;arg2;arg3 on Windows")
+    println(" Map is in the form key1=value1:key2=value2 on Linux/Mac or key1=value1;key2=value2 on Windows")
 }
 
 internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSPConfig, List<String>>) {

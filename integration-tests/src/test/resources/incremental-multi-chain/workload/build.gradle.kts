@@ -19,6 +19,6 @@ dependencies {
     ksp(project(":processors"))
 }
 
-tasks.named<JavaExec>("run") {
-    mainClass.set("MainKt")
+application {
+    mainClass = "MainKt"
 }

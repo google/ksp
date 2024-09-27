@@ -77,7 +77,7 @@ class OnErrorIT(useKSP2: Boolean) {
 
     @Test
     fun testCreateTwice() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
         // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
@@ -97,7 +97,7 @@ class OnErrorIT(useKSP2: Boolean) {
 
     @Test
     fun testCreateTwiceNotOkOnError() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
         File(project.root, "gradle.properties").appendText("\nksp.return.ok.on.error=false")

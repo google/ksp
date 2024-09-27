@@ -36,6 +36,8 @@
 // test.TestJava JAVA
 // symbols from package testlib
 // testlib.TestJavaLib JAVA_LIB
+// symbols from package main.nested
+// main.nested.MainAnotherJavaClass JAVA
 // END
 
 // MODULE: lib1
@@ -113,3 +115,12 @@ public class L {
 // FILE: test/Test.java
 package test;
 class TestJava {}
+
+// FILE: main/nested/MainAnotherJavaClass.java
+package main.nested;
+public class MainAnotherJavaClass {
+    public MainNestedJavaClass() {}
+    private String javaFieldInMain;
+    private void javaMethodInMain() {
+    }
+}

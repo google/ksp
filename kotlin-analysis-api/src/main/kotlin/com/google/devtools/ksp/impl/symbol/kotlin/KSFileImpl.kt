@@ -93,12 +93,9 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
     }
 
     override fun defer(): Restorable {
-        val psi = this.psi
+        val ptr = analyze { ktFileSymbol.createPointer() }
         return Restorable {
-            when (psi) {
-                is KtFile -> analyze { getCached(psi.symbol) }
-                else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
-            }
+            analyze { getCached(ptr.restoreSymbol() as KaFileSymbol) }
         }
     }
 }

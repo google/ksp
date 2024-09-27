@@ -14,30 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.gradle.jvm.tasks.Jar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-plugins {
-    kotlin("jvm") version "1.6.10"
-    application
+// TEST PROCESSOR: ImplicitPropertyAccessorProcessor
+// EXPECTED:
+// privateGetterVal.getter(): Int
+// privateGetterVar.getter(): String
+// privateGetterVar.setter()(value: String)
+// val1.getter(): Int
+// var2.getter(): String
+// var2.setter()(value: String)
+// END
+// MODULE: lib
+// FILE: lib/Bar.kt
+package lib
+
+class Bar {
+    val val1: Int = 0
+    var var2: String = ""
 }
-repositories {
-    mavenCentral()
-}
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("compiler"))
-}
-application {
-    applicationName = "BenchRunner"
-    group = "com.google.devtools.ksp"
-    mainClass = "com.google.devtools.ksp.BenchRunner"
-}
-tasks.withType<KotlinCompile> {
-    compilerOptions.jvmTarget = "1.8"
-}
-tasks.withType<Jar> {
-    manifest {
-        attributes(mapOf("Main-Class" to application.mainClass.get()))
-    }
+// MODULE: main(lib)
+// FILE: Foo.kt
+
+class Foo {
+    val privateGetterVal: Int
+        private get
+
+    var privateGetterVar: String
+        set
+        private get
 }

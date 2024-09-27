@@ -105,7 +105,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         // Value changes
         func2Dirty.forEach { (src, _) ->
             File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Int = 1")
-            gradleRunner.withArguments("assemble", "--no-configuration-cache").withDebug(true).build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").build().let { result ->
                 // Value changes should not result in re-processing.
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
@@ -152,7 +152,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
         // Value changes
         prop2Dirty.forEach { (src, _) ->
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Int = 1")
-            gradleRunner.withArguments("assemble", "--no-configuration-cache").withDebug(true).build().let { result ->
+            gradleRunner.withArguments("assemble", "--no-configuration-cache").build().let { result ->
                 // Value changes should not result in re-processing.
                 Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
@@ -173,7 +173,7 @@ class IncrementalCPIT(val useKSP2: Boolean) {
     }
 
     private fun toggleFlags(vararg extras: String) {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withDebug(true)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
             *extras,

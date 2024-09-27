@@ -84,7 +84,9 @@ private fun JavaExec.configureCommonKtlintParams(
         it.exclude("**/.*/**")
         it.exclude("**/resources/**")
     }
-    val outputFile = project.buildDir.resolve("reports/ktlint/ktlint-checkstyle-report.xml").toRelativeString(project.projectDir)
+    val outputFile = project.layout.buildDirectory.file("reports/ktlint/ktlint-checkstyle-report.xml")
+        .map{ it.asFile.toRelativeString(project.layout.projectDirectory.asFile) }
+        .get()
     inputs.files(ktlintInputFiles).withPropertyName("ktlintInputFiles").withPathSensitivity(PathSensitivity.RELATIVE)
     classpath = project.getKtlintConfiguration()
     mainClass.set("com.pinterest.ktlint.Main")

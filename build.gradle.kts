@@ -1,5 +1,8 @@
 import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -25,7 +28,7 @@ plugins {
 
     // Adding plugins used in multiple places to the classpath for centralized version control
     id("com.github.johnrengelman.shadow") version "7.1.2" apply false
-    id("org.jetbrains.dokka") version "1.8.10" apply false
+    id("org.jetbrains.dokka") version "1.9.20" apply false
 }
 
 nexusPublishing {
@@ -64,7 +67,7 @@ subprojects {
             }
             maven {
                 name = "test"
-                url = uri("${rootProject.buildDir}/repos/test")
+                url = uri("${rootProject.layout.buildDirectory.get().asFile}/repos/test")
             }
         }
         publishExtension.publications.whenObjectAdded {
@@ -94,32 +97,24 @@ subprojects {
         }
     }
 
-    tasks.withType<JavaCompile>().configureEach {
-        sourceCompatibility = JavaVersion.VERSION_1_8.toString()
-        targetCompatibility = JavaVersion.VERSION_1_8.toString()
-        javaCompiler.set(
-            javaToolchains.compilerFor {
-                languageVersion.set(JavaLanguageVersion.of(17))
-            }
-        )
-    }
+    val compileJavaVersion = JavaLanguageVersion.of(17)
 
-    tasks.withType<Test>().configureEach {
-        // Java 11 is required to run tests
-        javaLauncher.set(
-            javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(11))
+    pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        configure<JavaPluginExtension> {
+            toolchain.languageVersion.set(compileJavaVersion)
+            sourceCompatibility = JavaVersion.VERSION_11
+            targetCompatibility = JavaVersion.VERSION_11
+        }
+        configure<KotlinJvmProjectExtension> {
+            compilerOptions {
+                jvmTarget = JvmTarget.JVM_11
+                languageVersion.set(KotlinVersion.KOTLIN_1_9)
+                apiVersion.set(languageVersion)
             }
-        )
-    }
-
-    tasks.withType<JavaExec>().configureEach {
-        // Java 11 is required to run
-        javaLauncher.set(
-            javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(17))
+            jvmToolchain {
+                languageVersion = compileJavaVersion
             }
-        )
+        }
     }
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

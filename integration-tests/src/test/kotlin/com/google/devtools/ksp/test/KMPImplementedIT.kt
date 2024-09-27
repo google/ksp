@@ -14,7 +14,7 @@ import java.io.File
 import java.util.jar.*
 
 @RunWith(Parameterized::class)
-class KMPImplementedIT(useKSP2: Boolean) {
+class KMPImplementedIT(val useKSP2: Boolean) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("kmp", useKSP2 = useKSP2)
@@ -130,6 +130,33 @@ class KMPImplementedIT(useKSP2: Boolean) {
             Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
             checkExecutionOptimizations(it.output)
         }
+    }
+
+    @Test
+    fun testDefaultArgumentsImpl() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        // FIXME: KSP1
+        Assume.assumeTrue(useKSP2)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val newSrc = File(project.root, "workload-wasm/src/wasmJsMain/kotlin/com/example/AnnoOnProperty.kt")
+        newSrc.appendText(
+            """
+@Target(AnnotationTarget.PROPERTY)
+annotation class OnProperty
+
+class AnnoOnProperty {
+    @OnProperty
+    val value: Int = 0
+}
+            """.trimIndent()
+        )
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-wasm:build"
+        ).build()
     }
 
     @Test

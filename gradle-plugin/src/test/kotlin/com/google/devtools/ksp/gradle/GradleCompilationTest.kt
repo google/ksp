@@ -186,7 +186,6 @@ class GradleCompilationTest {
         testRule.addProvider(Provider::class)
 
         testRule.runner()
-            .withDebug(true)
             .withArguments("app:assemble")
             .forwardOutput()
             .build()
@@ -347,7 +346,7 @@ class GradleCompilationTest {
                  }
             """.trimIndent()
         )
-        val result = testRule.runner().withDebug(true).withArguments(":app:assembleDebug").build()
+        val result = testRule.runner().withArguments(":app:assembleDebug").build()
         val pattern1 = Regex.escape("apoption=room.schemaLocation=")
         val pattern2 = Regex.escape(testRule.appModule.moduleRoot.resolve("schemas-kspDebugKotlin").path)
         val pattern3 = Regex.escape("commandLine=[")
@@ -386,6 +385,19 @@ class GradleCompilationTest {
         val result = testRule.runner().withArguments(":app:assemble").build()
         assertThat(result.output).contains("HAS LIBRARY: ")
         assertThat(result.output).doesNotContain("app/build/generated/ksp/main/classes")
+    }
+
+    @Test
+    fun changingKsp2AtRuntime() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.buildFileAdditions.add(
+            """
+                @OptIn(com.google.devtools.ksp.KspExperimental::class)
+                ksp { useKsp2.set(true) }
+            """.trimIndent()
+        )
+
+        testRule.runner().withArguments().build()
     }
 
     /**

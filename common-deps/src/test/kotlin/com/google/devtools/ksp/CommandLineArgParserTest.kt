@@ -9,9 +9,10 @@ import java.io.File
 class CommandLineArgParserTest {
     @Test
     fun testJvm() {
+        val sep = File.pathSeparator
         val args = arrayListOf<String>(
             "-module-name=MyModule",
-            "-source-roots", "/path/to/A:/path/to/B",
+            "-source-roots", "/path/to/A$sep/path/to/B",
             "/path/to/processorA.jar",
             "-kotlin-output-dir=/path/to/output/kotlin",
             "-java-output-dir=/path/to/output/java",
@@ -23,7 +24,7 @@ class CommandLineArgParserTest {
             "-project-base-dir", "/path/to/base",
             "-output-base-dir", "/path/to/output",
             "-caches-dir", "/path/to/caches",
-            "/path/to/processorB.jar:rel/to/processorC.jar",
+            "/path/to/processorB.jar${sep}rel/to/processorC.jar",
         ).toTypedArray()
         val (config, classpath) = kspJvmArgParser(args)
         Assert.assertEquals(
