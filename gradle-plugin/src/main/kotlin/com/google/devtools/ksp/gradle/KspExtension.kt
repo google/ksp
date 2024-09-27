@@ -71,6 +71,7 @@ abstract class KspExtension @Inject constructor(project: Project) {
     // Instruct KSP to pickup sources from compile tasks, instead of source sets.
     // Note that it depends on behaviors of other Gradle plugins, that may bring surprises and can be hard to debug.
     // Use your discretion.
+    @Deprecated("This feature is broken in recent versions of Gradle and is no longer supported in KSP2.")
     open var allowSourcesFromOtherPlugins: Boolean = false
 
     // Treat all warning as errors.

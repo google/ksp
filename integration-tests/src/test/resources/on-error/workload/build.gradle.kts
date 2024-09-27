@@ -19,5 +19,5 @@ dependencies {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions.freeCompilerArgs += "-opt-in=MyOptIn"
+    compilerOptions.freeCompilerArgs.add("-opt-in=MyOptIn")
 }

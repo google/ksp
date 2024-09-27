@@ -27,7 +27,7 @@ class TemporaryTestProject(
         appendProperty("kspVersion=$kspVersion")
         appendProperty("agpVersion=$agpVersion")
         appendProperty("testRepo=$testRepo")
-        appendProperty("org.gradle.unsafe.configuration-cache=true")
+        appendProperty("org.gradle.configuration-cache=true")
         appendProperty("kotlin.jvm.target.validation.mode=warning")
         appendProperty("ksp.incremental.log=true")
         appendProperty("android.useAndroidX=true")

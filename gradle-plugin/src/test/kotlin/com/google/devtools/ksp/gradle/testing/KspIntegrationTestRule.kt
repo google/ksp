@@ -125,6 +125,7 @@ class KspIntegrationTestRule(
         testProject.appModule.buildFileAdditions.add(
             """
             android {
+                namespace = "com.example.kspandroidtestapp"
                 compileSdkVersion(31)
                 defaultConfig {
                     minSdkVersion(24)
@@ -138,9 +139,7 @@ class KspIntegrationTestRule(
             }.writeText(
                 """
             <?xml version="1.0" encoding="utf-8"?>
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="com.example.kspandroidtestapp">
-            </manifest>
+            <manifest />
                 """.trimIndent()
             )
     }
