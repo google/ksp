@@ -12,7 +12,7 @@ dependencies {
 android {
     namespace = "com.example.kspandroidtestapp"
     defaultConfig {
-        minSdkVersion(24)
+        minSdk = 24
     }
     compileSdk = 34
     buildFeatures { 
