@@ -22,6 +22,7 @@ dependencies {
 }
 
 android {
+    namespace = "com.example.myapplication"
     compileSdkVersion(34)
     defaultConfig {
         applicationId = "org.gradle.kotlin.dsl.samples.androidstudio"
