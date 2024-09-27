@@ -399,4 +399,19 @@ class GradleCompilationTest {
 
         testRule.runner().withArguments().build()
     }
+
+    /**
+     * Regression test for b/362279380
+     */
+    @Test
+    fun androidGradlePluginBuiltInKotlin() {
+        testRule.setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport = true)
+        testRule.appModule.dependencies.addAll(
+            listOf(
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
+                artifact(configuration = "kspTest", "androidx.room:room-compiler:2.4.2")
+            )
+        )
+        testRule.runner().withArguments(":app:assembleDebug").build()
+    }
 }
