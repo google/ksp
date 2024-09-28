@@ -181,10 +181,10 @@ class SourceSetConfigurationsTest {
                         val variantData = baseVariant::class.java.getMethod("getVariantData").invoke(baseVariant)
                             as com.android.build.gradle.internal.variant.BaseVariantData
                         variantData.extraGeneratedSourceFoldersOnlyInModel.forEach {
-                            println("SRC:" + it.relativeTo(buildDir).path)
+                            println("SRC:" + it.relativeTo(layout.buildDirectory.get().asFile).path)
                         }
                         variantData.allPreJavacGeneratedBytecode.forEach {
-                            println("BYTE:" + it.relativeTo(buildDir).path)
+                            println("BYTE:" + it.relativeTo(layout.buildDirectory.get().asFile).path)
                         }
                     }
                 }
@@ -196,7 +196,7 @@ class SourceSetConfigurationsTest {
             }
             """.trimIndent()
         )
-        val result = testRule.runner().withDebug(true).withArguments(":app:printSources").build()
+        val result = testRule.runner().withArguments(":app:printSources").build()
 
         data class SourceFolder(
             val variantName: String,

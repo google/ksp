@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.devtools.ksp.RelativizingPathProvider
 import java.io.ByteArrayOutputStream
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
@@ -11,8 +12,8 @@ val kotlinBaseVersion: String by project
 val junitVersion: String by project
 val junit5Version: String by project
 val junitPlatformVersion: String by project
-val libsForTesting by configurations.creating
-val libsForTestingCommon by configurations.creating
+val libsForTesting: Configuration by configurations.creating
+val libsForTestingCommon: Configuration by configurations.creating
 
 val aaKotlinBaseVersion: String by project
 val aaIntellijVersion: String by project
@@ -31,9 +32,9 @@ plugins {
     signing
 }
 
-val depSourceJars by configurations.creating
-val depJarsForCheck by configurations.creating
-val compilerJar by configurations.creating
+val depSourceJars: Configuration by configurations.creating
+val depJarsForCheck: Configuration by configurations.creating
+val compilerJar: Configuration by configurations.creating
 
 dependencies {
     listOf(
@@ -132,11 +133,11 @@ sourceSets.main {
     java.srcDirs("src/main/kotlin")
 }
 
-fun Project.javaPluginConvention(): JavaPluginConvention = the()
-val JavaPluginConvention.testSourceSet: SourceSet
+fun Project.javaPluginExtension(): JavaPluginExtension = the()
+val JavaPluginExtension.testSourceSet: SourceSet
     get() = sourceSets.getByName("test")
 val Project.testSourceSet: SourceSet
-    get() = javaPluginConvention().testSourceSet
+    get() = javaPluginExtension().testSourceSet
 
 repositories {
     flatDir {
@@ -150,7 +151,7 @@ tasks.withType<org.gradle.jvm.tasks.Jar> {
     archiveClassifier.set("real")
 }
 
-tasks.withType<ShadowJar>() {
+tasks.withType<ShadowJar>().configureEach {
     dependencies {
         exclude(project(":api"))
     }
@@ -253,23 +254,23 @@ kotlin {
     }
 }
 
-tasks.register<Copy>("CopyLibsForTesting") {
-    from(configurations.get("libsForTesting"))
+val copyLibsForTesting by tasks.registering(Copy::class) {
+    from(configurations["libsForTesting"])
     into("dist/kotlinc/lib")
     val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
-tasks.register<Copy>("CopyLibsForTestingCommon") {
-    from(configurations.get("libsForTestingCommon"))
+val copyLibsForTestingCommon by tasks.registering(Copy::class) {
+    from(configurations["libsForTestingCommon"])
     into("dist/common")
     val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
 tasks.test {
-    dependsOn("CopyLibsForTesting")
-    dependsOn("CopyLibsForTestingCommon")
+    dependsOn(copyLibsForTesting)
+    dependsOn(copyLibsForTestingCommon)
     maxHeapSize = "2g"
 
     useJUnitPlatform()
@@ -282,16 +283,10 @@ tasks.test {
         events("passed", "skipped", "failed")
     }
 
-    lateinit var tempTestDir: File
-    doFirst {
-        val ideaHomeDir = buildDir.resolve("tmp/ideaHome").takeIf { it.exists() || it.mkdirs() }!!
-        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("idea.home.path", ideaHomeDir))
-
-        tempTestDir = createTempDir()
-        jvmArgumentProviders.add(com.google.devtools.ksp.RelativizingPathProvider("java.io.tmpdir", tempTestDir))
-    }
-
-    doLast {
-        delete(tempTestDir)
-    }
+    val ideaHomeDir = layout.buildDirectory.dir("tmp/ideaHome")
+        .get()
+        .asFile
+        .apply { if (!exists()) mkdirs() }
+    jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
+    jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", temporaryDir))
 }

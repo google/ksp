@@ -29,7 +29,7 @@ ksp {
 val compileKotlin: AbstractKotlinCompileTool<*> by tasks
 tasks.register<Copy>("copyG") {
     from("G.kt")
-    into(File(buildDir, "generatedSources").apply { mkdirs() })
+    into(layout.buildDirectory.file("generatedSources"))
 }.let {
     // Magic. `map` creates a provider to propagate task dependency.
     compileKotlin.setSource(it.map { it.destinationDir })

@@ -20,5 +20,5 @@ dependencies {
 }
 
 application {
-    mainClassName = "MainKt"
+    mainClass = "MainKt"
 }

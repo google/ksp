@@ -89,7 +89,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
-            File(project.project.buildDir, "generated/ksp/$target/$sourceSetName")
+            project.layout.buildDirectory.file("generated/ksp/$target/$sourceSetName").get().asFile
 
         @JvmStatic
         fun getKspClassOutputDir(project: Project, sourceSetName: String, target: String) =
@@ -337,6 +337,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourceOutputDir
             )
 
+            @Suppress("DEPRECATION")
             if (kspExtension.allowSourcesFromOtherPlugins) {
                 val kotlinCompileTask = kotlinCompileProvider.get()
                 fun setSource(source: FileCollection) {

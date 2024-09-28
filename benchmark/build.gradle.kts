@@ -31,13 +31,13 @@ dependencies {
 application {
     applicationName = "BenchRunner"
     group = "com.google.devtools.ksp"
-    mainClassName = "com.google.devtools.ksp.BenchRunner"
+    mainClass = "com.google.devtools.ksp.BenchRunner"
 }
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    compilerOptions.jvmTarget = "1.8"
 }
 tasks.withType<Jar> {
     manifest {
-        attributes(mapOf("Main-Class" to application.mainClassName))
+        attributes(mapOf("Main-Class" to application.mainClass.get()))
     }
 }
