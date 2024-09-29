@@ -1,3 +1,5 @@
 TestProcessorProvider
 ValidateProcessorProvider
 ErrorProcessorProvider
+TriggerExceptionProvider
+

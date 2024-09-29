@@ -109,6 +109,43 @@ class KMPImplementedIT(val useKSP2: Boolean) {
     }
 
     @Test
+    fun triggerException() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        val path = "workload/src/commonMain/kotlin/com/example/FooBar.kt"
+        val file = File(project.root, path)
+
+        fun setup(shouldFail: Boolean) {
+            project.restore(path)
+
+            // Add an annotation that'll will make the processor trigger an exception.
+            if (shouldFail) {
+                file.writeText(
+                    file.readText()
+                        .replace("//@TriggerExceptionAnnotation", "@TriggerExceptionAnnotation")
+                )
+            }
+        }
+
+        // Start the kotlin daemon?
+        setup(shouldFail = false)
+        gradleRunner.withArguments("compileKotlinJvm").build()
+
+        // Make the processor fail
+        setup(shouldFail = true)
+        gradleRunner.withArguments("compileKotlinJvm").buildAndFail()
+
+        // Triggers the caching issue
+        setup(shouldFail = false)
+        gradleRunner.withArguments("compileKotlinJvm")
+            .buildAndFail().let { result ->
+                println("OUTPUT START")
+                println(result.output)
+                Assert.assertTrue(result.output.contains("id-to-file.tab] is already registered"))
+            }
+    }
+
+    @Test
     fun testWasm() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
