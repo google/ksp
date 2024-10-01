@@ -224,14 +224,16 @@ tasks {
         from(copyDeps)
         filter { it.replaceWithKsp() }
     }
-
-    withType<PublishToMavenRepository> { dependsOn("signShadowPublication") }
-    withType<PublishToMavenLocal> { dependsOn("signShadowPublication") }
+    val javadocJar by creating(Jar::class) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveClassifier.set("javadoc")
+        from(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+    }
 
     publish {
         dependsOn(shadowJar)
         dependsOn(sourcesJar)
-        dependsOn(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+        dependsOn(javadocJar)
     }
 }
 
@@ -239,7 +241,7 @@ publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-aa-embeddable"
-            artifact(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+            artifact(tasks["javadocJar"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["shadowJar"])
             pom {
