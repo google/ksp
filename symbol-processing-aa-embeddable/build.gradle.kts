@@ -226,6 +226,7 @@ tasks {
     }
 
     publish {
+        dependsOn("signShadowPublication")
         dependsOn(shadowJar)
         dependsOn(sourcesJar)
         dependsOn(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
