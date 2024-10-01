@@ -225,8 +225,10 @@ tasks {
         filter { it.replaceWithKsp() }
     }
 
+    withType<PublishToMavenRepository> { dependsOn("signShadowPublication") }
+    withType<PublishToMavenLocal> { dependsOn("signShadowPublication") }
+
     publish {
-        dependsOn("signShadowPublication")
         dependsOn(shadowJar)
         dependsOn(sourcesJar)
         dependsOn(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
