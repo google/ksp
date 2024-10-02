@@ -310,6 +310,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
                 }?.let {
                     resolver.tearDown()
+                    incrementalContext.closeFiles()
                     return it
                 }
                 if (logger.hasError()) {
@@ -336,9 +337,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                     processor.onError()
                 }?.let {
                     resolver.tearDown()
+                    incrementalContext.closeFiles()
                     return it
                 }
             }
+            incrementalContext.closeFiles()
         } else {
             if (finished) {
                 processors.forEach { processor ->
@@ -346,6 +349,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         processor.finish()
                     }?.let {
                         resolver.tearDown()
+                        incrementalContext.closeFiles()
                         return it
                     }
                 }
@@ -364,6 +368,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         codeGenerator.outputs,
                         codeGenerator.sourceToOutputs
                     )
+                } else {
+                    incrementalContext.closeFiles()
                 }
             }
         }

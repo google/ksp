@@ -212,13 +212,13 @@ abstract class IncrementalContextBase(
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
     fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
         if (!isIncremental) {
-            return ksFiles
+            return@closeFilesOnException ksFiles
         }
 
         if (rebuild) {
             collectDefinedSymbols(ksFiles)
             logDirtyFiles(ksFiles, ksFiles)
-            return ksFiles
+            return@closeFilesOnException ksFiles
         }
 
         val newSyms = mutableSetOf<LookupSymbolWrapper>()
@@ -286,7 +286,7 @@ abstract class IncrementalContextBase(
             dirtyFilesByNewSyms,
             dirtyFilesBySealed
         )
-        return ksFiles.filter { it.relativeFile in dirtyFiles }
+        return@closeFilesOnException ksFiles.filter { it.relativeFile in dirtyFiles }
     }
 
     // Loop detection isn't needed because of overwritten checks in CodeGeneratorImpl
@@ -404,17 +404,21 @@ abstract class IncrementalContextBase(
         collectDefinedSymbols(newFiles)
     }
 
-    private inline fun <T> closeFilesOnException(f: () -> T): T {
+    fun <T> closeFilesOnException(f: () -> T): T {
         try {
             return f()
         } catch (e: Exception) {
-            symbolsMap.flush()
-            sealedMap.flush()
-            symbolLookupCache.close()
-            classLookupCache.close()
-            sourceToOutputsMap.flush()
+            closeFiles()
             throw e
         }
+    }
+
+    fun closeFiles() {
+        symbolsMap.flush()
+        sealedMap.flush()
+        symbolLookupCache.close()
+        classLookupCache.close()
+        sourceToOutputsMap.flush()
     }
 
     // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
@@ -424,7 +428,7 @@ abstract class IncrementalContextBase(
         sourceToOutputs: Map<File, Set<File>>,
     ) = closeFilesOnException {
         if (!isIncremental)
-            return
+            return@closeFilesOnException
 
         cachesUpToDateFile.delete()
         assert(!cachesUpToDateFile.exists())
