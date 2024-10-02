@@ -548,9 +548,11 @@ class KotlinSymbolProcessing(
                 ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
 
                 processors.forEach {
-                    deferredSymbols[it] =
-                        it.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
-                            .filterIsInstance<Deferrable>().mapNotNull(Deferrable::defer)
+                    incrementalContext.closeFilesOnException {
+                        deferredSymbols[it] =
+                            it.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
+                                .filterIsInstance<Deferrable>().mapNotNull(Deferrable::defer)
+                    }
                     if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
                         deferredSymbols.remove(it)
                     }
@@ -591,6 +593,8 @@ class KotlinSymbolProcessing(
                     codeGenerator.outputs,
                     codeGenerator.sourceToOutputs
                 )
+            } else {
+                incrementalContext.closeFiles()
             }
 
             dropCaches()
