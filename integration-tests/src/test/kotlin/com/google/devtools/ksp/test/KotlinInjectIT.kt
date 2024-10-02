@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,14 +42,9 @@ class KotlinInjectIT(val useKSP2: Boolean) {
         setup(shouldFail = true)
         gradleRunner.withArguments("compileKotlinJvm").buildAndFail()
 
-        // Triggers the caching issue
+        // Should not trigger the caching issue
         setup(shouldFail = false)
-        gradleRunner.withArguments("compileKotlinJvm")
-            .buildAndFail().let { result ->
-                println("OUTPUT START")
-                println(result.output)
-                Assert.assertTrue(result.output.contains("id-to-file.tab] is already registered"))
-            }
+        gradleRunner.withArguments("compileKotlinJvm").build()
     }
 
     companion object {
