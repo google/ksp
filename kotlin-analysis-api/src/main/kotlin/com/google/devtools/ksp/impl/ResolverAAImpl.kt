@@ -759,17 +759,10 @@ class ResolverAAImpl(
             return if (this is KSTypeImpl) {
                 analyze {
                     val decl = (this@toSignature.declaration as? KSClassDeclaration)
-                    // special handling for single parameter inline value class
-                    // unwrap the underlying for jvm signature.
-                    if (
-                        decl != null &&
-                        (decl.modifiers.contains(Modifier.INLINE) || decl.modifiers.contains(Modifier.VALUE)) &&
-                        decl.primaryConstructor?.parameters?.size == 1
-                    ) {
-                        decl.primaryConstructor!!.parameters.single().type.resolve().toSignature()
-                    } else {
-                        this@toSignature.type.toSignature()
-                    }
+                    // Force inline value class to be unwrapped.
+                    // Do not remove until AA fixes this.
+                    decl?.primaryConstructor
+                    type.toSignature()
                 }
             } else {
                 "<ERROR>"
@@ -778,7 +771,7 @@ class ResolverAAImpl(
 
         return when (ksAnnotated) {
             is KSClassDeclaration -> analyze {
-                (ksAnnotated.asStarProjectedType() as KSTypeImpl).type.mapToJvmType().descriptor
+                (ksAnnotated.asStarProjectedType() as KSTypeImpl).toSignature()
             }
             is KSFunctionDeclarationImpl -> {
                 analyze {
