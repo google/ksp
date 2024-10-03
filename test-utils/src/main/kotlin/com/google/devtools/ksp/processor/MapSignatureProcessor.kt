@@ -38,16 +38,16 @@ class MapSignatureProcessor : AbstractTestProcessor() {
             }.forEach { subject ->
                 result.add(resolver.mapToJvmSignature(subject)!!)
                 subject.declarations.forEach {
+                    var returnTypeSignature: String? = null
                     if (it is KSFunctionDeclaration) {
                         val decl = it.returnType!!.resolve().declaration
-                        println("before: ${it.simpleName.asString()}: ${resolver.mapToJvmSignature(decl)}")
+                        returnTypeSignature = resolver.mapToJvmSignature(decl)
                     }
                     result.add(it.simpleName.asString() + ": " + resolver.mapToJvmSignature(it))
                     if (it is KSFunctionDeclaration) {
                         val decl = it.returnType!!.resolve().declaration
-                        println("after: ${it.simpleName.asString()}: ${resolver.mapToJvmSignature(decl)}")
+                        assert(returnTypeSignature == resolver.mapToJvmSignature(decl))
                     }
-
                 }
             }
         return emptyList()
