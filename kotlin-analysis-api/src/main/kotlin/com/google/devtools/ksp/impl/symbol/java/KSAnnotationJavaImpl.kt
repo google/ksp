@@ -90,9 +90,11 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 )
             }
             val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
-            presentArgs + defaultArguments.filterIndexed { idx, ksValueArgument ->
-                ksValueArgument.name?.asString() !in presentValueArgumentNames &&
-                    annotationConstructor?.valueParameters?.get(idx)?.hasDefaultValue == true
+            presentArgs + defaultArguments.filter { ksValueArgument ->
+                val name = ksValueArgument.name?.asString() ?: return@filter false
+                if (name in presentValueArgumentNames)
+                    return@filter false
+                annotationConstructor?.valueParameters?.any { it.name.asString() == name && it.hasDefaultValue } == true
             }
         }
     }
