@@ -60,8 +60,11 @@ class KSAnnotationResolvedImpl private constructor(
             val annotationClass = annotationApplication.classId?.toKtClassSymbol()
             val annotationConstructor = annotationClass?.memberScope?.constructors?.singleOrNull()
             val params = annotationConstructor?.valueParameters
-            defaultArguments.filterIndexed { idx, arg ->
-                arg.name?.asString() !in presentNames && params?.get(idx)?.hasDefaultValue == true
+            defaultArguments.filter { arg ->
+                val name = arg.name?.asString() ?: return@filter false
+                if (name in presentNames)
+                    return@filter false
+                params?.any { it.name.asString() == name && it.hasDefaultValue } == true
             }
         }
         presentArgs + absentArgs
