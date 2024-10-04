@@ -608,7 +608,11 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
 internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubstitutorBuilder) {
     val unwrappedType = when (context) {
         is KaClassType -> context
-        is KaFlexibleType -> context.lowerBound as? KaClassType ?: return
+        is KaFlexibleType -> {
+            fillInDeepSubstitutor(context.upperBound, substitutorBuilder)
+            fillInDeepSubstitutor(context.lowerBound, substitutorBuilder)
+            return
+        }
         else -> return
     }
     val parameters = unwrappedType.symbol.typeParameters
