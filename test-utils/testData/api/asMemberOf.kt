@@ -18,6 +18,18 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AsMemberOfProcessor
 // EXPECTED:
+// main.Test: MutableIterator<(String..String?)>
+// main.Test: Iterator<(String..String?)>
+// main.Test: MutableIterator<(String..String?)>
+// lib.Test: MutableIterator<(String..String?)>
+// lib.Test: Iterator<(String..String?)>
+// lib.Test: MutableIterator<(String..String?)>
+// main.TestKt: MutableIterator<String>
+// main.TestKt: Iterator<String>
+// main.TestKt: MutableIterator<String>
+// lib.TestKt: MutableIterator<String>
+// lib.TestKt: Iterator<String>
+// lib.TestKt: MutableIterator<String>
 // Child1!!
 // intType: kotlin.Int!!
 // baseTypeArg1: kotlin.Int!!
