@@ -20,9 +20,6 @@
 // EXPECTED:
 // defaultInNested
 // []
-// null
-// null
-// null
 // SomeClass$WithDollarSign
 // Str
 // 42

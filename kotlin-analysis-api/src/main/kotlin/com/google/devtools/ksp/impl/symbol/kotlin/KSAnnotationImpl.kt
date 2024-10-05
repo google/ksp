@@ -20,7 +20,6 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.symbol.*
@@ -31,8 +30,6 @@ import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
-import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -106,15 +103,12 @@ class KSAnnotationImpl private constructor(
                         }
                 } else {
                     symbol.memberScope.constructors.singleOrNull()?.let {
-                        it.valueParameters.map { valueParameterSymbol ->
+                        it.valueParameters.mapNotNull { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
                                     KaBaseNamedAnnotationValue(
                                         valueParameterSymbol.name,
-                                        constantValue
-                                            ?: KaUnsupportedAnnotationValueImpl(
-                                                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-                                            )
+                                        constantValue ?: return@let null
                                     ),
                                     this@KSAnnotationImpl,
                                     Origin.SYNTHETIC
