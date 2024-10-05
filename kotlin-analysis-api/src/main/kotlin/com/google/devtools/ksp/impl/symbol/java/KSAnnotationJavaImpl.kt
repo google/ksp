@@ -40,8 +40,6 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
-import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KaType
@@ -136,7 +134,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                 }
                             }
                     } else {
-                        symbol.valueParameters.map { valueParameterSymbol ->
+                        symbol.valueParameters.mapNotNull { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
                                     KaBaseNamedAnnotationValue(
@@ -145,10 +143,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                         // fallback to unsupported annotation value to indicate such use cases.
                                         // when seeing unsupported annotation value we return `null` for the value.
                                         // which might still be incorrect but there might not be a perfect way.
-                                        constantValue
-                                            ?: KaUnsupportedAnnotationValueImpl(
-                                                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-                                            )
+                                        constantValue ?: return@let null
                                     ),
                                     this@KSAnnotationJavaImpl,
                                     Origin.SYNTHETIC
