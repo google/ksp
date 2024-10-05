@@ -46,7 +46,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 
 class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) :
     KSAnnotation {
@@ -56,9 +55,18 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 
     private val type: KaType by lazy {
-        // TODO: local class annotations?
+        fun PsiClass.fqn(): String? {
+            val parent = containingClass?.fqn()
+                ?: return qualifiedName?.replace('.', '/')
+            if (name == null)
+                return null
+            return "$parent.$name"
+        }
         analyze {
-            buildClassType(ClassId.topLevel(FqName(psi.qualifiedName!!)))
+            val resolved = psi.resolveAnnotationType()
+            val fqn = resolved?.fqn() ?: "__KSP_unresolved_${psi.qualifiedName}"
+            val classId = ClassId.fromString(fqn)
+            buildClassType(classId)
         }
     }
 

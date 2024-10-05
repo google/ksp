@@ -18,12 +18,15 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
+// MyClass: MyAnnotation
 // MyClass: MyAnnotation: stringParam = 2
 // MyClass: MyAnnotation: stringParam2 = 1
 // MyClass: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClass: MyAnnotationInLib
 // MyClass: MyAnnotationInLib: stringParam = 2
 // MyClass: MyAnnotationInLib: stringParam2 = 1
 // MyClass: MyAnnotationInLib: stringArrayParam = [3, 5, 7]
+// MyClassInLib: MyAnnotationInLib
 // MyClassInLib: MyAnnotationInLib: stringParam = 2
 // MyClassInLib: MyAnnotationInLib: stringParam2 = 1
 // MyClassInLib: MyAnnotationInLib: stringArrayParam = [3, 5, 7]

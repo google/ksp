@@ -18,14 +18,16 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
+// MyClass: MyAnnotation
 // MyClass: MyAnnotation: stringParam = 2
 // MyClass: MyAnnotation: stringParam2 = 1
 // MyClass: MyAnnotation: stringArrayParam = [3, 5, 7]
-// MyClass: MyAnnotation: Containing.Nested
+// MyClass: Containing.Nested
+// MyClassInLib: MyAnnotation
 // MyClassInLib: MyAnnotation: stringParam = 2
 // MyClassInLib: MyAnnotation: stringParam2 = 1
 // MyClassInLib: MyAnnotation: stringArrayParam = [3, 5, 7]
-// MyClassInLib: MyAnnotation: Containing.Nested
+// MyClassInLib: Containing.Nested
 // Str
 // 42
 // Foo
