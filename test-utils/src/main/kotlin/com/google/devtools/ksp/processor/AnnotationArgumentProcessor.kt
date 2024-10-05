@@ -29,6 +29,9 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
         listOf("MyClass", "MyClassInLib").forEach { clsName ->
             resolver.getClassDeclarationByName(clsName)?.let { cls ->
                 cls.annotations.forEach() { annotation ->
+                    results.add(
+                        "$clsName: ${annotation.annotationType.resolve().declaration.qualifiedName?.asString()}"
+                    )
                     annotation.arguments.forEach {
                         results.add(
                             "$clsName: ${annotation.shortName.asString()}: ${it.name!!.asString()} = ${it.value}"
