@@ -28,7 +28,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedI
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
-import com.google.devtools.ksp.impl.symbol.util.getFileContent
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -66,9 +65,6 @@ import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
-import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryClassSignatureParser
-import org.jetbrains.kotlin.load.java.structure.impl.classFiles.BinaryJavaAnnotationVisitor
-import org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
@@ -80,7 +76,6 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
-import org.jetbrains.org.objectweb.asm.*
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
@@ -555,34 +550,12 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
                 val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
                     ?: return@let null
-                val fileContent = classId.getFileContent(fileManager) ?: return@let null
-                var defaultValue: JavaAnnotationArgument? = null
-                ClassReader(fileContent).accept(
-                    object : ClassVisitor(Opcodes.API_VERSION) {
-                        override fun visitMethod(
-                            access: Int,
-                            name: String?,
-                            desc: String?,
-                            signature: String?,
-                            exceptions: Array<out String>?
-                        ): MethodVisitor {
-                            return if (name == this@getDefaultValue.name.asString()) {
-                                object : MethodVisitor(Opcodes.API_VERSION) {
-                                    override fun visitAnnotationDefault(): AnnotationVisitor =
-                                        BinaryJavaAnnotationVisitor(
-                                            ClassifierResolutionContext { null },
-                                            BinaryClassSignatureParser()
-                                        ) {
-                                            defaultValue = it
-                                        }
-                                }
-                            } else {
-                                object : MethodVisitor(Opcodes.API_VERSION) {}
-                            }
-                        }
-                    },
-                    ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-                )
+
+                val defaultValue: JavaAnnotationArgument? = analyze {
+                    val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
+                    jc.methods.firstOrNull { it.name == name }?.annotationParameterDefaultValue
+                }
+
                 (this as? KaFirValueParameterSymbol)?.let {
                     val firSession = it.firSymbol.fir.moduleData.session
                     val symbolBuilder = it.builder

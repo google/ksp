@@ -124,18 +124,16 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithArrayValue.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithDefault.kt")
     @Test
     fun testAnnotationWithDefault() {
-        runTest("../test-utils/testData/api/annotationWithDefault.kt")
+        runTest("../kotlin-analysis-api/testData/annotationWithDefault.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithDefaultValues.kt")
     @Test
     fun testAnnotationWithDefaultValues() {
-        runTest("../test-utils/testData/api/annotationWithDefaultValues.kt")
+        runTest("../kotlin-analysis-api/testData/annotationWithDefaultValues.kt")
     }
 
     @TestMetadata("annotationWithJavaTypeValue.kt")
@@ -283,7 +281,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/functionTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
     @Test
     fun testGetAnnotationByTypeWithInnerDefault() {
