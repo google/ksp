@@ -12,6 +12,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
+import java.io.BufferedInputStream
 import java.io.File
 
 private object FileSerializer : KSerializer<File> {
@@ -53,7 +54,9 @@ abstract class PersistentMap<K, V>(
         @OptIn(ExperimentalSerializationApi::class)
         protected fun <K, V> deserialize(serializer: KSerializer<Map<K, V>>, storage: File): MutableMap<K, V> {
             return if (storage.exists()) {
-                Json.decodeFromStream(serializer, storage.inputStream()).toMutableMap()
+                BufferedInputStream(storage.inputStream()).use {
+                    Json.decodeFromStream(serializer, it).toMutableMap()
+                }
             } else {
                 mutableMapOf()
             }
