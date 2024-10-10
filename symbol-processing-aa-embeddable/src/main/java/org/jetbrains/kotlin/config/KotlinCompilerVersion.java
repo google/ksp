@@ -40,14 +40,10 @@ public class KotlinCompilerVersion {
     return VERSION.equals("@snapshot@") ? null : VERSION;
   }
 
-  @SuppressWarnings({"TryFinallyCanBeTryWithResources", "ConstantConditions"})
+  @SuppressWarnings("ConstantConditions")
   private static String loadKotlinCompilerVersion() throws IOException {
-    BufferedReader versionReader = new BufferedReader(
-        new InputStreamReader(KotlinCompilerVersion.class.getResourceAsStream(VERSION_FILE_PATH)));
-    try {
+    try (BufferedReader versionReader = new BufferedReader(new InputStreamReader(KotlinCompilerVersion.class.getResourceAsStream(VERSION_FILE_PATH)))) {
       return versionReader.readLine();
-    } finally {
-      versionReader.close();
     }
   }
 

@@ -30,8 +30,9 @@ class KSPLoader {
             processorProvider: List<SymbolProcessorProvider>,
             logLevel: Int
         ): Int {
-            val objectInputStream = ObjectInputStream(ByteArrayInputStream(kspConfigStream))
-            val kspConfig = objectInputStream.readObject() as KSPConfig
+            val kspConfig = ObjectInputStream(ByteArrayInputStream(kspConfigStream)).use { objectInputStream ->
+                objectInputStream.readObject() as KSPConfig
+            }
             val ksp = KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
             return ksp.execute().ordinal
         }
