@@ -28,7 +28,10 @@ class KSObjectCacheManager {
             get() = caches_prop.get()
 
         fun register(cache: KSObjectCache<*, *>) = caches.add(cache)
-        fun clear() = caches.forEach { it.clear() }
+        fun clear() {
+            caches.forEach { it.clear() }
+            caches_prop.remove()
+        }
     }
 }
 
@@ -44,5 +47,8 @@ abstract class KSObjectCache<K, V> {
             return cache_prop.get()
         }
 
-    open fun clear() = cache.clear()
+    open fun clear() {
+        cache.clear()
+        cache_prop.remove()
+    }
 }
