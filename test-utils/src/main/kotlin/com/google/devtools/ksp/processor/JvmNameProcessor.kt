@@ -25,8 +25,15 @@ class JvmNameProcessor : AbstractTestProcessor() {
         }
         listOf("MyAnnotationUser", "MyAnnotationUserLib").forEach { clsName ->
             resolver.getClassDeclarationByName(clsName)!!.let { cls ->
-                cls.annotations.single().let { annotation ->
+                cls.annotations.forEach { annotation ->
                     results.add(annotation.arguments.joinToString { it.name!!.asString() })
+                }
+            }
+        }
+        listOf("MyAnnotation", "MyAnnotationLib").forEach { clsName ->
+            resolver.getClassDeclarationByName(clsName)!!.getAllProperties().forEach { p ->
+                p.getter?.let {
+                    results.add("JvmName: ${resolver.getJvmName(it)}")
                 }
             }
         }
