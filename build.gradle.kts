@@ -1,5 +1,6 @@
 import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -124,5 +125,9 @@ subprojects {
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions.freeCompilerArgs.add("-Xskip-prerelease-check")
+
+        // For access to internal classes.
+        // FIXME: get rid of internal accesses
+        compilerOptions.languageVersion.set(KotlinVersion.KOTLIN_1_9)
     }
 }
