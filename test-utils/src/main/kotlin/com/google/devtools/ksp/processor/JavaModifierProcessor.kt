@@ -19,6 +19,8 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -45,6 +47,15 @@ class JavaModifierProcessor : AbstractTestProcessor() {
             .forEach {
                 it.superTypes.single().resolve().declaration.accept(ModifierVisitor(resolver), Unit)
             }
+
+        resolver.getClassDeclarationByName("HasTypeAliasFuns")!!.getDeclaredFunctions().forEach { f ->
+            val decl = f.returnType!!.resolve().declaration
+            val declName = decl.simpleName.asString().toString()
+            val visibility = decl.getVisibility().toString()
+            val modifiers = decl.modifiers.map { it.toString() }
+            results.add("$declName: Visibility: $visibility")
+            results.add("$declName: Modifiers: $modifiers")
+        }
         return emptyList()
     }
 
