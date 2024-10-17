@@ -63,6 +63,8 @@
 // DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
 // DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL JAVA_VOLATILE PUBLIC
 // DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
+// HasTypeAliasFuns: Modifiers: []
+// HasTypeAliasFuns: Visibility: PUBLIC
 // OuterJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterJavaClass.InnerJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterJavaClass.InnerJavaClass: PUBLIC : PUBLIC
@@ -96,12 +98,19 @@
 // OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
 // OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
 // OuterKotlinClass: OPEN : PUBLIC
+// TypeAliasInKt: Modifiers: [PRIVATE]
+// TypeAliasInKt: Visibility: PRIVATE
+// TypeAliasInLib: Modifiers: [FINAL, PUBLIC]
+// TypeAliasInLib: Visibility: PUBLIC
 // END
 // MODULE: module1
 // FILE: ALib.kt
 fun interface ALib {
     fun test(): Boolean
 }
+
+public typealias TypeAliasInLib = Int
+
 // FILE: DependencyOuterJavaClass.java
 public class DependencyOuterJavaClass {
     public class DependencyInnerJavaClass {}
@@ -149,6 +158,13 @@ open class DependencyOuterKotlinClass {
 }
 // MODULE: main(module1)
 // FILE: ASrc.kt
+private typealias TypeAliasInKt = Int
+
+class HasTypeAliasFuns {
+    fun FunReturnTA1(): TypeAliasInKt = 0
+    fun FunReturnTA2(): TypeAliasInLib = 0
+}
+
 fun interface ASrc {
     fun test(): Boolean
 }
