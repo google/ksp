@@ -340,7 +340,7 @@ private fun KaAnnotated.annotationsWithRepeatableUnfolded(): List<KaAnnotation> 
                     (it as? KaAnnotationValue.NestedAnnotationValue)?.annotation ?: return@flatMap listOf(container)
                 }
             val containedAnnotationClassId: ClassId =
-                containedAnnotations?.first()?.classId ?: return@flatMap listOf(container)
+                containedAnnotations?.firstOrNull()?.classId ?: return@flatMap listOf(container)
             val containedClass = containedAnnotationClassId.toKtClassSymbol() ?: return@flatMap listOf(container)
             if (containedClass.isRepeatableAnnotation(container)) {
                 containedAnnotations
