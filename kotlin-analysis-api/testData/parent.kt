@@ -44,6 +44,9 @@
 // parent of Int: foo
 // parent of foo: B
 // parent of B<*>: synthetic constructor for B
+// parent of Any: (Any..Any?)
+// parent of (Any..Any?): T
+// parent of T: B
 // parent of synthetic constructor for B: B
 // parent of RGB: (RGB..RGB?)
 // parent of (RGB..RGB?): INVARIANT (RGB..RGB?)
