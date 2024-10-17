@@ -63,6 +63,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
                 is KaClassSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaFunctionSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
+                is KaTypeAliasSymbol -> ktDeclarationSymbol.toModifiers()
                 else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
             }
         } else {
