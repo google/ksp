@@ -38,12 +38,14 @@ interface Resolver {
     fun getAllFiles(): Sequence<KSFile>
 
     /**
-     * Get all symbols with specified annotation.
+     * Get all symbols with specified annotation in the current compilation unit.
      * Note that in multiple round processing, only symbols from deferred symbols of last round and symbols from newly generated files will be returned in this function.
      *
      * @param annotationName is the fully qualified name of the annotation; using '.' as separator.
      * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.
      * @return Elements annotated with the specified annotation.
+     *
+     * @see getDeclarationsFromPackage to get declarations outside the current compilation unit.
      */
     fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean = false): Sequence<KSAnnotated>
 
@@ -231,6 +233,9 @@ interface Resolver {
 
     /**
      * Returns declarations with the given package name.
+     *
+     * getDeclarationsFromPackage looks for declaration in the whole classpath, including dependencies.
+     *
      * @param packageName the package name to look up.
      * @return A sequence of [KSDeclaration] with matching package name.
      * This will return declarations from both dependencies and source.
