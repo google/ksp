@@ -469,10 +469,6 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(accessor: KSPropertyAccessor): String {
-        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
-            return accessor.receiver.simpleName.asString()
-        }
-
         val symbol: KaPropertyAccessorSymbol? = when (accessor) {
             is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol
             else -> null
@@ -480,6 +476,10 @@ class ResolverAAImpl(
 
         symbol?.explictJvmName()?.let {
             return it
+        }
+
+        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
+            return accessor.receiver.simpleName.asString()
         }
 
         val prefix = if (accessor is KSPropertyGetter) {
