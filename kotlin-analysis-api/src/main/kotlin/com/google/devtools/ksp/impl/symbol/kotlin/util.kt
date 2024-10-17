@@ -274,7 +274,8 @@ internal fun KaDeclarationContainerSymbol.getAllProperties(): Sequence<KSPropert
         this@getAllProperties.memberScope.callables { true }
             .filter {
                 it.isVisibleInClass(this@getAllProperties as KaClassSymbol) ||
-                    it.containingSymbol == this@getAllProperties
+                    it.containingSymbol == this@getAllProperties ||
+                    it.containingSymbol?.psi == this@getAllProperties.psi
             }
             .mapNotNull { callableSymbol ->
                 when (callableSymbol) {
@@ -292,7 +293,8 @@ internal fun KaDeclarationContainerSymbol.getAllFunctions(): Sequence<KSFunction
         this@getAllFunctions.memberScope.let { it.callables { true } + it.constructors }
             .filter {
                 it.isVisibleInClass(this@getAllFunctions as KaClassSymbol) ||
-                    it.containingSymbol == this@getAllFunctions
+                    it.containingSymbol == this@getAllFunctions ||
+                    it.containingSymbol?.psi == this@getAllFunctions.psi
             }
             .mapNotNull { callableSymbol ->
                 // TODO: replace with single safe cast if no more implementations of KSFunctionDeclaration is added.

@@ -113,7 +113,8 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
+    // FIXME: use aaKotlinBaseVersion after the dependency is fixed.
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:2.1.20-dev-201")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
 
@@ -159,6 +160,7 @@ tasks.withType<ShadowJar>().configureEach {
     archiveClassifier.set("")
     minimize {
         exclude(dependency("org.lz4:lz4-java:.*"))
+        exclude(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
     }
     mergeServiceFiles()
 
