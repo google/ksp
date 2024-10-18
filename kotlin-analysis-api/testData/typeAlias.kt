@@ -31,6 +31,9 @@
 // myList_b_String : MyList_B_String = MyList_B<String> = MyList<R> = List<T>
 // myListOfAlias : MyListOfAlias = List<@JvmSuppressWildcards A>
 // myListOfAliasInLib : MyListOfAliasInLib = List<@JvmSuppressWildcards AInLib>
+// viewBinderProviders : Map<Class<BaseViewHolder>, @JvmSuppressWildcards Provider<BaseEmbedViewBinder>>
+// nested1 : MyList<ListOfInt> = List<T>
+// nested2 : List<ListOfInt>
 // END
 
 // MODULE: module1
@@ -65,3 +68,13 @@ val myList_String: MyList_String = TODO()
 val myList_b_String: MyList_B_String = TODO()
 val myListOfAlias: MyListOfAlias = TODO()
 val myListOfAliasInLib: MyListOfAliasInLib = TODO()
+
+interface BaseViewHolder
+interface SpaceshipEmbedModel
+interface Provider<T>
+interface ViewBinder<T1, T2>
+typealias BaseEmbedViewBinder = ViewBinder<out BaseViewHolder, out SpaceshipEmbedModel>
+
+val viewBinderProviders: Map<Class<out BaseViewHolder>, @JvmSuppressWildcards Provider<BaseEmbedViewBinder>> = TODO()
+val nested1: MyList<ListOfInt>
+val nested2: List<ListOfInt>
