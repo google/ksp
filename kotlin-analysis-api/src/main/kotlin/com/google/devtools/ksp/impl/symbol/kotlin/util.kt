@@ -632,8 +632,9 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
                 val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classIdIfNonLocal!!
                 val file = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
+                    fileManager.findClass(classId, analysisScope)
+                        ?.let { javaClass -> (javaClass as JavaClassImpl).virtualFile!!.contentsToByteArray() }
+                } ?: return null
                 var defaultValue: JavaAnnotationArgument? = null
                 ClassReader(file).accept(
                     object : ClassVisitor(Opcodes.API_VERSION) {
