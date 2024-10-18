@@ -99,6 +99,17 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
             }
         }
 
+        resolver.getClassDeclarationByName("TestValueArgEquals")?.let { cls ->
+            cls.annotations.forEach { anno1 ->
+                val arg1 = (anno1.arguments.single().value as KSAnnotation).arguments.single()
+                cls.annotations.forEach { anno2 ->
+                    val arg2 = (anno2.arguments.single().value as KSAnnotation).arguments.single()
+                    val eq = arg1 == arg2
+                    results.add("$anno1($arg1) == $anno2($arg2): $eq")
+                }
+            }
+        }
+
         return emptyList()
     }
 
