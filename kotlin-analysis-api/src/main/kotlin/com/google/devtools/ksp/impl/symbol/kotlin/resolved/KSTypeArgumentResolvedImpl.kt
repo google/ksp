@@ -24,6 +24,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.types.KaStarTypeProjection
+import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.KaTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.types.KaTypeProjection
 
@@ -50,12 +51,16 @@ class KSTypeArgumentResolvedImpl private constructor(
         }
     }
 
+    private val kaType: KaType? by lazy {
+        ktTypeProjection.type?.abbreviation ?: ktTypeProjection.type
+    }
+
     override val type: KSTypeReference? by lazy {
-        ktTypeProjection.type?.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSTypeArgumentResolvedImpl) }
+        kaType?.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSTypeArgumentResolvedImpl) }
     }
 
     override val annotations: Sequence<KSAnnotation> by lazy {
-        ktTypeProjection.type?.annotations(this) ?: emptySequence()
+        kaType?.annotations(this) ?: emptySequence()
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
