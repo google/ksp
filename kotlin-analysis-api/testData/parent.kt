@@ -82,7 +82,6 @@
 // parent of topProp.getter(): topProp
 // parent of Anno: Anno
 // parent of Anno: @Anno
-// parent of param:: @Anno
 // parent of @Anno: topProp
 // parent of topProp: File: a.kt
 // parent of T: T
@@ -91,7 +90,6 @@
 // parent of T: topFun
 // parent of Anno: Anno
 // parent of Anno: @Anno
-// parent of param:: @Anno
 // parent of @Anno: topFun
 // parent of topFun: File: a.kt
 // parent of Annotation: Annotation
@@ -125,7 +123,6 @@
 // parent of ITF: topClass
 // parent of Anno: Anno
 // parent of Anno: @Anno
-// parent of param:: @Anno
 // parent of @Anno: topClass
 // parent of topClass: File: a.kt
 // parent of Int: Int
