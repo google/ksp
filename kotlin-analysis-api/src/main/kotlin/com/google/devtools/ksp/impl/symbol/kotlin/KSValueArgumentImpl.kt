@@ -26,7 +26,7 @@ class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KaNamedAnnotationValue,
     override val parent: KSNode?,
     override val origin: Origin
-) : KSValueArgument, Deferrable {
+) : AbstractKSValueArgumentImpl(), Deferrable {
     companion object : KSObjectCache<KaNamedAnnotationValue, KSValueArgumentImpl>() {
         fun getCached(namedAnnotationValue: KaNamedAnnotationValue, parent: KSNode?, origin: Origin) =
             cache.getOrPut(namedAnnotationValue) {
@@ -48,16 +48,29 @@ class KSValueArgumentImpl private constructor(
         namedAnnotationValue.expression.sourcePsi?.toLocation() ?: NonExistLocation
     }
 
+    override fun defer(): Restorable {
+        val parent = if (parent is Deferrable) parent.defer() else null
+        return Restorable { getCached(namedAnnotationValue, parent?.restore(), origin) }
+    }
+}
+
+abstract class AbstractKSValueArgumentImpl : KSValueArgument {
+    override fun hashCode(): Int {
+        return name.hashCode() * 31 + value.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is KSValueArgument)
+            return false
+
+        return other.name == this.name && other.value == this.value
+    }
+
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitValueArgument(this, data)
     }
 
     override fun toString(): String {
         return "${name?.asString() ?: ""}:$value"
-    }
-
-    override fun defer(): Restorable {
-        val parent = if (parent is Deferrable) parent.defer() else null
-        return Restorable { getCached(namedAnnotationValue, parent?.restore(), origin) }
     }
 }
