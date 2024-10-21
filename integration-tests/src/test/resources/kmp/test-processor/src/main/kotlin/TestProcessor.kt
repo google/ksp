@@ -67,7 +67,7 @@ class ClassVisitor : KSTopDownVisitor<OutputStreamWriter, Unit>() {
         data: OutputStreamWriter
     ) {
         super.visitClassDeclaration(classDeclaration, data)
-        val symbolName = classDeclaration.simpleName.asString().toLowerCase()
+        val symbolName = classDeclaration.simpleName.asString().lowercase()
         data.write("    val $symbolName = true\n")
     }
 }

@@ -13,12 +13,17 @@ class ImplicitPropertyAccessorProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val foo = resolver.getClassDeclarationByName("Foo")!!
-        foo.declarations.filterIsInstance<KSPropertyDeclaration>().forEach { prop ->
-            result.add(prop.getter?.returnType.toString())
-            prop.setter?.parameter?.let {
-                result.add(it.toString())
-                result.add(it.type.toString())
+        listOf("Foo", "lib.Bar").forEach { clsName ->
+            val cls = resolver.getClassDeclarationByName(clsName)!!
+            cls.declarations.filterIsInstance<KSPropertyDeclaration>().forEach { prop ->
+                prop.getter?.let { getter ->
+                    result.add("$getter: ${getter.returnType}")
+                }
+                prop.setter?.let { setter ->
+                    val param = setter.parameter
+                    val paramName = param.name?.getShortName()
+                    result.add("$setter($paramName: ${setter.parameter.type})")
+                }
             }
         }
         return emptyList()

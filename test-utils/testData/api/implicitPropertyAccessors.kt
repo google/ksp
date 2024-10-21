@@ -17,12 +17,23 @@
 
 // TEST PROCESSOR: ImplicitPropertyAccessorProcessor
 // EXPECTED:
-// Int
-// String
-// <set-?>
-// String
+// privateGetterVal.getter(): Int
+// privateGetterVar.getter(): String
+// privateGetterVar.setter()(<set-?>: String)
+// val1.getter(): Int
+// var2.getter(): String
+// var2.setter()(<set-?>: String)
 // END
-// FILE: a.kt
+// MODULE: lib
+// FILE: lib/Bar.kt
+package lib
+
+class Bar {
+    val val1: Int = 0
+    var var2: String = ""
+}
+// MODULE: main(lib)
+// FILE: Foo.kt
 
 class Foo {
     val privateGetterVal: Int

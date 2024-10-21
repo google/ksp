@@ -34,10 +34,20 @@ tasks.withType<ShadowJar>() {
 }
 
 tasks {
+    val sourcesJar by creating(Jar::class) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveClassifier.set("sources")
+        from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
+    }
+    val javadocJar by creating(Jar::class) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveClassifier.set("javadoc")
+        from(project(":compiler-plugin").tasks["dokkaJavadocJar"])
+    }
     publish {
         dependsOn(shadowJar)
-        dependsOn(project(":compiler-plugin").tasks["dokkaJavadocJar"])
-        dependsOn(project(":compiler-plugin").tasks["sourcesJar"])
+        dependsOn(javadocJar)
+        dependsOn(sourcesJar)
     }
 }
 
@@ -45,9 +55,9 @@ publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-cmdline"
+            artifact(tasks["javadocJar"])
+            artifact(tasks["sourcesJar"])
             artifact(tasks["shadowJar"])
-            artifact(project(":compiler-plugin").tasks["dokkaJavadocJar"])
-            artifact(project(":compiler-plugin").tasks["sourcesJar"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-cmdline")
                 description.set("Symbol processing for K/N and command line")

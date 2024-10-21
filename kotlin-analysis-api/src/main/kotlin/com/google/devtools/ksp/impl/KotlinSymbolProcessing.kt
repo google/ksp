@@ -515,6 +515,15 @@ class KotlinSymbolProcessing(
                 provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
             }
 
+            fun dropCaches() {
+                KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
+                KaSessionProvider.getInstance(project).clearCaches()
+                psiManager.dropResolveCaches()
+                psiManager.dropPsiCaches()
+
+                KSObjectCacheManager.clear()
+            }
+
             var rounds = 0
             // Run processors until either
             // 1) there is an error
@@ -539,25 +548,23 @@ class KotlinSymbolProcessing(
                 ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
 
                 processors.forEach {
-                    deferredSymbols[it] =
-                        it.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
-                            .filterIsInstance<Deferrable>().mapNotNull(Deferrable::defer)
+                    incrementalContext.closeFilesOnException {
+                        deferredSymbols[it] =
+                            it.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
+                                .filterIsInstance<Deferrable>().mapNotNull(Deferrable::defer)
+                    }
                     if (!deferredSymbols.containsKey(it) || deferredSymbols[it]!!.isEmpty()) {
                         deferredSymbols.remove(it)
                     }
                 }
 
-                // Drop caches
-                KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
-                KaSessionProvider.getInstance(project).clearCaches()
-                psiManager.dropResolveCaches()
-                psiManager.dropPsiCaches()
-
-                KSObjectCacheManager.clear()
+                val allKSFilesPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
 
                 if (logger.hasError || codeGenerator.generatedFile.isEmpty()) {
                     break
                 }
+
+                dropCaches()
 
                 newKSFiles = prepareNewKSFiles(
                     kotlinCoreProjectEnvironment,
@@ -565,21 +572,10 @@ class KotlinSymbolProcessing(
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
                 )
-                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be re-created from PSI.
-                allDirtyKSFiles = allDirtyKSFiles.map {
-                    when (it) {
-                        is KSFileImpl -> {
-                            val ktFile = it.ktFileSymbol.psi!! as KtFile
-                            analyze { KSFileImpl.getCached(ktFile.symbol) }
-                        }
-
-                        is KSFileJavaImpl -> {
-                            KSFileJavaImpl.getCached(it.psi)
-                        }
-
-                        else -> throw IllegalArgumentException("Unknown KSFile implementation: $it")
-                    }
-                } + newKSFiles
+                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be restored from deferred.
+                // Do not replace `!!` with `?.`. Implementations of KSFile in KSP2 must implement Deferrable and
+                // return non-null.
+                allDirtyKSFiles = allKSFilesPointers.map { it!!.restore() as KSFile } + newKSFiles
                 incrementalContext.registerGeneratedFiles(newKSFiles)
                 codeGenerator.closeFiles()
             }
@@ -597,8 +593,11 @@ class KotlinSymbolProcessing(
                     codeGenerator.outputs,
                     codeGenerator.sourceToOutputs
                 )
+            } else {
+                incrementalContext.closeFiles()
             }
 
+            dropCaches()
             codeGenerator.closeFiles()
         } finally {
             Disposer.dispose(projectDisposable)
@@ -650,6 +649,7 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseModuleProvider::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
+    org.jetbrains.kotlin.analysis.api.fir.KaFirDefaultImportsProvider::class.java,
     org.jetbrains.kotlin.analysis.api.fir.KaFirSessionProvider::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.ReadWriteAccessCheckerFirImpl::class.java,
     org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneFirDirectInheritorsProvider::class.java,
@@ -660,6 +660,7 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
+    org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinSimpleGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.fir.modification.KaFirSourceModificationService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
     org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,

@@ -20,9 +20,6 @@
 // EXPECTED:
 // defaultInNested
 // []
-// null
-// null
-// null
 // SomeClass$WithDollarSign
 // Str
 // 42
@@ -42,6 +39,26 @@
 // Cls: argToA: b
 // Cls: argToB: 42
 // TestJavaLib: OtherAnnotation
+// TestNestedAnnotationDefaults: def
+// TestNestedAnnotationDefaults: hij
+// TestNestedAnnotationDefaults: def
+// TestNestedAnnotationDefaults: hij
+// @JavaAnnotationWithDefaultsInSource(value:def) == @JavaAnnotationWithDefaultsInSource(value:def): true
+// @JavaAnnotationWithDefaultsInSource(value:def) == @KotlinAnnotationWithDefaultsInSource(value:hij): false
+// @JavaAnnotationWithDefaultsInSource(value:def) == @JavaAnnotationWithDefaults(value:def): true
+// @JavaAnnotationWithDefaultsInSource(value:def) == @KotlinAnnotationWithDefaults(value:hij): false
+// @KotlinAnnotationWithDefaultsInSource(value:hij) == @JavaAnnotationWithDefaultsInSource(value:def): false
+// @KotlinAnnotationWithDefaultsInSource(value:hij) == @KotlinAnnotationWithDefaultsInSource(value:hij): true
+// @KotlinAnnotationWithDefaultsInSource(value:hij) == @JavaAnnotationWithDefaults(value:def): false
+// @KotlinAnnotationWithDefaultsInSource(value:hij) == @KotlinAnnotationWithDefaults(value:hij): true
+// @JavaAnnotationWithDefaults(value:def) == @JavaAnnotationWithDefaultsInSource(value:def): true
+// @JavaAnnotationWithDefaults(value:def) == @KotlinAnnotationWithDefaultsInSource(value:hij): false
+// @JavaAnnotationWithDefaults(value:def) == @JavaAnnotationWithDefaults(value:def): true
+// @JavaAnnotationWithDefaults(value:def) == @KotlinAnnotationWithDefaults(value:hij): false
+// @KotlinAnnotationWithDefaults(value:hij) == @JavaAnnotationWithDefaultsInSource(value:def): false
+// @KotlinAnnotationWithDefaults(value:hij) == @KotlinAnnotationWithDefaultsInSource(value:hij): true
+// @KotlinAnnotationWithDefaults(value:hij) == @JavaAnnotationWithDefaults(value:def): false
+// @KotlinAnnotationWithDefaults(value:hij) == @KotlinAnnotationWithDefaults(value:hij): true
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -71,6 +88,9 @@ public @interface OtherAnnotation {
 public @interface JavaAnnotationWithDefaults {
     OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
 }
+
+// FILE: KotlinAnnotationWithDefaults.kt
+annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
 
 // MODULE: main(module1)
 // FILE: a.kt
@@ -150,3 +170,25 @@ class Sub : @B(a = A(i = 42)) Parent
 // FILE: TestJavaLib.kt
 @JavaAnnotationWithDefaults
 class TestJavaLib
+
+// FILE: JavaAnnotationWithDefaultsInSource.java
+public @interface JavaAnnotationWithDefaultsInSource {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
+// FILE: KotlinAnnotationWithDefaultsInSource.kt
+annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+
+// FILE: TestNestedAnnotationDefaults.java
+@JavaAnnotationWithDefaultsInSource
+@KotlinAnnotationWithDefaultsInSource
+@JavaAnnotationWithDefaults
+@KotlinAnnotationWithDefaults
+class TestNestedAnnotationDefaults {}
+
+// FILE: TestValueArgEquals.java
+@JavaAnnotationWithDefaultsInSource
+@KotlinAnnotationWithDefaultsInSource
+@JavaAnnotationWithDefaults
+@KotlinAnnotationWithDefaults
+class TestValueArgEquals {}

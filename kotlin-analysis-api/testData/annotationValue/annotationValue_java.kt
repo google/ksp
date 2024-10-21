@@ -18,12 +18,16 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
-// MyClass: stringParam = 2
-// MyClass: stringParam2 = 1
-// MyClass: stringArrayParam = [3, 5, 7]
-// MyClassInLib: stringParam = 2
-// MyClassInLib: stringParam2 = 1
-// MyClassInLib: stringArrayParam = [3, 5, 7]
+// MyClass: MyAnnotation
+// MyClass: MyAnnotation: stringParam = 2
+// MyClass: MyAnnotation: stringParam2 = 1
+// MyClass: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClass: Containing.Nested
+// MyClassInLib: MyAnnotation
+// MyClassInLib: MyAnnotation: stringParam = 2
+// MyClassInLib: MyAnnotation: stringParam2 = 1
+// MyClassInLib: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClassInLib: Containing.Nested
 // Str
 // 42
 // Foo
@@ -38,6 +42,10 @@
 // [warning1, warning 2]
 // Sub: [i:42]
 // TestJavaLib: OtherAnnotation
+// TestNestedAnnotationDefaults: def
+// TestNestedAnnotationDefaults: hij
+// TestNestedAnnotationDefaults: def
+// TestNestedAnnotationDefaults: hij
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -56,8 +64,12 @@ import java.lang.annotation.Target;
     int value1();
 }
 
+@interface Containing {
+    @interface Nested {}
+}
+
 interface MyInterface {}
-@MyAnnotation(stringParam = "2") class MyClassInLib implements MyInterface {}
+@MyAnnotation(stringParam = "2") @Containing.Nested class MyClassInLib implements MyInterface {}
 
 // FILE: OtherAnnotation.java
 import java.lang.annotation.Retention;
@@ -71,9 +83,12 @@ public @interface JavaAnnotationWithDefaults {
     OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
 }
 
+// FILE: KotlinAnnotationWithDefaults.kt
+annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+
 // MODULE: main(module1)
 // FILE: Test.java
-@MyAnnotation(stringParam = "2") class MyClass implements MyInterface {}
+@MyAnnotation(stringParam = "2") @Containing.Nested class MyClass implements MyInterface {}
 
 // FILE: a.kt
 enum class RGB {
@@ -137,3 +152,18 @@ class Sub implements @B(a = @A(i = 42)) Parent {}
 // FILE: TestJavaLib.java
 @JavaAnnotationWithDefaults
 class TestJavaLib {}
+
+// FILE: JavaAnnotationWithDefaultsInSource.java
+public @interface JavaAnnotationWithDefaultsInSource {
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+}
+
+// FILE: KotlinAnnotationWithDefaults.kt
+annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+
+// FILE: KotlinClient.kt
+@JavaAnnotationWithDefaultsInSource
+@KotlinAnnotationWithDefaultsInSource
+@JavaAnnotationWithDefaults
+@KotlinAnnotationWithDefaults
+class TestNestedAnnotationDefaults

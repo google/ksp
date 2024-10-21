@@ -20,25 +20,50 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
 
-tasks.withType<Test> {
-    maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
+fun Test.configureCommonSettings() {
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
     systemProperty("agpVersion", agpBaseVersion)
-    jvmArgumentProviders.add(RelativizingInternalPathProvider("testRepo", File(rootProject.buildDir, "repos/test")))
+    jvmArgumentProviders.add(
+        RelativizingInternalPathProvider(
+            "testRepo",
+            rootProject.layout.buildDirectory.dir("repos/test").get().asFile
+        )
+    )
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
+}
 
-    // JDK_9 environment property is required.
-    // To add a custom location (if not detected automatically) follow https://docs.gradle.org/current/userguide/toolchains.html#sec:custom_loc
-    if (System.getenv("JDK_9") == null) {
-        val launcher9 = javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(9))
-        }
-        environment["JDK_9"] = launcher9.map { it.metadata.installationPath }
-    }
+val agpCompatibilityTestClasses = listOf("**/AGP731IT.class", "**/AGP741IT.class")
+
+// Create a new test task for the AGP compatibility tests
+val agpCompatibilityTest by tasks.registering(Test::class) {
+    description = "Runs AGP compatibility tests with maxParallelForks = 1"
+    group = "verification"
+
+    // Include only the AGP compatibility tests
+    include(agpCompatibilityTestClasses)
+
+    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+    maxParallelForks = 1
+
+    // Apply common settings
+    configureCommonSettings()
+}
+
+tasks.named<Test>("test") {
+    maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
+
+    // Exclude test classes from agpCompatibilityTest
+    exclude(agpCompatibilityTestClasses)
+
+    // Apply common settings
+    configureCommonSettings()
+
+    // Ensure that 'test' depends on 'compatibilityTest'
+    dependsOn(agpCompatibilityTest)
 }

@@ -28,8 +28,6 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
-import org.jetbrains.kotlin.analysis.project.structure.impl.collectSourceFilePaths
-import org.jetbrains.kotlin.analysis.project.structure.impl.hasSuitableExtensionToAnalyse
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
@@ -39,7 +37,6 @@ import java.nio.file.Path
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
-import kotlin.io.path.isDirectory
 
 @KtModuleBuilderDsl
 class KspModuleBuilder(
@@ -77,17 +74,17 @@ class KspModuleBuilder(
         )
     }
 
+    val analyzableExtensions = setOf("kt", "java", "kts")
+
     private fun collectVirtualFilesByRoots(): Set<VirtualFile> {
         val localFileSystem = kotlinCoreProjectEnvironment.environment.localFileSystem
         return buildSet {
             for (root in sourceRoots) {
-                val files = when {
-                    root.isDirectory() -> listOf(root) + collectSourceFilePaths(root)
-                    root.hasSuitableExtensionToAnalyse() -> listOf(root)
-                    else -> emptyList()
+                val files = root.toFile().walk().filter {
+                    it.isDirectory || it.extension.lowercase() in analyzableExtensions
                 }
                 for (file in files) {
-                    val virtualFile = localFileSystem.findFileByIoFile(file.toFile()) ?: continue
+                    val virtualFile = localFileSystem.findFileByIoFile(file) ?: continue
                     add(virtualFile)
                 }
             }

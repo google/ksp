@@ -4,10 +4,7 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.*
 
 @KspExperimental
 class DeclarationOrderProcessor : AbstractTestProcessor() {
@@ -19,11 +16,19 @@ class DeclarationOrderProcessor : AbstractTestProcessor() {
             "lib.KotlinClass", "lib.JavaClass",
             "KotlinClass", "JavaClass"
         )
-        classNames.map {
+        val companionClsses = listOf("KotlinCompanion", "lib.KotlinCompanion")
+        val containers = classNames.map {
             checkNotNull(resolver.getClassDeclarationByName(it)) {
                 "cannot find $it"
             }
-        }.forEach { klass ->
+        } + companionClsses.map {
+            checkNotNull(resolver.getClassDeclarationByName(it)) {
+                "cannot find $it"
+            }.declarations.single {
+                it is KSClassDeclaration && it.isCompanionObject
+            } as KSClassDeclaration
+        }
+        containers.forEach { klass ->
             result.add(klass.qualifiedName!!.asString())
             result.addAll(
                 resolver.getDeclarationsInSourceOrder(klass).filterIsInstance<KSPropertyDeclaration>().map {

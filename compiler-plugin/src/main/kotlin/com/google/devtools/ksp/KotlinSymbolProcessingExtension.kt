@@ -50,8 +50,10 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.config.JvmAnalysisFlags
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -157,6 +159,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         val psiManager = PsiManager.getInstance(project)
         if (initialized) {
             psiManager.dropPsiCaches()
+            psiManager.dropResolveCaches()
+            invalidateKotlinCliJavaFileManagerCache(project)
         } else {
             // In case of broken builds.
             if (javaShadowBase.exists()) {
@@ -310,6 +314,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         processor.process(resolver).filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
                 }?.let {
                     resolver.tearDown()
+                    incrementalContext.closeFiles()
                     return it
                 }
                 if (logger.hasError()) {
@@ -336,9 +341,11 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                     processor.onError()
                 }?.let {
                     resolver.tearDown()
+                    incrementalContext.closeFiles()
                     return it
                 }
             }
+            incrementalContext.closeFiles()
         } else {
             if (finished) {
                 processors.forEach { processor ->
@@ -346,6 +353,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         processor.finish()
                     }?.let {
                         resolver.tearDown()
+                        incrementalContext.closeFiles()
                         return it
                     }
                 }
@@ -364,6 +372,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
                         codeGenerator.outputs,
                         codeGenerator.sourceToOutputs
                     )
+                } else {
+                    incrementalContext.closeFiles()
                 }
             }
         }
@@ -503,3 +513,13 @@ fun findTargetInfos(languageVersionSettings: LanguageVersionSettings, module: Mo
             else -> UnknownPlatformInfoImpl(platform.toString())
         }
     } ?: emptyList()
+
+// FIXME: remove as soon as possible.
+private fun invalidateKotlinCliJavaFileManagerCache(project: Project): Boolean {
+    val javaFileManager = (JavaFileManager.getInstance(project) as? KotlinCliJavaFileManagerImpl) ?: return false
+    val privateCacheField = KotlinCliJavaFileManagerImpl::class.java.getDeclaredField("topLevelClassesCache")
+    if (!privateCacheField.trySetAccessible())
+        return false
+    (privateCacheField.get(javaFileManager) as? MutableMap<*, *>)?.clear() ?: return false
+    return true
+}

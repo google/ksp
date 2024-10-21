@@ -44,6 +44,9 @@
 // parent of Int: foo
 // parent of foo: B
 // parent of B<*>: synthetic constructor for B
+// parent of Any: (Any..Any?)
+// parent of (Any..Any?): T
+// parent of T: B
 // parent of synthetic constructor for B: B
 // parent of RGB: (RGB..RGB?)
 // parent of (RGB..RGB?): INVARIANT (RGB..RGB?)
@@ -79,7 +82,6 @@
 // parent of topProp.getter(): topProp
 // parent of Anno: Anno
 // parent of Anno: @Anno
-// parent of param:: @Anno
 // parent of @Anno: topProp
 // parent of topProp: File: a.kt
 // parent of T: T
@@ -88,7 +90,6 @@
 // parent of T: topFun
 // parent of Anno: Anno
 // parent of Anno: @Anno
-// parent of param:: @Anno
 // parent of @Anno: topFun
 // parent of topFun: File: a.kt
 // parent of Annotation: Annotation
@@ -122,7 +123,6 @@
 // parent of ITF: topClass
 // parent of Anno: Anno
 // parent of Anno: @Anno
-// parent of param:: @Anno
 // parent of @Anno: topClass
 // parent of topClass: File: a.kt
 // parent of Int: Int
@@ -142,8 +142,8 @@
 // parent of String: String
 // parent of String: b.getter()
 // parent of b.getter(): b
-// parent of String: <set-?>
-// parent of <set-?>: b.setter()
+// parent of String: value
+// parent of value: b.setter()
 // parent of b.setter(): b
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass

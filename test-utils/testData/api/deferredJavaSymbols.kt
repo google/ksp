@@ -26,7 +26,7 @@
 // END
 
 // FILE: J.java
-annotation class Defer
+public @interface Defer {}
 
 @Defer
 class K<@Defer T> {

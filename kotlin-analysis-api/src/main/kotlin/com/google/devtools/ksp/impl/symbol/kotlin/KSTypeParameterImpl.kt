@@ -24,14 +24,20 @@ import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeParameterSymbol
+import org.jetbrains.kotlin.analysis.api.types.KaType
 
-class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol: KaTypeParameterSymbol) :
+class KSTypeParameterImpl private constructor(
+    internal val ktTypeParameterSymbol: KaTypeParameterSymbol,
+    private val boundsSubstitued: List<KaType>?
+) :
     KSTypeParameter,
     AbstractKSDeclarationImpl(ktTypeParameterSymbol),
     KSExpectActual by KSExpectActualImpl(ktTypeParameterSymbol) {
-    companion object : KSObjectCache<KaTypeParameterSymbol, KSTypeParameterImpl>() {
-        fun getCached(ktTypeParameterSymbol: KaTypeParameterSymbol) =
-            cache.getOrPut(ktTypeParameterSymbol) { KSTypeParameterImpl(ktTypeParameterSymbol) }
+    companion object : KSObjectCache<Pair<KaTypeParameterSymbol, List<KaType>?>, KSTypeParameterImpl>() {
+        fun getCached(ktTypeParameterSymbol: KaTypeParameterSymbol, bounds: List<KaType>? = null) =
+            cache.getOrPut(Pair(ktTypeParameterSymbol, bounds)) {
+                KSTypeParameterImpl(ktTypeParameterSymbol, bounds)
+            }
     }
 
     override fun asKSDeclaration(): KSDeclaration = this
@@ -51,7 +57,9 @@ class KSTypeParameterImpl private constructor(internal val ktTypeParameterSymbol
     override val isReified: Boolean = ktTypeParameterSymbol.isReified
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
+        boundsSubstitued?.mapIndexed { index, type ->
+            KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
+        }?.asSequence() ?: ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
             KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
         }.ifEmpty {
             sequenceOf(

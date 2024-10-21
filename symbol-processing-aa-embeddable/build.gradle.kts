@@ -169,7 +169,7 @@ fun String.replaceWithKsp() =
             .replace("import $f", "import $t")
     }
 
-val DEP_SOURCES_DIR = "$buildDir/source-jar"
+val depSourceDir: Provider<Directory> = layout.buildDirectory.dir("source-jar")
 
 val validPaths = prefixesToRelocate.map {
     it.second.split('.').filter { it.isNotEmpty() }.joinToString("/")
@@ -215,21 +215,25 @@ tasks {
             from(zipTree(it))
         }
         from(project(":common-util").sourceSets.main.get().allSource)
-        into("$DEP_SOURCES_DIR/ksp")
+        into(depSourceDir.map { it.dir("ksp") })
     }
     val sourcesJar by creating(Jar::class) {
-        dependsOn(copyDeps)
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         archiveClassifier.set("sources")
         from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
-        from(DEP_SOURCES_DIR)
+        from(copyDeps)
         filter { it.replaceWithKsp() }
+    }
+    val javadocJar by creating(Jar::class) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveClassifier.set("javadoc")
+        from(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
     }
 
     publish {
         dependsOn(shadowJar)
         dependsOn(sourcesJar)
-        dependsOn(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+        dependsOn(javadocJar)
     }
 }
 
@@ -237,7 +241,7 @@ publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-aa-embeddable"
-            artifact(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+            artifact(tasks["javadocJar"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["shadowJar"])
             pom {
@@ -275,29 +279,32 @@ signing {
     sign(extensions.getByType<PublishingExtension>().publications)
 }
 
-abstract class WriteVersionSrcTask @Inject constructor(
-    @get:Input val kotlinVersion: String,
-    @get:OutputDirectory val outputResDir: File
-) : DefaultTask() {
+abstract class WriteVersionSrcTask : DefaultTask() {
+    @get:Input
+    abstract val kotlinVersion: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputResDir: DirectoryProperty
+
     @TaskAction
     fun generate() {
-        val metaInfDir = File(outputResDir, "META-INF")
+        val metaInfDir = outputResDir.get().asFile.resolve("META-INF")
         metaInfDir.mkdirs()
-        File(metaInfDir, "ksp.compiler.version").writeText(kotlinVersion)
+        File(metaInfDir, "ksp.compiler.version").writeText(kotlinVersion.get())
     }
 }
 
-val kspVersionDir = File(project.buildDir, "generated/ksp-versions/META-INF")
 val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>(
-    "generateKSPVersions",
-    aaKotlinBaseVersion,
-    kspVersionDir
-)
+    "generateKSPVersions"
+) {
+    kotlinVersion = aaKotlinBaseVersion
+    outputResDir = layout.buildDirectory.dir("generated/ksp-versions/META-INF")
+}
 
 kotlin {
     sourceSets {
         main {
-            resources.srcDir(writeVersionSrcTask.map { it.outputResDir })
+            resources.srcDir(writeVersionSrcTask)
         }
     }
 }

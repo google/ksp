@@ -18,12 +18,16 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
-// MyClass: stringParam = 2
-// MyClass: stringParam2 = 1
-// MyClass: stringArrayParam = [3, 5, 7]
-// MyClassInLib: stringParam = 2
-// MyClassInLib: stringParam2 = 1
-// MyClassInLib: stringArrayParam = [3, 5, 7]
+// MyClass: MyAnnotation
+// MyClass: MyAnnotation: stringParam = 2
+// MyClass: MyAnnotation: stringParam2 = 1
+// MyClass: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClass: Containing.Nested
+// MyClassInLib: MyAnnotation
+// MyClassInLib: MyAnnotation: stringParam = 2
+// MyClassInLib: MyAnnotation: stringParam2 = 1
+// MyClassInLib: MyAnnotation: stringArrayParam = [3, 5, 7]
+// MyClassInLib: Containing.Nested
 // Str
 // 42
 // Foo
@@ -50,8 +54,13 @@ import java.lang.annotation.Target;
     String stringParam2() default "1";
     String[] stringArrayParam() default {"3", "5", "7"};
 }
+
+@interface Containing {
+    @interface Nested {}
+}
+
 interface MyInterface {}
-@MyAnnotation(stringParam = "2") class MyClassInLib implements MyInterface {}
+@MyAnnotation(stringParam = "2") @Containing.Nested class MyClassInLib implements MyInterface {}
 
 // FILE: OtherAnnotation.java
 import java.lang.annotation.Retention;
@@ -67,7 +76,7 @@ public @interface JavaAnnotationWithDefaults {
 
 // MODULE: main(module1)
 // FILE: Test.java
-@MyAnnotation(stringParam = "2") class MyClass implements MyInterface {}
+@MyAnnotation(stringParam = "2") @Containing.Nested class MyClass implements MyInterface {}
 // FILE: a.kt
 
 enum class RGB {

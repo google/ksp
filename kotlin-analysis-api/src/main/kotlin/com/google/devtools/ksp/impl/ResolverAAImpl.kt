@@ -19,29 +19,13 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
-import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_STRICTFP_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_SYNCHRONIZED_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_TRANSIENT_ANNOTATION_FQN
-import com.google.devtools.ksp.common.JVM_VOLATILE_ANNOTATION_FQN
-import com.google.devtools.ksp.common.extractThrowsAnnotation
-import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
-import com.google.devtools.ksp.common.impl.RefPosition
-import com.google.devtools.ksp.common.impl.findOuterMostRef
-import com.google.devtools.ksp.common.impl.findRefPosition
-import com.google.devtools.ksp.common.impl.isReturnTypeOfAnnotationMethod
-import com.google.devtools.ksp.common.javaModifiers
-import com.google.devtools.ksp.common.memoized
+import com.google.devtools.ksp.common.*
+import com.google.devtools.ksp.common.impl.*
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
-import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
+import com.google.devtools.ksp.impl.symbol.util.*
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
-import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
-import com.google.devtools.ksp.impl.symbol.util.hasAnnotation
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -65,7 +49,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
-import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
@@ -74,6 +57,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.platform.jvm.JvmPlatform
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.org.objectweb.asm.Opcodes
 
@@ -263,11 +247,8 @@ class ResolverAAImpl(
                 val fileManager = instance.javaFileManager
                 val parentClass = this.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
-                BinaryClassInfoCache.getCached(classId, virtualFileContent)
-                    .fieldAccFlags[this.simpleName.asString()] ?: 0
+                BinaryClassInfoCache.getCached(classId, fileManager)
+                    ?.fieldAccFlags?.get(this.simpleName.asString()) ?: 0
             }
             else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
         }
@@ -279,11 +260,8 @@ class ResolverAAImpl(
                 val fileManager = instance.javaFileManager
                 val parentClass = this.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
-                BinaryClassInfoCache.getCached(classId, virtualFileContent)
-                    .methodAccFlags[this.simpleName.asString() + jvmDesc] ?: 0
+                BinaryClassInfoCache.getCached(classId, fileManager)
+                    ?.methodAccFlags?.get(this.simpleName.asString() + jvmDesc) ?: 0
             }
             else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
         }
@@ -353,6 +331,12 @@ class ResolverAAImpl(
         if (container.origin != Origin.KOTLIN_LIB) {
             return container.declarations
         }
+
+        // TODO: multiplatform
+        if (!isJvm) {
+            return container.declarations
+        }
+
         require(container is AbstractKSDeclarationImpl)
         val fileManager = instance.javaFileManager
         var parentClass: KSNode = container
@@ -361,11 +345,19 @@ class ResolverAAImpl(
         ) {
             parentClass = parentClass.parent!!
         }
-        val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-            ?: return container.declarations
-        val virtualFile = analyze {
-            (fileManager.findClass(classId, analysisScope) as? JavaClassImpl)?.virtualFile
-        } ?: return container.declarations
+
+        if (parentClass !is KSClassDeclarationImpl) {
+            return container.declarations
+        }
+
+        // Members of Foo's companion object are compiled into Foo and Foo$Companion. Total ordering is not recoverable
+        // from class files. Let's give up and rely on AA for now.
+        if (parentClass.isCompanionObject) {
+            return container.declarations
+        }
+
+        val classId = parentClass.ktClassOrObjectSymbol.classId ?: return container.declarations
+        val virtualFile = classId.getVirtualFile(fileManager) ?: return container.declarations
         val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
@@ -434,10 +426,9 @@ class ResolverAAImpl(
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = accessor.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                    ?: return emptySequence()
+                val virtualFileContent = classId.getFileContent(fileManager) ?: return emptySequence()
                 val jvmDesc = this.mapToJvmSignatureInternal(accessor)
                 extractThrowsFromClassFile(
                     virtualFileContent,
@@ -467,10 +458,9 @@ class ResolverAAImpl(
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = function.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                val virtualFileContent = analyze {
-                    (fileManager.findClass(classId, analysisScope) as JavaClassImpl).virtualFile!!.contentsToByteArray()
-                }
+                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                    ?: return emptySequence()
+                val virtualFileContent = classId.getFileContent(fileManager) ?: return emptySequence()
                 val jvmDesc = this.mapToJvmSignature(function)
                 extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
             }
@@ -480,10 +470,6 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(accessor: KSPropertyAccessor): String {
-        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
-            return accessor.receiver.simpleName.asString()
-        }
-
         val symbol: KaPropertyAccessorSymbol? = when (accessor) {
             is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol
             else -> null
@@ -491,6 +477,10 @@ class ResolverAAImpl(
 
         symbol?.explictJvmName()?.let {
             return it
+        }
+
+        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
+            return accessor.receiver.simpleName.asString()
         }
 
         val prefix = if (accessor is KSPropertyGetter) {
@@ -770,17 +760,10 @@ class ResolverAAImpl(
             return if (this is KSTypeImpl) {
                 analyze {
                     val decl = (this@toSignature.declaration as? KSClassDeclaration)
-                    // special handling for single parameter inline value class
-                    // unwrap the underlying for jvm signature.
-                    if (
-                        decl != null &&
-                        (decl.modifiers.contains(Modifier.INLINE) || decl.modifiers.contains(Modifier.VALUE)) &&
-                        decl.primaryConstructor?.parameters?.size == 1
-                    ) {
-                        decl.primaryConstructor!!.parameters.single().type.resolve().toSignature()
-                    } else {
-                        this@toSignature.type.toSignature()
-                    }
+                    // Force inline value class to be unwrapped.
+                    // Do not remove until AA fixes this.
+                    decl?.primaryConstructor
+                    type.toSignature()
                 }
             } else {
                 "<ERROR>"
@@ -789,7 +772,7 @@ class ResolverAAImpl(
 
         return when (ksAnnotated) {
             is KSClassDeclaration -> analyze {
-                (ksAnnotated.asStarProjectedType() as KSTypeImpl).type.mapToJvmType().descriptor
+                (ksAnnotated.asStarProjectedType() as KSTypeImpl).toSignature()
             }
             is KSFunctionDeclarationImpl -> {
                 analyze {
@@ -878,7 +861,7 @@ class ResolverAAImpl(
     internal fun computeAsMemberOf(function: KSFunctionDeclaration, containing: KSType): KSFunction {
         val propertyDeclaredIn = function.closestClassDeclaration()
             ?: throw IllegalArgumentException(
-                "Cannot call asMemberOf with a property that is not declared in a class or an interface"
+                "Cannot call asMemberOf with a function that is not declared in a class or an interface"
             )
         val key = function to containing
         return functionAsMemberOfCache.getOrPut(key) {
@@ -921,12 +904,12 @@ class ResolverAAImpl(
                             next = funcToSub.substitute(it)
                             cnt += 1
                         }
-                        funcToSub
-                    }.let {
-                        KSFunctionImpl(it)
+                        KSFunctionImpl(funcToSub, it)
                     }
                 }
             } else KSFunctionErrorImpl(function)
         }
     }
+
+    internal val isJvm = ktModule.targetPlatform.all { it is JvmPlatform }
 }

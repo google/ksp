@@ -67,7 +67,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
-        runTest("../test-utils/testData/api/annotationInDependencies.kt")
+        runTest("../kotlin-analysis-api/testData/annotationInDependencies.kt")
     }
 
     @TestMetadata("annotationOnConstructorParameter.kt")
@@ -106,6 +106,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java.kt")
     }
 
+    @TestMetadata("annotationValue_java2.kt")
+    @Test
+    fun testAnnotationValue_java2() {
+        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java2.kt")
+    }
+
     @TestMetadata("annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
@@ -118,18 +124,16 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithArrayValue.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithDefault.kt")
     @Test
     fun testAnnotationWithDefault() {
-        runTest("../test-utils/testData/api/annotationWithDefault.kt")
+        runTest("../kotlin-analysis-api/testData/annotationWithDefault.kt")
     }
 
-    @Disabled
     @TestMetadata("annotationWithDefaultValues.kt")
     @Test
     fun testAnnotationWithDefaultValues() {
-        runTest("../test-utils/testData/api/annotationWithDefaultValues.kt")
+        runTest("../kotlin-analysis-api/testData/annotationWithDefaultValues.kt")
     }
 
     @TestMetadata("annotationWithJavaTypeValue.kt")
@@ -138,11 +142,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithJavaTypeValue.kt")
     }
 
-    @Disabled
     @TestMetadata("asMemberOf.kt")
     @Test
     fun testAsMemberOf() {
-        runTest("../test-utils/testData/api/asMemberOf.kt")
+        runTest("../kotlin-analysis-api/testData/asMemberOf.kt")
     }
 
     @TestMetadata("backingFields.kt")
@@ -169,11 +172,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/objCacheB.kt")
     }
 
-    @Disabled
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
-        runTest("../test-utils/testData/api/checkOverride.kt")
+        runTest("../kotlin-analysis-api/testData/checkOverride.kt")
     }
 
     @TestMetadata("classKinds.kt")
@@ -227,7 +229,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
-        runTest("../test-utils/testData/api/declarationOrder.kt")
+        runTest("../kotlin-analysis-api/testData/declarationOrder.kt")
     }
 
     @TestMetadata("declarationUtil.kt")
@@ -279,7 +281,6 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/functionTypes.kt")
     }
 
-    @Disabled
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
     @Test
     fun testGetAnnotationByTypeWithInnerDefault() {
@@ -319,7 +320,7 @@ class KSPAATest : AbstractKSPAATest() {
     @TestMetadata("implicitPropertyAccessors.kt")
     @Test
     fun testImplicitPropertyAccessors() {
-        runTest("../test-utils/testData/api/implicitPropertyAccessors.kt")
+        runTest("../kotlin-analysis-api/testData/implicitPropertyAccessors.kt")
     }
 
     @TestMetadata("inheritedTypeAlias.kt")

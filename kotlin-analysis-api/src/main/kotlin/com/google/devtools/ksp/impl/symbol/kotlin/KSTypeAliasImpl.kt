@@ -19,14 +19,8 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSExpectActual
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSTypeAlias
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.KSVisitor
-import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
-import org.jetbrains.kotlin.analysis.api.symbols.nameOrAnonymous
+import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.symbols.*
 
 class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KaTypeAliasSymbol) :
     KSTypeAlias,
@@ -64,4 +58,13 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KaTypeA
     override fun defer(): Restorable? {
         return ktTypeAliasSymbol.defer(::getCached)
     }
+}
+
+internal fun KaTypeAliasSymbol.toModifiers(): Set<Modifier> {
+    val result = mutableSetOf<Modifier>()
+    result.add(modality.toModifier())
+    if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
+        result.add(visibility.toModifier())
+    }
+    return result
 }

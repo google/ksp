@@ -92,6 +92,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/annotationValue_java.kt")
     }
 
+    @TestMetadata("annotationValue_java2.kt")
+    @Test
+    fun testAnnotationValue_java2() {
+        runTest("../test-utils/testData/api/annotationValue_java2.kt")
+    }
+
     @TestMetadata("annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {

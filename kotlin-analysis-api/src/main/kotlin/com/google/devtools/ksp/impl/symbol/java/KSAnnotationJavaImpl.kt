@@ -40,13 +40,10 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaUnsupportedAnnotationValueImpl
-import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 
 class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) :
     KSAnnotation {
@@ -56,9 +53,18 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 
     private val type: KaType by lazy {
-        // TODO: local class annotations?
+        fun PsiClass.fqn(): String? {
+            val parent = containingClass?.fqn()
+                ?: return qualifiedName?.replace('.', '/')
+            if (name == null)
+                return null
+            return "$parent.$name"
+        }
         analyze {
-            buildClassType(ClassId.topLevel(FqName(psi.qualifiedName!!)))
+            val resolved = psi.resolveAnnotationType()
+            val fqn = resolved?.fqn() ?: "__KSP_unresolved_${psi.qualifiedName}"
+            val classId = ClassId.fromString(fqn)
+            buildClassType(classId)
         }
     }
 
@@ -90,9 +96,11 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 )
             }
             val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
-            presentArgs + defaultArguments.filterIndexed { idx, ksValueArgument ->
-                ksValueArgument.name?.asString() !in presentValueArgumentNames &&
-                    annotationConstructor?.valueParameters?.get(idx)?.hasDefaultValue == true
+            presentArgs + defaultArguments.filter { ksValueArgument ->
+                val name = ksValueArgument.name?.asString() ?: return@filter false
+                if (name in presentValueArgumentNames)
+                    return@filter false
+                annotationConstructor?.valueParameters?.any { it.name.asString() == name && it.hasDefaultValue } == true
             }
         }
     }
@@ -126,7 +134,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                 }
                             }
                     } else {
-                        symbol.valueParameters.map { valueParameterSymbol ->
+                        symbol.valueParameters.mapNotNull { valueParameterSymbol ->
                             valueParameterSymbol.getDefaultValue().let { constantValue ->
                                 KSValueArgumentImpl.getCached(
                                     KaBaseNamedAnnotationValue(
@@ -135,10 +143,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                         // fallback to unsupported annotation value to indicate such use cases.
                                         // when seeing unsupported annotation value we return `null` for the value.
                                         // which might still be incorrect but there might not be a perfect way.
-                                        constantValue
-                                            ?: KaUnsupportedAnnotationValueImpl(
-                                                KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-                                            )
+                                        constantValue ?: return@let null
                                     ),
                                     this@KSAnnotationJavaImpl,
                                     Origin.SYNTHETIC

@@ -22,11 +22,12 @@ dependencies {
 }
 
 android {
-    compileSdkVersion(34)
+    namespace = "com.example.myapplication"
+    compileSdk = 34
     defaultConfig {
         applicationId = "org.gradle.kotlin.dsl.samples.androidstudio"
-        minSdkVersion(34)
-        targetSdkVersion(34)
+        minSdk = 34
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }

@@ -92,16 +92,23 @@ class KspIntegrationTestRule(
 
     /**
      * Sets up the app module as an android app, adding necessary plugin dependencies, a manifest
-     * file and necessary gradle configuration.
+     * file and necessary gradle configuration. If [enableAgpBuiltInKotlinSupport] is true, enable AGP's built-in Kotlin
+     * support instead of applying the Kotlin Android Gradle plugin.
      */
-    fun setupAppAsAndroidApp() {
+    fun setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport: Boolean = false) {
         testProject.appModule.plugins.addAll(
             listOf(
                 PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
-                PluginDeclaration.kotlin("android", testConfig.kotlinBaseVersion),
                 PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
             )
         )
+        if (enableAgpBuiltInKotlinSupport) {
+            testProject.appModule
+                .plugins
+                .add(PluginDeclaration.id("com.android.experimental.built-in-kotlin", testConfig.androidBaseVersion))
+        } else {
+            testProject.appModule.plugins.add(PluginDeclaration.kotlin("android", testConfig.kotlinBaseVersion))
+        }
         addAndroidBoilerplate()
     }
 
@@ -125,10 +132,15 @@ class KspIntegrationTestRule(
         testProject.appModule.buildFileAdditions.add(
             """
             android {
-                compileSdkVersion(31)
+                namespace = "com.example.kspandroidtestapp"
+                compileSdk = 31
                 defaultConfig {
-                    minSdkVersion(24)
+                    minSdk = 24
                 }
+            }
+            
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-stdlib:${testConfig.kotlinBaseVersion}")
             }
             """.trimIndent()
         )
@@ -138,9 +150,7 @@ class KspIntegrationTestRule(
             }.writeText(
                 """
             <?xml version="1.0" encoding="utf-8"?>
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="com.example.kspandroidtestapp">
-            </manifest>
+            <manifest />
                 """.trimIndent()
             )
     }

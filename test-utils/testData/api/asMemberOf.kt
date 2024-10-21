@@ -18,6 +18,18 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AsMemberOfProcessor
 // EXPECTED:
+// main.Test: MutableIterator<(String..String?)>
+// main.Test: Iterator<(String..String?)>
+// main.Test: MutableIterator<(String..String?)>
+// lib.Test: MutableIterator<(String..String?)>
+// lib.Test: Iterator<(String..String?)>
+// lib.Test: MutableIterator<(String..String?)>
+// main.TestKt: MutableIterator<String>
+// main.TestKt: Iterator<String>
+// main.TestKt: MutableIterator<String>
+// lib.TestKt: MutableIterator<String>
+// lib.TestKt: Iterator<String>
+// lib.TestKt: MutableIterator<String>
 // Child1!!
 // intType: kotlin.Int!!
 // baseTypeArg1: kotlin.Int!!
@@ -112,6 +124,21 @@
 // (kotlin.Int!!) -> kotlin.Unit!!
 // Baz!!<kotlin.Long!!, kotlin.Number!!>
 // END
+// MODULE: lib
+// FILE: Test.java
+package lib;
+import java.util.List;
+class Test {
+    List<String> f() {
+        throw new RuntimeException("stub");
+    }
+}
+// FILE: TestKt.kt
+package lib
+class TestKt {
+    fun f(): MutableList<String> = TODO()
+}
+// MODULE: main(lib)
 // FILE: Input.kt
 open class Base<BaseTypeArg1, BaseTypeArg2> {
     val intType: Int = 0
@@ -196,4 +223,18 @@ class JavaImpl implements KotlinInterface {
     }
     public void setY(int value) {
     }
+}
+
+// FILE: main/Test.java
+package main;
+import java.util.List;
+class Test {
+    List<String> f() {
+        throw new RuntimeException("stub");
+    }
+}
+// FILE: TestKt.kt
+package main
+class TestKt {
+    fun f(): MutableList<String> = TODO()
 }
