@@ -218,7 +218,7 @@ abstract class KspAATask @Inject constructor(
                                     provider.asArguments().forEach { argument ->
                                         val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
                                         require(kv != null && kv.size == 3) {
-                                            "KSP apoption does not match (\\S+)=(\\S+): $argument"
+                                            "Processor arguments not in the format \\S+=\\S+: $argument"
                                         }
                                         put(kv[1], kv[2])
                                     }
