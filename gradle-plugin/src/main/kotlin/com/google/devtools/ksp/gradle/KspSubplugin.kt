@@ -194,7 +194,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     providers.flatMap { provider ->
                         provider.asArguments().map { argument ->
                             require(argument.matches(Regex("\\S+=\\S+"))) {
-                                "KSP apoption does not match \\S+=\\S+: $argument"
+                                "Processor arguments not in the format \\S+=\\S+: $argument"
                             }
                             InternalSubpluginOption("apoption", argument)
                         }
