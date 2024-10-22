@@ -306,7 +306,7 @@ class GradleCompilationTest {
         )
 
         val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
-        assertThat(result.output).contains("KSP apoption does not match \\S+=\\S+: invalid")
+        assertThat(result.output).contains("Processor arguments not in the format \\S+=\\S+: invalid")
     }
 
     @Test
