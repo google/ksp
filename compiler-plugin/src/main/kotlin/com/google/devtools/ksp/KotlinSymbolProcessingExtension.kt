@@ -45,7 +45,9 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Visibility
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
@@ -79,7 +81,7 @@ class KotlinSymbolProcessingExtension(
     logger: KSPLogger,
     val testProcessor: SymbolProcessorProvider? = null,
 ) : AbstractKotlinSymbolProcessingExtension(options, logger, testProcessor != null) {
-    override fun loadProviders(): List<SymbolProcessorProvider> {
+    override fun loadProviders(rootDisposable: Disposable): List<SymbolProcessorProvider> {
         if (!initialized) {
             providers = if (testProcessor != null) {
                 listOf(testProcessor)
@@ -87,6 +89,10 @@ class KotlinSymbolProcessingExtension(
                 val processingClasspath = options.processingClasspath
                 val classLoader =
                     URLClassLoader(processingClasspath.map { it.toURI().toURL() }.toTypedArray(), javaClass.classLoader)
+
+                Disposer.register(rootDisposable) {
+                    classLoader.close()
+                }
 
                 ServiceLoaderLite.loadImplementations(SymbolProcessorProvider::class.java, classLoader).filter {
                     (options.processors.isEmpty() && it.javaClass.name !in options.excludedProcessors) ||
@@ -266,7 +272,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
             }
         }
 
-        val providers = loadProviders()
+        val providers = loadProviders(project)
         if (!initialized) {
             codeGenerator = CodeGeneratorImpl(
                 options.classOutputDir,
@@ -398,7 +404,7 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         )
     }
 
-    abstract fun loadProviders(): List<SymbolProcessorProvider>
+    abstract fun loadProviders(rootDisposable: Disposable): List<SymbolProcessorProvider>
 
     private var annotationProcessingComplete = false
 
