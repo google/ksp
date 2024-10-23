@@ -4,11 +4,11 @@ name: CI
 
 on:
   push:
-    branches: [ main, 1.0.26-release, 1.0.25-release ]
+    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   pull_request:
-    branches: [ main, 1.0.26-release, 1.0.25-release ]
+    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   workflow_dispatch:
-    branches: [ main, 1.0.26-release, 1.0.25-release ]
+    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
 
 jobs:
   build-and-test:
