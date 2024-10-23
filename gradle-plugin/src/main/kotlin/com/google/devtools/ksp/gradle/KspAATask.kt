@@ -532,6 +532,8 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         } catch (e: InvocationTargetException) {
             kspGradleLogger.exception(e.targetException)
             throw e.targetException
+        } finally {
+            processorClassloader.close()
         }
 
         if (exitCode != ExitCode.OK) {
