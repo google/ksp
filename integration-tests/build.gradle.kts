@@ -3,7 +3,7 @@ import kotlin.math.max
 
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
-val agpBaseVersion: String by project
+val agpTestVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -23,7 +23,7 @@ dependencies {
 fun Test.configureCommonSettings() {
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
-    systemProperty("agpVersion", agpBaseVersion)
+    systemProperty("agpVersion", agpTestVersion)
     jvmArgumentProviders.add(
         RelativizingInternalPathProvider(
             "testRepo",
