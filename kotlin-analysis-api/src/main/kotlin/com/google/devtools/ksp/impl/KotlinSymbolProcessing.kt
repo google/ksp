@@ -495,7 +495,6 @@ class KotlinSymbolProcessing(
             )
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
             var newKSFiles = allDirtyKSFiles
-            val initialDirtySet = allDirtyKSFiles.toSet()
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
@@ -589,7 +588,7 @@ class KotlinSymbolProcessing(
 
             if (!logger.hasError) {
                 incrementalContext.updateCachesAndOutputs(
-                    initialDirtySet,
+                    allDirtyKSFiles,
                     codeGenerator.outputs,
                     codeGenerator.sourceToOutputs
                 )

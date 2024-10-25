@@ -372,6 +372,16 @@ class PlaygroundIT(val useKSP2: Boolean) {
         }
     }
 
+    @Test
+    fun testEmpty() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload/src/main/java/Empty.kt").appendText("\n\n")
+        gradleRunner.withArguments("clean", "assemble", "-Pksp.incremental.log=false").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+        }
+    }
+
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "KSP2={0}")
