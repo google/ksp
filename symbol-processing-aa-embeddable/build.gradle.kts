@@ -15,6 +15,7 @@ val kotlinBaseVersion: String by project
 
 val aaKotlinBaseVersion: String by project
 val aaIntellijVersion: String by project
+val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -50,7 +51,6 @@ val prefixesToRelocate = listOf(
     "javax.inject.",
     "javax.annotation.",
     "kotlinx.collections.immutable.",
-    "kotlinx.coroutines.",
     "kotlinx.serialization.",
     "org.apache.log4j.",
     "org.checkerframework.",
@@ -264,6 +264,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlinx", "kotlinx-coroutines-core-jvm", aaCoroutinesVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
