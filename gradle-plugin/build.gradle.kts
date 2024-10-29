@@ -8,6 +8,7 @@ val googleTruthVersion: String by project
 val agpBaseVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
+val aaCoroutinesVersion: String? by project
 
 tasks.withType<KotlinCompile> {
     compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
@@ -148,6 +149,8 @@ abstract class WriteVersionSrcTask : DefaultTask() {
     abstract val kspVersion: Property<String>
     @get:Input
     abstract val kotlinVersion: Property<String>
+    @get:Input
+    abstract val coroutinesVersion: Property<String>
 
     @get:OutputDirectory
     abstract val outputSrcDir: DirectoryProperty
@@ -159,6 +162,7 @@ abstract class WriteVersionSrcTask : DefaultTask() {
             package com.google.devtools.ksp.gradle
             val KSP_KOTLIN_BASE_VERSION = "${kotlinVersion.get()}"
             val KSP_VERSION = "${kspVersion.get()}"
+            val KSP_COROUTINES_VERSION = "${coroutinesVersion.get()}"
             """.trimIndent()
         )
     }
@@ -167,6 +171,7 @@ abstract class WriteVersionSrcTask : DefaultTask() {
 val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
     kspVersion = version.toString()
     kotlinVersion = kotlinBaseVersion
+    coroutinesVersion = aaCoroutinesVersion
     outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
 }
 

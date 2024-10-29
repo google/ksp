@@ -23,6 +23,7 @@ val aaFastutilVersion: String by project
 val aaStax2Version: String by project
 val aaAaltoXmlVersion: String by project
 val aaStreamexVersion: String by project
+val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -93,7 +94,7 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0") { isTransitive = false }
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion") { isTransitive = false }
     implementation(
         "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
     ) {
@@ -157,6 +158,7 @@ tasks.withType<ShadowJar>().configureEach {
         exclude(project(":api"))
     }
     exclude("kotlin/**")
+    exclude("kotlinx/coroutines/**")
     archiveClassifier.set("")
     minimize {
         exclude(dependency("org.lz4:lz4-java:.*"))
@@ -235,6 +237,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlinx", "kotlinx-coroutines-core-jvm", aaCoroutinesVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
