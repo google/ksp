@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.KaType
+import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
@@ -91,31 +92,6 @@ class ResolverAAImpl(
     private val packageInfoFiles by lazy {
         allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
     }
-
-    private val aliasingFqNs: Map<String, KSTypeAlias> by lazy {
-        val result = mutableMapOf<String, KSTypeAlias>()
-        val visitor = object : KSVisitorVoid() {
-            override fun visitFile(file: KSFile, data: Unit) {
-                file.declarations.forEach { it.accept(this, data) }
-
-                // TODO: evaluate with benchmarks: cost of getContainingFile v.s. name collision
-                // Import aliases are file-scoped. `aliasingNamesByFile` could be faster
-                ((file as? KSFileImpl)?.ktFileSymbol?.psi as? KtFile)?.importDirectives?.forEach {
-                    it.aliasName?.let { aliasingNames.add(it) }
-                }
-            }
-
-            override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
-                typeAlias.qualifiedName?.asString()?.let { fqn ->
-                    result[fqn] = typeAlias
-                    aliasingNames.add(fqn.substringAfterLast('.'))
-                }
-            }
-        }
-        allKSFiles.forEach { it.accept(visitor, Unit) }
-        result
-    }
-    private val aliasingNames: MutableSet<String> = mutableSetOf()
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
@@ -568,36 +544,20 @@ class ResolverAAImpl(
         }
     }
 
-    internal fun KSTypeReference.resolveToUnderlying(): KSType {
-        var candidate = resolve()
-        var declaration = candidate.declaration
-        while (declaration is KSTypeAlias) {
-            candidate = declaration.type.resolve()
-            declaration = candidate.declaration
-        }
-        return candidate
-    }
-    internal fun checkAnnotation(annotation: KSAnnotation, ksName: KSName, shortName: String): Boolean {
-        val annotationType = annotation.annotationType
-        val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
-        val simpleName = referencedName?.substringAfterLast('.')
-        return (simpleName == shortName || simpleName in aliasingNames) &&
-            annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
-    }
-    // Currently, all annotation types are imlemented by KSTypeReferenceResolvedImpl.
-    // The short-name-check optimization doesn't help.
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        val realAnnotationName =
-            aliasingFqNs[annotationName]?.type?.resolveToUnderlying()?.declaration?.qualifiedName?.asString()
-                ?: annotationName
+        val expandedIfAlias = analyze {
+            val classId = ClassId.fromString(annotationName)
+            findTypeAlias(classId)?.expandedType?.symbol?.classId?.asFqNameString()
+        }
+        val realAnnotationName = expandedIfAlias ?: annotationName
 
-        val ksName = KSNameImpl.getCached(realAnnotationName)
-        val shortName = ksName.getShortName()
         fun checkAnnotated(annotated: KSAnnotated): Boolean {
             return annotated.annotations.any {
-                checkAnnotation(it, ksName, shortName)
+                val kaType = (it.annotationType.resolve() as? KSTypeImpl)?.type ?: return@any false
+                kaType.toAbbreviatedType().symbol?.classId?.asFqNameString() == realAnnotationName
             }
         }
+
         val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
         return (newSymbols + deferredSymbolsRestored).asSequence().filter(::checkAnnotated)
     }
