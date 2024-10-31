@@ -458,16 +458,18 @@ class ResolverAAImpl(
             return accessor.receiver.simpleName.asString()
         }
 
-        val prefix = if (accessor is KSPropertyGetter) {
-            "get"
-        } else {
-            "set"
+        val name = accessor.receiver.simpleName.asString()
+        val uppercasedName = name.replaceFirstChar(Char::uppercaseChar)
+        // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
+        val prefixedName = when(accessor) {
+            is KSPropertyGetter -> if(name.startsWith("is")) name else "get$uppercasedName"
+            is KSPropertySetter -> if(name.startsWith("is")) "set${name.removePrefix("is")}" else "set$uppercasedName"
+            else -> ""
         }
 
-        val name = accessor.receiver.simpleName.asString().replaceFirstChar(Char::uppercaseChar)
         val inlineSuffix = symbol?.inlineSuffix ?: ""
         val mangledName = symbol?.internalSuffix ?: ""
-        return "$prefix$name$inlineSuffix$mangledName"
+        return "$prefixedName$inlineSuffix$mangledName"
     }
 
     // TODO: handle library symbols
