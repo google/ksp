@@ -227,6 +227,10 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             .map { it.substring(3).trim() }
 
         val results = runTest(testServices, mainModule, libModules, testProcessor)
+        val expected = expectedResults.joinToString("\n")
+        val actual = results.joinToString("\n")
+        println(expected)
+        println(actual)
         Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
     }
 }
