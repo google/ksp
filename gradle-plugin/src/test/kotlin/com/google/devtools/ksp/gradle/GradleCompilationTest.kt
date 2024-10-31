@@ -414,4 +414,16 @@ class GradleCompilationTest {
         )
         testRule.runner().withArguments(":app:assembleDebug").build()
     }
+
+    /**
+     * Regression test for https://github.com/google/ksp/issues/2174
+     */
+    @Test
+    fun androidGradlePluginBuiltInKotlinWithKspAppliedFirst() {
+        testRule.setupAppAsAndroidApp(applyKspPluginFirst = true)
+        // Enable AGP's built-in Kotlin support for test fixtures
+        testRule.runner()
+            .withArguments("tasks", "-Pandroid.experimental.enableTestFixturesKotlinSupport=true")
+            .build()
+    }
 }

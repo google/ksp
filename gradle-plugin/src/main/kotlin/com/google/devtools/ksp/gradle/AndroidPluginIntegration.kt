@@ -39,14 +39,10 @@ import java.util.concurrent.Callable
 @Suppress("UnstableApiUsage") // some android APIs are unsable.
 object AndroidPluginIntegration {
 
-    private val agpPluginIds = listOf("com.android.application", "com.android.library", "com.android.dynamic-feature")
-
     fun forEachAndroidSourceSet(project: Project, onSourceSet: (String) -> Unit) {
-        agpPluginIds.forEach { agpPluginId ->
-            project.pluginManager.withPlugin(agpPluginId) {
-                // for android apps, we need a configuration per source set
-                decorateAndroidExtension(project, onSourceSet)
-            }
+        project.pluginManager.withPlugin("com.android.base") {
+            // for android modules, we need a configuration per source set
+            decorateAndroidExtension(project, onSourceSet)
         }
     }
 
