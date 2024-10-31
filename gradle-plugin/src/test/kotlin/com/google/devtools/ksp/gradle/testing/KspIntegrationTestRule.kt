@@ -93,14 +93,25 @@ class KspIntegrationTestRule(
     /**
      * Sets up the app module as an android app, adding necessary plugin dependencies, a manifest
      * file and necessary gradle configuration. If [enableAgpBuiltInKotlinSupport] is true, enable AGP's built-in Kotlin
-     * support instead of applying the Kotlin Android Gradle plugin.
+     * support instead of applying the Kotlin Android Gradle plugin. If [applyKspPluginFirst] is true, apply the KSP
+     * plugin first.
      */
-    fun setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport: Boolean = false) {
+    fun setupAppAsAndroidApp(
+        enableAgpBuiltInKotlinSupport: Boolean = false,
+        applyKspPluginFirst: Boolean = false
+    ) {
         testProject.appModule.plugins.addAll(
-            listOf(
-                PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
-                PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
-            )
+            if (applyKspPluginFirst) {
+                listOf(
+                    PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion),
+                    PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion)
+                )
+            } else {
+                listOf(
+                    PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
+                    PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
+                )
+            }
         )
         if (enableAgpBuiltInKotlinSupport) {
             testProject.appModule
