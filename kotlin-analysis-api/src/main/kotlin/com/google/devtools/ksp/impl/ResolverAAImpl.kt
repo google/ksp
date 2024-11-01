@@ -461,9 +461,9 @@ class ResolverAAImpl(
         val name = accessor.receiver.simpleName.asString()
         val uppercasedName = name.replaceFirstChar(Char::uppercaseChar)
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
-        val prefixedName = when(accessor) {
-            is KSPropertyGetter -> if(name.startsWith("is")) name else "get$uppercasedName"
-            is KSPropertySetter -> if(name.startsWith("is")) "set${name.removePrefix("is")}" else "set$uppercasedName"
+        val prefixedName = when (accessor) {
+            is KSPropertyGetter -> if (name.startsWith("is")) name else "get$uppercasedName"
+            is KSPropertySetter -> if (name.startsWith("is")) "set${name.removePrefix("is")}" else "set$uppercasedName"
             else -> ""
         }
 
