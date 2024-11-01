@@ -43,6 +43,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
@@ -269,6 +270,11 @@ abstract class KspAATask @Inject constructor(
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
                         cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
+                        kspAATask.onlyIf {
+                            HostManager().enabled.any {
+                                it.name == konanTargetName
+                            }
+                        }
                     }
 
                     // TODO: pass targets of common
