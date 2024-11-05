@@ -2,21 +2,22 @@
 
 KSP2 has 4 main classes, one for each platform: `KSPJvmMain`, `KSPJsMain`, `KSPNativeMain`, `KSPCommonMain`. They reside
 in the same jars from the
-[artifacts.zip](https://github.com/google/ksp/releases/download/2.0.0-1.0.21/artifacts.zip) in the
-[release page](https://github.com/google/ksp/releases/tag/2.0.0-1.0.21):
-* `symbol-processing-aa-2.0.0-1.0.21.jar`
+[artifacts.zip](https://github.com/google/ksp/releases/download/2.0.21-1.0.26/artifacts.zip) in the
+[release page](https://github.com/google/ksp/releases/tag/2.0.21-1.0.26):
+* `symbol-processing-aa-2.0.21-1.0.26.jar`
 
 and depend on:
-* `symbol-processing-common-deps-2.0.0-1.0.21.jar`
+* `symbol-processing-common-deps-2.0.21-1.0.26.jar`
 
 You’ll also need the Kotlin runtime:
-* `kotlin-stdlib-2.0.0.jar`
+* `kotlin-stdlib-2.0.21.jar`
+* `kotlinx-coroutines-core-jvm-1.6.4.jar`
 
 Taking `KSPJvmMain` for example,
 
 ```
 java -cp \
-kotlin-analysis-api-2.0.0-1.0.21.jar:common-deps-2.0.0-1.0.21.jar:symbol-processing-api-2.0.0-1.0.21.jar:kotlin-stdlib-2.0.0.jar \
+kotlin-analysis-api-2.0.21-1.0.26.jar:common-deps-2.0.21-1.0.26.jar:symbol-processing-api-2.0.21-1.0.26.jar:kotlin-stdlib-2.0.21.jar:kotlinx-coroutines-core-jvm-1.6.4.jar \
 com.google.devtools.ksp.cmdline.KSPJvmMain \
 -jvm-target 11 \
 -module-name=main \
