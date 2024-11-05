@@ -1,9 +1,10 @@
 # Calling KSP2 In Programs
 
 There are two flavors of KSP2 artifacts: `symbol-processing-aa` and `symbol-processing-aa-embeddable`. They are both
-uber jars that include almost all runtime dependencies except `kotlin-stdlib` and `symbol-processing-common-deps`.
-The `-embeddable` version is the regular version with all the runtime dependencies renamed, so that it can be used with
-a Kotlin compiler in the same classpath without name clash. When in doubt, use `symbol-processing-aa-embeddable`.
+uber jars that include almost all runtime dependencies except `kotlin-stdlib`, `kotlinx-coroutines` and
+`symbol-processing-common-deps`. The `-embeddable` version is the regular version with all the runtime dependencies
+renamed, so that it can be used with a Kotlin compiler in the same classpath without name clash. When in doubt, use
+`symbol-processing-aa-embeddable`.
 
 Calling KSP2 consists of just 4 steps:
 1. Load processors
