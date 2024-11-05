@@ -32,6 +32,9 @@ class AndroidIT(useKSP2: Boolean) {
             assert("-keep class com.example.AClassBuilder { *; }" in configurationText) {
                 "Merged configuration did not contain generated proguard rules!\n$configurationText"
             }
+            val outputs = result.output.lines()
+            assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
+            assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
         }
     }
 
