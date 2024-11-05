@@ -114,8 +114,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    // FIXME: use aaKotlinBaseVersion after the dependency is fixed.
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:2.1.20-dev-201")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
 
