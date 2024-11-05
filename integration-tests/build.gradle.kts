@@ -4,6 +4,7 @@ import kotlin.math.max
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
 val agpTestVersion: String by project
+val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -18,6 +19,7 @@ dependencies {
     testImplementation(project(":symbol-processing"))
     testImplementation(project(":symbol-processing-cmdline"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
 }
 
 fun Test.configureCommonSettings() {
