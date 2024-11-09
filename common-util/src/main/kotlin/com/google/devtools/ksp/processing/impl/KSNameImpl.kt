@@ -1,6 +1,6 @@
-package com.google.devtools.ksp.processing.impl
+package com.google.devtools.ksp.common.impl
 
-import com.google.devtools.ksp.KSObjectCache
+import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.KSName
 
 class KSNameImpl private constructor(val name: String) : KSName {
