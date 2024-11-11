@@ -32,15 +32,25 @@ import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class GradleCompilationTest {
+@RunWith(Parameterized::class)
+class GradleCompilationTest(val useKSP2: Boolean) {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "KSP2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
+    }
+
     @Rule
     @JvmField
     val tmpDir = TemporaryFolder()
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir)
+    val testRule = KspIntegrationTestRule(tmpDir, useKSP2)
 
     @Test
     fun errorMessageFailsCompilation() {
@@ -239,8 +249,8 @@ class GradleCompilationTest {
         )
         testRule.appModule.dependencies.addAll(
             listOf(
-                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
-                artifact(configuration = "implementation", "androidx.room:room-runtime:2.4.2")
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.6.1"),
+                artifact(configuration = "implementation", "androidx.room:room-runtime:2.6.1")
             )
         )
         testRule.appModule.buildFileAdditions.add(
@@ -264,6 +274,13 @@ class GradleCompilationTest {
                     doFirst {
                         options.get().forEach { option ->
                             println("${'$'}{option.key}=${'$'}{option.value}")
+                        }
+                    }
+                }
+                tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                    doFirst {
+                        kspConfig.processorOptions.get().forEach { (key, value) ->
+                            println("apoption=${'$'}key=${'$'}value")
                         }
                     }
                 }
@@ -312,6 +329,7 @@ class GradleCompilationTest {
     @Test
     fun commandLineArgumentIsIncludedInApoptionsWhenAddedInKspTask() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assume.assumeFalse(useKSP2)
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(
@@ -366,6 +384,11 @@ class GradleCompilationTest {
                        println("HAS LIBRARY: ${'$'}{it.path}")
                      }
                    }
+                   tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                     kspConfig.libraries.files.forEach {
+                       println("HAS LIBRARY: ${'$'}{it.path}")
+                     }
+                   }
                  }
             """.trimIndent()
         )
@@ -389,6 +412,7 @@ class GradleCompilationTest {
 
     @Test
     fun changingKsp2AtRuntime() {
+        Assume.assumeFalse(useKSP2)
         testRule.setupAppAsJvmApp()
         testRule.appModule.buildFileAdditions.add(
             """
