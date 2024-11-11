@@ -29,7 +29,8 @@ import kotlin.reflect.KClass
  * Test must call [setupAppAsAndroidApp] or [setupAppAsJvmApp] before using the [runner].
  */
 class KspIntegrationTestRule(
-    private val tmpFolder: TemporaryFolder
+    private val tmpFolder: TemporaryFolder,
+    private val useKSP2: Boolean
 ) : TestWatcher() {
     /**
      * Initialized when the test starts.
@@ -144,7 +145,7 @@ class KspIntegrationTestRule(
             """
             android {
                 namespace = "com.example.kspandroidtestapp"
-                compileSdk = 31
+                compileSdk = 34
                 defaultConfig {
                     minSdk = 24
                 }
@@ -168,6 +169,6 @@ class KspIntegrationTestRule(
 
     override fun starting(description: Description) {
         super.starting(description)
-        testProject = TestProject(tmpFolder.newFolder(), testConfig)
+        testProject = TestProject(tmpFolder.newFolder(), testConfig, useKSP2)
     }
 }

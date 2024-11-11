@@ -30,16 +30,26 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class SourceSetConfigurationsTest {
+@RunWith(Parameterized::class)
+class SourceSetConfigurationsTest(val useKSP2: Boolean) {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "KSP2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
+    }
+
     @Rule
     @JvmField
     val tmpDir = TemporaryFolder()
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir)
+    val testRule = KspIntegrationTestRule(tmpDir, useKSP2)
 
     @Test
     fun configurationsForJvmApp() {
