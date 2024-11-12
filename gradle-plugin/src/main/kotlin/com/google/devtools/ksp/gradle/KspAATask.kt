@@ -24,11 +24,13 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.Optional
+import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
@@ -62,6 +64,9 @@ abstract class KspAATask @Inject constructor(
 
     @get:Nested
     abstract val kspConfig: KspGradleConfig
+
+    @get:Nested
+    abstract val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
@@ -220,8 +225,9 @@ abstract class KspAATask @Inject constructor(
                         )
                     )
                     cfg.processorOptions.putAll(kspExtension.apOptions)
-                    cfg.processorOptions.putAll(
-                        kspExtension.commandLineArgumentProviders.map { providers ->
+
+                    fun ListProperty<CommandLineArgumentProvider>.mapArgProviders() =
+                        map { providers ->
                             buildMap {
                                 for (provider in providers) {
                                     provider.asArguments().forEach { argument ->
@@ -234,7 +240,10 @@ abstract class KspAATask @Inject constructor(
                                 }
                             }
                         }
-                    )
+
+                    cfg.processorOptions.putAll(kspExtension.commandLineArgumentProviders.mapArgProviders())
+                    cfg.processorOptions.putAll(kspAATask.commandLineArgumentProviders.mapArgProviders())
+
                     val logLevel = LogLevel.entries.first {
                         project.logger.isEnabled(it)
                     }

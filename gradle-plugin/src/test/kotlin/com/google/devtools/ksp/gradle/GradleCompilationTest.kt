@@ -329,7 +329,6 @@ class GradleCompilationTest(val useKSP2: Boolean) {
     @Test
     fun commandLineArgumentIsIncludedInApoptionsWhenAddedInKspTask() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        Assume.assumeFalse(useKSP2)
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(
@@ -356,6 +355,17 @@ class GradleCompilationTest(val useKSP2: Boolean) {
 
                      options.get().forEach { option ->
                        println("${'$'}{option.key}=${'$'}{option.value}")
+                     }
+                     commandLineArgumentProviders.get().forEach { commandLine ->
+                       println("commandLine=${'$'}{commandLine.asArguments()}")
+                     }
+                   }
+                   tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                     val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
+                     commandLineArgumentProviders.add(Provider(destination.asFile))
+
+                     kspConfig.processorOptions.get().forEach { (key, value) ->
+                         println("apoption=${'$'}key=${'$'}value")
                      }
                      commandLineArgumentProviders.get().forEach { commandLine ->
                        println("commandLine=${'$'}{commandLine.asArguments()}")
