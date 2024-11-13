@@ -126,7 +126,7 @@ class KotlinSymbolProcessing(
     val logger: KSPLogger
 ) {
     enum class ExitCode(
-        @Suppress("UNUSED_PARAMETER") code: Int
+        val code: Int
     ) {
         OK(0),
 
