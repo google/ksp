@@ -185,7 +185,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             "-classpath", classpath,
             "-d", module.outDir.path
         )
-        compileJavaFiles(javaFiles, options, assertions = JUnit5Assertions)
+        compileJavaFiles(javaFiles, options)
     }
 
     fun runTest(@TestDataFile path: String) {

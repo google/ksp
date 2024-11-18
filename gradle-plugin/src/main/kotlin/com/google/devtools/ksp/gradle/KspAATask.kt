@@ -24,11 +24,13 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.Optional
+import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
@@ -43,6 +45,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
@@ -61,6 +64,9 @@ abstract class KspAATask @Inject constructor(
 
     @get:Nested
     abstract val kspConfig: KspGradleConfig
+
+    @get:Nested
+    abstract val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
@@ -143,6 +149,9 @@ abstract class KspAATask @Inject constructor(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
                 ),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
+                project.dependencies.create(
+                    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
+                ),
             ).apply {
                 isTransitive = false
             }
@@ -150,7 +159,12 @@ abstract class KspAATask @Inject constructor(
                 kspAATask.kspClasspath.from(kspAADepCfg)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
-                    cfg.moduleName.value(project.name)
+                    // Ref: https://github.com/JetBrains/kotlin/blob/6535f86dfe36effeba976802ebd56a5a56071f45/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/mpp/kotlinCompilations.kt#L92
+                    val moduleName = when (val compilationName = kotlinCompilation.name) {
+                        KotlinCompilation.MAIN_COMPILATION_NAME -> project.name
+                        else -> "${project.name}_$compilationName"
+                    }
+                    cfg.moduleName.value(moduleName)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
                     val filteredTasks =
@@ -211,8 +225,9 @@ abstract class KspAATask @Inject constructor(
                         )
                     )
                     cfg.processorOptions.putAll(kspExtension.apOptions)
-                    cfg.processorOptions.putAll(
-                        kspExtension.commandLineArgumentProviders.map { providers ->
+
+                    fun ListProperty<CommandLineArgumentProvider>.mapArgProviders() =
+                        map { providers ->
                             buildMap {
                                 for (provider in providers) {
                                     provider.asArguments().forEach { argument ->
@@ -225,7 +240,10 @@ abstract class KspAATask @Inject constructor(
                                 }
                             }
                         }
-                    )
+
+                    cfg.processorOptions.putAll(kspExtension.commandLineArgumentProviders.mapArgProviders())
+                    cfg.processorOptions.putAll(kspAATask.commandLineArgumentProviders.mapArgProviders())
+
                     val logLevel = LogLevel.entries.first {
                         project.logger.isEnabled(it)
                     }
@@ -266,6 +284,11 @@ abstract class KspAATask @Inject constructor(
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
                         cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
+                        kspAATask.onlyIf {
+                            HostManager().enabled.any {
+                                it.name == konanTargetName
+                            }
+                        }
                     }
 
                     // TODO: pass targets of common

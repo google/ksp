@@ -9,6 +9,7 @@ import com.google.devtools.ksp.processing.kspJvmArgParserHelp
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
+import kotlin.system.exitProcess
 
 class KSPJvmMain {
     companion object {
@@ -45,5 +46,6 @@ internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSP
         )
         .toList() as List<SymbolProcessorProvider>
 
-    KotlinSymbolProcessing(config, processorProviders, logger).execute()
+    val exitCode = KotlinSymbolProcessing(config, processorProviders, logger).execute()
+    exitProcess(exitCode.code)
 }

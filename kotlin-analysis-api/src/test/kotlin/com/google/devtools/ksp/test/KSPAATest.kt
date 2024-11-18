@@ -305,6 +305,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotation.kt")
     }
 
+    @TestMetadata("getSymbolsFromAnnotationInLib.kt")
+    @Test
+    fun testGetSymbolsFromAnnotationInLib() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotationInLib.kt")
+    }
+
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {

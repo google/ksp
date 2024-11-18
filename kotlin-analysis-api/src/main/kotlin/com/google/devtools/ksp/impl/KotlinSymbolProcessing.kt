@@ -126,7 +126,7 @@ class KotlinSymbolProcessing(
     val logger: KSPLogger
 ) {
     enum class ExitCode(
-        @Suppress("UNUSED_PARAMETER") code: Int
+        val code: Int
     ) {
         OK(0),
 
@@ -495,7 +495,6 @@ class KotlinSymbolProcessing(
             )
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
             var newKSFiles = allDirtyKSFiles
-            val initialDirtySet = allDirtyKSFiles.toSet()
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
@@ -589,7 +588,7 @@ class KotlinSymbolProcessing(
 
             if (!logger.hasError) {
                 incrementalContext.updateCachesAndOutputs(
-                    initialDirtySet,
+                    allDirtyKSFiles,
                     codeGenerator.outputs,
                     codeGenerator.sourceToOutputs
                 )
@@ -645,7 +644,6 @@ fun String?.toKotlinVersion(): KotlinVersion {
 @Suppress("unused")
 @OptIn(KaImplementationDetail::class)
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
-    kotlinx.coroutines.debug.internal.DebugProbesImpl::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseModuleProvider::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
@@ -655,14 +653,14 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneFirDirectInheritorsProvider::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased
-        .deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinSimpleGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.fir.modification.KaFirSourceModificationService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
+    org.jetbrains.kotlin.analysis.api.fir.statistics.KaFirStatisticsService::class.java,
     org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,
     org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
     org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
