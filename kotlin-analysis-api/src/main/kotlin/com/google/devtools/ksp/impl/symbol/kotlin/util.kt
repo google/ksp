@@ -922,7 +922,7 @@ internal val KaDeclarationSymbol.internalSuffix: String
             else -> {}
         }
 
-        fun String.toSuffix(): String = "\$$this"
+        fun String.toSuffix(): String = "\$$this".replace('.', '_')
         when (val module = containingModule) {
             is KaSourceModule -> module.name.toSuffix()
             is KaLibraryModule -> {
