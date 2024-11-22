@@ -218,9 +218,6 @@ class KotlinSymbolProcessing(
                 if (kspConfig is KSPJvmConfig) {
                     roots.addAll(kspConfig.javaSourceRoots)
                 }
-                roots.forEach {
-                    it.mkdirs()
-                }
                 addSourceRoots(roots.map { it.toPath() })
             }.apply(::addModule)
 
