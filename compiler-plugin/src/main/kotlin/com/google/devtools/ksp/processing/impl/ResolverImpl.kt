@@ -57,7 +57,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
-import org.jetbrains.kotlin.codegen.OwnerKind
+import org.jetbrains.kotlin.codegen.signature.BothSignatureWriter
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -66,9 +66,11 @@ import org.jetbrains.kotlin.container.tryGetService
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
+import org.jetbrains.kotlin.fileClasses.JvmFileClassUtil
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.components.TypeUsage
 import org.jetbrains.kotlin.load.java.descriptors.JavaForKotlinOverridePropertyDescriptor
+import org.jetbrains.kotlin.load.java.descriptors.getImplClassNameForDeserialized
 import org.jetbrains.kotlin.load.java.lazy.*
 import org.jetbrains.kotlin.load.java.lazy.descriptors.LazyJavaTypeParameterDescriptor
 import org.jetbrains.kotlin.load.java.lazy.types.JavaTypeResolver
@@ -106,6 +108,7 @@ import org.jetbrains.kotlin.resolve.multiplatform.findExpects
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DescriptorWithContainerSource
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.checker.SimpleClassicTypeSystemContext
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
@@ -113,6 +116,7 @@ import org.jetbrains.kotlin.types.typeUtil.substitute
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.util.containingNonLocalDeclaration
 import org.jetbrains.org.objectweb.asm.Opcodes
+import org.jetbrains.org.objectweb.asm.Type
 import java.io.File
 import java.util.*
 
@@ -356,18 +360,22 @@ class ResolverImpl(
     override fun mapToJvmSignature(declaration: KSDeclaration): String? = mapToJvmSignatureInternal(declaration)
 
     internal fun mapToJvmSignatureInternal(declaration: KSDeclaration): String? = when (declaration) {
-        is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it).descriptor }
+        is KSClassDeclaration -> resolveClassDeclaration(declaration)?.let { typeMapper.mapType(it.defaultType).descriptor }
         is KSFunctionDeclaration -> resolveFunctionDeclaration(declaration)?.let {
             when (it) {
                 is FunctionDescriptor -> typeMapper.mapAsmMethod(it).descriptor
-                is PropertyDescriptor -> typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
+                is PropertyDescriptor -> typeMapper.mapPropertySignature(it)
                 else -> throw IllegalStateException("Unexpected descriptor type for declaration: $declaration")
             }
         }
-        is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)?.let {
-            typeMapper.mapFieldSignature(it.type, it) ?: typeMapper.mapType(it).descriptor
-        }
+        is KSPropertyDeclaration -> resolvePropertyDeclaration(declaration)?.let { typeMapper.mapPropertySignature(it) }
         else -> null
+    }
+
+    private fun KotlinTypeMapper.mapPropertySignature(descriptor: PropertyDescriptor): String? {
+        val sw = BothSignatureWriter(BothSignatureWriter.Mode.TYPE)
+        writeFieldSignature(descriptor.type, descriptor, sw)
+        return sw.makeJavaGenericSignature() ?: mapType(descriptor.type).descriptor
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
@@ -880,22 +888,13 @@ class ResolverImpl(
 
     @KspExperimental
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
-        val descriptor = resolvePropertyAccessorDeclaration(accessor)
-
-        return descriptor?.let {
-            // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
-            typeMapper.mapFunctionName(descriptor, OwnerKind.IMPLEMENTATION)
-        }
+        return resolvePropertyAccessorDeclaration(accessor)?.let(typeMapper::mapFunctionName)
     }
 
     @KspExperimental
     override fun getJvmName(declaration: KSFunctionDeclaration): String? {
         // function names might be mangled if they receive inline class parameters or they are internal
-        val descriptor = resolveFunctionDeclaration(declaration)
-        return (descriptor as? FunctionDescriptor)?.let {
-            // KotlinTypeMapper.mapSignature always uses OwnerKind.IMPLEMENTATION
-            typeMapper.mapFunctionName(it, OwnerKind.IMPLEMENTATION)
-        }
+        return (resolveFunctionDeclaration(declaration) as? FunctionDescriptor)?.let(typeMapper::mapFunctionName)
     }
 
     @KspExperimental
@@ -911,11 +910,35 @@ class ResolverImpl(
     }
 
     private fun getJvmOwnerQualifiedName(descriptor: DeclarationDescriptor): String? {
-        return try {
-            typeMapper.mapImplementationOwner(descriptor).className
-        } catch (unsupported: UnsupportedOperationException) {
-            null
+        return typeMapper.mapJvmImplementationOwner(descriptor)?.className
+    }
+
+    private fun KotlinTypeMapper.mapJvmImplementationOwner(descriptor: DeclarationDescriptor): Type? {
+        if (descriptor is ConstructorDescriptor) {
+            return mapClass(descriptor.constructedClass)
         }
+
+        return when (val container = descriptor.containingDeclaration) {
+            is PackageFragmentDescriptor ->
+                internalNameForPackageMemberOwner(descriptor as CallableMemberDescriptor)?.let(Type::getObjectType)
+            is ClassDescriptor ->
+                mapClass(container)
+            else -> null
+        }
+    }
+
+    private fun internalNameForPackageMemberOwner(descriptor: CallableMemberDescriptor): String? {
+        val file = DescriptorToSourceUtils.getContainingFile(descriptor)
+        if (file != null) {
+            return JvmFileClassUtil.getFileClassInternalName(file)
+        }
+
+        val directMember = DescriptorUtils.getDirectMember(descriptor)
+        if (directMember is DescriptorWithContainerSource) {
+            return directMember.getImplClassNameForDeserialized()?.internalName
+        }
+
+        return null
     }
 
     // TODO: refactor and reuse BinaryClassInfoCache
