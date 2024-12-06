@@ -102,6 +102,85 @@ class ProcessorClasspathConfigurationsTest(val useKSP2: Boolean) {
     }
 
     @Test
+    fun testConfigurationsForAndroidApp() {
+        testRule.setupAppAsAndroidApp()
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                android {
+                    flavorDimensions += listOf("tier", "region")
+
+                    productFlavors {
+                        create("free") {
+                            dimension = "tier"
+                        }
+                        create("premium") {
+                            dimension = "tier"
+                        }
+                        create("us") {
+                            dimension = "region"
+                        }
+                        create("eu") {
+                            dimension = "region"
+                        }
+                    }
+                }
+                $kspConfigs.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.4.2")
+                }
+                tasks.register("testConfigurations") {
+                    // Resolve all tasks to trigger classpath config creation
+                    dependsOn(tasks["tasks"])
+                    doLast {
+                        val freeUsDebugConfig = configurations["kspFreeUsDebugKotlinProcessorClasspath"]
+                        val testFreeUsDebugConfig = configurations["kspFreeUsDebugUnitTestKotlinProcessorClasspath"]
+                        val androidTestFreeUsDebugConfig =
+                            configurations["kspFreeUsDebugAndroidTestKotlinProcessorClasspath"]
+                        val freeUsDebugParentConfigs =
+                            setOf(
+                                "ksp",
+                                "kspDebug",
+                                "kspFree",
+                                "kspUs",
+                                "kspFreeUs",
+                                "kspFreeUsDebug"
+                            )
+                        val testFreeUsDebugParentConfigs =
+                            setOf(
+                                "ksp",
+                                "kspTest",
+                                "kspTestDebug",
+                                "kspTestFree",
+                                "kspTestUs",
+                                "kspTestFreeUs",
+                                "kspTestFreeUsDebug"
+                            )
+                        val androidTestFreeUsDebugParentConfigs =
+                            setOf(
+                                "ksp",
+                                "kspAndroidTest",
+                                "kspAndroidTestDebug",
+                                "kspAndroidTestFree",
+                                "kspAndroidTestUs",
+                                "kspAndroidTestFreeUs",
+                                "kspAndroidTestFreeUsDebug"
+                            )
+                        require(freeUsDebugConfig.extendsFrom.map { it.name }.toSet() == freeUsDebugParentConfigs)
+                        require(
+                            testFreeUsDebugConfig.extendsFrom.map { it.name }.toSet() == testFreeUsDebugParentConfigs
+                        )
+                        require(
+                            androidTestFreeUsDebugConfig.extendsFrom.map { it.name }.toSet() == androidTestFreeUsDebugParentConfigs
+                        )
+                    }
+                }
+            """.trimIndent()
+        )
+        testRule.runner().withArguments(":app:testConfigurations").build()
+    }
+
+    @Test
     fun testConfigurationsForMultiPlatformApp() {
         testRule.setupAppAsMultiplatformApp(
             """
