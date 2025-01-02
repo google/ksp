@@ -85,7 +85,6 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInherit
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
@@ -135,6 +134,8 @@ class KotlinSymbolProcessing(
 
         // Let exceptions pop through to the caller. Don't catch and convert them to, e.g., INTERNAL_ERROR.
     }
+
+    private var applicationServiceRegistered = false
 
     init {
         // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
@@ -238,6 +239,15 @@ class KotlinSymbolProcessing(
             StandaloneProjectFactory.createPackagePartsProvider(
                 libraryRoots,
             )
+
+        synchronized(applicationServiceRegistered) {
+            if (!applicationServiceRegistered) {
+                FirStandaloneServiceRegistrar.registerApplicationServices(
+                    kotlinCoreProjectEnvironment.environment.application
+                )
+                applicationServiceRegistered = true
+            }
+        }
         registerProjectServices(
             kotlinCoreProjectEnvironment,
             ktFiles,
@@ -331,6 +341,7 @@ class KotlinSymbolProcessing(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         modules: List<KaModule>,
@@ -339,8 +350,8 @@ class KotlinSymbolProcessing(
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
-        modules.filterIsInstance<KaSourceModuleImpl>().forEach {
-            it.sourceRoots.forEach {
+        modules.filterIsInstance<KaSourceModule>().forEach {
+            it.psiRoots.forEach {
                 when (it) {
                     is KtFile -> ktFiles.add(it)
                     is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(it)
