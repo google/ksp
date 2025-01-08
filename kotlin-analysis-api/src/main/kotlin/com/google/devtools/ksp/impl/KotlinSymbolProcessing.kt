@@ -673,6 +673,7 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.symbols.pointers.KaBasePsiSymbolPointerCreator::class.java,
     org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
