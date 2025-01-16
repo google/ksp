@@ -659,6 +659,8 @@ class ResolverAAImpl(
         }
         recordLookupForPropertyOrMethod(overrider)
         recordLookupForPropertyOrMethod(overridee)
+        if (!overridee.isVisibleFrom(overrider))
+            return false
         return analyze {
             overriderSymbol.allOverriddenSymbols.contains(overrideeSymbol) ||
                 overriderSymbol.intersectionOverriddenSymbols.contains(overrideeSymbol)
