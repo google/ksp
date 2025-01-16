@@ -110,6 +110,14 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val jBaseOverride = resolver.getClassDeclarationByName("JBaseOverride")!!
         val jbaseProp = jbase.declarations.single { it.simpleName.asString() == "getProp" }
         checkOverride(jbaseProp, myInterfaceProp, jBaseOverride)
+
+        val packagePrivateBase = resolver.getClassDeclarationByName("pkg2.WithPackagePrivateBase")!!
+        val packagePrivateBaseFun = packagePrivateBase.declarations
+            .single { it.simpleName.asString() == "packagePrivateFun" }
+        val packagePrivate = resolver.getClassDeclarationByName("pkg1.WithPackagePrivate")!!
+        val packagePrivateFun = packagePrivate.declarations
+            .single { it.simpleName.asString() == "packagePrivateFun" }
+        checkOverride(packagePrivateFun, packagePrivateBaseFun)
         return emptyList()
     }
 }
