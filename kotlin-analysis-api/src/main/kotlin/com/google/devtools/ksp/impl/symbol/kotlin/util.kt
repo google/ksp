@@ -29,6 +29,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameter
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
 import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsMemberImpl
@@ -404,7 +405,14 @@ internal fun ClassId.toKtClassSymbol(): KaClassSymbol? {
                 it.asString() == this@toKtClassSymbol.shortClassName.asString()
             }?.singleOrNull() as? KaClassSymbol
         } else {
-            findClass(this@toKtClassSymbol)
+            // Try to find KaFirPsiJavaClassSymbol. See KT-74598 for details.
+            val candidate = findClass(this@toKtClassSymbol)
+            val psi = candidate?.psi
+            // Checking of JAVA_SOURCE is needed because psi can come from libraries.
+            if (candidate?.origin == KaSymbolOrigin.JAVA_SOURCE && psi is PsiClass)
+                psi.namedClassSymbol
+            else
+                candidate
         }
     }
 }

@@ -224,6 +224,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/docString.kt")
     }
 
+    @TestMetadata("equals.kt")
+    @Test
+    fun testEquals() {
+        runTest("../test-utils/testData/api/equals.kt")
+    }
+
     @TestMetadata("equivalentJavaWildcards.kt")
     @Test
     fun testEquivalentJavaWildcards() {
