@@ -89,6 +89,7 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderB
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
@@ -136,9 +137,6 @@ class KotlinSymbolProcessing(
 
         // Let exceptions pop through to the caller. Don't catch and convert them to, e.g., INTERNAL_ERROR.
     }
-
-    private var applicationServiceRegistered = false
-    private var applicationServiceRegisteredLock = object {}
 
     init {
         // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
@@ -243,20 +241,15 @@ class KotlinSymbolProcessing(
                 libraryRoots,
             )
 
-        synchronized(applicationServiceRegisteredLock) {
-            if (!applicationServiceRegistered) {
-                applicationServiceRegistered = true
-                val application = kotlinCoreProjectEnvironment.environment.application
-                application.registerService(
-                    org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
-                    org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java
-                )
-                application.registerService(
-                    KotlinAnalysisPermissionOptions::class.java,
-                    KotlinStandaloneAnalysisPermissionOptions::class.java
-                )
-            }
-        }
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
+            org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java
+        )
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            KotlinAnalysisPermissionOptions::class.java,
+            KotlinStandaloneAnalysisPermissionOptions::class.java
+        )
+
         registerProjectServices(
             kotlinCoreProjectEnvironment,
             ktFiles,
@@ -276,6 +269,20 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             modules
         )
+    }
+
+    private fun <T> KotlinCoreProjectEnvironment.registerApplicationServices(
+        serviceInterface: Class<T>,
+        serviceImplementation: Class<out T>
+    ) {
+        val application = environment.application
+        if (application.getServiceIfCreated(serviceInterface) == null) {
+            KotlinCoreEnvironment.underApplicationLock {
+                if (application.getServiceIfCreated(serviceInterface) == null) {
+                    application.registerService(serviceInterface, serviceImplementation)
+                }
+            }
+        }
     }
 
     // TODO: org.jetbrains.kotlin.analysis.providers.impl.KotlinStatic*
