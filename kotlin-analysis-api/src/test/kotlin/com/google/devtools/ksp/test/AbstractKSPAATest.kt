@@ -91,7 +91,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     override fun compileModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
-        val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }
+        val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
         compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name)
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
             .joinToString(File.pathSeparator) { it.absolutePath }

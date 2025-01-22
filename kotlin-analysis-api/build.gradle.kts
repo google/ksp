@@ -49,6 +49,7 @@ dependencies {
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
         "com.jetbrains.intellij.platform:diagnostic",
+        "com.jetbrains.intellij.platform:diagnostic-telemetry",
         "com.jetbrains.intellij.java:java-frontback-psi",
         "com.jetbrains.intellij.java:java-frontback-psi-impl",
         "com.jetbrains.intellij.java:java-psi",
@@ -102,6 +103,8 @@ dependencies {
     }
     implementation("org.jetbrains:annotations:24.1.0")
 
+    implementation("io.opentelemetry:opentelemetry-api:1.34.1") { isTransitive = false }
+
     compileOnly(project(":common-deps"))
 
     implementation(project(":api"))
@@ -117,6 +120,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
+    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
 
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))
