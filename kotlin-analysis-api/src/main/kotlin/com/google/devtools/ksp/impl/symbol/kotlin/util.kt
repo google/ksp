@@ -739,13 +739,13 @@ internal fun getVarianceForWildcard(
 
 @OptIn(KaExperimentalApi::class)
 internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
-    val parameters = this.classifierSymbol()?.typeParameters ?: emptyList()
     val args = this.typeArguments()
     return analyze {
         when (this@toWildcard) {
             is KaClassType -> {
                 // TODO: missing annotations from original type.
-                buildClassType(this@toWildcard.expandedSymbol!!.tryResolveToTypePhase()) {
+                buildClassType(symbol.tryResolveToTypePhase()) {
+                    val parameters = symbol.typeParameters
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
                         val variance = getVarianceForWildcard(param, arg, argMode)
