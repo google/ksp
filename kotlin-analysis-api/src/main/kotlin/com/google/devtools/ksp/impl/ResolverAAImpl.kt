@@ -556,7 +556,7 @@ class ResolverAAImpl(
         fun checkAnnotated(annotated: KSAnnotated): Boolean {
             return annotated.annotations.any {
                 val kaType = (it.annotationType.resolve() as? KSTypeImpl)?.type ?: return@any false
-                kaType.toAbbreviatedType().symbol?.classId?.asFqNameString() == realAnnotationName
+                kaType.fullyExpand().symbol?.classId?.asFqNameString() == realAnnotationName
             }
         }
 
