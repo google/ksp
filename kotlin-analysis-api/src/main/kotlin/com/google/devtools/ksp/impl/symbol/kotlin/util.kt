@@ -158,7 +158,7 @@ internal fun KaType.render(inFunctionType: Boolean = false): String {
                         if (!inFunctionType) {
                             append("[typealias ${symbol.name.asString()}]")
                         } else {
-                            append(this@render.toAbbreviatedType().render(inFunctionType = true))
+                            append(this@render.fullyExpand().render(inFunctionType = true))
                         }
                     } else {
                         append(this@render.symbol.name?.asString())
