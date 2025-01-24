@@ -42,7 +42,6 @@ import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverte
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
-import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
@@ -723,12 +722,11 @@ internal fun getVarianceForWildcard(
     }
     if (projectionKind == Variance.INVARIANT || projectionKind == parameterVariance) {
         if (mode.skipDeclarationSiteWildcardsIfPossible && projection !is KaStarTypeProjection) {
-            val coneType = (projection.type as KaFirType).coneType
-            // TODO: fix most precise covariant argument case.
-            if (parameterVariance == Variance.OUT_VARIANCE) {
+            val type = projection.type ?: return parameterVariance
+            if (parameterVariance == Variance.OUT_VARIANCE && type.isMostPreciseCovariantArgument()) {
                 return Variance.INVARIANT
             }
-            if (parameterVariance == Variance.IN_VARIANCE && coneType.isAny) {
+            if (parameterVariance == Variance.IN_VARIANCE && type.isMostPreciseContravariantArgument()) {
                 return Variance.INVARIANT
             }
         }
@@ -736,6 +734,41 @@ internal fun getVarianceForWildcard(
     }
     return Variance.OUT_VARIANCE
 }
+
+internal fun KaType.isMostPreciseContravariantArgument(): Boolean = analyze { isAnyType }
+
+internal fun KaType.isMostPreciseCovariantArgument() = !canHaveSubtypesIgnoreNullability()
+
+@OptIn(KaExperimentalApi::class)
+private fun KaType.canHaveSubtypesIgnoreNullability(): Boolean =
+    analyze {
+        val type = fullyExpandedType
+        val symbol = expandedSymbol ?: return@analyze true
+        if (symbol.classKind == KaClassKind.ENUM_CLASS || symbol.isExpect) {
+            return@analyze true
+        }
+        if (symbol.modality != KaSymbolModality.FINAL) {
+            return@analyze true
+        }
+
+        symbol.typeParameters.forEachIndexed { idx, param ->
+            val projection = type.typeArguments().get(idx)
+
+            if (projection !is KaTypeArgumentWithVariance) {
+                return@analyze true
+            }
+
+            val type = projection.type
+            val effectiveVariance = getEffectiveVariance(param.variance, projection.variance)
+            if (effectiveVariance == Variance.OUT_VARIANCE && !type.isMostPreciseCovariantArgument()) {
+                return@analyze true
+            }
+            if (effectiveVariance == Variance.IN_VARIANCE && !type.isMostPreciseContravariantArgument()) {
+                return@analyze true
+            }
+        }
+        false
+    }
 
 @OptIn(KaExperimentalApi::class)
 internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
