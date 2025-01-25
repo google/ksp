@@ -711,7 +711,7 @@ internal fun getVarianceForWildcard(
     val projectionKind = if (projection is KaTypeArgumentWithVariance) {
         projection.variance
     } else {
-        Variance.INVARIANT
+        Variance.OUT_VARIANCE
     }
     val parameterVariance = parameter.variance
     if (parameterVariance == Variance.INVARIANT) {
