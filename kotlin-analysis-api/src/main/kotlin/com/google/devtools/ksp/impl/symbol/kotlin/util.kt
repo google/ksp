@@ -42,7 +42,6 @@ import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverte
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
-import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
@@ -158,7 +157,7 @@ internal fun KaType.render(inFunctionType: Boolean = false): String {
                         if (!inFunctionType) {
                             append("[typealias ${symbol.name.asString()}]")
                         } else {
-                            append(this@render.toAbbreviatedType().render(inFunctionType = true))
+                            append(this@render.fullyExpand().render(inFunctionType = true))
                         }
                     } else {
                         append(this@render.symbol.name?.asString())
@@ -712,7 +711,7 @@ internal fun getVarianceForWildcard(
     val projectionKind = if (projection is KaTypeArgumentWithVariance) {
         projection.variance
     } else {
-        Variance.INVARIANT
+        Variance.OUT_VARIANCE
     }
     val parameterVariance = parameter.variance
     if (parameterVariance == Variance.INVARIANT) {
@@ -723,12 +722,11 @@ internal fun getVarianceForWildcard(
     }
     if (projectionKind == Variance.INVARIANT || projectionKind == parameterVariance) {
         if (mode.skipDeclarationSiteWildcardsIfPossible && projection !is KaStarTypeProjection) {
-            val coneType = (projection.type as KaFirType).coneType
-            // TODO: fix most precise covariant argument case.
-            if (parameterVariance == Variance.OUT_VARIANCE) {
+            val type = projection.type ?: return parameterVariance
+            if (parameterVariance == Variance.OUT_VARIANCE && type.isMostPreciseCovariantArgument()) {
                 return Variance.INVARIANT
             }
-            if (parameterVariance == Variance.IN_VARIANCE && coneType.isAny) {
+            if (parameterVariance == Variance.IN_VARIANCE && type.isMostPreciseContravariantArgument()) {
                 return Variance.INVARIANT
             }
         }
@@ -737,15 +735,50 @@ internal fun getVarianceForWildcard(
     return Variance.OUT_VARIANCE
 }
 
+internal fun KaType.isMostPreciseContravariantArgument(): Boolean = analyze { isAnyType }
+
+internal fun KaType.isMostPreciseCovariantArgument() = !canHaveSubtypesIgnoreNullability()
+
+@OptIn(KaExperimentalApi::class)
+private fun KaType.canHaveSubtypesIgnoreNullability(): Boolean =
+    analyze {
+        val type = fullyExpandedType
+        val symbol = expandedSymbol ?: return@analyze true
+        if (symbol.classKind == KaClassKind.ENUM_CLASS || symbol.isExpect) {
+            return@analyze true
+        }
+        if (symbol.modality != KaSymbolModality.FINAL) {
+            return@analyze true
+        }
+
+        symbol.typeParameters.forEachIndexed { idx, param ->
+            val projection = type.typeArguments().get(idx)
+
+            if (projection !is KaTypeArgumentWithVariance) {
+                return@analyze true
+            }
+
+            val type = projection.type
+            val effectiveVariance = getEffectiveVariance(param.variance, projection.variance)
+            if (effectiveVariance == Variance.OUT_VARIANCE && !type.isMostPreciseCovariantArgument()) {
+                return@analyze true
+            }
+            if (effectiveVariance == Variance.IN_VARIANCE && !type.isMostPreciseContravariantArgument()) {
+                return@analyze true
+            }
+        }
+        false
+    }
+
 @OptIn(KaExperimentalApi::class)
 internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
-    val parameters = this.classifierSymbol()?.typeParameters ?: emptyList()
     val args = this.typeArguments()
     return analyze {
         when (this@toWildcard) {
             is KaClassType -> {
                 // TODO: missing annotations from original type.
-                buildClassType(this@toWildcard.expandedSymbol!!.tryResolveToTypePhase()) {
+                buildClassType(symbol.tryResolveToTypePhase()) {
+                    val parameters = symbol.typeParameters
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
                         val variance = getVarianceForWildcard(param, arg, argMode)

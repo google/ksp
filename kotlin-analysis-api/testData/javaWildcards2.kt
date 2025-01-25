@@ -71,7 +71,7 @@
 // enumList : List<MyEnum>
 // jvmWildcard : List<out String>
 // suppressJvmWildcard : List<Number>
-// <init> : VarianceSubjectSuppressed<Any?>
+// <init> : VarianceSubjectSuppressed<out Any?>
 // R : Any?
 // END
 

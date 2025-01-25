@@ -256,11 +256,10 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/equals.kt")
     }
 
-    @Disabled
     @TestMetadata("equivalentJavaWildcards.kt")
     @Test
     fun testEquivalentJavaWildcards() {
-        runTest("../test-utils/testData/api/equivalentJavaWildcards.kt")
+        runTest("../kotlin-analysis-api/testData/equivalentJavaWildcards.kt")
     }
 
     @TestMetadata("errorTypes.kt")

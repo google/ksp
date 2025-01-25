@@ -162,7 +162,7 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         get() = type is KaFunctionType && type.isSuspend
 
     override fun hashCode(): Int {
-        return type.toAbbreviatedType().hashCode()
+        return type.fullyExpand().hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -179,8 +179,4 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
     }
 }
 
-internal fun KaType.toAbbreviatedType(): KaType =
-    when (val symbol = this.classifierSymbol()) {
-        is KaTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
-        else -> this
-    }
+internal fun KaType.fullyExpand(): KaType = analyze { fullyExpandedType }
