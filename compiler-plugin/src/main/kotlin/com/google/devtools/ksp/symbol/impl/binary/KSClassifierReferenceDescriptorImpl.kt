@@ -68,7 +68,7 @@ class KSClassifierReferenceDescriptorImpl private constructor(
     }
 
     override val typeArguments: List<KSTypeArgument> by lazy {
-        arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, origin, this.parent) }
+        arguments.map { KSTypeArgumentDescriptorImpl.getCached(it, origin, this) }
     }
 
     override fun referencedName(): String {
