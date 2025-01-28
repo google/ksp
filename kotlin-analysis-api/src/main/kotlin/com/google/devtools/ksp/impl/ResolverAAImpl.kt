@@ -367,7 +367,7 @@ class ResolverAAImpl(
         if (type.isError)
             return reference
         val position = findRefPosition(ref)
-        val ktType = (type as KSTypeImpl).type
+        val ktType = (type as KSTypeImpl).type.fullyExpand()
         // cast to FIR internal needed due to missing support in AA for type mapping mode
         // and corresponding type mapping APIs.
         val coneType = (ktType as KaFirType).coneType
@@ -556,7 +556,7 @@ class ResolverAAImpl(
         fun checkAnnotated(annotated: KSAnnotated): Boolean {
             return annotated.annotations.any {
                 val kaType = (it.annotationType.resolve() as? KSTypeImpl)?.type ?: return@any false
-                kaType.toAbbreviatedType().symbol?.classId?.asFqNameString() == realAnnotationName
+                kaType.fullyExpand().symbol?.classId?.asFqNameString() == realAnnotationName
             }
         }
 
@@ -659,6 +659,8 @@ class ResolverAAImpl(
         }
         recordLookupForPropertyOrMethod(overrider)
         recordLookupForPropertyOrMethod(overridee)
+        if (!overridee.isVisibleFrom(overrider))
+            return false
         return analyze {
             overriderSymbol.allOverriddenSymbols.contains(overrideeSymbol) ||
                 overriderSymbol.intersectionOverriddenSymbols.contains(overrideeSymbol)

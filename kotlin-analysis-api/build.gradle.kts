@@ -59,13 +59,13 @@ dependencies {
     }
 
     listOf(
-        "org.jetbrains.kotlin:high-level-api-fir-for-ide",
-        "org.jetbrains.kotlin:high-level-api-for-ide",
+        "org.jetbrains.kotlin:analysis-api-k2-for-ide",
+        "org.jetbrains.kotlin:analysis-api-for-ide",
         "org.jetbrains.kotlin:low-level-api-fir-for-ide",
         "org.jetbrains.kotlin:analysis-api-platform-interface-for-ide",
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
-        "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
+        "org.jetbrains.kotlin:analysis-api-impl-base-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-common-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-fir-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-fe10-for-ide",

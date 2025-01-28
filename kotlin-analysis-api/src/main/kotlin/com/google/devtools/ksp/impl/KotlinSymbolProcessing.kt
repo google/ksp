@@ -65,6 +65,7 @@ import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinGlobalModif
 import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinModificationTrackerFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackageProviderFactory
+import org.jetbrains.kotlin.analysis.api.platform.permissions.KotlinAnalysisPermissionOptions
 import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinByModulesResolutionScopeProvider
 import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinResolutionScopeProvider
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
@@ -78,6 +79,7 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStan
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneGlobalModificationService
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneModificationTrackerFactory
+import org.jetbrains.kotlin.analysis.api.standalone.base.permissions.KotlinStandaloneAnalysisPermissionOptions
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirStandaloneServiceRegistrar
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
@@ -85,9 +87,9 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInherit
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
@@ -145,7 +147,7 @@ class KotlinSymbolProcessing(
         setupIdeaStandaloneExecution()
     }
 
-    @OptIn(KaExperimentalApi::class)
+    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class)
     private fun createAASession(
         compilerConfiguration: CompilerConfiguration,
         projectDisposable: Disposable,
@@ -238,6 +240,16 @@ class KotlinSymbolProcessing(
             StandaloneProjectFactory.createPackagePartsProvider(
                 libraryRoots,
             )
+
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
+            org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java
+        )
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            KotlinAnalysisPermissionOptions::class.java,
+            KotlinStandaloneAnalysisPermissionOptions::class.java
+        )
+
         registerProjectServices(
             kotlinCoreProjectEnvironment,
             ktFiles,
@@ -257,6 +269,20 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             modules
         )
+    }
+
+    private fun <T> KotlinCoreProjectEnvironment.registerApplicationServices(
+        serviceInterface: Class<T>,
+        serviceImplementation: Class<out T>
+    ) {
+        val application = environment.application
+        if (application.getServiceIfCreated(serviceInterface) == null) {
+            KotlinCoreEnvironment.underApplicationLock {
+                if (application.getServiceIfCreated(serviceInterface) == null) {
+                    application.registerService(serviceInterface, serviceImplementation)
+                }
+            }
+        }
     }
 
     // TODO: org.jetbrains.kotlin.analysis.providers.impl.KotlinStatic*
@@ -331,6 +357,7 @@ class KotlinSymbolProcessing(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         modules: List<KaModule>,
@@ -339,8 +366,8 @@ class KotlinSymbolProcessing(
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
-        modules.filterIsInstance<KaSourceModuleImpl>().forEach {
-            it.sourceRoots.forEach {
+        modules.filterIsInstance<KaSourceModule>().forEach {
+            it.psiRoots.forEach {
                 when (it) {
                     is KtFile -> ktFiles.add(it)
                     is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(it)
@@ -652,6 +679,9 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.symbols.pointers.KaBasePsiSymbolPointerCreator::class.java,
+    org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinSimpleGlobalSearchScopeMerger::class.java,

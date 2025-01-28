@@ -18,26 +18,15 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: EquivalentJavaWildcardProcessor
 // EXPECTED:
-// X : Any -> Any
-// <init> : X -> X
-// Y : X -> X
-// <init> : Y -> Y
-// A : Any -> Any
-// T1 : Any? -> Any?
-// T2 : Any? -> Any?
-// <init> : A<T1, T2> -> A<T1, T2>
-// B : Any -> Any
-// T : Any? -> Any?
-// synthetic constructor for B : B<*> -> B<out Any?>
-// bar1 : [@kotlin.jvm.JvmSuppressWildcards] A<X, X> -> [@kotlin.jvm.JvmSuppressWildcards] A<X, X>
+// bar1 : [@JvmSuppressWildcards(true)] A<X, X> -> A<X, X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
 // - @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
-// bar2 : [@kotlin.jvm.JvmSuppressWildcards] A<X, X> -> [@kotlin.jvm.JvmSuppressWildcards] A<in X, out X>
+// bar2 : [@JvmSuppressWildcards(false)] A<X, X> -> A<in X, out X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
 // - @JvmSuppressWildcards : JvmSuppressWildcards -> JvmSuppressWildcards
-// bar3 : [@kotlin.jvm.JvmWildcard] A<X, X> -> [@kotlin.jvm.JvmWildcard] A<X, X>
+// bar3 : [@JvmWildcard] A<X, X> -> A<X, X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
 // - @JvmWildcard : JvmWildcard -> JvmWildcard
@@ -55,8 +44,6 @@
 // - INVARIANT Y : Y -> Y
 // p3 : A<*, *> -> A<Any?, Any?>
 // p3.getter() : A<*, *> -> A<Any?, Any?>
-// - STAR Any : Any? -> Any?
-// - STAR Any : Any? -> Any?
 // p4 : B<X> -> B<X>
 // - INVARIANT X : X -> X
 // p4.getter() : B<X> -> B<X>
@@ -71,13 +58,12 @@
 // - COVARIANT X : X -> X
 // p7 : B<*> -> B<out Any?>
 // p7.getter() : B<*> -> B<out Any?>
-// - STAR Any : Any? -> Any?
 // p8 : B<A<X, out Y>> -> B<A<X, Y>>
-// - INVARIANT A : A<X, out Y> -> A<X, Y>
+// - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // p8.getter() : B<A<X, out Y>> -> B<A<X, Y>>
-// - INVARIANT A<X, out Y> : A<X, out Y> -> A<X, Y>
+// - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // v1 : A<X, X> -> A<in X, out X>
@@ -95,7 +81,7 @@
 // - COVARIANT X : X -> X
 // v7 : B<*> -> B<out Any?>
 // v8 : B<A<X, out Y>> -> B<A<X, Y>>
-// - INVARIANT A : A<X, out Y> -> A<X, Y>
+// - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // foo : Unit -> Unit
@@ -114,9 +100,23 @@
 // - COVARIANT X : X -> X
 // r7 : B<*> -> B<out Any?>
 // r8 : B<A<X, out Y>> -> B<A<X, Y>>
-// - INVARIANT A : A<X, out Y> -> A<X, Y>
+// - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
+// X : Any -> Any
+// <init> : X -> X
+// Y : X -> X
+// <init> : Y -> Y
+// A : Any -> Any
+// T1 : Any? -> Any?
+// T2 : Any? -> Any?
+// <init> : A<*, *> -> A<Any?, Any?>
+// T1 : Any? -> Any?
+// T2 : Any? -> Any?
+// B : Any -> Any
+// T : Any? -> Any?
+// synthetic constructor for B : B<*> -> B<out Any?>
+// T : Any? -> Any?
 // C1 : A<X, X> -> A<X, X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X
@@ -129,7 +129,7 @@
 // - INVARIANT X : X -> X
 // <init> : C3 -> C3
 // C4 : B<A<X, out Y>> -> B<A<in X, out Y>>
-// - INVARIANT A : A<X, out Y> -> A<in X, out Y>
+// - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<in X, out Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // <init> : C4 -> C4
