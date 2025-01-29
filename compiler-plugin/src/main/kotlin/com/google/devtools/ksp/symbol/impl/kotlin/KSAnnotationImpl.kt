@@ -93,7 +93,7 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
 
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
         when (ktAnnotationEntry.useSiteTarget?.getAnnotationUseSiteTarget()) {
-            null -> null
+            ALL, null -> null
             FILE -> AnnotationUseSiteTarget.FILE
             PROPERTY -> AnnotationUseSiteTarget.PROPERTY
             FIELD -> AnnotationUseSiteTarget.FIELD
