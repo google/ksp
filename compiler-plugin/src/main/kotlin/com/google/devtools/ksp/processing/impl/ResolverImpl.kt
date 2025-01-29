@@ -57,7 +57,6 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.codegen.ClassBuilderMode
-import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.signature.BothSignatureWriter
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
@@ -893,17 +892,13 @@ class ResolverImpl(
 
     @KspExperimental
     override fun getJvmName(accessor: KSPropertyAccessor): String? {
-        return resolvePropertyAccessorDeclaration(accessor)?.let {
-            typeMapper.mapFunctionName(it, OwnerKind.IMPLEMENTATION)
-        }
+        return resolvePropertyAccessorDeclaration(accessor)?.let(typeMapper::mapFunctionName)
     }
 
     @KspExperimental
     override fun getJvmName(declaration: KSFunctionDeclaration): String? {
         // function names might be mangled if they receive inline class parameters or they are internal
-        return (resolveFunctionDeclaration(declaration) as? FunctionDescriptor)?.let {
-            typeMapper.mapFunctionName(it, OwnerKind.IMPLEMENTATION)
-        }
+        return (resolveFunctionDeclaration(declaration) as? FunctionDescriptor)?.let(typeMapper::mapFunctionName)
     }
 
     @KspExperimental
