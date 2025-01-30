@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
@@ -49,7 +50,7 @@ object AndroidPluginIntegration {
     private fun decorateAndroidExtension(project: Project, onSourceSet: (String) -> Unit) {
         val sourceSets = when (val androidExt = project.extensions.getByName("android")) {
             is BaseExtension -> androidExt.sourceSets
-            is CommonExtension<*, *, *, *> -> androidExt.sourceSets
+            is CommonExtension<*, *, *, *, *, *> -> androidExt.sourceSets
             else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
         }
         sourceSets.all {
@@ -154,5 +155,27 @@ object AndroidPluginIntegration {
             classOutputDir,
             resourcesOutputDir
         )
+    }
+
+    /**
+     * Returns false for AGP versions 8.10.0-alpha03 or higher.
+     *
+     * Returns true for older AGP versions or when AGP version cannot be determined.
+     */
+    fun Project.useLegacyVariantApi(): Boolean {
+        val agpVersion = try {
+            this.extensions
+                .findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+                ?.pluginVersion
+        } catch (e: Exception) {
+            // Perhaps a version of AGP before pluginVersion API was added.
+            null
+        }
+
+        // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
+        if (agpVersion == null) {
+            return true
+        }
+        return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
     }
 }
