@@ -26,6 +26,7 @@ class Validator : SymbolProcessor {
         if (processed) {
             return emptyList()
         }
+
         val validator = object : KSDefaultVisitor<OutputStreamWriter, Unit>() {
             override fun defaultHandler(node: KSNode, data: OutputStreamWriter) = Unit
 
@@ -41,7 +42,7 @@ class Validator : SymbolProcessor {
             logger.warn("${file.packageName.asString()}/${file.fileName}")
             val output = OutputStreamWriter(
                 codeGenerator.createNewFile(
-                    Dependencies(false, file),
+                    Dependencies(true, file),
                     file.packageName.asString(),
                     file.fileName,
                     "log"
@@ -52,28 +53,6 @@ class Validator : SymbolProcessor {
             }
             output.close()
         }
-
-        // create an output from k3 + l4
-        val k3 = resolver.getClassDeclarationByName("p1.K3")!!
-        val l4 = resolver.getClassDeclarationByName("p1.L4")!!
-        codeGenerator.createNewFile(Dependencies(false), "p1", "l4", "log")
-        codeGenerator.associateWithClasses(listOf(k3, l4), "p1", "l4", "log")
-
-        // create an output from l5
-        val l5 = resolver.getClassDeclarationByName("p1.L5")!!
-        codeGenerator.createNewFile(Dependencies(false), "p1", "l5", "log")
-        codeGenerator.associateWithClasses(listOf(l5), "p1", "l5", "log")
-
-        // create an output from MyTopFunc1, declared in TopFunc1.kt
-        val myTopFunc1 = resolver.getFunctionDeclarationsByName("p1.MyTopFunc1", true).single()
-        codeGenerator.createNewFile(Dependencies(false), "p1", "MyTopFunc1", "log")
-        codeGenerator.associateWithFunctions(listOf(myTopFunc1), "p1", "MyTopFunc1", "log")
-
-        // create an output from MyTopProp1, declared in TopProp1.kt
-        val myTopProp1 = resolver.getPropertyDeclarationByName("p1.MyTopProp1", true)!!
-        codeGenerator.createNewFile(Dependencies(false), "p1", "MyTopProp1", "log")
-        codeGenerator.associateWithProperties(listOf(myTopProp1), "p1", "MyTopProp1", "log")
-        logger.warn("processing done")
 
         processed = true
         return emptyList()
