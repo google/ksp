@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.gradle
 
+import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -100,13 +101,20 @@ class KspConfigurations(private val project: Project) {
             //  decorateKotlinProject here instead.
             createAndroidSourceSetConfigurations(project, kotlinTarget = null)
         }
+        project.pluginManager.withPlugin("com.android.base") {
+            if (!project.useLegacyVariantApi()) {
+                val androidComponents =
+                    project.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+                androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+            }
+        }
     }
 
     private fun decorateKotlinProject(kotlin: KotlinProjectExtension, project: Project) {
         when (kotlin) {
-            is KotlinSingleTargetExtension<*> -> decorateKotlinTarget(kotlin.target)
+            is KotlinSingleTargetExtension<*> -> decorateKotlinTarget(kotlin.target, isKotlinMultiplatform = false)
             is KotlinMultiplatformExtension -> {
-                kotlin.targets.configureEach(::decorateKotlinTarget)
+                kotlin.targets.configureEach { decorateKotlinTarget(it, isKotlinMultiplatform = true) }
 
                 var reported = false
                 configurationForAll.dependencies.whenObjectAdded {
@@ -137,9 +145,11 @@ class KspConfigurations(private val project: Project) {
      * there are slight differences between the two - Kotlin creates some extra sets with unexpected word ordering,
      * and things get worse when you add product flavors. So, we use AGP sets as the source of truth.
      */
-    private fun decorateKotlinTarget(target: KotlinTarget) {
+    private fun decorateKotlinTarget(target: KotlinTarget, isKotlinMultiplatform: Boolean) {
         if (target.platformType == KotlinPlatformType.androidJvm) {
-            createAndroidSourceSetConfigurations(target.project, target)
+            if (project.useLegacyVariantApi() || isKotlinMultiplatform) {
+                createAndroidSourceSetConfigurations(target.project, target)
+            }
         } else {
             target.compilations.configureEach { compilation ->
                 compilation.kotlinSourceSetsObservable.forAll { sourceSet ->

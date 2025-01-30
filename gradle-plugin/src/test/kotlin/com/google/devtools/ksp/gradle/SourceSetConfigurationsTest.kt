@@ -300,7 +300,7 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
             it.startsWith("kapt") && !it.startsWith("kaptClasspath_")
         }
         val kspConfigurations = configurations.filter {
-            it.startsWith("ksp")
+            it.startsWith("ksp") && !it.endsWith("KotlinProcessorClasspath")
         }
         assertThat(kspConfigurations).containsExactlyElementsIn(
             kaptConfigurations.map {
