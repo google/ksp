@@ -261,12 +261,7 @@ abstract class IncrementalContextBase(
         initialSet.addAll(dirtyFilesBySealed)
         initialSet.addAll(noSourceFiles)
 
-        // modified can be seen as removed + new. Therefore the following check doesn't work:
-        //   if (modified.any { it !in sourceToOutputsMap.keys }) ...
-        // Removed files affect aggregating outputs if they were generated unconditionally.
-        if (modified.isNotEmpty() || changedClasses.isNotEmpty() || removed.isNotEmpty()) {
-            initialSet.add(anyChangesWildcard)
-        }
+        initialSet.add(anyChangesWildcard)
 
         val dirtyFiles = DirtinessPropagator(
             symbolLookupCache,
