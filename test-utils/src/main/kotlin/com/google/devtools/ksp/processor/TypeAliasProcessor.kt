@@ -37,6 +37,7 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
                     byFinalSignature.getOrPut(signatures.last()) {
                         mutableListOf()
                     }.add(propType)
+                    append(" = (expanded) ${resolver.expandType(propType).toSignature()}")
                 }
             }
         }.forEach(results::add)
@@ -87,6 +88,46 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
             }.forEach(this::append)
             append(">")
         }
+    }
+
+    private fun Resolver.expandType(type: KSType, substitutions: MutableMap<KSTypeParameter, KSType>): KSType {
+        val decl = type.declaration
+        return when (decl) {
+            is KSClassDeclaration -> {
+                val arguments = type.arguments.map {
+                    val argType = it.type?.resolve() ?: return@map it
+                    getTypeArgument(createKSTypeReferenceFromKSType(expandType(argType, substitutions)), it.variance)
+                }
+                decl.asType(arguments)
+            }
+
+            is KSTypeParameter -> {
+                val substituted = substitutions.get(decl) ?: return type
+                val fullySubstituted = expandType(substituted, substitutions)
+                // update/cache with refined substitution
+                if (substituted != fullySubstituted)
+                    substitutions[decl] = fullySubstituted
+                fullySubstituted
+            }
+
+            is KSTypeAlias -> {
+                val aliasedType = decl.type.resolve()
+
+                decl.typeParameters.zip(type.arguments).forEach { (param, arg) ->
+                    arg.type?.resolve()?.let {
+                        substitutions[param] = it
+                    }
+                }
+
+                expandType(aliasedType, substitutions)
+            }
+
+            else -> type
+        }
+    }
+
+    private fun Resolver.expandType(type: KSType): KSType {
+        return expandType(type, mutableMapOf())
     }
 
     override fun toResult(): List<String> {
