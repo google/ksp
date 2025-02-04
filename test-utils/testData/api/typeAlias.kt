@@ -18,22 +18,22 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: TypeAliasProcessor
 // EXPECTED:
-// a : A = String
-// b : B = String
-// c : CC = A = String
-// d : String
-// listOfInt : ListOfInt = List<Int>
-// listOfInt_B : ListOfInt_B = ListOfInt = List<Int>
-// listOfInt_C : ListOfInt_C = ListOfInt_B = ListOfInt = List<Int>
-// myList : MyList<Long> = List<T>
-// myList_B : List<Number>
-// myList_String : MyList_String = MyList<String> = List<T>
-// myList_b_String : MyList_B_String = MyList_B<String> = MyList<R> = List<T>
-// myListOfAlias : MyListOfAlias = List<A>
-// myListOfAliasInLib : MyListOfAliasInLib = List<@JvmSuppressWildcards AInLib>
-// viewBinderProviders : Map<Class<BaseViewHolder>, @JvmSuppressWildcards Provider<BaseEmbedViewBinder>>
-// nested1 : MyList<ListOfInt> = List<T>
-// nested2 : List<ListOfInt>
+// a : A = String = (expanded) String
+// b : B = String = (expanded) String
+// c : CC = A = String = (expanded) String
+// d : String = (expanded) String
+// listOfInt : ListOfInt = List<Int> = (expanded) List<Int>
+// listOfInt_B : ListOfInt_B = ListOfInt = List<Int> = (expanded) List<Int>
+// listOfInt_C : ListOfInt_C = ListOfInt_B = ListOfInt = List<Int> = (expanded) List<Int>
+// myList : MyList<Long> = List<T> = (expanded) List<Long>
+// myList_B : List<Number> = (expanded) List<Number>
+// myList_String : MyList_String = MyList<String> = List<T> = (expanded) List<String>
+// myList_b_String : MyList_B_String = MyList_B<String> = MyList<R> = List<T> = (expanded) List<String>
+// myListOfAlias : MyListOfAlias = List<A> = (expanded) List<String>
+// myListOfAliasInLib : MyListOfAliasInLib = List<@JvmSuppressWildcards AInLib> = (expanded) List<String>
+// viewBinderProviders : Map<Class<BaseViewHolder>, @JvmSuppressWildcards Provider<BaseEmbedViewBinder>> = (expanded) Map<Class<BaseViewHolder>, Provider<ViewBinder<BaseViewHolder, SpaceshipEmbedModel>>>
+// nested1 : MyList<ListOfInt> = List<T> = (expanded) List<List<Int>>
+// nested2 : List<ListOfInt> = (expanded) List<List<Int>>
 // END
 
 // MODULE: module1
