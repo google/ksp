@@ -520,7 +520,7 @@ class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) : 
 
 @KspExperimental
 private fun KSType.asClass(proxyClass: Class<*>) = try {
-    Class.forName(this.declaration.qualifiedName!!.asString(), true, proxyClass.classLoader)
+    Class.forName(this.declaration.toJavaClassName(), true, proxyClass.classLoader)
 } catch (e: Exception) {
     throw KSTypeNotPresentException(this, e)
 }
@@ -536,3 +536,28 @@ fun KSValueArgument.isDefault() = origin == Origin.SYNTHETIC
 
 @KspExperimental
 private fun Any.asArray(method: Method, proxyClass: Class<*>) = listOf(this).asArray(method, proxyClass)
+
+private fun KSDeclaration.toJavaClassName(): String {
+    val nameDelimiter = '.'
+    val packageNameString = packageName.asString()
+    val qualifiedNameString = qualifiedName!!.asString()
+    val simpleNames = qualifiedNameString
+        .removePrefix("${packageNameString}$nameDelimiter")
+        .split(nameDelimiter)
+
+    return if (simpleNames.size > 1) {
+        buildString {
+            append(packageNameString)
+            append(nameDelimiter)
+
+            simpleNames.forEachIndexed { index, s ->
+                if (index > 0) {
+                    append('$')
+                }
+                append(s)
+            }
+        }
+    } else {
+        qualifiedNameString
+    }
+}
