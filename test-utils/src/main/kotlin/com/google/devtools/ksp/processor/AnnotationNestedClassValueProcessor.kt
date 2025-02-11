@@ -17,8 +17,6 @@
 
 package com.google.devtools.ksp.processor
 
-import com.google.devtools.ksp.KSTypeNotPresentException
-import com.google.devtools.ksp.KSTypesNotPresentException
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.Resolver
@@ -38,20 +36,20 @@ class AnnotationNestedClassValueProcessor : AbstractTestProcessor() {
             "com.google.devtools.ksp.processor.ClassValueAnnotationForNested"
         )
         symbols.flatMap {
-            it.getAnnotationsByType(ClassValueAnnotationForNested::class)
+            it.getAnnotationsByType(NestedClassValueAnnotation::class)
         }.forEach {
             logAnnotationValues(it)
         }
         return emptyList()
     }
 
-    private fun logAnnotationValues(classValueAnnotation: ClassValueAnnotationForNested) {
+    private fun logAnnotationValues(classValueAnnotation: NestedClassValueAnnotation) {
         result.add(classValueAnnotation.classValue.simpleName!!)
         result.add(classValueAnnotation.classValues.joinToString { it.simpleName!! })
     }
 }
 
-annotation class ClassValueAnnotationForNested(
+annotation class NestedClassValueAnnotation(
     val classValue: KClass<*>,
     val classValues: Array<KClass<*>>
 )

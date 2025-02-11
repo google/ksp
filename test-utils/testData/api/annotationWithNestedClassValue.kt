@@ -24,12 +24,12 @@ package com.google.devtools.ksp.processor
 
 import kotlin.reflect.KClass
 
-annotation class ClassValueAnnotationForNested(
+annotation class NestedClassValueAnnotation(
     val classValue: KClass<*>,
     val classValues: Array<KClass<*>>
 )
 
-@ClassValueAnnotationForNested(
+@NestedClassValueAnnotation(
     classValue = java.util.Map.Entry::class,
     classValues = [java.util.Map.Entry::class]
 )
