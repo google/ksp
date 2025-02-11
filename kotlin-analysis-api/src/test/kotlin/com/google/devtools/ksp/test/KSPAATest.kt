@@ -94,6 +94,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/annotationWithArbitraryClassValue.kt")
     }
 
+    @TestMetadata("annotationWithNestedClassValue.kt")
+    @Test
+    fun testAnnotationWithNestedClassValue() {
+        runTest("../test-utils/testData/api/annotationWithNestedClassValue.kt")
+    }
+
     @TestMetadata("defaultKClassValue.kt")
     @Test
     fun testAnnotationValue_defaultKClassValue() {
