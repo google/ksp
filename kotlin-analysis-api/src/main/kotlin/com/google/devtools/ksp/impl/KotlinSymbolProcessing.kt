@@ -44,6 +44,8 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
@@ -53,6 +55,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.platform.KotlinMessageBusProvider
@@ -539,12 +542,14 @@ class KotlinSymbolProcessing(
             }
 
             fun dropCaches() {
-                KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
-                KaSessionProvider.getInstance(project).clearCaches()
-                psiManager.dropResolveCaches()
-                psiManager.dropPsiCaches()
+                maybeRunInWriteAction {
+                    KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
+                    KaSessionProvider.getInstance(project).clearCaches()
+                    psiManager.dropResolveCaches()
+                    psiManager.dropPsiCaches()
 
-                KSObjectCacheManager.clear()
+                    KSObjectCacheManager.clear()
+                }
             }
 
             var rounds = 0
@@ -623,7 +628,9 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
-            Disposer.dispose(projectDisposable)
+            maybeRunInWriteAction {
+                Disposer.dispose(projectDisposable)
+            }
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
@@ -668,6 +675,8 @@ fun String?.toKotlinVersion(): KotlinVersion {
 @Suppress("unused")
 @OptIn(KaImplementationDetail::class)
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
+    it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap::class.java,
+    it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseModuleProvider::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
@@ -677,7 +686,7 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneFirDirectInheritorsProvider::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.symbolProviders.factories.LLStubOriginLibrarySymbolProviderFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.symbols.pointers.KaBasePsiSymbolPointerCreator::class.java,
@@ -698,6 +707,8 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     com.intellij.diagnostic.ActivityCategory::class.java,
     com.intellij.openapi.application.JetBrainsProtocolHandler::class.java,
     com.intellij.openapi.editor.impl.EditorDocumentPriorities::class.java,
+    com.intellij.platform.diagnostic.telemetry.TelemetryManager::class.java,
+    com.intellij.psi.impl.PsiSubstitutorImpl::class.java,
     com.intellij.psi.tree.ChildRoleBase::class.java,
     com.intellij.util.xmlb.Constants::class.java,
     com.intellij.xml.CommonXmlStrings::class.java,
@@ -725,3 +736,17 @@ fun TargetPlatform.getPlatformInfo(kspConfig: KSPConfig): List<PlatformInfo> =
             else -> UnknownPlatformInfoImpl(platform.toString())
         }
     }
+
+private fun <R> maybeRunInWriteAction(f: () -> R) {
+    synchronized(EDT::class.java) {
+        if (!EDT.isCurrentThreadEdt())
+            EDT.updateEdt()
+        if (ApplicationManager.getApplication() != null) {
+            runWriteAction {
+                f()
+            }
+        } else {
+            f()
+        }
+    }
+}
