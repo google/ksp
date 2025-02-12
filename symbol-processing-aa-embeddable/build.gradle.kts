@@ -46,7 +46,6 @@ val prefixesToRelocate = listOf(
     "com.intellij.",
     "com.sun.jna.",
     "gnu.trove.",
-    "io.opentelemetry.api.",
     "it.unimi.dsi.",
     "javaslang.",
     "javax.inject.",
