@@ -137,8 +137,6 @@ class KSAnnotationImpl private constructor(
             CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
             SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
             PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-            // FIXME
-            ALL -> null
         }
     }
 
