@@ -34,6 +34,8 @@
 // viewBinderProviders : Map<Class<BaseViewHolder>, @JvmSuppressWildcards Provider<BaseEmbedViewBinder>> = (expanded) Map<Class<BaseViewHolder>, Provider<ViewBinder<BaseViewHolder, SpaceshipEmbedModel>>>
 // nested1 : MyList<ListOfInt> = List<T> = (expanded) List<List<Int>>
 // nested2 : List<ListOfInt> = (expanded) List<List<Int>>
+// param w.o. asMemberOf: MyAlias<String> = Foo<Bar<T>, Baz<T>> = (expanded) Foo<Bar<String>, Baz<String>>
+// param with asMemberOf: MyAlias<String> = Foo<Bar<T>, Baz<T>> = (expanded) Foo<Bar<String>, Baz<String>>
 // END
 
 // MODULE: module1
@@ -79,3 +81,9 @@ typealias BaseEmbedViewBinder = ViewBinder<out BaseViewHolder, out SpaceshipEmbe
 val viewBinderProviders: Map<Class<out BaseViewHolder>, @JvmSuppressWildcards Provider<BaseEmbedViewBinder>> = TODO()
 val nested1: MyList<ListOfInt>
 val nested2: List<ListOfInt>
+
+class Subject(val param: MyAlias<String>)
+typealias MyAlias<T> = Foo<Bar<T>, Baz<T>>
+class Foo<T1, T2>
+class Bar<T>
+class Baz<T>

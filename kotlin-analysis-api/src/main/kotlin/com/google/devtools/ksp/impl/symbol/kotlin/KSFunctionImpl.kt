@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.typeParameters
 import org.jetbrains.kotlin.analysis.api.types.KaSubstitutor
 import org.jetbrains.kotlin.analysis.api.types.KaType
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.util.*
 
@@ -35,11 +36,11 @@ class KSFunctionImpl @OptIn(KaExperimentalApi::class) constructor(
 ) : KSFunction {
 
     override val returnType: KSType? by lazy {
-        functionSignature.returnType.let { KSTypeImpl.getCached(it) }
+        functionSignature.returnType.abbreviationOrSelf.let { KSTypeImpl.getCached(it) }
     }
 
     override val parameterTypes: List<KSType?> by lazy {
-        functionSignature.valueParameters.map { it.returnType.let { KSTypeImpl.getCached(it) } }
+        functionSignature.valueParameters.map { it.returnType.abbreviationOrSelf.let { KSTypeImpl.getCached(it) } }
     }
 
     @OptIn(KaExperimentalApi::class)
@@ -69,7 +70,7 @@ class KSFunctionImpl @OptIn(KaExperimentalApi::class) constructor(
     }
 
     override val extensionReceiverType: KSType? by lazy {
-        functionSignature.receiverType?.let { KSTypeImpl.getCached(it) }
+        functionSignature.receiverType?.abbreviationOrSelf?.let { KSTypeImpl.getCached(it) }
     }
 
     override val isError: Boolean = false
