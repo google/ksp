@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
@@ -57,6 +58,19 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
                 }
             }
         }
+
+        val subjectName = resolver.getKSNameFromString("Subject")
+        val subject = resolver.getClassDeclarationByName(subjectName)!!
+        val constructor = subject.getConstructors().single()
+        val type1 = constructor.parameters.single().type.resolve()
+        val type2 = constructor.asMemberOf(subject.asType(emptyList())).parameterTypes.single()!!
+        val type1Signatures = type1.typeAliasSignatures().joinToString(" = ")
+        val type2Signatures = type2.typeAliasSignatures().joinToString(" = ")
+        val type1Expanded = resolver.expandType(type1).toSignature()
+        val type2Expanded = resolver.expandType(type2).toSignature()
+
+        results.add("param w.o. asMemberOf: $type1Signatures = (expanded) $type1Expanded")
+        results.add("param with asMemberOf: $type2Signatures = (expanded) $type2Expanded")
         return emptyList()
     }
 
