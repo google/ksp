@@ -66,6 +66,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$kotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$kotlinBaseVersion")
     testImplementation(project(":test-utils"))
 
     libsForTesting(kotlin("stdlib", kotlinBaseVersion))
