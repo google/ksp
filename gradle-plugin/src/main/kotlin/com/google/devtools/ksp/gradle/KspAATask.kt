@@ -270,6 +270,13 @@ abstract class KspAATask @Inject constructor(
                         // TODO: set proper jdk home
                         cfg.jdkHome.value(File(System.getProperty("java.home")))
 
+                        val javaVersion = System.getProperty("java.version")?.split(".")?.let {
+                            if (it[0] == "1") it.getOrNull(1) else it.getOrNull(0)
+                        }
+                        javaVersion?.let {
+                            cfg.jdkVersion.value(it.toInt())
+                        }
+
                         val jvmDefaultMode = compilerOptions.freeCompilerArgs
                             .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
                             .map { it.lastOrNull()?.substringAfter("=") ?: "disable" }
@@ -329,9 +336,12 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Classpath
     abstract val libraries: ConfigurableFileCollection
 
+    @get:Internal
+    abstract val jdkHome: Property<File>
+
     @get:Input
     @get:Optional
-    abstract val jdkHome: Property<File>
+    abstract val jdkVersion: Property<Int>
 
     @get:Internal
     abstract val projectBaseDir: Property<File>
