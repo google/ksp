@@ -103,6 +103,7 @@ class KSAnnotationImpl private constructor(val ktAnnotationEntry: KtAnnotationEn
             CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
             SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
             PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+            ALL -> null
         }
     }
 
