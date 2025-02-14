@@ -123,9 +123,11 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         useAdditionalService<TemporaryDirectoryManager>(::TemporaryDirectoryManagerImpl)
         useAdditionalService<ApplicationDisposableProvider> { ExecutionListenerBasedDisposableProvider() }
         useAdditionalService<KotlinStandardLibrariesPathProvider> { StandardLibrariesPathProviderForKotlinProject }
+        useAdditionalService<TargetPlatformProvider>(::TargetPlatformProviderForAnalysisApiTests)
 
         useDirectives(*AbstractKotlinCompilerTest.defaultDirectiveContainers.toTypedArray())
         useDirectives(JvmEnvironmentConfigurationDirectives)
+        useDirectives(TargetPlatformDirectives)
 
         defaultDirectives {
             +JvmEnvironmentConfigurationDirectives.FULL_JDK
@@ -165,7 +167,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     open fun compileModule(module: TestModule, testServices: TestServices) {
         val javaFiles = module.writeJavaFiles()
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
-        val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }
+        val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
         compilerConfiguration.addJvmClasspathRoots(dependencies)
         compilerConfiguration.addJavaSourceRoot(module.javaDir)
 
@@ -187,7 +189,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             "-classpath", classpath,
             "-d", module.outDir.path
         )
-        compileJavaFiles(javaFiles, options, assertions = JUnit5Assertions)
+        compileJavaFiles(javaFiles, options)
     }
 
     fun runTest(@TestDataFile path: String) {
@@ -198,8 +200,8 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             path,
             testConfiguration.directives,
         )
-        val dependencyProvider = DependencyProviderImpl(testServices, moduleStructure.modules)
-        testServices.registerDependencyProvider(dependencyProvider)
+        val dependencyProvider = ArtifactsProvider(testServices, moduleStructure.modules)
+        testServices.registerArtifactsProvider(dependencyProvider)
         testServices.register(TestModuleStructure::class, moduleStructure)
 
         val mainModule = moduleStructure.modules.last()
