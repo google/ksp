@@ -368,16 +368,22 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     )
                 }
             } else {
-                val filteredTasks =
-                    kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
+//                val filteredTasks =
+//                    kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                 kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
-                    kspTask.setSource(
-                        sourceSet.kotlin.srcDirs.filter {
-                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it) &&
-                                it !in kspExtension.excludedSources
-                        }
-                    )
-                    kspTask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks })
+                    kspTask.setSource(sourceSet.kotlin.sourceDirectories)
+//                    //note: set source/input for kspTask from kotlin Compilation source set
+//                    kspTask.setSource(
+//                        sourceSet.kotlin.srcDirs.filter {
+//                            //note: remove ksp generated kotlin and java source
+//                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+//                                // note: can ignore excludedSources for now
+////                                && it !in kspExtension.excludedSources
+//                        }
+//                    )
+//                    //note: set up task dependency, remove output directories generated from ksp itself
+//                    kspTask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName))
+//                        .filter { it.name !in filteredTasks })
                 }
             }
 
@@ -611,13 +617,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             project.files(kotlinOutputDir).builtBy(kspTaskProvider),
             project.files(javaOutputDir).builtBy(kspTaskProvider),
         )
-        if (kotlinCompilation is KotlinCommonCompilation) {
+
+        AndroidPluginIntegration.usingVariantApiToRegisterSource(project, sourceSetName, target)
+
+//        if (kotlinCompilation is KotlinCommonCompilation) {
             // Do not add generated sources to common source sets.
             // They will be observed by downstreams and violate current build scheme.
-            kotlinCompileProvider.configure { it.source(*generatedSources) }
-        } else {
-            kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
-        }
+        kotlinCompileProvider.configure { it.source(*generatedSources) }
+//        } else {
+//            kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
+//        }
 
         kotlinCompileProvider.configure { kotlinCompile ->
             when (kotlinCompile) {

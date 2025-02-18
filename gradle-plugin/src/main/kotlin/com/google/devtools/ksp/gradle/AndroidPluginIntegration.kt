@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import org.gradle.api.Project
@@ -39,6 +40,21 @@ import java.util.concurrent.Callable
  */
 @Suppress("UnstableApiUsage") // some android APIs are unsable.
 object AndroidPluginIntegration {
+
+    fun usingVariantApiToRegisterSource(project: Project, sourceSetName: String, target: String) {
+        val appAndroidComponents = project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java)
+
+        // use addStaticSourceDirectory because we don't want the task dependency and don't want agp to control the
+        // output of the corresponding task?
+        appAndroidComponents.onVariants { variant ->
+            variant.sources.java?.addStaticSourceDirectory(
+        "build/generated/ksp/$target/$sourceSetName/java"
+            )
+            variant.sources.kotlin?.addStaticSourceDirectory(
+                "build/generated/ksp/$target/$sourceSetName/kotlin"
+            )
+        }
+    }
 
     fun forEachAndroidSourceSet(project: Project, onSourceSet: (String) -> Unit) {
         project.pluginManager.withPlugin("com.android.base") {

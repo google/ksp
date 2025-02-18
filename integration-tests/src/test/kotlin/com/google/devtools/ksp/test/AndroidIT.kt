@@ -15,12 +15,14 @@ class AndroidIT(useKSP2: Boolean) {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground", useKSP2)
 
+    //note: ANDROID_HOME might be needed in run configuration
     @Test
     fun testPlaygroundAndroid() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
-            "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
+            "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace",
+            "-Dorg.gradle.unsafe.isolated-projects=true"
         ).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
             val mergedConfiguration = File(project.root, "workload/build/outputs/mapping/release/configuration.txt")
