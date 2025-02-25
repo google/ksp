@@ -34,6 +34,7 @@ import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.gradle.work.NormalizeLineEndings
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -97,7 +98,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.sourceRoots,
                         kspConfig.javaSourceRoots,
                         kspConfig.commonSourceRoots,
-                        kspConfig.libraries
+                        kspConfig.classpathStructure,
                     ),
                     kspConfig.cachesDir.asFile.get(),
                     kspConfig.classpathStructure,
@@ -107,7 +108,7 @@ abstract class KspAATask @Inject constructor(
             } else {
                 if (
                     !inputChanges.isIncremental ||
-                    inputChanges.getFileChanges(kspConfig.libraries).iterator().hasNext()
+                    inputChanges.getFileChanges(kspConfig.nonJvmLibraries).iterator().hasNext()
                 )
                     kspConfig.cachesDir.get().asFile.deleteRecursively()
                 emptyList()
@@ -264,8 +265,6 @@ abstract class KspAATask @Inject constructor(
                             .orElse(false)
                     )
 
-                    cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
-
                     if (compilerOptions is KotlinJvmCompilerOptions) {
                         // TODO: set proper jdk home
                         cfg.jdkHome.value(File(System.getProperty("java.home")))
@@ -284,6 +283,10 @@ abstract class KspAATask @Inject constructor(
                         cfg.jvmDefaultMode.value(jvmDefaultMode)
 
                         cfg.jvmTarget.value(compilerOptions.jvmTarget.map { it.target })
+
+                        cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
+                    } else {
+                        cfg.nonJvmLibraries.from(cfg.libraries)
                     }
 
                     cfg.platformType.value(kotlinCompilation.platformType)
@@ -332,8 +335,9 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val javaSourceRoots: ConfigurableFileCollection
 
-    @get:Incremental
-    @get:Classpath
+    // Marked as Internal for compilation avoidance.
+    // classpathStructure has the needed incremental properties.
+    @get:Internal
     abstract val libraries: ConfigurableFileCollection
 
     @get:Internal
@@ -397,8 +401,21 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     abstract val incrementalLog: Property<Boolean>
 
-    @get:Internal
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Incremental
+    @get:IgnoreEmptyDirectories
+    @get:NormalizeLineEndings
+    @get:Optional
+    @get:InputFiles
     abstract val classpathStructure: ConfigurableFileCollection
+
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Incremental
+    @get:IgnoreEmptyDirectories
+    @get:NormalizeLineEndings
+    @get:Optional
+    @get:InputFiles
+    abstract val nonJvmLibraries: ConfigurableFileCollection
 
     @get:Input
     abstract val platformType: Property<KotlinPlatformType>
