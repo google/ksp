@@ -498,6 +498,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                     project.provider { processorClasspath }
                                 )
                             )
+                            kspTask.classpathStructure.from(classStructureFiles)
                         }
                         // Don't support binary generation for non-JVM platforms yet.
                         // FIXME: figure out how to add user generated libraries.
