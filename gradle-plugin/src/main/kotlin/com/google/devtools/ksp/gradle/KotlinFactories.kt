@@ -20,6 +20,7 @@
 package com.google.devtools.ksp.gradle
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -30,6 +31,7 @@ import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -37,7 +39,9 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.process.ExecOperations
+import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.gradle.work.NormalizeLineEndings
 import org.gradle.workers.WorkerExecutor
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
@@ -90,20 +94,12 @@ class KotlinFactories {
                 KotlinCompileConfig(KotlinCompilationInfo(kotlinCompilation))
                     .execute(kspTaskProvider as TaskProvider<KotlinCompile>)
 
-                // useClasspathSnapshot isn't configurable per task.
-                // Workaround: enable the other path and ignore irrelevant changes
-                // See [KotlinCompileConfig] in for details.
-                // FIXME: make it configurable in upstream or support useClasspathSnapshot == true, if possible.
                 kspTaskProvider.configure {
                     val compilerOptions = kotlinCompilation.compilerOptions.options as KotlinJvmCompilerOptions
                     KotlinJvmCompilerOptionsHelper.syncOptionsAsConvention(
                         from = compilerOptions,
                         into = it.compilerOptions
                     )
-
-                    if (it.classpathSnapshotProperties.useClasspathSnapshot.get()) {
-                        it.classpathSnapshotProperties.classpath.from(project.provider { it.libraries })
-                    }
                 }
             }
         }
@@ -205,6 +201,14 @@ abstract class KspTaskJvm @Inject constructor(
     @get:OutputDirectory
     abstract val destination: Property<File>
 
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Incremental
+    @get:IgnoreEmptyDirectories
+    @get:NormalizeLineEndings
+    @get:Optional
+    @get:InputFiles
+    abstract val classpathStructure: ConfigurableFileCollection
+
     // Override incrementalProps to exclude irrelevant changes
     override val incrementalProps: List<FileCollection>
         get() = listOf(
@@ -212,6 +216,7 @@ abstract class KspTaskJvm @Inject constructor(
             javaSources,
             commonSourceSet,
             classpathSnapshotProperties.classpath,
+            classpathStructure,
         )
 
     // Overrding an internal function is hacky.
