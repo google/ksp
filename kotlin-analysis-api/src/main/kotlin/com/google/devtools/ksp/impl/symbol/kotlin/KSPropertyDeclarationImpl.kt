@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
@@ -111,7 +112,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                     ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
                 )
             }
-            ?: ktPropertySymbol.receiverType?.let {
+            ?: ktPropertySymbol.receiverType?.abbreviationOrSelf?.let {
                 KSTypeReferenceResolvedImpl.getCached(
                     it,
                     this@KSPropertyDeclarationImpl,
@@ -123,7 +124,10 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
     override val type: KSTypeReference by lazy {
         (ktPropertySymbol.psiIfSource() as? KtProperty)?.typeReference?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(ktPropertySymbol.returnType, this@KSPropertyDeclarationImpl)
+            ?: KSTypeReferenceResolvedImpl.getCached(
+                ktPropertySymbol.returnType.abbreviationOrSelf,
+                this@KSPropertyDeclarationImpl
+            )
     }
 
     override val isMutable: Boolean by lazy {

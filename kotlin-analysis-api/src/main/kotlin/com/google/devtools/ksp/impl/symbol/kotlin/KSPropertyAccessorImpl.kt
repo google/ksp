@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySetterSymbol
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtModifierListOwner
@@ -139,7 +140,7 @@ class KSPropertyGetterImpl private constructor(
     override val returnType: KSTypeReference? by lazy {
         ((owner as? KSPropertyDeclarationImpl)?.ktPropertySymbol?.psiIfSource() as? KtProperty)?.typeReference
             ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(getter.returnType, this@KSPropertyGetterImpl)
+            ?: KSTypeReferenceResolvedImpl.getCached(getter.returnType.abbreviationOrSelf, this@KSPropertyGetterImpl)
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

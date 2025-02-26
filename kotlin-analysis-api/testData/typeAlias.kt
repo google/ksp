@@ -36,6 +36,7 @@
 // nested2 : List<ListOfInt> = (expanded) List<List<Int>>
 // param w.o. asMemberOf: MyAlias<String> = Foo<Bar<T>, Baz<T>> = (expanded) Foo<Bar<String>, Baz<String>>
 // param with asMemberOf: MyAlias<String> = Foo<Bar<T>, Baz<T>> = (expanded) Foo<Bar<String>, Baz<String>>
+// param: MyAlias: MyAlias<String> = Foo<Bar<T>, Baz<T>> = (expanded) Foo<Bar<String>, Baz<String>>
 // END
 
 // MODULE: module1
