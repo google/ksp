@@ -28,6 +28,7 @@ import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
 
@@ -82,7 +83,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                             ktFunctionSymbol.receiverParameter?.annotations ?: emptyList()
                         )
                     }
-                    ?: ktFunctionSymbol.receiverType?.let {
+                    ?: ktFunctionSymbol.receiverType?.abbreviationOrSelf?.let {
                         KSTypeReferenceResolvedImpl.getCached(
                             it,
                             this@KSFunctionDeclarationImpl,
@@ -101,7 +102,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                 if (ktFunctionSymbol is KaConstructorSymbol) {
                     ((parentDeclaration as KSClassDeclaration).asStarProjectedType() as KSTypeImpl).type
                 } else {
-                    ktFunctionSymbol.returnType
+                    ktFunctionSymbol.returnType.abbreviationOrSelf
                 }.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSFunctionDeclarationImpl) }
             }
     }

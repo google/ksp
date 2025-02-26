@@ -11,6 +11,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import org.jetbrains.kotlin.analysis.api.symbols.KaLocalVariableSymbol
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationLocalVariableImpl private constructor(
@@ -32,7 +33,7 @@ class KSPropertyDeclarationLocalVariableImpl private constructor(
     override val type: KSTypeReference by lazy {
         (ktLocalVariableSymbol.psiIfSource() as? KtProperty)?.typeReference
             ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(ktLocalVariableSymbol.returnType, this)
+            ?: KSTypeReferenceResolvedImpl.getCached(ktLocalVariableSymbol.returnType.abbreviationOrSelf, this)
     }
 
     override val isMutable: Boolean = !ktLocalVariableSymbol.isVal

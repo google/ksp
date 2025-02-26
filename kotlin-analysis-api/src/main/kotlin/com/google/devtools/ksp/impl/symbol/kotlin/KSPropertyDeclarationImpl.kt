@@ -112,7 +112,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                     ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
                 )
             }
-            ?: ktPropertySymbol.receiverType?.let {
+            ?: ktPropertySymbol.receiverType?.abbreviationOrSelf?.let {
                 KSTypeReferenceResolvedImpl.getCached(
                     it,
                     this@KSPropertyDeclarationImpl,
