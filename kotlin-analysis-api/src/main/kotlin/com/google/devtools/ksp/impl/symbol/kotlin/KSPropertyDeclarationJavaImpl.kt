@@ -31,7 +31,7 @@ class KSPropertyDeclarationJavaImpl private constructor(val ktJavaFieldSymbol: K
     }
 
     override val isMutable: Boolean
-        get() = !modifiers.contains(Modifier.FINAL)
+        get() = !ktJavaFieldSymbol.isVal
 
     override val hasBackingField: Boolean
         get() = true

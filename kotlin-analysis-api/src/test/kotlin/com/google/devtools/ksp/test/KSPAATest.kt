@@ -358,6 +358,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/interfaceWithDefault.kt")
     }
 
+    @TestMetadata("isMutable.kt")
+    @Test
+    fun testIsMutable() {
+        runTest("../test-utils/testData/api/isMutable.kt")
+    }
+
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
