@@ -7,6 +7,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.types.KaFunctionType
 import org.jetbrains.kotlin.analysis.api.types.KaType
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 
 // TODO: implement a psi based version, rename this class to resolved Impl.
 class KSCallableReferenceImpl private constructor(
@@ -18,7 +19,7 @@ class KSCallableReferenceImpl private constructor(
             cache.getOrPut(IdKeyPair(ktFunctionalType, parent)) { KSCallableReferenceImpl(ktFunctionalType, parent) }
     }
     override val receiverType: KSTypeReference?
-        get() = ktFunctionalType.receiverType?.let { KSTypeReferenceResolvedImpl.getCached(it) }
+        get() = ktFunctionalType.receiverType?.abbreviationOrSelf?.let { KSTypeReferenceResolvedImpl.getCached(it) }
 
     override val functionParameters: List<KSValueParameter>
         get() = ktFunctionalType.parameterTypes.map {
@@ -26,7 +27,7 @@ class KSCallableReferenceImpl private constructor(
         }
 
     override val returnType: KSTypeReference
-        get() = KSTypeReferenceResolvedImpl.getCached(ktFunctionalType.returnType)
+        get() = KSTypeReferenceResolvedImpl.getCached(ktFunctionalType.returnType.abbreviationOrSelf)
 
     override val typeArguments: List<KSTypeArgument>
         get() = ktFunctionalType.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it, this) }

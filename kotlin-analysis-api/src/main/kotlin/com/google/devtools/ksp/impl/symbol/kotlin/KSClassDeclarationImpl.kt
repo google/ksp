@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtClassOrObject
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KaClassSymbol) :
@@ -84,7 +85,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             }
         } ?: analyze {
             val supers = ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
-                KSTypeReferenceResolvedImpl.getCached(type, this@KSClassDeclarationImpl, index)
+                KSTypeReferenceResolvedImpl.getCached(type.abbreviationOrSelf, this@KSClassDeclarationImpl, index)
             }
             // AA is returning additional kotlin.Any for java classes, explicitly extending kotlin.Any will result in
             // compile error, therefore filtering by name should work.
