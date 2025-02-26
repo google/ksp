@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.getConstructors
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
@@ -71,6 +72,17 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
 
         results.add("param w.o. asMemberOf: $type1Signatures = (expanded) $type1Expanded")
         results.add("param with asMemberOf: $type2Signatures = (expanded) $type2Expanded")
+
+        val property = subject.getDeclaredProperties().single()
+        val propertyType = property.type.resolve()
+        val propertyTypeSignatures = propertyType.typeAliasSignatures().joinToString(" = ")
+        val propertyTypeExpanded = resolver.expandType(propertyType).toSignature()
+        results.add(
+            "${property.simpleName.asString()}: " +
+                "${propertyType.declaration.qualifiedName?.asString()}: " +
+                "$propertyTypeSignatures = (expanded) $propertyTypeExpanded"
+        )
+
         return emptyList()
     }
 
