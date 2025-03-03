@@ -37,6 +37,7 @@ import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFa
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.KspStandaloneDirectInheritorsProvider
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
+import com.google.devtools.ksp.standalone.buildKspSdkModule
 import com.google.devtools.ksp.standalone.buildKspSourceModule
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
@@ -89,7 +90,6 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
@@ -200,7 +200,7 @@ class KotlinSymbolProcessing(
                 )
                 compilerConfig.get(JVMConfigurationKeys.JDK_HOME)?.let { jdkHome ->
                     addRegularDependency(
-                        buildKtSdkModule {
+                        buildKspSdkModule {
                             this.platform = platform
                             addBinaryRootsFromJdkHome(jdkHome.toPath(), isJre = false)
                             libraryName = "JDK for $moduleName"

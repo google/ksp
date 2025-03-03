@@ -18,30 +18,42 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.standalone
 
-import com.intellij.psi.search.ProjectScope
+import com.intellij.openapi.module.Module
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibrarySourceModule
+import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtBinaryModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.impl.KaLibraryModuleImpl
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
+import java.nio.file.Path
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 @KtModuleBuilderDsl
-class KspLibraryModuleBuilder(
+open class KspLibraryModuleBuilder(
     private val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment
 ) : KtBinaryModuleBuilder() {
     public lateinit var libraryName: String
     public var librarySources: KaLibrarySourceModule? = null
 
+    override fun build(): KaLibraryModule = build(isSdk = false)
+
     @OptIn(KaExperimentalApi::class)
-    override fun build(): KaLibraryModule {
+    fun build(isSdk: Boolean): KaLibraryModule {
         val binaryRoots = getBinaryRoots()
-        val contentScope = ProjectScope.getLibrariesScope(kotlinCoreProjectEnvironment.project)
+        val binaryVirtualFiles = getBinaryVirtualFiles()
+        val contentScope = LibraryRootsSearchScope(
+            StandaloneProjectFactory.getVirtualFilesForLibraryRoots(binaryRoots, kotlinCoreProjectEnvironment) +
+                binaryVirtualFiles
+        )
         return KaLibraryModuleImpl(
             directRegularDependencies,
             directDependsOnDependencies,
@@ -50,10 +62,10 @@ class KspLibraryModuleBuilder(
             platform,
             kotlinCoreProjectEnvironment.project,
             binaryRoots,
-            emptyList(),
+            binaryVirtualFiles,
             libraryName,
             librarySources,
-            false
+            isSdk
         )
     }
 }
@@ -64,4 +76,66 @@ inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleB
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }
     return KspLibraryModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
+}
+
+internal class SimpleTrie(paths: List<String>) {
+    class TrieNode {
+        var isTerminal: Boolean = false
+    }
+
+    val root = TrieNode()
+
+    private val m = mutableMapOf<Pair<TrieNode, String>, TrieNode>().apply {
+        paths.forEach { path ->
+            var p = root
+            for (d in path.trim('/').split('/')) {
+                p = getOrPut(Pair(p, d)) { TrieNode() }
+            }
+            p.isTerminal = true
+        }
+    }
+
+    fun contains(s: String): Boolean {
+        var p = root
+        for (d in s.trim('/').split('/')) {
+            p = m.get(Pair(p, d))?.also {
+                if (it.isTerminal)
+                    return true
+            } ?: return false
+        }
+        return false
+    }
+}
+
+internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchScope() {
+    val trie: SimpleTrie = SimpleTrie(roots.map { it.path })
+
+    override fun contains(file: VirtualFile): Boolean {
+        return trie.contains(file.path)
+    }
+
+    override fun isSearchInModuleContent(aModule: Module): Boolean = false
+
+    override fun isSearchInLibraries(): Boolean = true
+}
+
+@KtModuleBuilderDsl
+public class KspSdkModuleBuilder(
+    kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment
+) : KspLibraryModuleBuilder(kotlinCoreProjectEnvironment) {
+    @OptIn(KaImplementationDetail::class)
+    public fun addBinaryRootsFromJdkHome(jdkHome: Path, isJre: Boolean) {
+        val jdkRoots = LibraryUtils.findClassesFromJdkHome(jdkHome, isJre)
+        addBinaryRoots(jdkRoots)
+    }
+
+    override fun build(): KaLibraryModule = build(isSdk = true)
+}
+
+@OptIn(ExperimentalContracts::class)
+public inline fun KtModuleProviderBuilder.buildKspSdkModule(init: KspSdkModuleBuilder.() -> Unit): KaLibraryModule {
+    contract {
+        callsInPlace(init, InvocationKind.EXACTLY_ONCE)
+    }
+    return KspSdkModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
 }
