@@ -34,7 +34,9 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }
 
-    override val packageName: KSName = KSNameImpl.getCached(psi.packageName)
+    override val packageName: KSName by lazy {
+        KSNameImpl.getCached(psi.packageName)
+    }
 
     override val fileName: String = psi.name
 
@@ -50,7 +52,9 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
 
     override val origin: Origin = Origin.JAVA
 
-    override val location: Location = psi.toLocation()
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val parent: KSNode? = null
 
