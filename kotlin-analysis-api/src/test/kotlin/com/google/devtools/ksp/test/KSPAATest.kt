@@ -88,6 +88,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/annotationsRepeatable.kt")
     }
 
+    @TestMetadata("annotationTargets.kt")
+    @Test
+    fun testAnnotationTargets() {
+        runTest("../test-utils/testData/api/annotationTargets.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
