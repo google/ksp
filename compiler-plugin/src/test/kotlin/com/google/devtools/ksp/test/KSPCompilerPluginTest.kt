@@ -80,6 +80,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/annotationsRepeatable.kt")
     }
 
+    @TestMetadata("annotationTargets.kt")
+    @Test
+    fun testAnnotationTargets() {
+        runTest("../test-utils/testData/api/annotationTargets.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {

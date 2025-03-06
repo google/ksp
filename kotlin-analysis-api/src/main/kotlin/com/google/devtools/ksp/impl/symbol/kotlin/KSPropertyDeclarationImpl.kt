@@ -64,21 +64,13 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             .map { KSAnnotationResolvedImpl.getCached(it, this) }
             .plus(
                 if (ktPropertySymbol.isFromPrimaryConstructor) {
-                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters
-                        ?.singleOrNull { it.name == simpleName }?.annotations ?: emptySequence()
+                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters?.singleOrNull {
+                        it.name == simpleName
+                    }?.annotations?.filter { it.isValidOnProperty() } ?: emptySequence()
                 } else {
                     emptySequence()
                 }
-            ).filterNot { valueParameterAnnotation ->
-                valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
-                    metaAnnotation.annotationType.resolve().declaration.qualifiedName
-                        ?.asString() == "kotlin.annotation.Target" &&
-                        (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.any {
-                        (it as? KSClassDeclaration)?.qualifiedName
-                            ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
-                    } ?: false
-                }
-            }.plus(
+            ).plus(
                 // TODO: optimize for psi
                 ktPropertySymbol.backingFieldSymbol?.annotations
                     ?.map { KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) } ?: emptyList()
@@ -203,6 +195,7 @@ internal fun KaAnnotation.isUseSiteTargetAnnotation(): Boolean {
             it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
     } ?: false
 }
+
 internal fun KtAnnotationEntry.isUseSiteTargetAnnotation(): Boolean {
     return this.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
         it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
@@ -212,6 +205,7 @@ internal fun KtAnnotationEntry.isUseSiteTargetAnnotation(): Boolean {
             it == AnnotationUseSiteTarget.FIELD
     } ?: false
 }
+
 internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
     if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
@@ -239,3 +233,11 @@ internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     }
     return result
 }
+
+internal fun KSAnnotation.isValidOnProperty(): Boolean =
+    annotationType.resolve().declaration.annotations.none { metaAnnotation ->
+        metaAnnotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.annotation.Target" &&
+            (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.none {
+            (it as? KSClassDeclaration)?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.PROPERTY"
+        } ?: false
+    }
