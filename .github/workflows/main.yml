@@ -46,7 +46,7 @@ jobs:
 
     # Build cache
     - name: Cache Gradle Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/.gradle/caches
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
@@ -54,7 +54,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     - name: Cache gradle wrapper
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
