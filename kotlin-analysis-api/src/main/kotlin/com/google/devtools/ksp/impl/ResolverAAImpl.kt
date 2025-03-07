@@ -544,15 +544,10 @@ class ResolverAAImpl(
         }
         val realAnnotationName = expandedIfAlias ?: annotationName
 
-        fun checkAnnotated(annotated: KSAnnotated): Boolean {
-            return annotated.annotations.any {
-                val kaType = (it.annotationType.resolve() as? KSTypeImpl)?.type ?: return@any false
-                kaType.fullyExpand().symbol?.classId?.asFqNameString() == realAnnotationName
-            }
-        }
-
-        val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
-        return (newSymbols + deferredSymbolsRestored).asSequence().filter(::checkAnnotated)
+        return if (inDepth)
+            annotationToSymbolsMapWithLocals[realAnnotationName]?.asSequence() ?: emptySequence()
+        else
+            annotationToSymbolsMap[realAnnotationName]?.asSequence() ?: emptySequence()
     }
 
     private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
@@ -565,16 +560,30 @@ class ResolverAAImpl(
         return visitor.symbols
     }
 
+    private val annotationToSymbolsMap: Map<String, Collection<KSAnnotated>> by lazy {
+        mapAnnotatedSymbols(false)
+    }
+
+    private val annotationToSymbolsMapWithLocals: Map<String, Collection<KSAnnotated>> by lazy {
+        mapAnnotatedSymbols(true)
+    }
+
+    private fun mapAnnotatedSymbols(inDepth: Boolean): Map<String, Collection<KSAnnotated>> {
+        val newSymbols = collectAnnotatedSymbols(inDepth)
+        val withDeferred = newSymbols + deferredSymbolsRestored
+        return mutableMapOf<String, MutableCollection<KSAnnotated>>().apply {
+            withDeferred.forEach { annotated ->
+                for (annotation in annotated.annotations) {
+                    val kaType = (annotation.annotationType.resolve() as? KSTypeImpl)?.type ?: continue
+                    val annotationFqN = kaType.fullyExpand().symbol?.classId?.asFqNameString() ?: continue
+                    getOrPut(annotationFqN, ::mutableSetOf).add(annotated)
+                }
+            }
+        }
+    }
+
     private val deferredSymbolsRestored: Set<KSAnnotated> by lazy {
         deferredSymbols.values.flatten().mapNotNull { it.restore() }.toSet()
-    }
-
-    private val newAnnotatedSymbols: Collection<KSAnnotated> by lazy {
-        collectAnnotatedSymbols(false)
-    }
-
-    private val newAnnotatedSymbolsWithLocals: Collection<KSAnnotated> by lazy {
-        collectAnnotatedSymbols(true)
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
