@@ -44,8 +44,7 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVo
     }
 
     override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
-        if (typeAlias.annotations.any())
-            symbols.add(typeAlias)
+        visitAnnotated(typeAlias, data)
     }
 
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
