@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
@@ -59,7 +60,7 @@ class KSTypeArgumentResolvedImpl private constructor(
         kaType?.let { KSTypeReferenceResolvedImpl.getCached(it, this@KSTypeArgumentResolvedImpl) }
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         kaType?.annotations(this) ?: emptySequence()
     }
 

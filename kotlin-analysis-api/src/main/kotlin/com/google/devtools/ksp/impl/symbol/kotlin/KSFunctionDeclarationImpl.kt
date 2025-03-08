@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
@@ -146,8 +147,8 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         return visitor.visitFunctionDeclaration(this, data)
     }
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
-        val psi = ktFunctionSymbol.psi as? KtFunction ?: return@lazy emptySequence()
+    override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
+        val psi = ktFunctionSymbol.psi as? KtFunction ?: return@lazyMemoizedSequence emptySequence()
         if (!psi.hasBlockBody()) {
             emptySequence()
         } else {
@@ -178,13 +179,12 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             )
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
-        if (isSyntheticConstructor()) {
+    override val annotations: Sequence<KSAnnotation>
+        get() = if (isSyntheticConstructor()) {
             emptySequence()
         } else {
             super.annotations
         }
-    }
 
     override fun toString(): String {
         // TODO: fix origin for implicit Java constructor in AA

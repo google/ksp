@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -58,7 +59,7 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
         psi.virtualFile.path
     }
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
+    override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
         analyze {
             ktFileSymbol.fileScope.declarations.map {
                 when (it) {
@@ -84,7 +85,7 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
         return visitor.visitFile(this, data)
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         (ktFileSymbol.psi as? KtFile)?.annotations(ktFileSymbol) ?: ktFileSymbol.annotations(this)
     }
 

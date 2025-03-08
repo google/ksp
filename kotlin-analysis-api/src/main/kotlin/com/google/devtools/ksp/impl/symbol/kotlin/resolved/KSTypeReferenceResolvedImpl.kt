@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
 import com.google.devtools.ksp.common.IdKeyTriple
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
@@ -71,7 +72,7 @@ class KSTypeReferenceResolvedImpl private constructor(
         return KSTypeImpl.getCached(ktType)
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktType.annotations(this) +
             additionalAnnotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, this) }
     }

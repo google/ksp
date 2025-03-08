@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
@@ -37,7 +38,7 @@ abstract class KSPropertyAccessorImpl(
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor, Deferrable {
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
@@ -45,7 +46,7 @@ abstract class KSPropertyAccessorImpl(
             .plus(findAnnotationFromUseSiteTarget())
     }
 
-    internal val originalAnnotations: Sequence<KSAnnotation> by lazy {
+    internal val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
         ktPropertyAccessorSymbol.annotations(this)
     }
@@ -84,8 +85,8 @@ abstract class KSPropertyAccessorImpl(
     override val parent: KSNode?
         get() = ktPropertyAccessorSymbol.getContainingKSSymbol()
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
-        val psi = ktPropertyAccessorSymbol.psi as? KtPropertyAccessor ?: return@lazy emptySequence()
+    override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
+        val psi = ktPropertyAccessorSymbol.psi as? KtPropertyAccessor ?: return@lazyMemoizedSequence emptySequence()
         if (!psi.hasBlockBody()) {
             emptySequence()
         } else {

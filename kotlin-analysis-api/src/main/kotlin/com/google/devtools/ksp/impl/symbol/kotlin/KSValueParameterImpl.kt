@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
@@ -86,7 +87,7 @@ class KSValueParameterImpl private constructor(
         ktValueParameterSymbol.hasDefaultValue
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktValueParameterSymbol.annotations(this).plus(findAnnotationFromUseSiteTarget())
     }
     override val origin: Origin by lazy {
