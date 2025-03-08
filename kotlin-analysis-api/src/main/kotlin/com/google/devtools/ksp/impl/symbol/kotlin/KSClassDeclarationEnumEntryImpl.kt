@@ -112,10 +112,8 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
         return visitor.visitClassDeclaration(this, data)
     }
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
-        // TODO: fix after .getDeclaredMemberScope() works for enum entry with no initializer.
-        emptySequence()
-    }
+    // TODO: fix after .getDeclaredMemberScope() works for enum entry with no initializer.
+    override val declarations: Sequence<KSDeclaration> = emptySequence()
 
     override fun toString(): String {
         return "$parent.${simpleName.asString()}"
