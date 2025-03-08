@@ -89,8 +89,8 @@ class ResolverAAImpl(
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     private val classBinaryCache = ClsKotlinBinaryClassCache()
-    private val packageInfoFiles by lazy {
-        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
+    private val packageInfoFiles by lazyMemoizedSequence {
+        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence()
     }
 
     // TODO: fix in upstream for builtin types.

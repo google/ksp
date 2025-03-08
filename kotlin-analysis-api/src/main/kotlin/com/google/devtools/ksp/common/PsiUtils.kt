@@ -94,3 +94,11 @@ inline fun <reified T> PsiElement.findParentOfType(): T? {
 }
 
 fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
+
+inline fun <T> lazyMemoizedSequence(crossinline initializer: () -> Sequence<T>): Lazy<Sequence<T>> = lazy {
+    val value = initializer()
+    if (value is MemoizedSequence<T>)
+        value
+    else
+        value.memoized()
+}

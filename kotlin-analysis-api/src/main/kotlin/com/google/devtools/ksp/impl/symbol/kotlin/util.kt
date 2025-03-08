@@ -21,7 +21,6 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.common.memoized
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
@@ -264,7 +263,7 @@ internal fun KaDeclarationContainerSymbol.declarations(): Sequence<KSDeclaration
                 is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
                 else -> throw IllegalStateException()
             }
-        }.memoized()
+        }
     }
 }
 
