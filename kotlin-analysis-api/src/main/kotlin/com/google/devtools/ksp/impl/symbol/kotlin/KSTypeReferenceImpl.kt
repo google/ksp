@@ -18,6 +18,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -76,7 +77,7 @@ class KSTypeReferenceImpl(
         return KSTypeImpl.getCached(ktType)
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         val innerAnnotations = mutableListOf<Sequence<KtAnnotationEntry>>()
         visitNullableType {
             innerAnnotations.add(it.annotationEntries.asSequence())
