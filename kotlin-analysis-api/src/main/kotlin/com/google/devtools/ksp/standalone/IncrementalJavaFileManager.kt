@@ -38,7 +38,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         val javaModuleGraph = JavaModuleGraph(javaModuleFinder)
         val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
         val jdkRoots = getDefaultJdkModuleRoots(javaModuleFinder, javaModuleGraph)
-        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, environment)
+        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, environment.environment)
 
         val rootsWithSingleJavaFileRoots = buildList {
             addAll(libraryRoots)
