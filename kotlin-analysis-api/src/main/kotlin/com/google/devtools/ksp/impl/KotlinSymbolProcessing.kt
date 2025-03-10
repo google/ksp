@@ -172,7 +172,9 @@ class KotlinSymbolProcessing(
         )
 
         // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-        val projectStructureProvider = KtModuleProviderBuilder(kotlinCoreProjectEnvironment).apply {
+        val projectStructureProvider = KtModuleProviderBuilder(
+            kotlinCoreProjectEnvironment.environment, project
+        ).apply {
             val compilerConfig = compilerConfiguration
             val platform = when (kspConfig) {
                 is KSPJvmConfig -> {
@@ -238,7 +240,7 @@ class KotlinSymbolProcessing(
             projectStructureProvider,
         )
         val ktFiles = allSourceFiles.filterIsInstance<KtFile>()
-        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment)
+        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment.environment)
         val createPackagePartProvider =
             StandaloneProjectFactory.createPackagePartsProvider(
                 libraryRoots,
@@ -687,9 +689,9 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.symbolProviders.factories.LLStubOriginLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseJavaModuleResolver::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.symbols.pointers.KaBasePsiSymbolPointerCreator::class.java,
     org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,

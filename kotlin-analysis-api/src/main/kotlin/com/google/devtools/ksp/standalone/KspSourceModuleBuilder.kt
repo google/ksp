@@ -18,6 +18,7 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.standalone
 
+import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -28,7 +29,6 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettings
@@ -40,7 +40,8 @@ import kotlin.contracts.contract
 
 @KtModuleBuilderDsl
 class KspModuleBuilder(
-    private val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
+    private val coreApplicationEnvironment: CoreApplicationEnvironment,
+    private val project: Project
 ) : KtModuleBuilder() {
     public lateinit var moduleName: String
     public var languageVersionSettings: LanguageVersionSettings =
@@ -58,16 +59,16 @@ class KspModuleBuilder(
 
     override fun build(): KaSourceModule {
         val virtualFiles = collectVirtualFilesByRoots()
-        val psiManager = PsiManager.getInstance(kotlinCoreProjectEnvironment.project)
+        val psiManager = PsiManager.getInstance(project)
         val psiFiles = virtualFiles.mapNotNull { psiManager.findFile(it) }
-        val contentScope = IncrementalGlobalSearchScope(kotlinCoreProjectEnvironment.project, virtualFiles)
+        val contentScope = IncrementalGlobalSearchScope(project, virtualFiles)
         return KaSourceModuleImpl(
             directRegularDependencies,
             directDependsOnDependencies,
             directFriendDependencies,
             contentScope,
             platform,
-            kotlinCoreProjectEnvironment.project,
+            project,
             moduleName,
             languageVersionSettings,
             psiFiles,
@@ -77,7 +78,7 @@ class KspModuleBuilder(
     val analyzableExtensions = setOf("kt", "java", "kts")
 
     private fun collectVirtualFilesByRoots(): Set<VirtualFile> {
-        val localFileSystem = kotlinCoreProjectEnvironment.environment.localFileSystem
+        val localFileSystem = coreApplicationEnvironment.localFileSystem
         return buildSet {
             for (root in sourceRoots) {
                 val files = root.toFile().walk().filter {
@@ -115,5 +116,5 @@ public inline fun KtModuleProviderBuilder.buildKspSourceModule(
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }
-    return KspModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
+    return KspModuleBuilder(coreApplicationEnvironment, project).apply(init).build()
 }

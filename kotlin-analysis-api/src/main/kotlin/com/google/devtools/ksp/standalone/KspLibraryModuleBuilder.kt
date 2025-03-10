@@ -18,7 +18,9 @@
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.standalone
 
+import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
@@ -31,7 +33,6 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.KtBinaryModuleBui
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.impl.KaLibraryModuleImpl
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import java.nio.file.Path
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -39,7 +40,8 @@ import kotlin.contracts.contract
 
 @KtModuleBuilderDsl
 open class KspLibraryModuleBuilder(
-    private val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment
+    private val coreApplicationEnvironment: CoreApplicationEnvironment,
+    private val project: Project,
 ) : KtBinaryModuleBuilder() {
     public lateinit var libraryName: String
     public var librarySources: KaLibrarySourceModule? = null
@@ -51,8 +53,10 @@ open class KspLibraryModuleBuilder(
         val binaryRoots = getBinaryRoots()
         val binaryVirtualFiles = getBinaryVirtualFiles()
         val contentScope = LibraryRootsSearchScope(
-            StandaloneProjectFactory.getVirtualFilesForLibraryRoots(binaryRoots, kotlinCoreProjectEnvironment) +
-                binaryVirtualFiles
+            StandaloneProjectFactory.getVirtualFilesForLibraryRoots(
+                binaryRoots,
+                coreApplicationEnvironment,
+            ) + binaryVirtualFiles
         )
         return KaLibraryModuleImpl(
             directRegularDependencies,
@@ -60,7 +64,7 @@ open class KspLibraryModuleBuilder(
             directFriendDependencies,
             contentScope,
             platform,
-            kotlinCoreProjectEnvironment.project,
+            project,
             binaryRoots,
             binaryVirtualFiles,
             libraryName,
@@ -75,7 +79,7 @@ inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleB
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }
-    return KspLibraryModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
+    return KspLibraryModuleBuilder(coreApplicationEnvironment, project).apply(init).build()
 }
 
 internal class SimpleTrie(paths: List<String>) {
@@ -121,8 +125,9 @@ internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchS
 
 @KtModuleBuilderDsl
 public class KspSdkModuleBuilder(
-    kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment
-) : KspLibraryModuleBuilder(kotlinCoreProjectEnvironment) {
+    coreApplicationEnvironment: CoreApplicationEnvironment,
+    project: Project,
+) : KspLibraryModuleBuilder(coreApplicationEnvironment, project) {
     @OptIn(KaImplementationDetail::class)
     public fun addBinaryRootsFromJdkHome(jdkHome: Path, isJre: Boolean) {
         val jdkRoots = LibraryUtils.findClassesFromJdkHome(jdkHome, isJre)
@@ -137,5 +142,5 @@ public inline fun KtModuleProviderBuilder.buildKspSdkModule(init: KspSdkModuleBu
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }
-    return KspSdkModuleBuilder(kotlinCoreProjectEnvironment).apply(init).build()
+    return KspSdkModuleBuilder(coreApplicationEnvironment, project).apply(init).build()
 }
