@@ -87,7 +87,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
             rootsIndex,
             packagePartProviders,
             SingleJavaFileRootsIndex(singleJavaFileRoots),
-            true
+            true, null
         )
     }
 
@@ -130,7 +130,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
             rootsIndex,
             packagePartProviders,
             SingleJavaFileRootsIndex(singleJavaFileRoots),
-            true
+            true, null
         )
     }
 }
