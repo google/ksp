@@ -86,7 +86,7 @@ object AndroidPluginIntegration {
             }
             when (task) {
                 is KspTaskJvm -> {
-                    task.setSource(filteredSources)
+                    task.source(filteredSources)
                     task.dependsOn(filteredSources)
                 }
 
