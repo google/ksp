@@ -87,8 +87,7 @@ private fun JavaExec.configureCommonMetalavaArgs(
 
 private fun Project.getCompileClasspath(): String =
     configurations.findByName("compileClasspath")!!.files
-        .map { it.toRelativeString(projectDir) }
-        .joinToString(File.pathSeparator)
+        .joinToString(File.pathSeparator) { it.relativeToOrSelf(projectDir).path }
 
 private fun Project.getMetalavaConfiguration(): Configuration {
     return configurations.findByName("metalava") ?: configurations.create("metalava") {
