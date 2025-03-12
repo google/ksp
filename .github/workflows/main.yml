@@ -58,10 +58,6 @@ jobs:
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-    # Run ktlint
-    - name: lint
-      if: matrix.os == 'ubuntu-latest'
-      run: ./gradlew ktlint
 
     # Check API compatibility
     - name: API compatibility check
@@ -71,7 +67,7 @@ jobs:
     # Run tests
     - name: test
       shell: bash
-      run: ./gradlew --stacktrace --info test
+      run: ./gradlew --stacktrace --info check
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
