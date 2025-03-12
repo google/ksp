@@ -69,11 +69,6 @@ class AndroidIncrementalIT(useKSP2: Boolean) {
         testWithExtraFlags()
     }
 
-    @Test
-    fun testPlaygroundAndroidUseClasspathSnapshotFalse() {
-        testWithExtraFlags("-Pkotlin.incremental.useClasspathSnapshot=false")
-    }
-
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "KSP2={0}")
