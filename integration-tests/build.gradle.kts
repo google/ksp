@@ -58,7 +58,7 @@ val agpCompatibilityTest by tasks.registering(Test::class) {
     configureCommonSettings()
 }
 
-tasks.named<Test>("test") {
+tasks.test {
     maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
 
     // Exclude test classes from agpCompatibilityTest
@@ -67,7 +67,11 @@ tasks.named<Test>("test") {
     // Apply common settings
     configureCommonSettings()
 
-    // Ensure that 'test' depends on 'compatibilityTest'
+    // Ensure that 'test' runs after 'compatibilityTest'
+    mustRunAfter(agpCompatibilityTest)
+}
+
+tasks.check {
     dependsOn(agpCompatibilityTest)
 }
 
