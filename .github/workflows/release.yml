@@ -41,7 +41,7 @@ jobs:
     # Run tests
     - name: test
       shell: bash
-      run: ./gradlew --stacktrace --info test
+      run: ./gradlew --stacktrace --info check
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
