@@ -32,5 +32,5 @@ tasks.register<Copy>("copyG") {
     into(layout.buildDirectory.file("generatedSources"))
 }.let {
     // Magic. `map` creates a provider to propagate task dependency.
-    compileKotlin.setSource(it.map { it.destinationDir })
+    compileKotlin.source(it.map { it.destinationDir })
 }
