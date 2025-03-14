@@ -24,6 +24,10 @@ import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
@@ -77,11 +81,26 @@ class KSValueParameterImpl private constructor(
     override val isCrossInline: Boolean
         get() = ktValueParameterSymbol.isCrossinline
 
+    private val KaValueParameterSymbol.primaryConstructorProperty: KaPropertySymbol? by lazy {
+        when (ktValueParameterSymbol.origin) {
+            // ktValueParameterSymbol.generatedPrimaryConstructorProperty is always null in libraries.
+            // TODO: fix in AA
+            KaSymbolOrigin.LIBRARY, KaSymbolOrigin.JAVA_LIBRARY -> analyze {
+                val cstr = ktValueParameterSymbol.containingDeclaration as? KaConstructorSymbol
+                val cls = cstr?.containingDeclaration as? KaClassSymbol
+                cls?.declaredMemberScope?.declarations?.filterIsInstance<KaPropertySymbol>()
+                    ?.firstOrNull { it.name == ktValueParameterSymbol.name }
+            }
+
+            else -> ktValueParameterSymbol.generatedPrimaryConstructorProperty
+        }
+    }
+
     override val isVal: Boolean
-        get() = (ktValueParameterSymbol.psi as? KtParameter)?.let { it.hasValOrVar() && !it.isMutable } ?: false
+        get() = ktValueParameterSymbol.primaryConstructorProperty?.isVal == true
 
     override val isVar: Boolean
-        get() = (ktValueParameterSymbol.psi as? KtParameter)?.let { it.hasValOrVar() && it.isMutable } ?: false
+        get() = ktValueParameterSymbol.primaryConstructorProperty?.isVal == false
 
     override val hasDefault: Boolean by lazy {
         ktValueParameterSymbol.hasDefaultValue

@@ -684,6 +684,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
     }
 
+    @TestMetadata("valueParameter.kt")
+    @Test
+    fun testValueParameter() {
+        runTest("../kotlin-analysis-api/testData/valueParameter.kt")
+    }
+
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {
