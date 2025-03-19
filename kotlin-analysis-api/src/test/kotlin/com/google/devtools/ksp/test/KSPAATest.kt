@@ -702,6 +702,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/validateTypes.kt")
     }
 
+    @TestMetadata("vararg.kt")
+    @Test
+    fun testVararg() {
+        runTest("../test-utils/testData/api/vararg.kt")
+    }
+
     @TestMetadata("visibilities.kt")
     @Test
     fun testVisibilities() {
