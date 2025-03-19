@@ -81,7 +81,7 @@
 // - COVARIANT X : X -> X
 // v7 : B<*> -> B<out Any?>
 // v8 : B<A<X, out Y>> -> B<A<X, Y>>
-// - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
+// - INVARIANT A<X, out Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // foo : Unit -> Unit
