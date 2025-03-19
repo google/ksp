@@ -12,6 +12,9 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
     - name: Setup Java 17
       uses: actions/setup-java@v1.4.3
