@@ -80,6 +80,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/annotationsRepeatable.kt")
     }
 
+    @TestMetadata("annotationTargets.kt")
+    @Test
+    fun testAnnotationTargets() {
+        runTest("../test-utils/testData/api/annotationTargets.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
@@ -224,6 +230,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
         runTest("../test-utils/testData/api/docString.kt")
     }
 
+    @TestMetadata("equals.kt")
+    @Test
+    fun testEquals() {
+        runTest("../test-utils/testData/api/equals.kt")
+    }
+
     @TestMetadata("equivalentJavaWildcards.kt")
     @Test
     fun testEquivalentJavaWildcards() {
@@ -313,6 +325,12 @@ class KSPCompilerPluginTest : AbstractKSPCompilerPluginTest() {
     @Test
     fun testInterfaceWithDefault() {
         runTest("../test-utils/testData/api/interfaceWithDefault.kt")
+    }
+
+    @TestMetadata("isMutable.kt")
+    @Test
+    fun testIsMutable() {
+        runTest("../test-utils/testData/api/isMutable.kt")
     }
 
     @TestMetadata("javaModifiers.kt")

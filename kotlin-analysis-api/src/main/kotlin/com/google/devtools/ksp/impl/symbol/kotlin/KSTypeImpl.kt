@@ -17,7 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.common.IdKeyPair
+import com.google.devtools.ksp.common.IdKey
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.impl.ResolverAAImpl
@@ -31,14 +31,13 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationList
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 
 class KSTypeImpl private constructor(internal val type: KaType) : KSType {
-    companion object : KSObjectCache<IdKeyPair<KaType, KaAnnotationList>, KSTypeImpl>() {
-        fun getCached(type: KaType): KSTypeImpl = cache.getOrPut(IdKeyPair(type, type.annotations)) {
+    companion object : KSObjectCache<IdKey<KaType>, KSTypeImpl>() {
+        fun getCached(type: KaType): KSTypeImpl = cache.getOrPut(IdKey(type)) {
             KSTypeImpl(type)
         }
     }
@@ -162,7 +161,7 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         get() = type is KaFunctionType && type.isSuspend
 
     override fun hashCode(): Int {
-        return type.toAbbreviatedType().hashCode()
+        return type.fullyExpand().hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -179,8 +178,4 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
     }
 }
 
-internal fun KaType.toAbbreviatedType(): KaType =
-    when (val symbol = this.classifierSymbol()) {
-        is KaTypeAliasSymbol -> symbol.expandedType.toAbbreviatedType()
-        else -> this
-    }
+internal fun KaType.fullyExpand(): KaType = analyze { fullyExpandedType }

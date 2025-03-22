@@ -14,26 +14,24 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
     # Checkout
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: 1.0.26-release
+          ref: 1.0.32-release
   
       - name: merge commits from main to release branch
         run: |
           # Cherry pick new changes from main, except for version bumps.
           # A commit is a version bump IFF it touches third_party/prebuilt/repo
           DONT_PICK=$(cat <<EOF
-          d44ad7d9824aa0f073ce3c53e79361ae0f030d3b
-          1a4ed56e3dc43f1d075fb2fa1f9f12f29bcd43cd
-          c65ac57cad85f38b314414489a53a7fcff414c8c
-          3ea749001abc37d4253e58be1861f17222091605
-          17d03d52f3c303da886bd0a9e82a5696ebbe825b
-          ba2bee790da28056c30b0bc30f22c36e83cb7e68
-          f52eef6634a8dcbfca6a335966464702ffbcb3b9
-          dd5a919a0c7d78c5b98ca856339de915cab2ed38
+          4ac220e3d98429ccb70984bc3b7aa34b403a5af1
+          13592a7600b6da335242cc98608daadddd036c3d
+          a85b287d34279ac766b305ea369a9b549bfc25ac
           EOF
           )
           git config --global user.email "kotlin-symbol-processing@google.com"
@@ -55,7 +53,7 @@ jobs:
   
       # Build cache
       - name: Cache Gradle Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
@@ -63,7 +61,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Cache gradle wrapper
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
@@ -74,7 +72,7 @@ jobs:
   
       # Run ksp generated tests
       - name: test
-        run: ./gradlew --stacktrace --info test
+        run: ./gradlew --stacktrace --info check
 
       - name: push to release branch
         if: success()
@@ -82,7 +80,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: |

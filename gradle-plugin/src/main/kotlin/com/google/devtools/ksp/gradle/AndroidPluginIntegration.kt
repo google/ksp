@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
@@ -39,14 +40,10 @@ import java.util.concurrent.Callable
 @Suppress("UnstableApiUsage") // some android APIs are unsable.
 object AndroidPluginIntegration {
 
-    private val agpPluginIds = listOf("com.android.application", "com.android.library", "com.android.dynamic-feature")
-
     fun forEachAndroidSourceSet(project: Project, onSourceSet: (String) -> Unit) {
-        agpPluginIds.forEach { agpPluginId ->
-            project.pluginManager.withPlugin(agpPluginId) {
-                // for android apps, we need a configuration per source set
-                decorateAndroidExtension(project, onSourceSet)
-            }
+        project.pluginManager.withPlugin("com.android.base") {
+            // for android modules, we need a configuration per source set
+            decorateAndroidExtension(project, onSourceSet)
         }
     }
 
@@ -89,7 +86,7 @@ object AndroidPluginIntegration {
             }
             when (task) {
                 is KspTaskJvm -> {
-                    task.setSource(filteredSources)
+                    task.source(filteredSources)
                     task.dependsOn(filteredSources)
                 }
 
@@ -158,5 +155,27 @@ object AndroidPluginIntegration {
             classOutputDir,
             resourcesOutputDir
         )
+    }
+
+    /**
+     * Returns false for AGP versions 8.10.0-alpha03 or higher.
+     *
+     * Returns true for older AGP versions or when AGP version cannot be determined.
+     */
+    fun Project.useLegacyVariantApi(): Boolean {
+        val agpVersion = try {
+            this.extensions
+                .findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+                ?.pluginVersion
+        } catch (e: Exception) {
+            // Perhaps a version of AGP before pluginVersion API was added.
+            null
+        }
+
+        // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
+        if (agpVersion == null) {
+            return true
+        }
+        return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
     }
 }

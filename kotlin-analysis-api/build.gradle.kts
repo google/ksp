@@ -23,6 +23,7 @@ val aaFastutilVersion: String by project
 val aaStax2Version: String by project
 val aaAaltoXmlVersion: String by project
 val aaStreamexVersion: String by project
+val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -48,6 +49,7 @@ dependencies {
         "com.jetbrains.intellij.platform:core-impl",
         "com.jetbrains.intellij.platform:extensions",
         "com.jetbrains.intellij.platform:diagnostic",
+        "com.jetbrains.intellij.platform:diagnostic-telemetry",
         "com.jetbrains.intellij.java:java-frontback-psi",
         "com.jetbrains.intellij.java:java-frontback-psi-impl",
         "com.jetbrains.intellij.java:java-psi",
@@ -58,13 +60,13 @@ dependencies {
     }
 
     listOf(
-        "org.jetbrains.kotlin:high-level-api-fir-for-ide",
-        "org.jetbrains.kotlin:high-level-api-for-ide",
+        "org.jetbrains.kotlin:analysis-api-k2-for-ide",
+        "org.jetbrains.kotlin:analysis-api-for-ide",
         "org.jetbrains.kotlin:low-level-api-fir-for-ide",
         "org.jetbrains.kotlin:analysis-api-platform-interface-for-ide",
         "org.jetbrains.kotlin:symbol-light-classes-for-ide",
         "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
-        "org.jetbrains.kotlin:high-level-api-impl-base-for-ide",
+        "org.jetbrains.kotlin:analysis-api-impl-base-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-common-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-fir-for-ide",
         "org.jetbrains.kotlin:kotlin-compiler-fe10-for-ide",
@@ -93,13 +95,15 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0") { isTransitive = false }
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion") { isTransitive = false }
     implementation(
         "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
     ) {
         isTransitive = false
     }
     implementation("org.jetbrains:annotations:24.1.0")
+
+    implementation("io.opentelemetry:opentelemetry-api:1.34.1") { isTransitive = false }
 
     compileOnly(project(":common-deps"))
 
@@ -113,10 +117,10 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    // FIXME: use aaKotlinBaseVersion after the dependency is fixed.
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:2.1.20-dev-201")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
+    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
 
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))
@@ -157,6 +161,7 @@ tasks.withType<ShadowJar>().configureEach {
         exclude(project(":api"))
     }
     exclude("kotlin/**")
+    exclude("kotlinx/coroutines/**")
     archiveClassifier.set("")
     minimize {
         exclude(dependency("org.lz4:lz4-java:.*"))
@@ -235,6 +240,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlinx", "kotlinx-coroutines-core-jvm", aaCoroutinesVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }

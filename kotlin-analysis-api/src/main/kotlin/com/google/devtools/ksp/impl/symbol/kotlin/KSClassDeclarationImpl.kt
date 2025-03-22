@@ -21,6 +21,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordGetSealedSubclasses
 import com.google.devtools.ksp.impl.recordLookup
@@ -32,6 +33,7 @@ import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtClassOrObject
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KaClassSymbol) :
@@ -71,7 +73,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         }
     }
 
-    override val superTypes: Sequence<KSTypeReference> by lazy {
+    override val superTypes: Sequence<KSTypeReference> by lazyMemoizedSequence {
         (ktClassOrObjectSymbol.psiIfSource() as? KtClassOrObject)?.let { classOrObject ->
             if (classKind == ClassKind.ANNOTATION_CLASS || classKind == ClassKind.ENUM_CLASS) {
                 null
@@ -86,7 +88,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             }
         } ?: analyze {
             val supers = ktClassOrObjectSymbol.superTypes.mapIndexed { index, type ->
-                KSTypeReferenceResolvedImpl.getCached(type, this@KSClassDeclarationImpl, index)
+                KSTypeReferenceResolvedImpl.getCached(type.abbreviationOrSelf, this@KSClassDeclarationImpl, index)
             }
             // AA is returning additional kotlin.Any for java classes, explicitly extending kotlin.Any will result in
             // compile error, therefore filtering by name should work.
@@ -179,31 +181,21 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         return visitor.visitClassDeclaration(this, data)
     }
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
+    override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
         val decls = ktClassOrObjectSymbol.declarations()
         if (origin == Origin.JAVA && classKind != ClassKind.ANNOTATION_CLASS) {
-            buildList {
-                decls.forEach { decl ->
-                    if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KaSyntheticJavaPropertySymbol) {
-                        decl.getter?.let {
-                            add(
-                                KSFunctionDeclarationImpl.getCached(
-                                    (it as KSPropertyAccessorImpl).ktPropertyAccessorSymbol
-                                )
-                            )
-                        }
-                        decl.setter?.let {
-                            add(
-                                KSFunctionDeclarationImpl.getCached(
-                                    (it as KSPropertyAccessorImpl).ktPropertyAccessorSymbol
-                                )
-                            )
-                        }
-                    } else {
-                        add(decl)
+            decls.flatMap { decl ->
+                if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KaSyntheticJavaPropertySymbol) {
+                    sequenceOf(decl.getter, decl.setter).mapNotNull { accessor ->
+                        KSFunctionDeclarationImpl.getCached(
+                            (accessor as? KSPropertyAccessorImpl)?.ktPropertyAccessorSymbol
+                                ?: return@mapNotNull null
+                        )
                     }
+                } else {
+                    sequenceOf(decl)
                 }
-            }.asSequence()
+            }
         } else decls
     }
 

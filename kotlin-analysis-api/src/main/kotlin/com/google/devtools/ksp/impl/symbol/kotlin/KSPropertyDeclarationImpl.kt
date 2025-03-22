@@ -22,6 +22,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
@@ -39,6 +40,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
@@ -59,27 +61,19 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override val originalAnnotations: Sequence<KSAnnotation>
         get() = annotations
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
             .map { KSAnnotationResolvedImpl.getCached(it, this) }
             .plus(
                 if (ktPropertySymbol.isFromPrimaryConstructor) {
-                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters
-                        ?.singleOrNull { it.name == simpleName }?.annotations ?: emptySequence()
+                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters?.singleOrNull {
+                        it.name == simpleName
+                    }?.annotations?.filter { it.isValidOnProperty() } ?: emptySequence()
                 } else {
                     emptySequence()
                 }
-            ).filterNot { valueParameterAnnotation ->
-                valueParameterAnnotation.annotationType.resolve().declaration.annotations.any { metaAnnotation ->
-                    metaAnnotation.annotationType.resolve().declaration.qualifiedName
-                        ?.asString() == "kotlin.annotation.Target" &&
-                        (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.any {
-                        (it as? KSClassDeclaration)?.qualifiedName
-                            ?.asString() == "kotlin.annotation.AnnotationTarget.VALUE_PARAMETER"
-                    } ?: false
-                }
-            }.plus(
+            ).plus(
                 // TODO: optimize for psi
                 ktPropertySymbol.backingFieldSymbol?.annotations
                     ?.map { KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) } ?: emptyList()
@@ -113,7 +107,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                     ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
                 )
             }
-            ?: ktPropertySymbol.receiverType?.let {
+            ?: ktPropertySymbol.receiverType?.abbreviationOrSelf?.let {
                 KSTypeReferenceResolvedImpl.getCached(
                     it,
                     this@KSPropertyDeclarationImpl,
@@ -125,7 +119,10 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
     override val type: KSTypeReference by lazy {
         (ktPropertySymbol.psiIfSource() as? KtProperty)?.typeReference?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(ktPropertySymbol.returnType, this@KSPropertyDeclarationImpl)
+            ?: KSTypeReferenceResolvedImpl.getCached(
+                ktPropertySymbol.returnType.abbreviationOrSelf,
+                this@KSPropertyDeclarationImpl
+            )
     }
 
     override val isMutable: Boolean by lazy {
@@ -201,6 +198,7 @@ internal fun KaAnnotation.isUseSiteTargetAnnotation(): Boolean {
             it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
     } ?: false
 }
+
 internal fun KtAnnotationEntry.isUseSiteTargetAnnotation(): Boolean {
     return this.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
         it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
@@ -210,6 +208,7 @@ internal fun KtAnnotationEntry.isUseSiteTargetAnnotation(): Boolean {
             it == AnnotationUseSiteTarget.FIELD
     } ?: false
 }
+
 internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     val result = mutableSetOf<Modifier>()
     if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
@@ -237,3 +236,11 @@ internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     }
     return result
 }
+
+internal fun KSAnnotation.isValidOnProperty(): Boolean =
+    annotationType.resolve().declaration.annotations.none { metaAnnotation ->
+        metaAnnotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.annotation.Target" &&
+            (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.none {
+            (it as? KSClassDeclaration)?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.PROPERTY"
+        } ?: false
+    }

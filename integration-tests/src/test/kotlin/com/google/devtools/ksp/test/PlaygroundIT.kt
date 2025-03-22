@@ -250,7 +250,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
             """
             kotlin {
               compilerOptions {
-                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_6)
+                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
                 languageVersion.set(compilerOptions.apiVersion)
                }
             }
@@ -260,8 +260,8 @@ class PlaygroundIT(val useKSP2: Boolean) {
         val kotlinVersion = System.getProperty("kotlinVersion").split('-').first()
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("language version: 1.6"))
-            Assert.assertTrue(result.output.contains("api version: 1.6"))
+            Assert.assertTrue(result.output.contains("language version: 1.8"))
+            Assert.assertTrue(result.output.contains("api version: 1.8"))
             if (!useKSP2) {
                 // In case KSP 1 and KSP 2 uses different compiler versions, ignore this test for KSP 2 for now.
                 Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
@@ -310,7 +310,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
             Assert.assertTrue(result.output.contains("platform: JVM"))
-            Assert.assertTrue(result.output.contains("jvm default mode: all"))
+            Assert.assertTrue(result.output.contains("jvm default mode: no-compatibility"))
         }
         project.restore(buildFile.path)
     }
@@ -352,14 +352,19 @@ class PlaygroundIT(val useKSP2: Boolean) {
             """
             kotlin {
                 compilerOptions {
-                    allWarningsAsErrors.value(true)
                     progressiveMode.value(true)
                }
             }
             """.trimIndent()
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
-        gradleRunner.withArguments("clean", "build").build()
+        gradleRunner.withArguments("clean", "build").build().let {
+            Assert.assertFalse(
+                it.output.contains(
+                    "'-progressive' is meaningful only for the latest language version"
+                )
+            )
+        }
         project.restore(buildFile.path)
     }
 
@@ -369,6 +374,16 @@ class PlaygroundIT(val useKSP2: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").build().let { result ->
             Assert.assertTrue(result.output.contains("Module name is workload"))
+        }
+    }
+
+    @Test
+    fun testEmpty() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        File(project.root, "workload/src/main/java/Empty.kt").appendText("\n\n")
+        gradleRunner.withArguments("clean", "assemble", "-Pksp.incremental.log=false").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
     }
 

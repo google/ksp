@@ -19,6 +19,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -34,13 +35,15 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
         fun getCached(psi: PsiJavaFile) = cache.getOrPut(psi) { KSFileJavaImpl(psi) }
     }
 
-    override val packageName: KSName = KSNameImpl.getCached(psi.packageName)
+    override val packageName: KSName by lazy {
+        KSNameImpl.getCached(psi.packageName)
+    }
 
     override val fileName: String = psi.name
 
     override val filePath: String = psi.virtualFile.path
 
-    override val declarations: Sequence<KSDeclaration> by lazy {
+    override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
         psi.classes.asSequence().mapNotNull { psi ->
             analyze {
                 psi.namedClassSymbol?.let { KSClassDeclarationImpl.getCached(it) }
@@ -50,7 +53,9 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
 
     override val origin: Origin = Origin.JAVA
 
-    override val location: Location = psi.toLocation()
+    override val location: Location by lazy {
+        psi.toLocation()
+    }
 
     override val parent: KSNode? = null
 

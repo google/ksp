@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processor"
@@ -8,6 +9,7 @@ val googleTruthVersion: String by project
 val agpBaseVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
+val aaCoroutinesVersion: String? by project
 
 tasks.withType<KotlinCompile> {
     compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
@@ -125,6 +127,8 @@ java {
             resources.srcDir(testPropsOutDir)
         }
     }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 tasks.named("compileTestKotlin").configure {
@@ -148,6 +152,8 @@ abstract class WriteVersionSrcTask : DefaultTask() {
     abstract val kspVersion: Property<String>
     @get:Input
     abstract val kotlinVersion: Property<String>
+    @get:Input
+    abstract val coroutinesVersion: Property<String>
 
     @get:OutputDirectory
     abstract val outputSrcDir: DirectoryProperty
@@ -159,6 +165,7 @@ abstract class WriteVersionSrcTask : DefaultTask() {
             package com.google.devtools.ksp.gradle
             val KSP_KOTLIN_BASE_VERSION = "${kotlinVersion.get()}"
             val KSP_VERSION = "${kspVersion.get()}"
+            val KSP_COROUTINES_VERSION = "${coroutinesVersion.get()}"
             """.trimIndent()
         )
     }
@@ -167,6 +174,7 @@ abstract class WriteVersionSrcTask : DefaultTask() {
 val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
     kspVersion = version.toString()
     kotlinVersion = kotlinBaseVersion
+    coroutinesVersion = aaCoroutinesVersion
     outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
 }
 
@@ -175,5 +183,8 @@ kotlin {
         main {
             kotlin.srcDir(writeVersionSrcTask)
         }
+    }
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }

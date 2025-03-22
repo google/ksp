@@ -31,7 +31,6 @@ import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
-import org.jetbrains.kotlin.test.services.JUnit5Assertions
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.isKtFile
@@ -92,7 +91,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
     override fun compileModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
-        val dependencies = module.allDependencies.map { outDirForModule(it.moduleName) }
+        val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
         compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name)
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
             .joinToString(File.pathSeparator) { it.absolutePath }
@@ -101,7 +100,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             "-d", module.outDir.path
         )
         if (javaFiles.isNotEmpty()) {
-            compileJavaFiles(javaFiles, options, assertions = JUnit5Assertions)
+            compileJavaFiles(javaFiles, options)
         }
     }
 

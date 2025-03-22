@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.KaType
+import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
@@ -88,34 +89,9 @@ class ResolverAAImpl(
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     private val classBinaryCache = ClsKotlinBinaryClassCache()
-    private val packageInfoFiles by lazy {
-        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence().memoized()
+    private val packageInfoFiles by lazyMemoizedSequence {
+        allKSFiles.filter { it.fileName == "package-info.java" }.asSequence()
     }
-
-    private val aliasingFqNs: Map<String, KSTypeAlias> by lazy {
-        val result = mutableMapOf<String, KSTypeAlias>()
-        val visitor = object : KSVisitorVoid() {
-            override fun visitFile(file: KSFile, data: Unit) {
-                file.declarations.forEach { it.accept(this, data) }
-
-                // TODO: evaluate with benchmarks: cost of getContainingFile v.s. name collision
-                // Import aliases are file-scoped. `aliasingNamesByFile` could be faster
-                ((file as? KSFileImpl)?.ktFileSymbol?.psi as? KtFile)?.importDirectives?.forEach {
-                    it.aliasName?.let { aliasingNames.add(it) }
-                }
-            }
-
-            override fun visitTypeAlias(typeAlias: KSTypeAlias, data: Unit) {
-                typeAlias.qualifiedName?.asString()?.let { fqn ->
-                    result[fqn] = typeAlias
-                    aliasingNames.add(fqn.substringAfterLast('.'))
-                }
-            }
-        }
-        allKSFiles.forEach { it.accept(visitor, Unit) }
-        result
-    }
-    private val aliasingNames: MutableSet<String> = mutableSetOf()
 
     // TODO: fix in upstream for builtin types.
     override val builtIns: KSBuiltIns by lazy {
@@ -305,25 +281,16 @@ class ResolverAAImpl(
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
         return analyze {
-            val packageNames = FqName(packageName).pathSegments().map { it.asString() }
-            var packages = listOf(useSiteSession.rootPackageSymbol)
-            for (curName in packageNames) {
-                packages = packages
-                    .flatMap { it.packageScope.getPackageSymbols { it.asString() == curName } }
-                    .distinct()
-            }
-            packages.flatMap {
-                it.packageScope.declarations.distinct().mapNotNull { symbol ->
-                    when (symbol) {
-                        is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
-                        is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
-                        is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
-                        is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
-                        is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
-                        else -> null
-                    }
+            findPackage(FqName(packageName))?.packageScope?.declarations?.distinct()?.mapNotNull { symbol ->
+                when (symbol) {
+                    is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                    is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
+                    is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
+                    is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
+                    is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
+                    else -> null
                 }
-            }.asSequence()
+            }?.asSequence() ?: emptySequence()
         }
     }
 
@@ -392,7 +359,7 @@ class ResolverAAImpl(
         if (type.isError)
             return reference
         val position = findRefPosition(ref)
-        val ktType = (type as KSTypeImpl).type
+        val ktType = (type as KSTypeImpl).type.fullyExpand()
         // cast to FIR internal needed due to missing support in AA for type mapping mode
         // and corresponding type mapping APIs.
         val coneType = (ktType as KaFirType).coneType
@@ -483,16 +450,18 @@ class ResolverAAImpl(
             return accessor.receiver.simpleName.asString()
         }
 
-        val prefix = if (accessor is KSPropertyGetter) {
-            "get"
-        } else {
-            "set"
+        val name = accessor.receiver.simpleName.asString()
+        val uppercasedName = name.replaceFirstChar(Char::uppercaseChar)
+        // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
+        val prefixedName = when (accessor) {
+            is KSPropertyGetter -> if (name.startsWith("is")) name else "get$uppercasedName"
+            is KSPropertySetter -> if (name.startsWith("is")) "set${name.removePrefix("is")}" else "set$uppercasedName"
+            else -> ""
         }
 
-        val name = accessor.receiver.simpleName.asString().replaceFirstChar(Char::uppercaseChar)
         val inlineSuffix = symbol?.inlineSuffix ?: ""
         val mangledName = symbol?.internalSuffix ?: ""
-        return "$prefix$name$inlineSuffix$mangledName"
+        return "$prefixedName$inlineSuffix$mangledName"
     }
 
     // TODO: handle library symbols
@@ -569,38 +538,17 @@ class ResolverAAImpl(
         }
     }
 
-    internal fun KSTypeReference.resolveToUnderlying(): KSType {
-        var candidate = resolve()
-        var declaration = candidate.declaration
-        while (declaration is KSTypeAlias) {
-            candidate = declaration.type.resolve()
-            declaration = candidate.declaration
-        }
-        return candidate
-    }
-    internal fun checkAnnotation(annotation: KSAnnotation, ksName: KSName, shortName: String): Boolean {
-        val annotationType = annotation.annotationType
-        val referencedName = (annotationType.element as? KSClassifierReference)?.referencedName()
-        val simpleName = referencedName?.substringAfterLast('.')
-        return (simpleName == shortName || simpleName in aliasingNames) &&
-            annotationType.resolveToUnderlying().declaration.qualifiedName == ksName
-    }
-    // Currently, all annotation types are imlemented by KSTypeReferenceResolvedImpl.
-    // The short-name-check optimization doesn't help.
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
-        val realAnnotationName =
-            aliasingFqNs[annotationName]?.type?.resolveToUnderlying()?.declaration?.qualifiedName?.asString()
-                ?: annotationName
-
-        val ksName = KSNameImpl.getCached(realAnnotationName)
-        val shortName = ksName.getShortName()
-        fun checkAnnotated(annotated: KSAnnotated): Boolean {
-            return annotated.annotations.any {
-                checkAnnotation(it, ksName, shortName)
-            }
+        val expandedIfAlias = analyze {
+            val classId = ClassId.fromString(annotationName)
+            findTypeAlias(classId)?.expandedType?.symbol?.classId?.asFqNameString()
         }
-        val newSymbols = if (inDepth) newAnnotatedSymbolsWithLocals else newAnnotatedSymbols
-        return (newSymbols + deferredSymbolsRestored).asSequence().filter(::checkAnnotated)
+        val realAnnotationName = expandedIfAlias ?: annotationName
+
+        return if (inDepth)
+            annotationToSymbolsMapWithLocals[realAnnotationName]?.asSequence() ?: emptySequence()
+        else
+            annotationToSymbolsMap[realAnnotationName]?.asSequence() ?: emptySequence()
     }
 
     private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
@@ -613,16 +561,30 @@ class ResolverAAImpl(
         return visitor.symbols
     }
 
+    private val annotationToSymbolsMap: Map<String, Collection<KSAnnotated>> by lazy {
+        mapAnnotatedSymbols(false)
+    }
+
+    private val annotationToSymbolsMapWithLocals: Map<String, Collection<KSAnnotated>> by lazy {
+        mapAnnotatedSymbols(true)
+    }
+
+    private fun mapAnnotatedSymbols(inDepth: Boolean): Map<String, Collection<KSAnnotated>> {
+        val newSymbols = collectAnnotatedSymbols(inDepth)
+        val withDeferred = newSymbols + deferredSymbolsRestored
+        return mutableMapOf<String, MutableCollection<KSAnnotated>>().apply {
+            withDeferred.forEach { annotated ->
+                for (annotation in annotated.annotations) {
+                    val kaType = (annotation.annotationType.resolve() as? KSTypeImpl)?.type ?: continue
+                    val annotationFqN = kaType.fullyExpand().symbol?.classId?.asFqNameString() ?: continue
+                    getOrPut(annotationFqN, ::mutableSetOf).add(annotated)
+                }
+            }
+        }
+    }
+
     private val deferredSymbolsRestored: Set<KSAnnotated> by lazy {
         deferredSymbols.values.flatten().mapNotNull { it.restore() }.toSet()
-    }
-
-    private val newAnnotatedSymbols: Collection<KSAnnotated> by lazy {
-        collectAnnotatedSymbols(false)
-    }
-
-    private val newAnnotatedSymbolsWithLocals: Collection<KSAnnotated> by lazy {
-        collectAnnotatedSymbols(true)
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -698,6 +660,8 @@ class ResolverAAImpl(
         }
         recordLookupForPropertyOrMethod(overrider)
         recordLookupForPropertyOrMethod(overridee)
+        if (!overridee.isVisibleFrom(overrider))
+            return false
         return analyze {
             overriderSymbol.allOverriddenSymbols.contains(overrideeSymbol) ||
                 overriderSymbol.intersectionOverriddenSymbols.contains(overrideeSymbol)

@@ -20,15 +20,16 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
-import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaValueParameterSymbol
-import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
-import org.jetbrains.kotlin.fir.java.declarations.FirJavaValueParameter
-import org.jetbrains.kotlin.fir.java.resolveIfJavaType
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.psi.KtParameter
 
 class KSValueParameterImpl private constructor(
     private val ktValueParameterSymbol: KaValueParameterSymbol,
@@ -49,17 +50,14 @@ class KSValueParameterImpl private constructor(
 
     @OptIn(SymbolInternals::class)
     override val type: KSTypeReference by lazy {
-        // FIXME: temporary workaround before upstream fixes java type refs.
-        if (origin == Origin.JAVA || origin == Origin.JAVA_LIB) {
-            ((ktValueParameterSymbol as KaFirValueParameterSymbol).firSymbol.fir as? FirJavaValueParameter)?.let {
-                // can't get containing class for FirJavaValueParameter, using empty stack for now.
-                it.returnTypeRef =
-                    it.returnTypeRef.resolveIfJavaType(it.moduleData.session, JavaTypeParameterStack.EMPTY, null)
-            }
-        }
-        (ktValueParameterSymbol.psiIfSource() as? KtParameter)?.typeReference
-            ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(ktValueParameterSymbol.returnType, this@KSValueParameterImpl)
+        // TODO: avoid eager resolution by using PSI.
+        // KaFirValueParameterSymbol extracts and returns the element type of a vararg.
+        // That logic needs to be replicated if we resolve the PSI via
+        // analyze { KtTypeReference.type }.
+        KSTypeReferenceResolvedImpl.getCached(
+            ktValueParameterSymbol.returnType.abbreviationOrSelf,
+            this@KSValueParameterImpl
+        )
     }
 
     override val isVararg: Boolean by lazy {
@@ -72,17 +70,32 @@ class KSValueParameterImpl private constructor(
     override val isCrossInline: Boolean
         get() = ktValueParameterSymbol.isCrossinline
 
+    private val KaValueParameterSymbol.primaryConstructorProperty: KaPropertySymbol? by lazy {
+        when (ktValueParameterSymbol.origin) {
+            // ktValueParameterSymbol.generatedPrimaryConstructorProperty is always null in libraries.
+            // TODO: fix in AA
+            KaSymbolOrigin.LIBRARY, KaSymbolOrigin.JAVA_LIBRARY -> analyze {
+                val cstr = ktValueParameterSymbol.containingDeclaration as? KaConstructorSymbol
+                val cls = cstr?.containingDeclaration as? KaClassSymbol
+                cls?.declaredMemberScope?.declarations?.filterIsInstance<KaPropertySymbol>()
+                    ?.firstOrNull { it.name == ktValueParameterSymbol.name }
+            }
+
+            else -> ktValueParameterSymbol.generatedPrimaryConstructorProperty
+        }
+    }
+
     override val isVal: Boolean
-        get() = (ktValueParameterSymbol.psi as? KtParameter)?.let { it.hasValOrVar() && !it.isMutable } ?: false
+        get() = ktValueParameterSymbol.primaryConstructorProperty?.isVal == true
 
     override val isVar: Boolean
-        get() = (ktValueParameterSymbol.psi as? KtParameter)?.let { it.hasValOrVar() && it.isMutable } ?: false
+        get() = ktValueParameterSymbol.primaryConstructorProperty?.isVal == false
 
     override val hasDefault: Boolean by lazy {
         ktValueParameterSymbol.hasDefaultValue
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazy {
+    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktValueParameterSymbol.annotations(this).plus(findAnnotationFromUseSiteTarget())
     }
     override val origin: Origin by lazy {

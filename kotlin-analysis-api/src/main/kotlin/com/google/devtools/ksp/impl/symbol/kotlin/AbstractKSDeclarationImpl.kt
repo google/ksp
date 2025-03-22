@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.common.toKSModifiers
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
@@ -54,9 +55,8 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
         KSNameImpl.getCached((ktDeclarationSymbol as? KaNamedSymbol)?.name?.asString() ?: "")
     }
 
-    open /*override*/ val annotations: Sequence<KSAnnotation> by lazy {
-        originalAnnotations
-    }
+    open /*override*/ val annotations: Sequence<KSAnnotation>
+        get() = originalAnnotations
 
     open /*override*/ val modifiers: Set<Modifier> by lazy {
         if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
@@ -124,7 +124,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
     open /*override*/ val docString: String?
         get() = ktDeclarationSymbol.toDocString()
 
-    internal open val originalAnnotations: Sequence<KSAnnotation> by lazy {
+    internal open val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         if (ktDeclarationSymbol.psi is KtAnnotated) {
             (ktDeclarationSymbol.psi as KtAnnotated).annotations(ktDeclarationSymbol, this.asKSDeclaration())
         } else if (ktDeclarationSymbol.origin == KaSymbolOrigin.JAVA_SOURCE && ktDeclarationSymbol.psi != null) {

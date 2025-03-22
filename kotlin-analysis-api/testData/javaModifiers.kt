@@ -41,8 +41,8 @@
 // DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicMethod: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.synchronizedFun: OPEN : JAVA_SYNCHRONIZED
-// DependencyOuterJavaClass.transientField: OPEN : JAVA_TRANSIENT
-// DependencyOuterJavaClass.volatileField: OPEN : JAVA_VOLATILE
+// DependencyOuterJavaClass.transientField: FINAL : FINAL JAVA_TRANSIENT
+// DependencyOuterJavaClass.volatileField: FINAL : FINAL JAVA_VOLATILE
 // DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.<init>: FINAL PRIVATE : FINAL PRIVATE

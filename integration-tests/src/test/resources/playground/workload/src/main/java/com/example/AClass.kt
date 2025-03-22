@@ -14,4 +14,6 @@ class AClass(private val a: Int, val b: String, val c: Double, val d: HELLO) {
     class innerClass<T : HELLO>
 
     val generic = innerClass<HELLO>()
+
+    internal fun internalFun(): Int = 0
 }

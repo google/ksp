@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.common
 
-import com.google.devtools.ksp.isPrivate
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSDeclarationContainer
@@ -35,9 +34,6 @@ object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>()
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {
-        if (declaration.isPrivate())
-            return
-
         val name = declaration.simpleName.asString()
         val scope =
             declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) }
@@ -261,12 +257,7 @@ abstract class IncrementalContextBase(
         initialSet.addAll(dirtyFilesBySealed)
         initialSet.addAll(noSourceFiles)
 
-        // modified can be seen as removed + new. Therefore the following check doesn't work:
-        //   if (modified.any { it !in sourceToOutputsMap.keys }) ...
-        // Removed files affect aggregating outputs if they were generated unconditionally.
-        if (modified.isNotEmpty() || changedClasses.isNotEmpty() || removed.isNotEmpty()) {
-            initialSet.add(anyChangesWildcard)
-        }
+        initialSet.add(anyChangesWildcard)
 
         val dirtyFiles = DirtinessPropagator(
             symbolLookupCache,

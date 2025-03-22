@@ -45,6 +45,7 @@
 // Base.f1 overrides MyInterface3.f1: true
 // Base.prop overrides MyInterface3.prop: true
 // JBase.getProp overrides MyInterface3.prop: true
+// pkg1.WithPackagePrivate.packagePrivateFun overrides pkg2.WithPackagePrivateBase.packagePrivateFun: false
 // END
 // FILE: a.kt
 
@@ -185,5 +186,21 @@ public abstract class JavaDifferentReturnType extends JavaList {
     // intentional different return type
     protected String foo() {
         return "";
+    }
+}
+
+// FILE: WithPackagePrivate.java
+package pkg1;
+public class WithPackagePrivate extends pkg2.WithPackagePrivateBase {
+    int packagePrivateFun() {
+        return 1;
+    }
+}
+
+// FILE: WithPackagePrivateBase.java
+package pkg2;
+public class WithPackagePrivateBase {
+    int packagePrivateFun() {
+        return 0;
     }
 }

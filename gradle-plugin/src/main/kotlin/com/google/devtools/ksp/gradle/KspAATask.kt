@@ -24,17 +24,21 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.Optional
+import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.gradle.work.NormalizeLineEndings
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
@@ -43,6 +47,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
+import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
@@ -61,6 +66,9 @@ abstract class KspAATask @Inject constructor(
 
     @get:Nested
     abstract val kspConfig: KspGradleConfig
+
+    @get:Nested
+    abstract val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
@@ -91,7 +99,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.sourceRoots,
                         kspConfig.javaSourceRoots,
                         kspConfig.commonSourceRoots,
-                        kspConfig.libraries
+                        kspConfig.classpathStructure,
                     ),
                     kspConfig.cachesDir.asFile.get(),
                     kspConfig.classpathStructure,
@@ -101,7 +109,7 @@ abstract class KspAATask @Inject constructor(
             } else {
                 if (
                     !inputChanges.isIncremental ||
-                    inputChanges.getFileChanges(kspConfig.libraries).iterator().hasNext()
+                    inputChanges.getFileChanges(kspConfig.nonJvmLibraries).iterator().hasNext()
                 )
                     kspConfig.cachesDir.get().asFile.deleteRecursively()
                 emptyList()
@@ -143,6 +151,9 @@ abstract class KspAATask @Inject constructor(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
                 ),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
+                project.dependencies.create(
+                    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
+                ),
             ).apply {
                 isTransitive = false
             }
@@ -150,7 +161,12 @@ abstract class KspAATask @Inject constructor(
                 kspAATask.kspClasspath.from(kspAADepCfg)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
-                    cfg.moduleName.value(project.name)
+                    // Ref: https://github.com/JetBrains/kotlin/blob/6535f86dfe36effeba976802ebd56a5a56071f45/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/mpp/kotlinCompilations.kt#L92
+                    val moduleName = when (val compilationName = kotlinCompilation.name) {
+                        KotlinCompilation.MAIN_COMPILATION_NAME -> project.name
+                        else -> "${project.name}_$compilationName"
+                    }
+                    cfg.moduleName.value(moduleName)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
                     val filteredTasks =
@@ -211,21 +227,25 @@ abstract class KspAATask @Inject constructor(
                         )
                     )
                     cfg.processorOptions.putAll(kspExtension.apOptions)
-                    cfg.processorOptions.putAll(
-                        kspExtension.commandLineArgumentProviders.map { providers ->
+
+                    fun ListProperty<CommandLineArgumentProvider>.mapArgProviders() =
+                        map { providers ->
                             buildMap {
                                 for (provider in providers) {
                                     provider.asArguments().forEach { argument ->
                                         val kv = Regex("(\\S+)=(\\S+)").matchEntire(argument)?.groupValues
                                         require(kv != null && kv.size == 3) {
-                                            "KSP apoption does not match (\\S+)=(\\S+): $argument"
+                                            "Processor arguments not in the format \\S+=\\S+: $argument"
                                         }
                                         put(kv[1], kv[2])
                                     }
                                 }
                             }
                         }
-                    )
+
+                    cfg.processorOptions.putAll(kspExtension.commandLineArgumentProviders.mapArgProviders())
+                    cfg.processorOptions.putAll(kspAATask.commandLineArgumentProviders.mapArgProviders())
+
                     val logLevel = LogLevel.entries.first {
                         project.logger.isEnabled(it)
                     }
@@ -246,19 +266,37 @@ abstract class KspAATask @Inject constructor(
                             .orElse(false)
                     )
 
-                    cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
-
                     if (compilerOptions is KotlinJvmCompilerOptions) {
                         // TODO: set proper jdk home
                         cfg.jdkHome.value(File(System.getProperty("java.home")))
 
-                        val jvmDefaultMode = compilerOptions.freeCompilerArgs
-                            .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
-                            .map { it.lastOrNull()?.substringAfter("=") ?: "disable" }
+                        val javaVersion = System.getProperty("java.version")?.split(".")?.let {
+                            if (it[0] == "1") it.getOrNull(1) else it.getOrNull(0)
+                        }
+                        javaVersion?.let {
+                            cfg.jdkVersion.value(it.toInt())
+                        }
 
-                        cfg.jvmDefaultMode.value(jvmDefaultMode)
+                        val oldJvmDefaultMode = compilerOptions.freeCompilerArgs
+                            .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
+                            .map { it.lastOrNull()?.substringAfter("=") ?: "undefined" }
+
+                        cfg.jvmDefaultMode.value(
+                            project.provider {
+                                when (oldJvmDefaultMode.get()) {
+                                    "all" -> "no-compatibility"
+                                    "all-compatibility" -> "enable"
+                                    "disable" -> "disable"
+                                    else -> compilerOptions.jvmDefault.getOrElse(JvmDefaultMode.ENABLE).compilerArgument
+                                }
+                            }
+                        )
 
                         cfg.jvmTarget.value(compilerOptions.jvmTarget.map { it.target })
+
+                        cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
+                    } else {
+                        cfg.nonJvmLibraries.from(cfg.libraries)
                     }
 
                     cfg.platformType.value(kotlinCompilation.platformType)
@@ -266,6 +304,11 @@ abstract class KspAATask @Inject constructor(
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
                         cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
+                        kspAATask.onlyIf {
+                            HostManager().enabled.any {
+                                it.name == konanTargetName
+                            }
+                        }
                     }
 
                     // TODO: pass targets of common
@@ -302,13 +345,17 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val javaSourceRoots: ConfigurableFileCollection
 
-    @get:Incremental
-    @get:Classpath
+    // Marked as Internal for compilation avoidance.
+    // classpathStructure has the needed incremental properties.
+    @get:Internal
     abstract val libraries: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val jdkHome: Property<File>
 
     @get:Input
     @get:Optional
-    abstract val jdkHome: Property<File>
+    abstract val jdkVersion: Property<Int>
 
     @get:Internal
     abstract val projectBaseDir: Property<File>
@@ -364,8 +411,21 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     abstract val incrementalLog: Property<Boolean>
 
-    @get:Internal
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Incremental
+    @get:IgnoreEmptyDirectories
+    @get:NormalizeLineEndings
+    @get:Optional
+    @get:InputFiles
     abstract val classpathStructure: ConfigurableFileCollection
+
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Incremental
+    @get:IgnoreEmptyDirectories
+    @get:NormalizeLineEndings
+    @get:Optional
+    @get:InputFiles
+    abstract val nonJvmLibraries: ConfigurableFileCollection
 
     @get:Input
     abstract val platformType: Property<KotlinPlatformType>
@@ -532,6 +592,8 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         } catch (e: InvocationTargetException) {
             kspGradleLogger.exception(e.targetException)
             throw e.targetException
+        } finally {
+            processorClassloader.close()
         }
 
         if (exitCode != ExitCode.OK) {

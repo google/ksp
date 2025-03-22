@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -194,7 +195,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     providers.flatMap { provider ->
                         provider.asArguments().map { argument ->
                             require(argument.matches(Regex("\\S+=\\S+"))) {
-                                "KSP apoption does not match \\S+=\\S+: $argument"
+                                "Processor arguments not in the format \\S+=\\S+: $argument"
                             }
                             InternalSubpluginOption("apoption", argument)
                         }
@@ -253,15 +254,28 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
             project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
-        val kspConfigurations = kspConfigurations.find(kotlinCompilation)
-        val nonEmptyKspConfigurations = kspConfigurations.filter { it.allDependencies.isNotEmpty() }
-        if (nonEmptyKspConfigurations.isEmpty()) {
-            return project.provider { emptyList() }
-        }
         if (kotlinCompileProvider.name == "compileKotlinMetadata") {
             return project.provider { emptyList() }
         }
         if ((kotlinCompilation as? KotlinSharedNativeCompilation)?.platformType == KotlinPlatformType.common) {
+            return project.provider { emptyList() }
+        }
+        assert(kotlinCompileProvider.name.startsWith("compile"))
+        val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
+        val processorClasspath =
+            project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath").markResolvable()
+        if (kotlinCompilation.platformType != KotlinPlatformType.androidJvm ||
+            project.useLegacyVariantApi() ||
+            project.pluginManager.hasPlugin("kotlin-multiplatform")
+        ) {
+            val nonEmptyKspConfigurations =
+                kspConfigurations.find(kotlinCompilation)
+                    .filter { it.allDependencies.isNotEmpty() }
+            if (nonEmptyKspConfigurations.isEmpty()) {
+                return project.provider { emptyList() }
+            }
+            processorClasspath.extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
+        } else if (processorClasspath.allDependencies.isEmpty()) {
             return project.provider { emptyList() }
         }
 
@@ -296,12 +310,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE,
             "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE:$KSP_VERSION"
         )
-
-        assert(kotlinCompileProvider.name.startsWith("compile"))
-        val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
-
-        val processorClasspath = project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath")
-            .extendsFrom(*nonEmptyKspConfigurations.toTypedArray()).markResolvable()
 
         val kspCachesDir = getKspCachesDir(project, sourceSetName, target)
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
@@ -343,7 +351,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 fun setSource(source: FileCollection) {
                     // kspTask.setSource(source) would create circular dependency.
                     // Therefore we need to manually extract input deps, filter them, and tell kspTask.
-                    kspTask.setSource(project.provider { source.files })
+                    kspTask.source(project.provider { source.files })
                     kspTask.dependsOn(project.provider { source.nonSelfDeps(kspTaskName) })
                 }
 
@@ -363,7 +371,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 val filteredTasks =
                     kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                 kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
-                    kspTask.setSource(
+                    kspTask.source(
                         sourceSet.kotlin.srcDirs.filter {
                             !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it) &&
                                 it !in kspExtension.excludedSources
@@ -490,6 +498,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                     project.provider { processorClasspath }
                                 )
                             )
+                            kspTask.classpathStructure.from(classStructureFiles)
                         }
                         // Don't support binary generation for non-JVM platforms yet.
                         // FIXME: figure out how to add user generated libraries.

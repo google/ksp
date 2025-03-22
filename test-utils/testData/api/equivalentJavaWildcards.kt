@@ -77,7 +77,7 @@
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // p8.getter() : B<A<X, out Y>> -> B<A<X, Y>>
-// - INVARIANT A<X, out Y> : A<X, out Y> -> A<in X, Y>
+// - INVARIANT A<X, out Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // v1 : A<X, X> -> A<in X, out X>

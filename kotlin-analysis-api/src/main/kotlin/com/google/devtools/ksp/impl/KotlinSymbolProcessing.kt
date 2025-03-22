@@ -37,6 +37,7 @@ import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFa
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
 import com.google.devtools.ksp.standalone.KspStandaloneDirectInheritorsProvider
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
+import com.google.devtools.ksp.standalone.buildKspSdkModule
 import com.google.devtools.ksp.standalone.buildKspSourceModule
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
@@ -44,6 +45,8 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
@@ -53,6 +56,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.platform.KotlinMessageBusProvider
@@ -65,6 +69,7 @@ import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinGlobalModif
 import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinModificationTrackerFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackageProviderFactory
+import org.jetbrains.kotlin.analysis.api.platform.permissions.KotlinAnalysisPermissionOptions
 import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinByModulesResolutionScopeProvider
 import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinResolutionScopeProvider
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
@@ -78,16 +83,16 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStan
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneGlobalModificationService
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneModificationTrackerFactory
+import org.jetbrains.kotlin.analysis.api.standalone.base.permissions.KotlinStandaloneAnalysisPermissionOptions
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirStandaloneServiceRegistrar
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
-import org.jetbrains.kotlin.analysis.project.structure.impl.KaSourceModuleImpl
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
@@ -126,7 +131,7 @@ class KotlinSymbolProcessing(
     val logger: KSPLogger
 ) {
     enum class ExitCode(
-        @Suppress("UNUSED_PARAMETER") code: Int
+        val code: Int
     ) {
         OK(0),
 
@@ -145,7 +150,7 @@ class KotlinSymbolProcessing(
         setupIdeaStandaloneExecution()
     }
 
-    @OptIn(KaExperimentalApi::class)
+    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class)
     private fun createAASession(
         compilerConfiguration: CompilerConfiguration,
         projectDisposable: Disposable,
@@ -167,7 +172,9 @@ class KotlinSymbolProcessing(
         )
 
         // replaces buildKtModuleProviderByCompilerConfiguration(compilerConfiguration)
-        val projectStructureProvider = KtModuleProviderBuilder(kotlinCoreProjectEnvironment).apply {
+        val projectStructureProvider = KtModuleProviderBuilder(
+            kotlinCoreProjectEnvironment.environment, project
+        ).apply {
             val compilerConfig = compilerConfiguration
             val platform = when (kspConfig) {
                 is KSPJvmConfig -> {
@@ -195,7 +202,7 @@ class KotlinSymbolProcessing(
                 )
                 compilerConfig.get(JVMConfigurationKeys.JDK_HOME)?.let { jdkHome ->
                     addRegularDependency(
-                        buildKtSdkModule {
+                        buildKspSdkModule {
                             this.platform = platform
                             addBinaryRootsFromJdkHome(jdkHome.toPath(), isJre = false)
                             libraryName = "JDK for $moduleName"
@@ -218,9 +225,6 @@ class KotlinSymbolProcessing(
                 if (kspConfig is KSPJvmConfig) {
                     roots.addAll(kspConfig.javaSourceRoots)
                 }
-                roots.forEach {
-                    it.mkdirs()
-                }
                 addSourceRoots(roots.map { it.toPath() })
             }.apply(::addModule)
 
@@ -236,11 +240,21 @@ class KotlinSymbolProcessing(
             projectStructureProvider,
         )
         val ktFiles = allSourceFiles.filterIsInstance<KtFile>()
-        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment)
+        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, kotlinCoreProjectEnvironment.environment)
         val createPackagePartProvider =
             StandaloneProjectFactory.createPackagePartsProvider(
                 libraryRoots,
             )
+
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
+            org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java
+        )
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            KotlinAnalysisPermissionOptions::class.java,
+            KotlinStandaloneAnalysisPermissionOptions::class.java
+        )
+
         registerProjectServices(
             kotlinCoreProjectEnvironment,
             ktFiles,
@@ -260,6 +274,20 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             modules
         )
+    }
+
+    private fun <T> KotlinCoreProjectEnvironment.registerApplicationServices(
+        serviceInterface: Class<T>,
+        serviceImplementation: Class<out T>
+    ) {
+        val application = environment.application
+        if (application.getServiceIfCreated(serviceInterface) == null) {
+            KotlinCoreEnvironment.underApplicationLock {
+                if (application.getServiceIfCreated(serviceInterface) == null) {
+                    application.registerService(serviceInterface, serviceImplementation)
+                }
+            }
+        }
     }
 
     // TODO: org.jetbrains.kotlin.analysis.providers.impl.KotlinStatic*
@@ -334,6 +362,7 @@ class KotlinSymbolProcessing(
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         modules: List<KaModule>,
@@ -342,8 +371,8 @@ class KotlinSymbolProcessing(
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
-        modules.filterIsInstance<KaSourceModuleImpl>().forEach {
-            it.sourceRoots.forEach {
+        modules.filterIsInstance<KaSourceModule>().forEach {
+            it.psiRoots.forEach {
                 when (it) {
                     is KtFile -> ktFiles.add(it)
                     is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(it)
@@ -495,7 +524,6 @@ class KotlinSymbolProcessing(
             )
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
             var newKSFiles = allDirtyKSFiles
-            val initialDirtySet = allDirtyKSFiles.toSet()
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
@@ -516,12 +544,14 @@ class KotlinSymbolProcessing(
             }
 
             fun dropCaches() {
-                KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
-                KaSessionProvider.getInstance(project).clearCaches()
-                psiManager.dropResolveCaches()
-                psiManager.dropPsiCaches()
+                maybeRunInWriteAction {
+                    KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
+                    KaSessionProvider.getInstance(project).clearCaches()
+                    psiManager.dropResolveCaches()
+                    psiManager.dropPsiCaches()
 
-                KSObjectCacheManager.clear()
+                    KSObjectCacheManager.clear()
+                }
             }
 
             var rounds = 0
@@ -589,7 +619,7 @@ class KotlinSymbolProcessing(
 
             if (!logger.hasError) {
                 incrementalContext.updateCachesAndOutputs(
-                    initialDirtySet,
+                    allDirtyKSFiles,
                     codeGenerator.outputs,
                     codeGenerator.sourceToOutputs
                 )
@@ -600,7 +630,9 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
-            Disposer.dispose(projectDisposable)
+            maybeRunInWriteAction {
+                Disposer.dispose(projectDisposable)
+            }
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
@@ -645,7 +677,8 @@ fun String?.toKotlinVersion(): KotlinVersion {
 @Suppress("unused")
 @OptIn(KaImplementationDetail::class)
 internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
-    kotlinx.coroutines.debug.internal.DebugProbesImpl::class.java,
+    it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap::class.java,
+    it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseModuleProvider::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
@@ -655,14 +688,17 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneFirDirectInheritorsProvider::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased
-        .deserialization.LLStubBasedLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.low.level.api.fir.symbolProviders.factories.LLStubOriginLibrarySymbolProviderFactory::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseJavaModuleResolver::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
+    org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinSimpleGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.fir.modification.KaFirSourceModificationService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
+    org.jetbrains.kotlin.analysis.api.fir.statistics.KaFirStatisticsService::class.java,
     org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,
     org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
     org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
@@ -673,6 +709,8 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     com.intellij.diagnostic.ActivityCategory::class.java,
     com.intellij.openapi.application.JetBrainsProtocolHandler::class.java,
     com.intellij.openapi.editor.impl.EditorDocumentPriorities::class.java,
+    com.intellij.platform.diagnostic.telemetry.TelemetryManager::class.java,
+    com.intellij.psi.impl.PsiSubstitutorImpl::class.java,
     com.intellij.psi.tree.ChildRoleBase::class.java,
     com.intellij.util.xmlb.Constants::class.java,
     com.intellij.xml.CommonXmlStrings::class.java,
@@ -700,3 +738,17 @@ fun TargetPlatform.getPlatformInfo(kspConfig: KSPConfig): List<PlatformInfo> =
             else -> UnknownPlatformInfoImpl(platform.toString())
         }
     }
+
+private fun <R> maybeRunInWriteAction(f: () -> R) {
+    synchronized(EDT::class.java) {
+        if (!EDT.isCurrentThreadEdt())
+            EDT.updateEdt()
+        if (ApplicationManager.getApplication() != null) {
+            runWriteAction {
+                f()
+            }
+        } else {
+            f()
+        }
+    }
+}

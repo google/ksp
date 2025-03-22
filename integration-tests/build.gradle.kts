@@ -1,9 +1,11 @@
 import com.google.devtools.ksp.RelativizingInternalPathProvider
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import kotlin.math.max
 
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
 val agpBaseVersion: String by project
+val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -18,6 +20,7 @@ dependencies {
     testImplementation(project(":symbol-processing"))
     testImplementation(project(":symbol-processing-cmdline"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
 }
 
 fun Test.configureCommonSettings() {
@@ -55,7 +58,7 @@ val agpCompatibilityTest by tasks.registering(Test::class) {
     configureCommonSettings()
 }
 
-tasks.named<Test>("test") {
+tasks.test {
     maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
 
     // Exclude test classes from agpCompatibilityTest
@@ -64,6 +67,21 @@ tasks.named<Test>("test") {
     // Apply common settings
     configureCommonSettings()
 
-    // Ensure that 'test' depends on 'compatibilityTest'
+    // Ensure that 'test' runs after 'compatibilityTest'
+    mustRunAfter(agpCompatibilityTest)
+}
+
+tasks.check {
     dependsOn(agpCompatibilityTest)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
 }

@@ -83,8 +83,8 @@ class OverrideOrder2 : BaseInterface2, GrandBaseInterface1 {
 * KSP2: Type annotations on a type argument now present in the resolved type as well
 
 ##### vararg parameters
-* KSP1: Considered as an `Array` type
-* KSP2: Not considered as an `Array` type
+* KSP1: Considered as an `Array` type when it is from Java sources.
+* KSP2: Not considered as an `Array` type. KSValueParameter returns the declared type consistently.
 
 ##### Synthesized members of Enums
 * KSP1: `values` and `valueOf` are missing if the enum is defined in Kotlin sources

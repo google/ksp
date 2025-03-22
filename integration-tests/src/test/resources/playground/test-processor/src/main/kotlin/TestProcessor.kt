@@ -1,5 +1,6 @@
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import java.io.OutputStream
@@ -48,6 +49,14 @@ class TestProcessor : SymbolProcessor {
         for (file in files) {
             emit("TestProcessor: processing ${file.fileName}", "")
             file.accept(visitor, "")
+        }
+
+        resolver.getClassDeclarationByName("com.example.AClass")?.let { aClass ->
+            aClass.declarations.single { it.simpleName.asString() == "internalFun" }.let { internalFun ->
+                val internalName = resolver.getJvmName(internalFun as KSFunctionDeclaration)
+                val moduleName = resolver.getModuleName().asString()
+                logger.warn("[$moduleName] Mangled name for internalFun: $internalName")
+            }
         }
         invoked = true
         return emptyList()

@@ -32,15 +32,25 @@ import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class GradleCompilationTest {
+@RunWith(Parameterized::class)
+class GradleCompilationTest(val useKSP2: Boolean) {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "KSP2={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
+    }
+
     @Rule
     @JvmField
     val tmpDir = TemporaryFolder()
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir)
+    val testRule = KspIntegrationTestRule(tmpDir, useKSP2)
 
     @Test
     fun errorMessageFailsCompilation() {
@@ -239,8 +249,8 @@ class GradleCompilationTest {
         )
         testRule.appModule.dependencies.addAll(
             listOf(
-                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
-                artifact(configuration = "implementation", "androidx.room:room-runtime:2.4.2")
+                artifact(configuration = "ksp", "androidx.room:room-compiler:2.6.1"),
+                artifact(configuration = "implementation", "androidx.room:room-runtime:2.6.1")
             )
         )
         testRule.appModule.buildFileAdditions.add(
@@ -264,6 +274,13 @@ class GradleCompilationTest {
                     doFirst {
                         options.get().forEach { option ->
                             println("${'$'}{option.key}=${'$'}{option.value}")
+                        }
+                    }
+                }
+                tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                    doFirst {
+                        kspConfig.processorOptions.get().forEach { (key, value) ->
+                            println("apoption=${'$'}key=${'$'}value")
                         }
                     }
                 }
@@ -306,7 +323,7 @@ class GradleCompilationTest {
         )
 
         val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
-        assertThat(result.output).contains("KSP apoption does not match \\S+=\\S+: invalid")
+        assertThat(result.output).contains("Processor arguments not in the format \\S+=\\S+: invalid")
     }
 
     @Test
@@ -343,6 +360,17 @@ class GradleCompilationTest {
                        println("commandLine=${'$'}{commandLine.asArguments()}")
                      }
                    }
+                   tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                     val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
+                     commandLineArgumentProviders.add(Provider(destination.asFile))
+
+                     kspConfig.processorOptions.get().forEach { (key, value) ->
+                         println("apoption=${'$'}key=${'$'}value")
+                     }
+                     commandLineArgumentProviders.get().forEach { commandLine ->
+                       println("commandLine=${'$'}{commandLine.asArguments()}")
+                     }
+                   }
                  }
             """.trimIndent()
         )
@@ -363,6 +391,11 @@ class GradleCompilationTest {
                  afterEvaluate {
                    tasks.withType<com.google.devtools.ksp.gradle.KspTaskJvm>().configureEach {
                      libraries.files.forEach {
+                       println("HAS LIBRARY: ${'$'}{it.path}")
+                     }
+                   }
+                   tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                     kspConfig.libraries.files.forEach {
                        println("HAS LIBRARY: ${'$'}{it.path}")
                      }
                    }
@@ -389,6 +422,7 @@ class GradleCompilationTest {
 
     @Test
     fun changingKsp2AtRuntime() {
+        Assume.assumeFalse(useKSP2)
         testRule.setupAppAsJvmApp()
         testRule.appModule.buildFileAdditions.add(
             """
@@ -413,5 +447,17 @@ class GradleCompilationTest {
             )
         )
         testRule.runner().withArguments(":app:assembleDebug").build()
+    }
+
+    /**
+     * Regression test for https://github.com/google/ksp/issues/2174
+     */
+    @Test
+    fun androidGradlePluginBuiltInKotlinWithKspAppliedFirst() {
+        testRule.setupAppAsAndroidApp(applyKspPluginFirst = true)
+        // Enable AGP's built-in Kotlin support for test fixtures
+        testRule.runner()
+            .withArguments("tasks", "-Pandroid.experimental.enableTestFixturesKotlinSupport=true")
+            .build()
     }
 }

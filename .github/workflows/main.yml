@@ -4,11 +4,11 @@ name: CI
 
 on:
   push:
-    branches: [ main, 1.0.26-release, 1.0.25-release ]
+    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   pull_request:
-    branches: [ main, 1.0.26-release, 1.0.25-release ]
+    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   workflow_dispatch:
-    branches: [ main, 1.0.26-release, 1.0.25-release ]
+    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
 
 jobs:
   build-and-test:
@@ -46,7 +46,7 @@ jobs:
 
     # Build cache
     - name: Cache Gradle Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/.gradle/caches
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
@@ -54,14 +54,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     - name: Cache gradle wrapper
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-    # Run ktlint
-    - name: lint
-      if: matrix.os == 'ubuntu-latest'
-      run: ./gradlew ktlint
 
     # Check API compatibility
     - name: API compatibility check
@@ -71,10 +67,10 @@ jobs:
     # Run tests
     - name: test
       shell: bash
-      run: ./gradlew --stacktrace --info test
+      run: ./gradlew --stacktrace --info check
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-reports-${{ matrix.branch }}-${{ matrix.os }}
         path: |

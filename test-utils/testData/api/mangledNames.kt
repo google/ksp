@@ -34,10 +34,10 @@
 // get-abstractVal -> getAbstractVal
 // get-abstractVar -> getAbstractVar
 // set-abstractVar -> setAbstractVar
-// get-internalAbstractVal -> getInternalAbstractVal$mainModule
-// set-internalAbstractVal -> setInternalAbstractVal$mainModule
-// get-internalAbstractVar -> getInternalAbstractVar$mainModule
-// set-internalAbstractVar -> setInternalAbstractVar$mainModule
+// get-internalAbstractVal -> getInternalAbstractVal$mainModule_abc
+// set-internalAbstractVal -> setInternalAbstractVal$mainModule_abc
+// get-internalAbstractVar -> getInternalAbstractVar$mainModule_abc
+// set-internalAbstractVar -> setInternalAbstractVar$mainModule_abc
 // mainPackage.Anno -> declarations
 // get-a -> a
 // mainPackage.Foo -> declarations
@@ -46,12 +46,12 @@
 // set-inlineProp -> setInlineProp-E03SJzc
 // inlineReceivingFun -> inlineReceivingFun-E03SJzc
 // inlineReturningFun -> inlineReturningFun-HRn7Rpw
-// get-internalInlineProp -> getInternalInlineProp-HRn7Rpw$mainModule
-// set-internalInlineProp -> setInternalInlineProp-E03SJzc$mainModule
-// internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule
-// internalInlineReturningFun -> internalInlineReturningFun-HRn7Rpw$mainModule
-// get-internalProp -> getInternalProp$mainModule
-// set-internalProp -> setInternalProp$mainModule
+// get-internalInlineProp -> getInternalInlineProp-HRn7Rpw$mainModule_abc
+// set-internalInlineProp -> setInternalInlineProp-E03SJzc$mainModule_abc
+// internalInlineReceivingFun -> internalInlineReceivingFun-E03SJzc$mainModule_abc
+// internalInlineReturningFun -> internalInlineReturningFun-HRn7Rpw$mainModule_abc
+// get-internalProp -> getInternalProp$mainModule_abc
+// set-internalProp -> setInternalProp$mainModule_abc
 // get-jvmNameProp -> explicitGetterName
 // set-jvmNameProp -> explicitSetterName
 // normalFun -> normalFun
@@ -73,12 +73,12 @@
 // set-inlineProp -> setInlineProp-mQ73O9w
 // inlineReceivingFun -> inlineReceivingFun-mQ73O9w
 // inlineReturningFun -> inlineReturningFun-b_MPbnQ
-// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib
-// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib
-// internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib
-// internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib
-// get-internalProp -> getInternalProp$lib
-// set-internalProp -> setInternalProp$lib
+// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib_xyz
+// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib_xyz
+// internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib_xyz
+// internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib_xyz
+// get-internalProp -> getInternalProp$lib_xyz
+// set-internalProp -> setInternalProp$lib_xyz
 // get-jvmNameProp -> explicitGetterName
 // set-jvmNameProp -> explicitSetterName
 // normalFun -> normalFun
@@ -88,16 +88,16 @@
 // get-abstractVal -> getAbstractVal
 // get-abstractVar -> getAbstractVar
 // set-abstractVar -> setAbstractVar
-// get-internalAbstractVal -> getInternalAbstractVal$lib
-// set-internalAbstractVal -> setInternalAbstractVal$lib
-// get-internalAbstractVar -> getInternalAbstractVar$lib
-// set-internalAbstractVar -> setInternalAbstractVar$lib
+// get-internalAbstractVal -> getInternalAbstractVal$lib_xyz
+// set-internalAbstractVal -> setInternalAbstractVal$lib_xyz
+// get-internalAbstractVar -> getInternalAbstractVar$lib_xyz
+// set-internalAbstractVar -> setInternalAbstractVar$lib_xyz
 // libPackage.MyInterface -> declarations
 // get-x -> getX
 // get-y -> getY
 // set-y -> setY
 // END
-// MODULE: lib
+// MODULE: lib.xyz
 // FILE: input.kt
 /**
  * control group
@@ -132,7 +132,7 @@ interface MyInterface {
     val x:Int
     var y:Int
 }
-// MODULE: mainModule(lib)
+// MODULE: mainModule.abc(lib.xyz)
 // FILE: input.kt
 package mainPackage;
 inline class Inline1(val value:String)

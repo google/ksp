@@ -88,10 +88,22 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/annotationsRepeatable.kt")
     }
 
+    @TestMetadata("annotationTargets.kt")
+    @Test
+    fun testAnnotationTargets() {
+        runTest("../test-utils/testData/api/annotationTargets.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
         runTest("../test-utils/testData/api/annotationWithArbitraryClassValue.kt")
+    }
+
+    @TestMetadata("annotationWithNestedClassValue.kt")
+    @Test
+    fun testAnnotationWithNestedClassValue() {
+        runTest("../test-utils/testData/api/annotationWithNestedClassValue.kt")
     }
 
     @TestMetadata("defaultKClassValue.kt")
@@ -250,11 +262,16 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../test-utils/testData/api/docString.kt")
     }
 
-    @Disabled
+    @TestMetadata("equals.kt")
+    @Test
+    fun testEquals() {
+        runTest("../test-utils/testData/api/equals.kt")
+    }
+
     @TestMetadata("equivalentJavaWildcards.kt")
     @Test
     fun testEquivalentJavaWildcards() {
-        runTest("../test-utils/testData/api/equivalentJavaWildcards.kt")
+        runTest("../kotlin-analysis-api/testData/equivalentJavaWildcards.kt")
     }
 
     @TestMetadata("errorTypes.kt")
@@ -305,6 +322,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotation.kt")
     }
 
+    @TestMetadata("getSymbolsFromAnnotationInLib.kt")
+    @Test
+    fun testGetSymbolsFromAnnotationInLib() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotationInLib.kt")
+    }
+
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {
@@ -339,6 +362,12 @@ class KSPAATest : AbstractKSPAATest() {
     @Test
     fun testInterfaceWithDefault() {
         runTest("../test-utils/testData/api/interfaceWithDefault.kt")
+    }
+
+    @TestMetadata("isMutable.kt")
+    @Test
+    fun testIsMutable() {
+        runTest("../test-utils/testData/api/isMutable.kt")
     }
 
     @TestMetadata("javaModifiers.kt")
@@ -655,6 +684,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
     }
 
+    @TestMetadata("valueParameter.kt")
+    @Test
+    fun testValueParameter() {
+        runTest("../kotlin-analysis-api/testData/valueParameter.kt")
+    }
+
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {
@@ -665,6 +700,12 @@ class KSPAATest : AbstractKSPAATest() {
     @Test
     fun testValidateTypes() {
         runTest("../test-utils/testData/api/validateTypes.kt")
+    }
+
+    @TestMetadata("vararg.kt")
+    @Test
+    fun testVararg() {
+        runTest("../test-utils/testData/api/vararg.kt")
     }
 
     @TestMetadata("visibilities.kt")
@@ -702,5 +743,11 @@ class KSPAATest : AbstractKSPAATest() {
     @Test
     fun testExitCode() {
         runTest("../test-utils/testData/api/exitCode.kt")
+    }
+
+    @TestMetadata("packageProviderForGenerated.kt")
+    @Test
+    fun testPackageProviderForGenerated() {
+        runTest("../test-utils/testData/api/packageProviderForGenerated.kt")
     }
 }

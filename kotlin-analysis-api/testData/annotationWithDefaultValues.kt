@@ -22,8 +22,8 @@
 // JavaAnnotation2 -> x:x-default,y:y-default,z:z-default
 // KotlinAnnotation2 -> y:y-default,z:z-default,kotlinEnumVal:KotlinEnum.VALUE_1
 // KotlinAnnotationLib -> b:defaultInLib,kClassValue:OtherKotlinAnnotation,topLevelProp:bar
-// JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<(Any..Any?), (Any..Any?)>,typeArrayVal:[LinkedHashMap<(Any..Any?), (Any..Any?)>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
-// KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<(Any..Any?), (Any..Any?)>,typeArrayVal:[LinkedHashMap<(Any..Any?), (Any..Any?)>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
+// JavaAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],localEnumVal:LocalEnum.LOCAL1,otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
+// KotlinAnnotationWithDefaults -> stringVal:foo,stringArrayVal:[x, y],typeVal:HashMap<*, *>,typeArrayVal:[LinkedHashMap<*, *>],intVal:3,intArrayVal:[1, 3, 5],enumVal:JavaEnum.DEFAULT,enumArrayVal:[JavaEnum.VAL1, JavaEnum.VAL2],otherAnnotationVal:@OtherAnnotation,otherAnnotationArrayVal:[@OtherAnnotation],kotlinAnnotationLibVal:@OtherKotlinAnnotation
 // KotlinAnnotation -> b:default,kClassValue:Array<Array<InnerObj>>,topLevelProp:foo,companionProp:companion
 // JavaAnnotation -> withDefaultValue:OK,stringArrayParam:[3, 5, 7],typeVal:HashMap<*, *>,nested:@Nested
 // JavaAnnotation2 -> x:x-default,y:y-default,z:z-default
