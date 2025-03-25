@@ -259,6 +259,7 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             ktFiles,
             createPackagePartProvider,
+            projectDisposable
         )
 
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -295,6 +296,7 @@ class KotlinSymbolProcessing(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         ktFiles: List<KtFile>,
         packagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
+        projectDisposable: Disposable,
     ) {
         val project = kotlinCoreProjectEnvironment.project
         project.apply {
@@ -343,7 +345,10 @@ class KotlinSymbolProcessing(
                 KotlinDeclarationProviderMerger::class.java,
                 KotlinStandaloneDeclarationProviderMerger(this)
             )
-            registerService(KotlinPackageProviderFactory::class.java, IncrementalKotlinPackageProviderFactory(project))
+            registerService(
+                KotlinPackageProviderFactory::class.java,
+                IncrementalKotlinPackageProviderFactory(project, projectDisposable)
+            )
 
             registerService(
                 SealedClassInheritorsProvider::class.java,
