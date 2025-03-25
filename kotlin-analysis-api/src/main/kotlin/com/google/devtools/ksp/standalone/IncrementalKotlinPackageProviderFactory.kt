@@ -12,8 +12,7 @@ import org.jetbrains.kotlin.psi.KtFile
 
 class IncrementalKotlinPackageProviderFactory(
     private val project: Project,
-    private val projectDisposable: Disposable,
-) : KotlinPackageProviderFactory {
+) : KotlinPackageProviderFactory, Disposable {
     private val staticFactories: MutableList<KotlinStandalonePackageProviderFactory> = mutableListOf()
 
     override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
@@ -23,7 +22,10 @@ class IncrementalKotlinPackageProviderFactory(
 
     fun update(files: Collection<KtFile>) {
         val staticFactory = KotlinStandalonePackageProviderFactory(project, files)
-        Disposer.register(projectDisposable, staticFactory)
+        Disposer.register(this, staticFactory)
         staticFactories.add(staticFactory)
+    }
+
+    override fun dispose() {
     }
 }
