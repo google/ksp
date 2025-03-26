@@ -214,7 +214,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             target.providers
                 .gradleProperty("ksp.useKSP2")
                 .map { it.toBoolean() }
-                .orElse(false)
+                .orElse(true)
         )
         kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
