@@ -28,7 +28,7 @@ import javax.inject.Inject
 
 abstract class KspExtension @Inject constructor(project: Project) {
     /**
-     * Enables or disables KSP 2, defaults to the `ksp.useKsp2` gradle property or `false` if that's not set.
+     * Enables or disables KSP 2, defaults to the `ksp.useKSP2` gradle property or `true` if that's not set.
      *
      * This API is temporary and will be removed once KSP1 is removed.
      */
