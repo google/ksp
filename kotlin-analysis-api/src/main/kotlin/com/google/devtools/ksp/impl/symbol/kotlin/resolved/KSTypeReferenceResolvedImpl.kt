@@ -116,7 +116,7 @@ class KSTypeReferenceResolvedImpl private constructor(
         }
 
     override fun toString(): String {
-        return ktType.render()
+        return ktType.abbreviationOrSelf.render()
     }
 
     override fun defer(): Restorable? {
