@@ -405,11 +405,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             (kspTask as? AbstractKotlinCompile<*>)?.incremental = false
         }
 
-        fun maybeBlockOtherPlugins(kspTask: BaseKotlinCompile) {
-            if (kspExtension.blockOtherCompilerPlugins) {
-                kspTask.pluginClasspath.setFrom(kspClasspathCfg)
-                kspTask.pluginOptions.set(emptyList())
-            }
+        fun blockOtherPlugins(kspTask: BaseKotlinCompile) {
+            kspTask.pluginClasspath.setFrom(kspClasspathCfg)
+            kspTask.pluginOptions.set(emptyList())
         }
 
         fun configurePluginOptions(kspTask: BaseKotlinCompile) {
@@ -474,7 +472,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
                             val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile
-                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            blockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
@@ -509,7 +507,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 KotlinPlatformType.js, KotlinPlatformType.wasm -> {
                     KotlinFactories.registerKotlinJSCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
-                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            blockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
@@ -532,7 +530,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 KotlinPlatformType.common -> {
                     KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
-                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            blockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
@@ -570,13 +568,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 kspClasspathCfgNonEmbeddable
                             }
                             // KotlinNativeCompile computes -Xplugin=... from compilerPluginClasspath.
-                            if (kspExtension.blockOtherCompilerPlugins) {
-                                kspTask.compilerPluginClasspath = classpathCfg
-                            } else {
-                                kspTask.compilerPluginClasspath =
-                                    classpathCfg + kotlinCompileTask.compilerPluginClasspath!!
-                                kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
-                            }
+                            kspTask.compilerPluginClasspath = classpathCfg
                             kspTask.commonSources.from(kotlinCompileTask.commonSources)
                             kspTask.options.add(
                                 FileCollectionSubpluginOption.create(

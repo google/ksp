@@ -65,7 +65,7 @@ abstract class KspExtension @Inject constructor(project: Project) {
         commandLineArgumentProviders.add(arg)
     }
 
-    @Deprecated("KSP will stop supporting other compiler plugins in KSP's Gradle tasks after 1.0.8.")
+    @Deprecated("No-op. KSP no longer reads this property")
     open var blockOtherCompilerPlugins: Boolean = true
 
     // Instruct KSP to pickup sources from compile tasks, instead of source sets.
