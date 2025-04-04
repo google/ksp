@@ -477,11 +477,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
                             configureLanguageVersion(kspTask)
-                            if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
-                                kspTask.compilerOptions.moduleName.convention(
-                                    kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
-                                )
-                            }
 
                             kspTask.destination.value(kspOutputDir)
 
