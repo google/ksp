@@ -60,6 +60,7 @@ import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.config.JvmAnalysisFlags
+import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
@@ -511,7 +512,9 @@ fun findTargetInfos(languageVersionSettings: LanguageVersionSettings, module: Mo
             is JdkPlatform -> JvmPlatformInfoImpl(
                 platformName = platform.platformName,
                 jvmTarget = platform.targetVersion.toString(),
-                jvmDefaultMode = languageVersionSettings.getFlag(JvmAnalysisFlags.jvmDefaultMode).description
+                jvmDefaultMode =
+                (languageVersionSettings.getFlag(JvmAnalysisFlags.jvmDefaultMode) ?: JvmDefaultMode.ENABLE)
+                    .description
             )
             is JsPlatform -> JsPlatformInfoImpl(
                 platformName = platform.platformName
