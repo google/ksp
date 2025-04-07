@@ -42,6 +42,7 @@ import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.internal.Kapt3GradleSubplugin
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
@@ -383,6 +384,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             if (kotlinCompilation is KotlinJvmAndroidCompilation) {
                 // Workaround of a dependency resolution issue of AGP.
+                val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
                 kspTask.libraries.setFrom(
                     project.files(
                         Callable {
@@ -390,7 +392,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 // manually exclude KAPT generated class folder from class path snapshot.
                                 // TODO: remove in 1.9.0.
 
-                                !kspOutputDir.isParentOf(it) && !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                                !kspOutputDir.isParentOf(it) &&
+                                    !kaptGeneratedClassesDir.isParentOf(it) &&
+                                    !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                             }
                         }
                     )
@@ -924,3 +928,6 @@ internal fun FileCollection.nonSelfDeps(selfTaskName: String): List<Task> =
     buildDependencies.getDependencies(null).filterNot {
         it.name == selfTaskName
     }
+
+internal fun getKaptGeneratedClassesDir(project: Project, sourceSetName: String) =
+    Kapt3GradleSubplugin.getKaptGeneratedClassesDir(project, sourceSetName)

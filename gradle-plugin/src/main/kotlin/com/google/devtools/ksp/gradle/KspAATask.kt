@@ -191,12 +191,14 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinJvmAndroidCompilation) {
                         // Workaround of a dependency resolution issue of AGP.
                         // FIXME: figure out how to filter or set variant attributes correctly.
+                        val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
                         val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
                         cfg.libraries.from(
                             project.files(
                                 Callable {
                                     kotlinCompileProvider.get().libraries.filter {
                                         !kspOutputDir.isParentOf(it) &&
+                                            !kaptGeneratedClassesDir.isParentOf(it) &&
                                             !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                                     }
                                 }
