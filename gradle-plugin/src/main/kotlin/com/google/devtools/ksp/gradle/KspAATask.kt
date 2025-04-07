@@ -92,27 +92,30 @@ abstract class KspAATask @Inject constructor(
         }
 
         val changedClasses = if (kspConfig.incremental.get()) {
-            if (kspConfig.platformType.get() == KotlinPlatformType.jvm) {
-                getCPChanges(
-                    inputChanges,
-                    listOf(
-                        kspConfig.sourceRoots,
-                        kspConfig.javaSourceRoots,
-                        kspConfig.commonSourceRoots,
+            when (kspConfig.platformType.get()) {
+                KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
+                    getCPChanges(
+                        inputChanges,
+                        listOf(
+                            kspConfig.sourceRoots,
+                            kspConfig.javaSourceRoots,
+                            kspConfig.commonSourceRoots,
+                            kspConfig.classpathStructure,
+                        ),
+                        kspConfig.cachesDir.asFile.get(),
                         kspConfig.classpathStructure,
-                    ),
-                    kspConfig.cachesDir.asFile.get(),
-                    kspConfig.classpathStructure,
-                    kspConfig.libraries,
-                    kspConfig.processorClasspath,
-                )
-            } else {
-                if (
-                    !inputChanges.isIncremental ||
-                    inputChanges.getFileChanges(kspConfig.nonJvmLibraries).iterator().hasNext()
-                )
-                    kspConfig.cachesDir.get().asFile.deleteRecursively()
-                emptyList()
+                        kspConfig.libraries,
+                        kspConfig.processorClasspath,
+                    )
+                }
+                else -> {
+                    if (
+                        !inputChanges.isIncremental ||
+                        inputChanges.getFileChanges(kspConfig.nonJvmLibraries).iterator().hasNext()
+                    )
+                        kspConfig.cachesDir.get().asFile.deleteRecursively()
+                    emptyList()
+                }
             }
         } else {
             kspConfig.cachesDir.get().asFile.deleteRecursively()
