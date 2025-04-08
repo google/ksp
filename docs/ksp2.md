@@ -39,7 +39,7 @@ KSP2 easily with a single `ksp.useKSP2=<true|false>` property in Gradle projects
 ### KSP1 Deprecation Schedule
 Because KSP1 is built on top of the old Kotlin compiler, theoretically it won’t be able to support language version
 2.0+. Fortunately, Kotlin language 2.0 is designed to be fully compatible with language version 1.9, so KSP1 will still
-be compatible with Kotlin 2.0. **KSP1 will not support Kotlin 2.1**. Please plan transitioning from KSP1 to KSP2 during
+be compatible with Kotlin 2.0. **KSP1 will not fully support Kotlin 2.2**. Please plan transitioning from KSP1 to KSP2 during
 Kotlin 2.0.
 
 Because KSP2 is no longer a compiler plugin, there is no strong dependency to the Kotlin compiler. After KSP1 is

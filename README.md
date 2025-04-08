@@ -24,11 +24,29 @@ Most of the documentation of KSP can be found on [kotlinlang.org](https://kotlin
 
 For debugging and testing processors, as well as KSP itself, please check [DEVELOPMENT.md](DEVELOPMENT.md)
 
-## KSP2 is in Beta!
-KSP2 is a new implementation of the KSP API. It will be faster and easier to use than KSP 1.x. Please refer to the
+## KSP2 Is Here!
+KSP2 is a new implementation of the KSP API. It is faster and easier to use than KSP 1.x. Please refer to the
 [KSP2 introduction](docs/ksp2.md) for more details.
 
-### Nightly Builds
+### Switching Between KSP1 And KSP2
+Starting with KSP 2.0.0, KSP2 is enabled by default. You can still switch back to KSP1 with the Gradle property
+`ksp.useKSP2=false`, or the `ksp` extension in Gradle build scripts:
+
+```
+ksp {
+    useKsp2 = false
+}
+```
+
+### KSP1 deprecation schedule
+KSP1 will not be able to support newer Kotlin language features and will be deprecated starting from Kotlin 2.2.0.
+This is because KSP1 is a compiler plugin of K1, which is already deprecated. Also, the Kotlin Gradle Plugin is
+standardizing its API and disallowing accesses to its internal implementations on which KSP1 relies.
+
+The KSP team will try to support KSP1 with best efforts so that users have more time to migrate to KSP2, but no promise
+can be made. Please plan migrating to KSP2 as early as possible.
+
+## Nightly Builds
 Nightly builds of KSP for the latest Kotlin stable releases are published
 [here](https://oss.sonatype.org/content/repositories/snapshots/com/google/devtools/ksp/).
 
