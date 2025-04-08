@@ -24,7 +24,6 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.TestDataFile
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformDirectives
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformProviderForAnalysisApiTests
-import org.jetbrains.kotlin.cli.common.disposeRootInWriteAction
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
@@ -61,13 +60,13 @@ abstract class DisposableTest {
     protected val disposable: Disposable get() = _disposable!!
 
     @BeforeEach
-    fun initDisposable(testInfo: TestInfo) {
+    private fun initDisposable(testInfo: TestInfo) {
         _disposable = Disposer.newDisposable("disposable for ${testInfo.displayName}")
     }
 
     @AfterEach
-    fun disposeDisposable() {
-        _disposable?.let { disposeRootInWriteAction(it) }
+    private fun disposeDisposable() {
+        _disposable?.let { Disposer.dispose(it) }
         _disposable = null
     }
 }

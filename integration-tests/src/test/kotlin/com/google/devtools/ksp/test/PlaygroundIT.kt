@@ -310,7 +310,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
             Assert.assertTrue(result.output.contains("platform: JVM"))
-            Assert.assertTrue(result.output.contains("jvm default mode: no-compatibility"))
+            Assert.assertTrue(result.output.contains("jvm default mode: all"))
         }
         project.restore(buildFile.path)
     }
