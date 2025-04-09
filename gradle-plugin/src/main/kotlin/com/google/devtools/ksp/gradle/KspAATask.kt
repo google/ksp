@@ -211,6 +211,8 @@ abstract class KspAATask @Inject constructor(
                         cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
                     }
 
+                    val classOutputDir = KspGradleSubplugin.getKspClassOutputDir(project, sourceSetName, target)
+
                     val compilerOptions = kotlinCompilation.compilerOptions.options
                     val langVer = compilerOptions.languageVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
                     val apiVer = compilerOptions.apiVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
@@ -222,7 +224,7 @@ abstract class KspAATask @Inject constructor(
                     cfg.outputBaseDir.value(KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target))
                     cfg.kotlinOutputDir.value(kotlinOutputDir)
                     cfg.javaOutputDir.value(javaOutputDir)
-                    cfg.classOutputDir.value(KspGradleSubplugin.getKspClassOutputDir(project, sourceSetName, target))
+                    cfg.classOutputDir.value(classOutputDir)
                     cfg.resourceOutputDir.value(
                         KspGradleSubplugin.getKspResourceOutputDir(
                             project,
@@ -290,6 +292,10 @@ abstract class KspAATask @Inject constructor(
                         cfg.jvmTarget.value(compilerOptions.jvmTarget.map { it.target })
 
                         cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
+
+                        // Don't support binary generation for non-JVM platforms yet.
+                        // FIXME: figure out how to add user generated libraries.
+                        kotlinCompilation.output.classesDirs.from(classOutputDir)
                     } else {
                         cfg.nonJvmLibraries.from(cfg.libraries)
                     }

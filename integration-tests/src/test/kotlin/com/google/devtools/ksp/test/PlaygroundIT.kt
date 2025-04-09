@@ -387,6 +387,25 @@ class PlaygroundIT(val useKSP2: Boolean) {
         }
     }
 
+    @Test
+    fun testGeneratedBinaryClass() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        File(project.root, "workload/src/main/java/NeedGenerated.kt").appendText("val v = BinaryClass()\n")
+        File(
+            project.root,
+            "test-processor/src/main/resources/META-INF/services/" +
+                "com.google.devtools.ksp.processing.SymbolProcessorProvider"
+        ).appendText("BinaryGenProcessorProvider")
+        gradleRunner.buildAndCheck("clean", "build") {
+            val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
+            Assert.assertTrue(artifact.exists())
+
+            JarFile(artifact).use { jarFile ->
+                Assert.assertTrue(jarFile.getEntry("BinaryClass.class").size > 0)
+            }
+        }
+    }
+
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "KSP2={0}")
