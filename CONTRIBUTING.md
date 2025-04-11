@@ -62,8 +62,10 @@ it should be extending [AbstractTestProcessor](test-utils/src/main/kotlin/com/go
         * Then follows virtual files section till the end of test file.
         * You can use ```// FILE: <file name>``` to create files that will be available at run time of the test.
             * E.g. ```// FILE: a.kt``` will result in a file named ```a.kt``` at run time.
-* Add new test to [test suite](test-utils/src/test/kotlin/com/google/devtools/ksp/test/KSPCompilerPluginTest.kt)
-* Run generated tests with ```:test-util:test``` gradle task.
+* Add new test to
+  * [KSP1 test suite](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/test/KSPCompilerPluginTest.kt)
+  * [KSP2 test suite](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/KSPAATest.kt)
+* Run generated tests with ```:compiler-plugin:test``` and ```:kotlin-analysis-api:test``` gradle task.
     * This will execute all tests in KSP test suite. To run your test only, specify the test name with 
     ```--tests "com.google.devtools.ksp.test.KSPCompilerPluginTest.<name of your generated test>"```
     * Make sure your change is not breaking any existing test as well :).
