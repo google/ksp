@@ -44,7 +44,13 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
     override val functionKind: FunctionKind by lazy {
         when (ktFunctionSymbol.location) {
-            KaSymbolLocation.CLASS -> FunctionKind.MEMBER
+            KaSymbolLocation.CLASS -> {
+                if (ktFunctionSymbol is KaNamedFunctionSymbol && ktFunctionSymbol.isStatic) {
+                    FunctionKind.STATIC
+                } else {
+                    FunctionKind.MEMBER
+                }
+            }
             KaSymbolLocation.TOP_LEVEL -> FunctionKind.TOP_LEVEL
             else -> throw IllegalStateException("Unexpected location ${ktFunctionSymbol.location}")
         }
