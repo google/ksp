@@ -163,12 +163,6 @@ abstract class KspAATask @Inject constructor(
                 kspAATask.kspClasspath.from(kspAADepCfg)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
-                    // Ref: https://github.com/JetBrains/kotlin/blob/6535f86dfe36effeba976802ebd56a5a56071f45/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/mpp/kotlinCompilations.kt#L92
-                    val moduleName = when (val compilationName = kotlinCompilation.name) {
-                        KotlinCompilation.MAIN_COMPILATION_NAME -> project.name
-                        else -> "${project.name}_$compilationName"
-                    }
-                    cfg.moduleName.value(moduleName)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
                     val filteredTasks =
@@ -272,6 +266,11 @@ abstract class KspAATask @Inject constructor(
                             .orElse(false)
                     )
 
+                    // Ref: https://github.com/JetBrains/kotlin/blob/6535f86dfe36effeba976802ebd56a5a56071f45/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/mpp/kotlinCompilations.kt#L92
+                    val moduleName = when (val compilationName = kotlinCompilation.name) {
+                        KotlinCompilation.MAIN_COMPILATION_NAME -> project.name
+                        else -> "${project.name}_$compilationName"
+                    }
                     if (compilerOptions is KotlinJvmCompilerOptions) {
                         // TODO: set proper jdk home
                         cfg.jdkHome.value(File(System.getProperty("java.home")))
@@ -296,8 +295,11 @@ abstract class KspAATask @Inject constructor(
                         // Don't support binary generation for non-JVM platforms yet.
                         // FIXME: figure out how to add user generated libraries.
                         kotlinCompilation.output.classesDirs.from(classOutputDir)
+
+                        cfg.moduleName.set(compilerOptions.moduleName.orElse(moduleName))
                     } else {
                         cfg.nonJvmLibraries.from(cfg.libraries)
+                        cfg.moduleName.value(moduleName)
                     }
 
                     cfg.platformType.value(kotlinCompilation.platformType)
