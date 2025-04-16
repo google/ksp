@@ -49,7 +49,7 @@ index c5607aa82..e274b0455 100644
      repositories {
          mavenCentral()
          google()
-+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
++        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
          maven { setUrl("https://www.jitpack.io") }
      }
  }
