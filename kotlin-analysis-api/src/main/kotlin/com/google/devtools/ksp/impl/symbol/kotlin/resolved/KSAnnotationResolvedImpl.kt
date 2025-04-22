@@ -50,7 +50,7 @@ class KSAnnotationResolvedImpl private constructor(
     }
     override val arguments: List<KSValueArgument> by lazy {
         val presentArgs = annotationApplication.arguments.map {
-            KSValueArgumentImpl.getCached(it, this, Origin.KOTLIN)
+            KSValueArgumentImpl.getCached(it, this, origin)
         }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = analyze {
@@ -137,8 +137,7 @@ class KSAnnotationResolvedImpl private constructor(
         }
     }
 
-    // FIXME: use parent.origin
-    override val origin: Origin = Origin.KOTLIN_LIB
+    override val origin: Origin = parent?.origin ?: Origin.KOTLIN_LIB
 
     override val location: Location by lazy {
         NonExistLocation
