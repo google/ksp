@@ -23,6 +23,8 @@
 // Validating Anno4
 // Validating JavaLib
 // Validating KotlinLibClass
+// Exception: [KotlinLibClass, T1, Any?]: SYNTHETIC
+// Exception: [KotlinLibClass, T1, Any?]: SYNTHETIC
 // Validating kotlinLibFuntion
 // Validating kotlinLibProperty
 // Validating File: JavaSrc.java
@@ -34,19 +36,14 @@
 // Exception: [File: KotlinSrc.kt, kotlinSrcProperty, kotlinSrcProperty.getter()]: SYNTHETIC
 // Exception: [File: KotlinSrc.kt, KotlinSrcClass, Any]: SYNTHETIC
 // Exception: [File: KotlinSrc.kt, KotlinSrcClass, T3, Any?]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter(), Set<T3>, Set<T3>, INVARIANT T3, T3, KotlinSrcClass]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter(), Set<T3>, Set<T3>, INVARIANT T3, T3, T3]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter(), Set<T3>, Set<T3>, INVARIANT T3, T3]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter(), Set<T3>, Set<T3>, INVARIANT T3]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter(), Set<T3>, Set<T3>]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter(), Set<T3>]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q1, q1.getter()]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q2, q2.getter(), Short, Short]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q2, q2.getter(), Short]: SYNTHETIC
-// Exception: [File: KotlinSrc.kt, KotlinSrcClass, <init>, q2, q2.getter()]: SYNTHETIC
+// Exception: [File: KotlinSrc.kt, KotlinSrcClass, q1, q1.getter(), Set<T3>]: SYNTHETIC
+// Exception: [File: KotlinSrc.kt, KotlinSrcClass, q1, q1.getter()]: SYNTHETIC
+// Exception: [File: KotlinSrc.kt, KotlinSrcClass, q2, q2.getter(), Short]: SYNTHETIC
+// Exception: [File: KotlinSrc.kt, KotlinSrcClass, q2, q2.getter()]: SYNTHETIC
 // Exception: [File: KotlinSrc.kt, KotlinSrcClass, q3, q3.getter(), Short, Short]: SYNTHETIC
 // Exception: [File: KotlinSrc.kt, KotlinSrcClass, q3, q3.getter(), Short]: SYNTHETIC
 // Exception: [File: KotlinSrc.kt, KotlinSrcClass, q3, q3.getter()]: SYNTHETIC
+// Exception: [File: KotlinSrc.kt, KotlinSrcClass, T3, Any?]: SYNTHETIC
 // END
 // MODULE: module1
 // FILE: KotlinLib.kt
