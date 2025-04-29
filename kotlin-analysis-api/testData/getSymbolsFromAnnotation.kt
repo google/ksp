@@ -38,6 +38,7 @@
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
 // local:KSPropertyDeclaration
+// a:KSPropertyDeclaration
 // <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
 // param:KSValueParameter
@@ -77,6 +78,7 @@
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
 // local:KSPropertyDeclaration
+// a:KSPropertyDeclaration
 // <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
 // param:KSValueParameter
@@ -106,6 +108,7 @@
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
 // local:KSPropertyDeclaration
+// a:KSPropertyDeclaration
 // <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
 // param:KSValueParameter
@@ -147,6 +150,7 @@ class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, 
     @Anno
     fun functionFoo(@Anno p1: Int, @Bnno p2: Int) {
         @Anno val local = 1
+        val (@Anno a, b) = Pair<Int, Int>(17, 42)
     }
 
     @setparam:Cnno
