@@ -381,6 +381,7 @@ internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
 
 internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = this.toKSNode() as? KSDeclaration
 
+// For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSNode(): KSNode {
     return when (this) {
         is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
