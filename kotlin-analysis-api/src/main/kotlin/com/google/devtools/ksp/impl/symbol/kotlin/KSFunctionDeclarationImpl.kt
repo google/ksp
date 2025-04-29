@@ -158,9 +158,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         if (!psi.hasBlockBody()) {
             emptySequence()
         } else {
-            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
+            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.flatMap {
                 analyze {
-                    it.symbol.toKSDeclaration()
+                    when (val symbol = it.symbol) {
+                        is KaDestructuringDeclarationSymbol -> {
+                            symbol.entries.mapNotNull { it.toKSDeclaration() }
+                        }
+                        else -> listOfNotNull(symbol.toKSDeclaration())
+                    }
                 }
             } ?: emptySequence()
         }
