@@ -3,6 +3,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.*
@@ -137,7 +138,14 @@ class KSAnnotationResolvedImpl private constructor(
         }
     }
 
-    override val origin: Origin = parent?.origin ?: Origin.KOTLIN_LIB
+    // Annotations on deeply synthesized members like getter of Java annotation arguments can still be real.
+    override val origin: Origin by lazy {
+        val parentOrigin = parent?.origin ?: Origin.SYNTHETIC
+        when (parentOrigin) {
+            Origin.SYNTHETIC -> containingFile?.origin ?: Origin.SYNTHETIC
+            else -> parentOrigin
+        }
+    }
 
     override val location: Location by lazy {
         NonExistLocation
