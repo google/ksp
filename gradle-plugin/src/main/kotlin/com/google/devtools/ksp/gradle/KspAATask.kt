@@ -317,8 +317,11 @@ abstract class KspAATask @Inject constructor(
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
                         cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
+
+                        val isKlibCrossCompilationEnabled =
+                            project.findProperty("kotlin.native.enableKlibsCrossCompilation") == "true"
                         kspAATask.onlyIf {
-                            HostManager().enabled.any {
+                            isKlibCrossCompilationEnabled || HostManager().enabled.any {
                                 it.name == konanTargetName
                             }
                         }
