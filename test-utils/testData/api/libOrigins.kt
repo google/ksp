@@ -21,6 +21,7 @@
 // Validating Anno2
 // Validating Anno3
 // Validating Anno4
+// Validating Anno5
 // Validating JavaLib
 // Validating KotlinLibClass
 // Validating kotlinLibFuntion
@@ -28,6 +29,8 @@
 // Validating File: JavaSrc.java
 // Exception: [File: JavaSrc.java, JavaSrc, synthetic constructor for JavaSrc, JavaSrc]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaSrc, synthetic constructor for JavaSrc]: SYNTHETIC
+// Exception: [File: JavaSrc.java, JavaAnno1, synthetic constructor for JavaAnno1, JavaAnno1]: SYNTHETIC
+// Exception: [File: JavaSrc.java, JavaAnno1, synthetic constructor for JavaAnno1]: SYNTHETIC
 // Validating File: KotlinSrc.kt
 // Exception: [File: KotlinSrc.kt, kotlinSrcProperty, kotlinSrcProperty.getter(), Short, Short]: SYNTHETIC
 // Exception: [File: KotlinSrc.kt, kotlinSrcProperty, kotlinSrcProperty.getter(), Short]: SYNTHETIC
@@ -59,6 +62,7 @@ annotation class Anno1
 annotation class Anno2
 annotation class Anno3
 annotation class Anno4
+annotation class Anno5(val p1: Int = 42, val p2: String = "default")
 
 @Anno1
 class KotlinLibClass<T1>(val p1: List<T1>, val p2: Int)  {
@@ -114,3 +118,7 @@ class JavaSrc {
     }
 }
 
+public @interface JavaAnno1 {
+    @Anno5(p1 = 1, p2 = "a2")
+    String value ();
+}
