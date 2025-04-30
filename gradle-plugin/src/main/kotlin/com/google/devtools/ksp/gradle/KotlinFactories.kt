@@ -215,6 +215,7 @@ abstract class KspTaskJvm @Inject constructor(
             sources,
             javaSources,
             commonSourceSet,
+            classpathSnapshotProperties.classpath,
             classpathStructure,
         )
 
