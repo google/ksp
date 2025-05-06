@@ -25,5 +25,6 @@ enum class AnnotationUseSiteTarget {
     RECEIVER,
     PARAM,
     SETPARAM,
-    DELEGATE
+    DELEGATE,
+    ALL,
 }

@@ -28,8 +28,8 @@
 // parameter param1 : annotations.ValueParameterTarget{[value = onParam1]}
 // parameter param2 : annotations.NoTargetAnnotation{[value = onParam2]}
 // parameter param2 : annotations.ValueParameterTarget{[value = onParam2]}
-// parameter value : annotations.ValueParameterTarget{[value = onPropSetter]}
 // parameter value : annotations.ValueParameterTarget{[value = onProp]}
+// property prop : annotations.AllTarget{[value = all:]}
 // property prop : annotations.FieldTarget2{[value = field:]}
 // property prop : annotations.FieldTarget{[value = onProp]}
 // property prop : annotations.NoTargetAnnotation{[value = onProp]}
@@ -40,12 +40,16 @@
 // class lib.KotlinClass : annotations.NoTargetAnnotation{[value = onClass]}
 // function myFun : annotations.FunctionTarget{[value = onMyFun]}
 // function myFun : annotations.NoTargetAnnotation{[value = onMyFun]}
+// getter of property prop : annotations.AllTarget{[value = all:]}
 // getter of property prop : annotations.PropertyGetterTarget{[value = get:]}
 // parameter param1 : annotations.NoTargetAnnotation{[value = onParam1]}
 // parameter param1 : annotations.ValueParameterTarget{[value = onParam1]}
 // parameter param2 : annotations.NoTargetAnnotation{[value = onParam2]}
 // parameter param2 : annotations.ValueParameterTarget{[value = onParam2]}
 // parameter propInConstructor : annotations.ValueParameterTarget{[value = propInConstructor]}
+// parameter value : annotations.AllTarget{[value = all:]}
+// property prop : annotations.AllTarget{[value = all:]}
+// property prop : annotations.AllTarget{[value = all:]}
 // property prop : annotations.FieldTarget2{[value = field:]}
 // property prop : annotations.FieldTarget{[value = onProp]}
 // property prop : annotations.NoTargetAnnotation{[value = onProp]}
@@ -55,9 +59,12 @@
 // class main.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class main.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
 // getter of property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
+// parameter constructorParam : annotations.AllTarget{[value = all:]}
 // parameter constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // parameter constructorParam : annotations.ValueParameterTarget{[value = onConstructorParam]}
 // parameter value : annotations.ValueParameterTarget{[value = onConstructorParam]}
+// property constructorParam : annotations.AllTarget{[value = all:]}
+// property constructorParam : annotations.AllTarget{[value = all:]}
 // property constructorParam : annotations.FieldTarget2{[value = field:]}
 // property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
@@ -67,8 +74,13 @@
 // lib.DataClass ->
 // class lib.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class lib.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
+// getter of property constructorParam : annotations.AllTarget{[value = all:]}
 // getter of property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
+// parameter constructorParam : annotations.AllTarget{[value = all:]}
 // parameter constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
+// parameter value : annotations.AllTarget{[value = all:]}
+// property constructorParam : annotations.AllTarget{[value = all:]}
+// property constructorParam : annotations.AllTarget{[value = all:]}
 // property constructorParam : annotations.FieldTarget2{[value = field:]}
 // property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
@@ -106,6 +118,8 @@ annotation class ValueParameterTarget(val value:String)
 @Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.FIELD)
 annotation class ValueParameterAndFieldTarget(val value: String)
 
+annotation class AllTarget(val value: String)
+
 // MODULE: lib(annotations)
 // FILE: ClassInLib.kt
 package lib;
@@ -119,6 +133,7 @@ class KotlinClass(@ValueParameterTarget("propInConstructor") val propInConstruct
     @set:PropertySetterTarget("set:")
     @get:PropertyGetterTarget("get:")
     @field:FieldTarget2("field:")
+    @all:AllTarget("all:")
     var prop : String = ""
 
     @NoTargetAnnotation("onMyFun")
@@ -143,6 +158,7 @@ class DataClass(
     @set:PropertySetterTarget("set:")
     @get:PropertyGetterTarget("get:")
     @field:FieldTarget2("field:")
+    @all:AllTarget("all:")
     var constructorParam : String = ""
 )
 // FILE: lib/JavaClass.java
@@ -163,9 +179,8 @@ class KotlinClass {
     @get:PropertyGetterTarget("get:")
     @field:FieldTarget2("field:")
     @setparam:ValueParameterTarget("onProp")
+    @all:AllTarget("all:")
     var prop : String = ""
-        @setparam:ValueParameterTarget("onPropSetter")
-        set
 
     @NoTargetAnnotation("onMyFun")
     @FunctionTarget("onMyFun")
@@ -192,6 +207,7 @@ class DataClass(
     @field:ValueParameterAndFieldTarget("valueParameterAndField")
     @setparam:ValueParameterTarget("onConstructorParam")
     @ValueParameterTarget("onConstructorParam")
+    @all:AllTarget("all:")
     var constructorParam : String = ""
 )
 // FILE: main/JavaClassInModule2.java
