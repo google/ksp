@@ -74,6 +74,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             javaSourcePath,
             "-d", outDir.absolutePath,
             "-no-stdlib",
+            "-Xannotation-target-all",
             "-module-name", moduleName,
             "-classpath", classpath.joinToString(File.pathSeparator)
         )

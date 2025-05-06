@@ -230,6 +230,7 @@ package com.google.devtools.ksp.symbol {
   public enum AnnotationUseSiteTarget {
     method @NonNull public static com.google.devtools.ksp.symbol.AnnotationUseSiteTarget valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
     method @NonNull public static com.google.devtools.ksp.symbol.AnnotationUseSiteTarget[] values();
+    enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget ALL;
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget DELEGATE;
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget FIELD;
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget FILE;
