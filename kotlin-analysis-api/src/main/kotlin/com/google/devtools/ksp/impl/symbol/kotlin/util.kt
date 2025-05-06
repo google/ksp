@@ -458,40 +458,6 @@ internal fun KaType.typeArguments(): List<KaTypeProjection> {
     }
 }
 
-internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {
-    return when (this) {
-        is KSPropertyGetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let { decl ->
-            decl.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.GET }
-        }
-
-        is KSPropertySetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let { decl ->
-            decl.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SET }
-        }
-
-        is KSValueParameter -> {
-            var parent = this.parent
-            // TODO: eliminate annotationsFromParents to make this fully sequence.
-            val annotationsFromParents = mutableListOf<KSAnnotation>()
-            (parent as? KSPropertyAccessorImpl)?.let { propertyAccessor ->
-                annotationsFromParents.addAll(
-                    propertyAccessor.originalAnnotations
-                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
-                )
-                parent = (parent as KSPropertyAccessorImpl).receiver
-            }
-            (parent as? KSPropertyDeclarationImpl)?.let { propertyDeclaration ->
-                annotationsFromParents.addAll(
-                    propertyDeclaration.originalAnnotations
-                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
-                )
-            }
-            annotationsFromParents.asSequence()
-        }
-
-        else -> emptySequence()
-    } ?: emptySequence()
-}
-
 internal fun KaSymbolVisibility.toModifier(): Modifier {
     return when (this) {
         KaSymbolVisibility.PUBLIC -> Modifier.PUBLIC
