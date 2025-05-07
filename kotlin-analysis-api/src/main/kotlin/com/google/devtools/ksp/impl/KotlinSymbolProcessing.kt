@@ -85,7 +85,7 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStan
 import org.jetbrains.kotlin.analysis.api.standalone.base.permissions.KotlinStandaloneAnalysisPermissionOptions
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirStandaloneServiceRegistrar
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getResolutionFacade
 import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolutionActivityTracker
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
@@ -559,7 +559,7 @@ class KotlinSymbolProcessing(
                 // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots
                 // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
                 // are created.
-                val firSession = ResolverAAImpl.ktModule.getFirResolveSession(project)
+                val firSession = ResolverAAImpl.ktModule.getResolutionFacade(project)
                 firSession.useSiteFirSession.registerResolveComponents(dualLookupTracker)
 
                 val resolver = ResolverAAImpl(
@@ -691,10 +691,10 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseContentScopeProvider::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseResolutionScopeProvider::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KotlinOptimizingGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
-    org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinSimpleGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.fir.modification.KaFirSourceModificationService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
     org.jetbrains.kotlin.analysis.api.fir.statistics.KaFirStatisticsService::class.java,
