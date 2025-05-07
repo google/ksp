@@ -42,7 +42,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getResolutionFacade
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.findFacadeClass
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
@@ -363,7 +363,7 @@ class ResolverAAImpl(
         // and corresponding type mapping APIs.
         val coneType = (ktType as KaFirType).coneType
         val mode = analyze {
-            val typeContext = analyze { useSiteModule.getFirResolveSession(project).useSiteFirSession.typeContext }
+            val typeContext = analyze { useSiteModule.getResolutionFacade(project).useSiteFirSession.typeContext }
             when (position) {
                 RefPosition.RETURN_TYPE -> typeContext.getOptimalModeForReturnType(
                     coneType,
