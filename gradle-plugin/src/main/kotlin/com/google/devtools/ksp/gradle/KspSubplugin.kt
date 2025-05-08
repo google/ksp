@@ -272,12 +272,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             val nonEmptyKspConfigurations =
                 kspConfigurations.find(kotlinCompilation)
                     .filter { it.allDependencies.isNotEmpty() }
-            if (nonEmptyKspConfigurations.isEmpty()) {
-                return project.provider { emptyList() }
-            }
             processorClasspath.extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
-        } else if (processorClasspath.allDependencies.isEmpty()) {
-            return project.provider { emptyList() }
         }
 
         val target = kotlinCompilation.target.name
@@ -313,7 +308,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         )
 
         val kspCachesDir = getKspCachesDir(project, sourceSetName, target)
+        val incomingProcessors = processorClasspath.incoming.files
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
+            kspTask.onlyIf {
+                !incomingProcessors.isEmpty()
+            }
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
