@@ -160,7 +160,11 @@ abstract class KspAATask @Inject constructor(
             ).apply {
                 isTransitive = false
             }
+            val incomingProcessors = processorClasspath.incoming.files
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
+                kspAATask.onlyIf {
+                    !incomingProcessors.isEmpty()
+                }
                 kspAATask.kspClasspath.from(kspAADepCfg)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(processorClasspath)
