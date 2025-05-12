@@ -149,7 +149,7 @@ class ResolverImpl(
     private val typeMapper = KotlinTypeMapper(
         moduleIdentifier,
         LanguageVersionSettingsImpl(LanguageVersion.KOTLIN_1_9, ApiVersion.KOTLIN_1_9),
-        true
+        false
     )
     private val qualifiedExpressionResolver = QualifiedExpressionResolver(LanguageVersionSettingsImpl.DEFAULT)
 
