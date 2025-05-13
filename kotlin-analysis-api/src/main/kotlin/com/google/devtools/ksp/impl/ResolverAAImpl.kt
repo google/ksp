@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
+import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
@@ -450,11 +451,10 @@ class ResolverAAImpl(
         }
 
         val name = accessor.receiver.simpleName.asString()
-        val uppercasedName = name.replaceFirstChar(Char::uppercaseChar)
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
         val prefixedName = when (accessor) {
-            is KSPropertyGetter -> if (name.startsWith("is")) name else "get$uppercasedName"
-            is KSPropertySetter -> if (name.startsWith("is")) "set${name.removePrefix("is")}" else "set$uppercasedName"
+            is KSPropertyGetter -> JvmAbi.getterName(name)
+            is KSPropertySetter -> JvmAbi.setterName(name)
             else -> ""
         }
 
