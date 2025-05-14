@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.10.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.10.0)" variant="all" version="8.10.0">
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use configureEach instead of all"
+        errorLine1="        sourceSets.all {"
+        errorLine2="                   ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
+            line="56"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir"
+        errorLine2="                                                         ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
+            line="83"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Passing Configuration to ConfigurableFileCollection.from results in eager resolution of this configuration. Instead use project.files(configuration) or configuration.incoming.artifactView {}.files to wrap the configuration making it lazy."
+        errorLine1="                kspAATask.kspClasspath.from(kspAADepCfg)"
+        errorLine2="                                       ~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="168"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Passing Configuration to ConfigurableFileCollection.from results in eager resolution of this configuration. Instead use project.files(configuration) or configuration.incoming.artifactView {}.files to wrap the configuration making it lazy."
+        errorLine1="                    cfg.processorClasspath.from(processorClasspath)"
+        errorLine2="                                           ~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="170"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                                    kotlinCompileProvider.get().libraries.filter {"
+        errorLine2="                                                          ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="201"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)"
+        errorLine2="                                                                   ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="323"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use configureEach instead of whenObjectAdded"
+        errorLine1="                configurationForAll.dependencies.whenObjectAdded {"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
+            line="120"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                val kotlinCompileTask = kotlinCompileProvider.get()"
+        errorLine2="                                                              ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="350"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                            kotlinCompileProvider.get().libraries.filter {"
+        errorLine2="                                                  ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="390"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                            val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile"
+        errorLine2="                                                                          ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="477"
+            column="75"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                            val kotlinCompileTask = kotlinCompileProvider.get() as KotlinNativeCompile"
+        errorLine2="                                                                          ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="554"
+            column="75"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Passing Configuration to ConfigurableFileCollection.from results in eager resolution of this configuration. Instead use project.files(configuration) or configuration.incoming.artifactView {}.files to wrap the configuration making it lazy."
+        errorLine1="            fileCollection.from(classpath)"
+        errorLine2="                           ~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="912"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val destination: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KotlinFactories.kt"
+            line="202"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val jdkHome: Property&lt;File>"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="374"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val projectBaseDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="381"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val outputBaseDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="384"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val kotlinOutputDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="390"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val javaOutputDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="393"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val classOutputDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="396"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val resourceOutputDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="399"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="GradleProjectIsolation"
+        message="Use providers.gradleProperty instead of findProperty"
+        errorLine1="                            project.findProperty(&quot;kotlin.native.enableKlibsCrossCompilation&quot;) == &quot;true&quot;"
+        errorLine2="                                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="326"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="WithTypeWithoutConfigureEach"
+        message="Avoid passing a closure to withType, use withType().configureEach instead"
+        errorLine1="        project.plugins.withType(KotlinBaseApiPlugin::class.java) {"
+        errorLine2="                        ~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
+            line="99"
+            column="25"/>
+    </issue>
+
+</issues>
