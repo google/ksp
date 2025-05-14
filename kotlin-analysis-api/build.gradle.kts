@@ -168,14 +168,26 @@ tasks.withType<ShadowJar>().configureEach {
         exclude(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
     }
     mergeServiceFiles()
+}
 
-    doLast {
-        // Checks for missing dependencies
-        val jarJar = archiveFile.get().asFile
-        val depJars = depJarsForCheck.resolve().map(File::getPath)
+abstract class ValidateShadowJar : DefaultTask() {
+    @get:Inject abstract val execOperations: ExecOperations
+
+    @get:InputFile abstract val inputFile: RegularFileProperty
+
+    @get:InputFiles abstract val classpath: ConfigurableFileCollection
+
+    @get:InputFile abstract val baselineFile: RegularFileProperty
+
+    @get:OutputFile abstract val outputFile: RegularFileProperty
+
+    @TaskAction
+    fun validate() {
+        val jarJar = inputFile.get().asFile
+        val depJars = classpath.files
         val stdout = ByteArrayOutputStream()
         try {
-            exec {
+            execOperations.exec {
                 executable = "jdeps"
                 args = listOf(
                     "--multi-release", "base",
@@ -185,10 +197,32 @@ tasks.withType<ShadowJar>().configureEach {
                 standardOutput = stdout
             }
         } catch (e: org.gradle.process.internal.ExecException) {
-            logger.warn(e.message)
+            throw Exception("Unable to run jdeps")
         }
-        logger.warn(stdout.toString())
+        val actualOutput = stdout.toString()
+        outputFile.get().asFile.writeText(actualOutput)
+        val expectedOutput = baselineFile.get().asFile.readText()
+        if (actualOutput != expectedOutput) {
+            throw Exception(
+                """
+                jdeps missing dependencies output has changed.
+                Compare expected ${baselineFile.get().asFile.absolutePath} with
+                actual ${outputFile.get().asFile.absolutePath}.
+                """.trimIndent()
+            )
+        }
     }
+}
+
+val validateShadowJar = tasks.register<ValidateShadowJar>("validateShadowJar") {
+    inputFile.set(tasks.shadowJar.flatMap { it.archiveFile })
+    classpath.from(depJarsForCheck.incoming.artifactView { }.files)
+    baselineFile.set(layout.projectDirectory.file("shadow-validation-baseline.txt"))
+    outputFile.set(layout.buildDirectory.file("validateShadowJar.txt"))
+}
+
+tasks.named("check").configure {
+    dependsOn(validateShadowJar)
 }
 
 val sourcesJar = tasks.register<Jar>("sourcesJar") {
