@@ -191,35 +191,27 @@ tasks.withType<ShadowJar>().configureEach {
     }
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("sources")
-        from(sourceSets.main.get().allSource)
-        from(project(":common-util").sourceSets.main.get().allSource)
-        depSourceJars.resolve().forEach {
-            from(zipTree(it))
-        }
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("sources")
+    from(sourceSets.main.map { it.allSource })
+    from(project(":common-util").sourceSets.main.get().allSource)
+    depSourceJars.resolve().forEach {
+        from(zipTree(it))
     }
-    val dokkaJavadocJar by creating(Jar::class) {
-        dependsOn(dokkaJavadoc)
-        from(dokkaJavadoc.flatMap { it.outputDirectory })
-        archiveClassifier.set("javadoc")
-    }
-    publish {
-        dependsOn(shadowJar)
-        dependsOn(sourcesJar)
-        dependsOn(dokkaJavadocJar)
-    }
+}
+val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
+    archiveClassifier.set("javadoc")
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
 }
 
 publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-aa"
-            artifact(tasks["shadowJar"])
-            artifact(tasks["dokkaJavadocJar"])
-            artifact(tasks["sourcesJar"])
+            artifact(tasks.shadowJar)
+            artifact(dokkaJavadocJar)
+            artifact(sourcesJar)
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-aa")
                 description.set("KSP implementation on Kotlin Analysis API")
@@ -262,14 +254,14 @@ kotlin {
     }
 }
 
-val copyLibsForTesting by tasks.registering(Copy::class) {
+val copyLibsForTesting = tasks.register<Copy>("copyLibsForTesting") {
     from(configurations["libsForTesting"])
     into("dist/kotlinc/lib")
     val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
-val copyLibsForTestingCommon by tasks.registering(Copy::class) {
+val copyLibsForTestingCommon = tasks.register<Copy>("copyLibsForTestingCommon") {
     from(configurations["libsForTestingCommon"])
     into("dist/common")
     val escaped = Regex.escape(aaKotlinBaseVersion)
