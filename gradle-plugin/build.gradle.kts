@@ -21,6 +21,7 @@ plugins {
     `maven-publish`
     signing
     id("org.jetbrains.dokka")
+    id("com.android.lint")
 }
 
 dependencies {
@@ -40,6 +41,8 @@ dependencies {
     testImplementation("junit:junit:$junitVersion")
     testImplementation("com.google.truth:truth:$googleTruthVersion")
     testImplementation(gradleTestKit())
+
+    lintChecks("androidx.lint:lint-gradle:1.0.0-alpha04")
 }
 
 tasks.named("validatePlugins").configure {
@@ -187,4 +190,10 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }
+}
+
+lint {
+    baseline = file("lint-baseline.xml")
+    // GradleDependency suggest library upgrades, thus it is not useful in this case.
+    disable.add("GradleDependency")
 }
