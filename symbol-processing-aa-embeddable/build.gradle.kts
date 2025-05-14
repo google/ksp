@@ -1,8 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
 import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
+import org.apache.tools.zip.ZipEntry
+import org.apache.tools.zip.ZipOutputStream
 import org.gradle.jvm.tasks.Jar
-import shadow.org.apache.tools.zip.ZipEntry
-import shadow.org.apache.tools.zip.ZipOutputStream
 import java.io.InputStreamReader
 import java.util.zip.ZipFile
 
@@ -19,7 +20,7 @@ val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
-    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow")
     `maven-publish`
     signing
 }
@@ -67,7 +68,7 @@ val prefixesToRelocate = listOf(
     Pair(it, "ksp." + it)
 }
 
-class AAServiceTransformer : com.github.jengelman.gradle.plugins.shadow.transformers.Transformer {
+class AAServiceTransformer : Transformer {
     private val entries = HashMap<String, String>()
 
     // Names of extension points needs to be relocated, because ShadowJar does that, too.
@@ -139,7 +140,7 @@ tasks.withType<ShadowJar> {
     exclude("META-INF/compiler.version")
     exclude("META-INF/*.kotlin_module")
 
-    this.transform(AAServiceTransformer())
+    //this.transform(AAServiceTransformer())
 
     // All bundled dependencies should be renamed.
     doLast {
