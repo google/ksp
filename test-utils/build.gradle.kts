@@ -1,8 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
-}
 plugins {
     kotlin("jvm")
 }
@@ -17,4 +12,10 @@ repositories {
 dependencies {
     implementation(project(":api"))
     implementation(kotlin("reflect"))
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    }
 }

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 description = "Kotlin Symbol Processor"
 
 val kotlinBaseVersion: String by project
@@ -7,10 +5,6 @@ val junitVersion: String by project
 val googleTruthVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
-
-tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
-}
 
 plugins {
     kotlin("jvm")
@@ -27,17 +21,19 @@ dependencies {
     ksp(project(":cmdline-parser-gen"))
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        archiveClassifier.set("sources")
-        from(project.sourceSets.main.get().allSource)
-    }
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(project.sourceSets.main.map { it.allSource })
+}
+val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
+    archiveClassifier.set("javadoc")
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
 }
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-    archiveClassifier.set("javadoc")
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    }
 }
 
 publishing {
@@ -45,8 +41,8 @@ publishing {
         create<MavenPublication>("default") {
             artifactId = "symbol-processing-common-deps"
             from(components["java"])
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["dokkaJavadocJar"])
+            artifact(sourcesJar)
+            artifact(dokkaJavadocJar)
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-common-deps")
                 description.set("Kotlin Symbol processing Gradle Utils")
