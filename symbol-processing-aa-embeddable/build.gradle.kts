@@ -140,7 +140,7 @@ tasks.withType(ShadowJar::class.java).configureEach {
     exclude("META-INF/compiler.version")
     exclude("META-INF/*.kotlin_module")
 
-    //this.transform(AAServiceTransformer())
+    this.transform(AAServiceTransformer())
 
     // All bundled dependencies should be renamed.
     doLast {
