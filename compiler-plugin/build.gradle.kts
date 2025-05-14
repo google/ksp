@@ -1,5 +1,4 @@
 import com.google.devtools.ksp.RelativizingPathProvider
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 evaluationDependsOn(":common-util")
 
@@ -14,21 +13,15 @@ val junitPlatformVersion: String by project
 val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
-tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
-}
-
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        archiveClassifier.set("sources")
-        from(sourceSets.main.get().allSource)
-        from(project(":common-util").sourceSets.main.get().allSource)
-    }
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.map { it.allSource })
+    from(project(":common-util").sourceSets.main.get().allSource)
 }
 
 // WARNING: remember to update the dependencies in symbol-processing as well.
@@ -75,7 +68,13 @@ dependencies {
     libsForTestingCommon(kotlin("stdlib-common", kotlinBaseVersion))
 }
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    }
+}
+
+val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(tasks.dokkaJavadoc)
     from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
@@ -83,21 +82,21 @@ val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
     archiveClassifier.set("javadoc")
 }
 
-val copyLibsForTesting by tasks.registering(Copy::class) {
+val copyLibsForTesting = tasks.register<Copy>("copyLibsForTesting") {
     from(configurations["libsForTesting"])
     into("dist/kotlinc/lib")
     val escaped = Regex.escape(kotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
-val copyLibsForTestingCommon by tasks.registering(Copy::class) {
+val copyLibsForTestingCommon = tasks.register<Copy>("copyLibsForTestingCommon") {
     from(configurations["libsForTestingCommon"])
     into("dist/common")
     val escaped = Regex.escape(kotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
-tasks.test {
+tasks.test.configure {
     dependsOn(copyLibsForTesting)
     dependsOn(copyLibsForTestingCommon)
     maxHeapSize = "2g"

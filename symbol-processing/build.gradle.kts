@@ -34,30 +34,23 @@ tasks.withType<ShadowJar> {
     relocate("com.intellij", "org.jetbrains.kotlin.com.intellij")
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("sources")
-        from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
-    }
-    val javadocJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("javadoc")
-        from(project(":compiler-plugin").tasks["dokkaJavadocJar"])
-    }
-    publish {
-        dependsOn(shadowJar)
-        dependsOn(javadocJar)
-        dependsOn(sourcesJar)
-    }
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("sources")
+    from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
+}
+val javadocJar = tasks.register<Jar>("javadocJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("javadoc")
+    from(project(":compiler-plugin").tasks["dokkaJavadocJar"])
 }
 
 publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing"
-            artifact(tasks["javadocJar"])
-            artifact(tasks["sourcesJar"])
+            artifact(javadocJar)
+            artifact(sourcesJar)
             artifact(tasks["shadowJar"])
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing")

@@ -22,42 +22,35 @@ dependencies {
     packedJars(project(":common-util")) { isTransitive = false }
 }
 
-tasks.withType<Jar> {
+tasks.withType(Jar::class.java).configureEach {
     archiveClassifier.set("real")
 }
 
-tasks.withType<ShadowJar>() {
+tasks.withType(ShadowJar::class.java).configureEach {
     archiveClassifier.set("")
     // ShadowJar picks up the `compile` configuration by default and pulls stdlib in.
     // Therefore, specifying another configuration instead.
     configurations = listOf(packedJars)
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("sources")
-        from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
-    }
-    val javadocJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("javadoc")
-        from(project(":compiler-plugin").tasks["dokkaJavadocJar"])
-    }
-    publish {
-        dependsOn(shadowJar)
-        dependsOn(javadocJar)
-        dependsOn(sourcesJar)
-    }
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("sources")
+    from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
+}
+val javadocJar = tasks.register<Jar>("javadocJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("javadoc")
+    from(project(":compiler-plugin").tasks["dokkaJavadocJar"])
 }
 
 publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-cmdline"
-            artifact(tasks["javadocJar"])
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["shadowJar"])
+            artifact(javadocJar)
+            artifact(sourcesJar)
+            artifact(tasks.shadowJar)
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-cmdline")
                 description.set("Symbol processing for K/N and command line")

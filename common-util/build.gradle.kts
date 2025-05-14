@@ -1,15 +1,7 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-evaluationDependsOn(":api")
-
 description = "Kotlin Symbol Processing Util"
 
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
-
-tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
-}
 
 plugins {
     kotlin("jvm")
@@ -22,8 +14,13 @@ dependencies {
     testImplementation("junit:junit:$junitVersion")
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    }
+}
+
 val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
 }
