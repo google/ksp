@@ -159,14 +159,14 @@ abstract class KspAATask @Inject constructor(
             ).apply {
                 isTransitive = false
             }
-            val incomingProcessors = processorClasspath.incoming.files
+            val incomingProcessors = processorClasspath.incoming.artifactView { }.files
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
                 kspAATask.onlyIf {
-                    !incomingProcessors.isEmpty()
+                    !incomingProcessors.isEmpty
                 }
-                kspAATask.kspClasspath.from(kspAADepCfg)
+                kspAATask.kspClasspath.from(kspAADepCfg.incoming.artifactView { }.files)
                 kspAATask.kspConfig.let { cfg ->
-                    cfg.processorClasspath.from(processorClasspath)
+                    cfg.processorClasspath.from(incomingProcessors)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
                     val filteredTasks =
@@ -598,7 +598,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 processorProviders,
                 gradleCfg.logLevel.get().ordinal
             ) as Int
-            ExitCode.values()[returnCode]
+            ExitCode.entries[returnCode]
         } catch (e: InvocationTargetException) {
             kspGradleLogger.exception(e.targetException)
             throw e.targetException

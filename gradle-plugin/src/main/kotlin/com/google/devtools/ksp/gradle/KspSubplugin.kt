@@ -311,7 +311,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val incomingProcessors = processorClasspath.incoming.files
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
             kspTask.onlyIf {
-                !incomingProcessors.isEmpty()
+                !incomingProcessors.isEmpty
             }
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
@@ -462,7 +462,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             .get()
 
         // Create and configure KSP tasks.
-        @Suppress("DEPRECATION") val kspTaskProvider = if (useKSP2) {
+        val kspTaskProvider = if (useKSP2) {
             KspAATask.registerKspAATask(
                 kotlinCompilation,
                 kotlinCompileProvider,
@@ -575,7 +575,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             kspTask.commonSources.from(kotlinCompileTask.commonSources)
                             kspTask.options.add(
                                 FileCollectionSubpluginOption.create(
-                                    project = project,
                                     name = "apclasspath",
                                     classpath = processorClasspath
                                 )
@@ -899,7 +898,7 @@ internal fun Configuration.markResolvable(): Configuration = apply {
  */
 internal class FileCollectionSubpluginOption(
     key: String,
-    val fileCollection: ConfigurableFileCollection
+    val fileCollection: FileCollection
 ) : SubpluginOption(
     key = key,
     lazyValue = lazy {
@@ -909,15 +908,12 @@ internal class FileCollectionSubpluginOption(
 ) {
     companion object {
         fun create(
-            project: Project,
             name: String,
             classpath: Configuration
         ): FileCollectionSubpluginOption {
-            val fileCollection = project.objects.fileCollection()
-            fileCollection.from(classpath)
             return FileCollectionSubpluginOption(
                 key = name,
-                fileCollection = fileCollection
+                fileCollection = classpath.incoming.artifactView { }.files
             )
         }
     }

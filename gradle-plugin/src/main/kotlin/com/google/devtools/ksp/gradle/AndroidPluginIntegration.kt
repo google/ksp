@@ -37,7 +37,6 @@ import java.util.concurrent.Callable
  * without the Android plugin. The downside is that we need to ensure never to access Android
  * plugin APIs directly without checking its existence (we have tests covering that case).
  */
-@Suppress("UnstableApiUsage") // some android APIs are unsable.
 object AndroidPluginIntegration {
 
     fun forEachAndroidSourceSet(project: Project, onSourceSet: (String) -> Unit) {
@@ -53,7 +52,7 @@ object AndroidPluginIntegration {
             is CommonExtension<*, *, *, *, *, *> -> androidExt.sourceSets
             else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
         }
-        sourceSets.all {
+        sourceSets.configureEach {
             onSourceSet(it.name)
         }
     }
