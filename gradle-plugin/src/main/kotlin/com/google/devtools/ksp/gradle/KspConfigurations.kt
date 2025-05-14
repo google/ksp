@@ -105,6 +105,7 @@ class KspConfigurations(private val project: Project) {
             if (!project.useLegacyVariantApi()) {
                 val androidComponents =
                     project.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+                @Suppress("UnstableApiUsage") // use of addKspConfigurations
                 androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
             }
         }
