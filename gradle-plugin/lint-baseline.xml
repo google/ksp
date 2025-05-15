@@ -8,7 +8,7 @@
         errorLine2="                                                         ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="82"
+            line="84"
             column="58"/>
     </issue>
 
@@ -19,7 +19,7 @@
         errorLine2="                                                          ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="201"
+            line="223"
             column="59"/>
     </issue>
 
@@ -30,7 +30,7 @@
         errorLine2="                                                                   ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="323"
+            line="345"
             column="68"/>
     </issue>
 
@@ -52,7 +52,7 @@
         errorLine2="                                                              ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="350"
+            line="361"
             column="63"/>
     </issue>
 
@@ -63,19 +63,8 @@
         errorLine2="                                                  ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="390"
+            line="408"
             column="51"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Avoid using method get"
-        errorLine1="                            val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile"
-        errorLine2="                                                                          ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="477"
-            column="75"/>
     </issue>
 
     <issue
@@ -85,19 +74,8 @@
         errorLine2="                                                                          ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="554"
+            line="570"
             column="75"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val destination: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KotlinFactories.kt"
-            line="202"
-            column="18"/>
     </issue>
 
     <issue
@@ -107,7 +85,7 @@
         errorLine2="                 ~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="374"
+            line="397"
             column="18"/>
     </issue>
 
@@ -118,85 +96,8 @@
         errorLine2="                 ~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="381"
+            line="404"
             column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val outputBaseDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="384"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val kotlinOutputDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="390"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val javaOutputDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="393"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val classOutputDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="396"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val resourceOutputDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="399"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="GradleProjectIsolation"
-        message="Use providers.gradleProperty instead of findProperty"
-        errorLine1="                            project.findProperty(&quot;kotlin.native.enableKlibsCrossCompilation&quot;) == &quot;true&quot;"
-        errorLine2="                                    ~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="326"
-            column="37"/>
-    </issue>
-
-    <issue
-        id="WithTypeWithoutConfigureEach"
-        message="Avoid passing a closure to withType, use withType().configureEach instead"
-        errorLine1="        project.plugins.withType(KotlinBaseApiPlugin::class.java) {"
-        errorLine2="                        ~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
-            line="99"
-            column="25"/>
     </issue>
 
 </issues>
