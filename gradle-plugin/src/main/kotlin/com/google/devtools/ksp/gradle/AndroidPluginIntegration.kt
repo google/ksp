@@ -22,12 +22,13 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.internal.KaptTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
-import java.io.File
 import java.util.concurrent.Callable
 
 /**
@@ -114,9 +115,9 @@ object AndroidPluginIntegration {
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<*>,
-        javaOutputDir: File,
-        kotlinOutputDir: File,
-        classOutputDir: File,
+        javaOutputDir: Provider<Directory>,
+        kotlinOutputDir: Provider<Directory>,
+        classOutputDir: Provider<Directory>,
         resourcesOutputDir: FileCollection,
     ) {
         val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
@@ -135,9 +136,9 @@ object AndroidPluginIntegration {
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<*>,
-        javaOutputDir: File,
-        kotlinOutputDir: File,
-        classOutputDir: File,
+        javaOutputDir: Provider<Directory>,
+        kotlinOutputDir: Provider<Directory>,
+        classOutputDir: Provider<Directory>,
         resourcesOutputDir: FileCollection
     ) {
         // Order is important here as we update task with AGP generated sources and
