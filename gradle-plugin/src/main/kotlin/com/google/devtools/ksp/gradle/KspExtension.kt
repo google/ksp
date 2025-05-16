@@ -41,12 +41,22 @@ abstract class KspExtension @Inject constructor(project: Project) {
     internal val excludedProcessors = project.objects.setProperty(String::class.java)
         .also { it.finalizeValueOnRead() }
 
-    // Specify sources that should be excluded from KSP.
-    // If you have a task that generates sources, you can call `ksp.excludedSources.from(task)`.
+    /**
+     * Sources that should be excluded from processing by Kotlin Symbol Processors.
+     *
+     * If you have a task that generates sources, you can call `ksp.excludedSources.from(task)` for those sources
+     * to be added to the file collection.
+     */
     abstract val excludedSources: ConfigurableFileCollection
 
+    /**
+     * Returns a map with key/value arguments passed to Kotlin Symbol Processors.
+     */
     open val arguments: Map<String, String> get() = apOptions.get()
 
+    /**
+     * Add a key/value pair to pass an argument to the processors.
+     */
     open fun arg(k: String, v: String) {
         if ('=' in k) {
             throw GradleException("'=' is not allowed in custom option's name.")
@@ -54,6 +64,9 @@ abstract class KspExtension @Inject constructor(project: Project) {
         apOptions.put(k, v)
     }
 
+    /**
+     * Add a key/value pair to pass an argument to the processors.
+     */
     open fun arg(k: String, v: Provider<String>) {
         if ('=' in k) {
             throw GradleException("'=' is not allowed in custom option's name.")
@@ -61,6 +74,9 @@ abstract class KspExtension @Inject constructor(project: Project) {
         apOptions.put(k, v)
     }
 
+    /**
+     * Add an argument in a form of "key=value" to pass to the processors.
+     */
     open fun arg(arg: CommandLineArgumentProvider) {
         commandLineArgumentProviders.add(arg)
     }
@@ -74,10 +90,17 @@ abstract class KspExtension @Inject constructor(project: Project) {
     @Deprecated("This feature is broken in recent versions of Gradle and is no longer supported in KSP2.")
     open var allowSourcesFromOtherPlugins: Boolean = false
 
-    // Treat all warning as errors.
+    /**
+     * Treat all warnings as errors.
+     */
     open var allWarningsAsErrors: Boolean = false
 
-    // Keep processor providers from being called. Providers will still be loaded if they're in classpath.
+    /**
+     * Exclude calling the processor provider with given class with [fullyQualifiedName]. By default, all
+     * `com.google.devtools.ksp.processing.SymbolProcessorProvider` on the processor classpath are called.
+     *
+     * Note, the excluded providers will still be loaded, but not called.
+     */
     open fun excludeProcessor(fullyQualifiedName: String) {
         excludedProcessors.add(fullyQualifiedName)
     }
