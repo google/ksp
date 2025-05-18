@@ -46,7 +46,13 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
 
     override val functionKind: FunctionKind by lazy {
         when (ktFunctionSymbol.location) {
-            KaSymbolLocation.CLASS -> FunctionKind.MEMBER
+            KaSymbolLocation.CLASS -> {
+                if (ktFunctionSymbol is KaNamedFunctionSymbol && ktFunctionSymbol.isStatic) {
+                    FunctionKind.STATIC
+                } else {
+                    FunctionKind.MEMBER
+                }
+            }
             KaSymbolLocation.TOP_LEVEL -> FunctionKind.TOP_LEVEL
             else -> throw IllegalStateException("Unexpected location ${ktFunctionSymbol.location}")
         }
@@ -154,9 +160,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
         if (!psi.hasBlockBody()) {
             emptySequence()
         } else {
-            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
+            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.flatMap {
                 analyze {
-                    it.symbol.toKSDeclaration()
+                    when (val symbol = it.symbol) {
+                        is KaDestructuringDeclarationSymbol -> {
+                            symbol.entries.mapNotNull { it.toKSDeclaration() }
+                        }
+                        else -> listOfNotNull(symbol.toKSDeclaration())
+                    }
                 }
             } ?: emptySequence()
         }

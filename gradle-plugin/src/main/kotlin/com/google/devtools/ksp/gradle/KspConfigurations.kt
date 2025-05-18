@@ -96,7 +96,7 @@ class KspConfigurations(private val project: Project) {
         }
         // Create sourceSet-specific KSP configurations for the case when the KotlinBaseApiPlugin is applied instead
         // of the KotlinBasePluginWrapper (e.g., when AGP's built-in Kotlin support is enabled).
-        project.plugins.withType(KotlinBaseApiPlugin::class.java) {
+        project.plugins.withType(KotlinBaseApiPlugin::class.java).configureEach {
             // FIXME: After KT-70897 is fixed and AGP's built-in Kotlin support adds a `kotlin` extension, call
             //  decorateKotlinProject here instead.
             createAndroidSourceSetConfigurations(project, kotlinTarget = null)
@@ -105,6 +105,7 @@ class KspConfigurations(private val project: Project) {
             if (!project.useLegacyVariantApi()) {
                 val androidComponents =
                     project.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+                @Suppress("UnstableApiUsage") // use of addKspConfigurations
                 androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
             }
         }

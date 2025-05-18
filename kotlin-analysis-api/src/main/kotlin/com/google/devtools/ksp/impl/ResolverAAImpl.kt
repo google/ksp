@@ -42,7 +42,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getResolutionFacade
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.findFacadeClass
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
+import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
@@ -364,7 +365,7 @@ class ResolverAAImpl(
         // and corresponding type mapping APIs.
         val coneType = (ktType as KaFirType).coneType
         val mode = analyze {
-            val typeContext = analyze { useSiteModule.getFirResolveSession(project).useSiteFirSession.typeContext }
+            val typeContext = analyze { useSiteModule.getResolutionFacade(project).useSiteFirSession.typeContext }
             when (position) {
                 RefPosition.RETURN_TYPE -> typeContext.getOptimalModeForReturnType(
                     coneType,
@@ -451,11 +452,10 @@ class ResolverAAImpl(
         }
 
         val name = accessor.receiver.simpleName.asString()
-        val uppercasedName = name.replaceFirstChar(Char::uppercaseChar)
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
         val prefixedName = when (accessor) {
-            is KSPropertyGetter -> if (name.startsWith("is")) name else "get$uppercasedName"
-            is KSPropertySetter -> if (name.startsWith("is")) "set${name.removePrefix("is")}" else "set$uppercasedName"
+            is KSPropertyGetter -> JvmAbi.getterName(name)
+            is KSPropertySetter -> JvmAbi.setterName(name)
             else -> ""
         }
 

@@ -19,16 +19,16 @@ if (!extra.has("kspVersion")) {
 
 repositories {
     mavenCentral()
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+    maven("https://redirector.kotlinlang.org/maven/bootstrap/")
 }
 
 plugins {
     kotlin("jvm")
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-
     // Adding plugins used in multiple places to the classpath for centralized version control
-    id("com.github.johnrengelman.shadow") version "7.1.2" apply false
+    id("com.gradleup.shadow") version "8.3.6" apply false
     id("org.jetbrains.dokka") version "1.9.20" apply false
+    id("com.android.lint") version "8.10.0" apply false
 }
 
 nexusPublishing {
@@ -51,7 +51,7 @@ subprojects {
     repositories {
         mavenCentral()
         google()
-        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")
+        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
         maven("https://www.jetbrains.com/intellij-repository/releases")
     }
     pluginManager.withPlugin("maven-publish") {
@@ -119,5 +119,10 @@ subprojects {
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions.freeCompilerArgs.add("-Xskip-prerelease-check")
+    }
+
+    tasks.withType<Jar>().configureEach {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
     }
 }

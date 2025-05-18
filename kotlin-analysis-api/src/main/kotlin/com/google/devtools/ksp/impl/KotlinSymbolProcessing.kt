@@ -58,6 +58,7 @@ import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.KaIdeApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.platform.KotlinMessageBusProvider
 import org.jetbrains.kotlin.analysis.api.platform.KotlinPlatformSettings
@@ -65,13 +66,12 @@ import org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvide
 import org.jetbrains.kotlin.analysis.api.platform.declarations.*
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinLifetimeTokenFactory
-import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinGlobalModificationService
 import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinModificationTrackerFactory
+import org.jetbrains.kotlin.analysis.api.platform.modification.publishGlobalModuleStateModificationEvent
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackageProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.permissions.KotlinAnalysisPermissionOptions
-import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinByModulesResolutionScopeProvider
-import org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinResolutionScopeProvider
+import org.jetbrains.kotlin.analysis.api.platform.resolution.KaResolutionActivityTracker
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KaResolveExtensionProvider
@@ -81,12 +81,12 @@ import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.KotlinStandalonePlatformSettings
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneAnnotationsResolverFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger
-import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneGlobalModificationService
 import org.jetbrains.kotlin.analysis.api.standalone.base.modification.KotlinStandaloneModificationTrackerFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.permissions.KotlinStandaloneAnalysisPermissionOptions
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirStandaloneServiceRegistrar
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getFirResolveSession
+import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getResolutionFacade
+import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolutionActivityTracker
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
@@ -150,7 +150,7 @@ class KotlinSymbolProcessing(
         setupIdeaStandaloneExecution()
     }
 
-    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class)
+    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
     private fun createAASession(
         compilerConfiguration: CompilerConfiguration,
         projectDisposable: Disposable,
@@ -254,6 +254,10 @@ class KotlinSymbolProcessing(
             KotlinAnalysisPermissionOptions::class.java,
             KotlinStandaloneAnalysisPermissionOptions::class.java
         )
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            KaResolutionActivityTracker::class.java,
+            LLFirResolutionActivityTracker::class.java
+        )
 
         registerProjectServices(
             kotlinCoreProjectEnvironment,
@@ -314,10 +318,6 @@ class KotlinSymbolProcessing(
                 KotlinStandaloneModificationTrackerFactory::class.java
             )
             registerService(
-                KotlinGlobalModificationService::class.java,
-                KotlinStandaloneGlobalModificationService::class.java
-            )
-            registerService(
                 KotlinLifetimeTokenFactory::class.java,
                 KotlinAlwaysAccessibleLifetimeTokenFactory::class.java
             )
@@ -326,10 +326,6 @@ class KotlinSymbolProcessing(
             registerService(
                 KotlinAnnotationsResolverFactory::class.java,
                 KotlinStandaloneAnnotationsResolverFactory(project, ktFiles)
-            )
-            registerService(
-                KotlinResolutionScopeProvider::class.java,
-                KotlinByModulesResolutionScopeProvider::class.java
             )
             registerService(
                 KotlinDeclarationProviderFactory::class.java,
@@ -545,7 +541,7 @@ class KotlinSymbolProcessing(
 
             fun dropCaches() {
                 maybeRunInWriteAction {
-                    KotlinGlobalModificationService.getInstance(project).publishGlobalSourceModuleStateModification()
+                    project.publishGlobalModuleStateModificationEvent()
                     KaSessionProvider.getInstance(project).clearCaches()
                     psiManager.dropResolveCaches()
                     psiManager.dropPsiCaches()
@@ -563,7 +559,7 @@ class KotlinSymbolProcessing(
                 // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots
                 // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
                 // are created.
-                val firSession = ResolverAAImpl.ktModule.getFirResolveSession(project)
+                val firSession = ResolverAAImpl.ktModule.getResolutionFacade(project)
                 firSession.useSiteFirSession.registerResolveComponents(dualLookupTracker)
 
                 val resolver = ResolverAAImpl(
@@ -690,12 +686,15 @@ internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
     org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
     org.jetbrains.kotlin.analysis.low.level.api.fir.symbolProviders.factories.LLStubOriginLibrarySymbolProviderFactory::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseJavaModuleResolver::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseKotlinJavaPsiFacade::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
     org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseContentScopeProvider::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseResolutionScopeProvider::class.java,
+    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KotlinOptimizingGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
     org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
     org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
-    org.jetbrains.kotlin.analysis.api.platform.projectStructure.KotlinSimpleGlobalSearchScopeMerger::class.java,
     org.jetbrains.kotlin.analysis.api.fir.modification.KaFirSourceModificationService::class.java,
     org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
     org.jetbrains.kotlin.analysis.api.fir.statistics.KaFirStatisticsService::class.java,

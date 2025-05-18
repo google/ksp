@@ -28,7 +28,7 @@ val aaCoroutinesVersion: String by project
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
-    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow")
     `maven-publish`
     signing
 }
@@ -148,7 +148,7 @@ repositories {
     flatDir {
         dirs("${project.rootDir}/third_party/prebuilt/repo/")
     }
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
+    maven("https://redirector.kotlinlang.org/maven/kotlin-ide-plugin-dependencies")
     maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
 }
 
@@ -168,14 +168,26 @@ tasks.withType<ShadowJar>().configureEach {
         exclude(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
     }
     mergeServiceFiles()
+}
 
-    doLast {
-        // Checks for missing dependencies
-        val jarJar = archiveFile.get().asFile
-        val depJars = depJarsForCheck.resolve().map(File::getPath)
+abstract class ValidateShadowJar : DefaultTask() {
+    @get:Inject abstract val execOperations: ExecOperations
+
+    @get:InputFile abstract val inputFile: RegularFileProperty
+
+    @get:InputFiles abstract val classpath: ConfigurableFileCollection
+
+    @get:InputFile abstract val baselineFile: RegularFileProperty
+
+    @get:OutputFile abstract val outputFile: RegularFileProperty
+
+    @TaskAction
+    fun validate() {
+        val jarJar = inputFile.get().asFile
+        val depJars = classpath.files
         val stdout = ByteArrayOutputStream()
         try {
-            exec {
+            execOperations.exec {
                 executable = "jdeps"
                 args = listOf(
                     "--multi-release", "base",
@@ -185,41 +197,55 @@ tasks.withType<ShadowJar>().configureEach {
                 standardOutput = stdout
             }
         } catch (e: org.gradle.process.internal.ExecException) {
-            logger.warn(e.message)
+            throw Exception("Unable to run jdeps")
         }
-        logger.warn(stdout.toString())
+        val actualOutput = stdout.toString()
+        outputFile.get().asFile.writeText(actualOutput)
+        val expectedOutput = baselineFile.get().asFile.readText()
+        if (actualOutput != expectedOutput) {
+            throw Exception(
+                """
+                jdeps missing dependencies output has changed.
+                Compare expected ${baselineFile.get().asFile.absolutePath} with
+                actual ${outputFile.get().asFile.absolutePath}.
+                """.trimIndent()
+            )
+        }
     }
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("sources")
-        from(sourceSets.main.get().allSource)
-        from(project(":common-util").sourceSets.main.get().allSource)
-        depSourceJars.resolve().forEach {
-            from(zipTree(it))
-        }
+val validateShadowJar = tasks.register<ValidateShadowJar>("validateShadowJar") {
+    inputFile.set(tasks.shadowJar.flatMap { it.archiveFile })
+    classpath.from(depJarsForCheck.incoming.artifactView { }.files)
+    baselineFile.set(layout.projectDirectory.file("shadow-validation-baseline.txt"))
+    outputFile.set(layout.buildDirectory.file("validateShadowJar.txt"))
+}
+
+tasks.named("check").configure {
+    dependsOn(validateShadowJar)
+}
+
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("sources")
+    from(sourceSets.main.map { it.allSource })
+    from(project(":common-util").sourceSets.main.get().allSource)
+    depSourceJars.resolve().forEach {
+        from(zipTree(it))
     }
-    val dokkaJavadocJar by creating(Jar::class) {
-        dependsOn(dokkaJavadoc)
-        from(dokkaJavadoc.flatMap { it.outputDirectory })
-        archiveClassifier.set("javadoc")
-    }
-    publish {
-        dependsOn(shadowJar)
-        dependsOn(sourcesJar)
-        dependsOn(dokkaJavadocJar)
-    }
+}
+val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
+    archiveClassifier.set("javadoc")
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
 }
 
 publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-aa"
-            artifact(tasks["shadowJar"])
-            artifact(tasks["dokkaJavadocJar"])
-            artifact(tasks["sourcesJar"])
+            artifact(tasks.shadowJar)
+            artifact(dokkaJavadocJar)
+            artifact(sourcesJar)
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-aa")
                 description.set("KSP implementation on Kotlin Analysis API")
@@ -262,14 +288,14 @@ kotlin {
     }
 }
 
-val copyLibsForTesting by tasks.registering(Copy::class) {
+val copyLibsForTesting = tasks.register<Copy>("copyLibsForTesting") {
     from(configurations["libsForTesting"])
     into("dist/kotlinc/lib")
     val escaped = Regex.escape(aaKotlinBaseVersion)
     rename("(.+)-$escaped\\.jar", "$1.jar")
 }
 
-val copyLibsForTestingCommon by tasks.registering(Copy::class) {
+val copyLibsForTestingCommon = tasks.register<Copy>("copyLibsForTestingCommon") {
     from(configurations["libsForTestingCommon"])
     into("dist/common")
     val escaped = Regex.escape(aaKotlinBaseVersion)

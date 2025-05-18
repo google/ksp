@@ -44,7 +44,6 @@ abstract class KSPropertyAccessorImpl(
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
             .map { KSAnnotationResolvedImpl.getCached(it, this.asKSPropertyAccessor()) }
-            .plus(this.asKSPropertyAccessor().findAnnotationFromUseSiteTarget())
     }
 
     internal val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {

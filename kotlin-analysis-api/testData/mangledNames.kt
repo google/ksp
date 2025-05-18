@@ -73,12 +73,12 @@
 // set-inlineProp -> setInlineProp-mQ73O9w
 // inlineReceivingFun -> inlineReceivingFun-mQ73O9w
 // inlineReturningFun -> inlineReturningFun-b_MPbnQ
-// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib_xyz
-// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib_xyz
-// internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib_xyz
-// internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib_xyz
-// get-internalProp -> getInternalProp$lib_xyz
-// set-internalProp -> setInternalProp$lib_xyz
+// get-internalInlineProp -> getInternalInlineProp-b_MPbnQ$lib_xyz_abc
+// set-internalInlineProp -> setInternalInlineProp-mQ73O9w$lib_xyz_abc
+// internalInlineReceivingFun -> internalInlineReceivingFun-mQ73O9w$lib_xyz_abc
+// internalInlineReturningFun -> internalInlineReturningFun-b_MPbnQ$lib_xyz_abc
+// get-internalProp -> getInternalProp$lib_xyz_abc
+// set-internalProp -> setInternalProp$lib_xyz_abc
 // get-jvmNameProp -> explicitGetterName
 // set-jvmNameProp -> explicitSetterName
 // normalFun -> normalFun
@@ -88,16 +88,16 @@
 // get-abstractVal -> getAbstractVal
 // get-abstractVar -> getAbstractVar
 // set-abstractVar -> setAbstractVar
-// get-internalAbstractVal -> getInternalAbstractVal$lib_xyz
-// set-internalAbstractVal -> setInternalAbstractVal$lib_xyz
-// get-internalAbstractVar -> getInternalAbstractVar$lib_xyz
-// set-internalAbstractVar -> setInternalAbstractVar$lib_xyz
+// get-internalAbstractVal -> getInternalAbstractVal$lib_xyz_abc
+// set-internalAbstractVal -> setInternalAbstractVal$lib_xyz_abc
+// get-internalAbstractVar -> getInternalAbstractVar$lib_xyz_abc
+// set-internalAbstractVar -> setInternalAbstractVar$lib_xyz_abc
 // libPackage.MyInterface -> declarations
 // get-x -> getX
 // get-y -> getY
 // set-y -> setY
 // END
-// MODULE: lib.xyz
+// MODULE: lib.xyz-abc
 // FILE: input.kt
 /**
  * control group
@@ -132,7 +132,7 @@ interface MyInterface {
     val x:Int
     var y:Int
 }
-// MODULE: mainModule.abc(lib.xyz)
+// MODULE: mainModule.abc(lib.xyz-abc)
 // FILE: input.kt
 package mainPackage;
 inline class Inline1(val value:String)

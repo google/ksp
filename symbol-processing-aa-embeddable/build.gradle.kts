@@ -1,8 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
 import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
+import org.apache.tools.zip.ZipEntry
+import org.apache.tools.zip.ZipOutputStream
 import org.gradle.jvm.tasks.Jar
-import shadow.org.apache.tools.zip.ZipEntry
-import shadow.org.apache.tools.zip.ZipOutputStream
 import java.io.InputStreamReader
 import java.util.zip.ZipFile
 
@@ -19,7 +20,7 @@ val aaCoroutinesVersion: String by project
 
 plugins {
     kotlin("jvm")
-    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow")
     `maven-publish`
     signing
 }
@@ -30,7 +31,7 @@ dependencies {
     packedJars(project(":kotlin-analysis-api", "shadow")) { isTransitive = false }
 }
 
-tasks.withType<Jar> {
+tasks.withType(Jar::class.java).configureEach {
     archiveClassifier.set("real")
 }
 
@@ -67,7 +68,7 @@ val prefixesToRelocate = listOf(
     Pair(it, "ksp." + it)
 }
 
-class AAServiceTransformer : com.github.jengelman.gradle.plugins.shadow.transformers.Transformer {
+class AAServiceTransformer : Transformer {
     private val entries = HashMap<String, String>()
 
     // Names of extension points needs to be relocated, because ShadowJar does that, too.
@@ -120,11 +121,11 @@ class AAServiceTransformer : com.github.jengelman.gradle.plugins.shadow.transfor
     override fun transform(context: TransformerContext) {
         val path = context.path
         val content = InputStreamReader(context.`is`).readText()
-        entries.put(path, content)
+        entries[path] = content
     }
 }
 
-tasks.withType<ShadowJar> {
+tasks.withType(ShadowJar::class.java).configureEach {
     archiveClassifier.set("")
     // ShadowJar picks up the `compile` configuration by default and pulls stdlib in.
     // Therefore, specifying another configuration instead.
@@ -209,42 +210,34 @@ class Trie(paths: List<String>) {
 
 val validPackages = Trie(validPaths)
 
-tasks {
-    val copyDeps by creating(Copy::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        project(":kotlin-analysis-api").configurations.getByName("depSourceJars").resolve().forEach {
-            from(zipTree(it))
-        }
-        from(project(":common-util").sourceSets.main.get().allSource)
-        into(depSourceDir.map { it.dir("ksp") })
+val copyDeps = tasks.register<Copy>("copyDeps") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    project(":kotlin-analysis-api").configurations.getByName("depSourceJars").resolve().forEach {
+        from(zipTree(it))
     }
-    val sourcesJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("sources")
-        from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
-        from(copyDeps)
-        filter { it.replaceWithKsp() }
-    }
-    val javadocJar by creating(Jar::class) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveClassifier.set("javadoc")
-        from(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
-    }
-
-    publish {
-        dependsOn(shadowJar)
-        dependsOn(sourcesJar)
-        dependsOn(javadocJar)
-    }
+    from(project(":common-util").sourceSets.main.get().allSource)
+    into(depSourceDir.map { it.dir("ksp") })
+}
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("sources")
+    from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
+    from(copyDeps)
+    filter { it.replaceWithKsp() }
+}
+val javadocJar = tasks.register<Jar>("javadocJar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("javadoc")
+    from(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
 }
 
 publishing {
     publications {
         create<MavenPublication>("shadow") {
             artifactId = "symbol-processing-aa-embeddable"
-            artifact(tasks["javadocJar"])
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["shadowJar"])
+            artifact(javadocJar)
+            artifact(sourcesJar)
+            artifact(tasks.shadowJar)
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing-aa-embeddable")
                 description.set("KSP implementation on Kotlin Analysis API")

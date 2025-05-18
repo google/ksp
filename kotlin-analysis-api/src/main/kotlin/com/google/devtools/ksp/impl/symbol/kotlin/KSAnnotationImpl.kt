@@ -68,7 +68,7 @@ class KSAnnotationImpl private constructor(
 
     override val arguments: List<KSValueArgument> by lazy {
         val presentArgs = annotationApplication.arguments.map {
-            KSValueArgumentImpl.getCached(it, this, Origin.KOTLIN)
+            KSValueArgumentImpl.getCached(it, this, origin)
         }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = defaultArguments.filter {
@@ -137,8 +137,7 @@ class KSAnnotationImpl private constructor(
             CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
             SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
             PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-            // FIXME
-            ALL -> null
+            ALL -> AnnotationUseSiteTarget.ALL
         }
     }
 

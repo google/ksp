@@ -3,6 +3,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.*
@@ -50,7 +51,7 @@ class KSAnnotationResolvedImpl private constructor(
     }
     override val arguments: List<KSValueArgument> by lazy {
         val presentArgs = annotationApplication.arguments.map {
-            KSValueArgumentImpl.getCached(it, this, Origin.KOTLIN)
+            KSValueArgumentImpl.getCached(it, this, origin)
         }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = analyze {
@@ -132,13 +133,18 @@ class KSAnnotationResolvedImpl private constructor(
             CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
             SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
             PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-            // FIXME:
-            ALL -> null
+            ALL -> AnnotationUseSiteTarget.ALL
         }
     }
 
-    // FIXME: use parent.origin
-    override val origin: Origin = Origin.KOTLIN_LIB
+    // Annotations on deeply synthesized members like getter of Java annotation arguments can still be real.
+    override val origin: Origin by lazy {
+        val parentOrigin = parent?.origin ?: Origin.SYNTHETIC
+        when (parentOrigin) {
+            Origin.SYNTHETIC -> containingFile?.origin ?: Origin.SYNTHETIC
+            else -> parentOrigin
+        }
+    }
 
     override val location: Location by lazy {
         NonExistLocation

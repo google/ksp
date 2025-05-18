@@ -21,10 +21,10 @@ package com.google.devtools.ksp.gradle
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.IgnoreEmptyDirectories
@@ -199,7 +199,7 @@ abstract class KspTaskJvm @Inject constructor(
     ),
     KspTask {
     @get:OutputDirectory
-    abstract val destination: Property<File>
+    abstract val destination: DirectoryProperty
 
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Incremental
@@ -215,7 +215,6 @@ abstract class KspTaskJvm @Inject constructor(
             sources,
             javaSources,
             commonSourceSet,
-            classpathSnapshotProperties.classpath,
             classpathStructure,
         )
 
@@ -242,7 +241,8 @@ abstract class KspTaskJvm @Inject constructor(
     @get:IgnoreEmptyDirectories
     @get:PathSensitive(PathSensitivity.RELATIVE)
     override val javaSources: FileCollection = super.javaSources.filter {
-        !destination.get().isParentOf(it)
+        // TODO: This is eager realization of destination directory
+        !destination.get().asFile.isParentOf(it)
     }
 }
 

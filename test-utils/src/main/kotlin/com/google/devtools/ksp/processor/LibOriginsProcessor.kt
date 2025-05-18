@@ -25,51 +25,29 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class LibOriginsProcessor : AbstractTestProcessor() {
     private val result = mutableListOf<String>()
+    private val visited = mutableSetOf<KSNode>()
 
     override fun toResult(): List<String> {
         return result
     }
 
-    inner class MyCollector : KSTopDownVisitor<Unit, Unit>() {
-        override fun defaultHandler(node: KSNode, data: Unit) = Unit
-
-        override fun visitDeclaration(declaration: KSDeclaration, data: Unit) {
-            result.add(
-                "declaration: ${
-                declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
-                }: ${declaration.origin.name}"
-            )
-            super.visitDeclaration(declaration, data)
+    inner class MyCollector : KSTopDownVisitor<Origin, Unit>() {
+        private fun KSNode.pretty(): String {
+            val parents: MutableList<KSNode> = mutableListOf(this)
+            var curr: KSNode = this
+            while (curr.parent != null) {
+                curr = curr.parent!!
+                parents.add(curr)
+            }
+            parents.reverse()
+            return parents.toString()
         }
 
-        override fun visitAnnotation(annotation: KSAnnotation, data: Unit) {
-            result.add("annotation: ${annotation.shortName.asString()}: ${annotation.origin.name}")
-            super.visitAnnotation(annotation, data)
-        }
-
-        override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {
-            result.add("reference: $typeReference: ${typeReference.origin.name}")
-            super.visitTypeReference(typeReference, data)
-        }
-
-        override fun visitClassifierReference(reference: KSClassifierReference, data: Unit) {
-            result.add("classifier ref: $reference: ${reference.origin.name}")
-            super.visitClassifierReference(reference, data)
-        }
-
-        override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-            result.add("value param: $valueParameter: ${valueParameter.origin.name}")
-            super.visitValueParameter(valueParameter, data)
-        }
-
-        override fun visitTypeArgument(typeArgument: KSTypeArgument, data: Unit) {
-            result.add("type arg: $typeArgument: ${typeArgument.origin.name}")
-            super.visitTypeArgument(typeArgument, data)
-        }
-
-        override fun visitPropertyAccessor(accessor: KSPropertyAccessor, data: Unit) {
-            result.add("property accessor: $accessor: ${accessor.origin.name}")
-            super.visitPropertyAccessor(accessor, data)
+        override fun defaultHandler(node: KSNode, data: Origin) {
+            if (node.origin != data && !visited.contains(node)) {
+                visited.add(node)
+                result.add("Exception: ${node.pretty()}: ${node.origin}")
+            }
         }
     }
 
@@ -78,17 +56,18 @@ class LibOriginsProcessor : AbstractTestProcessor() {
         val visitor = MyCollector()
 
         // FIXME: workaround for https://github.com/google/ksp/issues/418
-        resolver.getDeclarationsFromPackage("foo.bar").forEach {
-            if (it.containingFile == null) {
-                it.accept(visitor, Unit)
+        resolver.getDeclarationsFromPackage("foo.bar").sortedBy { it.simpleName.asString() }.forEach {
+            if (it.containingFile == null || it.containingFile.toString().endsWith(".class")) {
+                result.add("Validating $it")
+                it.accept(visitor, it.origin)
             }
         }
 
-        resolver.getNewFiles().forEach {
-            it.accept(visitor, Unit)
+        resolver.getNewFiles().sortedBy { it.fileName }.forEach {
+            result.add("Validating $it")
+            it.accept(visitor, it.origin)
         }
 
-        result.sort()
         return emptyList()
     }
 }

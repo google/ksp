@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.10.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.10.0)" variant="all" version="8.10.0">
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir"
+        errorLine2="                                                         ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
+            line="84"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                                    kotlinCompileProvider.get().libraries.filter {"
+        errorLine2="                                                          ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="223"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)"
+        errorLine2="                                                                   ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="345"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use configureEach instead of whenObjectAdded"
+        errorLine1="                configurationForAll.dependencies.whenObjectAdded {"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
+            line="121"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                val kotlinCompileTask = kotlinCompileProvider.get()"
+        errorLine2="                                                              ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="361"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                            kotlinCompileProvider.get().libraries.filter {"
+        errorLine2="                                                  ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="408"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Avoid using method get"
+        errorLine1="                            val kotlinCompileTask = kotlinCompileProvider.get() as KotlinNativeCompile"
+        errorLine2="                                                                          ~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="570"
+            column="75"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val jdkHome: Property&lt;File>"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="397"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="FilePropertyDetector"
+        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
+        errorLine1="    abstract val projectBaseDir: Property&lt;File>"
+        errorLine2="                 ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
+            line="404"
+            column="18"/>
+    </issue>
+
+</issues>

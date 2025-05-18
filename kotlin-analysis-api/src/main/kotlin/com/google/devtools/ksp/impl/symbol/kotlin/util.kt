@@ -381,6 +381,7 @@ internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
 
 internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = this.toKSNode() as? KSDeclaration
 
+// For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSNode(): KSNode {
     return when (this) {
         is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
@@ -455,40 +456,6 @@ internal fun KaType.typeArguments(): List<KaTypeProjection> {
         (it as? KaClassType)?.qualifiers?.reversed()?.flatMap(KaResolvedClassTypeQualifier::typeArguments)
             ?: emptyList()
     }
-}
-
-internal fun KSAnnotated.findAnnotationFromUseSiteTarget(): Sequence<KSAnnotation> {
-    return when (this) {
-        is KSPropertyGetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let { decl ->
-            decl.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.GET }
-        }
-
-        is KSPropertySetter -> (this.receiver as? AbstractKSDeclarationImpl)?.let { decl ->
-            decl.originalAnnotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.SET }
-        }
-
-        is KSValueParameter -> {
-            var parent = this.parent
-            // TODO: eliminate annotationsFromParents to make this fully sequence.
-            val annotationsFromParents = mutableListOf<KSAnnotation>()
-            (parent as? KSPropertyAccessorImpl)?.let { propertyAccessor ->
-                annotationsFromParents.addAll(
-                    propertyAccessor.originalAnnotations
-                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
-                )
-                parent = (parent as KSPropertyAccessorImpl).receiver
-            }
-            (parent as? KSPropertyDeclarationImpl)?.let { propertyDeclaration ->
-                annotationsFromParents.addAll(
-                    propertyDeclaration.originalAnnotations
-                        .filter { it.useSiteTarget == AnnotationUseSiteTarget.SETPARAM }
-                )
-            }
-            annotationsFromParents.asSequence()
-        }
-
-        else -> emptySequence()
-    } ?: emptySequence()
 }
 
 internal fun KaSymbolVisibility.toModifier(): Modifier {
@@ -962,7 +929,7 @@ internal val KaDeclarationSymbol.internalSuffix: String
             else -> {}
         }
 
-        fun String.toSuffix(): String = "\$$this".replace('.', '_')
+        fun String.toSuffix(): String = "\$$this".replace('.', '_').replace('-', '_')
         when (val module = containingModule) {
             is KaSourceModule -> module.name.toSuffix()
             is KaLibraryModule -> {

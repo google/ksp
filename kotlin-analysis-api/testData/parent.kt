@@ -59,6 +59,7 @@
 // parent of RGB.B: RGB
 // parent of Array<RGB>: values
 // parent of values: RGB
+// parent of String: String
 // parent of String: value
 // parent of value: valueOf
 // parent of RGB: valueOf
@@ -231,12 +232,22 @@
 // parent of HSV.H: HSV
 // parent of HSV.S: HSV
 // parent of HSV.V: HSV
+// parent of HSV: HSV
+// parent of HSV: INVARIANT HSV
+// parent of INVARIANT HSV: Array<INVARIANT HSV>
+// parent of Array<INVARIANT HSV>: Array<HSV>
 // parent of Array<HSV>: values
 // parent of values: HSV
+// parent of String: String
 // parent of String: value
 // parent of value: valueOf
+// parent of HSV: HSV
 // parent of HSV: valueOf
 // parent of valueOf: HSV
+// parent of HSV: HSV
+// parent of HSV: INVARIANT HSV
+// parent of INVARIANT HSV: EnumEntries<INVARIANT HSV>
+// parent of EnumEntries<INVARIANT HSV>: EnumEntries<HSV>
 // parent of EnumEntries<HSV>: entries
 // parent of entries: HSV
 // END

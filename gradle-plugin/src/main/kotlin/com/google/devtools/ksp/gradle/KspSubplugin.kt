@@ -42,6 +42,7 @@ import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.internal.Kapt3GradleSubplugin
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
@@ -89,27 +90,27 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
 
         @JvmStatic
-        fun getKspOutputDir(project: Project, sourceSetName: String, target: String) =
-            project.layout.buildDirectory.file("generated/ksp/$target/$sourceSetName").get().asFile
+        fun getKspOutputDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
+            project.layout.buildDirectory.dir("generated/ksp/$target/$sourceSetName")
 
         @JvmStatic
-        fun getKspClassOutputDir(project: Project, sourceSetName: String, target: String) =
-            File(getKspOutputDir(project, sourceSetName, target), "classes")
+        fun getKspClassOutputDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
+            getKspOutputDir(project, sourceSetName, target).map { it.dir("classes") }
 
         @JvmStatic
-        fun getKspJavaOutputDir(project: Project, sourceSetName: String, target: String) =
-            File(getKspOutputDir(project, sourceSetName, target), "java")
+        fun getKspJavaOutputDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
+            getKspOutputDir(project, sourceSetName, target).map { it.dir("java") }
 
         @JvmStatic
-        fun getKspKotlinOutputDir(project: Project, sourceSetName: String, target: String) =
-            File(getKspOutputDir(project, sourceSetName, target), "kotlin")
+        fun getKspKotlinOutputDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
+            getKspOutputDir(project, sourceSetName, target).map { it.dir("kotlin") }
 
         @JvmStatic
-        fun getKspResourceOutputDir(project: Project, sourceSetName: String, target: String) =
-            File(getKspOutputDir(project, sourceSetName, target), "resources")
+        fun getKspResourceOutputDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
+            getKspOutputDir(project, sourceSetName, target).map { it.dir("resources") }
 
         @JvmStatic
-        fun getKspCachesDir(project: Project, sourceSetName: String, target: String) =
+        fun getKspCachesDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
             project.layout.buildDirectory.dir("kspCaches/$target/$sourceSetName")
 
         @JvmStatic
@@ -126,19 +127,24 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         ): Provider<List<SubpluginOption>> {
             val options = project.objects.listProperty(SubpluginOption::class.java)
             options.add(
-                InternalSubpluginOption("classOutputDir", getKspClassOutputDir(project, sourceSetName, target).path)
+                getKspClassOutputDir(project, sourceSetName, target).map {
+                    InternalSubpluginOption("classOutputDir", it.asFile.path)
+                }
             )
             options.add(
-                InternalSubpluginOption("javaOutputDir", getKspJavaOutputDir(project, sourceSetName, target).path)
+                getKspJavaOutputDir(project, sourceSetName, target).map {
+                    InternalSubpluginOption("javaOutputDir", it.asFile.path)
+                }
             )
             options.add(
-                InternalSubpluginOption("kotlinOutputDir", getKspKotlinOutputDir(project, sourceSetName, target).path)
+                getKspKotlinOutputDir(project, sourceSetName, target).map {
+                    InternalSubpluginOption("kotlinOutputDir", it.asFile.path)
+                }
             )
             options.add(
-                InternalSubpluginOption(
-                    "resourceOutputDir",
-                    getKspResourceOutputDir(project, sourceSetName, target).path
-                )
+                getKspResourceOutputDir(project, sourceSetName, target).map {
+                    InternalSubpluginOption("resourceOutputDir", it.asFile.path)
+                }
             )
             options.add(
                 cachesDir.map {
@@ -146,7 +152,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 }
             )
             options.add(
-                InternalSubpluginOption("kspOutputDir", getKspOutputDir(project, sourceSetName, target).path)
+                getKspOutputDir(project, sourceSetName, target).map {
+                    InternalSubpluginOption("kspOutputDir", it.asFile.path)
+                }
             )
             options.add(
                 SubpluginOption("incremental", isIncremental.toString())
@@ -214,7 +222,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             target.providers
                 .gradleProperty("ksp.useKSP2")
                 .map { it.toBoolean() }
-                .orElse(false)
+                .orElse(true)
         )
         kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
@@ -271,12 +279,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             val nonEmptyKspConfigurations =
                 kspConfigurations.find(kotlinCompilation)
                     .filter { it.allDependencies.isNotEmpty() }
-            if (nonEmptyKspConfigurations.isEmpty()) {
-                return project.provider { emptyList() }
-            }
             processorClasspath.extendsFrom(*nonEmptyKspConfigurations.toTypedArray())
-        } else if (processorClasspath.allDependencies.isEmpty()) {
-            return project.provider { emptyList() }
         }
 
         val target = kotlinCompilation.target.name
@@ -312,7 +315,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         )
 
         val kspCachesDir = getKspCachesDir(project, sourceSetName, target)
+        val incomingProcessors = processorClasspath.incoming.files
         fun configureAsKspTask(kspTask: KspTask, isIncremental: Boolean) {
+            kspTask.onlyIf {
+                !incomingProcessors.isEmpty
+            }
             // depends on the processor; if the processor changes, it needs to be reprocessed.
             kspTask.dependsOn(processorClasspath.buildDependencies)
             kspTask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
@@ -345,25 +352,33 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourceOutputDir
             )
 
+            val kotlinJavaOutDirPairProvider = kotlinOutputDir.zip(javaOutputDir) { kotlinOut, javaOut ->
+                kotlinOut.asFile to javaOut.asFile
+            }
+
             @Suppress("DEPRECATION")
             if (kspExtension.allowSourcesFromOtherPlugins) {
                 val kotlinCompileTask = kotlinCompileProvider.get()
-                fun setSource(source: FileCollection) {
+                fun setSource(source: Provider<FileCollection>) {
                     // kspTask.setSource(source) would create circular dependency.
-                    // Therefore we need to manually extract input deps, filter them, and tell kspTask.
-                    kspTask.source(project.provider { source.files })
-                    kspTask.dependsOn(project.provider { source.nonSelfDeps(kspTaskName) })
+                    // Therefore, we need to manually extract input deps, filter them, and tell kspTask.
+                    kspTask.source(project.provider { source.map { it.files } })
+                    kspTask.dependsOn(project.provider { source.map { it.nonSelfDeps(kspTaskName) } })
                 }
 
                 setSource(
-                    kotlinCompileTask.sources.filter {
-                        !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+                    kotlinJavaOutDirPairProvider.map { (kotlinOut, javaOut) ->
+                        kotlinCompileTask.sources.filter {
+                            !kotlinOut.isParentOf(it) && !javaOut.isParentOf(it)
+                        }
                     }
                 )
                 if (kotlinCompileTask is KotlinCompile) {
                     setSource(
-                        kotlinCompileTask.javaSources.filter {
-                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it)
+                        kotlinJavaOutDirPairProvider.map { (kotlinOut, javaOut) ->
+                            kotlinCompileTask.javaSources.filter {
+                                !kotlinOut.isParentOf(it) && !javaOut.isParentOf(it)
+                            }
                         }
                     )
                 }
@@ -372,9 +387,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                 kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                     kspTask.source(
-                        sourceSet.kotlin.srcDirs.filter {
-                            !kotlinOutputDir.isParentOf(it) && !javaOutputDir.isParentOf(it) &&
-                                it !in kspExtension.excludedSources
+                        kotlinJavaOutDirPairProvider.map { (kotlinOut, javaOut) ->
+                            sourceSet.kotlin.srcDirs.filter {
+                                !kotlinOut.isParentOf(it) && !javaOut.isParentOf(it) &&
+                                    it !in kspExtension.excludedSources
+                            }
                         }
                     )
                     kspTask.dependsOn(sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks })
@@ -383,14 +400,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             if (kotlinCompilation is KotlinJvmAndroidCompilation) {
                 // Workaround of a dependency resolution issue of AGP.
+                val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
+
                 kspTask.libraries.setFrom(
                     project.files(
                         Callable {
                             kotlinCompileProvider.get().libraries.filter {
                                 // manually exclude KAPT generated class folder from class path snapshot.
                                 // TODO: remove in 1.9.0.
-
-                                !kspOutputDir.isParentOf(it) && !(it.isDirectory && it.listFiles()?.isEmpty() == true)
+                                !kspOutputDir.get().asFile.isParentOf(it) &&
+                                    !kaptGeneratedClassesDir.isParentOf(it) &&
+                                    !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                             }
                         }
                     )
@@ -405,11 +425,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             (kspTask as? AbstractKotlinCompile<*>)?.incremental = false
         }
 
-        fun maybeBlockOtherPlugins(kspTask: BaseKotlinCompile) {
-            if (kspExtension.blockOtherCompilerPlugins) {
-                kspTask.pluginClasspath.setFrom(kspClasspathCfg)
-                kspTask.pluginOptions.set(emptyList())
-            }
+        fun blockOtherPlugins(kspTask: BaseKotlinCompile) {
+            kspTask.pluginClasspath.setFrom(kspClasspathCfg)
+            kspTask.pluginOptions.set(emptyList())
         }
 
         fun configurePluginOptions(kspTask: BaseKotlinCompile) {
@@ -461,7 +479,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             .get()
 
         // Create and configure KSP tasks.
-        @Suppress("DEPRECATION") val kspTaskProvider = if (useKSP2) {
+        val kspTaskProvider = if (useKSP2) {
             KspAATask.registerKspAATask(
                 kotlinCompilation,
                 kotlinCompileProvider,
@@ -473,19 +491,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> {
                     KotlinFactories.registerKotlinJvmCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
-                            val kotlinCompileTask = kotlinCompileProvider.get() as KotlinCompile
-                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            blockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
                             configureLanguageVersion(kspTask)
-                            if (kspTask.classpathSnapshotProperties.useClasspathSnapshot.get() == false) {
-                                kspTask.compilerOptions.moduleName.convention(
-                                    kotlinCompileTask.compilerOptions.moduleName.map { "$it-ksp" }
-                                )
-                            }
 
-                            kspTask.destination.value(kspOutputDir)
+                            kspTask.destination.set(kspOutputDir)
 
                             val classStructureFiles = getClassStructureFiles(project, kspTask.libraries)
                             kspTask.incrementalChangesTransformers.add(
@@ -509,7 +521,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 KotlinPlatformType.js, KotlinPlatformType.wasm -> {
                     KotlinFactories.registerKotlinJSCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
-                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            blockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
@@ -532,7 +544,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 KotlinPlatformType.common -> {
                     KotlinFactories.registerKotlinMetadataCompileTask(project, kspTaskName, kotlinCompilation).also {
                         it.configure { kspTask ->
-                            maybeBlockOtherPlugins(kspTask as BaseKotlinCompile)
+                            blockOtherPlugins(kspTask as BaseKotlinCompile)
                             configureAsKspTask(kspTask, isIncremental)
                             configureAsAbstractKotlinCompileTool(kspTask as AbstractKotlinCompileTool<*>)
                             configurePluginOptions(kspTask)
@@ -570,17 +582,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                                 kspClasspathCfgNonEmbeddable
                             }
                             // KotlinNativeCompile computes -Xplugin=... from compilerPluginClasspath.
-                            if (kspExtension.blockOtherCompilerPlugins) {
-                                kspTask.compilerPluginClasspath = classpathCfg
-                            } else {
-                                kspTask.compilerPluginClasspath =
-                                    classpathCfg + kotlinCompileTask.compilerPluginClasspath!!
-                                kspTask.compilerPluginOptions.addPluginArgument(kotlinCompileTask.compilerPluginOptions)
-                            }
+                            kspTask.compilerPluginClasspath = classpathCfg
                             kspTask.commonSources.from(kotlinCompileTask.commonSources)
                             kspTask.options.add(
                                 FileCollectionSubpluginOption.create(
-                                    project = project,
                                     name = "apclasspath",
                                     classpath = processorClasspath
                                 )
@@ -598,7 +603,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                             // https://docs.gradle.org/7.2/userguide/validation_problems.html#implementation_unknown
                             kspTask.doFirst(object : Action<Task> {
                                 override fun execute(t: Task) {
-                                    kspOutputDir.deleteRecursively()
+                                    kspOutputDir.get().asFile.deleteRecursively()
                                 }
                             })
                         }
@@ -904,7 +909,7 @@ internal fun Configuration.markResolvable(): Configuration = apply {
  */
 internal class FileCollectionSubpluginOption(
     key: String,
-    val fileCollection: ConfigurableFileCollection
+    val fileCollection: FileCollection
 ) : SubpluginOption(
     key = key,
     lazyValue = lazy {
@@ -914,15 +919,12 @@ internal class FileCollectionSubpluginOption(
 ) {
     companion object {
         fun create(
-            project: Project,
             name: String,
             classpath: Configuration
         ): FileCollectionSubpluginOption {
-            val fileCollection = project.objects.fileCollection()
-            fileCollection.from(classpath)
             return FileCollectionSubpluginOption(
                 key = name,
-                fileCollection = fileCollection
+                fileCollection = classpath.incoming.artifactView { }.files
             )
         }
     }
@@ -932,3 +934,6 @@ internal fun FileCollection.nonSelfDeps(selfTaskName: String): List<Task> =
     buildDependencies.getDependencies(null).filterNot {
         it.name == selfTaskName
     }
+
+internal fun getKaptGeneratedClassesDir(project: Project, sourceSetName: String) =
+    Kapt3GradleSubplugin.getKaptGeneratedClassesDir(project, sourceSetName)

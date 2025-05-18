@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processor"
 
@@ -11,16 +10,13 @@ val signingKey: String? by project
 val signingPassword: String? by project
 val aaCoroutinesVersion: String? by project
 
-tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
-}
-
 plugins {
     kotlin("jvm")
     id("java-gradle-plugin")
     `maven-publish`
     signing
     id("org.jetbrains.dokka")
+    id("com.android.lint")
 }
 
 dependencies {
@@ -40,6 +36,14 @@ dependencies {
     testImplementation("junit:junit:$junitVersion")
     testImplementation("com.google.truth:truth:$googleTruthVersion")
     testImplementation(gradleTestKit())
+
+    lintChecks("androidx.lint:lint-gradle:1.0.0-alpha04")
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    }
 }
 
 tasks.named("validatePlugins").configure {
@@ -62,17 +66,13 @@ gradlePlugin {
     }
 }
 
-tasks {
-    val sourcesJar by creating(Jar::class) {
-        archiveClassifier.set("sources")
-        from(project.sourceSets.main.get().allSource)
-    }
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(project.sourceSets.main.map { it.allSource })
 }
-
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
     archiveClassifier.set("javadoc")
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
 }
 
 publishing {
@@ -81,8 +81,8 @@ publishing {
         // https://github.com/gradle/gradle/blob/master/subprojects/plugin-development/src/main/java/org/gradle/plugin/devel/plugins/MavenPluginPublishPlugin.java#L73
         this.create<MavenPublication>("pluginMaven") {
             artifactId = "symbol-processing-gradle-plugin"
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["dokkaJavadocJar"])
+            artifact(sourcesJar)
+            artifact(dokkaJavadocJar)
             pom {
                 name.set("symbol-processing-gradle-plugin")
                 description.set("Kotlin symbol processing integration for Gradle")
@@ -187,4 +187,10 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }
+}
+
+lint {
+    baseline = file("lint-baseline.xml")
+    // GradleDependency suggest library upgrades, thus it is not useful in this case.
+    disable.add("GradleDependency")
 }

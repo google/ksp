@@ -1,6 +1,8 @@
 package com.google.devtools.ksp.standalone
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinCompositePackageProvider
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackageProvider
@@ -10,7 +12,7 @@ import org.jetbrains.kotlin.psi.KtFile
 
 class IncrementalKotlinPackageProviderFactory(
     private val project: Project,
-) : KotlinPackageProviderFactory {
+) : KotlinPackageProviderFactory, Disposable {
     private val staticFactories: MutableList<KotlinStandalonePackageProviderFactory> = mutableListOf()
 
     override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
@@ -20,6 +22,10 @@ class IncrementalKotlinPackageProviderFactory(
 
     fun update(files: Collection<KtFile>) {
         val staticFactory = KotlinStandalonePackageProviderFactory(project, files)
+        Disposer.register(this, staticFactory)
         staticFactories.add(staticFactory)
+    }
+
+    override fun dispose() {
     }
 }

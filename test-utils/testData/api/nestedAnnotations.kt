@@ -24,10 +24,12 @@
 // END
 
 class MyClass(@param:MyNestedAnnotation param: String) {
-    @field:MyNestedAnnotation val field: String = TODO()
-    @property:MyNestedAnnotation val property: String = TODO()
-        @setparam:MyNestedAnnotation
-        set(value) {}
+    @field:MyNestedAnnotation
+    val field: String = TODO()
+
+    @property:MyNestedAnnotation
+    @setparam:MyNestedAnnotation
+    var property: String = TODO()
     annotation class MyNestedAnnotation
 }
 

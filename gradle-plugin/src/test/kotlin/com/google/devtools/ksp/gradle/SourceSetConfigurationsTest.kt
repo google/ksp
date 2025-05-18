@@ -27,6 +27,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -132,43 +133,35 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
     }
 
     @Test
-    fun configurationsForMultiplatformApp_doesNotCrossCompilationBoundaries() {
-        // Adding a ksp dependency on jvmParent should not leak into jvmChild compilation,
-        // even if the source sets depend on each other. This works because we use
-        // KotlinCompilation.kotlinSourceSets instead of KotlinCompilation.allKotlinSourceSets
+    fun configurationsForMultiplatformApp_skipEmptyKspTasks() {
         testRule.setupAppAsMultiplatformApp(
             """
                 kotlin {
-                    jvm("jvmParent") { }
-                    jvm("jvmChild") { }
+                    jvm { }
+                    js(IR) { browser() }
                 }
             """.trimIndent()
         )
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
             """
-                kotlin {
-                    sourceSets {
-                        this["jvmChildMain"].dependsOn(this["jvmParentMain"])
-                    }
-                }
                 dependencies {
-                    add("kspJvmParent", "androidx.room:room-compiler:2.4.2")
-                }
-                tasks.register("checkConfigurations") {
-                    doLast {
-                        // child has no dependencies, so task is not created.
-                        val parent = tasks.findByName("kspKotlinJvmParent")
-                        val child = tasks.findByName("kspKotlinJvmChild")
-                        require(parent != null)
-                        require(child == null)
-                    }
+                    add("kspJvm", "androidx.room:room-compiler:2.4.2")
                 }
             """.trimIndent()
         )
         testRule.runner()
-            .withArguments(":app:checkConfigurations")
-            .build()
+            .withArguments(":app:kspKotlinJvm", ":app:kspKotlinJs")
+            .build().let {
+                val kspKotlinJvm = it.task(":app:kspKotlinJvm")
+                val kspKotlinJs = it.task(":app:kspKotlinJs")
+                require(kspKotlinJvm != null)
+                require(kspKotlinJvm.outcome == TaskOutcome.SUCCESS)
+                // even though kspJs is not added, the task is created.
+                require(kspKotlinJs != null)
+                // kspKotlinJs has no dependencies, so task is skipped.
+                require(kspKotlinJs.outcome == TaskOutcome.SKIPPED)
+            }
     }
 
     @Test
@@ -300,7 +293,7 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
             it.startsWith("kapt") && !it.startsWith("kaptClasspath_")
         }
         val kspConfigurations = configurations.filter {
-            it.startsWith("ksp") && !it.endsWith("KotlinProcessorClasspath")
+            it.startsWith("ksp") && !it.endsWith("KotlinProcessorClasspath") && !it.startsWith("kspPluginClasspath")
         }
         assertThat(kspConfigurations).containsExactlyElementsIn(
             kaptConfigurations.map {
