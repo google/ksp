@@ -62,7 +62,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
-            .map { KSAnnotationResolvedImpl.getCached(it, this) }
+            .map { KSAnnotationResolvedImpl.getCached(it, this, annotationOrigin) }
             .plus(
                 if (ktPropertySymbol.isFromPrimaryConstructor) {
                     (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters?.singleOrNull {
@@ -73,8 +73,9 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 }
             ).plus(
                 // TODO: optimize for psi
-                ktPropertySymbol.backingFieldSymbol?.annotations
-                    ?.map { KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl) } ?: emptyList()
+                ktPropertySymbol.backingFieldSymbol?.annotations?.map {
+                    KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl, annotationOrigin)
+                } ?: emptyList()
             )
     }
 
