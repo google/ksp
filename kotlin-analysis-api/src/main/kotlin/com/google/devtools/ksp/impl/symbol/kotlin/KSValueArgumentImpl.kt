@@ -41,7 +41,7 @@ class KSValueArgumentImpl private constructor(
     override val isSpread: Boolean = false
 
     override val value: Any? by lazy {
-        namedAnnotationValue.expression.toValue()
+        namedAnnotationValue.expression.toValue(this, origin)
     }
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()
