@@ -3,7 +3,6 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.*
@@ -29,16 +28,18 @@ import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.psi.KtFile
 
 class KSAnnotationResolvedImpl private constructor(
     private val annotationApplication: KaAnnotation,
-    override val parent: KSNode?
+    override val parent: KSNode?,
+    override val origin: Origin
 ) : KSAnnotation {
     companion object :
         KSObjectCache<IdKeyPair<KaAnnotation, KSNode?>, KSAnnotationResolvedImpl>() {
-        fun getCached(annotationApplication: KaAnnotation, parent: KSNode? = null) =
+        fun getCached(annotationApplication: KaAnnotation, parent: KSNode? = null, origin: Origin? = parent?.origin) =
             cache.getOrPut(IdKeyPair(annotationApplication, parent)) {
-                KSAnnotationResolvedImpl(annotationApplication, parent)
+                KSAnnotationResolvedImpl(annotationApplication, parent, origin ?: Origin.SYNTHETIC)
             }
     }
     override val annotationType: KSTypeReference by lazy {
@@ -51,7 +52,12 @@ class KSAnnotationResolvedImpl private constructor(
     }
     override val arguments: List<KSValueArgument> by lazy {
         val presentArgs = annotationApplication.arguments.map {
-            KSValueArgumentImpl.getCached(it, this, origin)
+            val argOrigin = if (origin == Origin.SYNTHETIC) {
+                it.expression.sourcePsi?.containingFile?.let {
+                    if (it is KtFile) Origin.KOTLIN else Origin.JAVA
+                } ?: Origin.JAVA_LIB // FIXME: how to tell from KOTLIN_LIB?
+            } else origin
+            KSValueArgumentImpl.getCached(it, this, argOrigin)
         }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = analyze {
@@ -134,15 +140,6 @@ class KSAnnotationResolvedImpl private constructor(
             SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
             PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
             ALL -> AnnotationUseSiteTarget.ALL
-        }
-    }
-
-    // Annotations on deeply synthesized members like getter of Java annotation arguments can still be real.
-    override val origin: Origin by lazy {
-        val parentOrigin = parent?.origin ?: Origin.SYNTHETIC
-        when (parentOrigin) {
-            Origin.SYNTHETIC -> containingFile?.origin ?: Origin.SYNTHETIC
-            else -> parentOrigin
         }
     }
 

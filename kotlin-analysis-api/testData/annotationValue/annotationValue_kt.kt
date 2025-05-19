@@ -39,10 +39,10 @@
 // Cls: argToA: b
 // Cls: argToB: 42
 // TestJavaLib: OtherAnnotation
-// TestNestedAnnotationDefaults: def
-// TestNestedAnnotationDefaults: hij
-// TestNestedAnnotationDefaults: def
-// TestNestedAnnotationDefaults: hij
+// TestNestedAnnotationDefaults: def: SYNTHETIC: JAVA
+// TestNestedAnnotationDefaults: hij: SYNTHETIC: KOTLIN
+// TestNestedAnnotationDefaults: def: SYNTHETIC: JAVA_LIB
+// TestNestedAnnotationDefaults: hij: SYNTHETIC: JAVA_LIB
 // @JavaAnnotationWithDefaultsInSource(value:def) == @JavaAnnotationWithDefaultsInSource(value:def): true
 // @JavaAnnotationWithDefaultsInSource(value:def) == @KotlinAnnotationWithDefaultsInSource(value:hij): false
 // @JavaAnnotationWithDefaultsInSource(value:def) == @JavaAnnotationWithDefaults(value:def): true

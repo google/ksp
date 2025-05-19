@@ -94,8 +94,17 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
 
         resolver.getClassDeclarationByName("TestNestedAnnotationDefaults")?.let { cls ->
             cls.annotations.forEach { annotation ->
-                val annotationArg = annotation.arguments.single().value as KSAnnotation
-                results.add("${cls.simpleName.asString()}: ${annotationArg.arguments.single().value}")
+                val arg = annotation.arguments.single().value as KSAnnotation
+                val argArg = arg.arguments.single()
+                results.add("${cls.simpleName.asString()}: ${argArg.value}: ${arg.origin}: ${argArg.origin}")
+            }
+        }
+
+        resolver.getClassDeclarationByName("TestNestedAnnotationDefaultsWithGiven")?.let { cls ->
+            cls.annotations.forEach { annotation ->
+                val arg = annotation.arguments.single().value as KSAnnotation
+                val argArg = arg.arguments.single()
+                results.add("${cls.simpleName.asString()}: ${argArg.value}: ${arg.origin}: ${argArg.origin}")
             }
         }
 

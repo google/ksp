@@ -44,10 +44,14 @@
 // [warning1, warning 2]
 // Sub: [i:42]
 // TestJavaLib: OtherAnnotation
-// TestNestedAnnotationDefaults: def
-// TestNestedAnnotationDefaults: hij
-// TestNestedAnnotationDefaults: def
-// TestNestedAnnotationDefaults: hij
+// TestNestedAnnotationDefaults: def: SYNTHETIC: JAVA
+// TestNestedAnnotationDefaults: hij: SYNTHETIC: KOTLIN
+// TestNestedAnnotationDefaults: def: SYNTHETIC: JAVA_LIB
+// TestNestedAnnotationDefaults: hij: SYNTHETIC: JAVA_LIB
+// TestNestedAnnotationDefaultsWithGiven: Given1: KOTLIN: KOTLIN
+// TestNestedAnnotationDefaultsWithGiven: Given2: KOTLIN: KOTLIN
+// TestNestedAnnotationDefaultsWithGiven: Given3: KOTLIN: KOTLIN
+// TestNestedAnnotationDefaultsWithGiven: Given4: KOTLIN: KOTLIN
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -178,3 +182,9 @@ annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: Other
 @JavaAnnotationWithDefaults
 @KotlinAnnotationWithDefaults
 class TestNestedAnnotationDefaults
+
+@JavaAnnotationWithDefaultsInSource(OtherAnnotation("Given1"))
+@KotlinAnnotationWithDefaultsInSource(OtherAnnotation("Given2"))
+@JavaAnnotationWithDefaults(OtherAnnotation("Given3"))
+@KotlinAnnotationWithDefaults(OtherAnnotation("Given4"))
+class TestNestedAnnotationDefaultsWithGiven
