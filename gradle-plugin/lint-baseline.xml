@@ -8,7 +8,7 @@
         errorLine2="                                                         ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="84"
+            line="83"
             column="58"/>
     </issue>
 
@@ -36,6 +36,28 @@
 
     <issue
         id="EagerGradleConfiguration"
+        message="Use register instead of create"
+        errorLine1="    private val configurationForAll = project.configurations.create(PREFIX).apply {"
+        errorLine2="                                                             ~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
+            line="27"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use register instead of maybeCreate"
+        errorLine1="        return project.configurations.maybeCreate(name).apply {"
+        errorLine2="                                      ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
+            line="46"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
         message="Use configureEach instead of whenObjectAdded"
         errorLine1="                configurationForAll.dependencies.whenObjectAdded {"
         errorLine2="                                                 ~~~~~~~~~~~~~~~">
@@ -43,6 +65,39 @@
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
             line="121"
             column="50"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use register instead of maybeCreate"
+        errorLine1="            project.configurations.maybeCreate(&quot;${kspTaskName}ProcessorClasspath&quot;).markResolvable()"
+        errorLine2="                                   ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="274"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use register instead of maybeCreate"
+        errorLine1="        val kspClasspathCfg = project.configurations.maybeCreate("
+        errorLine2="                                                     ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="293"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="EagerGradleConfiguration"
+        message="Use register instead of maybeCreate"
+        errorLine1="        val kspClasspathCfgNonEmbeddable = project.configurations.maybeCreate("
+        errorLine2="                                                                  ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="305"
+            column="67"/>
     </issue>
 
     <issue
@@ -98,6 +153,171 @@
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
             line="404"
             column="18"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.KaptTask"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
+            line="29"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.Kapt3GradleSubplugin"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="45"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="46"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="47"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="48"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformAction"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="49"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformLegacyAction"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="50"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="    val loadedPrevious = ClasspathSnapshot.ClasspathSnapshotFactory.loadFrom(cacheDir)"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="751"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="        ClasspathSnapshot.ClasspathSnapshotFactory.getEmptySnapshot()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="766"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="        ClasspathSnapshot.ClasspathSnapshotFactory.createCurrent("
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="770"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="    if (classpathChanges is KaptClasspathChanges.Unknown || changes is SourcesChanges.Unknown) {"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="778"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="    return if (this is KaptClasspathChanges.Known) {"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="797"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs (field names from org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges.Known)"
+        errorLine1="        this.names.map { it.replace(&apos;/&apos;, &apos;.&apos;).replace(&apos;$&apos;, &apos;.&apos;) }.ifNotEmpty {"
+        errorLine2="        ~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="798"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs"
+        errorLine1="    return if (classpathChanges is KaptClasspathChanges.Known) {"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="892"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="InternalKgpApiUsage"
+        message="Avoid using internal Kotlin Gradle Plugin APIs (field names from org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges.Known)"
+        errorLine1="        classpathChanges.names.map {"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
+            line="893"
+            column="9"/>
     </issue>
 
 </issues>
