@@ -33,7 +33,7 @@ import org.jetbrains.kotlin.psi.KtFile
 class KSAnnotationResolvedImpl private constructor(
     private val annotationApplication: KaAnnotation,
     override val parent: KSNode?,
-    override val origin: Origin
+    override val origin: Origin,
 ) : KSAnnotation {
     companion object :
         KSObjectCache<IdKeyPair<KaAnnotation, KSNode?>, KSAnnotationResolvedImpl>() {
@@ -51,13 +51,13 @@ class KSAnnotationResolvedImpl private constructor(
         }
     }
     override val arguments: List<KSValueArgument> by lazy {
-        val presentArgs = annotationApplication.arguments.map {
+        val presentArgs = annotationApplication.arguments.map { arg ->
             val argOrigin = if (origin == Origin.SYNTHETIC) {
-                it.expression.sourcePsi?.containingFile?.let {
-                    if (it is KtFile) Origin.KOTLIN else Origin.JAVA
+                arg.expression.sourcePsi?.containingFile?.let { containingFile ->
+                    if (containingFile is KtFile) Origin.KOTLIN else Origin.JAVA
                 } ?: Origin.JAVA_LIB // FIXME: how to tell from KOTLIN_LIB?
             } else origin
-            KSValueArgumentImpl.getCached(it, this, argOrigin)
+            KSValueArgumentImpl.getCached(arg, this, argOrigin)
         }
         val presentNames = presentArgs.mapNotNull { it.name?.asString() }
         val absentArgs = analyze {

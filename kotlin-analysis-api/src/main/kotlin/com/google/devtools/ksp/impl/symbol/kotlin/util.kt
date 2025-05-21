@@ -945,6 +945,6 @@ internal val KaDeclarationSymbol.internalSuffix: String
         }
     }
 
-// Annotations on deeply synthesized members like getter of Java annotation arguments can still be real.
-internal val KSNode.annotationOrigin: Origin
+// Annotations on deeply synthesized members like getter of Java annotation arguments can be defined in src.
+internal val KSNode.definitionOrigin: Origin
     get() = containingFile?.origin ?: origin
