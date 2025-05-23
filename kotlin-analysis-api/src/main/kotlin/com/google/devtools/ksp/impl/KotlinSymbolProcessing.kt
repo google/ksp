@@ -90,24 +90,15 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolut
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
-import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
-import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
-import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
-import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 import org.jetbrains.kotlin.config.ApiVersion
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
-import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
-import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
@@ -152,7 +143,6 @@ class KotlinSymbolProcessing(
 
     @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
     private fun createAASession(
-        compilerConfiguration: CompilerConfiguration,
         projectDisposable: Disposable,
     ): Triple<StandaloneAnalysisAPISession, KotlinCoreProjectEnvironment, List<KaModule>> {
         val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment =
@@ -162,7 +152,6 @@ class KotlinSymbolProcessing(
             )
 
         val project: MockProject = kotlinCoreProjectEnvironment.project
-        val configLanguageVersionSettings = compilerConfiguration[CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS]
 
         @Suppress("UnstableApiUsage")
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -175,7 +164,6 @@ class KotlinSymbolProcessing(
         val projectStructureProvider = KtModuleProviderBuilder(
             kotlinCoreProjectEnvironment.environment, project
         ).apply {
-            val compilerConfig = compilerConfiguration
             val platform = when (kspConfig) {
                 is KSPJvmConfig -> {
                     val jvmTarget = JvmTarget.fromString(kspConfig.jvmTarget) ?: JvmTarget.DEFAULT
@@ -192,19 +180,19 @@ class KotlinSymbolProcessing(
             }
 
             fun KtModuleBuilder.addModuleDependencies(moduleName: String) {
-                val libraryRoots = compilerConfig.jvmModularRoots + compilerConfig.jvmClasspathRoots
                 addRegularDependency(
                     buildKspLibraryModule {
                         this.platform = platform
-                        addBinaryRoots(libraryRoots.map { it.toPath() })
-                        libraryName = "Library for $moduleName"
+                        addBinaryRoots(kspConfig.libraries.map { it.toPath() })
+                        libraryName = "Libraries for $moduleName"
                     }
                 )
-                compilerConfig.get(JVMConfigurationKeys.JDK_HOME)?.let { jdkHome ->
+
+                if (kspConfig is KSPJvmConfig && kspConfig.jdkHome != null) {
                     addRegularDependency(
                         buildKspSdkModule {
                             this.platform = platform
-                            addBinaryRootsFromJdkHome(jdkHome.toPath(), isJre = false)
+                            addBinaryRootsFromJdkHome(kspConfig.jdkHome!!.toPath(), isJre = false)
                             libraryName = "JDK for $moduleName"
                         }
                     )
@@ -212,9 +200,15 @@ class KotlinSymbolProcessing(
             }
 
             buildKspSourceModule {
-                configLanguageVersionSettings?.let { this.languageVersionSettings = it }
+                val languageVersion = LanguageVersion.fromFullVersionString(kspConfig.languageVersion)!!
+                val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
+                languageVersionSettings = LanguageVersionSettingsImpl(
+                    languageVersion,
+                    ApiVersion.createByLanguageVersion(apiVersion)
+                )
+
                 this.platform = platform
-                this.moduleName = compilerConfig.get(CommonConfigurationKeys.MODULE_NAME) ?: "<no module name provided>"
+                this.moduleName = kspConfig.moduleName
 
                 addModuleDependencies(moduleName)
 
@@ -439,25 +433,6 @@ class KotlinSymbolProcessing(
     // TODO: performance
     @OptIn(KaImplementationDetail::class)
     fun execute(): ExitCode {
-        // TODO: CompilerConfiguration is deprecated.
-        val compilerConfiguration: CompilerConfiguration = CompilerConfiguration().apply {
-            addKotlinSourceRoots(kspConfig.sourceRoots.map { it.path })
-            if (kspConfig is KSPJvmConfig) {
-                addJavaSourceRoots(kspConfig.javaSourceRoots)
-                kspConfig.jdkHome?.let {
-                    put(JVMConfigurationKeys.JDK_HOME, it)
-                }
-            }
-            val languageVersion = LanguageVersion.fromFullVersionString(kspConfig.languageVersion)!!
-            val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
-            languageVersionSettings = LanguageVersionSettingsImpl(
-                languageVersion,
-                ApiVersion.createByLanguageVersion(apiVersion)
-            )
-            addJvmClasspathRoots(kspConfig.libraries)
-            put(CommonConfigurationKeys.MODULE_NAME, kspConfig.moduleName)
-        }
-
         val logger = object : KSPLogger by logger {
             var hasError: Boolean = false
 
@@ -476,7 +451,7 @@ class KotlinSymbolProcessing(
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         try {
             val (analysisAPISession, kotlinCoreProjectEnvironment, modules) =
-                createAASession(compilerConfiguration, projectDisposable)
+                createAASession(projectDisposable)
             val project = analysisAPISession.project
             // Initializes it
             KSPCoreEnvironment(project as MockProject)
