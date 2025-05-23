@@ -188,6 +188,14 @@ class KotlinSymbolProcessing(
                     }
                 )
 
+                addFriendDependency(
+                    buildKspLibraryModule {
+                        this.platform = platform
+                        addBinaryRoots(kspConfig.friends.map { it.toPath() })
+                        libraryName = "Friends of $moduleName"
+                    }
+                )
+
                 if (kspConfig is KSPJvmConfig && kspConfig.jdkHome != null) {
                     addRegularDependency(
                         buildKspSdkModule {

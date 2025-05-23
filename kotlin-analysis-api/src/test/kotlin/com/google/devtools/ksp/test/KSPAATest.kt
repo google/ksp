@@ -352,6 +352,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/implicitPropertyAccessors.kt")
     }
 
+    @TestMetadata("internalOfFriends.kt")
+    @Test
+    fun testInternalOfFriends() {
+        runTest("../test-utils/testData/api/internalOfFriends.kt")
+    }
+
     @TestMetadata("inheritedTypeAlias.kt")
     @Test
     fun testInheritedTypeAlias() {
