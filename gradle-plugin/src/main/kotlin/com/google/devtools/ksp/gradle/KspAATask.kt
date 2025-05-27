@@ -128,6 +128,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.processorClasspath,
                     )
                 }
+
                 else -> {
                     if (
                         !inputChanges.isIncremental ||
@@ -254,6 +255,7 @@ abstract class KspAATask @Inject constructor(
                         )
                     )
                     cfg.processorOptions.putAll(kspExtension.apOptions)
+                    cfg.apOptions.putAll(kspExtension.apOptions)
 
                     fun ListProperty<CommandLineArgumentProvider>.mapArgProviders() =
                         map { providers ->
@@ -269,8 +271,7 @@ abstract class KspAATask @Inject constructor(
                                 }
                             }
                         }
-
-                    cfg.processorOptions.putAll(kspExtension.commandLineArgumentProviders.mapArgProviders())
+                    kspAATask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
                     cfg.processorOptions.putAll(kspAATask.commandLineArgumentProviders.mapArgProviders())
 
                     val logLevel = LogLevel.entries.first {
@@ -433,8 +434,11 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     abstract val apiVersion: Property<String>
 
-    @get:Input
+    @get:Internal
     abstract val processorOptions: MapProperty<String, String>
+
+    @get:Input
+    abstract val apOptions: MapProperty<String, String>
 
     // Unfortunately, passing project.logger over is not possible.
     @get:Input
