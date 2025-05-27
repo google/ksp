@@ -41,9 +41,10 @@ abstract class KSPropertyAccessorImpl(
 
     /*override*/ val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
+        val thisAsKSNode = this.asKSPropertyAccessor()
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
-            .map { KSAnnotationResolvedImpl.getCached(it, this.asKSPropertyAccessor()) }
+            .map { KSAnnotationResolvedImpl.getCached(it, thisAsKSNode, thisAsKSNode.definitionOrigin) }
     }
 
     internal val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {

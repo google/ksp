@@ -23,7 +23,6 @@ import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
-import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.languageVersionSettings
@@ -129,9 +128,9 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             jvmTarget = compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)!!.description
             languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
             apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
-            libraries = libModules.map { it.outDir } +
-                compilerConfiguration.jvmModularRoots +
-                compilerConfiguration.jvmClasspathRoots
+            libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
+                compilerConfiguration.jvmModularRoots
+            friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
             projectBaseDir = testRoot
             classOutputDir = File(testRoot, "kspTest/classes/main")
             javaOutputDir = File(testRoot, "kspTest/src/main/java")

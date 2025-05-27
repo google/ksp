@@ -44,10 +44,14 @@
 // [warning1, warning 2]
 // Sub: [i:42]
 // TestJavaLib: OtherAnnotation
-// TestNestedAnnotationDefaults: def
-// TestNestedAnnotationDefaults: hij
-// TestNestedAnnotationDefaults: def
-// TestNestedAnnotationDefaults: hij
+// TestNestedAnnotationDefaults: from Java annotation in src: SYNTHETIC: JAVA
+// TestNestedAnnotationDefaults: from Kotlin annotation in src: SYNTHETIC: KOTLIN
+// TestNestedAnnotationDefaults: from Java annotation in lib: SYNTHETIC: JAVA_LIB
+// TestNestedAnnotationDefaults: from Kotlin annotation in lib: SYNTHETIC: JAVA_LIB
+// TestNestedAnnotationDefaultsWithGiven: Given1: KOTLIN: KOTLIN
+// TestNestedAnnotationDefaultsWithGiven: Given2: KOTLIN: KOTLIN
+// TestNestedAnnotationDefaultsWithGiven: Given3: KOTLIN: KOTLIN
+// TestNestedAnnotationDefaultsWithGiven: Given4: KOTLIN: KOTLIN
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -78,11 +82,12 @@ public @interface OtherAnnotation {
 }
 // FILE: JavaAnnotationWithDefaults.java
 public @interface JavaAnnotationWithDefaults {
-    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("from Java annotation in lib");
 }
 
 // FILE: KotlinAnnotationWithDefaults.kt
-annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation =
+    OtherAnnotation("from Kotlin annotation in lib"))
 
 // MODULE: main(module1)
 // FILE: Test.java
@@ -166,11 +171,12 @@ class TestJavaLib {}
 
 // FILE: JavaAnnotationWithDefaultsInSource.java
 public @interface JavaAnnotationWithDefaultsInSource {
-    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
+    OtherAnnotation otherAnnotationVal() default @OtherAnnotation("from Java annotation in src");
 }
 
 // FILE: KotlinAnnotationWithDefaults.kt
-annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: OtherAnnotation =
+    OtherAnnotation("from Kotlin annotation in src"))
 
 // FILE: KotlinClient.kt
 @JavaAnnotationWithDefaultsInSource
@@ -178,3 +184,9 @@ annotation class KotlinAnnotationWithDefaultsInSource(val otherAnnotation: Other
 @JavaAnnotationWithDefaults
 @KotlinAnnotationWithDefaults
 class TestNestedAnnotationDefaults
+
+@JavaAnnotationWithDefaultsInSource(OtherAnnotation("Given1"))
+@KotlinAnnotationWithDefaultsInSource(OtherAnnotation("Given2"))
+@JavaAnnotationWithDefaults(OtherAnnotation("Given3"))
+@KotlinAnnotationWithDefaults(OtherAnnotation("Given4"))
+class TestNestedAnnotationDefaultsWithGiven

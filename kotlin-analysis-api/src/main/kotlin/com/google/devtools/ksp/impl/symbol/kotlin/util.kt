@@ -21,6 +21,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.ExceptionMessage
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
@@ -487,9 +488,9 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
     return result
 }
 
-internal fun KaAnnotationValue.toValue(): Any? = when (this) {
-    is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue() }
-    is KaAnnotationValue.NestedAnnotationValue -> KSAnnotationResolvedImpl.getCached(this.annotation)
+internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? = when (this) {
+    is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
+    is KaAnnotationValue.NestedAnnotationValue -> KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
     // TODO: Enum entry should return a type, use declaration as a placeholder.
     is KaAnnotationValue.EnumEntryValue -> this.callableId?.classId?.let { classId ->
         analyze {
@@ -943,3 +944,7 @@ internal val KaDeclarationSymbol.internalSuffix: String
             else -> ""
         }
     }
+
+// Annotations on deeply synthesized members like getter of Java annotation arguments can be defined in src.
+internal val KSNode.definitionOrigin: Origin
+    get() = containingFile?.origin ?: origin

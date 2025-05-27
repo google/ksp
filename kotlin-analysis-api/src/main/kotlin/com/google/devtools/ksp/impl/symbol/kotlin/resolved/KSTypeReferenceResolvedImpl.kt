@@ -74,7 +74,7 @@ class KSTypeReferenceResolvedImpl private constructor(
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktType.annotations(this) +
-            additionalAnnotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, this) }
+            additionalAnnotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, this, origin) }
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC

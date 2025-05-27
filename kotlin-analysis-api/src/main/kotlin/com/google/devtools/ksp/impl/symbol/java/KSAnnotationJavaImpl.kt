@@ -161,7 +161,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     override val useSiteTarget: AnnotationUseSiteTarget? = null
 
-    override val origin: Origin = Origin.JAVA
+    override val origin: Origin = if (parent == null) Origin.SYNTHETIC else Origin.JAVA
 
     override val location: Location
         get() = psi.toLocation()
