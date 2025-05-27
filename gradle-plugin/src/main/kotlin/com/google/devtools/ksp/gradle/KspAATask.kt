@@ -128,7 +128,6 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.processorClasspath,
                     )
                 }
-
                 else -> {
                     if (
                         !inputChanges.isIncremental ||
@@ -271,6 +270,7 @@ abstract class KspAATask @Inject constructor(
                                 }
                             }
                         }
+
                     kspAATask.commandLineArgumentProviders.addAll(kspExtension.commandLineArgumentProviders)
                     cfg.processorOptions.putAll(kspAATask.commandLineArgumentProviders.mapArgProviders())
 
