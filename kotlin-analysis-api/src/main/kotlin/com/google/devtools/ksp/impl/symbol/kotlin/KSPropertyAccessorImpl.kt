@@ -35,7 +35,8 @@ import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(
     internal val ktPropertyAccessorSymbol: KaPropertyAccessorSymbol,
-    val receiver: KSPropertyDeclaration // overrides KSPropertyAccessor.receiver
+    /*override*/
+    val receiver: KSPropertyDeclaration
 ) : /*KSPropertyAccessor,*/ Deferrable {
     protected abstract fun asKSPropertyAccessor(): KSPropertyAccessor
 
