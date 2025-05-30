@@ -36,6 +36,23 @@ interface KSValueArgument : KSAnnotated {
 
     /**
      * The value of the argument.
+     *
+     * Can be of one of the possible types:
+     *
+     * * [Boolean];
+     * * [Byte];
+     * * [Char];
+     * * [Short];
+     * * [Int];
+     * * [Long];
+     * * [Float];
+     * * [Double];
+     * * [String];
+     * * [KSType] for annotation arguments of type [kotlin.reflect.KClass];
+     * * [KSClassDeclaration] for annotation arguments of type [Enum] (in this case[KSClassDeclaration.classKind]
+     *   equals to [ClassKind.ENUM_CLASS]);
+     * * [KSAnnotation] for embedded annotation arguments;
+     * * [Array] of a possible type listed above.
      */
     val value: Any?
 }
