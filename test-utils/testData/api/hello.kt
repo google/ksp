@@ -96,6 +96,18 @@ fun <D> foo(c: C, dd: () -> D) = 1
 
 class CC: C() {}
 
+public interface K1 {
+    fun getProp(): String = "1"
+}
+
+public interface K2 {
+    val prop: String = "2"
+}
+
+// FILE: JI.java
+public interface JI extends K1, K2 {
+}
+
 // FILE: C.java
 import java.util.List;
 import java.util.ArrayList;
