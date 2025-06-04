@@ -251,6 +251,7 @@ internal inline fun <R> analyze(crossinline action: KaSession.() -> R): R {
     return analyze(ResolverAAImpl.ktModule, action)
 }
 
+// FIXME: https://github.com/google/ksp/issues/2480
 internal fun KaDeclarationContainerSymbol.declarations(): Sequence<KSDeclaration> {
     return analyze {
         this@declarations.let {

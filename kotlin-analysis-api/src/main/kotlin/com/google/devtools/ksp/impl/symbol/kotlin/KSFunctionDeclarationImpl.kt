@@ -139,7 +139,10 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     override val simpleName: KSName by lazy {
         when (ktFunctionSymbol) {
             is KaNamedFunctionSymbol -> KSNameImpl.getCached(ktFunctionSymbol.name.asString())
-            is KaPropertyAccessorSymbol -> KSNameImpl.getCached((ktFunctionSymbol.psi as PsiMethod).name)
+            is KaPropertyAccessorSymbol -> when (val psi = ktFunctionSymbol.psi) {
+                is PsiMethod -> KSNameImpl.getCached(psi.name)
+                else -> KSNameImpl.getCached(ktFunctionSymbol.callableId?.callableName?.asString() ?: "<no name>")
+            }
             is KaConstructorSymbol -> KSNameImpl.getCached("<init>")
             else -> throw IllegalStateException("Unexpected function symbol type ${ktFunctionSymbol.javaClass}")
         }
