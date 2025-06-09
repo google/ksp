@@ -46,8 +46,6 @@ import com.google.devtools.ksp.symbol.Visibility
 import com.google.devtools.ksp.symbol.impl.java.KSFileJavaImpl
 import com.google.devtools.ksp.symbol.impl.kotlin.KSFileImpl
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
@@ -55,12 +53,10 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.impl.file.impl.JavaFileManager
-import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.config.JvmAnalysisFlags
-import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.context.ProjectContext
@@ -168,10 +164,8 @@ abstract class AbstractKotlinSymbolProcessingExtension(
         logger.logging("round $rounds of processing")
         val psiManager = PsiManager.getInstance(project)
         if (initialized) {
-            maybeRunInWriteAction {
-                psiManager.dropPsiCaches()
-                psiManager.dropResolveCaches()
-            }
+            psiManager.dropPsiCaches()
+            psiManager.dropResolveCaches()
             invalidateKotlinCliJavaFileManagerCache(project)
         } else {
             // In case of broken builds.
@@ -512,9 +506,7 @@ fun findTargetInfos(languageVersionSettings: LanguageVersionSettings, module: Mo
             is JdkPlatform -> JvmPlatformInfoImpl(
                 platformName = platform.platformName,
                 jvmTarget = platform.targetVersion.toString(),
-                jvmDefaultMode =
-                (languageVersionSettings.getFlag(JvmAnalysisFlags.jvmDefaultMode) ?: JvmDefaultMode.ENABLE)
-                    .description
+                jvmDefaultMode = languageVersionSettings.getFlag(JvmAnalysisFlags.jvmDefaultMode).description
             )
             is JsPlatform -> JsPlatformInfoImpl(
                 platformName = platform.platformName
@@ -536,21 +528,4 @@ private fun invalidateKotlinCliJavaFileManagerCache(project: Project): Boolean {
         return false
     (privateCacheField.get(javaFileManager) as? MutableMap<*, *>)?.clear() ?: return false
     return true
-}
-
-private fun <R> maybeRunInWriteAction(f: () -> R) {
-    synchronized(EDT::class.java) {
-        if (!EDT.isCurrentThreadEdt()) {
-            val edt = EDT::class.java.getDeclaredField("myEventDispatchThread")
-            edt.isAccessible = true
-            edt.set(null, Thread.currentThread())
-        }
-        if (ApplicationManager.getApplication() != null) {
-            runWriteAction {
-                f()
-            }
-        } else {
-            f()
-        }
-    }
 }
