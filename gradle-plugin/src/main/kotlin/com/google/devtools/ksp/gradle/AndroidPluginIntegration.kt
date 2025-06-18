@@ -76,13 +76,17 @@ object AndroidPluginIntegration {
         val kaptProvider: TaskProvider<Task>? =
             project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
 
+        val kspExtension = project.extensions.getByType(KspExtension::class.java)
         val sources = kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA)
         kspTaskProvider.configure { task ->
             // this is workaround for KAPT generator that prevents circular dependency
             val filteredSources = Callable {
                 val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
                 val dir = destinationProperty?.get()?.asFile
-                sources.filter { dir?.isParentOf(it.dir) != true }
+                sources.filter { source ->
+                    dir?.isParentOf(source.dir) != true &&
+                        source.dir !in kspExtension.excludedSources
+                }
             }
             when (task) {
                 is KspTaskJvm -> {
