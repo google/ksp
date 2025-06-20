@@ -344,6 +344,12 @@ abstract class KspAATask @Inject constructor(
                         }
                     }
 
+                    cfg.profilingMode.value(
+                        project.providers
+                            .gradleProperty("ksp.ksp2.profiling.mode")
+                            .map { it.toBoolean() }
+                            .orElse(false)
+                    )
                     // TODO: pass targets of common
                 }
             }
@@ -470,6 +476,9 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     @get:Optional
     abstract val konanHome: Property<String>
+
+    @get:Internal
+    abstract val profilingMode: Property<Boolean>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -482,6 +491,7 @@ interface KspAAWorkParameter : WorkParameters {
 }
 
 var isolatedClassLoaderCache = mutableMapOf<String, URLClassLoader>()
+val doNotGC = mutableSetOf<Any>()
 
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
@@ -506,6 +516,11 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
             isolatedClassLoader
         )
+        if (gradleCfg.profilingMode.get()) {
+            doNotGC.add(processorClassloader)
+        } else {
+            doNotGC.clear()
+        }
 
         val excludedProcessors = gradleCfg.excludedProcessors.get()
         val processorProviders = ServiceLoader.load(
