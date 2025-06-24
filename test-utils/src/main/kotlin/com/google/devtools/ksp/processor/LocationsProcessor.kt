@@ -22,9 +22,13 @@ class LocationsProcessor : AbstractTestProcessor() {
                     is FileLocation -> {
                         val filename = File(location.filePath).name
                         val line = location.lineNumber
-                        result.add("$it:$filename:$line")
+                        val endLine = location.endLineNumber
+                        val column = location.column
+                        val endColumn = location.endColumn
+
+                        result += "$it:$filename:$line,$column-$endLine,$endColumn"
                     }
-                    is NonExistLocation -> result.add("$it:NonExistLocation")
+                    is NonExistLocation -> result += "$it:NonExistLocation"
                 }
             }
         }
