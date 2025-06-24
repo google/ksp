@@ -6,6 +6,7 @@ description = "Kotlin Symbol Processing"
 
 val intellijVersion: String by project
 val kotlinBaseVersion: String by project
+val kotlinxSerializationVersion: String by project
 
 val junitVersion: String by project
 val junit5Version: String by project
@@ -47,7 +48,7 @@ dependencies {
     implementation(kotlin("stdlib", kotlinBaseVersion))
 
     compileOnly("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     implementation(project(":api"))
     implementation(project(":common-util"))
