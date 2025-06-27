@@ -36,14 +36,15 @@ class ErrorProcessor : SymbolProcessor {
             throw Exception("Test Exception in process")
         }
         rounds++
+        val main = resolver.getSymbolsWithAnnotation("kotlin.OptIn").single()
         if (rounds == 2) {
             if (exception == "" || exception == "error") {
-                logger.error("Error processor: errored at $rounds")
+                logger.error("Error processor: errored at $rounds", main)
             }
         } else {
             codeGenerator.createNewFile(Dependencies.ALL_FILES, "test", "error", "log")
         }
-        return emptyList()
+        return listOf(main)
     }
 
     override fun finish() {
