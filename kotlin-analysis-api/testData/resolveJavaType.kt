@@ -54,7 +54,6 @@
 // kotlin.Unit
 // kotlin.Int
 // JavaEnum
-// kotlin.String
 // END
 // FILE: dummy.kt
 
