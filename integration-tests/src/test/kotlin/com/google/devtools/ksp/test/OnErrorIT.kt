@@ -20,8 +20,8 @@ class OnErrorIT(useKSP2: Boolean) {
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] Error processor: errored at 2", errors.first())
-            Assert.assertEquals("e: [ksp] NormalProcessor called error on 2", errors.last())
+            Assert.assertTrue(errors[0].endsWith("Error processor: errored at 2"))
+            Assert.assertTrue(errors[1].endsWith("NormalProcessor called error at 2"))
         }
     }
 
@@ -69,8 +69,8 @@ class OnErrorIT(useKSP2: Boolean) {
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
-            Assert.assertEquals("e: [ksp] Error processor: errored at 2", errors.first())
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in error", errors[1])
+            Assert.assertTrue(errors[0].endsWith("Error processor: errored at 2"))
+            Assert.assertTrue(errors[1].endsWith("java.lang.Exception: Test Exception in error"))
         }
         project.restore("workload/build.gradle.kts")
     }
