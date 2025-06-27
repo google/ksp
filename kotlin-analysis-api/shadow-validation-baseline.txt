@@ -346,6 +346,7 @@ kotlin-analysis-api-2.0.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.psi.stubs.elements.KtFileElementType -> org.jetbrains.kotlin.psi.stubs.KotlinStubVersions  not found
    org.jetbrains.kotlin.psi2ir.generators.ArgumentsGenerationUtilsKt$generateReceiverForCalleeImportedFromObject$$inlined$generateExpressionValue$1 -> org.jetbrains.kotlin.psi2ir.intermediate.OnceExpressionValueKt not found
    org.jetbrains.kotlin.psi2ir.generators.DelegatedPropertyGenerator$createThisValueForDelegate$lambda$12$$inlined$generateExpressionValue$1 -> org.jetbrains.kotlin.psi2ir.intermediate.OnceExpressionValueKt not found
+   org.jetbrains.kotlin.resolve.calls.inference.model.MutableVariableWithConstraints$addConstraint$lambda$8$$inlined$withOrigins$1 -> org.jetbrains.kotlin.resolve.calls.inference.components.InferenceLoggerKt not found
    org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo -> io.vavr.collection.Map                             not found
    org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo -> io.vavr.collection.Set                             not found
    org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfoImpl -> io.vavr.Tuple2                                     not found
