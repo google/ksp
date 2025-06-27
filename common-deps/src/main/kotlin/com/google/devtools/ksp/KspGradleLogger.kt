@@ -16,29 +16,37 @@
  */
 package com.google.devtools.ksp.processing
 
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.NonExistLocation
 
 class KspGradleLogger(val loglevel: Int) : KSPLogger {
     private val messager = System.out
 
+    private fun decorateMessage(message: String, symbol: KSNode?): String =
+        when (val location = symbol?.location) {
+            is FileLocation -> "${location.filePath}:${location.lineNumber}: $message"
+            is NonExistLocation, null -> message
+        }
+
     override fun logging(message: String, symbol: KSNode?) {
         if (loglevel <= LOGGING_LEVEL_LOGGING)
-            messager.println("v: [ksp] $message")
+            messager.println("v: [ksp] ${decorateMessage(message, symbol)}")
     }
 
     override fun info(message: String, symbol: KSNode?) {
         if (loglevel <= LOGGING_LEVEL_INFO)
-            messager.println("i: [ksp] $message")
+            messager.println("i: [ksp] ${decorateMessage(message, symbol)}")
     }
 
     override fun warn(message: String, symbol: KSNode?) {
         if (loglevel <= LOGGING_LEVEL_WARN)
-            messager.println("w: [ksp] $message")
+            messager.println("w: [ksp] ${decorateMessage(message, symbol)}")
     }
 
     override fun error(message: String, symbol: KSNode?) {
         if (loglevel <= LOGGING_LEVEL_ERROR)
-            messager.println("e: [ksp] $message")
+            messager.println("e: [ksp] ${decorateMessage(message, symbol)}")
     }
 
     override fun exception(e: Throwable) {
