@@ -171,6 +171,7 @@ class KotlinFactories {
                             it.name == konanTargetName
                         }
                     }
+                    kspTask.separateKmpCompilation.value(false)
                 }
             }
         }
