@@ -4,6 +4,7 @@ import kotlin.math.max
 
 val junitVersion: String by project
 val kotlinBaseVersion: String by project
+val kotlinxSerializationVersion: String by project
 val agpBaseVersion: String by project
 val aaCoroutinesVersion: String by project
 
@@ -19,7 +20,7 @@ dependencies {
     testImplementation(project(":gradle-plugin"))
     testImplementation(project(":symbol-processing"))
     testImplementation(project(":symbol-processing-cmdline"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
 }
 
