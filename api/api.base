@@ -256,12 +256,21 @@ package com.google.devtools.ksp.symbol {
   }
 
   public final class FileLocation extends com.google.devtools.ksp.symbol.Location {
-    ctor public FileLocation(@NonNull String filePath, int lineNumber);
+    ctor public FileLocation(@NonNull String filePath, int lineNumber, int column, int endLineNumber, int endColumn);
     method @NonNull public String component1();
     method public int component2();
-    method @NonNull public com.google.devtools.ksp.symbol.FileLocation copy(@NonNull String filePath, int lineNumber);
+    method public int component3();
+    method public int component4();
+    method public int component5();
+    method @NonNull public com.google.devtools.ksp.symbol.FileLocation copy(@NonNull String filePath, int lineNumber, int column, int endLineNumber, int endColumn);
+    method public int getColumn();
+    method public int getEndColumn();
+    method public int getEndLineNumber();
     method @NonNull public String getFilePath();
     method public int getLineNumber();
+    property public final int column;
+    property public final int endColumn;
+    property public final int endLineNumber;
     property @NonNull public final String filePath;
     property public final int lineNumber;
   }
