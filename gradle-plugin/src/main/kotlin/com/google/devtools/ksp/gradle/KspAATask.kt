@@ -304,7 +304,7 @@ abstract class KspAATask @Inject constructor(
 
                         val javaVersion = System.getProperty("java.version")?.split(".")?.let {
                             if (it[0] == "1") it.getOrNull(1) else it.getOrNull(0)
-                        }
+                        }?.removeSuffix("-internal")
                         javaVersion?.let {
                             cfg.jdkVersion.value(it.toInt())
                         }
