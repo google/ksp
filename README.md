@@ -47,11 +47,10 @@ The KSP team will try to support KSP1 with best efforts so that users have more 
 can be made. Please plan migrating to KSP2 as early as possible.
 
 ## Nightly Builds
-Nightly builds of KSP for the latest Kotlin stable releases are published
-[here](https://oss.sonatype.org/content/repositories/snapshots/com/google/devtools/ksp/).
+Nightly builds of KSP for the latest Kotlin stable releases are published here:
 
 ```
-maven("https://oss.sonatype.org/content/repositories/snapshots")
+maven("https://central.sonatype.com/repository/maven-snapshots/")
 ```
 
 ## Feedback and Bug Reporting

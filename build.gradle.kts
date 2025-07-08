@@ -24,7 +24,7 @@ repositories {
 
 plugins {
     kotlin("jvm")
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     // Adding plugins used in multiple places to the classpath for centralized version control
     id("com.gradleup.shadow") version "8.3.6" apply false
     id("org.jetbrains.dokka") version "1.9.20" apply false
@@ -37,6 +37,8 @@ nexusPublishing {
         sonatype {
             username.set(sonatypeUserName)
             password.set(sonatypePassword)
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
     }
 }
