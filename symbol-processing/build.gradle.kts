@@ -5,6 +5,7 @@ evaluationDependsOn(":common-util")
 evaluationDependsOn(":compiler-plugin")
 
 val kotlinBaseVersion: String by project
+val kotlinxSerializationVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
 
@@ -75,7 +76,7 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
-                        addDependency("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.6.3")
+                        addDependency("org.jetbrains.kotlinx", "kotlinx-serialization-json", kotlinxSerializationVersion)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                     }
                 }
