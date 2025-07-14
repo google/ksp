@@ -58,6 +58,7 @@ import org.gradle.work.NormalizeLineEndings
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
@@ -309,11 +310,20 @@ abstract class KspAATask @Inject constructor(
                             cfg.jdkVersion.value(it.toInt())
                         }
 
-                        val jvmDefaultMode = compilerOptions.freeCompilerArgs
+                        val oldJvmDefaultMode = compilerOptions.freeCompilerArgs
                             .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
-                            .map { it.lastOrNull()?.substringAfter("=") ?: "disable" }
+                            .map { it.lastOrNull()?.substringAfter("=") ?: "undefined" }
 
-                        cfg.jvmDefaultMode.value(jvmDefaultMode)
+                        cfg.jvmDefaultMode.value(
+                            project.provider {
+                                when (oldJvmDefaultMode.get()) {
+                                    "all" -> "no-compatibility"
+                                    "all-compatibility" -> "enable"
+                                    "disable" -> "disable"
+                                    else -> compilerOptions.jvmDefault.getOrElse(JvmDefaultMode.ENABLE).compilerArgument
+                                }
+                            }
+                        )
 
                         cfg.jvmTarget.value(compilerOptions.jvmTarget.map { it.target })
 
