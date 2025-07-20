@@ -17,24 +17,24 @@
 
 // TEST PROCESSOR: LocationsProcessor
 // EXPECTED:
-// A:K.kt:49
-// File: K.kt:K.kt:1
-// K:J.java:71
-// K:K.kt:52
-// T:J.java:71
-// T:K.kt:52
-// f1:J.java:75
-// f1:K.kt:59
-// p1:K.kt:54
-// p2:J.java:75
-// p2:K.kt:59
-// v1:K.kt:53
-// v1:K.kt:53
-// v2:J.java:72
-// v2:K.kt:56
-// v3.getter():K.kt:64
-// v3.setter():K.kt:65
-// v3:J.java:80
+// A:K.kt:49,10-49,15
+// File: K.kt:K.kt:1,0-68,0
+// K:J.java:71,6-81,1
+// K:K.kt:52,6-66,1
+// T:J.java:71,8-71,22
+// T:K.kt:52,18-52,21
+// f1:J.java:75,9-77,5
+// f1:K.kt:59,8-59,36
+// p1:K.kt:54,14-54,25
+// p2:J.java:75,26-75,31
+// p2:K.kt:59,21-59,36
+// v1:K.kt:53,18-53,26
+// v1:K.kt:53,18-53,26
+// v2:J.java:72,18-72,25
+// v2:K.kt:56,18-56,25
+// v3.getter():K.kt:64,8-64,22
+// v3.setter():K.kt:65,8-65,35
+// v3:J.java:80,17-80,36
 // END
 
 // FILE: Location.kt
