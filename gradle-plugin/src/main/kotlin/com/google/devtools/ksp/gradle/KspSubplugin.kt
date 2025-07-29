@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.variant.Variant
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
@@ -55,7 +56,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
@@ -75,6 +75,7 @@ import org.jetbrains.kotlin.incremental.isKotlinFile
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.concurrent.Callable
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @OptIn(KspExperimental::class)
@@ -216,6 +217,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     private lateinit var kspConfigurations: KspConfigurations
 
+    private val variantCache = ConcurrentHashMap<String, Variant>()
+
     override fun apply(target: Project) {
         val ksp = target.extensions.create("ksp", KspExtension::class.java)
         ksp.useKsp2.convention(
@@ -226,6 +229,18 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         )
         kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
+
+        target.plugins.withId("com.android.base") {
+            val androidComponents =
+                target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
+
+            val selector = androidComponents.selector().all()
+            androidComponents.onVariants(selector) { variant ->
+                variantCache.computeIfAbsent(variant.name) {
+                    variant
+                }
+            }
+        }
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
@@ -263,12 +278,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         return true
     }
 
-    // TODO: to be future proof, protect with `synchronized`
-    // Map from default input source set to output source set
-    private val sourceSetMap: MutableMap<KotlinSourceSet, KotlinSourceSet> = mutableMapOf()
-
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
+        val variant = variantCache.get(kotlinCompilation.name)
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
             project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
@@ -664,7 +676,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 javaOutputDir = javaOutputDir,
                 kotlinOutputDir = kotlinOutputDir,
                 classOutputDir = classOutputDir,
-                resourcesOutputDir = project.files(resourceOutputDir)
+                resourcesOutputDir = project.files(resourceOutputDir),
+                androidVariant = variant,
             )
         }
 
