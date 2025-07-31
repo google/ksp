@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.gradle
 
 import com.android.build.api.variant.Variant
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
