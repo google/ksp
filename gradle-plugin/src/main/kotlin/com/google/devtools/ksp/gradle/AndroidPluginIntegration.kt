@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.Variant
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import com.google.devtools.ksp.gradle.utils.getAgpVersion
@@ -72,31 +73,42 @@ object AndroidPluginIntegration {
     private fun tryUpdateKspWithAndroidSourceSets(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<*>
+        kspTaskProvider: TaskProvider<*>,
+        androidVariant: Variant?
     ) {
         val kaptProvider: TaskProvider<Task>? =
             project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
 
-        val sources = kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA)
-        kspTaskProvider.configure { task ->
-            // this is workaround for KAPT generator that prevents circular dependency
-            val filteredSources = Callable {
-                val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
-                val dir = destinationProperty?.get()?.asFile
-                sources.filter { dir?.isParentOf(it.dir) != true }
+        val useLegacyApi = project.useLegacyVariantApi()
+        if (useLegacyApi) {
+            val sources = kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA)
+            kspTaskProvider.configure { task ->
+                // this is workaround for KAPT generator that prevents circular dependency
+                val filteredSources = Callable {
+                    val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
+                    val dir = destinationProperty?.get()?.asFile
+                    sources.filter { dir?.isParentOf(it.dir) != true }
+                }
+                when (task) {
+                    is KspTaskJvm -> { task.source(filteredSources) }
+                    is KspAATask -> { task.kspConfig.javaSourceRoots.from(filteredSources) }
+                    else -> Unit
+                }
             }
-            when (task) {
-                is KspTaskJvm -> {
-                    task.source(filteredSources)
-                    task.dependsOn(filteredSources)
+        } else {
+            kspTaskProvider.configure { task ->
+                val sources = androidVariant?.sources?.java?.static
+                // this is workaround for KAPT generator that prevents circular dependency
+                val filteredSources = Callable {
+                    val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
+                    val dir = destinationProperty?.get()?.asFile
+                    sources?.map { it.filter { dir?.isParentOf(it.asFile) != true } }
                 }
-
-                is KspAATask -> {
-                    task.kspConfig.javaSourceRoots.from(filteredSources)
-                    task.dependsOn(filteredSources)
+                when (task) {
+                    is KspTaskJvm -> { task.source(filteredSources) }
+                    is KspAATask -> { task.kspConfig.javaSourceRoots.from(filteredSources) }
+                    else -> Unit
                 }
-
-                else -> Unit
             }
         }
     }
@@ -140,12 +152,13 @@ object AndroidPluginIntegration {
         javaOutputDir: Provider<Directory>,
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
-        resourcesOutputDir: FileCollection
+        resourcesOutputDir: FileCollection,
+        androidVariant: Variant?
     ) {
         // Order is important here as we update task with AGP generated sources and
         // then update AGP with source that KSP will generate.
         // Mixing this up will cause circular dependency in Gradle
-        tryUpdateKspWithAndroidSourceSets(project, kotlinCompilation, kspTaskProvider)
+        tryUpdateKspWithAndroidSourceSets(project, kotlinCompilation, kspTaskProvider, androidVariant)
 
         registerGeneratedSources(
             project,
