@@ -16,9 +16,11 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.AndroidPluginVersion
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
+import com.google.devtools.ksp.gradle.utils.getAgpVersion
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -232,6 +234,25 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val project = kotlinCompilation.target.project
         val kspVersion = ApiVersion.parse(KSP_KOTLIN_BASE_VERSION)!!
         val kotlinVersion = ApiVersion.parse(project.getKotlinPluginVersion())!!
+
+        val agpVersion = project.getAgpVersion()
+        val useKsp2 = project.extensions.getByType(KspExtension::class.java).useKsp2.get()
+
+        if (agpVersion != null && agpVersion > AndroidPluginVersion(8, 0, 0) &&
+            agpVersion < AndroidPluginVersion(9, 0, 0).alpha(1) && useKsp2.not()
+        ) {
+            project.logger.warn(
+                "We noticed you are using KSP1 which is deprecated and support for it will be removed soon - " +
+                    "please migrate to KSP2 as soon as possible." +
+                    "KSP1 will no longer be compatible with AGP 9.0.0 (and above) and KGP 2.3.0 (and above)"
+            )
+        }
+
+        if (agpVersion != null && agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(1) && useKsp2.not()) {
+            throw RuntimeException(
+                "KSP1 is compatible with AGP 9.0.0 (and above) and KGP 2.3.0 (and above). You must enable KSP2."
+            )
+        }
 
         // Check version and show warning by default.
         val noVersionCheck = project.providers.gradleProperty("ksp.version.check").orNull?.toBoolean() == false
