@@ -233,6 +233,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kspVersion = ApiVersion.parse(KSP_KOTLIN_BASE_VERSION)!!
         val kotlinVersion = ApiVersion.parse(project.getKotlinPluginVersion())!!
 
+        val useKsp2 = project.extensions.getByType(KspExtension::class.java).useKsp2.get()
+
+        if (useKsp2.not()) {
+            project.logger.warn(
+                "We noticed you are using KSP1 which is deprecated and support for it will be removed soon - " +
+                    "please migrate to KSP2 as soon as possible. KSP1 will no longer be compatible with" +
+                    " Android Gradle Plugin 9.0.0 (and above) and Kotlin 2.3.0 (and above)"
+            )
+        }
+
         // Check version and show warning by default.
         val noVersionCheck = project.providers.gradleProperty("ksp.version.check").orNull?.toBoolean() == false
         if (!noVersionCheck) {
