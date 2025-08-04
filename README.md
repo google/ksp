@@ -46,6 +46,22 @@ standardizing its API and disallowing accesses to its internal implementations o
 The KSP team will try to support KSP1 with best efforts so that users have more time to migrate to KSP2, but no promise
 can be made. Please plan migrating to KSP2 as early as possible.
 
+### Deprecation notice for KSP1
+
+KSP1 is deprecated and support will be removed. We are focusing our development efforts on KSP2 to provide better performance, improved APIs, and a more robust architecture for the future.
+
+#### Compatibility Limitations
+Please be aware that KSP1 will not be updated to support upcoming major versions of the Android and Kotlin toolchains. Specifically, KSP1 will not be compatible with:
+* Kotlin version `2.3.0` and higher.
+* Android Gradle Plugin (AGP) version `9.0` and higher.
+
+Projects using KSP1 may not behave correctly (or fail the build) if you upgrade to these or any subsequent versions of AGP or Kotlin.
+
+To ensure your annotation processors continue to function correctly and to take advantage of future tooling advancements, it is crucial to migrate your projects to use KSP2 (which has been the default since beginning of 2025)
+
+Please refer to the [KSP2 introduction](docs/ksp2.md) for further details.
+
+
 ## Nightly Builds
 Nightly builds of KSP for the latest Kotlin stable releases are published here:
 
