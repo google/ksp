@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.Variant
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
@@ -217,7 +218,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     private lateinit var kspConfigurations: KspConfigurations
 
-    private val variantCache = ConcurrentHashMap<String, Variant>()
+    private val variantCache = ConcurrentHashMap<String, Component>()
 
     override fun apply(target: Project) {
         val ksp = target.extensions.create("ksp", KspExtension::class.java)
@@ -236,8 +237,10 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
             val selector = androidComponents.selector().all()
             androidComponents.onVariants(selector) { variant ->
-                variantCache.computeIfAbsent(variant.name) {
-                    variant
+                for (component in variant.components) {
+                    variantCache.computeIfAbsent(component.name) {
+                        component
+                    }
                 }
             }
         }
@@ -280,7 +283,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
-        val variant = variantCache.get(kotlinCompilation.name)
+        val component = variantCache.get(kotlinCompilation.name)
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
             project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
@@ -676,8 +679,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 javaOutputDir = javaOutputDir,
                 kotlinOutputDir = kotlinOutputDir,
                 classOutputDir = classOutputDir,
-                resourcesOutputDir = project.files(resourceOutputDir),
-                androidVariant = variant,
+                resourcesOutputDir = resourceOutputDir,
+                androidVariant = component,
             )
         }
 
