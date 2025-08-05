@@ -273,6 +273,14 @@ class PlaygroundIT(val useKSP2: Boolean) {
     }
 
     @Test
+    fun testInternalJdkVersion() {
+        System.setProperty("java.version", "17-internal")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.buildAndCheck("clean", "build")
+    }
+
+    @Test
     fun testExcludeProcessor() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
