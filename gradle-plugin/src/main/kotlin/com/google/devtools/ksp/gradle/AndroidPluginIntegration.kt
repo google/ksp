@@ -124,6 +124,8 @@ object AndroidPluginIntegration {
             }
         }
 
+    fun TaskProvider<*>.isKspAATask(): Boolean = map { it is KspAATask }.getOrElse(false)
+
     private fun registerGeneratedSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
@@ -132,6 +134,7 @@ object AndroidPluginIntegration {
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
         resourcesOutputDir: FileCollection,
+        androidVariant: Variant?,
     ) {
         val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
         val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
@@ -139,10 +142,23 @@ object AndroidPluginIntegration {
         kspJavaOutput.include("**/*.java")
         kspKotlinOutput.include("**/*.kt")
         kspClassOutput.include("**/*.class")
-        kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
+
         kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
         kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
-        kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
+
+        if (androidVariant != null && kspTaskProvider.isKspAATask() && project.useLegacyVariantApi().not()) {
+            androidVariant.sources.resources?.addGeneratedSourceDirectory(kspTaskProvider) {
+                task: Any ->
+                (task as KspAATask).kspConfig.resourceOutputDir
+            }
+            androidVariant.sources.java?.addGeneratedSourceDirectory(kspTaskProvider) {
+                task: Any ->
+                (task as KspAATask).kspConfig.javaOutputDir
+            }
+        } else {
+            kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
+            kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
+        }
     }
 
     fun syncSourceSets(
@@ -167,7 +183,8 @@ object AndroidPluginIntegration {
             javaOutputDir,
             kotlinOutputDir,
             classOutputDir,
-            resourcesOutputDir
+            resourcesOutputDir,
+            androidVariant
         )
     }
 
