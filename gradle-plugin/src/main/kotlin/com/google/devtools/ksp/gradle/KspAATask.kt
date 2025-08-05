@@ -26,6 +26,7 @@ import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processing.KspGradleLogger
 import org.gradle.api.DefaultTask
+import org.gradle.api.JavaVersion
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -303,12 +304,8 @@ abstract class KspAATask @Inject constructor(
                         // TODO: set proper jdk home
                         cfg.jdkHome.value(File(System.getProperty("java.home")))
 
-                        val javaVersion = System.getProperty("java.version")?.split(".")?.let {
-                            if (it[0] == "1") it.getOrNull(1) else it.getOrNull(0)
-                        }
-                        javaVersion?.let {
-                            cfg.jdkVersion.value(it.toInt())
-                        }
+                        val javaVersion = JavaVersion.toVersion(System.getProperty("java.version"))
+                        cfg.jdkVersion.value(javaVersion.majorVersion.toInt())
 
                         val oldJvmDefaultMode = compilerOptions.freeCompilerArgs
                             .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
