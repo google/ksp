@@ -52,6 +52,7 @@ import org.jetbrains.kotlin.load.kotlin.getContainingKotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getOwnerForEffectiveDispatchReceiverParameter
@@ -101,7 +102,16 @@ fun PsiElement.findParentDeclaration(): KSDeclaration? {
 fun PsiElement.toLocation(): Location {
     val file = this.containingFile
     val document = ResolverImpl.instance!!.psiDocumentManager.getDocument(file) ?: return NonExistLocation
-    return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
+    val lineNumber = document.getLineNumber(textOffset)
+    val endLineNumber = document.getLineNumber(endOffset)
+
+    return FileLocation(
+        filePath = file.virtualFile.path,
+        lineNumber = lineNumber + 1,
+        column = textOffset - document.getLineStartOffset(lineNumber),
+        endLineNumber = endLineNumber + 1,
+        endColumn = document.getLineEndOffset(endLineNumber) - document.getLineStartOffset(endLineNumber),
+    )
 }
 
 // TODO: handle local functions/classes correctly
