@@ -41,7 +41,6 @@ import org.gradle.util.GradleVersion
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
-import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.internal.Kapt3GradleSubplugin
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
@@ -72,6 +71,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.incremental.isJavaFile
 import org.jetbrains.kotlin.incremental.isKotlinFile
+import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.io.File
 import java.util.concurrent.Callable
@@ -245,8 +245,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
         val project = kotlinCompilation.target.project
-        val kspVersion = ApiVersion.parse(KSP_KOTLIN_BASE_VERSION)!!
-        val kotlinVersion = ApiVersion.parse(project.getKotlinPluginVersion())!!
+        val kspVersion = KotlinToolingVersion(KSP_KOTLIN_BASE_VERSION)
+        val kotlinVersion = KotlinToolingVersion(project.getKotlinPluginVersion())
 
         val useKsp2 = project.extensions.getByType(KspExtension::class.java).useKsp2.get()
 
