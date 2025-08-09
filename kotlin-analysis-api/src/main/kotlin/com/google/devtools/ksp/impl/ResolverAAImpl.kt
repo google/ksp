@@ -189,6 +189,7 @@ class ResolverAAImpl(
                         if (declaration.isAbstract)
                             modifiers.add(Modifier.ABSTRACT)
                     }
+                    is KSTypeAlias, is KSTypeParameter -> Unit
                 }
             }
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
@@ -209,6 +210,7 @@ class ResolverAAImpl(
                         if (declaration.jvmAccessFlag and Opcodes.ACC_SYNCHRONIZED != 0)
                             modifiers.add(Modifier.JAVA_SYNCHRONIZED)
                     }
+                    is KSClassDeclaration, is KSTypeAlias, is KSTypeParameter -> Unit
                 }
             }
             else -> Unit
@@ -327,9 +329,8 @@ class ResolverAAImpl(
         val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
-        @Suppress("UNCHECKED_CAST")
-        return (container.declarations as? Sequence<AbstractKSDeclarationImpl>)
-            ?.sortedWith(declarationOrdering.comparator) ?: container.declarations
+        return container.declarations
+            .sortedWith(compareBy(declarationOrdering.comparator) { it as AbstractKSDeclarationImpl })
     }
 
     override fun getFunctionDeclarationsByName(
