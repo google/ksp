@@ -439,6 +439,8 @@ class GradleCompilationTest(val useKSP2: Boolean) {
      */
     @Test
     fun androidGradlePluginBuiltInKotlin() {
+        // built in kotlin will only be supported with KSP2
+        Assume.assumeTrue(useKSP2)
         testRule.setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport = true)
         testRule.appModule.dependencies.addAll(
             listOf(
@@ -446,7 +448,7 @@ class GradleCompilationTest(val useKSP2: Boolean) {
                 artifact(configuration = "kspTest", "androidx.room:room-compiler:2.4.2")
             )
         )
-        testRule.runner().withArguments(":app:assembleDebug").build()
+        testRule.runner().withArguments(":app:assembleDebug", "--stacktrace").build()
     }
 
     /**
