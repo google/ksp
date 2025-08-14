@@ -8,7 +8,7 @@
         errorLine2="                                                             ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="87"
+            line="89"
             column="62"/>
     </issue>
 
@@ -19,7 +19,7 @@
         errorLine2="                                                             ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="106"
+            line="104"
             column="62"/>
     </issue>
 
@@ -30,7 +30,7 @@
         errorLine2="                                                          ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="223"
+            line="224"
             column="59"/>
     </issue>
 
@@ -41,7 +41,7 @@
         errorLine2="                                                                   ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="346"
+            line="343"
             column="68"/>
     </issue>
 
@@ -85,7 +85,7 @@
         errorLine2="                                   ~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="287"
+            line="296"
             column="36"/>
     </issue>
 
@@ -96,7 +96,7 @@
         errorLine2="                                                     ~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="306"
+            line="315"
             column="54"/>
     </issue>
 
@@ -107,7 +107,7 @@
         errorLine2="                                                                  ~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="318"
+            line="327"
             column="67"/>
     </issue>
 
@@ -118,7 +118,7 @@
         errorLine2="                                                              ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="374"
+            line="383"
             column="63"/>
     </issue>
 
@@ -129,7 +129,7 @@
         errorLine2="                                                  ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="421"
+            line="430"
             column="51"/>
     </issue>
 
@@ -140,7 +140,7 @@
         errorLine2="                                                                          ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="583"
+            line="592"
             column="75"/>
     </issue>
 
@@ -151,7 +151,7 @@
         errorLine2="                 ~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="404"
+            line="401"
             column="18"/>
     </issue>
 
@@ -162,7 +162,7 @@
         errorLine2="                 ~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="411"
+            line="408"
             column="18"/>
     </issue>
 
@@ -173,7 +173,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="30"
+            line="31"
             column="1"/>
     </issue>
 
@@ -184,7 +184,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="47"
+            line="45"
             column="1"/>
     </issue>
 
@@ -195,7 +195,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="48"
+            line="46"
             column="1"/>
     </issue>
 
@@ -206,7 +206,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="49"
+            line="47"
             column="1"/>
     </issue>
 
@@ -217,7 +217,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="50"
+            line="48"
             column="1"/>
     </issue>
 
@@ -228,7 +228,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="51"
+            line="49"
             column="1"/>
     </issue>
 
@@ -239,7 +239,7 @@
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="52"
+            line="50"
             column="1"/>
     </issue>
 
@@ -250,7 +250,7 @@
         errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="765"
+            line="774"
             column="26"/>
     </issue>
 
@@ -261,7 +261,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="780"
+            line="789"
             column="9"/>
     </issue>
 
@@ -272,7 +272,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="784"
+            line="793"
             column="9"/>
     </issue>
 
@@ -283,7 +283,7 @@
         errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="792"
+            line="801"
             column="29"/>
     </issue>
 
@@ -294,7 +294,7 @@
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="811"
+            line="820"
             column="24"/>
     </issue>
 
@@ -305,7 +305,7 @@
         errorLine2="        ~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="812"
+            line="821"
             column="9"/>
     </issue>
 
@@ -316,7 +316,7 @@
         errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="906"
+            line="915"
             column="36"/>
     </issue>
 
@@ -327,7 +327,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="907"
+            line="916"
             column="9"/>
     </issue>
 
