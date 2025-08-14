@@ -29,6 +29,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.internal.KaptTask
+import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 import java.util.concurrent.Callable
@@ -141,8 +142,11 @@ object AndroidPluginIntegration {
         kspClassOutput.include("**/*.class")
         kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
         kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
-        kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
         kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
+        if (project.isAgpBuiltInKotlinUsed().not()) {
+            // This API leads to circular dependency with AGP + Built in kotlin
+            kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
+        }
     }
 
     fun syncSourceSets(
@@ -170,6 +174,12 @@ object AndroidPluginIntegration {
             resourcesOutputDir
         )
     }
+
+    fun Project.isKotlinBaseApiPluginApplied() = plugins.findPlugin(KotlinBaseApiPlugin::class.java) != null
+
+    fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
+
+    fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
 
     /**
      * Returns false for AGP versions 8.10.0-alpha03 or higher.
