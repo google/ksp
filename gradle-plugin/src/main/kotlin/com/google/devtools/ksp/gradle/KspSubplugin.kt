@@ -260,7 +260,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         // Check version and show warning by default.
         val noVersionCheck = project.providers.gradleProperty("ksp.version.check").orNull?.toBoolean() == false
-        if (!noVersionCheck) {
+        if (!noVersionCheck && !useKsp2) {
             if (kspVersion < kotlinVersion) {
                 project.logger.warn(
                     "ksp-$KSP_VERSION is too old for kotlin-$kotlinVersion. " +
