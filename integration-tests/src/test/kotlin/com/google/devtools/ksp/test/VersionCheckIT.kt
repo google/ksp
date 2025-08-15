@@ -37,7 +37,11 @@ class VersionCheckIT(val useKSP2: Boolean) {
         val result = gradleRunner.withArguments(
             "-PkotlinVersion=2.0.0", "clean", "build"
         ).run()
-        Assert.assertTrue(result.output.contains("is too new for kotlin"))
+        if (!useKSP2) {
+            Assert.assertTrue(result.output.contains("is too new for kotlin"))
+        } else {
+            Assert.assertFalse(result.output.contains("is too new for kotlin"))
+        }
     }
 
     @Test
