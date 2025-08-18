@@ -91,9 +91,9 @@ class KspConfigurations(private val project: Project) {
 
     init {
         project.plugins.withType(KotlinBasePluginWrapper::class.java).configureEach {
-            // 1.6.0: decorateKotlinProject(project.kotlinExtension)?
-            decorateKotlinProject(project.extensions.getByName("kotlin") as KotlinProjectExtension, project)
+            decorateKotlinProject(project.kotlinExtension, project)
         }
+
         // Create sourceSet-specific KSP configurations for the case when the KotlinBaseApiPlugin is applied instead
         // of the KotlinBasePluginWrapper (e.g., when AGP's built-in Kotlin support is enabled).
         project.plugins.withType(KotlinBaseApiPlugin::class.java).configureEach {
@@ -101,11 +101,11 @@ class KspConfigurations(private val project: Project) {
             //  decorateKotlinProject here instead.
             createAndroidSourceSetConfigurations(project, kotlinTarget = null)
         }
+
         project.pluginManager.withPlugin("com.android.base") {
             if (!project.useLegacyVariantApi()) {
                 val androidComponents =
                     project.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
-                @Suppress("UnstableApiUsage") // use of addKspConfigurations
                 androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
             }
         }
