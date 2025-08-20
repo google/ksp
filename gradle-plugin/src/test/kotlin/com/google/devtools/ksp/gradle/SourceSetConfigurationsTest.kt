@@ -28,6 +28,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -166,6 +167,7 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
 
     @Test
     fun registerGeneratedSourcesToAndroid() {
+        Assume.assumeTrue(useKSP2)
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(
@@ -176,25 +178,42 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
         )
         testRule.appModule.buildFileAdditions.add(
             """
-            tasks.register("printSources") {
-                fun logVariantSources(variants: DomainObjectSet<out com.android.build.gradle.api.BaseVariant>) {
-                    variants.all {
-                        println("VARIANT:" + this.name)
-                        val baseVariant = (this as com.android.build.gradle.internal.api.BaseVariantImpl)
-                        val variantData = baseVariant::class.java.getMethod("getVariantData").invoke(baseVariant)
-                            as com.android.build.gradle.internal.variant.BaseVariantData
-                        variantData.extraGeneratedSourceFoldersOnlyInModel.forEach {
-                            println("SRC:" + it.relativeTo(layout.buildDirectory.get().asFile).path)
-                        }
-                        variantData.allPreJavacGeneratedBytecode.forEach {
-                            println("BYTE:" + it.relativeTo(layout.buildDirectory.get().asFile).path)
+                
+            abstract class DisplayAllSources: DefaultTask() {
+
+                @get:InputFiles
+                abstract val sourceFolders: ListProperty<Directory>
+
+                @get:Input
+                abstract val componentName: Property<String>
+
+                @TaskAction
+                fun taskAction() {
+                    println("VARIANT:" + componentName.get())
+                    sourceFolders.get().forEach { directory ->
+                        if (directory.asFile.path.contains("generated")) {
+                            println("SRC:" + directory.asFile.relativeTo(project.layout.buildDirectory.get().asFile).path)
                         }
                     }
                 }
-                doLast {
-                    logVariantSources(android.applicationVariants)
-                    logVariantSources(android.testVariants)
-                    logVariantSources(android.unitTestVariants)
+            }
+            
+            val globalTaskProvider = project.tasks.register("printSources")
+
+            androidComponents {
+                onVariants { variant ->
+                    variant.components.forEach { component ->
+                        component.sources.let { sources ->
+                            val taskProvider =
+                                project.tasks.register<DisplayAllSources>("${'$'}{component.name}DisplayAllSources") {
+                                    sourceFolders.addAll(sources.java!!.all)
+                                    componentName.set(component.name)
+                                }
+                            globalTaskProvider.configure {
+                                dependsOn(taskProvider)
+                            }
+                        }
+                    }
                 }
             }
             """.trimIndent()
@@ -255,6 +274,21 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
             ),
             SourceFolder(
                 "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/kotlin"
+            ),
+            SourceFolder(
+                "debug", "SRC:generated/ksp/debug/java"
+            ),
+            SourceFolder(
+                "release", "SRC:generated/ksp/release/java"
+            ),
+            SourceFolder(
+                "debugAndroidTest", "SRC:generated/ksp/debugAndroidTest/java"
+            ),
+            SourceFolder(
+                "debugUnitTest", "SRC:generated/ksp/debugUnitTest/java"
+            ),
+            SourceFolder(
+                "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/java"
             ),
             // TODO byte sources seems to be overridden by tmp/kotlin-classes/debug
             //  assert them as well once fixed
