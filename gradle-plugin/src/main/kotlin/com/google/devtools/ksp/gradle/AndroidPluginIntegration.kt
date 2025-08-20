@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
@@ -25,7 +26,6 @@ import com.google.devtools.ksp.gradle.utils.getAgpVersion
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
-import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.internal.KaptTask
@@ -75,7 +75,7 @@ object AndroidPluginIntegration {
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<*>,
-        androidVariant: Variant?
+        androidVariant: Component?
     ) {
         val kaptProvider: TaskProvider<Task>? =
             project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
@@ -125,6 +125,8 @@ object AndroidPluginIntegration {
             }
         }
 
+    fun TaskProvider<*>.isKspAATask(): Boolean = map { it is KspAATask }.getOrElse(false)
+
     private fun registerGeneratedSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
@@ -132,20 +134,37 @@ object AndroidPluginIntegration {
         javaOutputDir: Provider<Directory>,
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
-        resourcesOutputDir: FileCollection,
+        resourcesOutputDir: Provider<Directory>,
+        androidVariant: Component?,
     ) {
+        println("calling registerGeneratedSources with compilation " + kotlinCompilation)
+        println(" and variant " + androidVariant?.name)
         val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
         val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
         val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
         kspJavaOutput.include("**/*.java")
         kspKotlinOutput.include("**/*.kt")
         kspClassOutput.include("**/*.class")
-        kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
-        kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
-        kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutputDir)
+
         if (project.isAgpBuiltInKotlinUsed().not()) {
             // This API leads to circular dependency with AGP + Built in kotlin
             kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
+        }
+
+        kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(project.files(resourcesOutputDir))
+
+        if (androidVariant != null && kspTaskProvider.isKspAATask() && project.useLegacyVariantApi().not()) {
+            androidVariant.sources.java?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> (task as KspAATask).kspConfig.javaOutputDir }
+            )
+            androidVariant.sources.java?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> (task as KspAATask).kspConfig.kotlinOutputDir }
+            )
+        } else {
+            kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
+            kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
         }
     }
 
@@ -156,8 +175,8 @@ object AndroidPluginIntegration {
         javaOutputDir: Provider<Directory>,
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
-        resourcesOutputDir: FileCollection,
-        androidVariant: Variant?
+        resourcesOutputDir: Provider<Directory>,
+        androidVariant: Component?
     ) {
         // Order is important here as we update task with AGP generated sources and
         // then update AGP with source that KSP will generate.
@@ -171,7 +190,8 @@ object AndroidPluginIntegration {
             javaOutputDir,
             kotlinOutputDir,
             classOutputDir,
-            resourcesOutputDir
+            resourcesOutputDir,
+            androidVariant
         )
     }
 
