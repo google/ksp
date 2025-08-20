@@ -18,7 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.Component
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import com.google.devtools.ksp.gradle.utils.getAgpVersion
@@ -75,7 +75,7 @@ object AndroidPluginIntegration {
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<*>,
-        androidVariant: Variant?
+        androidComponent: Component?
     ) {
         val kaptProvider: TaskProvider<Task>? =
             project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
@@ -98,7 +98,7 @@ object AndroidPluginIntegration {
             }
         } else {
             kspTaskProvider.configure { task ->
-                val sources = androidVariant?.sources?.java?.static
+                val sources = androidComponent?.sources?.java?.static
                 // this is workaround for KAPT generator that prevents circular dependency
                 val filteredSources = Callable {
                     val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
@@ -157,12 +157,12 @@ object AndroidPluginIntegration {
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
         resourcesOutputDir: FileCollection,
-        androidVariant: Variant?
+        androidComponent: Component?
     ) {
         // Order is important here as we update task with AGP generated sources and
         // then update AGP with source that KSP will generate.
         // Mixing this up will cause circular dependency in Gradle
-        tryUpdateKspWithAndroidSourceSets(project, kotlinCompilation, kspTaskProvider, androidVariant)
+        tryUpdateKspWithAndroidSourceSets(project, kotlinCompilation, kspTaskProvider, androidComponent)
 
         registerGeneratedSources(
             project,
