@@ -230,7 +230,9 @@ abstract class KspAATask @Inject constructor(
                             )
                         )
                     } else {
-                        cfg.libraries.from(kotlinCompilation.compileDependencyFiles)
+                        cfg.libraries.from(project.provider {
+                            kotlinCompilation.compileDependencyFiles
+                        })
                     }
 
                     val classOutputDir = KspGradleSubplugin.getKspClassOutputDir(project, sourceSetName, target)
