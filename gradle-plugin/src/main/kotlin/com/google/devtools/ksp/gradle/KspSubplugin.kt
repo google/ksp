@@ -678,7 +678,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 javaOutputDir = javaOutputDir,
                 kotlinOutputDir = kotlinOutputDir,
                 classOutputDir = classOutputDir,
-                resourcesOutputDir = project.files(resourceOutputDir),
+                resourcesOutputDir = resourceOutputDir,
                 androidComponent = component,
             )
         }
