@@ -148,7 +148,9 @@ object AndroidPluginIntegration {
 
         kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(project.files(resourcesOutputDir))
 
-        if (androidComponent != null && kspTaskProvider.isKspAATask() && project.useLegacyVariantApi().not()) {
+        if (androidComponent != null && kspTaskProvider.isKspAATask() &&
+            project.canUseAddGeneratedSourceDirectoriesApi()
+        ) {
             androidComponent.sources.java?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
                 wiredWith = { task -> (task as KspAATask).kspConfig.javaOutputDir }
@@ -204,12 +206,18 @@ object AndroidPluginIntegration {
      * Returns true for older AGP versions or when AGP version cannot be determined.
      */
     fun Project.useLegacyVariantApi(): Boolean {
-        val agpVersion = project.getAgpVersion()
+        val agpVersion = project.getAgpVersion() ?: return true
 
         // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
-        if (agpVersion == null) {
-            return true
-        }
         return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
+    }
+
+    /**
+     * Returns true for AGP version is 8.12.0-alpha06 or higher.
+     * That is the version where addGeneratedSourceDirectories API was fixed
+     */
+    fun Project.canUseAddGeneratedSourceDirectoriesApi(): Boolean {
+        val agpVersion = project.getAgpVersion() ?: return false
+        return agpVersion >= AndroidPluginVersion(8, 12, 0).alpha(6)
     }
 }
