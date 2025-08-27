@@ -17,8 +17,10 @@
 package com.google.devtools.ksp.gradle
 
 import com.android.build.api.AndroidPluginVersion
+import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Component
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import com.google.devtools.ksp.gradle.utils.getAgpVersion
@@ -134,20 +136,6 @@ object AndroidPluginIntegration {
         resourcesOutputDir: Provider<Directory>,
         androidComponent: Component?,
     ) {
-        val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
-        val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
-        val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
-        kspJavaOutput.include("**/*.java")
-        kspKotlinOutput.include("**/*.kt")
-        kspClassOutput.include("**/*.class")
-
-        if (project.isAgpBuiltInKotlinUsed().not()) {
-            // This API leads to circular dependency with AGP + Built in kotlin
-            kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
-        }
-
-        kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(project.files(resourcesOutputDir))
-
         if (androidComponent != null && kspTaskProvider.isKspAATask() &&
             project.canUseAddGeneratedSourceDirectoriesApi()
         ) {
@@ -159,9 +147,42 @@ object AndroidPluginIntegration {
                 taskProvider = kspTaskProvider,
                 wiredWith = { task -> (task as KspAATask).kspConfig.kotlinOutputDir }
             )
+            androidComponent.sources.resources?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> (task as KspAATask).kspConfig.resourceOutputDir }
+            )
+
+            // this is a bit of a hack because merge*GeneratedProguardFiles in AGP looks in the CLASSES artifacts
+            // for the KSP generated proguard files
+            // todo: remove this once the issues is amended in AGP
+            androidComponent.artifacts
+                .forScope(ScopedArtifacts.Scope.PROJECT)
+                .use(kspTaskProvider)
+                .toAppend(
+                    ScopedArtifact.CLASSES
+                ) { task -> project.objects.directoryProperty().also { it.set(resourcesOutputDir) } }
+
+            androidComponent.artifacts
+                .forScope(ScopedArtifacts.Scope.PROJECT)
+                .use(kspTaskProvider)
+                .toAppend(
+                    ScopedArtifact.CLASSES
+                ) { task -> project.objects.directoryProperty().also { it.set(classOutputDir) } }
         } else {
+            val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
+            val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
+            val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
+            kspJavaOutput.include("**/*.java")
+            kspKotlinOutput.include("**/*.kt")
+            kspClassOutput.include("**/*.class")
+
             kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
             kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
+            kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(project.files(resourcesOutputDir))
+            if (project.isAgpBuiltInKotlinUsed().not()) {
+                // This API leads to circular dependency with AGP + Built in kotlin
+                kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
+            }
         }
     }
 
