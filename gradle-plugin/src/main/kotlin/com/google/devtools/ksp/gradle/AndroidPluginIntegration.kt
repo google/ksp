@@ -172,13 +172,17 @@ object AndroidPluginIntegration {
             val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
             val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
             val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
+            // PostJavacGeneratedBytecode will be used by bundleLibRuntimeToJar*
+            // We need add ksp task dependency for this output to avoid bundleLib task run before KSP
+            val resourcesOutput = project.files(resourcesOutputDir).builtBy(kspTaskProvider)
+
             kspJavaOutput.include("**/*.java")
             kspKotlinOutput.include("**/*.kt")
             kspClassOutput.include("**/*.class")
 
             kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
             kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
-            kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(project.files(resourcesOutputDir))
+            kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutput)
             if (project.isAgpBuiltInKotlinUsed().not()) {
                 // This API leads to circular dependency with AGP + Built in kotlin
                 kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
