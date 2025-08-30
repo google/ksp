@@ -16,7 +16,6 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
     implementation(project(":test-processor"))
     ksp(project(":test-processor"))
 }
