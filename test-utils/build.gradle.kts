@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm")
 }
 
-version = "2.0.255-SNAPSHOT"
+version = rootProject.extra.get("kspVersion") as String
 
 repositories {
     maven("https://redirector.kotlinlang.org/maven/kotlin-ide-plugin-dependencies")

@@ -33,10 +33,12 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
             .newInstance() as K2JVMCompiler
         val repoPath = "../build/repos/test/com/google/devtools/ksp/"
         val kspPluginId = "com.google.devtools.ksp.symbol-processing"
-        val kspPluginJar = File("$repoPath/symbol-processing-cmdline/2.0.255-SNAPSHOT").listFiles()!!.filter {
+        val kspPluginJar = File("$repoPath/symbol-processing-cmdline/${System.getProperty("kspVersion")}")
+            .listFiles()!!.filter {
             it.name.matches(Regex(".*-\\d.jar"))
         }.maxByOrNull { it.lastModified() }!!
-        val kspApiJar = File("$repoPath/symbol-processing-api/2.0.255-SNAPSHOT").listFiles()!!.filter {
+        val kspApiJar = File("$repoPath/symbol-processing-api/${System.getProperty("kspVersion")}")
+            .listFiles()!!.filter {
             it.name.matches(Regex(".*-\\d.jar"))
         }.maxByOrNull { it.lastModified() }!!
         val compilerArgs = mutableListOf(
@@ -98,13 +100,16 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
     private fun getKsp2Main(mainClassName: String): Method {
         val repoPath = "../build/repos/test/com/google/devtools/ksp/"
 
-        val commonDepsJar = File("$repoPath/symbol-processing-common-deps/2.0.255-SNAPSHOT").listFiles()!!.filter {
+        val commonDepsJar = File("$repoPath/symbol-processing-common-deps/${System.getProperty("kspVersion")}")
+            .listFiles()!!.filter {
             it.name.matches(Regex(".*-\\d.jar"))
         }.maxByOrNull { it.lastModified() }!!
-        val kspMainJar = File("$repoPath/symbol-processing-aa-embeddable/2.0.255-SNAPSHOT").listFiles()!!.filter {
+        val kspMainJar = File("$repoPath/symbol-processing-aa-embeddable/${System.getProperty("kspVersion")}")
+            .listFiles()!!.filter {
             it.name.matches(Regex(".*-\\d.jar"))
         }.maxByOrNull { it.lastModified() }!!
-        val kspApiJar = File("$repoPath/symbol-processing-api/2.0.255-SNAPSHOT").listFiles()!!.filter {
+        val kspApiJar = File("$repoPath/symbol-processing-api/${System.getProperty("kspVersion")}")
+            .listFiles()!!.filter {
             it.name.matches(Regex(".*-\\d.jar"))
         }.maxByOrNull { it.lastModified() }!!
 
