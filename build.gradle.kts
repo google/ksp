@@ -14,7 +14,7 @@ if (extra.has("kspOnlyVersion") && kotlinBaseVersion != null) {
 }
 
 if (!extra.has("kspVersion")) {
-    extra.set("kspVersion", "2.0.255-SNAPSHOT")
+    extra.set("kspVersion", "255.255.255-SNAPSHOT")
 }
 
 repositories {
