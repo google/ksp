@@ -41,7 +41,7 @@ fun Test.configureCommonSettings() {
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 
-val agpCompatibilityTestClasses = listOf("**/AGP731IT.class", "**/AGP741IT.class")
+val agpCompatibilityTestClasses = listOf("**/AGP731IT.class", "**/AGP741IT.class", "**/AGP900IT.class")
 
 // Create a new test task for the AGP compatibility tests
 val agpCompatibilityTest by tasks.registering(Test::class) {
