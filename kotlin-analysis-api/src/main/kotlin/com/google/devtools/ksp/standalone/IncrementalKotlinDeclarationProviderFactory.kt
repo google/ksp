@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.standalone
 
+import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinCompositeDeclarationProvider
@@ -14,6 +15,7 @@ import org.jetbrains.kotlin.psi.KtTypeAlias
 
 class IncrementalKotlinDeclarationProviderFactory(
     private val project: Project,
+    private val environment: CoreApplicationEnvironment,
 ) : KotlinDeclarationProviderFactory {
     private val staticFactories: MutableList<KotlinStandaloneDeclarationProviderFactory> = mutableListOf()
 
@@ -27,7 +29,12 @@ class IncrementalKotlinDeclarationProviderFactory(
 
     fun update(files: Collection<KtFile>) {
         val skipBuiltIns = staticFactories.isNotEmpty()
-        val staticFactory = KotlinStandaloneDeclarationProviderFactory(project, files, skipBuiltins = skipBuiltIns)
+        val staticFactory = KotlinStandaloneDeclarationProviderFactory(
+            project,
+            environment,
+            files,
+            skipBuiltins = skipBuiltIns
+        )
         staticFactories.add(staticFactory)
     }
 
