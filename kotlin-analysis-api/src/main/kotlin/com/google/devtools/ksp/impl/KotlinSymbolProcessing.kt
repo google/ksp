@@ -331,7 +331,7 @@ class KotlinSymbolProcessing(
             )
             registerService(
                 KotlinDeclarationProviderFactory::class.java,
-                IncrementalKotlinDeclarationProviderFactory(this)
+                IncrementalKotlinDeclarationProviderFactory(this, kotlinCoreProjectEnvironment.environment)
             )
             registerService(
                 KotlinDirectInheritorsProvider::class.java,
