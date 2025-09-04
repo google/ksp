@@ -110,7 +110,7 @@ subprojects {
         configure<KotlinJvmProjectExtension> {
             compilerOptions {
                 jvmTarget = JvmTarget.JVM_1_8
-                languageVersion.set(KotlinVersion.KOTLIN_1_9)
+                languageVersion.set(KotlinVersion.KOTLIN_2_1)
                 apiVersion.set(languageVersion)
             }
             jvmToolchain {
