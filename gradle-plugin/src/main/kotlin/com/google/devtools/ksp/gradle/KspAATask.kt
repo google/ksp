@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.gradle
 
+import com.google.devtools.ksp.gradle.AndroidPluginIntegration.canUseAddGeneratedSourceDirectoriesApi
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
@@ -191,8 +192,9 @@ abstract class KspAATask @Inject constructor(
                     cfg.processorClasspath.from(incomingProcessors)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
-                    val filteredTasks =
+                    val filteredTasks = if (kspExtension.excludedSources.isEmpty.not()) {
                         kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
+                    } else emptyList()
                     kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                         val filtered = kotlinOutputDir.zip(javaOutputDir) { kotlinOut, javaOut ->
                             sourceSet.kotlin.srcDirs.filter {
@@ -205,9 +207,13 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
-                        kspAATask.dependsOn(
-                            sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
-                        )
+                        if (kotlinCompilation.platformType != KotlinPlatformType.androidJvm &&
+                            project.canUseAddGeneratedSourceDirectoriesApi()
+                        ) {
+                            kspAATask.dependsOn(
+                                sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
+                            )
+                        }
                     }
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
