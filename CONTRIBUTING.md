@@ -30,7 +30,7 @@ This project follows
 
 ## API verification
 
-For changes that involves API changes(new API, API signature change), please also update [api.base](./api/api.base) file. You can monitor api change with `./gradlew :api:apiCheck`, and`./gradlew :api:updateApi` to generate new api signature.
+For changes that involves API changes(new API, API signature change), please also update [api.base](./api/api.base) file. You can monitor api change with `./gradlew :api:checkApi`, and`./gradlew :api:updateApi` to generate new api signature.
 
 ## Testing
 For incoming PRs, we would like to request changes covered by tests for good practice.
