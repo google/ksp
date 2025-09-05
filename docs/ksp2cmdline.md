@@ -81,6 +81,6 @@ where:
 * `-friends` - classpath of the modules that are friends of the current module. This is usually the
   submodules this module depends on. Supported since [2.1.21-2.0.2](https://github.com/google/ksp/releases/tag/2.1.21-2.0.2). See also [friend modules](https://kotlinlang.org/api/kotlin-gradle-plugin/kotlin-gradle-plugin-api/org.jetbrains.kotlin.gradle.tasks/-base-kotlin-compile/friend-paths.html).
 
-### Jvm Args
+### Jvm Parameters
 
 * `-Dksp.logging` - logging level, one of `error`, `warn` or `warning`, `info`, `debug`. Default is `warn`. If an unrecognised level is specified, it will be treated as `warn`.
