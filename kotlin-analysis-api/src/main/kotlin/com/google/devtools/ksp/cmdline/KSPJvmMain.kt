@@ -34,7 +34,19 @@ internal fun printHelpMsg(optionsList: String) {
 }
 
 internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSPConfig, List<String>>) {
-    val logger = KspGradleLogger(KspGradleLogger.LOGGING_LEVEL_WARN)
+
+    val loggingVerbosity = System.getProperty("ksp.logging", "warn")
+    val loggingLevel = when (loggingVerbosity.lowercase()) {
+        "error" -> KspGradleLogger.LOGGING_LEVEL_ERROR
+        "warn" -> KspGradleLogger.LOGGING_LEVEL_WARN
+        "warning" -> KspGradleLogger.LOGGING_LEVEL_WARN
+        "info" -> KspGradleLogger.LOGGING_LEVEL_INFO
+        "debug" -> KspGradleLogger.LOGGING_LEVEL_LOGGING
+        else -> KspGradleLogger.LOGGING_LEVEL_WARN
+    }
+
+    val logger = KspGradleLogger(loggingLevel)
+
     val (config, classpath) = parse(args)
     val processorClassloader = URLClassLoader(classpath.map { File(it).toURI().toURL() }.toTypedArray())
 
