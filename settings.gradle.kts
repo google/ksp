@@ -11,6 +11,7 @@ pluginManagement {
 
     repositories {
         gradlePluginPortal()
+        maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies/")
         maven("https://redirector.kotlinlang.org/maven/bootstrap/")
         maven("https://www.jetbrains.com/intellij-repository/snapshots")
         google()
