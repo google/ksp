@@ -165,7 +165,7 @@ class KotlinFactories {
                     kspTask.onlyIf {
                         // KonanTarget is not properly serializable, hence we should check by name
                         // see https://youtrack.jetbrains.com/issue/KT-61657.
-                        val konanTargetName = kspTask.konanTarget.name
+                        val konanTargetName = kspTask.target
                         HostManager().enabled.any {
                             it.name == konanTargetName
                         }
