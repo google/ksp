@@ -63,9 +63,7 @@ object AndroidPluginIntegration {
     }
 
     fun getCompilationSourceSets(kotlinCompilation: KotlinJvmAndroidCompilation): List<String> {
-        return kotlinCompilation.androidVariant
-            .sourceSets
-            .map { it.name }
+        return kotlinCompilation.androidVariant?.sourceSets?.map { it.name } ?: emptyList()
     }
 
     /**
@@ -83,13 +81,13 @@ object AndroidPluginIntegration {
 
         val useLegacyApi = project.useLegacyVariantApi()
         if (useLegacyApi) {
-            val sources = kotlinCompilation.androidVariant.getSourceFolders(SourceKind.JAVA)
+            val sources = kotlinCompilation.androidVariant?.getSourceFolders(SourceKind.JAVA)
             kspTaskProvider.configure { task ->
                 // this is workaround for KAPT generator that prevents circular dependency
                 val filteredSources = Callable {
                     val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
                     val dir = destinationProperty?.get()?.asFile
-                    sources.filter { dir?.isParentOf(it.dir) != true }
+                    sources?.filter { dir?.isParentOf(it.dir) != true }
                 }
                 when (task) {
                     is KspTaskJvm -> { task.source(filteredSources) }
@@ -180,12 +178,12 @@ object AndroidPluginIntegration {
             kspKotlinOutput.include("**/*.kt")
             kspClassOutput.include("**/*.class")
 
-            kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
-            kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
-            kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutput)
+            kotlinCompilation.androidVariant?.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
+            kotlinCompilation.androidVariant?.registerExternalAptJavaOutput(kspJavaOutput)
+            kotlinCompilation.androidVariant?.registerPostJavacGeneratedBytecode(resourcesOutput)
             if (project.isAgpBuiltInKotlinUsed().not()) {
                 // This API leads to circular dependency with AGP + Built in kotlin
-                kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
+                kotlinCompilation.androidVariant?.registerPreJavacGeneratedBytecode(kspClassOutput)
             }
         }
     }
