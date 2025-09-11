@@ -56,6 +56,8 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
     }
 
+    override fun asKSDeclaration(): KSDeclaration = this
+
     override val originalAnnotations: Sequence<KSAnnotation>
         get() = annotations
 
