@@ -163,10 +163,6 @@ tasks.withType<ShadowJar>().configureEach {
     exclude("kotlin/**")
     exclude("kotlinx/coroutines/**")
     archiveClassifier.set("")
-    minimize {
-        exclude(dependency("org.lz4:lz4-java:.*"))
-        exclude(dependency("com.github.ben-manes.caffeine:caffeine:.*"))
-    }
     mergeServiceFiles()
 }
 
