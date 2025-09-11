@@ -44,6 +44,7 @@ val prefixesToRelocate = listOf(
     "com.google.errorprone.",
     "com.google.gwt.",
     "com.google.j2objc.",
+    "com.google.thirdparty.",
     "com.intellij.",
     "com.sun.jna.",
     "gnu.trove.",

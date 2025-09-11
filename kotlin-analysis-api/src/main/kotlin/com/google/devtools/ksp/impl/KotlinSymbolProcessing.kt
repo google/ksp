@@ -651,56 +651,6 @@ fun String?.toKotlinVersion(): KotlinVersion {
     }
 }
 
-// Workaround for ShadowJar's minimize, whose configuration isn't very flexible.
-/* ktlint-disable */
-@Suppress("unused")
-@OptIn(KaImplementationDetail::class)
-internal val DEAR_SHADOW_JAR_PLEASE_DO_NOT_REMOVE_THESE = listOf(
-    it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap::class.java,
-    it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseModuleProvider::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService::class.java,
-    org.jetbrains.kotlin.analysis.api.fir.KaFirDefaultImportsProvider::class.java,
-    org.jetbrains.kotlin.analysis.api.fir.KaFirSessionProvider::class.java,
-    org.jetbrains.kotlin.analysis.api.fir.references.ReadWriteAccessCheckerFirImpl::class.java,
-    org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneFirDirectInheritorsProvider::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService::class.java,
-    org.jetbrains.kotlin.analysis.low.level.api.fir.symbolProviders.factories.LLStubOriginLibrarySymbolProviderFactory::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseJavaModuleResolver::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseKotlinJavaPsiFacade::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionChecker::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.permissions.KaBaseAnalysisPermissionRegistry::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseContentScopeProvider::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KaBaseResolutionScopeProvider::class.java,
-    org.jetbrains.kotlin.analysis.api.impl.base.projectStructure.KotlinOptimizingGlobalSearchScopeMerger::class.java,
-    org.jetbrains.kotlin.analysis.api.permissions.KaAnalysisPermissionRegistry::class.java,
-    org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider::class.java,
-    org.jetbrains.kotlin.analysis.api.platform.permissions.KaAnalysisPermissionChecker::class.java,
-    org.jetbrains.kotlin.analysis.api.fir.modification.KaFirSourceModificationService::class.java,
-    org.jetbrains.kotlin.analysis.api.fir.references.KotlinFirReferenceContributor::class.java,
-    org.jetbrains.kotlin.analysis.api.fir.statistics.KaFirStatisticsService::class.java,
-    org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport::class.java,
-    org.jetbrains.kotlin.load.java.ErasedOverridabilityCondition::class.java,
-    org.jetbrains.kotlin.load.java.FieldOverridabilityCondition::class.java,
-    org.jetbrains.kotlin.plugin.references.SimpleNameReferenceExtension::class.java,
-    org.jetbrains.kotlin.serialization.deserialization.builtins.BuiltInsLoaderImpl::class.java,
-    com.fasterxml.aalto.AaltoInputProperties::class.java,
-    com.google.errorprone.annotations.CheckReturnValue::class.java,
-    com.intellij.diagnostic.ActivityCategory::class.java,
-    com.intellij.openapi.application.JetBrainsProtocolHandler::class.java,
-    com.intellij.openapi.editor.impl.EditorDocumentPriorities::class.java,
-    com.intellij.platform.diagnostic.telemetry.TelemetryManager::class.java,
-    com.intellij.psi.impl.PsiSubstitutorImpl::class.java,
-    com.intellij.psi.tree.ChildRoleBase::class.java,
-    com.intellij.util.xmlb.Constants::class.java,
-    com.intellij.xml.CommonXmlStrings::class.java,
-    org.codehaus.stax2.XMLInputFactory2::class.java,
-    org.codehaus.stax2.XMLStreamProperties::class.java,
-)
-/* ktlint-enable */
-
 fun TargetPlatform.getPlatformInfo(kspConfig: KSPConfig): List<PlatformInfo> =
     componentPlatforms.map { platform ->
         when (platform) {
