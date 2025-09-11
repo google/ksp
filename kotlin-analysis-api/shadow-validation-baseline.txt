@@ -1,25 +1,12 @@
 kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
-   com.google.common.base.package-info                -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.cache.package-info               -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.collect.package-info             -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.escape.package-info              -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.eventbus.package-info            -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.graph.package-info               -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.hash.package-info                -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.html.package-info                -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.io.package-info                  -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.math.package-info                -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.net.package-info                 -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.primitives.package-info          -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.reflect.package-info             -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.util.concurrent.package-info     -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.google.common.xml.package-info                 -> javax.annotation.ParametersAreNonnullByDefault     not found
-   com.intellij.codeInsight.AnnotationTargetUtil      -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.codeInsight.AnnotationUtil            -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.codeInsight.ExceptionUtil             -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.codeInsight.daemon.impl.analysis.JavaGenericsUtil -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.codeInsight.folding.impl.ClosureFolding -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.codeInsight.generation.OverrideImplementExploreUtil -> com.intellij.psi.CommonClassNames                  not found
+   com.google.common.util.concurrent.AbstractFuture   -> com.google.j2objc.annotations.ReflectionSupport    not found
+   com.google.common.util.concurrent.AbstractFuture   -> com.google.j2objc.annotations.ReflectionSupport$Level not found
+   com.google.common.util.concurrent.AggregateFutureState -> com.google.j2objc.annotations.ReflectionSupport    not found
+   com.google.common.util.concurrent.AggregateFutureState -> com.google.j2objc.annotations.ReflectionSupport$Level not found
+   com.google.common.util.concurrent.AtomicDouble     -> com.google.j2objc.annotations.ReflectionSupport    not found
+   com.google.common.util.concurrent.AtomicDouble     -> com.google.j2objc.annotations.ReflectionSupport$Level not found
+   com.google.common.util.concurrent.InterruptibleTask -> com.google.j2objc.annotations.ReflectionSupport    not found
+   com.google.common.util.concurrent.InterruptibleTask -> com.google.j2objc.annotations.ReflectionSupport$Level not found
    com.intellij.codeWithMe.ClientIdElement            -> kotlinx.coroutines.ThreadContextElement            not found
    com.intellij.codeWithMe.ClientIdElement            -> kotlinx.coroutines.ThreadContextElement$DefaultImpls not found
    com.intellij.concurrency.ThreadContext$getContextSkeleton$1 -> kotlinx.coroutines.CoroutineId                     not found
@@ -56,7 +43,11 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.diagnostic.CoroutineTracerShim$Companion$coroutineTracer$1 -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.diagnostic.JobTree                    -> kotlinx.coroutines.Job                             not found
    com.intellij.diagnostic.JobTree                    -> kotlinx.coroutines.debug.internal.DebugCoroutineInfo not found
+   com.intellij.diagnostic.PerformanceListener        -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.diagnostic.StartUpPerformanceService  -> kotlinx.coroutines.flow.Flow                       not found
    com.intellij.diagnostic.ThreadDumper               -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.ide.bootstrap.InitAppContext          -> kotlinx.coroutines.CompletableDeferred             not found
+   com.intellij.ide.bootstrap.InitAppContext          -> kotlinx.coroutines.Job                             not found
    com.intellij.ide.plugins.PathBasedProductLoadingStrategy -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.ide.plugins.PathBasedProductLoadingStrategy -> kotlinx.coroutines.Deferred                        not found
    com.intellij.ide.plugins.PathBasedProductLoadingStrategy$loadFromPluginClasspathDescriptor$1$1 -> kotlinx.coroutines.CoroutineScope                  not found
@@ -120,13 +111,23 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.ide.plugins.cl.PluginClassLoader      -> kotlinx.coroutines.Job                             not found
    com.intellij.ide.plugins.cl.PluginClassLoader      -> kotlinx.coroutines.JobKt                           not found
    com.intellij.ide.plugins.cl.PluginClassLoader      -> kotlinx.coroutines.SupervisorKt                    not found
-   com.intellij.lang.jvm.types.JvmPrimitiveTypeKind   -> com.intellij.psi.CommonClassNames                  not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer -> kotlinx.coroutines.flow.Flow                       not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer$getValues$$inlined$map$1 -> kotlinx.coroutines.flow.Flow                       not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer$getValues$$inlined$map$1 -> kotlinx.coroutines.flow.FlowCollector              not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer$getValues$$inlined$map$1 -> kotlinx.coroutines.flow.FlowKt__TransformKt        not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer$getValues$$inlined$map$1$2 -> kotlinx.coroutines.flow.FlowCollector              not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer$getValues$1 -> kotlinx.coroutines.channels.ProducerScope          not found
+   com.intellij.java.frontback.psi.impl.JavaLangLevelProjectCustomDataSynchronizer$getValues$1 -> kotlinx.coroutines.flow.Flow                       not found
    com.intellij.mock.MockApplication                  -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.mock.MockApplication                  -> kotlinx.coroutines.GlobalScope                     not found
    com.intellij.mock.MockProject                      -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.mock.MockProject                      -> kotlinx.coroutines.GlobalScope                     not found
    com.intellij.model.SideEffectGuard$Companion       -> kotlinx.coroutines.BuildersKt                      not found
    com.intellij.model.SideEffectGuard$Companion       -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.application.ClassPathUtil     -> org.apache.oro.text.regex.PatternMatcher           not found
+   com.intellij.openapi.application.CoroutinesKt      -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.openapi.application.CoroutinesKt      -> kotlinx.coroutines.Dispatchers                     not found
+   com.intellij.openapi.application.CoroutinesKt$writeAction$2 -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.openapi.application.ex.ApplicationUtil -> kotlinx.coroutines.BuildersKt                      not found
    com.intellij.openapi.application.ex.ApplicationUtil -> kotlinx.coroutines.CoroutineDispatcher             not found
    com.intellij.openapi.application.ex.ApplicationUtil -> kotlinx.coroutines.CoroutineScope                  not found
@@ -143,8 +144,20 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.openapi.application.ex.ApplicationUtil$runWithCheckCanceled$1$1$2 -> kotlinx.coroutines.Job                             not found
    com.intellij.openapi.application.ex.ApplicationUtil$runWithCheckCanceled$1$1$2 -> kotlinx.coroutines.Job$DefaultImpls                not found
    com.intellij.openapi.application.ex.ApplicationUtil$runWithCheckCanceled$deferred$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.application.impl.DispatchedRunnable -> kotlinx.coroutines.DisposableHandle                not found
+   com.intellij.openapi.application.impl.DispatchedRunnable -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.application.impl.DispatchedRunnable -> kotlinx.coroutines.Job$DefaultImpls                not found
+   com.intellij.openapi.application.impl.EdtCoroutineDispatcher -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.application.impl.EdtCoroutineDispatcher -> kotlinx.coroutines.JobKt                           not found
+   com.intellij.openapi.application.impl.EdtCoroutineDispatcher -> kotlinx.coroutines.MainCoroutineDispatcher         not found
+   com.intellij.openapi.application.impl.EdtCoroutineDispatcherFactory -> kotlinx.coroutines.MainCoroutineDispatcher         not found
+   com.intellij.openapi.application.impl.EdtCoroutineDispatcherFactory -> kotlinx.coroutines.internal.MainDispatcherFactory  not found
+   com.intellij.openapi.application.impl.EdtCoroutineDispatcherFactory -> kotlinx.coroutines.internal.MainDispatcherFactory$DefaultImpls not found
    com.intellij.openapi.application.impl.JobProvider  -> kotlinx.coroutines.Job                             not found
    com.intellij.openapi.application.impl.ModalityStateEx -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.client.ClientSessionsUtil     -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.openapi.client.ClientSessionsUtil$forEachSessionSuspending$2 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.client.ClientSessionsUtil$forEachSessionSuspending$4 -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.openapi.components.ComponentManagerEx -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.openapi.editor.impl.PersistentRangeMarker -> com.intellij.util.diff.FilesTooBigForDiffException not found
    com.intellij.openapi.editor.impl.RangeMarkerImpl   -> com.intellij.util.diff.FilesTooBigForDiffException not found
@@ -162,17 +175,117 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.openapi.progress.Cancellation         -> kotlinx.coroutines.Job                             not found
    com.intellij.openapi.progress.Cancellation         -> kotlinx.coroutines.Job$Key                         not found
    com.intellij.openapi.progress.Cancellation         -> kotlinx.coroutines.JobKt                           not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.CompletableJob                  not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.CoroutineDispatcher             not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.CoroutineName                   not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.CoroutineStart                  not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.Dispatchers                     not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.GlobalScope                     not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.Job$DefaultImpls                not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.Job$Key                         not found
+   com.intellij.openapi.progress.ContextKt            -> kotlinx.coroutines.JobKt                           not found
+   com.intellij.openapi.progress.ContextKt$cancelWithIndicator$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.ContextKt$cancelWithIndicator$1 -> kotlinx.coroutines.DelayKt                         not found
+   com.intellij.openapi.progress.ContextKt$cancelWithIndicator$1 -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.progress.CoroutineSuspenderElement -> kotlinx.coroutines.CancellableContinuationImpl     not found
+   com.intellij.openapi.progress.CoroutinesKt         -> com.intellij.platform.util.progress.ContextKt      not found
+   com.intellij.openapi.progress.CoroutinesKt         -> com.intellij.platform.util.progress.RawProgressReporter not found
+   com.intellij.openapi.progress.CoroutinesKt         -> com.intellij.platform.util.progress.RawProgressReporterHandle not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.CoroutineScopeKt                not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.DisposableHandle                not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.Job$DefaultImpls                not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.Job$Key                         not found
+   com.intellij.openapi.progress.CoroutinesKt         -> kotlinx.coroutines.JobKt                           not found
+   com.intellij.openapi.progress.CoroutinesKt$blockingContext$2 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.CoroutinesKt$blockingContextScope$2 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.CoroutinesKt$blockingContextScope$2 -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.progress.CoroutinesKt$blockingContextScope$2 -> kotlinx.coroutines.JobKt                           not found
+   com.intellij.openapi.progress.CoroutinesKt$indicatorRunBlockingCancellable$1 -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.openapi.progress.CoroutinesKt$indicatorRunBlockingCancellable$1 -> kotlinx.coroutines.CoroutineName                   not found
+   com.intellij.openapi.progress.CoroutinesKt$indicatorRunBlockingCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.CoroutinesKt$jobToIndicator$1$completionHandle$1 -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.progress.CoroutinesKt$runBlockingCancellable$1 -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.openapi.progress.CoroutinesKt$runBlockingCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.CoroutinesKt$runBlockingCancellable$1 -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.progress.CoroutinesKt$runBlockingCancellable$1 -> kotlinx.coroutines.Job$Key                         not found
+   com.intellij.openapi.progress.IndicatorRawProgressReporter -> com.intellij.platform.util.progress.RawProgressReporter not found
+   com.intellij.openapi.progress.ProgressReporterKt   -> com.intellij.platform.util.progress.StepsKt        not found
+   com.intellij.openapi.progress.ProgressReporterKt   -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.progress.RawProgressReporterIndicator -> com.intellij.platform.util.progress.RawProgressReporter not found
    com.intellij.openapi.progress.impl.ProgressRunner  -> kotlinx.coroutines.DisposableHandle                not found
    com.intellij.openapi.progress.impl.ProgressRunner  -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.project.DumbKt                -> kotlinx.coroutines.CancellableContinuation         not found
+   com.intellij.openapi.project.DumbKt                -> kotlinx.coroutines.CancellableContinuationImpl     not found
+   com.intellij.openapi.project.DumbKt$waitForSmartMode$2$1 -> kotlinx.coroutines.CancellableContinuation         not found
    com.intellij.openapi.project.Project               -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.project.ProjectCustomDataSynchronizer -> kotlinx.coroutines.flow.Flow                       not found
+   com.intellij.openapi.startup.StartupManager        -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.util.CoroutinesKt             -> kotlinx.coroutines.CancellableContinuation         not found
+   com.intellij.openapi.util.CoroutinesKt             -> kotlinx.coroutines.CancellableContinuationImpl     not found
+   com.intellij.openapi.util.CoroutinesKt$await$2$1   -> kotlinx.coroutines.CancellableContinuation         not found
+   com.intellij.openapi.util.CoroutinesKt$await$2$2   -> kotlinx.coroutines.CancellableContinuation         not found
+   com.intellij.openapi.util.io.FileSetLimiter        -> kotlinx.coroutines.CoroutineDispatcher             not found
+   com.intellij.openapi.util.io.FileSetLimiter        -> kotlinx.coroutines.Dispatchers                     not found
+   com.intellij.openapi.util.io.FileSetLimiter        -> kotlinx.coroutines.ExecutorsKt                     not found
+   com.intellij.openapi.util.registry.RegistryManagerKt -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.openapi.util.registry.RegistryManagerKt -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.util.registry.RegistryManagerKt -> kotlinx.coroutines.CoroutineStart                  not found
+   com.intellij.openapi.util.registry.RegistryManagerKt -> kotlinx.coroutines.Job                             not found
+   com.intellij.openapi.util.registry.RegistryManagerKt$useRegistryManagerWhenReady$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.openapi.util.registry.RegistryManagerKt$useRegistryManagerWhenReadyJavaAdapter$1 -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.openapi.util.registry.RegistryValue   -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.openapi.util.registry.RegistryValue   -> kotlinx.coroutines.DisposableHandle                not found
    com.intellij.openapi.util.registry.RegistryValue   -> kotlinx.coroutines.Job                             not found
    com.intellij.openapi.util.registry.RegistryValue   -> kotlinx.coroutines.Job$Key                         not found
+   com.intellij.openapi.vfs.VirtualFileCustomDataProvider -> kotlinx.coroutines.flow.Flow                       not found
+   com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.Automaton                       not found
+   com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.AutomatonProvider               not found
+   com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.DatatypesAutomatonProvider      not found
+   com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.RegExp                          not found
+   com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.RunAutomaton                    not found
+   com.intellij.patterns.StringPatternUtil$1          -> dk.brics.automaton.RunAutomaton                    not found
+   com.intellij.platform.diagnostic.telemetry.AggregatedMetricExporter -> io.opentelemetry.sdk.common.CompletableResultCode  not found
+   com.intellij.platform.diagnostic.telemetry.AggregatedMetricExporter -> io.opentelemetry.sdk.metrics.InstrumentType        not found
+   com.intellij.platform.diagnostic.telemetry.AggregatedMetricExporter -> io.opentelemetry.sdk.metrics.data.AggregationTemporality not found
+   com.intellij.platform.diagnostic.telemetry.AggregatedMetricExporter -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.AggregatedMetricExporter -> io.opentelemetry.sdk.metrics.export.MetricExporter not found
+   com.intellij.platform.diagnostic.telemetry.AsyncSpanExporter -> io.opentelemetry.sdk.trace.data.SpanData           not found
+   com.intellij.platform.diagnostic.telemetry.FilteredMetricsExporter -> io.opentelemetry.sdk.common.CompletableResultCode  not found
+   com.intellij.platform.diagnostic.telemetry.FilteredMetricsExporter -> io.opentelemetry.sdk.metrics.InstrumentType        not found
+   com.intellij.platform.diagnostic.telemetry.FilteredMetricsExporter -> io.opentelemetry.sdk.metrics.data.AggregationTemporality not found
+   com.intellij.platform.diagnostic.telemetry.FilteredMetricsExporter -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.FilteredMetricsExporter -> io.opentelemetry.sdk.metrics.export.MetricExporter not found
+   com.intellij.platform.diagnostic.telemetry.FilteredMetricsExporter$1 -> io.opentelemetry.sdk.metrics.data.MetricData       not found
    com.intellij.platform.diagnostic.telemetry.MetricsExporterEntry -> io.opentelemetry.sdk.metrics.export.MetricExporter not found
+   com.intellij.platform.diagnostic.telemetry.MetricsExtensionsKt -> io.opentelemetry.sdk.common.InstrumentationScopeInfo not found
+   com.intellij.platform.diagnostic.telemetry.MetricsExtensionsKt -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.MetricsImporterUtils -> io.opentelemetry.sdk.metrics.data.LongPointData    not found
+   com.intellij.platform.diagnostic.telemetry.MetricsImporterUtils -> io.opentelemetry.sdk.metrics.internal.data.ImmutableLongPointData not found
+   com.intellij.platform.diagnostic.telemetry.MetricsImporterUtils$fromCsvFile$1$metrics$1 -> io.opentelemetry.sdk.metrics.data.LongPointData    not found
+   com.intellij.platform.diagnostic.telemetry.MetricsImporterUtils$fromCsvFile$2$1 -> io.opentelemetry.sdk.metrics.data.LongPointData    not found
    com.intellij.platform.diagnostic.telemetry.NoopIntelliJTracer -> kotlinx.coroutines.CoroutineName                   not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils -> io.opentelemetry.sdk.metrics.data.GaugeData        not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils -> io.opentelemetry.sdk.metrics.data.MetricDataType   not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils -> io.opentelemetry.sdk.metrics.data.SumData          not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$WhenMappings -> io.opentelemetry.sdk.metrics.data.MetricDataType   not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$1 -> io.opentelemetry.sdk.metrics.data.LongPointData    not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$1 -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$2 -> io.opentelemetry.sdk.metrics.data.DoublePointData  not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$2 -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$3 -> io.opentelemetry.sdk.metrics.data.LongPointData    not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$3 -> io.opentelemetry.sdk.metrics.data.MetricData       not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$4 -> io.opentelemetry.sdk.metrics.data.DoublePointData  not found
+   com.intellij.platform.diagnostic.telemetry.OpenTelemetryUtils$toCsvStream$4 -> io.opentelemetry.sdk.metrics.data.MetricData       not found
    com.intellij.platform.diagnostic.telemetry.TelemetryManager -> kotlinx.coroutines.BuildersKt                      not found
    com.intellij.platform.diagnostic.telemetry.TelemetryManager$forceFlushMetricsBlocking$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.platform.diagnostic.telemetry.helpers.SharedMetrics -> io.opentelemetry.context.Context                   not found
+   com.intellij.platform.diagnostic.telemetry.helpers.SharedMetrics -> io.opentelemetry.context.ImplicitContextKeyed      not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.context.Context                   not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.context.ImplicitContextKeyed      not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.context.Scope                     not found
@@ -182,49 +295,32 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt$useWithScope$2 -> io.opentelemetry.semconv.SemanticAttributes        not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt$useWithScope$2 -> kotlinx.coroutines.CoroutineScope                  not found
-   com.intellij.psi.controlFlow.ControlFlowAnalyzer   -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.ConstantExpressionVisitor    -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.ElementPresentationUtil      -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.InheritanceImplUtil          -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.IsConstantExpressionVisitor  -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.PsiClassImplUtil             -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.PsiElementFactoryImpl        -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.PsiImplUtil                  -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.PsiSubstitutorImpl$SubstitutionVisitor -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.PsiSuperMethodImplUtil       -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.cache.TypeInfo               -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.cache.TypeInfo$TypeKind      -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.compiled.ClsAnonymousClass   -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.compiled.ClsClassImpl        -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.compiled.ClsReferenceListImpl -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.JavaVarTypeUtil$UpwardProjectionTypeVisitor -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.PsiImplicitClassImpl  -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.PsiJavaFileBaseImpl   -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef$2 -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.resolve.ClassResolverProcessor -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.resolve.JavaResolveUtil -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.resolve.PsiOldInferenceHelper -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.resolve.graphInference.InferenceIncorporationPhase -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.resolve.graphInference.InferenceSession -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.resolve.graphInference.constraints.StrictSubtypingConstraint -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.tree.injected.StringLiteralEscaper -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.tree.java.PsiSuperExpressionImpl -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.impl.source.tree.java.PsiTemplateExpressionImpl -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.scope.conflictResolvers.JavaMethodsConflictResolver -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.scope.util.PsiScopesUtil          -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.InheritanceUtil              -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.JavaPsiSwitchUtil            -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.PropertyUtilBase             -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.PsiMethodUtil                -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.PsiTypesUtil                 -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.PsiUtil                      -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.TypeConversionUtil           -> com.intellij.psi.CommonClassNames                  not found
-   com.intellij.psi.util.TypesDistinctProver          -> com.intellij.psi.CommonClassNames                  not found
+   com.intellij.platform.diagnostic.telemetry.helpers.TraceUtil -> io.opentelemetry.context.Context                   not found
+   com.intellij.platform.diagnostic.telemetry.helpers.TraceUtil -> io.opentelemetry.context.Scope                     not found
+   com.intellij.util.CoroutineScopeKt                 -> kotlinx.coroutines.DisposableHandle                not found
+   com.intellij.util.CoroutineScopeKt                 -> kotlinx.coroutines.Job                             not found
+   com.intellij.util.CoroutineScopeKt                 -> kotlinx.coroutines.JobKt                           not found
+   com.intellij.util.CoroutineScopeKt$cancelOnDispose$1 -> kotlinx.coroutines.Job                             not found
+   com.intellij.util.CoroutinesKt                     -> com.intellij.platform.util.coroutines.CoroutineScopeKt not found
+   com.intellij.util.CoroutinesKt                     -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.util.CoroutinesKt                     -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.CoroutinesKt                     -> kotlinx.coroutines.CoroutineStart                  not found
+   com.intellij.util.CoroutinesKt                     -> kotlinx.coroutines.Job                             not found
+   com.intellij.util.CoroutinesKt$awaitCancellationAndInvoke$1 -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.util.CoroutinesKt$awaitCancellationAndInvoke$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.CoroutinesKt$awaitCancellationAndInvoke$1 -> kotlinx.coroutines.DelayKt                         not found
+   com.intellij.util.CoroutinesKt$awaitCancellationAndInvoke$1 -> kotlinx.coroutines.NonCancellable                  not found
+   com.intellij.util.CoroutinesKt$awaitCancellationAndInvoke$1$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.CoroutinesKt$awaitCancellationAndInvoke$1$1 -> kotlinx.coroutines.YieldKt                         not found
    com.intellij.util.EnvironmentUtil                  -> kotlinx.coroutines.CompletableDeferred             not found
    com.intellij.util.EnvironmentUtil                  -> kotlinx.coroutines.CompletableDeferredKt           not found
    com.intellij.util.EnvironmentUtil                  -> kotlinx.coroutines.Deferred                        not found
    com.intellij.util.EnvironmentUtil                  -> kotlinx.coroutines.Job                             not found
    com.intellij.util.EnvironmentUtil                  -> kotlinx.coroutines.future.FutureKt                 not found
+   com.intellij.util.JContinuationImpl                -> kotlinx.coroutines.CancellableContinuation         not found
+   com.intellij.util.JContinuationImpl                -> kotlinx.coroutines.CancellableContinuation$DefaultImpls not found
+   com.intellij.util.JavaCoroutines                   -> kotlinx.coroutines.CancellableContinuation         not found
+   com.intellij.util.JavaCoroutines                   -> kotlinx.coroutines.CancellableContinuationImpl     not found
    com.intellij.util.concurrency.BlockingJob          -> kotlinx.coroutines.Job                             not found
    com.intellij.util.concurrency.CancellationFutureTask -> kotlinx.coroutines.Job                             not found
    com.intellij.util.concurrency.CancellationScheduledFutureTask -> kotlinx.coroutines.Job                             not found
@@ -248,6 +344,14 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.util.concurrency.Propagation$childContinuation$1 -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.util.concurrency.Propagation$childContinuation$1 -> kotlinx.coroutines.Job                             not found
    com.intellij.util.concurrency.Propagation$runAsCoroutine$deferred$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.io.BlockingKt                    -> kotlinx.coroutines.CoroutineDispatcher             not found
+   com.intellij.util.io.BlockingKt                    -> kotlinx.coroutines.Dispatchers                     not found
+   com.intellij.util.io.BlockingKt                    -> kotlinx.coroutines.InterruptibleKt                 not found
+   com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarArchiveEntry not found
+   com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarArchiveOutputStream not found
+   com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarConstants not found
+   com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream not found
+   com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream not found
    com.intellij.util.io.Decompressor$Tar              -> org.apache.commons.compress.archivers.tar.TarArchiveEntry not found
    com.intellij.util.io.Decompressor$Tar              -> org.apache.commons.compress.archivers.tar.TarArchiveInputStream not found
    com.intellij.util.io.Decompressor$Tar              -> org.apache.commons.compress.compressors.CompressorException not found
@@ -255,24 +359,61 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.util.io.Decompressor$Tar              -> org.apache.commons.compress.compressors.CompressorStreamFactory not found
    com.intellij.util.io.Decompressor$Zip$ExtZip       -> org.apache.commons.compress.archivers.zip.ZipArchiveEntry not found
    com.intellij.util.io.Decompressor$Zip$ExtZip       -> org.apache.commons.compress.archivers.zip.ZipFile  not found
+   com.intellij.util.io.IoKt                          -> kotlinx.coroutines.CoroutineName                   not found
+   com.intellij.util.io.IoKt$copyToAsync$2            -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.io.IoKt$copyToAsync$2            -> kotlinx.coroutines.YieldKt                         not found
+   com.intellij.util.io.ProcessKt                     -> kotlinx.coroutines.BuildersKt                      not found
+   com.intellij.util.io.ProcessKt                     -> kotlinx.coroutines.CoroutineDispatcher             not found
+   com.intellij.util.io.ProcessKt                     -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.io.ProcessKt                     -> kotlinx.coroutines.CoroutineStart                  not found
+   com.intellij.util.io.ProcessKt                     -> kotlinx.coroutines.Deferred                        not found
+   com.intellij.util.io.ProcessKt                     -> kotlinx.coroutines.GlobalScope                     not found
+   com.intellij.util.io.ProcessKt$readLineAsync$2     -> kotlinx.coroutines.CoroutineDispatcher             not found
+   com.intellij.util.io.ProcessKt$readLineAsync$2     -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.io.ProcessKt$readLineAsync$2     -> kotlinx.coroutines.InterruptibleKt                 not found
    com.intellij.util.io.WalRecord$Companion           -> org.apache.commons.compress.utils.IOUtils          not found
    com.intellij.util.messages.MessageBus              -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.messages.impl.MessageBusCoroutinesKt -> kotlinx.coroutines.channels.ProducerScope          not found
+   com.intellij.util.messages.impl.MessageBusCoroutinesKt -> kotlinx.coroutines.flow.Flow                       not found
+   com.intellij.util.messages.impl.MessageBusCoroutinesKt -> kotlinx.coroutines.flow.FlowKt                     not found
+   com.intellij.util.messages.impl.MessageBusCoroutinesKt$subscribeAsFlow$1 -> kotlinx.coroutines.channels.ProduceKt              not found
+   com.intellij.util.messages.impl.MessageBusCoroutinesKt$subscribeAsFlow$1 -> kotlinx.coroutines.channels.ProducerScope          not found
+   com.intellij.util.messages.impl.MessageBusCoroutinesKt$subscribeAsFlow$1 -> kotlinx.coroutines.flow.Flow                       not found
    com.intellij.util.messages.impl.MessageBusImpl     -> kotlinx.coroutines.CoroutineScope                  not found
    com.intellij.util.messages.impl.MessageBusImpl     -> kotlinx.coroutines.DisposableHandle                not found
    com.intellij.util.messages.impl.MessageBusImpl     -> kotlinx.coroutines.Job                             not found
    com.intellij.util.messages.impl.MessageBusImpl     -> kotlinx.coroutines.JobKt                           not found
    com.intellij.util.messages.impl.MessageBusImpl$connect$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$getCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$getCancellable$2 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$getCancellable$2 -> kotlinx.coroutines.Deferred                        not found
+   com.intellij.util.progress.CancellationUtil$getCancellable$2 -> kotlinx.coroutines.future.FutureKt                 not found
+   com.intellij.util.progress.CancellationUtil$getMaybeCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$getMaybeCancellable$2 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$getMaybeCancellable$2 -> kotlinx.coroutines.Deferred                        not found
+   com.intellij.util.progress.CancellationUtil$getMaybeCancellable$2 -> kotlinx.coroutines.future.FutureKt                 not found
+   com.intellij.util.progress.CancellationUtil$pollCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$pollCancellable$1 -> kotlinx.coroutines.DelayKt                         not found
+   com.intellij.util.progress.CancellationUtil$pollCancellable$1 -> kotlinx.coroutines.InterruptibleKt                 not found
+   com.intellij.util.progress.CancellationUtil$sleepCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$sleepCancellable$1 -> kotlinx.coroutines.DelayKt                         not found
+   com.intellij.util.progress.CancellationUtil$waitForCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
+   com.intellij.util.progress.CancellationUtil$waitForMaybeCancellable$1 -> kotlinx.coroutines.CoroutineScope                  not found
    io.opentelemetry.api.DefaultOpenTelemetry          -> io.opentelemetry.context.propagation.ContextPropagators not found
    io.opentelemetry.api.GlobalOpenTelemetry           -> io.opentelemetry.context.propagation.ContextPropagators not found
    io.opentelemetry.api.GlobalOpenTelemetry$ObfuscatedOpenTelemetry -> io.opentelemetry.context.propagation.ContextPropagators not found
    io.opentelemetry.api.OpenTelemetry                 -> io.opentelemetry.context.propagation.ContextPropagators not found
-   io.opentelemetry.api.baggage.package-info          -> javax.annotation.ParametersAreNonnullByDefault     not found
-   io.opentelemetry.api.baggage.propagation.package-info -> javax.annotation.ParametersAreNonnullByDefault     not found
-   io.opentelemetry.api.common.package-info           -> javax.annotation.ParametersAreNonnullByDefault     not found
-   io.opentelemetry.api.internal.package-info         -> javax.annotation.ParametersAreNonnullByDefault     not found
+   io.opentelemetry.api.baggage.Baggage               -> io.opentelemetry.context.Context                   not found
+   io.opentelemetry.api.baggage.Baggage               -> io.opentelemetry.context.ContextKey                not found
+   io.opentelemetry.api.baggage.Baggage               -> io.opentelemetry.context.ImplicitContextKeyed      not found
+   io.opentelemetry.api.baggage.BaggageContextKey     -> io.opentelemetry.context.ContextKey                not found
+   io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator -> io.opentelemetry.context.Context                   not found
+   io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator -> io.opentelemetry.context.ImplicitContextKeyed      not found
+   io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator -> io.opentelemetry.context.propagation.TextMapGetter not found
+   io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator -> io.opentelemetry.context.propagation.TextMapPropagator not found
+   io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator -> io.opentelemetry.context.propagation.TextMapSetter not found
    io.opentelemetry.api.logs.DefaultLogger$NoopLogRecordBuilder -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.logs.LogRecordBuilder         -> io.opentelemetry.context.Context                   not found
-   io.opentelemetry.api.logs.package-info             -> javax.annotation.ParametersAreNonnullByDefault     not found
    io.opentelemetry.api.metrics.DefaultMeter$NoopDoubleCounter -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.metrics.DefaultMeter$NoopDoubleHistogram -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.metrics.DefaultMeter$NoopDoubleUpDownCounter -> io.opentelemetry.context.Context                   not found
@@ -285,27 +426,47 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    io.opentelemetry.api.metrics.LongCounter           -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.metrics.LongHistogram         -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.metrics.LongUpDownCounter     -> io.opentelemetry.context.Context                   not found
-   io.opentelemetry.api.metrics.package-info          -> javax.annotation.ParametersAreNonnullByDefault     not found
-   io.opentelemetry.api.package-info                  -> javax.annotation.ParametersAreNonnullByDefault     not found
    io.opentelemetry.api.trace.DefaultTracer$NoopSpanBuilder -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.trace.Span                    -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.trace.Span                    -> io.opentelemetry.context.ContextKey                not found
    io.opentelemetry.api.trace.Span                    -> io.opentelemetry.context.ImplicitContextKeyed      not found
    io.opentelemetry.api.trace.SpanBuilder             -> io.opentelemetry.context.Context                   not found
    io.opentelemetry.api.trace.SpanContextKey          -> io.opentelemetry.context.ContextKey                not found
-   io.opentelemetry.api.trace.package-info            -> javax.annotation.ParametersAreNonnullByDefault     not found
-   io.opentelemetry.api.trace.propagation.internal.package-info -> javax.annotation.ParametersAreNonnullByDefault     not found
-   io.opentelemetry.api.trace.propagation.package-info -> javax.annotation.ParametersAreNonnullByDefault     not found
-   org.jetbrains.kotlin.analysis.api.fir.components.KaFirInternalCacheStorage$softCachedValueWithPsiKey$$inlined$softCachedValue$1 -> org.jetbrains.kotlin.analysis.utils.caches.SoftCachedValueKt not found
-   org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseKotlinJavaPsiFacade$findClass$$inlined$withRestrictedDataAccess$1 -> org.jetbrains.kotlin.analysis.api.platform.restrictedAnalysis.KotlinRestrictedAnalysisServiceKt not found
-   org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseKotlinJavaPsiFacade$findClasses$$inlined$withRestrictedDataAccess$1 -> org.jetbrains.kotlin.analysis.api.platform.restrictedAnalysis.KotlinRestrictedAnalysisServiceKt not found
-   org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseKotlinJavaPsiFacade$findPackage$$inlined$withRestrictedDataAccess$1 -> org.jetbrains.kotlin.analysis.api.platform.restrictedAnalysis.KotlinRestrictedAnalysisServiceKt not found
-   org.jetbrains.kotlin.analysis.api.impl.base.java.KaBaseKotlinJavaPsiFacade$knownClassNamesInPackage$$inlined$withRestrictedDataAccess$1 -> org.jetbrains.kotlin.analysis.api.platform.restrictedAnalysis.KotlinRestrictedAnalysisServiceKt not found
-   org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger$merge$$inlined$mergeSpecificProviders$1 -> org.jetbrains.kotlin.analysis.api.platform.KotlinCompositeProviderFactoryKt not found
+   io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator -> io.opentelemetry.context.Context                   not found
+   io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator -> io.opentelemetry.context.ImplicitContextKeyed      not found
+   io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator -> io.opentelemetry.context.propagation.TextMapGetter not found
+   io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator -> io.opentelemetry.context.propagation.TextMapPropagator not found
+   io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator -> io.opentelemetry.context.propagation.TextMapSetter not found
+   org.apache.log4j.or.jms.MessageRenderer            -> javax.jms.Destination                              not found
+   org.apache.log4j.or.jms.MessageRenderer            -> javax.jms.JMSException                             not found
+   org.apache.log4j.or.jms.MessageRenderer            -> javax.jms.Message                                  not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.BaseXPath                                not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.DefaultNavigator                         not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.FunctionCallException                    not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.JaxenConstants                           not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.Navigator                                not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.UnsupportedAxisException                 not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.XPath                                    not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.saxpath.SAXPathException                 not found
+   org.jdom.xpath.jaxen.JDOMCoreNavigator             -> org.jaxen.util.SingleObjectIterator                not found
+   org.jdom.xpath.jaxen.JDOMNavigator                 -> org.jaxen.NamespaceContext                         not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.BaseXPath                                not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.JaxenException                           not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.NamespaceContext                         not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.Navigator                                not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.SimpleVariableContext                    not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.VariableContext                          not found
+   org.jdom.xpath.jaxen.JDOMXPath                     -> org.jaxen.XPath                                    not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.BaseXPath                                not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.JaxenException                           not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.NamespaceContext                         not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.Navigator                                not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.UnresolvableException                    not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.VariableContext                          not found
+   org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.XPath                                    not found
    org.jetbrains.kotlin.analysis.api.symbols.DebugSymbolRenderer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.analysis.api.symbols.DebugSymbolRenderer -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.analysis.api.utils.ApiUtilsKt -> kotlin.reflect.full.KClasses                       not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.caches.LLFirSoftLazyValue$special$$inlined$softCachedValue$1 -> org.jetbrains.kotlin.analysis.utils.caches.SoftCachedValueKt not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirScriptConfiguratorExtensionImpl not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirScriptConfiguratorExtensionImpl$Companion not found
@@ -333,20 +494,707 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.utils.relfection.ToStringDataClassLikeKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.backend.common.serialization.IrBodyDeserializer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.backend.common.serialization.IrDeclarationDeserializer -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.backend.wasm.LoweredIrWithExtraArtifacts -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarations not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedModule not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.WasmModule            not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.convertors.WasmIrToBinary not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.convertors.WasmIrToText not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.debug.DebugInformationGenerator not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.debug.DebugInformationGeneratorImpl not found
+   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.debug.DebugInformationGeneratorImpl$Companion not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.Abbreviation -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.Abbreviation -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.Abbreviation$Specification -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.Abbreviation$Specification -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.AbbreviationTable -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.AbbreviationTable -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.DebuggingSection -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.DebuggingSection -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.LineProgram -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.LineProgram -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.CompileUnit -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.CompileUnit -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.Subprogram -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.Subprogram -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.Subprogram -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.Subprogram -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.entries.Subprogram -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocationMapping not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$AdvanceLine -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$AdvancePC -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$EndSequence -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$SetAddress -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$SetColumn -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$SetFile -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.utils.StringTable -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.dwarf.utils.StringTable -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedClass not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedConstructor not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedFunction not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedModule not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedNamespace not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedObject not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedParameter not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedProperty not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedRegularClass not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$ClassType not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$ErrorType not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Function not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$IntersectionType not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$BigInt not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Boolean not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Nothing not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Number not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$String not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Unit not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Unknown not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$TypeOf not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$TypeParameter not found
+   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedVisibility not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.TypesKt               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExnRefType        not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$NoExtern not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$None not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmI16               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmI8                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Value not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI32 not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstString not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$DataIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GcType  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$HeapType not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$MemArg  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$MemoryIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$StructFieldIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TypeIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediateKind     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$Companion not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NextLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NoLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator$Companion -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator$WhenMappings -> org.jetbrains.kotlin.wasm.ir.WasmImmediateKind     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.ConstantDataCharArray -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.ConstantDataCharField -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.ConstantDataIntArray -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.ConstantDataIntField -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.JsBuiltinDescriptor   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExport$Function   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Defined  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Imported not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$NoFunc not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$None not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI32 not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$FuncIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GcType  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$Companion not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmF32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmF64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Extern not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$NoExtern not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$None not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstString not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$HeapType not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmRefNullExternrefType not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmRefNullrefType    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmUnreachableType   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGeneratorKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$Companion not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.LocationUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.LocationUtilsKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.LocationUtilsKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$Companion not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.LocationUtilsKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.LocationUtilsKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$IgnoredLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Value not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdxVector not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.WasmUnreachableType   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$Companion not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt$createBinaryTable$$inlined$sortBy$1 -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt$createBinaryTable$$inlined$sortBy$2 -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.OptimisedWhenGeneratorKt$createBinaryTable$$inlined$sortBy$2 -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.TypesKt               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmF32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmF64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmFuncRef           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmI16               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmI31Ref            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmI8                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmStructRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmV128              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$createRecursiveTypeGroups$componentFinder$1 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$createRecursiveTypeGroups$lambda$0$$inlined$sortBy$1 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt$dependencyTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RttiElements -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RttiElements -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RttiElements -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.RttiGlobal -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.SpecialITableTypes -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.SpecialITableTypes -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.SpecialITableTypes -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledFileFragment -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.TypesKt               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.UtilsKt               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmData              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmDataMode          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmDataMode$Passive  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmElement           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Declarative not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmExport$Function   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmExport$Memory     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmFuncRef           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Defined  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Imported not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$None not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmI16               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmI8                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Value not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI32 not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$DataIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$FuncIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GcType  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$HeapType not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TypeIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmInstrWithLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmLimits            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmMemory            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmModule            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmNamedModuleField  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmRefNullrefType    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmTable             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value$Function not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmTag               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$Companion not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment$JsCodeSnippet -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment$ReferencableAndDefinable -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragment$ReferencableElements -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmCompiledModuleFragmentKt -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFileCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Defined  not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmFunctionCodegenContext -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmModuleTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmStringsElements -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmStringsElements -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmStringsElements -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmEqRef             not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmF32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmF64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Extern not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Func not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Struct not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmI16               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmI31Ref            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmI8                not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullrefType    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmUnreachableType   not found
+   org.jetbrains.kotlin.backend.wasm.lower.ComplexExternalDeclarationsToTopLevelFunctionsLowering -> org.jetbrains.kotlin.wasm.ir.JsBuiltinDescriptor   not found
+   org.jetbrains.kotlin.backend.wasm.lower.ComplexExternalDeclarationsToTopLevelFunctionsLowering -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.lower.JsInteropFunctionsLowering -> org.jetbrains.kotlin.wasm.ir.JsBuiltinDescriptor   not found
+   org.jetbrains.kotlin.backend.wasm.lower.JsInteropFunctionsLowering -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmElement           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Active not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Declarative not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Passive not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmEqRef             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExnRefType        not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Function   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Global     not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Memory     not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Table      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Tag        not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmF32               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmF64               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmFuncRef           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Defined  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Imported not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Eq not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Extern not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Func not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$NoExtern not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$None not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Struct not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmI16               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmI31Ref            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmI8                not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Function not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Value not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch$CatchType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstF32 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstF64 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI32 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI64 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstString not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstU8 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$DataIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ElemIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$FuncIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GcType  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GlobalIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$HeapType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdxVector not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LocalIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$MemArg  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$MemoryIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$StructFieldIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$SymbolI32 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TableIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TagIdx  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TypeIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ValTypeVector not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmInstrWithLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmInstrWithoutLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmLimits            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmMemory            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmNamedModuleField  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmNullExnRefType    not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullExternrefType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullrefType    not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmStructRef         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmTable             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value       not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value$Expression not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value$Function not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmTag               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmUnreachableType   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.WasmV128              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.convertors.MyByteReader not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$IgnoredLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NextLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NoLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmDeserializer$Companion -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmElement           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Active not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Declarative not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode$Passive not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmEqRef             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExnRefType        not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Function   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Global     not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Memory     not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Table      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExport$Tag        not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmF32               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmF64               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmFuncRef           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Defined  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Imported not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Eq not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Extern not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Func not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$NoExtern not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$NoFunc not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$None not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Struct not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Type     not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmI16               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmI31Ref            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmI32               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmI64               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmI8                not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Function not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$BlockType$Value not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch$CatchType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstF32 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstF64 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI32 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstI64 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstString not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ConstU8 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$DataIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ElemIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$FuncIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GcType  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GlobalIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$HeapType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LabelIdxVector not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$LocalIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$MemArg  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$MemoryIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$StructFieldIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$SymbolI32 not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TableIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TagIdx  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$TypeIdx not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$ValTypeVector not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmInstrWithLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmInstrWithoutLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmLimits            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmMemory            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmNamedModuleField  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmNullExnRefType    not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullExternrefType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullType       not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmRefNullrefType    not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmRefType           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmStructRef         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmTable             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value       not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value$Expression not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value$Function not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmTag               not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmUnreachableType   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.WasmV128              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$IgnoredLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NextLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NoLocation not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$WhenMappings -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$WhenMappings -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$WhenMappings -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch$CatchType not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$WhenMappings -> org.jetbrains.kotlin.wasm.ir.WasmOp                not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCatchImmediate$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCatchImmediate$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$Catch   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$11 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$13 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$15 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$18$2 -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$26 -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$3 -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$5 -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$7 -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeCompiledFileFragment$1$9 -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeInterfaceTableTypes$1 -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeInterfaceTableTypes$2 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeRttiElements$3 -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeRttiElements$4 -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmElement$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmElement           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmElement$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmTable             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmElement$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value       not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmElementMode$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmElement           not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmElementMode$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmElement$Mode      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmElementMode$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunction$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunction$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunction$1$2$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunction$1$2$1 -> org.jetbrains.kotlin.wasm.ir.WasmLocal             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunction$1$2$2 -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunction$1$2$2 -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunctionType$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunctionType$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunctionType$1$2 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmFunctionType$1$2 -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmGlobal$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmGlobal$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmImmediate$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmImmediate$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmImmediate$26$1 -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmImmediate$26$1 -> org.jetbrains.kotlin.wasm.ir.WasmType              not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmImportDescriptor$1 -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmInstr$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmInstr$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmInstr$2$1 -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmInstr$2$1 -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStringsElements$1 -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStringsElements$2 -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStringsElements$3 -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStructDeclaration$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStructDeclaration$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmStructFieldDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStructDeclaration$1$2$1 -> org.jetbrains.kotlin.wasm.ir.WasmStructDeclaration not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmStructDeclaration$1$2$1 -> org.jetbrains.kotlin.wasm.ir.WasmTypeDeclaration   not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmTableValue$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmInstr             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmTableValue$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmTable             not found
+   org.jetbrains.kotlin.backend.wasm.serialization.WasmSerializer$serializeWasmTableValue$1$1 -> org.jetbrains.kotlin.wasm.ir.WasmTable$Value       not found
+   org.jetbrains.kotlin.backend.wasm.utils.AnnotationsKt -> org.jetbrains.kotlin.wasm.ir.JsBuiltinDescriptor   not found
+   org.jetbrains.kotlin.backend.wasm.utils.AnnotationsKt -> org.jetbrains.kotlin.wasm.ir.WasmImportDescriptor  not found
+   org.jetbrains.kotlin.backend.wasm.utils.AnnotationsKt -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
+   org.jetbrains.kotlin.backend.wasm.utils.AnnotationsKt -> org.jetbrains.kotlin.wasm.ir.WasmSymbolReadOnly    not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugData       not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugData$RawBytes not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugInformationGenerator not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugSection    not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocationMapping not found
+   org.jetbrains.kotlin.backend.wasm.utils.DwarfGenerator$SourceLocationMappingWithPositionInFunction -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocationMapping not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugData       not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugData$StringData not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugInformationGenerator not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.debug.DebugSection    not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$DefinedLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$IgnoredLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NextLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$NoLocation not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation$WithFileAndLineNumberInformation not found
+   org.jetbrains.kotlin.backend.wasm.utils.SourceMapGenerator -> org.jetbrains.kotlin.wasm.ir.source.location.SourceLocationMapping not found
+   org.jetbrains.kotlin.build.SerializationUtilsKt    -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.build.report.statistics.HttpReportService -> com.google.gson.Gson                               not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService -> com.google.gson.Gson                               not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService -> com.google.gson.GsonBuilder                        not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService$gson$1 -> com.google.gson.JsonElement                        not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService$gson$1 -> com.google.gson.JsonNull                           not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService$gson$1 -> com.google.gson.JsonPrimitive                      not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService$gson$1 -> com.google.gson.JsonSerializationContext           not found
+   org.jetbrains.kotlin.build.report.statistics.JsonReportService$gson$1 -> com.google.gson.JsonSerializer                     not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.Tuple2                                     not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.Value                                      not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.CharSeq                         not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.HashMap                         not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.Iterator                        not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.Map                             not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.Seq                             not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.Set                             not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.collection.Traversable                     not found
+   org.jetbrains.kotlin.cfg.ControlFlowInfo           -> io.vavr.control.Option                             not found
+   org.jetbrains.kotlin.cfg.ReadOnlyControlFlowInfo   -> io.vavr.collection.Map                             not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData -> io.vavr.Tuple2                                     not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData -> io.vavr.collection.HashSet                         not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData -> io.vavr.collection.Iterator                        not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData -> io.vavr.collection.Map                             not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData -> io.vavr.collection.Set                             not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData$Companion -> io.vavr.collection.Set                             not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData$ReadOnlyInitVariableControlFlowInfoImpl -> io.vavr.collection.HashMap                         not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData$ReadOnlyInitVariableControlFlowInfoImpl -> io.vavr.collection.Map                             not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData$ReadOnlyInitVariableControlFlowInfoImpl -> io.vavr.collection.Set                             not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData$ReadOnlyUseControlFlowInfoImpl -> io.vavr.collection.HashMap                         not found
+   org.jetbrains.kotlin.cfg.variable.PseudocodeVariablesData$ReadOnlyUseControlFlowInfoImpl -> io.vavr.collection.Map                             not found
+   org.jetbrains.kotlin.cfg.variable.UsageVariableControlFlowInfo -> io.vavr.collection.HashMap                         not found
+   org.jetbrains.kotlin.cfg.variable.UsageVariableControlFlowInfo -> io.vavr.collection.Map                             not found
+   org.jetbrains.kotlin.cfg.variable.VariableInitControlFlowInfo -> io.vavr.Tuple2                                     not found
+   org.jetbrains.kotlin.cfg.variable.VariableInitControlFlowInfo -> io.vavr.collection.HashMap                         not found
+   org.jetbrains.kotlin.cfg.variable.VariableInitControlFlowInfo -> io.vavr.collection.Iterator                        not found
+   org.jetbrains.kotlin.cfg.variable.VariableInitControlFlowInfo -> io.vavr.collection.Map                             not found
    org.jetbrains.kotlin.cli.common.arguments.ArgumentUtilsKt -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.cli.common.arguments.ArgumentUtilsKt -> kotlin.reflect.jvm.ReflectJvmMapping               not found
+   org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmInvocableScriptEngine -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM -> org.jetbrains.kotlin.javac.components.JavacBasedClassFinder not found
+   org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM -> org.jetbrains.kotlin.javac.components.JavacBasedSourceElementFactory not found
+   org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM -> org.jetbrains.kotlin.javac.components.StubJavaResolverCache not found
    org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperKotlinResolverImpl -> org.jetbrains.kotlin.javac.JavacWrapperKotlinResolver not found
    org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperKotlinResolverImpl -> org.jetbrains.kotlin.javac.resolve.MockKotlinField not found
    org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperRegistrar -> org.jetbrains.kotlin.javac.JavacWrapper            not found
    org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperRegistrar -> org.jetbrains.kotlin.javac.JavacWrapperKotlinResolver not found
-   org.jetbrains.kotlin.codegen.DescriptorAsmUtil     -> org.jetbrains.kotlin.codegen.intrinsics.IntrinsicMethods not found
-   org.jetbrains.kotlin.codegen.JvmCodegenUtil        -> org.jetbrains.kotlin.builtins.functions.BuiltInFunctionArity not found
+   org.jetbrains.kotlin.compilerRunner.ArgumentsToStrings -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.compilerRunner.ArgumentsToStrings -> kotlin.reflect.jvm.ReflectJvmMapping               not found
+   org.jetbrains.kotlin.fir.pipeline.FirUtilsKt       -> org.jetbrains.kotlin.fir.lightTree.LightTree2Fir   not found
+   org.jetbrains.kotlin.idea.ExplicitDefaultSubstitutor -> kotlin.reflect.jvm.ReflectJvmMapping               not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputs -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarationsKt not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputs -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputsCached -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarationsKt not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer$generateExportWithExternals$1$tsDeclarations$1 -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedDeclaration not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformerKt -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarationsKt not found
+   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformerKt -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.ir.backend.js.utils.serialization.JsIrAstDeserializer -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.ir.backend.js.utils.serialization.JsIrAstSerializer -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
+   org.jetbrains.kotlin.ir.inline.konan.NativeFirstPhaseLoweringPhasesKt -> org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr not found
    org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext -> io.vavr.collection.HashMap                         not found
    org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext -> io.vavr.collection.Map                             not found
-   org.jetbrains.kotlin.psi.stubs.elements.KtFileElementType -> org.jetbrains.kotlin.psi.stubs.KotlinStubVersions  not found
-   org.jetbrains.kotlin.psi2ir.generators.ArgumentsGenerationUtilsKt$generateReceiverForCalleeImportedFromObject$$inlined$generateExpressionValue$1 -> org.jetbrains.kotlin.psi2ir.intermediate.OnceExpressionValueKt not found
-   org.jetbrains.kotlin.psi2ir.generators.DelegatedPropertyGenerator$createThisValueForDelegate$lambda$12$$inlined$generateExpressionValue$1 -> org.jetbrains.kotlin.psi2ir.intermediate.OnceExpressionValueKt not found
-   org.jetbrains.kotlin.resolve.calls.inference.model.MutableVariableWithConstraints$addConstraint$lambda$8$$inlined$withOrigins$1 -> org.jetbrains.kotlin.resolve.calls.inference.components.InferenceLoggerKt not found
    org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo -> io.vavr.collection.Map                             not found
    org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo -> io.vavr.collection.Set                             not found
    org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfoImpl -> io.vavr.Tuple2                                     not found
@@ -365,8 +1213,10 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.types.expressions.PreliminaryLoopVisitor -> io.vavr.Tuple2                                     not found
    org.jetbrains.kotlin.types.expressions.PreliminaryLoopVisitor -> io.vavr.collection.Iterator                        not found
    org.jetbrains.kotlin.types.expressions.PreliminaryLoopVisitor -> io.vavr.collection.Map                             not found
-   org.jetbrains.kotlin.util.ConstUtils               -> com.intellij.psi.CommonClassNames                  not found
-   org.jetbrains.kotlin.util.IsConstantExpressionVisitor -> com.intellij.psi.CommonClassNames                  not found
    org.jetbrains.kotlin.util.vavr.VavrAdaptersKt      -> io.vavr.Tuple2                                     not found
    org.jetbrains.kotlin.util.vavr.VavrAdaptersKt      -> io.vavr.collection.Map                             not found
    org.jetbrains.kotlin.util.vavr.VavrAdaptersKt      -> io.vavr.control.Option                             not found
+   org.jetbrains.kotlin.utils.AnyArgsConverter        -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.utils.AnyArgsConverter        -> kotlin.reflect.jvm.KTypesJvm                       not found
+   org.jetbrains.kotlin.utils.ParametersMapKt         -> kotlin.reflect.jvm.KTypesJvm                       not found
+   org.jetbrains.kotlin.utils.StringArgsConverter     -> kotlin.reflect.jvm.KTypesJvm                       not found
