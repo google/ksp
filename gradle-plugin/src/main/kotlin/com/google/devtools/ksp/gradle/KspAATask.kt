@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.gradle
 
-import com.google.devtools.ksp.gradle.AndroidPluginIntegration.canUseAddGeneratedSourceDirectoriesApi
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
@@ -207,13 +206,9 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
-                        if (kotlinCompilation.platformType != KotlinPlatformType.androidJvm &&
-                            project.canUseAddGeneratedSourceDirectoriesApi()
-                        ) {
-                            kspAATask.dependsOn(
-                                sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
-                            )
-                        }
+                        kspAATask.dependsOn(
+                            sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
+                        )
                     }
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
