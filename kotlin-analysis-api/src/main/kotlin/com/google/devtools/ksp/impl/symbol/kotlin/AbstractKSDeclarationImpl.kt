@@ -125,7 +125,10 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
     internal open val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         if (ktDeclarationSymbol.psi is KtAnnotated) {
             (ktDeclarationSymbol.psi as KtAnnotated).annotations(ktDeclarationSymbol, this)
-        } else if (ktDeclarationSymbol.origin == KaSymbolOrigin.JAVA_SOURCE && ktDeclarationSymbol.psi != null) {
+        } else if (
+            ktDeclarationSymbol.origin == KaSymbolOrigin.JAVA_SOURCE &&
+            ktDeclarationSymbol.psi is PsiJvmModifiersOwner
+        ) {
             (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
                 .annotations.map { KSAnnotationJavaImpl.getCached(it, this) }.asSequence()
         } else {
