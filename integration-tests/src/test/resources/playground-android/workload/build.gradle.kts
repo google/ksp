@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.android.application")
     kotlin("android")
+    id("app.cash.sqldelight")
 }
 
 version = "1.0-SNAPSHOT"

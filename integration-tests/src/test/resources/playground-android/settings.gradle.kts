@@ -8,6 +8,7 @@ pluginManagement {
         kotlin("jvm") version kotlinVersion apply false
         kotlin("android") version kotlinVersion apply false
         id("com.android.application") version agpVersion apply false
+        id("app.cash.sqldelight") version "2.0.2" apply false
     }
     repositories {
         maven(testRepo)
