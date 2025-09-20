@@ -8,10 +8,10 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class AndroidViewBindingIT(useKSP2: Boolean) {
+class AndroidDataBindingIT(useKSP2: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("android-view-binding", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("android-data-binding", useKSP2 = useKSP2)
 
     @Test
     fun testPlaygroundAndroid() {
