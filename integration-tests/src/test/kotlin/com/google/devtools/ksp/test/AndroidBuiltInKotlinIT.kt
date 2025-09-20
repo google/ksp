@@ -33,4 +33,23 @@ class AndroidBuiltInKotlinIT {
             assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
         }
     }
+
+    @Test
+    fun testPlaygroundAndroidWithBuiltInKotlinAGP90() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.0.0")
+
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha05")
+
+        gradleRunner.withArguments(
+            "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
+        ).buildAndFail().let { result ->
+            Assert.assertTrue(
+                result.output.contains(
+                    "KSP is not compatible with Android Gradle Plugin's built-in Kotlin. " +
+                        "Please disable by adding android.builtInKotlin=false to gradle.properties " +
+                        "and apply kotlin(\"android\") plugin"
+                )
+            )
+        }
+    }
 }

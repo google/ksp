@@ -19,8 +19,10 @@ class AGP900IT(useKSP2: Boolean) {
     fun testRunsKSP() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.0.0")
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha03")
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha05")
         File(project.root, "gradle.properties").appendText("\nandroid.builtInKotlin=false")
+        File(project.root, "gradle.properties").appendText("\nandroid.newDsl=false")
+
         gradleRunner.withArguments(":workload:compileDebugKotlin").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome)
         }
