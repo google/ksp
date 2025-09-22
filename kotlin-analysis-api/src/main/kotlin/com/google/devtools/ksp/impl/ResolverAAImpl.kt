@@ -412,7 +412,8 @@ class ResolverAAImpl(
     override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
         return when (function.origin) {
             Origin.JAVA -> {
-                val psi = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as PsiMethod
+                val psi = ((function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as? PsiMethod)
+                    ?: return emptySequence()
                 psi.throwsList.referencedTypes.asSequence().mapNotNull {
                     analyze {
                         it.asKaType(psi)?.let { KSTypeImpl.getCached(it) }
