@@ -112,7 +112,8 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 ?.let { symbol ->
                     // ClsClassImpl means psi is decompiled psi.
                     if (
-                        symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl
+                        symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
+                        symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
                     ) {
                         (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->

@@ -81,7 +81,10 @@ class KSAnnotationImpl private constructor(
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
             annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
-                if (symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null && symbol.psi !is ClsClassImpl) {
+                if (
+                    symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
+                    symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
+                ) {
                     (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
                             annoMethod.defaultValue?.let { value ->
