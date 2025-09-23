@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.RelativizingInternalPathProvider
 import com.google.devtools.ksp.RelativizingPathProvider
 
 evaluationDependsOn(":common-util")
@@ -116,5 +117,5 @@ tasks.test.configure {
         .asFile
         .apply { if (!exists()) mkdirs() }
     jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
-    jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", temporaryDir))
+    jvmArgumentProviders.add(RelativizingInternalPathProvider("java.io.tmpdir", temporaryDir))
 }
