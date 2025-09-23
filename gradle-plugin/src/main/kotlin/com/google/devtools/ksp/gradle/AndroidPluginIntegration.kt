@@ -63,9 +63,7 @@ object AndroidPluginIntegration {
     }
 
     fun getCompilationSourceSets(kotlinCompilation: KotlinJvmAndroidCompilation): List<String> {
-        return kotlinCompilation.androidVariant
-            .sourceSets
-            .map { it.name }
+        return kotlinCompilation.androidVariant?.sourceSets?.map { it.name } ?: emptyList()
     }
 
     /**
@@ -177,12 +175,12 @@ object AndroidPluginIntegration {
             kspKotlinOutput.include("**/*.kt")
             kspClassOutput.include("**/*.class")
 
-            kotlinCompilation.androidVariant.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
-            kotlinCompilation.androidVariant.registerExternalAptJavaOutput(kspJavaOutput)
-            kotlinCompilation.androidVariant.registerPostJavacGeneratedBytecode(resourcesOutput)
+            kotlinCompilation.androidVariant?.addJavaSourceFoldersToModel(kspKotlinOutput.dir)
+            kotlinCompilation.androidVariant?.registerExternalAptJavaOutput(kspJavaOutput)
+            kotlinCompilation.androidVariant?.registerPostJavacGeneratedBytecode(resourcesOutput)
             if (project.isAgpBuiltInKotlinUsed().not()) {
                 // This API leads to circular dependency with AGP + Built in kotlin
-                kotlinCompilation.androidVariant.registerPreJavacGeneratedBytecode(kspClassOutput)
+                kotlinCompilation.androidVariant?.registerPreJavacGeneratedBytecode(kspClassOutput)
             }
         }
     }
