@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.devtools.ksp.RelativizingInternalPathProvider
 import com.google.devtools.ksp.RelativizingPathProvider
 import java.io.ByteArrayOutputStream
 
@@ -318,5 +319,5 @@ tasks.test {
         .asFile
         .apply { if (!exists()) mkdirs() }
     jvmArgumentProviders.add(RelativizingPathProvider("idea.home.path", ideaHomeDir))
-    jvmArgumentProviders.add(RelativizingPathProvider("java.io.tmpdir", temporaryDir))
+    jvmArgumentProviders.add(RelativizingInternalPathProvider("java.io.tmpdir", temporaryDir))
 }
