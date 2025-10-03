@@ -98,15 +98,7 @@ internal fun mapAAOrigin(ktSymbol: KaSymbol): Origin {
     return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
         Origin.JAVA_LIB
     } else {
-        if (ktSymbol.psi == null) {
-            if (analyze { ktSymbol.containingModule is KaLibraryModule }) {
-                Origin.KOTLIN_LIB
-            } else {
-                Origin.SYNTHETIC
-            }
-        } else {
-            symbolOrigin
-        }
+        symbolOrigin
     }
 }
 

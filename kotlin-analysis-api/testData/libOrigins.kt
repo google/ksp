@@ -22,12 +22,22 @@
 // Validating Anno3
 // Validating Anno4
 // Validating Anno5
+// Validating Foo
+// Validating FooProvider2
 // Validating JavaLib
 // Validating KotlinLibClass
 // Exception: [KotlinLibClass, T1, Any?]: SYNTHETIC
 // Exception: [KotlinLibClass, T1, Any?]: SYNTHETIC
 // Validating kotlinLibFuntion
 // Validating kotlinLibProperty
+// Validating File: App.java
+// Exception: [File: App.java, App, foo, getFoo, Foo]: SYNTHETIC
+// Exception: [File: App.java, App, foo, getFoo]: SYNTHETIC
+// Validating File: FooProvider1.kt
+// Exception: [File: FooProvider1.kt, FooProvider1, Any]: SYNTHETIC
+// Exception: [File: FooProvider1.kt, FooProvider1, foo, foo.getter(), Foo, Foo]: SYNTHETIC
+// Exception: [File: FooProvider1.kt, FooProvider1, foo, foo.getter(), Foo]: SYNTHETIC
+// Exception: [File: FooProvider1.kt, FooProvider1, foo, foo.getter()]: SYNTHETIC
 // Validating File: JavaSrc.java
 // Exception: [File: JavaSrc.java, JavaSrc, synthetic constructor for JavaSrc, JavaSrc]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaSrc, synthetic constructor for JavaSrc]: SYNTHETIC
@@ -89,6 +99,15 @@ class JavaLib<T2> {
     }
 }
 
+// FILE: FooProvider2.kt
+package foo.bar
+
+interface Foo
+
+interface FooProvider2 {
+    fun getFoo(): Foo
+}
+
 // MODULE: main(module1)
 // FILE: KotlinSrc.kt
 package foo.bar
@@ -101,6 +120,13 @@ class KotlinSrcClass<T3>(val q1: Set<T3>, val q2: Short)  {
     fun g1(q4: T3): Short = 0
     fun g2(q5: Set<T3>): Short = 0
     fun g3(q6: Set<Short>): Short = 0
+}
+
+// FILE: FooProvider1.kt
+package foo.bar
+
+interface FooProvider1 {
+    val foo: Foo
 }
 
 // FILE: JavaSrc.java
@@ -123,3 +149,8 @@ public @interface JavaAnno1 {
     @Anno5(p1 = 1, p2 = "a2")
     String value ();
 }
+
+// FILE: App.java
+package foo.bar;
+import foo.bar.FooProvider2;
+interface App extends FooProvider1, FooProvider2 {}
