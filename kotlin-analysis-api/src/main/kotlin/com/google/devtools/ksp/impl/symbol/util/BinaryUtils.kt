@@ -40,6 +40,8 @@ import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.IdentityHashMap
 
 data class BinaryClassInfo(
@@ -96,11 +98,25 @@ fun KSAnnotated.hasAnnotation(fqn: String): Boolean =
             it.annotationType.resolve().declaration.qualifiedName?.asString() == fqn
     }
 
+// Validate classfile formate. May throw.
+private fun validateClassfileFormat(content: ByteArray) {
+    if (content.size < 4) {
+        throw IllegalArgumentException("Invalid bytecode format")
+    }
+    val magic = ByteBuffer.wrap(content, 0, 4)
+        .order(ByteOrder.BIG_ENDIAN).int
+    if (magic != 0xCAFEBABE.toInt()) {
+        throw IllegalArgumentException("Invalid bytecode format: $magic")
+    }
+}
+
 fun Resolver.extractThrowsFromClassFile(
     virtualFileContent: ByteArray,
     jvmDesc: String?,
     simpleName: String?
 ): Sequence<KSType> {
+    validateClassfileFormat(virtualFileContent)
+
     val exceptionNames = mutableListOf<String>()
     ClassReader(virtualFileContent).accept(
         object : ClassVisitor(Opcodes.API_VERSION) {
