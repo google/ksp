@@ -60,6 +60,7 @@ import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaIdeApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.fir.utils.KaFirCacheCleaner
 import org.jetbrains.kotlin.analysis.api.platform.KotlinMessageBusProvider
 import org.jetbrains.kotlin.analysis.api.platform.KotlinPlatformSettings
 import org.jetbrains.kotlin.analysis.api.platform.KotlinProjectMessageBusProvider
@@ -357,6 +358,9 @@ class KotlinSymbolProcessing(
                 KotlinPlatformSettings::class.java,
                 KotlinStandalonePlatformSettings()
             )
+            // replace KaFirStopWorldCacheCleaner with no op implementation
+            @OptIn(KaImplementationDetail::class)
+            registerService(KaFirCacheCleaner::class.java, NoOpCacheCleaner::class.java)
         }
     }
 
@@ -683,4 +687,17 @@ private fun <R> maybeRunInWriteAction(f: () -> R) {
             f()
         }
     }
+}
+
+/*
+* NoOp implementation of the KaFirCacheCleaner
+*
+* The stop world cache cleaner that is registered by default [KaFirStopWorldCacheCleaner] can
+* get analysis session into an invalid state which leads to build failures.
+*/
+@OptIn(KaImplementationDetail::class)
+class NoOpCacheCleaner : KaFirCacheCleaner {
+    override fun enterAnalysis() {}
+    override fun exitAnalysis() {}
+    override fun scheduleCleanup() {}
 }
