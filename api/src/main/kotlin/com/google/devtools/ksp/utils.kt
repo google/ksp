@@ -77,11 +77,14 @@ fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean
  */
 val KSNode.containingFile: KSFile?
     get() {
-        var parent = this.parent
-        while (parent != null && parent !is KSFile) {
-            parent = parent.parent
+        var current: KSNode? = this.parent
+        while (current != null) {
+            if (current is KSFile) {
+                return current
+            }
+            current = current.parent
         }
-        return parent as? KSFile?
+        return null
     }
 
 /**
