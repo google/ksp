@@ -38,7 +38,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.CommandLineArgumentProvider
-import org.gradle.process.ExecOperations
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import org.gradle.work.NormalizeLineEndings
@@ -308,13 +307,11 @@ abstract class KspTaskNative @Inject internal constructor(
     compilation: KotlinCompilationInfo,
     objectFactory: ObjectFactory,
     providerFactory: ProviderFactory,
-    execOperations: ExecOperations
 ) : KotlinNativeCompile(
         compilation,
         objectFactory.newInstance(KotlinNativeCompilerOptionsDefault::class.java),
         objectFactory,
         providerFactory,
-        execOperations
     ),
     KspTask
 
