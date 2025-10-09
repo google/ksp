@@ -5,15 +5,12 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class IncrementalCPIT(val useKSP2: Boolean) {
+class IncrementalCPIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental-classpath", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("incremental-classpath")
 
     private val src2Dirty = listOf(
         "l1/src/main/kotlin/p1/L1.kt" to setOf(
@@ -215,11 +212,5 @@ class IncrementalCPIT(val useKSP2: Boolean) {
     @Test
     fun toggleIncrementalFlagsWithConfigurationCache() {
         toggleFlags("--configuration-cache")
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

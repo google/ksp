@@ -21,17 +21,8 @@ import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class ProcessorClasspathConfigurationsTest(val useKSP2: Boolean) {
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
-    }
+class ProcessorClasspathConfigurationsTest() {
 
     @Rule
     @JvmField
@@ -39,7 +30,7 @@ class ProcessorClasspathConfigurationsTest(val useKSP2: Boolean) {
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, useKSP2)
+    val testRule = KspIntegrationTestRule(tmpDir)
 
     private val kspConfigs by lazy {
         """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""
