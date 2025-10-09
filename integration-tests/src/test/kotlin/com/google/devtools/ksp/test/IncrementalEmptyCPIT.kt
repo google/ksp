@@ -5,16 +5,13 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class IncrementalEmptyCPIT(val useKSP2: Boolean) {
+class IncrementalEmptyCPIT() {
     @Rule
     @JvmField
     val project: TemporaryTestProject =
-        TemporaryTestProject("incremental-classpath2", "incremental-classpath", useKSP2 = useKSP2)
+        TemporaryTestProject("incremental-classpath2", "incremental-classpath")
 
     private val emptyMessage = setOf("w: [ksp] processing done")
 
@@ -51,11 +48,5 @@ class IncrementalEmptyCPIT(val useKSP2: Boolean) {
                 Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

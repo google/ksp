@@ -6,16 +6,13 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.*
 
-@RunWith(Parameterized::class)
-class MultiplatformIT(useKSP2: Boolean) {
+class MultiplatformIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp", "playground", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp", "playground")
 
     @Test
     fun testJVM() {
@@ -36,11 +33,5 @@ class MultiplatformIT(useKSP2: Boolean) {
             Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

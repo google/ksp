@@ -6,15 +6,12 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class JavaOnlyIT(useKSP2: Boolean) {
+class JavaOnlyIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("java-only", "test-processor", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("java-only", "test-processor")
 
     @Test
     fun testJavaOnly() {
@@ -33,11 +30,5 @@ class JavaOnlyIT(useKSP2: Boolean) {
             Assert.assertEquals(TaskOutcome.NO_SOURCE, result.task(":workload:kspKotlin")?.outcome)
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
