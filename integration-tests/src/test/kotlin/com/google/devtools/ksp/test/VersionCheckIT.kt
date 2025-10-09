@@ -2,34 +2,13 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class VersionCheckIT(val useKSP2: Boolean) {
+class VersionCheckIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground", useKSP2 = useKSP2)
-
-    @Test
-    fun testKsp1Usage() {
-        Assume.assumeFalse(useKSP2)
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val result = gradleRunner.withArguments(
-            "clean", "build"
-        ).run()
-
-        Assert.assertTrue(
-            result.output.contains(
-                "We noticed you are using KSP1 which is deprecated and support for it will be removed " +
-                    "soon - please migrate to KSP2 as soon as possible. KSP1 will no " +
-                    "longer be compatible with Android Gradle Plugin 9.0.0 (and above) and Kotlin 2.3.0 (and above)"
-            )
-        )
-    }
+    val project: TemporaryTestProject = TemporaryTestProject("playground")
 
     @Test
     fun testVersion() {
@@ -37,11 +16,7 @@ class VersionCheckIT(val useKSP2: Boolean) {
         val result = gradleRunner.withArguments(
             "-PkotlinVersion=2.0.0", "clean", "build"
         ).run()
-        if (!useKSP2) {
-            Assert.assertTrue(result.output.contains("is too new for kotlin"))
-        } else {
-            Assert.assertFalse(result.output.contains("is too new for kotlin"))
-        }
+        Assert.assertFalse(result.output.contains("is too new for kotlin"))
     }
 
     @Test
@@ -61,11 +36,5 @@ class VersionCheckIT(val useKSP2: Boolean) {
             "-PkotlinVersion=2.0.0", "-Pksp.version.check=false", "clean", "build"
         ).run()
         Assert.assertFalse(result.output.contains("is too new for kotlin"))
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

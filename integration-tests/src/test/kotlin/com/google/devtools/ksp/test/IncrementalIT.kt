@@ -6,78 +6,12 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class IncrementalIT(val useKSP2: Boolean) {
+class IncrementalIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental", useKSP2 = useKSP2)
-
-    val src2DirtyKSP1 = listOf(
-        "workload/src/main/java/p1/J1.java" to setOf(
-            "w: [ksp] p1/TestK2J.kt",
-            "w: [ksp] p1/TestJ2J.java",
-            "w: [ksp] p1/J1.java",
-        ),
-        "workload/src/main/java/p1/J2.java" to setOf(
-            "w: [ksp] p1/J2.java",
-        ),
-        "workload/src/main/java/p1/TestJ2J.java" to setOf(
-            "w: [ksp] p1/TestJ2J.java",
-        ),
-        "workload/src/main/java/p1/TestJ2K.java" to setOf(
-            "w: [ksp] p1/TestJ2K.java",
-        ),
-        "workload/src/main/java/p2/J2.java" to setOf(
-            "w: [ksp] p1/TestK2J.kt",
-            "w: [ksp] p2/J2.java",
-            "w: [ksp] p1/TestJ2J.java",
-        ),
-        "workload/src/main/java/p3/J1.java" to setOf(
-            "w: [ksp] p3/J1.java",
-        ),
-        "workload/src/main/java/p3/J2.java" to setOf(
-            "w: [ksp] p3/J2.java",
-        ),
-        "workload/src/main/java/p3/J3.java" to setOf(
-            "w: [ksp] p1/TestK2J.kt",
-            "w: [ksp] p1/TestJ2J.java",
-            "w: [ksp] p3/J3.java",
-        ),
-        "workload/src/main/kotlin/p1/K1.kt" to setOf(
-            "w: [ksp] p1/TestK2K.kt",
-            "w: [ksp] p1/K1.kt",
-            "w: [ksp] p1/TestJ2K.java",
-        ),
-        "workload/src/main/kotlin/p1/K2.kt" to setOf(
-            "w: [ksp] p1/K2.kt",
-        ),
-        "workload/src/main/kotlin/p1/TestK2J.kt" to setOf(
-            "w: [ksp] p1/TestK2J.kt",
-        ),
-        "workload/src/main/kotlin/p1/TestK2K.kt" to setOf(
-            "w: [ksp] p1/TestK2K.kt",
-        ),
-        "workload/src/main/kotlin/p2/K2.kt" to setOf(
-            "w: [ksp] p1/TestK2K.kt",
-            "w: [ksp] p2/K2.kt",
-            "w: [ksp] p1/TestJ2K.java",
-        ),
-        "workload/src/main/kotlin/p3/K1.kt" to setOf(
-            "w: [ksp] p3/K1.kt",
-        ),
-        "workload/src/main/kotlin/p3/K2.kt" to setOf(
-            "w: [ksp] p3/K2.kt",
-        ),
-        "workload/src/main/kotlin/p3/K3.kt" to setOf(
-            "w: [ksp] p1/TestK2K.kt",
-            "w: [ksp] p3/K3.kt",
-            "w: [ksp] p1/TestJ2K.java",
-        )
-    )
+    val project: TemporaryTestProject = TemporaryTestProject("incremental")
 
     // K2 did some more lookups, which might be a spec change or potential optimization opportunity.
     // TODO: check with JetBrains.
@@ -150,7 +84,7 @@ class IncrementalIT(val useKSP2: Boolean) {
         )
     )
 
-    val src2Dirty = if (useKSP2) src2DirtyKSP2 else src2DirtyKSP1
+    val src2Dirty = src2DirtyKSP2
 
     @Test
     fun testUpToDate() {
@@ -334,11 +268,5 @@ class IncrementalIT(val useKSP2: Boolean) {
 
         File(project.root, "validator/src/main/kotlin/Validator.kt").appendText("\n")
         buildAndCheck()
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

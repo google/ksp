@@ -3,14 +3,11 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class OnlyResourcesFileIT(useKSP2: Boolean) {
+class OnlyResourcesFileIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("only-resources-file", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("only-resources-file")
 
     @Test
     fun test() {
@@ -20,11 +17,5 @@ class OnlyResourcesFileIT(useKSP2: Boolean) {
             "--configuration-cache-problems=warn",
             "jvmJar",
         ).build()
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

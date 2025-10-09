@@ -7,15 +7,12 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class OutputDepsIt(val useKSP2: Boolean) {
+class OutputDepsIt() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("output-deps", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("output-deps")
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(
@@ -180,11 +177,5 @@ class OutputDepsIt(val useKSP2: Boolean) {
                 Assert.assertEquals(expectedDirties, outputs)
             }
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
