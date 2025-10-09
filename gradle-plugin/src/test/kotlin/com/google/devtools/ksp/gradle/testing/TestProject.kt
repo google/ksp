@@ -24,7 +24,6 @@ import java.io.File
 class TestProject(
     val rootDir: File,
     val testConfig: TestConfig,
-    val useKSP2: Boolean,
 ) {
     val processorModule = TestModule(
         rootDir.resolve("processor")
@@ -60,7 +59,6 @@ class TestProject(
         val contents = """
             
             kotlin.jvm.target.validation.mode=warning
-            ksp.useKSP2=$useKSP2
         """.trimIndent()
         rootDir.resolve("gradle.properties").appendText(contents)
     }

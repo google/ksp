@@ -10,7 +10,7 @@ import java.io.File
 class AndroidBuiltInKotlinIT {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-builtinkotlin", "playground", true)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-builtinkotlin", "playground")
 
     @Test
     fun testPlaygroundAndroidWithBuiltInKotlin() {

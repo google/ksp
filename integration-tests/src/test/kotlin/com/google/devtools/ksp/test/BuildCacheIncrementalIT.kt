@@ -3,15 +3,12 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class BuildCacheIncrementalIT(useKSP2: Boolean) {
+class BuildCacheIncrementalIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("buildcache-incremental", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("buildcache-incremental")
 
     // See https://github.com/google/ksp/issues/2042 for details
     @Test
@@ -37,11 +34,5 @@ class BuildCacheIncrementalIT(useKSP2: Boolean) {
             "package p1\n\nclass K1(val foo: String)\n"
         )
         gradleRunner.withArguments("assemble", "--stacktrace").build()
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

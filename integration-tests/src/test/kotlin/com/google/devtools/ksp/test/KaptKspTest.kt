@@ -4,15 +4,12 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class KaptKspTest(useKSP2: Boolean) {
+class KaptKspTest() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("android-view-binding", "playground", useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("android-view-binding", "playground")
 
     @Test
     fun testPlaygroundAndroid() {
@@ -35,11 +32,5 @@ class KaptKspTest(useKSP2: Boolean) {
             Assert.assertTrue(kspTask.isNotEmpty())
             Assert.assertTrue(kaptTask.isNotEmpty())
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

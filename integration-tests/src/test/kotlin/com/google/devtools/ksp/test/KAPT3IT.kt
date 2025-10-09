@@ -6,16 +6,13 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.JarFile
 
-@RunWith(Parameterized::class)
-class KAPT3IT(useKSP2: Boolean) {
+class KAPT3IT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kapt3", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("kapt3")
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -48,11 +45,5 @@ class KAPT3IT(useKSP2: Boolean) {
         val Akt = File(project.root, "workload/src/main/java/com/example/A.kt")
         Akt.appendText("class Void")
         gradleRunner.buildAndCheck("--build-cache", "build")
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

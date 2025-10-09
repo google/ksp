@@ -6,16 +6,13 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.JarFile
 
-@RunWith(Parameterized::class)
-class VerboseIT(useKSP2: Boolean) {
+class VerboseIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground")
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -66,11 +63,5 @@ class VerboseIT(useKSP2: Boolean) {
             )
             Assert.assertTrue(result.output.contains("v: [ksp] round 3 of processing"))
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

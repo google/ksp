@@ -4,15 +4,12 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class IncrementalRemovalIT(useKSP2: Boolean) {
+class IncrementalRemovalIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental-removal", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("incremental-removal")
 
     @Test
     fun testRemoveOutputs() {
@@ -34,11 +31,5 @@ class IncrementalRemovalIT(useKSP2: Boolean) {
         gradleRunner.withArguments("run").build().let { result ->
             Assert.assertTrue(result.output.contains("result: generated"))
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
