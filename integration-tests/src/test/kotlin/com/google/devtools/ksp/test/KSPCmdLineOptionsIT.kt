@@ -7,8 +7,6 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
@@ -18,11 +16,10 @@ import java.net.URLClassLoader
 
 data class CompileResult(val exitCode: ExitCode, val output: String)
 
-@RunWith(Parameterized::class)
-class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
+class KSPCmdLineOptionsIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("cmd-options", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("cmd-options")
 
     private fun runCmdCompiler(pluginOptions: List<String>): CompileResult {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -65,36 +62,6 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
         val outStream = ByteArrayOutputStream()
         val exitCode = compiler.exec(PrintStream(outStream), *compilerArgs.toTypedArray())
         return CompileResult(exitCode, outStream.toString())
-    }
-
-    @Test
-    fun testWithCompilationOnError() {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        Assume.assumeFalse(useKSP2)
-        val result = runCmdCompiler(listOf("apoption=error=true", "withCompilation=true"))
-        val errors = result.output.lines().filter { it.startsWith("error: [ksp]") }
-        val exitCode = result.exitCode
-        Assert.assertTrue(exitCode == ExitCode.COMPILATION_ERROR)
-        Assert.assertTrue(
-            errors.any {
-                it.startsWith("error: [ksp] java.lang.IllegalStateException: Error on request")
-            }
-        )
-    }
-
-    @Test
-    fun testWithCompilationOnErrorOk() {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        Assume.assumeFalse(useKSP2)
-        val result = runCmdCompiler(listOf("apoption=error=true", "returnOkOnError=true", "withCompilation=true"))
-        val errors = result.output.lines().filter { it.startsWith("error: [ksp]") }
-        val exitCode = result.exitCode
-        Assert.assertTrue(exitCode == ExitCode.OK)
-        Assert.assertTrue(
-            errors.any {
-                it.startsWith("error: [ksp] java.lang.IllegalStateException: Error on request")
-            }
-        )
     }
 
     private fun getKsp2Main(mainClassName: String): Method {
@@ -144,7 +111,6 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
     }
 
     fun testKsp2(mainClassName: String, platformArgs: List<String>) {
-        Assume.assumeTrue(useKSP2)
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
 
         val sharedArgs = getKsp2SharedArgs()
@@ -214,11 +180,5 @@ class KSPCmdLineOptionsIT(val useKSP2: Boolean) {
                 "-target=LinuxX64"
             )
         )
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
