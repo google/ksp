@@ -4,15 +4,12 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class GeneratedRefsIncIT(val useKSP2: Boolean) {
+class GeneratedRefsIncIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("refs-gen", "test-processor", useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("refs-gen", "test-processor")
 
     @Test
     fun testGeneratedRefsInc() {
@@ -68,11 +65,5 @@ class GeneratedRefsIncIT(val useKSP2: Boolean) {
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }
             Assert.assertEquals(expectedBar, outputs)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

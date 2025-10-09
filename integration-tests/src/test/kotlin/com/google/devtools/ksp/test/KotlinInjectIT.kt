@@ -3,15 +3,12 @@ package com.google.devtools.ksp.test
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class KotlinInjectIT(val useKSP2: Boolean) {
+class KotlinInjectIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kotlin-inject", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("kotlin-inject")
 
     @Test
     fun triggerException() {
@@ -45,11 +42,5 @@ class KotlinInjectIT(val useKSP2: Boolean) {
         // Should not trigger the caching issue
         setup(shouldFail = false)
         gradleRunner.withArguments("compileKotlinJvm").build()
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
