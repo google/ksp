@@ -19,7 +19,7 @@ package com.google.devtools.ksp.test.fixtures
 
 import org.gradle.testkit.runner.BuildResult
 
-private val compileKotlinSrcs = Regex("\\[KOTLIN\\] compile iteration: ([^\\r\\n]*)")
+private val compileKotlinSrcs = Regex("\\[KOTLIN\\] v: compile iteration: ([^\\r\\n]*)")
 
 class BuildResultFixture(private val result: BuildResult) {
 
