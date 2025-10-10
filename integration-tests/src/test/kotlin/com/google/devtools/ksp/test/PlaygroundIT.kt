@@ -56,7 +56,7 @@ class PlaygroundIT() {
             """
             kotlin {
                 compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
                }
             }
             """.trimIndent()
@@ -65,7 +65,7 @@ class PlaygroundIT() {
             """
             kotlin {
                 compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
                }
             }
             """.trimIndent()
@@ -247,18 +247,17 @@ class PlaygroundIT() {
             """
             kotlin {
               compilerOptions {
-                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
+                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
                 languageVersion.set(compilerOptions.apiVersion)
                }
             }
             """.trimIndent()
         )
 
-        val kotlinVersion = System.getProperty("kotlinVersion").split('-').first()
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("language version: 1.8"))
-            Assert.assertTrue(result.output.contains("api version: 1.8"))
+            Assert.assertTrue(result.output.contains("language version: 1.9"))
+            Assert.assertTrue(result.output.contains("api version: 1.9"))
             val expectedKspVersion = "2.0"
             Assert.assertTrue(result.output.contains("ksp version: $expectedKspVersion"))
         }
