@@ -4,15 +4,12 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class OnErrorIT(useKSP2: Boolean) {
+class OnErrorIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("on-error", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("on-error")
 
     @Test
     fun testOnError() {
@@ -110,11 +107,5 @@ class OnErrorIT(useKSP2: Boolean) {
             )
         }
         project.restore("workload/build.gradle.kts")
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

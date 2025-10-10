@@ -4,14 +4,11 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class AndroidDataBindingIT(useKSP2: Boolean) {
+class AndroidDataBindingIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("android-data-binding", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("android-data-binding")
 
     @Test
     fun testPlaygroundAndroid() {
@@ -32,11 +29,5 @@ class AndroidDataBindingIT(useKSP2: Boolean) {
                 }
                 Assert.assertTrue(kspTask.isNotEmpty())
             }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

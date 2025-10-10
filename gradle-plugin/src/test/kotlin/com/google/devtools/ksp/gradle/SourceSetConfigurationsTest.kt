@@ -28,22 +28,12 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class SourceSetConfigurationsTest(val useKSP2: Boolean) {
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
-    }
+class SourceSetConfigurationsTest() {
 
     @Rule
     @JvmField
@@ -51,7 +41,7 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, useKSP2)
+    val testRule = KspIntegrationTestRule(tmpDir)
 
     @Test
     fun configurationsForJvmApp() {
@@ -167,7 +157,6 @@ class SourceSetConfigurationsTest(val useKSP2: Boolean) {
 
     @Test
     fun registerGeneratedSourcesToAndroid() {
-        Assume.assumeTrue(useKSP2)
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(

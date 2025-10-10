@@ -10,7 +10,7 @@ import java.io.File
 class AGP890IT {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", true)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
 
     @Test
     fun testRunsKSP() {

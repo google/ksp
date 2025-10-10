@@ -7,16 +7,13 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.*
 
-@RunWith(Parameterized::class)
-class PlaygroundIT(val useKSP2: Boolean) {
+class PlaygroundIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground")
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -59,7 +56,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
             """
             kotlin {
                 compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
                }
             }
             """.trimIndent()
@@ -68,7 +65,7 @@ class PlaygroundIT(val useKSP2: Boolean) {
             """
             kotlin {
                 compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
                }
             }
             """.trimIndent()
@@ -250,23 +247,18 @@ class PlaygroundIT(val useKSP2: Boolean) {
             """
             kotlin {
               compilerOptions {
-                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
+                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
                 languageVersion.set(compilerOptions.apiVersion)
                }
             }
             """.trimIndent()
         )
 
-        val kotlinVersion = System.getProperty("kotlinVersion").split('-').first()
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("language version: 1.8"))
-            Assert.assertTrue(result.output.contains("api version: 1.8"))
-            if (!useKSP2) {
-                // In case KSP 1 and KSP 2 uses different compiler versions, ignore this test for KSP 2 for now.
-                Assert.assertTrue(result.output.contains("compiler version: $kotlinVersion"))
-            }
-            val expectedKspVersion = if (useKSP2) "2.0" else "1.0"
+            Assert.assertTrue(result.output.contains("language version: 1.9"))
+            Assert.assertTrue(result.output.contains("api version: 1.9"))
+            val expectedKspVersion = "2.0"
             Assert.assertTrue(result.output.contains("ksp version: $expectedKspVersion"))
         }
         project.restore(buildFile.path)
@@ -412,11 +404,5 @@ class PlaygroundIT(val useKSP2: Boolean) {
                 Assert.assertTrue(jarFile.getEntry("BinaryClass.class").size > 0)
             }
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

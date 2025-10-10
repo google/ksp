@@ -74,6 +74,7 @@ import java.io.File
 import java.io.ObjectOutputStream
 import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
+import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.Callable
 import javax.inject.Inject
@@ -664,4 +665,11 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             throw Exception("KSP failed with exit code: $exitCode")
         }
     }
+}
+
+internal fun File.isParentOf(childCandidate: File): Boolean {
+    val parentPath = Paths.get(this.absolutePath).normalize()
+    val childCandidatePath = Paths.get(childCandidate.absolutePath).normalize()
+
+    return childCandidatePath.startsWith(parentPath)
 }

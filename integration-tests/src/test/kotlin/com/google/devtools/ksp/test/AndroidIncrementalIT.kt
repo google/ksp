@@ -23,21 +23,17 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class AndroidIncrementalIT(useKSP2: Boolean) {
+class AndroidIncrementalIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
 
-    private fun testWithExtraFlags(vararg extras: String) {
+    private fun testWithExtraFlags() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
-            *extras,
             "clean", ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:compileDebugKotlin")?.outcome)
@@ -54,7 +50,6 @@ class AndroidIncrementalIT(useKSP2: Boolean) {
         }
 
         gradleRunner.withArguments(
-            *extras,
             ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(
@@ -67,11 +62,5 @@ class AndroidIncrementalIT(useKSP2: Boolean) {
     @Test
     fun testPlaygroundAndroid() {
         testWithExtraFlags()
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

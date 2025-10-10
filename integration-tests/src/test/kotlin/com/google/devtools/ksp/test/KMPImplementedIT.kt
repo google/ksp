@@ -8,16 +8,13 @@ import org.junit.Assume
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.*
 
-@RunWith(Parameterized::class)
-class KMPImplementedIT(val useKSP2: Boolean) {
+class KMPImplementedIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kmp", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("kmp")
 
     private fun verify(jarName: String, contents: List<String>) {
         val artifact = File(project.root, jarName)
@@ -167,8 +164,6 @@ class KMPImplementedIT(val useKSP2: Boolean) {
     @Test
     fun testDefaultArgumentsImpl() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        // FIXME: KSP1
-        Assume.assumeTrue(useKSP2)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val newSrc = File(project.root, "workload-wasm/src/wasmJsMain/kotlin/com/example/AnnoOnProperty.kt")
@@ -440,11 +435,5 @@ class AnnoOnProperty {
             verifyAll(this)
             checkExecutionOptimizations(output)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

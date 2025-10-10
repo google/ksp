@@ -32,17 +32,8 @@ import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class GradleCompilationTest(val useKSP2: Boolean) {
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
-    }
+class GradleCompilationTest() {
 
     @Rule
     @JvmField
@@ -50,7 +41,7 @@ class GradleCompilationTest(val useKSP2: Boolean) {
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, useKSP2)
+    val testRule = KspIntegrationTestRule(tmpDir)
 
     @Test
     fun errorMessageFailsCompilation() {
@@ -270,13 +261,6 @@ class GradleCompilationTest(val useKSP2: Boolean) {
                         )
                     }
                 }
-                tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach {
-                    doFirst {
-                        options.get().forEach { option ->
-                            println("${'$'}{option.key}=${'$'}{option.value}")
-                        }
-                    }
-                }
                 tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
                     doFirst {
                         kspConfig.processorOptions.get().forEach { (key, value) ->
@@ -349,17 +333,6 @@ class GradleCompilationTest(val useKSP2: Boolean) {
                      }
                  }
                  afterEvaluate {
-                   tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach {
-                     val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
-                     commandLineArgumentProviders.add(Provider(destination.asFile))
-
-                     options.get().forEach { option ->
-                       println("${'$'}{option.key}=${'$'}{option.value}")
-                     }
-                     commandLineArgumentProviders.get().forEach { commandLine ->
-                       println("commandLine=${'$'}{commandLine.asArguments()}")
-                     }
-                   }
                    tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
                      val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
                      commandLineArgumentProviders.add(Provider(destination.asFile))
@@ -389,11 +362,6 @@ class GradleCompilationTest(val useKSP2: Boolean) {
         testRule.appModule.buildFileAdditions.add(
             """
                  afterEvaluate {
-                   tasks.withType<com.google.devtools.ksp.gradle.KspTaskJvm>().configureEach {
-                     libraries.files.forEach {
-                       println("HAS LIBRARY: ${'$'}{it.path}")
-                     }
-                   }
                    tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
                      kspConfig.libraries.files.forEach {
                        println("HAS LIBRARY: ${'$'}{it.path}")
@@ -420,27 +388,11 @@ class GradleCompilationTest(val useKSP2: Boolean) {
         assertThat(result.output).doesNotContain("app/build/generated/ksp/main/classes")
     }
 
-    @Test
-    fun changingKsp2AtRuntime() {
-        Assume.assumeFalse(useKSP2)
-        testRule.setupAppAsJvmApp()
-        testRule.appModule.buildFileAdditions.add(
-            """
-                @OptIn(com.google.devtools.ksp.KspExperimental::class)
-                ksp { useKsp2.set(true) }
-            """.trimIndent()
-        )
-
-        testRule.runner().withArguments().build()
-    }
-
     /**
      * Regression test for b/362279380
      */
     @Test
     fun androidGradlePluginBuiltInKotlin() {
-        // built in kotlin will only be supported with KSP2
-        Assume.assumeTrue(useKSP2)
         testRule.setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport = true)
         testRule.appModule.dependencies.addAll(
             listOf(
