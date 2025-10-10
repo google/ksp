@@ -261,13 +261,6 @@ class GradleCompilationTest() {
                         )
                     }
                 }
-                tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach {
-                    doFirst {
-                        options.get().forEach { option ->
-                            println("${'$'}{option.key}=${'$'}{option.value}")
-                        }
-                    }
-                }
                 tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
                     doFirst {
                         kspConfig.processorOptions.get().forEach { (key, value) ->
@@ -340,17 +333,6 @@ class GradleCompilationTest() {
                      }
                  }
                  afterEvaluate {
-                   tasks.withType<com.google.devtools.ksp.gradle.KspTask>().configureEach {
-                     val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
-                     commandLineArgumentProviders.add(Provider(destination.asFile))
-
-                     options.get().forEach { option ->
-                       println("${'$'}{option.key}=${'$'}{option.value}")
-                     }
-                     commandLineArgumentProviders.get().forEach { commandLine ->
-                       println("commandLine=${'$'}{commandLine.asArguments()}")
-                     }
-                   }
                    tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
                      val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
                      commandLineArgumentProviders.add(Provider(destination.asFile))
@@ -380,11 +362,6 @@ class GradleCompilationTest() {
         testRule.appModule.buildFileAdditions.add(
             """
                  afterEvaluate {
-                   tasks.withType<com.google.devtools.ksp.gradle.KspTaskJvm>().configureEach {
-                     libraries.files.forEach {
-                       println("HAS LIBRARY: ${'$'}{it.path}")
-                     }
-                   }
                    tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
                      kspConfig.libraries.files.forEach {
                        println("HAS LIBRARY: ${'$'}{it.path}")
