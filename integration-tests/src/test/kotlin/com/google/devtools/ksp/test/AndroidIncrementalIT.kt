@@ -30,11 +30,10 @@ class AndroidIncrementalIT() {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
 
-    private fun testWithExtraFlags(vararg extras: String) {
+    private fun testWithExtraFlags() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
-            *extras,
             "clean", ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:compileDebugKotlin")?.outcome)
@@ -51,7 +50,6 @@ class AndroidIncrementalIT() {
         }
 
         gradleRunner.withArguments(
-            *extras,
             ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
             Assert.assertEquals(
