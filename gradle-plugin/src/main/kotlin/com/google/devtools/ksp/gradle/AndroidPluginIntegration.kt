@@ -73,7 +73,7 @@ object AndroidPluginIntegration {
     private fun tryUpdateKspWithAndroidSourceSets(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<*>,
+        kspTaskProvider: TaskProvider<KspAATask>,
         androidComponent: Component?
     ) {
         val kaptProvider: TaskProvider<Task>? =
@@ -96,17 +96,8 @@ object AndroidPluginIntegration {
                 val dir = destinationProperty?.get()?.asFile
                 sources.filter { dir?.isParentOf(it.dir) != true }
             }
-            when (task) {
-                is KspTaskJvm -> {
-                    task.source(filteredSources)
-                }
 
-                is KspAATask -> {
-                    task.kspConfig.javaSourceRoots.from(filteredSources)
-                }
-
-                else -> Unit
-            }
+            task.kspConfig.javaSourceRoots.from(filteredSources)
         }
     }
 
@@ -124,27 +115,26 @@ object AndroidPluginIntegration {
     private fun registerGeneratedSources(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<*>,
+        kspTaskProvider: TaskProvider<KspAATask>,
         javaOutputDir: Provider<Directory>,
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
         resourcesOutputDir: Provider<Directory>,
         androidComponent: Component?,
-        useKsp2: Boolean,
     ) {
-        if (androidComponent != null && useKsp2 && project.canUseAddGeneratedSourceDirectoriesApi()) {
+        if (androidComponent != null && project.canUseAddGeneratedSourceDirectoriesApi()) {
             androidComponent.sources.java?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> (task as KspAATask).kspConfig.javaOutputDir }
+                wiredWith = { task -> task.kspConfig.javaOutputDir }
             )
 
             androidComponent.sources.java?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> (task as KspAATask).kspConfig.kotlinOutputDir }
+                wiredWith = { task -> task.kspConfig.kotlinOutputDir }
             )
             androidComponent.sources.resources?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> (task as KspAATask).kspConfig.resourceOutputDir }
+                wiredWith = { task -> task.kspConfig.resourceOutputDir }
             )
 
             // this is a bit of a hack because merge*GeneratedProguardFiles in AGP looks in the CLASSES artifacts
@@ -188,13 +178,12 @@ object AndroidPluginIntegration {
     fun syncSourceSets(
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
-        kspTaskProvider: TaskProvider<*>,
+        kspTaskProvider: TaskProvider<KspAATask>,
         javaOutputDir: Provider<Directory>,
         kotlinOutputDir: Provider<Directory>,
         classOutputDir: Provider<Directory>,
         resourcesOutputDir: Provider<Directory>,
         androidComponent: Component?,
-        useKsp2: Boolean,
     ) {
         // Order is important here as we update task with AGP generated sources and
         // then update AGP with source that KSP will generate.
@@ -210,7 +199,6 @@ object AndroidPluginIntegration {
             classOutputDir,
             resourcesOutputDir,
             androidComponent,
-            useKsp2
         )
     }
 
