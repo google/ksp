@@ -132,7 +132,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val useKsp2 = project.extensions.getByType(KspExtension::class.java).useKsp2.get()
 
         if (useKsp2.not()) {
-            project.logger.error(
+            throw RuntimeException(
                 "KSP1 is no longer available. Please use KSP2 instead and do not explicitly set ksp.useKsp2 to false " +
                     "via the DSL or the Gradle property please"
             )
