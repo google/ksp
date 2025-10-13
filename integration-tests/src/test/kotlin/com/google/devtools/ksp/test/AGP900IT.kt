@@ -5,15 +5,12 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class AGP900IT(useKSP2: Boolean) {
+class AGP900IT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground", useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
 
     @Test
     fun testRunsKSP() {
@@ -26,11 +23,5 @@ class AGP900IT(useKSP2: Boolean) {
         gradleRunner.withArguments(":workload:compileDebugKotlin").build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

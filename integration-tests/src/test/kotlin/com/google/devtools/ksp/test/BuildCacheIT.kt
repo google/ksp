@@ -5,19 +5,16 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class BuildCacheIT(useKSP2: Boolean) {
+class BuildCacheIT() {
     @Rule
     @JvmField
-    val project1: TemporaryTestProject = TemporaryTestProject("buildcache", "playground", useKSP2)
+    val project1: TemporaryTestProject = TemporaryTestProject("buildcache", "playground")
 
     @Rule
     @JvmField
-    val project2: TemporaryTestProject = TemporaryTestProject("buildcache", "playground", useKSP2)
+    val project2: TemporaryTestProject = TemporaryTestProject("buildcache", "playground")
 
     @Test
     fun testBuildCache() {
@@ -40,11 +37,5 @@ class BuildCacheIT(useKSP2: Boolean) {
         ).build().let {
             Assert.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

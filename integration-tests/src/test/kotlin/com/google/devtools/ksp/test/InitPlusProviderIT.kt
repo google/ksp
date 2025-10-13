@@ -5,16 +5,13 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.JarFile
 
-@RunWith(Parameterized::class)
-class InitPlusProviderIT(useKSP2: Boolean) {
+class InitPlusProviderIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("init-plus-provider", useKSP2 = useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("init-plus-provider")
 
     @Test
     fun testInitPlusProvider() {
@@ -32,11 +29,5 @@ class InitPlusProviderIT(useKSP2: Boolean) {
             Assert.assertTrue(jarFile.getEntry("HelloFromProvider.class").size > 0)
             Assert.assertTrue(jarFile.getEntry("GeneratedFromProvider.class").size > 0)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }

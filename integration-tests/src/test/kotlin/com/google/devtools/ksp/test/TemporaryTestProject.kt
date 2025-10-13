@@ -6,7 +6,6 @@ import java.io.File
 class TemporaryTestProject(
     projectName: String,
     baseProject: String? = null,
-    val useKSP2: Boolean = false,
 ) : TemporaryFolder() {
     private val testProjectSrc = File("src/test/resources", projectName)
     private val baseProjectSrc = baseProject?.let { File("src/test/resources", baseProject) }
@@ -36,9 +35,6 @@ class TemporaryTestProject(
 
         appendProperty("org.gradle.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m")
         appendProperty("kotlin.daemon.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m")
-
-        // Update `params` in test classses to enable / disable KSP2.
-        appendProperty("ksp.useKSP2=$useKSP2")
 
         // To debug compiler and compiler plugin:
         // 1. s/kotlin-compiler/kotlin-compiler-embeddable in integration-tests/build.gradle.kts, and

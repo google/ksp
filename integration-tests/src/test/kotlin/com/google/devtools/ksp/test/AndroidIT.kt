@@ -5,15 +5,12 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class AndroidIT(useKSP2: Boolean) {
+class AndroidIT() {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground", useKSP2)
+    val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground")
 
     @Test
     fun testPlaygroundAndroid() {
@@ -35,12 +32,6 @@ class AndroidIT(useKSP2: Boolean) {
             assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
             assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "KSP2={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 }
 

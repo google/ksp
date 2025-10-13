@@ -30,7 +30,6 @@ import kotlin.reflect.KClass
  */
 class KspIntegrationTestRule(
     private val tmpFolder: TemporaryFolder,
-    private val useKSP2: Boolean
 ) : TestWatcher() {
     /**
      * Initialized when the test starts.
@@ -169,6 +168,6 @@ class KspIntegrationTestRule(
 
     override fun starting(description: Description) {
         super.starting(description)
-        testProject = TestProject(tmpFolder.newFolder(), testConfig, useKSP2)
+        testProject = TestProject(tmpFolder.newFolder(), testConfig)
     }
 }
