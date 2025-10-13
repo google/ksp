@@ -18,16 +18,12 @@
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
-import com.intellij.core.CoreApplicationEnvironment
-import com.intellij.mock.MockProject
-import com.intellij.psi.PsiTreeChangeAdapter
-import com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -63,8 +59,10 @@ class KotlinSymbolProcessingCommandLineProcessor : CommandLineProcessor {
 //   https://github.com/tschuchortdev/kotlin-compile-testing
 @Suppress("DEPRECATION")
 @ExperimentalCompilerApi
-class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
-    override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
+class KotlinSymbolProcessingComponentRegistrar : CompilerPluginRegistrar() {
+    override val pluginId: String = "com.google.devtools.ksp.symbol-processing"
+
+    override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         // KSP 1.x don't and will not support K2. Do not register if language version >= 2.
         if (configuration.languageVersionSettings.languageVersion >= LanguageVersion.KOTLIN_2_0)
             return
@@ -87,13 +85,8 @@ class KotlinSymbolProcessingComponentRegistrar : ComponentRegistrar {
                 throw IllegalStateException("ksp: `incremental` is incompatible with `withCompilation`.")
             }
             val kotlinSymbolProcessingHandlerExtension = KotlinSymbolProcessingExtension(options, logger)
-            AnalysisHandlerExtension.registerExtension(project, kotlinSymbolProcessingHandlerExtension)
+            AnalysisHandlerExtension.registerExtension(kotlinSymbolProcessingHandlerExtension)
             configuration.put(CommonConfigurationKeys.LOOKUP_TRACKER, DualLookupTracker())
-
-            // Dummy extension point; Required by dropPsiCaches().
-            CoreApplicationEnvironment.registerExtensionPoint(
-                project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
-            )
         }
     }
 
