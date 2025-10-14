@@ -143,7 +143,6 @@ tasks.named<Test>("test").configure {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
-    dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 

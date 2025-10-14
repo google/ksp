@@ -51,7 +51,6 @@ jobs:
       with:
         name: test-reports-${{ runner.os }}
         path: |
-          compiler-plugin/build/reports
           integration-tests/build/reports
           gradle-plugin/build/reports
           common-util/build/reports

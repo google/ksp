@@ -74,7 +74,6 @@ jobs:
       with:
         name: test-reports-${{ matrix.branch }}-${{ matrix.os }}
         path: |
-          compiler-plugin/build/reports
           integration-tests/build/reports
           gradle-plugin/build/reports
           common-util/build/reports
