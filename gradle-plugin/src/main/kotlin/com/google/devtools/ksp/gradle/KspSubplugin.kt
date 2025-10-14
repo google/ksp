@@ -67,7 +67,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
         const val KSP_API_ID = "symbol-processing-api"
         const val KSP_COMPILER_PLUGIN_ID = "symbol-processing"
-        const val KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE = "symbol-processing-cmdline"
         const val KSP_GROUP_ID = "com.google.devtools.ksp"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
@@ -180,10 +179,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspClasspathCfg.name,
             "$KSP_GROUP_ID:$KSP_API_ID:$KSP_VERSION"
         )
-        project.dependencies.add(
-            kspClasspathCfg.name,
-            "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID:$KSP_VERSION"
-        )
 
         val kspClasspathCfgNonEmbeddable = project.configurations.maybeCreate(
             KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE
@@ -191,10 +186,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         project.dependencies.add(
             kspClasspathCfgNonEmbeddable.name,
             "$KSP_GROUP_ID:$KSP_API_ID:$KSP_VERSION"
-        )
-        project.dependencies.add(
-            kspClasspathCfgNonEmbeddable.name,
-            "$KSP_GROUP_ID:$KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE:$KSP_VERSION"
         )
 
         // Create and configure KSP tasks.
@@ -259,14 +250,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
             artifactId = KSP_COMPILER_PLUGIN_ID,
-            version = KSP_VERSION
-        )
-
-    override fun getPluginArtifactForNative(): SubpluginArtifact =
-        SubpluginArtifact(
-            groupId = "com.google.devtools.ksp",
-            artifactId = KSP_COMPILER_PLUGIN_ID_NON_EMBEDDABLE,
-            version = KSP_VERSION
         )
 }
 

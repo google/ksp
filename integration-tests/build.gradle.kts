@@ -17,8 +17,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
-    testImplementation(project(":symbol-processing"))
-    testImplementation(project(":symbol-processing-cmdline"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
 }
@@ -36,8 +34,6 @@ fun Test.configureCommonSettings() {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
-    dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
-    dependsOn(":symbol-processing-cmdline:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 
