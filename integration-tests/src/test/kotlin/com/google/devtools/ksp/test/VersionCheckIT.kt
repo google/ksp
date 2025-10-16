@@ -14,6 +14,11 @@ class VersionCheckIT(val useKSP2: Boolean) {
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground", useKSP2 = useKSP2)
 
+    fun String.containsOnce(substring: String, ignoreCase: Boolean = false): Boolean {
+        val firstIndex = this.indexOf(substring, ignoreCase = ignoreCase)
+        return firstIndex != -1 && firstIndex == this.lastIndexOf(substring, ignoreCase = ignoreCase)
+    }
+
     @Test
     fun testKsp1Usage() {
         Assume.assumeFalse(useKSP2)
@@ -23,7 +28,7 @@ class VersionCheckIT(val useKSP2: Boolean) {
         ).run()
 
         Assert.assertTrue(
-            result.output.contains(
+            result.output.containsOnce(
                 "We noticed you are using KSP1 which is deprecated and support for it will be removed " +
                     "soon - please migrate to KSP2 as soon as possible. KSP1 will no " +
                     "longer be compatible with Android Gradle Plugin 9.0.0 (and above) and Kotlin 2.3.0 (and above)"
