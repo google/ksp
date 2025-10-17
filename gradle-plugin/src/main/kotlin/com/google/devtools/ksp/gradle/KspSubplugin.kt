@@ -250,6 +250,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         SubpluginArtifact(
             groupId = "com.google.devtools.ksp",
             artifactId = KSP_COMPILER_PLUGIN_ID,
+            version = KSP_VERSION
         )
 }
 
