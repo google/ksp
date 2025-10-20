@@ -7,10 +7,10 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
 
-val kotlinBaseVersion: String? by project
-if (extra.has("kspOnlyVersion") && kotlinBaseVersion != null) {
+// kspOnlyVersion is still used by CI to build 2.0.x releases.
+if (extra.has("kspOnlyVersion") && !extra.has("kspVersion")) {
     val kspOnlyVersion = extra.get("kspOnlyVersion") as String
-    extra.set("kspVersion", "$kotlinBaseVersion-$kspOnlyVersion")
+    extra.set("kspVersion", kspOnlyVersion)
 }
 
 if (!extra.has("kspVersion")) {
