@@ -42,6 +42,7 @@
 // KtEnumWithVal: values: PUBLIC
 // KtEnumWithVal: valueOf: PUBLIC
 // JavaAnnotation: value: PUBLIC
+// IntersectionC: property: PUBLIC
 // END
 
 // MODULE: lib
@@ -68,6 +69,14 @@ open class KotlinClass {
 enum class LibEnum(val value: Int) {
     A(0), B(1), C(2);
 }
+// FILE: Intersection.kt
+interface IntersectionA {
+    val property: String
+}
+interface IntersectionB {
+    val property: String
+}
+interface IntersectionC: IntersectionA, IntersectionB
 
 // MODULE: main(lib)
 // FILE: a.kt
