@@ -52,6 +52,7 @@ class VisibilityProcessor : AbstractTestProcessor() {
         val kotlinEnum = resolver.getClassDeclarationByName("KtEnum")!!
         val kotlinEnumWithVal = resolver.getClassDeclarationByName("KtEnumWithVal")!!
         val javaAnnotation = resolver.getClassDeclarationByName("JavaAnnotation")!!
+        val intersectionClass = resolver.getClassDeclarationByName("IntersectionC")!!
         javaClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
                 "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
@@ -81,6 +82,9 @@ class VisibilityProcessor : AbstractTestProcessor() {
         }.forEach { results.add(it) }
         javaAnnotation.declarations.filterIsInstance<KSPropertyDeclaration>().map {
             "${javaAnnotation.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+        }.forEach { results.add(it) }
+        intersectionClass.getAllProperties().map {
+            "${intersectionClass.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
         }.forEach { results.add(it) }
         return emptyList()
     }
