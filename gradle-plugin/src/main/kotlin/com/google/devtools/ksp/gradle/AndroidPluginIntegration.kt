@@ -87,6 +87,7 @@ object AndroidPluginIntegration {
                     "and apply kotlin(\"android\") plugin"
             )
         }
+        val kspExtension = project.extensions.getByType(KspExtension::class.java)
         val sources = androidVariant.getSourceFolders(SourceKind.JAVA)
 
         kspTaskProvider.configure { task ->
@@ -94,7 +95,10 @@ object AndroidPluginIntegration {
             val filteredSources = Callable {
                 val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
                 val dir = destinationProperty?.get()?.asFile
-                sources.filter { dir?.isParentOf(it.dir) != true }
+                sources.filter { source ->
+                    dir?.isParentOf(source.dir) != true &&
+                        source.dir !in kspExtension.excludedSources
+                }
             }
 
             task.kspConfig.javaSourceRoots.from(filteredSources)
