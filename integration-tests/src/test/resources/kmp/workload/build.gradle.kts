@@ -7,7 +7,6 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
     jvm {
-        withJava()
     }
     js(IR) {
         browser()
@@ -47,6 +46,10 @@ kotlin {
         val androidNativeX64Main by getting
         val androidNativeArm64Main by getting
     }
+}
+
+tasks.withType<AbstractTestTask>().configureEach {
+    failOnNoDiscoveredTests = false
 }
 
 dependencies {

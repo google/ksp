@@ -18,5 +18,4 @@ pluginManagement {
 rootProject.name = "init-plus-provider"
 
 include(":workload")
-include(":init-processor")
 include(":provider-processor")

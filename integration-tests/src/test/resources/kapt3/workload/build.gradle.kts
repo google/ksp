@@ -25,3 +25,7 @@ ksp {
     arg("option1", "value1")
     arg("option2", "value2")
 }
+
+tasks.withType<AbstractTestTask>().configureEach {
+    failOnNoDiscoveredTests = false
+}
