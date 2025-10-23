@@ -17,7 +17,6 @@ buildCache {
     val buildCacheDir: String by settings
     local {
         directory = File(buildCacheDir)
-        removeUnusedEntriesAfterDays = 30
     }
 }
 

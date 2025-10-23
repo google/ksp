@@ -17,4 +17,3 @@ pluginManagement {
 rootProject.name = "hmpp"
 
 include(":workload")
-include(":test-processor")
