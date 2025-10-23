@@ -88,6 +88,13 @@ class KspIntegrationTestRule(
                 PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
             )
         )
+        testProject.appModule.buildFileAdditions.add(
+            """
+            tasks.withType<AbstractTestTask>().configureEach {
+                failOnNoDiscoveredTests = false
+            }
+            """.trimIndent()
+        )
     }
 
     /**
@@ -148,6 +155,10 @@ class KspIntegrationTestRule(
                 defaultConfig {
                     minSdk = 24
                 }
+            }
+            
+            tasks.withType<AbstractTestTask>().configureEach {
+                failOnNoDiscoveredTests = false
             }
             
             dependencies {
