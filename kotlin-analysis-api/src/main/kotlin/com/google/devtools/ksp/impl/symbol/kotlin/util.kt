@@ -86,7 +86,7 @@ internal val ktSymbolOriginToOrigin = mapOf(
     KaSymbolOrigin.DELEGATED to Origin.SYNTHETIC,
     KaSymbolOrigin.PROPERTY_BACKING_FIELD to Origin.KOTLIN,
     KaSymbolOrigin.JAVA_SYNTHETIC_PROPERTY to Origin.SYNTHETIC,
-    KaSymbolOrigin.INTERSECTION_OVERRIDE to Origin.KOTLIN,
+    KaSymbolOrigin.INTERSECTION_OVERRIDE to Origin.SYNTHETIC,
     // TODO: distinguish between kotlin library and java library.
     KaSymbolOrigin.LIBRARY to Origin.KOTLIN_LIB,
     KaSymbolOrigin.SUBSTITUTION_OVERRIDE to Origin.JAVA_LIB
@@ -98,15 +98,7 @@ internal fun mapAAOrigin(ktSymbol: KaSymbol): Origin {
     return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
         Origin.JAVA_LIB
     } else {
-        if (ktSymbol.psi == null) {
-            if (analyze { ktSymbol.containingModule is KaLibraryModule }) {
-                Origin.KOTLIN_LIB
-            } else {
-                Origin.SYNTHETIC
-            }
-        } else {
-            symbolOrigin
-        }
+        symbolOrigin
     }
 }
 
