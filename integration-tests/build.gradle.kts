@@ -14,7 +14,6 @@ plugins {
 dependencies {
     testImplementation("junit:junit:$junitVersion")
     testImplementation(gradleTestKit())
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinBaseVersion")
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")

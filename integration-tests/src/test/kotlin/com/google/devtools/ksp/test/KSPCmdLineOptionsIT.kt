@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
-import org.jetbrains.kotlin.cli.common.ExitCode
 import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
@@ -10,8 +9,6 @@ import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.net.URLClassLoader
-
-data class CompileResult(val exitCode: ExitCode, val output: String)
 
 class KSPCmdLineOptionsIT() {
     @Rule
