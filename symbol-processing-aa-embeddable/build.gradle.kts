@@ -85,7 +85,7 @@ class AAServiceTransformer : Transformer {
     }
 
     override fun hasTransformedResource(): Boolean {
-        return entries.size > 0
+        return entries.isNotEmpty()
     }
 
     override fun modifyOutputStream(os: ZipOutputStream, preserveFileTimestamps: Boolean) {
