@@ -7,7 +7,6 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
     jvm {
-        withJava()
     }
     linuxX64() {
         binaries {
@@ -37,4 +36,8 @@ dependencies {
     add("kspLinuxX64Test", project(":test-processor"))
     add("kspMingwX64", project(":test-processor"))
     add("kspMingwX64Test", project(":test-processor"))
+}
+
+tasks.withType<AbstractTestTask>().configureEach {
+    failOnNoDiscoveredTests = false
 }
