@@ -1,8 +1,6 @@
 description = "Kotlin Symbol Processor"
 
-val kotlinBaseVersion: String by project
 val junitVersion: String by project
-val googleTruthVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
 

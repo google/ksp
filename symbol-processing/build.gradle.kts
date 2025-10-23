@@ -2,7 +2,6 @@ description = "Dummy Artifact for KotlinCompilerPluginSupportPlugin"
 
 val signingKey: String? by project
 val signingPassword: String? by project
-val kotlinBaseVersion: String by project
 
 plugins {
     kotlin("jvm")

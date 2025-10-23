@@ -15,7 +15,6 @@ val signingPassword: String? by project
 val kotlinBaseVersion: String by project
 
 val aaKotlinBaseVersion: String by project
-val aaIntellijVersion: String by project
 val aaCoroutinesVersion: String by project
 
 plugins {
