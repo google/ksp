@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
@@ -147,7 +148,9 @@ class KspConfigurations(private val project: Project) {
      * and things get worse when you add product flavors. So, we use AGP sets as the source of truth.
      */
     private fun decorateKotlinTarget(target: KotlinTarget, isKotlinMultiplatform: Boolean) {
-        if (target.platformType == KotlinPlatformType.androidJvm) {
+        if (target.platformType == KotlinPlatformType.androidJvm &&
+            target !is KotlinMultiplatformAndroidLibraryTarget
+        ) {
             if (project.useLegacyVariantApi() || isKotlinMultiplatform) {
                 createAndroidSourceSetConfigurations(target.project, target)
             }
@@ -181,7 +184,9 @@ class KspConfigurations(private val project: Project) {
         compilation.kotlinSourceSets.mapTo(results) {
             getKotlinConfigurationName(compilation, it)
         }
-        if (compilation.platformType == KotlinPlatformType.androidJvm) {
+        if (compilation.platformType == KotlinPlatformType.androidJvm &&
+            compilation.target !is KotlinMultiplatformAndroidLibraryTarget
+        ) {
             compilation as KotlinJvmAndroidCompilation
             AndroidPluginIntegration.getCompilationSourceSets(compilation).mapTo(results) {
                 getAndroidConfigurationName(compilation.target, it)
