@@ -30,10 +30,13 @@
 // JavaAnnotation ->
 // stringArray = [j-x, j-y, null, j-z]
 // classArray = [Integer, Character]
+// p0: MyAnnotation(tag: [1, 2, 3])
 // END
 // FILE: a.kt
 
 annotation class KotlinAnnotation(val stringArray: Array<String?>, val classArray: Array<KClass<*>?>)
+
+annotation class MyAnnotation(val tag: ByteArray)
 
 @KotlinAnnotation(
     stringArray = ["a", "b", null, "c"],
@@ -44,6 +47,13 @@ annotation class KotlinAnnotation(val stringArray: Array<String?>, val classArra
     classArray = [String::class, Long::class]
 )
 class KotlinAnnotated
+
+class Main(
+    @MyAnnotation(
+        tag = [1.toByte(), 2.toByte(), 3.toByte()]
+    )
+    val p0: String = ""
+)
 
 // FILE: JavaAnnotation.java
 public @interface JavaAnnotation {
