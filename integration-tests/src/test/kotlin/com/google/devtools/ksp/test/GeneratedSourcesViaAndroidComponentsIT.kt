@@ -13,9 +13,8 @@ class GeneratedSourcesViaAndroidComponentsIT {
 
     @Test
     fun `test no circular dependency for other source generating tasks depending on ksp`() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.12.1")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=8.9.0")
         File(project.root, "workload/build.gradle.kts").appendText(
             """                
                 android {

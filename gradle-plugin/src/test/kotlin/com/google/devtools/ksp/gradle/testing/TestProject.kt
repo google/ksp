@@ -84,7 +84,7 @@ class TestProject(
             android.useAndroidX=true
             org.gradle.jvmargs=-Xmx2048M -XX:MaxMetaspaceSize=512m
         """.trimIndent()
-        rootDir.resolve("gradle.properties").writeText(contents)
+        rootDir.resolve("gradle.properties").appendText(contents)
     }
 
     private fun writeBuildFile() {

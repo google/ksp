@@ -7,7 +7,6 @@ pluginManagement {
         id("com.google.devtools.ksp") version kspVersion apply false
         kotlin("jvm") version kotlinVersion apply false
         id("com.android.application") version agpVersion apply false
-        id("com.android.experimental.built-in-kotlin") version agpVersion apply false
     }
     repositories {
         maven(testRepo)

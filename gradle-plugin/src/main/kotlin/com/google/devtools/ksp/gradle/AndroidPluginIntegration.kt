@@ -139,18 +139,33 @@ object AndroidPluginIntegration {
         resourcesOutputDir: Provider<Directory>,
         androidComponent: Component?,
     ) {
-        if (androidComponent != null && project.canUseInternalKspApis()) {
-            (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
-                taskProvider = kspTaskProvider,
-                wiredWith = { task -> (task as KspAATask).kspConfig.javaOutputDir },
-                DirectoryEntry.Kind.KSP
-            )
+        if (androidComponent != null &&
+            project.canUseAddGeneratedSourceDirectoriesApi() &&
+            project.isAgpBuiltInKotlinUsed()
+        ) {
+            if (project.canUseInternalKspApis()) {
+                (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
+                    taskProvider = kspTaskProvider,
+                    wiredWith = { task -> task.kspConfig.javaOutputDir },
+                    DirectoryEntry.Kind.KSP
+                )
 
-            (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
-                taskProvider = kspTaskProvider,
-                wiredWith = { task -> (task as KspAATask).kspConfig.kotlinOutputDir },
-                DirectoryEntry.Kind.KSP
-            )
+                (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
+                    taskProvider = kspTaskProvider,
+                    wiredWith = { task -> task.kspConfig.kotlinOutputDir },
+                    DirectoryEntry.Kind.KSP
+                )
+            } else {
+                (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
+                    taskProvider = kspTaskProvider,
+                    wiredWith = { task -> task.kspConfig.javaOutputDir }
+                )
+
+                (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
+                    taskProvider = kspTaskProvider,
+                    wiredWith = { task -> task.kspConfig.kotlinOutputDir }
+                )
+            }
             androidComponent.sources.resources?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
                 wiredWith = { task -> task.kspConfig.resourceOutputDir }
