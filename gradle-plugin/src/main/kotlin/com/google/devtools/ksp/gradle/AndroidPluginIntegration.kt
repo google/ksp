@@ -21,6 +21,9 @@ import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ScopedArtifacts
+import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.api.variant.impl.FlatSourceDirectoriesForJavaImpl
+import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import com.google.devtools.ksp.gradle.utils.getAgpVersion
@@ -54,7 +57,7 @@ object AndroidPluginIntegration {
     private fun decorateAndroidExtension(project: Project, onSourceSet: (String) -> Unit) {
         val sourceSets = when (val androidExt = project.extensions.getByName("android")) {
             is BaseExtension -> androidExt.sourceSets
-            is CommonExtension<*, *, *, *, *, *> -> androidExt.sourceSets
+            is CommonExtension -> androidExt.sourceSets
             else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
         }
         sourceSets.configureEach {
@@ -76,32 +79,42 @@ object AndroidPluginIntegration {
         kspTaskProvider: TaskProvider<KspAATask>,
         androidComponent: Component?
     ) {
-        val kaptProvider: TaskProvider<Task>? =
-            project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
+        if (project.isAgpBuiltInKotlinUsed()) {
+            if (androidComponent != null && project.canUseInternalKspApis()) {
+                val sources =
+                    (androidComponent.sources.java!! as FlatSourceDirectoriesForJavaImpl).allButKspAndKaptGenerators()
 
-        val androidVariant = kotlinCompilation.androidVariant
-        if (androidVariant == null) {
-            throw RuntimeException(
-                "KSP is not compatible with Android Gradle Plugin's built-in Kotlin. " +
-                    "Please disable by adding android.builtInKotlin=false to gradle.properties " +
-                    "and apply kotlin(\"android\") plugin"
-            )
-        }
-        val kspExtension = project.extensions.getByType(KspExtension::class.java)
-        val sources = androidVariant.getSourceFolders(SourceKind.JAVA)
-
-        kspTaskProvider.configure { task ->
-            // this is workaround for KAPT generator that prevents circular dependency
-            val filteredSources = Callable {
-                val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
-                val dir = destinationProperty?.get()?.asFile
-                sources.filter { source ->
-                    dir?.isParentOf(source.dir) != true &&
-                        source.dir !in kspExtension.excludedSources
+                kspTaskProvider.configure { task ->
+                    task.kspConfig.javaSourceRoots.from(sources)
                 }
+            } else {
+                throw RuntimeException(
+                    "KSP is not compatible with Android Gradle Plugin's built-in Kotlin. Please disable " +
+                        "by adding android.builtInKotlin=false and android.newDsl=false to gradle.properties " +
+                        "and apply kotlin(\"android\") plugin"
+                )
             }
+        } else {
+            val kaptProvider: TaskProvider<Task>? =
+                project.locateTask(kotlinCompilation.compileTaskProvider.kaptTaskName)
 
-            task.kspConfig.javaSourceRoots.from(filteredSources)
+            val androidVariant = kotlinCompilation.androidVariant
+            val kspExtension = project.extensions.getByType(KspExtension::class.java)
+            val sources = androidVariant?.getSourceFolders(SourceKind.JAVA)
+
+            kspTaskProvider.configure { task ->
+                // this is workaround for KAPT generator that prevents circular dependency
+                val filteredSources = Callable {
+                    val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
+                    val dir = destinationProperty?.get()?.asFile
+                    sources?.filter { source ->
+                        dir?.isParentOf(source.dir) != true &&
+                            source.dir !in kspExtension.excludedSources
+                    }
+                }
+
+                task.kspConfig.javaSourceRoots.from(filteredSources)
+            }
         }
     }
 
@@ -126,15 +139,17 @@ object AndroidPluginIntegration {
         resourcesOutputDir: Provider<Directory>,
         androidComponent: Component?,
     ) {
-        if (androidComponent != null && project.canUseAddGeneratedSourceDirectoriesApi()) {
-            androidComponent.sources.java?.addGeneratedSourceDirectory(
+        if (androidComponent != null && project.canUseInternalKspApis()) {
+            (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> task.kspConfig.javaOutputDir }
+                wiredWith = { task -> (task as KspAATask).kspConfig.javaOutputDir },
+                DirectoryEntry.Kind.KSP
             )
 
-            androidComponent.sources.java?.addGeneratedSourceDirectory(
+            (androidComponent.sources.java!! as FlatSourceDirectoriesImpl).addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> task.kspConfig.kotlinOutputDir }
+                wiredWith = { task -> (task as KspAATask).kspConfig.kotlinOutputDir },
+                DirectoryEntry.Kind.KSP
             )
             androidComponent.sources.resources?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
@@ -231,5 +246,10 @@ object AndroidPluginIntegration {
     fun Project.canUseAddGeneratedSourceDirectoriesApi(): Boolean {
         val agpVersion = project.getAgpVersion() ?: return false
         return agpVersion >= AndroidPluginVersion(8, 12, 0).alpha(6)
+    }
+
+    fun Project.canUseInternalKspApis(): Boolean {
+        val agpVersion = project.getAgpVersion() ?: return false
+        return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(12)
     }
 }
