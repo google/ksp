@@ -262,9 +262,6 @@ class SourceSetConfigurationsTest() {
                 "debugUnitTest", "SRC:generated/ksp/debugUnitTest/kotlin"
             ),
             SourceFolder(
-                "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/kotlin"
-            ),
-            SourceFolder(
                 "debug", "SRC:generated/ksp/debug/java"
             ),
             SourceFolder(
@@ -275,9 +272,6 @@ class SourceSetConfigurationsTest() {
             ),
             SourceFolder(
                 "debugUnitTest", "SRC:generated/ksp/debugUnitTest/java"
-            ),
-            SourceFolder(
-                "releaseUnitTest", "SRC:generated/ksp/releaseUnitTest/java"
             ),
             // TODO byte sources seems to be overridden by tmp/kotlin-classes/debug
             //  assert them as well once fixed

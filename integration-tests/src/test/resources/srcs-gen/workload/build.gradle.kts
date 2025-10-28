@@ -4,7 +4,6 @@ plugins {
     // DO NOT CHANGE THE ORDER.
     id("com.google.devtools.ksp")
     id("com.android.library")
-    kotlin("android")
 }
 
 version = "1.0-SNAPSHOT"

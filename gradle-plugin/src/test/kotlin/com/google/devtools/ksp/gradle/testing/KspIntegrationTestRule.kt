@@ -125,6 +125,12 @@ class KspIntegrationTestRule(
                 .plugins
                 .add(PluginDeclaration.id("com.android.experimental.built-in-kotlin", testConfig.androidBaseVersion))
         } else {
+            val contents = """
+            android.builtInKotlin=false
+            android.newDsl=false
+            
+            """.trimIndent()
+            testProject.rootDir.resolve("gradle.properties").appendText(contents)
             testProject.appModule.plugins.add(PluginDeclaration.kotlin("android", testConfig.kotlinBaseVersion))
         }
         addAndroidBoilerplate()
@@ -134,6 +140,12 @@ class KspIntegrationTestRule(
      * Sets up the app module as a multiplatform app with the specified [targets], wrapped in a kotlin { } block.
      */
     fun setupAppAsMultiplatformApp(targets: String) {
+        val contents = """
+            android.builtInKotlin=false
+            android.newDsl=false
+            
+        """.trimIndent()
+        testProject.rootDir.resolve("gradle.properties").appendText(contents)
         testProject.appModule.plugins.addAll(
             listOf(
                 PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
