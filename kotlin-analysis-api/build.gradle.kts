@@ -17,6 +17,7 @@ val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
 val aaKotlinBaseVersion: String by project
+val aaTestFrameworkVersion: String by project
 val aaIntellijVersion: String by project
 val aaGuavaVersion: String by project
 val aaAsmVersion: String by project
@@ -118,10 +119,10 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaTestFrameworkVersion")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
-    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
+    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaTestFrameworkVersion")
 
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))

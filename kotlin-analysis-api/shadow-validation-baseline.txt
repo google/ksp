@@ -494,10 +494,6 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.utils.relfection.ToStringDataClassLikeKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.backend.common.serialization.IrBodyDeserializer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.backend.common.serialization.IrDeclarationDeserializer -> kotlin.reflect.full.KClasses                       not found
-   org.jetbrains.kotlin.backend.wasm.LoweredIrWithExtraArtifacts -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
-   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarations not found
-   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedModule not found
-   org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
    org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.WasmExport            not found
    org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.WasmModule            not found
    org.jetbrains.kotlin.backend.wasm.WasmCompilerKt   -> org.jetbrains.kotlin.wasm.ir.WasmSymbol            not found
@@ -532,32 +528,6 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.backend.wasm.dwarf.lines.LineInstruction$SetFile -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
    org.jetbrains.kotlin.backend.wasm.dwarf.utils.StringTable -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter not found
    org.jetbrains.kotlin.backend.wasm.dwarf.utils.StringTable -> org.jetbrains.kotlin.wasm.ir.convertors.ByteWriter$OutputStream not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedClass not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedConstructor not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedDeclaration not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedFunction not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedModule not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedNamespace not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedObject not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedParameter not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedProperty not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedRegularClass not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$ClassType not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$ErrorType not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Function not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$IntersectionType not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$BigInt not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Boolean not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Nothing not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Number not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$String not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Unit not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$Primitive$Unknown not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$TypeOf not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedType$TypeParameter not found
-   org.jetbrains.kotlin.backend.wasm.export.ExportModelGenerator -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedVisibility not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.TypesKt               not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmAnyRef            not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExnRefType        not found
@@ -1182,16 +1152,6 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.compilerRunner.ArgumentsToStrings -> kotlin.reflect.jvm.ReflectJvmMapping               not found
    org.jetbrains.kotlin.fir.pipeline.FirUtilsKt       -> org.jetbrains.kotlin.fir.lightTree.LightTree2Fir   not found
    org.jetbrains.kotlin.idea.ExplicitDefaultSubstitutor -> kotlin.reflect.jvm.ReflectJvmMapping               not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputs -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarationsKt not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputs -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputsCached -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarationsKt not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer$generateExportWithExternals$1$tsDeclarations$1 -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportedDeclaration not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformerKt -> org.jetbrains.kotlin.ir.backend.js.tsexport.ExportModelToTsDeclarationsKt not found
-   org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformerKt -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
-   org.jetbrains.kotlin.ir.backend.js.utils.serialization.JsIrAstDeserializer -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
-   org.jetbrains.kotlin.ir.backend.js.utils.serialization.JsIrAstSerializer -> org.jetbrains.kotlin.ir.backend.js.tsexport.TypeScriptFragment not found
    org.jetbrains.kotlin.ir.inline.konan.NativeFirstPhaseLoweringPhasesKt -> org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr not found
    org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext -> io.vavr.collection.HashMap                         not found
    org.jetbrains.kotlin.load.java.structure.impl.classFiles.ClassifierResolutionContext -> io.vavr.collection.Map                             not found
