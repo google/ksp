@@ -156,8 +156,8 @@ class SourceSetConfigurationsTest() {
     }
 
     @Test
-    fun registerGeneratedSourcesToAndroid() {
-        testRule.setupAppAsAndroidApp()
+    fun registerGeneratedSourcesToAndroid_BuiltInKotlinEnabled() {
+        testRule.setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport = true)
         testRule.appModule.dependencies.addAll(
             listOf(
                 module("ksp", testRule.processorModule),
@@ -196,6 +196,7 @@ class SourceSetConfigurationsTest() {
                             val taskProvider =
                                 project.tasks.register<DisplayAllSources>("${'$'}{component.name}DisplayAllSources") {
                                     sourceFolders.addAll(sources.java!!.all)
+                                    sourceFolders.addAll(sources.kotlin!!.all)
                                     componentName.set(component.name)
                                 }
                             globalTaskProvider.configure {

@@ -39,9 +39,10 @@ class AndroidBuiltInKotlinIT {
         ).buildAndFail().let { result ->
             Assert.assertTrue(
                 result.output.contains(
-                    "KSP is not compatible with Android Gradle Plugin's built-in Kotlin. Please disable " +
-                        "by adding android.builtInKotlin=false and android.newDsl=false to gradle.properties " +
-                        "and apply kotlin(\"android\") plugin"
+                    "KSP is not compatible with Android Gradle Plugin's built-in Kotlin prior to AGP " +
+                        "version 9.0.0-alpha12. Please upgrade to AGP 9.0.0-alpha12 or alternatively disable " +
+                        "built-in kotlin by adding android.builtInKotlin=false and android.newDsl=false to " +
+                        "gradle.properties and apply kotlin(\"android\") plugin"
                 )
             )
         }
