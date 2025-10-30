@@ -137,7 +137,9 @@ fun Resolver.extractThrowsFromClassFile(
         ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
     )
     return exceptionNames.mapNotNull {
-        this.getClassDeclarationByName(it.replace("/", "."))?.asStarProjectedType()
+        this.getClassDeclarationByName(
+            it.replace("/", ".").replace("$", ".")
+        )?.asStarProjectedType()
     }.asSequence()
 }
 

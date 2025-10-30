@@ -83,6 +83,9 @@ class ThrowListProcessor : AbstractTestProcessor() {
         jlib.getConstructors().map {
             resolver.getJvmCheckedException(it).toResult()
         }.sorted().forEach { result.add(it) }
+        jlib.declarations.filter { it.simpleName.asString() == "throwsNested" }.map {
+            resolver.getJvmCheckedException(it as KSFunctionDeclaration).toResult()
+        }.sorted().forEach { result.add(it) }
         return emptyList()
     }
 
