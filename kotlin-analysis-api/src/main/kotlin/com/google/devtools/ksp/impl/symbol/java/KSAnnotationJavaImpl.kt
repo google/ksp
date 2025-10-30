@@ -87,7 +87,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 } else {
                     calcValue(it.value)
                 }
-                KSValueArgumentLiteImpl.getCached(
+                KSValueArgumentLiteImpl(
                     name?.let { KSNameImpl.getCached(it) },
                     calculatedValue,
                     this@KSAnnotationJavaImpl,
@@ -125,7 +125,7 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                     } else {
                                         calcValue(value)
                                     }
-                                    KSValueArgumentLiteImpl.getCached(
+                                    KSValueArgumentLiteImpl(
                                         KSNameImpl.getCached(annoMethod.name),
                                         calculatedValue,
                                         this@KSAnnotationJavaImpl,
