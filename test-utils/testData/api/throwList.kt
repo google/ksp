@@ -38,11 +38,19 @@
 // java.io.IOException,java.lang.IndexOutOfBoundsException
 // java.lang.IndexOutOfBoundsException
 // java.io.IOException
+// OuterException,OuterException.NestedException
 // END
 // MODULE: lib
 // FILE: JavaLib.java
 import java.io.IOException;
 import java.lang.IndexOutOfBoundsException;
+
+class OuterException extends IOException {
+    static class NestedException extends IOException {
+
+    }
+}
+
 public class JavaLib {
     public JavaLib() throws IOException {
 
@@ -56,6 +64,10 @@ public class JavaLib {
     }
     public void foo(String[] s) throws IOException, IndexOutOfBoundsException {
         throw new IOException();
+    }
+
+    public void throwsNested() throws OuterException, OuterException.NestedException {
+        throw new OuterException();
     }
 }
 // FILE: KtLib.kt
