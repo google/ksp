@@ -92,7 +92,7 @@ class KSAnnotationResolvedImpl private constructor(
                                 } else {
                                     calcValue(value)
                                 }
-                                KSValueArgumentLiteImpl.getCached(
+                                KSValueArgumentLiteImpl(
                                     KSNameImpl.getCached(annoMethod.name),
                                     calculatedValue,
                                     this@KSAnnotationResolvedImpl,
