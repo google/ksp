@@ -4,17 +4,6 @@
     <issue
         id="EagerGradleConfiguration"
         message="Avoid using method get"
-        errorLine1="                    val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir"
-        errorLine2="                                                             ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="109"
-            column="62"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Avoid using method get"
         errorLine1="                                    kotlinCompileProvider.get().libraries.filter {"
         errorLine2="                                                          ~~~">
         <location
