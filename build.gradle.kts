@@ -1,5 +1,6 @@
 import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
+import com.google.devtools.ksp.configureMetalava
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -97,6 +98,8 @@ subprojects {
                 }
             }
         }
+
+        configureMetalava()
     }
 
     val compileJavaVersion = JavaLanguageVersion.of(17)
