@@ -3,28 +3,6 @@
 
     <issue
         id="EagerGradleConfiguration"
-        message="Avoid using method get"
-        errorLine1="                                    kotlinCompileProvider.get().libraries.filter {"
-        errorLine2="                                                          ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="226"
-            column="59"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Avoid using method get"
-        errorLine1="                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)"
-        errorLine2="                                                                   ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="349"
-            column="68"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
         message="Use register instead of create"
         errorLine1="    private val configurationForAll = project.configurations.create(PREFIX).apply {"
         errorLine2="                                                             ~~~~~~">
@@ -87,28 +65,6 @@
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
             line="183"
             column="67"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val jdkHome: Property&lt;File>"
-        errorLine2="                 ~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="407"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val projectBaseDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="414"
-            column="18"/>
     </issue>
 
     <issue
