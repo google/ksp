@@ -18,6 +18,12 @@ package com.google.devtools.ksp.symbol
 
 sealed class Location
 
-data class FileLocation(val filePath: String, val lineNumber: Int) : Location()
+data class FileLocation(
+    val filePath: String,
+    val lineNumber: Int,
+    val column: Int,
+    val endLineNumber: Int,
+    val endColumn: Int,
+) : Location()
 
 object NonExistLocation : Location()
