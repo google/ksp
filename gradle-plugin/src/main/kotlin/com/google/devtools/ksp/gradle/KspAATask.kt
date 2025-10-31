@@ -77,7 +77,6 @@ import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 @CacheableTask
@@ -222,15 +221,16 @@ abstract class KspAATask @Inject constructor(
                         val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
                         val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
                         cfg.libraries.from(
-                            project.files(
-                                Callable {
-                                    kotlinCompileProvider.get().libraries.filter {
-                                        !kspOutputDir.get().asFile.isParentOf(it) &&
-                                            !kaptGeneratedClassesDir.isParentOf(it) &&
-                                            !(it.isDirectory && it.listFiles()?.isEmpty() == true)
-                                    }
+                            // Workaround for preventing circular dependency, we can't call kotlinCompileProvider.map directly.
+                            project.provider {
+                                @Suppress("EagerGradleConfiguration") // kotlinCompile could be gotten in provider.
+                                val kotlinCompile = kotlinCompileProvider.get()
+                                kotlinCompile.libraries.filter {
+                                    !kspOutputDir.get().asFile.isParentOf(it) &&
+                                        !kaptGeneratedClassesDir.isParentOf(it) &&
+                                        !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                                 }
-                            )
+                            }
                         )
                     } else {
                         cfg.libraries.from(
@@ -374,7 +374,7 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinNativeCompilation) {
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
-                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
+                        cfg.konanHome.value(kotlinCompileProvider.map { (it as KotlinNativeCompile).konanHome }.get())
 
                         val isKlibCrossCompilationEnabled: Provider<Boolean> = project.providers.gradleProperty(
                             "kotlin.native.enableKlibsCrossCompilation"
