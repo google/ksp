@@ -1,0 +1,263 @@
+// Signature format: 2.0
+package com.google.devtools.ksp {
+
+  public final class CommandLineArgParserTest {
+    ctor public CommandLineArgParserTest();
+    method public void testJvm();
+    method public void testJvmHelp();
+  }
+
+}
+
+package com.google.devtools.ksp.processing {
+
+  public final class KSPCommonConfig extends com.google.devtools.ksp.processing.KSPConfig {
+    ctor public KSPCommonConfig(@NonNull java.util.List<com.google.devtools.ksp.processing.Target> targets, @NonNull String moduleName, @NonNull java.util.List<? extends java.io.File> sourceRoots, @NonNull java.util.List<? extends java.io.File> commonSourceRoots, @NonNull java.util.List<? extends java.io.File> libraries, @NonNull java.util.List<? extends java.io.File> friends, @NonNull java.util.Map<java.lang.String,java.lang.String> processorOptions, @NonNull java.io.File projectBaseDir, @NonNull java.io.File outputBaseDir, @NonNull java.io.File cachesDir, @NonNull java.io.File classOutputDir, @NonNull java.io.File kotlinOutputDir, @NonNull java.io.File resourceOutputDir, boolean incremental, boolean incrementalLog, @NonNull java.util.List<? extends java.io.File> modifiedSources, @NonNull java.util.List<? extends java.io.File> removedSources, @NonNull java.util.List<java.lang.String> changedClasses, @NonNull String languageVersion, @NonNull String apiVersion, boolean allWarningsAsErrors, boolean mapAnnotationArgumentsInJava);
+    method @NonNull public java.util.List<com.google.devtools.ksp.processing.Target> getTargets();
+    property @NonNull public java.util.List<com.google.devtools.ksp.processing.Target> targets;
+  }
+
+  public static final class KSPCommonConfig.Builder extends com.google.devtools.ksp.processing.KSPConfig.Builder implements java.io.Serializable {
+    ctor public KSPCommonConfig.Builder();
+    method @NonNull public com.google.devtools.ksp.processing.KSPCommonConfig build();
+    method @NonNull public java.util.List<com.google.devtools.ksp.processing.Target> getTargets();
+    method public void setTargets(@NonNull java.util.List<com.google.devtools.ksp.processing.Target>);
+    property @NonNull public java.util.List<com.google.devtools.ksp.processing.Target> targets;
+    field @NonNull public java.util.List<com.google.devtools.ksp.processing.Target> targets;
+  }
+
+  public abstract class KSPConfig implements java.io.Serializable {
+    ctor public KSPConfig(@NonNull String moduleName, @NonNull java.util.List<? extends java.io.File> sourceRoots, @NonNull java.util.List<? extends java.io.File> commonSourceRoots, @NonNull java.util.List<? extends java.io.File> libraries, @NonNull java.util.List<? extends java.io.File> friends, @NonNull java.util.Map<java.lang.String,java.lang.String> processorOptions, @NonNull java.io.File projectBaseDir, @NonNull java.io.File outputBaseDir, @NonNull java.io.File cachesDir, @NonNull java.io.File classOutputDir, @NonNull java.io.File kotlinOutputDir, @NonNull java.io.File resourceOutputDir, boolean incremental, boolean incrementalLog, @NonNull java.util.List<? extends java.io.File> modifiedSources, @NonNull java.util.List<? extends java.io.File> removedSources, @NonNull java.util.List<java.lang.String> changedClasses, @NonNull String languageVersion, @NonNull String apiVersion, boolean allWarningsAsErrors, boolean mapAnnotationArgumentsInJava);
+    method public final boolean getAllWarningsAsErrors();
+    method @NonNull public final String getApiVersion();
+    method @NonNull public final java.io.File getCachesDir();
+    method @NonNull public final java.util.List<java.lang.String> getChangedClasses();
+    method @NonNull public final java.io.File getClassOutputDir();
+    method @NonNull public final java.util.List<java.io.File> getCommonSourceRoots();
+    method @NonNull public final java.util.List<java.io.File> getFriends();
+    method public final boolean getIncremental();
+    method public final boolean getIncrementalLog();
+    method @NonNull public final java.io.File getKotlinOutputDir();
+    method @NonNull public final String getLanguageVersion();
+    method @NonNull public final java.util.List<java.io.File> getLibraries();
+    method public final boolean getMapAnnotationArgumentsInJava();
+    method @NonNull public final java.util.List<java.io.File> getModifiedSources();
+    method @NonNull public final String getModuleName();
+    method @NonNull public final java.io.File getOutputBaseDir();
+    method @NonNull public final java.util.Map<java.lang.String,java.lang.String> getProcessorOptions();
+    method @NonNull public final java.io.File getProjectBaseDir();
+    method @NonNull public final java.util.List<java.io.File> getRemovedSources();
+    method @NonNull public final java.io.File getResourceOutputDir();
+    method @NonNull public final java.util.List<java.io.File> getSourceRoots();
+    property public final boolean allWarningsAsErrors;
+    property @NonNull public final String apiVersion;
+    property @NonNull public final java.io.File cachesDir;
+    property @NonNull public final java.util.List<java.lang.String> changedClasses;
+    property @NonNull public final java.io.File classOutputDir;
+    property @NonNull public final java.util.List<java.io.File> commonSourceRoots;
+    property @NonNull public final java.util.List<java.io.File> friends;
+    property public final boolean incremental;
+    property public final boolean incrementalLog;
+    property @NonNull public final java.io.File kotlinOutputDir;
+    property @NonNull public final String languageVersion;
+    property @NonNull public final java.util.List<java.io.File> libraries;
+    property public final boolean mapAnnotationArgumentsInJava;
+    property @NonNull public final java.util.List<java.io.File> modifiedSources;
+    property @NonNull public final String moduleName;
+    property @NonNull public final java.io.File outputBaseDir;
+    property @NonNull public final java.util.Map<java.lang.String,java.lang.String> processorOptions;
+    property @NonNull public final java.io.File projectBaseDir;
+    property @NonNull public final java.util.List<java.io.File> removedSources;
+    property @NonNull public final java.io.File resourceOutputDir;
+    property @NonNull public final java.util.List<java.io.File> sourceRoots;
+  }
+
+  public abstract static class KSPConfig.Builder {
+    ctor public KSPConfig.Builder();
+    method public final boolean getAllWarningsAsErrors();
+    method @NonNull public final String getApiVersion();
+    method @NonNull public final java.io.File getCachesDir();
+    method @NonNull public final java.util.List<java.lang.String> getChangedClasses();
+    method @NonNull public final java.io.File getClassOutputDir();
+    method @NonNull public final java.util.List<java.io.File> getCommonSourceRoots();
+    method @NonNull public final java.util.List<java.io.File> getFriends();
+    method public final boolean getIncremental();
+    method public final boolean getIncrementalLog();
+    method @NonNull public final java.io.File getKotlinOutputDir();
+    method @NonNull public final String getLanguageVersion();
+    method @NonNull public final java.util.List<java.io.File> getLibraries();
+    method public final boolean getMapAnnotationArgumentsInJava();
+    method @NonNull public final java.util.List<java.io.File> getModifiedSources();
+    method @NonNull public final String getModuleName();
+    method @NonNull public final java.io.File getOutputBaseDir();
+    method @NonNull public final java.util.Map<java.lang.String,java.lang.String> getProcessorOptions();
+    method @NonNull public final java.io.File getProjectBaseDir();
+    method @NonNull public final java.util.List<java.io.File> getRemovedSources();
+    method @NonNull public final java.io.File getResourceOutputDir();
+    method @NonNull public final java.util.List<java.io.File> getSourceRoots();
+    method public final void setAllWarningsAsErrors(boolean);
+    method public final void setApiVersion(@NonNull String);
+    method public final void setCachesDir(@NonNull java.io.File);
+    method public final void setChangedClasses(@NonNull java.util.List<java.lang.String>);
+    method public final void setClassOutputDir(@NonNull java.io.File);
+    method public final void setCommonSourceRoots(@NonNull java.util.List<? extends java.io.File>);
+    method public final void setFriends(@NonNull java.util.List<? extends java.io.File>);
+    method public final void setIncremental(boolean);
+    method public final void setIncrementalLog(boolean);
+    method public final void setKotlinOutputDir(@NonNull java.io.File);
+    method public final void setLanguageVersion(@NonNull String);
+    method public final void setLibraries(@NonNull java.util.List<? extends java.io.File>);
+    method public final void setMapAnnotationArgumentsInJava(boolean);
+    method public final void setModifiedSources(@NonNull java.util.List<? extends java.io.File>);
+    method public final void setModuleName(@NonNull String);
+    method public final void setOutputBaseDir(@NonNull java.io.File);
+    method public final void setProcessorOptions(@NonNull java.util.Map<java.lang.String,java.lang.String>);
+    method public final void setProjectBaseDir(@NonNull java.io.File);
+    method public final void setRemovedSources(@NonNull java.util.List<? extends java.io.File>);
+    method public final void setResourceOutputDir(@NonNull java.io.File);
+    method public final void setSourceRoots(@NonNull java.util.List<? extends java.io.File>);
+    property public final boolean allWarningsAsErrors;
+    property @NonNull public final String apiVersion;
+    property @NonNull public final java.io.File cachesDir;
+    property @NonNull public final java.util.List<java.lang.String> changedClasses;
+    property @NonNull public final java.io.File classOutputDir;
+    property @NonNull public final java.util.List<java.io.File> commonSourceRoots;
+    property @NonNull public final java.util.List<java.io.File> friends;
+    property public final boolean incremental;
+    property public final boolean incrementalLog;
+    property @NonNull public final java.io.File kotlinOutputDir;
+    property @NonNull public final String languageVersion;
+    property @NonNull public final java.util.List<java.io.File> libraries;
+    property public final boolean mapAnnotationArgumentsInJava;
+    property @NonNull public final java.util.List<java.io.File> modifiedSources;
+    property @NonNull public final String moduleName;
+    property @NonNull public final java.io.File outputBaseDir;
+    property @NonNull public final java.util.Map<java.lang.String,java.lang.String> processorOptions;
+    property @NonNull public final java.io.File projectBaseDir;
+    property @NonNull public final java.util.List<java.io.File> removedSources;
+    property @NonNull public final java.io.File resourceOutputDir;
+    property @NonNull public final java.util.List<java.io.File> sourceRoots;
+    field @NonNull public String apiVersion;
+    field @NonNull public java.io.File cachesDir;
+    field @NonNull public java.io.File classOutputDir;
+    field @NonNull public java.io.File kotlinOutputDir;
+    field @NonNull public String languageVersion;
+    field @NonNull public String moduleName;
+    field @NonNull public java.io.File outputBaseDir;
+    field @NonNull public java.io.File projectBaseDir;
+    field @NonNull public java.io.File resourceOutputDir;
+    field @NonNull public java.util.List<? extends java.io.File> sourceRoots;
+  }
+
+  public final class KSPConfigKt {
+    method @NonNull public static String getArg(@NonNull String[] args, int i);
+    method public static boolean parseBoolean(@NonNull String arg);
+    method @NonNull public static java.io.File parseFile(@NonNull String arg);
+    method @NonNull public static <T> java.util.List<T> parseList(@NonNull String arg, @NonNull kotlin.jvm.functions.Function1<? super java.lang.String,? extends T> transform);
+    method @NonNull public static <T> java.util.Map<java.lang.String,T> parseMap(@NonNull String arg, @NonNull kotlin.jvm.functions.Function1<? super java.lang.String,? extends T> transform);
+    method @NonNull public static String parseString(@NonNull String arg);
+    method @NonNull public static com.google.devtools.ksp.processing.Target parseTarget(@NonNull String arg);
+  }
+
+  public final class KSPJsConfig extends com.google.devtools.ksp.processing.KSPConfig {
+    ctor public KSPJsConfig(@NonNull String backend, @NonNull String moduleName, @NonNull java.util.List<? extends java.io.File> sourceRoots, @NonNull java.util.List<? extends java.io.File> commonSourceRoots, @NonNull java.util.List<? extends java.io.File> libraries, @NonNull java.util.List<? extends java.io.File> friends, @NonNull java.util.Map<java.lang.String,java.lang.String> processorOptions, @NonNull java.io.File projectBaseDir, @NonNull java.io.File outputBaseDir, @NonNull java.io.File cachesDir, @NonNull java.io.File classOutputDir, @NonNull java.io.File kotlinOutputDir, @NonNull java.io.File resourceOutputDir, boolean incremental, boolean incrementalLog, @NonNull java.util.List<? extends java.io.File> modifiedSources, @NonNull java.util.List<? extends java.io.File> removedSources, @NonNull java.util.List<java.lang.String> changedClasses, @NonNull String languageVersion, @NonNull String apiVersion, boolean allWarningsAsErrors, boolean mapAnnotationArgumentsInJava);
+    method @NonNull public String getBackend();
+    property @NonNull public String backend;
+  }
+
+  public static final class KSPJsConfig.Builder extends com.google.devtools.ksp.processing.KSPConfig.Builder implements java.io.Serializable {
+    ctor public KSPJsConfig.Builder();
+    method @NonNull public com.google.devtools.ksp.processing.KSPJsConfig build();
+    method @NonNull public String getBackend();
+    method public void setBackend(@NonNull String);
+    property @NonNull public String backend;
+    field @NonNull public String backend;
+  }
+
+  public final class KSPJvmConfig extends com.google.devtools.ksp.processing.KSPConfig {
+    ctor public KSPJvmConfig(@NonNull java.util.List<? extends java.io.File> javaSourceRoots, @NonNull java.io.File javaOutputDir, @Nullable java.io.File jdkHome, @NonNull String jvmTarget, @NonNull String jvmDefaultMode, @NonNull String moduleName, @NonNull java.util.List<? extends java.io.File> sourceRoots, @NonNull java.util.List<? extends java.io.File> commonSourceRoots, @NonNull java.util.List<? extends java.io.File> libraries, @NonNull java.util.List<? extends java.io.File> friends, @NonNull java.util.Map<java.lang.String,java.lang.String> processorOptions, @NonNull java.io.File projectBaseDir, @NonNull java.io.File outputBaseDir, @NonNull java.io.File cachesDir, @NonNull java.io.File classOutputDir, @NonNull java.io.File kotlinOutputDir, @NonNull java.io.File resourceOutputDir, boolean incremental, boolean incrementalLog, @NonNull java.util.List<? extends java.io.File> modifiedSources, @NonNull java.util.List<? extends java.io.File> removedSources, @NonNull java.util.List<java.lang.String> changedClasses, @NonNull String languageVersion, @NonNull String apiVersion, boolean allWarningsAsErrors, boolean mapAnnotationArgumentsInJava);
+    method @NonNull public java.io.File getJavaOutputDir();
+    method @NonNull public java.util.List<java.io.File> getJavaSourceRoots();
+    method @Nullable public java.io.File getJdkHome();
+    method @NonNull public String getJvmDefaultMode();
+    method @NonNull public String getJvmTarget();
+    property @NonNull public java.io.File javaOutputDir;
+    property @NonNull public java.util.List<java.io.File> javaSourceRoots;
+    property @Nullable public java.io.File jdkHome;
+    property @NonNull public String jvmDefaultMode;
+    property @NonNull public String jvmTarget;
+  }
+
+  public static final class KSPJvmConfig.Builder extends com.google.devtools.ksp.processing.KSPConfig.Builder implements java.io.Serializable {
+    ctor public KSPJvmConfig.Builder();
+    method @NonNull public com.google.devtools.ksp.processing.KSPJvmConfig build();
+    method @NonNull public java.io.File getJavaOutputDir();
+    method @NonNull public java.util.List<java.io.File> getJavaSourceRoots();
+    method @Nullable public java.io.File getJdkHome();
+    method @NonNull public String getJvmDefaultMode();
+    method @NonNull public String getJvmTarget();
+    method public void setJavaOutputDir(@NonNull java.io.File);
+    method public void setJavaSourceRoots(@NonNull java.util.List<? extends java.io.File>);
+    method public void setJdkHome(@Nullable java.io.File);
+    method public void setJvmDefaultMode(@NonNull String);
+    method public void setJvmTarget(@NonNull String);
+    property @NonNull public java.io.File javaOutputDir;
+    property @NonNull public java.util.List<java.io.File> javaSourceRoots;
+    property @Nullable public java.io.File jdkHome;
+    property @NonNull public String jvmDefaultMode;
+    property @NonNull public String jvmTarget;
+    field @NonNull public java.io.File javaOutputDir;
+    field @NonNull public String jvmTarget;
+  }
+
+  public final class KSPNativeConfig extends com.google.devtools.ksp.processing.KSPConfig {
+    ctor public KSPNativeConfig(@NonNull String targetName, @NonNull String moduleName, @NonNull java.util.List<? extends java.io.File> sourceRoots, @NonNull java.util.List<? extends java.io.File> commonSourceRoots, @NonNull java.util.List<? extends java.io.File> libraries, @NonNull java.util.List<? extends java.io.File> friends, @NonNull java.util.Map<java.lang.String,java.lang.String> processorOptions, @NonNull java.io.File projectBaseDir, @NonNull java.io.File outputBaseDir, @NonNull java.io.File cachesDir, @NonNull java.io.File classOutputDir, @NonNull java.io.File kotlinOutputDir, @NonNull java.io.File resourceOutputDir, boolean incremental, boolean incrementalLog, @NonNull java.util.List<? extends java.io.File> modifiedSources, @NonNull java.util.List<? extends java.io.File> removedSources, @NonNull java.util.List<java.lang.String> changedClasses, @NonNull String languageVersion, @NonNull String apiVersion, boolean allWarningsAsErrors, boolean mapAnnotationArgumentsInJava);
+    method @NonNull public String getTargetName();
+    property @NonNull public String targetName;
+  }
+
+  public static final class KSPNativeConfig.Builder extends com.google.devtools.ksp.processing.KSPConfig.Builder implements java.io.Serializable {
+    ctor public KSPNativeConfig.Builder();
+    method @NonNull public com.google.devtools.ksp.processing.KSPNativeConfig build();
+    method @NonNull public String getTarget();
+    method public void setTarget(@NonNull String);
+    property @NonNull public String target;
+    field @NonNull public String target;
+  }
+
+  public final class KspGradleLogger implements com.google.devtools.ksp.processing.KSPLogger {
+    ctor public KspGradleLogger(int loglevel);
+    method public void error(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public void exception(@NonNull Throwable e);
+    method public int getLoglevel();
+    method public void info(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public void logging(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public void warn(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    property public int loglevel;
+    field @NonNull public static final com.google.devtools.ksp.processing.KspGradleLogger.Companion Companion;
+    field public static final int LOGGING_LEVEL_ERROR = 5; // 0x5
+    field public static final int LOGGING_LEVEL_INFO = 1; // 0x1
+    field public static final int LOGGING_LEVEL_LOGGING = 0; // 0x0
+    field public static final int LOGGING_LEVEL_WARN = 3; // 0x3
+  }
+
+  public static final class KspGradleLogger.Companion {
+    property public static int LOGGING_LEVEL_ERROR;
+    property public static int LOGGING_LEVEL_INFO;
+    property public static int LOGGING_LEVEL_LOGGING;
+    property public static int LOGGING_LEVEL_WARN;
+  }
+
+  public final class Target {
+    ctor public Target(@NonNull String platform, @NonNull java.util.Map<java.lang.String,java.lang.String> args);
+    method @NonNull public String component1();
+    method @NonNull public java.util.Map<java.lang.String,java.lang.String> component2();
+    method @NonNull public com.google.devtools.ksp.processing.Target copy(@NonNull String platform, @NonNull java.util.Map<java.lang.String,java.lang.String> args);
+    method @NonNull public java.util.Map<java.lang.String,java.lang.String> getArgs();
+    method @NonNull public String getPlatform();
+    property @NonNull public java.util.Map<java.lang.String,java.lang.String> args;
+    property @NonNull public String platform;
+  }
+
+}
+

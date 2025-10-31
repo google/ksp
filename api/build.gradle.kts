@@ -1,4 +1,3 @@
-import com.google.devtools.ksp.configureMetalava
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processing API"
@@ -46,5 +45,3 @@ signing {
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(extensions.getByType<PublishingExtension>().publications)
 }
-
-configureMetalava()

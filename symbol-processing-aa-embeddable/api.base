@@ -1,0 +1,14 @@
+// Signature format: 2.0
+package org.jetbrains.kotlin.config {
+
+  public class KotlinCompilerVersion {
+    ctor public KotlinCompilerVersion();
+    method @Nullable public static String getVersion();
+    method public static boolean isPreRelease();
+    field public static final String TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY = "kotlin.test.is.pre.release";
+    field public static final String VERSION;
+    field public static final String VERSION_FILE_PATH = "/META-INF/ksp.compiler.version";
+  }
+
+}
+

@@ -4,16 +4,16 @@ package com.google.devtools.ksp {
   @com.google.devtools.ksp.KspExperimental public final class KSTypeNotPresentException extends java.lang.RuntimeException {
     ctor public KSTypeNotPresentException(@NonNull com.google.devtools.ksp.symbol.KSType ksType, @NonNull Throwable cause);
     method @NonNull public com.google.devtools.ksp.symbol.KSType getKsType();
-    property @NonNull public final com.google.devtools.ksp.symbol.KSType ksType;
+    property @NonNull public com.google.devtools.ksp.symbol.KSType ksType;
   }
 
   @com.google.devtools.ksp.KspExperimental public final class KSTypesNotPresentException extends java.lang.RuntimeException {
     ctor public KSTypesNotPresentException(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSType> ksTypes, @NonNull Throwable cause);
     method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSType> getKsTypes();
-    property @NonNull public final java.util.List<com.google.devtools.ksp.symbol.KSType> ksTypes;
+    property @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSType> ksTypes;
   }
 
-  @kotlin.RequiresOptIn(message="This API is experimental." + "It may be changed in the future without notice or might be removed.") @kotlin.annotation.Retention(kotlin.annotation.AnnotationRetention.BINARY) public @interface KspExperimental {
+  @kotlin.RequiresOptIn(message="This API is experimental.It may be changed in the future without notice or might be removed.") @kotlin.annotation.Retention(kotlin.annotation.AnnotationRetention.BINARY) public @interface KspExperimental {
   }
 
   public final class UtilsKt {
@@ -21,20 +21,20 @@ package com.google.devtools.ksp {
     method @NonNull public static com.google.devtools.ksp.symbol.KSClassDeclaration findActualType(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias);
     method @NonNull public static kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSType> getAllSuperTypes(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
     method @NonNull @com.google.devtools.ksp.KspExperimental public static <T extends java.lang.annotation.Annotation> kotlin.sequences.Sequence<T> getAnnotationsByType(@NonNull com.google.devtools.ksp.symbol.KSAnnotated, @NonNull kotlin.reflect.KClass<T> annotationKClass);
-    method @Nullable public static inline <reified T> com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver);
+    method @KotlinOnly public static inline <reified T> com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(com.google.devtools.ksp.processing.Resolver);
     method @Nullable public static com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name);
     method @NonNull public static kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFunctionDeclaration> getConstructors(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
     method @Nullable public static com.google.devtools.ksp.symbol.KSFile getContainingFile(@NonNull com.google.devtools.ksp.symbol.KSNode);
     method @NonNull public static kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFunctionDeclaration> getDeclaredFunctions(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
     method @NonNull public static kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSPropertyDeclaration> getDeclaredProperties(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
-    method @NonNull public static kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFunctionDeclaration> getFunctionDeclarationsByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name, boolean includeTopLevel = false);
+    method @NonNull public static kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFunctionDeclaration> getFunctionDeclarationsByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name, boolean includeTopLevel);
     method @NonNull public static java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> getInnerArguments(@NonNull com.google.devtools.ksp.symbol.KSType);
     method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getJavaClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull com.google.devtools.ksp.symbol.KSName name);
     method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getJavaClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name);
     method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getKotlinClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull com.google.devtools.ksp.symbol.KSName name);
     method @Nullable @com.google.devtools.ksp.KspExperimental public static com.google.devtools.ksp.symbol.KSClassDeclaration getKotlinClassByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name);
     method @Nullable public static com.google.devtools.ksp.symbol.KSType getOuterType(@NonNull com.google.devtools.ksp.symbol.KSType);
-    method @Nullable public static com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name, boolean includeTopLevel = false);
+    method @Nullable public static com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.processing.Resolver, @NonNull String name, boolean includeTopLevel);
     method @NonNull public static com.google.devtools.ksp.symbol.Visibility getVisibility(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
     method public static boolean isAbstract(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration);
     method public static boolean isAbstract(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration);
@@ -49,7 +49,11 @@ package com.google.devtools.ksp {
     method public static boolean isProtected(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
     method public static boolean isPublic(@NonNull com.google.devtools.ksp.symbol.KSDeclaration);
     method public static boolean isVisibleFrom(@NonNull com.google.devtools.ksp.symbol.KSDeclaration, @NonNull com.google.devtools.ksp.symbol.KSDeclaration other);
-    method public static boolean validate(@NonNull com.google.devtools.ksp.symbol.KSNode, @NonNull kotlin.jvm.functions.Function2<? super com.google.devtools.ksp.symbol.KSNode,? super com.google.devtools.ksp.symbol.KSNode,java.lang.Boolean> predicate = { _, _ -> return true });
+    method public static boolean validate(@NonNull com.google.devtools.ksp.symbol.KSNode, @NonNull kotlin.jvm.functions.Function2<? super com.google.devtools.ksp.symbol.KSNode,? super com.google.devtools.ksp.symbol.KSNode,java.lang.Boolean> predicate);
+    property public static String ExceptionMessage;
+    property @Nullable public static com.google.devtools.ksp.symbol.KSFile com.google.devtools.ksp.symbol.KSNode.containingFile;
+    property @NonNull public static java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> com.google.devtools.ksp.symbol.KSType.innerArguments;
+    property @Nullable public static com.google.devtools.ksp.symbol.KSType com.google.devtools.ksp.symbol.KSType.outerType;
     field @NonNull public static final String ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new";
   }
 
@@ -58,36 +62,34 @@ package com.google.devtools.ksp {
 package com.google.devtools.ksp.processing {
 
   public interface CodeGenerator {
-    method public void associate(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
-    method public void associateByPath(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String path, @NonNull String extensionName = "kt");
-    method public void associateWithClasses(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSClassDeclaration> classes, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
-    method public default void associateWithFunctions(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFunctionDeclaration> functions, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
-    method public default void associateWithProperties(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSPropertyDeclaration> properties, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
-    method @NonNull public java.io.OutputStream createNewFile(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName = "kt");
-    method @NonNull public java.io.OutputStream createNewFileByPath(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String path, @NonNull String extensionName = "kt");
+    method public void associate(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName);
+    method public void associateByPath(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFile> sources, @NonNull String path, @NonNull String extensionName);
+    method public void associateWithClasses(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSClassDeclaration> classes, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName);
+    method public default void associateWithFunctions(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSFunctionDeclaration> functions, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName);
+    method public default void associateWithProperties(@NonNull java.util.List<? extends com.google.devtools.ksp.symbol.KSPropertyDeclaration> properties, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName);
+    method @NonNull public java.io.OutputStream createNewFile(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String packageName, @NonNull String fileName, @NonNull String extensionName);
+    method @NonNull public java.io.OutputStream createNewFileByPath(@NonNull com.google.devtools.ksp.processing.Dependencies dependencies, @NonNull String path, @NonNull String extensionName);
     method @NonNull public java.util.Collection<java.io.File> getGeneratedFile();
     property @NonNull public abstract java.util.Collection<java.io.File> generatedFile;
   }
 
   public final class Dependencies {
-    ctor public Dependencies(boolean aggregating, @NonNull com.google.devtools.ksp.symbol.KSFile... sources);
+    ctor public Dependencies(boolean aggregating, com.google.devtools.ksp.symbol.KSFile... sources);
     method public boolean getAggregating();
     method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSFile> getOriginatingFiles();
     method public boolean isAllSources();
-    property public final boolean aggregating;
-    property public final boolean isAllSources;
-    property @NonNull public final java.util.List<com.google.devtools.ksp.symbol.KSFile> originatingFiles;
+    property public boolean aggregating;
+    property public boolean isAllSources;
+    property @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSFile> originatingFiles;
     field @NonNull public static final com.google.devtools.ksp.processing.Dependencies.Companion Companion;
   }
 
   public static final class Dependencies.Companion {
     method @NonNull public com.google.devtools.ksp.processing.Dependencies getALL_FILES();
-    property @NonNull public final com.google.devtools.ksp.processing.Dependencies ALL_FILES;
+    property @NonNull public com.google.devtools.ksp.processing.Dependencies ALL_FILES;
   }
 
   public enum ExitCode {
-    method @NonNull public static com.google.devtools.ksp.processing.ExitCode valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.processing.ExitCode[] values();
     enum_constant public static final com.google.devtools.ksp.processing.ExitCode OK;
     enum_constant public static final com.google.devtools.ksp.processing.ExitCode PROCESSING_ERROR;
   }
@@ -138,11 +140,11 @@ package com.google.devtools.ksp.processing {
   }
 
   public interface KSPLogger {
-    method public void error(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
+    method public void error(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
     method public void exception(@NonNull Throwable e);
-    method public void info(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
-    method public void logging(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
-    method public void warn(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol = null);
+    method public void info(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public void logging(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public void warn(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
   }
 
   public interface NativePlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {
@@ -163,7 +165,7 @@ package com.google.devtools.ksp.processing {
     method @Nullable public com.google.devtools.ksp.symbol.KSClassDeclaration getClassDeclarationByName(@NonNull com.google.devtools.ksp.symbol.KSName name);
     method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSDeclaration> getDeclarationsFromPackage(@NonNull String packageName);
     method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSDeclaration> getDeclarationsInSourceOrder(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer container);
-    method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFunctionDeclaration> getFunctionDeclarationsByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel = false);
+    method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSFunctionDeclaration> getFunctionDeclarationsByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel);
     method @NonNull @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSTypeReference getJavaWildcard(@NonNull com.google.devtools.ksp.symbol.KSTypeReference reference);
     method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSType> getJvmCheckedException(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function);
     method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSType> getJvmCheckedException(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor);
@@ -176,8 +178,8 @@ package com.google.devtools.ksp.processing {
     method @Nullable @com.google.devtools.ksp.KspExperimental public String getOwnerJvmClassName(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration declaration);
     method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotation> getPackageAnnotations(@NonNull String packageName);
     method @NonNull @com.google.devtools.ksp.KspExperimental public kotlin.sequences.Sequence<java.lang.String> getPackagesWithAnnotation(@NonNull String annotationName);
-    method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel = false);
-    method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotated> getSymbolsWithAnnotation(@NonNull String annotationName, boolean inDepth = false);
+    method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration getPropertyDeclarationByName(@NonNull com.google.devtools.ksp.symbol.KSName name, boolean includeTopLevel);
+    method @NonNull public kotlin.sequences.Sequence<com.google.devtools.ksp.symbol.KSAnnotated> getSymbolsWithAnnotation(@NonNull String annotationName, boolean inDepth);
     method @NonNull public com.google.devtools.ksp.symbol.KSTypeArgument getTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeRef, @NonNull com.google.devtools.ksp.symbol.Variance variance);
     method @com.google.devtools.ksp.KspExperimental public boolean isJavaRawType(@NonNull com.google.devtools.ksp.symbol.KSType type);
     method @Nullable @com.google.devtools.ksp.KspExperimental public com.google.devtools.ksp.symbol.KSName mapJavaNameToKotlin(@NonNull com.google.devtools.ksp.symbol.KSName javaName);
@@ -206,14 +208,14 @@ package com.google.devtools.ksp.processing {
     method @NonNull public com.google.devtools.ksp.processing.KSPLogger getLogger();
     method @NonNull public java.util.Map<java.lang.String,java.lang.String> getOptions();
     method @NonNull public java.util.List<com.google.devtools.ksp.processing.PlatformInfo> getPlatforms();
-    property @NonNull public final kotlin.KotlinVersion apiVersion;
-    property @NonNull public final com.google.devtools.ksp.processing.CodeGenerator codeGenerator;
-    property @NonNull public final kotlin.KotlinVersion compilerVersion;
-    property @NonNull public final kotlin.KotlinVersion kotlinVersion;
-    property @NonNull public final kotlin.KotlinVersion kspVersion;
-    property @NonNull public final com.google.devtools.ksp.processing.KSPLogger logger;
-    property @NonNull public final java.util.Map<java.lang.String,java.lang.String> options;
-    property @NonNull public final java.util.List<com.google.devtools.ksp.processing.PlatformInfo> platforms;
+    property @NonNull public kotlin.KotlinVersion apiVersion;
+    property @NonNull public com.google.devtools.ksp.processing.CodeGenerator codeGenerator;
+    property @NonNull public kotlin.KotlinVersion compilerVersion;
+    property @NonNull public kotlin.KotlinVersion kotlinVersion;
+    property @NonNull public kotlin.KotlinVersion kspVersion;
+    property @NonNull public com.google.devtools.ksp.processing.KSPLogger logger;
+    property @NonNull public java.util.Map<java.lang.String,java.lang.String> options;
+    property @NonNull public java.util.List<com.google.devtools.ksp.processing.PlatformInfo> platforms;
   }
 
   public fun interface SymbolProcessorProvider {
@@ -228,8 +230,6 @@ package com.google.devtools.ksp.processing {
 package com.google.devtools.ksp.symbol {
 
   public enum AnnotationUseSiteTarget {
-    method @NonNull public static com.google.devtools.ksp.symbol.AnnotationUseSiteTarget valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.AnnotationUseSiteTarget[] values();
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget ALL;
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget DELEGATE;
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget FIELD;
@@ -243,10 +243,8 @@ package com.google.devtools.ksp.symbol {
   }
 
   public enum ClassKind {
-    method public final String getType();
-    method @NonNull public static com.google.devtools.ksp.symbol.ClassKind valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.ClassKind[] values();
-    property public final String type;
+    method public String getType();
+    property public String type;
     enum_constant public static final com.google.devtools.ksp.symbol.ClassKind ANNOTATION_CLASS;
     enum_constant public static final com.google.devtools.ksp.symbol.ClassKind CLASS;
     enum_constant public static final com.google.devtools.ksp.symbol.ClassKind ENUM_CLASS;
@@ -262,13 +260,11 @@ package com.google.devtools.ksp.symbol {
     method @NonNull public com.google.devtools.ksp.symbol.FileLocation copy(@NonNull String filePath, int lineNumber);
     method @NonNull public String getFilePath();
     method public int getLineNumber();
-    property @NonNull public final String filePath;
-    property public final int lineNumber;
+    property @NonNull public String filePath;
+    property public int lineNumber;
   }
 
   public enum FunctionKind {
-    method @NonNull public static com.google.devtools.ksp.symbol.FunctionKind valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.FunctionKind[] values();
     enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind ANONYMOUS;
     enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind LAMBDA;
     enum_constant public static final com.google.devtools.ksp.symbol.FunctionKind MEMBER;
@@ -614,8 +610,6 @@ package com.google.devtools.ksp.symbol {
   }
 
   public enum Modifier {
-    method @NonNull public static com.google.devtools.ksp.symbol.Modifier valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.Modifier[] values();
     enum_constant public static final com.google.devtools.ksp.symbol.Modifier ABSTRACT;
     enum_constant public static final com.google.devtools.ksp.symbol.Modifier ACTUAL;
     enum_constant public static final com.google.devtools.ksp.symbol.Modifier ANNOTATION;
@@ -661,16 +655,12 @@ package com.google.devtools.ksp.symbol {
   }
 
   public enum Nullability {
-    method @NonNull public static com.google.devtools.ksp.symbol.Nullability valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.Nullability[] values();
     enum_constant public static final com.google.devtools.ksp.symbol.Nullability NOT_NULL;
     enum_constant public static final com.google.devtools.ksp.symbol.Nullability NULLABLE;
     enum_constant public static final com.google.devtools.ksp.symbol.Nullability PLATFORM;
   }
 
   public enum Origin {
-    method @NonNull public static com.google.devtools.ksp.symbol.Origin valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.Origin[] values();
     enum_constant public static final com.google.devtools.ksp.symbol.Origin JAVA;
     enum_constant public static final com.google.devtools.ksp.symbol.Origin JAVA_LIB;
     enum_constant public static final com.google.devtools.ksp.symbol.Origin KOTLIN;
@@ -679,10 +669,8 @@ package com.google.devtools.ksp.symbol {
   }
 
   public enum Variance {
-    method public final String getLabel();
-    method @NonNull public static com.google.devtools.ksp.symbol.Variance valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.Variance[] values();
-    property public final String label;
+    method public String getLabel();
+    property public String label;
     enum_constant public static final com.google.devtools.ksp.symbol.Variance CONTRAVARIANT;
     enum_constant public static final com.google.devtools.ksp.symbol.Variance COVARIANT;
     enum_constant public static final com.google.devtools.ksp.symbol.Variance INVARIANT;
@@ -690,8 +678,6 @@ package com.google.devtools.ksp.symbol {
   }
 
   public enum Visibility {
-    method @NonNull public static com.google.devtools.ksp.symbol.Visibility valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @NonNull public static com.google.devtools.ksp.symbol.Visibility[] values();
     enum_constant public static final com.google.devtools.ksp.symbol.Visibility INTERNAL;
     enum_constant public static final com.google.devtools.ksp.symbol.Visibility JAVA_PACKAGE;
     enum_constant public static final com.google.devtools.ksp.symbol.Visibility LOCAL;

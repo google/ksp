@@ -91,7 +91,7 @@ private fun Project.getCompileClasspath(): String =
 
 private fun Project.getMetalavaConfiguration(): Configuration {
     return configurations.findByName("metalava") ?: configurations.create("metalava") {
-        val dependency = dependencies.create("com.android.tools.metalava:metalava:1.0.0-alpha08")
+        val dependency = dependencies.create("com.android.tools.metalava:metalava:1.0.0-alpha13")
         it.dependencies.add(dependency)
     }
 }
