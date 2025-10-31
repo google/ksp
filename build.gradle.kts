@@ -1,9 +1,9 @@
 import com.google.devtools.ksp.configureKtlint
 import com.google.devtools.ksp.configureKtlintApplyToIdea
-import com.google.devtools.ksp.configureMetalava
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -99,7 +99,20 @@ subprojects {
             }
         }
 
-        configureMetalava()
+        kotlin {
+            @OptIn(ExperimentalAbiValidation::class)
+            abiValidation {
+                enabled = true
+            }
+        }
+
+        tasks.check {
+            dependsOn(
+                tasks.withType<Test>(),
+                // TODO: https://youtrack.jetbrains.com/issue/KT-78525
+                tasks.checkLegacyAbi,
+            )
+        }
     }
 
     val compileJavaVersion = JavaLanguageVersion.of(17)
