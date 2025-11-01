@@ -132,8 +132,23 @@ tasks.withType(ShadowJar::class.java).configureEach {
     configurations = listOf(packedJars)
     prefixesToRelocate.forEach { (f, t) ->
         relocate(f, t) {
+            fun excludeEfficiently(pattern: String) {
+                if (pattern.startsWith(f))
+                    exclude(pattern)
+            }
             // Do not rename this hardcoded string in XmlReader.
-            exclude("com.intellij.projectService")
+            excludeEfficiently("com.intellij.projectService")
+
+            // Do not rename Nullable and NonNull/NotNull, which are checked in Kotlin compiler.
+            excludeEfficiently("org.jetbrains.annotations")
+            excludeEfficiently("org.jetbrains.annotations.NotNull")
+            excludeEfficiently("org.jetbrains.annotations.Nullable")
+            excludeEfficiently("org.checkerframework.checker.nullness.compatqual")
+            excludeEfficiently("org.checkerframework.checker.nullness.compatqual.NonNullDecl")
+            excludeEfficiently("org.checkerframework.checker.nullness.compatqual.NullableDecl")
+            excludeEfficiently("org.checkerframework.checker.nullness.qual")
+            excludeEfficiently("org.checkerframework.checker.nullness.qual.NonNull")
+            excludeEfficiently("org.checkerframework.checker.nullness.qual.Nullable")
         }
     }
     mergeServiceFiles()
@@ -179,6 +194,12 @@ val validPaths = prefixesToRelocate.map {
     "com/google/devtools/ksp",
     "META-INF",
     "ksp/FirNativeForwardDeclarationGetClassCallChecker.class",
+    "org/checkerframework/checker/nullness/compatqual/NonNullDecl.class",
+    "org/checkerframework/checker/nullness/compatqual/NullableDecl.class",
+    "org/checkerframework/checker/nullness/qual/NonNull.class",
+    "org/checkerframework/checker/nullness/qual/Nullable.class",
+    "org/jetbrains/annotations/NotNull.class",
+    "org/jetbrains/annotations/Nullable.class",
 )
 
 class Trie(paths: List<String>) {
