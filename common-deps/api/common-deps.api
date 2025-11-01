@@ -1,0 +1,219 @@
+public final class com/google/devtools/ksp/processing/KSPCommonConfig : com/google/devtools/ksp/processing/KSPConfig {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;ZZLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public final fun getTargets ()Ljava/util/List;
+}
+
+public final class com/google/devtools/ksp/processing/KSPCommonConfig$Builder : com/google/devtools/ksp/processing/KSPConfig$Builder, java/io/Serializable {
+	public field targets Ljava/util/List;
+	public fun <init> ()V
+	public final fun build ()Lcom/google/devtools/ksp/processing/KSPCommonConfig;
+	public final fun getTargets ()Ljava/util/List;
+	public final fun setTargets (Ljava/util/List;)V
+}
+
+public abstract class com/google/devtools/ksp/processing/KSPConfig : java/io/Serializable {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;ZZLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public final fun getAllWarningsAsErrors ()Z
+	public final fun getApiVersion ()Ljava/lang/String;
+	public final fun getCachesDir ()Ljava/io/File;
+	public final fun getChangedClasses ()Ljava/util/List;
+	public final fun getClassOutputDir ()Ljava/io/File;
+	public final fun getCommonSourceRoots ()Ljava/util/List;
+	public final fun getFriends ()Ljava/util/List;
+	public final fun getIncremental ()Z
+	public final fun getIncrementalLog ()Z
+	public final fun getKotlinOutputDir ()Ljava/io/File;
+	public final fun getLanguageVersion ()Ljava/lang/String;
+	public final fun getLibraries ()Ljava/util/List;
+	public final fun getMapAnnotationArgumentsInJava ()Z
+	public final fun getModifiedSources ()Ljava/util/List;
+	public final fun getModuleName ()Ljava/lang/String;
+	public final fun getOutputBaseDir ()Ljava/io/File;
+	public final fun getProcessorOptions ()Ljava/util/Map;
+	public final fun getProjectBaseDir ()Ljava/io/File;
+	public final fun getRemovedSources ()Ljava/util/List;
+	public final fun getResourceOutputDir ()Ljava/io/File;
+	public final fun getSourceRoots ()Ljava/util/List;
+}
+
+public abstract class com/google/devtools/ksp/processing/KSPConfig$Builder {
+	public field apiVersion Ljava/lang/String;
+	public field cachesDir Ljava/io/File;
+	public field classOutputDir Ljava/io/File;
+	public field kotlinOutputDir Ljava/io/File;
+	public field languageVersion Ljava/lang/String;
+	public field moduleName Ljava/lang/String;
+	public field outputBaseDir Ljava/io/File;
+	public field projectBaseDir Ljava/io/File;
+	public field resourceOutputDir Ljava/io/File;
+	public field sourceRoots Ljava/util/List;
+	public fun <init> ()V
+	public final fun getAllWarningsAsErrors ()Z
+	public final fun getApiVersion ()Ljava/lang/String;
+	public final fun getCachesDir ()Ljava/io/File;
+	public final fun getChangedClasses ()Ljava/util/List;
+	public final fun getClassOutputDir ()Ljava/io/File;
+	public final fun getCommonSourceRoots ()Ljava/util/List;
+	public final fun getFriends ()Ljava/util/List;
+	public final fun getIncremental ()Z
+	public final fun getIncrementalLog ()Z
+	public final fun getKotlinOutputDir ()Ljava/io/File;
+	public final fun getLanguageVersion ()Ljava/lang/String;
+	public final fun getLibraries ()Ljava/util/List;
+	public final fun getMapAnnotationArgumentsInJava ()Z
+	public final fun getModifiedSources ()Ljava/util/List;
+	public final fun getModuleName ()Ljava/lang/String;
+	public final fun getOutputBaseDir ()Ljava/io/File;
+	public final fun getProcessorOptions ()Ljava/util/Map;
+	public final fun getProjectBaseDir ()Ljava/io/File;
+	public final fun getRemovedSources ()Ljava/util/List;
+	public final fun getResourceOutputDir ()Ljava/io/File;
+	public final fun getSourceRoots ()Ljava/util/List;
+	public final fun setAllWarningsAsErrors (Z)V
+	public final fun setApiVersion (Ljava/lang/String;)V
+	public final fun setCachesDir (Ljava/io/File;)V
+	public final fun setChangedClasses (Ljava/util/List;)V
+	public final fun setClassOutputDir (Ljava/io/File;)V
+	public final fun setCommonSourceRoots (Ljava/util/List;)V
+	public final fun setFriends (Ljava/util/List;)V
+	public final fun setIncremental (Z)V
+	public final fun setIncrementalLog (Z)V
+	public final fun setKotlinOutputDir (Ljava/io/File;)V
+	public final fun setLanguageVersion (Ljava/lang/String;)V
+	public final fun setLibraries (Ljava/util/List;)V
+	public final fun setMapAnnotationArgumentsInJava (Z)V
+	public final fun setModifiedSources (Ljava/util/List;)V
+	public final fun setModuleName (Ljava/lang/String;)V
+	public final fun setOutputBaseDir (Ljava/io/File;)V
+	public final fun setProcessorOptions (Ljava/util/Map;)V
+	public final fun setProjectBaseDir (Ljava/io/File;)V
+	public final fun setRemovedSources (Ljava/util/List;)V
+	public final fun setResourceOutputDir (Ljava/io/File;)V
+	public final fun setSourceRoots (Ljava/util/List;)V
+}
+
+public final class com/google/devtools/ksp/processing/KSPConfigKt {
+	public static final fun getArg ([Ljava/lang/String;I)Ljava/lang/String;
+	public static final fun parseBoolean (Ljava/lang/String;)Z
+	public static final fun parseFile (Ljava/lang/String;)Ljava/io/File;
+	public static final fun parseList (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
+	public static final fun parseMap (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Ljava/util/Map;
+	public static final fun parseString (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun parseTarget (Ljava/lang/String;)Lcom/google/devtools/ksp/processing/Target;
+}
+
+public final class com/google/devtools/ksp/processing/KSPJsConfig : com/google/devtools/ksp/processing/KSPConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;ZZLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public final fun getBackend ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KSPJsConfig$Builder : com/google/devtools/ksp/processing/KSPConfig$Builder, java/io/Serializable {
+	public field backend Ljava/lang/String;
+	public fun <init> ()V
+	public final fun build ()Lcom/google/devtools/ksp/processing/KSPJsConfig;
+	public final fun getBackend ()Ljava/lang/String;
+	public final fun setBackend (Ljava/lang/String;)V
+}
+
+public final class com/google/devtools/ksp/processing/KSPJvmConfig : com/google/devtools/ksp/processing/KSPConfig {
+	public fun <init> (Ljava/util/List;Ljava/io/File;Ljava/io/File;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;ZZLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public final fun getJavaOutputDir ()Ljava/io/File;
+	public final fun getJavaSourceRoots ()Ljava/util/List;
+	public final fun getJdkHome ()Ljava/io/File;
+	public final fun getJvmDefaultMode ()Ljava/lang/String;
+	public final fun getJvmTarget ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KSPJvmConfig$Builder : com/google/devtools/ksp/processing/KSPConfig$Builder, java/io/Serializable {
+	public field javaOutputDir Ljava/io/File;
+	public field jvmTarget Ljava/lang/String;
+	public fun <init> ()V
+	public final fun build ()Lcom/google/devtools/ksp/processing/KSPJvmConfig;
+	public final fun getJavaOutputDir ()Ljava/io/File;
+	public final fun getJavaSourceRoots ()Ljava/util/List;
+	public final fun getJdkHome ()Ljava/io/File;
+	public final fun getJvmDefaultMode ()Ljava/lang/String;
+	public final fun getJvmTarget ()Ljava/lang/String;
+	public final fun setJavaOutputDir (Ljava/io/File;)V
+	public final fun setJavaSourceRoots (Ljava/util/List;)V
+	public final fun setJdkHome (Ljava/io/File;)V
+	public final fun setJvmDefaultMode (Ljava/lang/String;)V
+	public final fun setJvmTarget (Ljava/lang/String;)V
+}
+
+public final class com/google/devtools/ksp/processing/KSPNativeConfig : com/google/devtools/ksp/processing/KSPConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;Ljava/io/File;ZZLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ZZ)V
+	public final fun getTargetName ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KSPNativeConfig$Builder : com/google/devtools/ksp/processing/KSPConfig$Builder, java/io/Serializable {
+	public field target Ljava/lang/String;
+	public fun <init> ()V
+	public final fun build ()Lcom/google/devtools/ksp/processing/KSPNativeConfig;
+	public final fun getTarget ()Ljava/lang/String;
+	public final fun setTarget (Ljava/lang/String;)V
+}
+
+public final class com/google/devtools/ksp/processing/KspCommonArgParserHelpKt {
+	public static final fun kspCommonArgParserHelp ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KspCommonArgParserKt {
+	public static final fun kspCommonArgParser ([Ljava/lang/String;)Lkotlin/Pair;
+}
+
+public final class com/google/devtools/ksp/processing/KspGradleLogger : com/google/devtools/ksp/processing/KSPLogger {
+	public static final field Companion Lcom/google/devtools/ksp/processing/KspGradleLogger$Companion;
+	public static final field LOGGING_LEVEL_ERROR I
+	public static final field LOGGING_LEVEL_INFO I
+	public static final field LOGGING_LEVEL_LOGGING I
+	public static final field LOGGING_LEVEL_WARN I
+	public fun <init> (I)V
+	public fun error (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public fun exception (Ljava/lang/Throwable;)V
+	public final fun getLoglevel ()I
+	public fun info (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public fun logging (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public fun warn (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+}
+
+public final class com/google/devtools/ksp/processing/KspGradleLogger$Companion {
+}
+
+public final class com/google/devtools/ksp/processing/KspJsArgParserHelpKt {
+	public static final fun kspJsArgParserHelp ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KspJsArgParserKt {
+	public static final fun kspJsArgParser ([Ljava/lang/String;)Lkotlin/Pair;
+}
+
+public final class com/google/devtools/ksp/processing/KspJvmArgParserHelpKt {
+	public static final fun kspJvmArgParserHelp ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KspJvmArgParserKt {
+	public static final fun kspJvmArgParser ([Ljava/lang/String;)Lkotlin/Pair;
+}
+
+public final class com/google/devtools/ksp/processing/KspNativeArgParserHelpKt {
+	public static final fun kspNativeArgParserHelp ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/processing/KspNativeArgParserKt {
+	public static final fun kspNativeArgParser ([Ljava/lang/String;)Lkotlin/Pair;
+}
+
+public final class com/google/devtools/ksp/processing/Target {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;)Lcom/google/devtools/ksp/processing/Target;
+	public static synthetic fun copy$default (Lcom/google/devtools/ksp/processing/Target;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/google/devtools/ksp/processing/Target;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgs ()Ljava/util/Map;
+	public final fun getPlatform ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
