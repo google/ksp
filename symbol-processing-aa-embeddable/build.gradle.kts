@@ -50,8 +50,6 @@ val prefixesToRelocate = listOf(
     "io.opentelemetry.api.",
     "it.unimi.dsi.",
     "javaslang.",
-    "javax.inject.",
-    "javax.annotation.",
     "kotlinx.collections.immutable.",
     "kotlinx.serialization.",
     "org.apache.log4j.",
@@ -154,6 +152,7 @@ tasks.withType(ShadowJar::class.java).configureEach {
     mergeServiceFiles()
     exclude("META-INF/compiler.version")
     exclude("META-INF/*.kotlin_module")
+    exclude("javax/**")
 
     this.transform(AAServiceTransformer())
 
