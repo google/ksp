@@ -76,7 +76,6 @@ import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 @CacheableTask
@@ -221,15 +220,16 @@ abstract class KspAATask @Inject constructor(
                         val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
                         val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
                         cfg.libraries.from(
-                            project.files(
-                                Callable {
-                                    kotlinCompileProvider.get().libraries.filter {
-                                        !kspOutputDir.get().asFile.isParentOf(it) &&
-                                            !kaptGeneratedClassesDir.isParentOf(it) &&
-                                            !(it.isDirectory && it.listFiles()?.isEmpty() == true)
-                                    }
+                            // Workaround for preventing circular dependency, we can't call kotlinCompileProvider.map directly.
+                            project.provider {
+                                @Suppress("EagerGradleConfiguration") // kotlinCompile could be gotten in provider.
+                                val kotlinCompile = kotlinCompileProvider.get()
+                                kotlinCompile.libraries.filter {
+                                    !kspOutputDir.get().asFile.isParentOf(it) &&
+                                        !kaptGeneratedClassesDir.isParentOf(it) &&
+                                        !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                                 }
-                            )
+                            }
                         )
                     } else {
                         cfg.libraries.from(
@@ -308,7 +308,7 @@ abstract class KspAATask @Inject constructor(
                     }
                     if (compilerOptions is KotlinJvmCompilerOptions) {
                         // TODO: set proper jdk home
-                        cfg.jdkHome.value(File(System.getProperty("java.home")))
+                        cfg.jdkHome.set(File(System.getProperty("java.home")))
 
                         val javaVersion = JavaVersion.toVersion(System.getProperty("java.version"))
                         cfg.jdkVersion.value(javaVersion.majorVersion.toInt())
@@ -346,7 +346,7 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinNativeCompilation) {
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
-                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
+                        cfg.konanHome.value(kotlinCompileProvider.map { (it as KotlinNativeCompile).konanHome }.get())
 
                         val isKlibCrossCompilationEnabled: Provider<Boolean> = project.providers.gradleProperty(
                             "kotlin.native.enableKlibsCrossCompilation"
@@ -404,14 +404,14 @@ abstract class KspGradleConfig @Inject constructor() {
     abstract val libraries: ConfigurableFileCollection
 
     @get:Internal
-    abstract val jdkHome: Property<File>
+    abstract val jdkHome: DirectoryProperty
 
     @get:Input
     @get:Optional
     abstract val jdkVersion: Property<Int>
 
     @get:Internal
-    abstract val projectBaseDir: Property<File>
+    abstract val projectBaseDir: DirectoryProperty
 
     @get:Internal
     abstract val outputBaseDir: DirectoryProperty
@@ -564,7 +564,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             sourceRoots = gradleCfg.sourceRoots.files.toList()
             commonSourceRoots = gradleCfg.commonSourceRoots.files.toList()
             libraries = gradleCfg.libraries.files.toList()
-            projectBaseDir = gradleCfg.projectBaseDir.get()
+            projectBaseDir = gradleCfg.projectBaseDir.get().asFile
             outputBaseDir = gradleCfg.outputBaseDir.get().asFile
             cachesDir = gradleCfg.cachesDir.get().asFile
             kotlinOutputDir = gradleCfg.kotlinOutputDir.get().asFile
@@ -592,7 +592,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 KSPJvmConfig.Builder().apply {
                     this.setupSuper()
                     javaSourceRoots = gradleCfg.javaSourceRoots.files.toList()
-                    jdkHome = gradleCfg.jdkHome.get()
+                    jdkHome = gradleCfg.jdkHome.get().asFile
                     javaOutputDir = gradleCfg.javaOutputDir.get().asFile
                     jvmTarget = gradleCfg.jvmTarget.get()
                     jvmDefaultMode = gradleCfg.jvmDefaultMode.get()
