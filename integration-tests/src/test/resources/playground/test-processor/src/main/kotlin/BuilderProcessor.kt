@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -33,7 +34,15 @@ class BuilderProcessor : SymbolProcessor {
 
     inner class BuilderVisitor : KSVisitorVoid() {
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-            classDeclaration.primaryConstructor?.accept(this, data)
+            val constructor = classDeclaration.primaryConstructor
+                ?: classDeclaration.getConstructors().maxByOrNull { it.parameters.size }
+
+            if (constructor == null) {
+                logger.error("No suitable constructor found for ${classDeclaration.qualifiedName?.asString()}", classDeclaration)
+                return
+            }
+
+            constructor.accept(this, data)
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {

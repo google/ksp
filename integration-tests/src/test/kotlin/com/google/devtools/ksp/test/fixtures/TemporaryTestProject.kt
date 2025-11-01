@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test
+package com.google.devtools.ksp.test.fixtures
 
 import org.junit.rules.TemporaryFolder
 import java.io.File

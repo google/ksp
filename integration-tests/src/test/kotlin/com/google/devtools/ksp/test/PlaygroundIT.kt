@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -31,13 +32,24 @@ class PlaygroundIT() {
         Assert.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("g/G.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+            jarFile.assertContainsNonNullEntry("TestProcessor.log")
+            jarFile.assertContainsNonNullEntry("Generated.class")
+            jarFile.assertContainsNonNullEntry("META-INF/proguard/builder-AClassBuilder.pro")
+            jarFile.assertContainsNonNullEntry("hello/HELLO.class")
+            jarFile.assertContainsNonNullEntry("g/G.class")
+            jarFile.assertContainsNonNullEntry("com/example/AClassBuilder.class")
+            jarFile.assertContainsNonNullEntry("com/example/BClassBuilder.class")
+            jarFile.assertContainsNonNullEntry("com/example/AClass.class")
+            jarFile.assertContainsNonNullEntry("com/example/BClass.class")
         }
 
         extraCheck(result)
+    }
+
+    private fun JarFile.assertContainsNonNullEntry(path: String) {
+        val entry = getEntry(path)
+        Assert.assertNotNull("Entry '$path' should exist in the JAR file.", entry)
+        Assert.assertTrue("Entry '$path' should not be empty.", entry.size > 0)
     }
 
     @Test
@@ -52,6 +64,8 @@ class PlaygroundIT() {
     @Test
     fun testPlaygroundJDK8() {
         // FIXME: `clean` fails to delete files on windows.
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+
         File(project.root, "test-processor/build.gradle.kts").appendText(
             """
             kotlin {
@@ -70,7 +84,6 @@ class PlaygroundIT() {
             }
             """.trimIndent()
         )
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build")
         gradleRunner.buildAndCheck("clean", "build")
@@ -83,7 +96,7 @@ class PlaygroundIT() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
         gradleRunner.withArguments(":workload:dependencies", "--info").build().let {
             Assert.assertTrue(
-                it.output.lines().filter { it.startsWith("The configuration :workload:ksp") }.isEmpty()
+                it.output.lines().none { it.startsWith("The configuration :workload:ksp") }
             )
         }
     }
@@ -403,6 +416,32 @@ class PlaygroundIT() {
             JarFile(artifact).use { jarFile ->
                 Assert.assertTrue(jarFile.getEntry("BinaryClass.class").size > 0)
             }
+        }
+    }
+
+    @Test
+    fun testNoProvider() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        File(
+            project.root,
+            "test-processor/src/main/resources/META-INF/services/" +
+                "com.google.devtools.ksp.processing.SymbolProcessorProvider"
+        ).delete()
+        gradleRunner.withArguments("build").buildAndFail().let { result ->
+            Assert.assertTrue(result.output.contains("No providers found in processor classpath."))
+        }
+    }
+
+    @Test
+    fun testProviderAndRoundLogging() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        gradleRunner.buildAndCheck("--debug", "clean", "build") { result ->
+            Assert.assertTrue(
+                result.output.contains(
+                    "i: [ksp] loaded provider(s): [TestProcessorProvider, TestProcessorProvider2]"
+                )
+            )
+            Assert.assertTrue(result.output.contains("v: [ksp] round 3 of processing"))
         }
     }
 }

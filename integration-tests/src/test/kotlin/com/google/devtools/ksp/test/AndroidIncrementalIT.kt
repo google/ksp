@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.BuildResultFixture
+import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
