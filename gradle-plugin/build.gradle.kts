@@ -46,13 +46,9 @@ kotlin {
     }
 }
 
-tasks.named("validatePlugins").configure {
-    onlyIf {
-        // while traversing classpath, this hits a class not found issue.
-        // Disabled until gradle kotlin version and our kotlin version matches
-        // java.lang.ClassNotFoundException: org/jetbrains/kotlin/compilerRunner/KotlinLogger
-        false
-    }
+tasks.validatePlugins {
+    // TODO: https://github.com/gradle/gradle/issues/22600
+    enableStricterValidation = true
 }
 
 gradlePlugin {
