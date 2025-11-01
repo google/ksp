@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.test
 
-import Artifact
+import com.google.devtools.ksp.test.fixtures.Artifact
+import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert

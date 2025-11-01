@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertMergedConfigurationOutput
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome

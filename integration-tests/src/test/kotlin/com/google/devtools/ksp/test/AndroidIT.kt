@@ -1,12 +1,12 @@
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertMergedConfigurationOutput
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 
 class AndroidIT() {
     @Rule
@@ -27,54 +27,4 @@ class AndroidIT() {
             assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
         }
     }
-}
-
-/**
- * Pretty print the directory tree and its file names.
- *
- * @param folder
- * must be a folder.
- * @return
- */
-fun printDirectoryTree(folder: File): String? {
-    require(folder.isDirectory) { "folder is not a Directory" }
-    val indent = 0
-    val sb = StringBuilder()
-    printDirectoryTree(folder, indent, sb)
-    return sb.toString()
-}
-
-private fun printDirectoryTree(
-    folder: File,
-    indent: Int,
-    sb: StringBuilder
-) {
-    require(folder.isDirectory) { "folder is not a Directory" }
-    sb.append(getIndentString(indent))
-    sb.append("+--")
-    sb.append(folder.name)
-    sb.append("/")
-    sb.append("\n")
-    for (file in folder.listFiles()) {
-        if (file.isDirectory) {
-            printDirectoryTree(file, indent + 1, sb)
-        } else {
-            printFile(file, indent + 1, sb)
-        }
-    }
-}
-
-private fun printFile(file: File, indent: Int, sb: StringBuilder) {
-    sb.append(getIndentString(indent))
-    sb.append("+--")
-    sb.append(file.name)
-    sb.append("\n")
-}
-
-private fun getIndentString(indent: Int): String? {
-    val sb = StringBuilder()
-    for (i in 0 until indent) {
-        sb.append("|  ")
-    }
-    return sb.toString()
 }

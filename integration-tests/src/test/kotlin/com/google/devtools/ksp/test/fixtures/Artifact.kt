@@ -1,3 +1,5 @@
+package com.google.devtools.ksp.test.fixtures
+
 import org.junit.Assert
 import java.io.File
 import java.util.zip.ZipFile

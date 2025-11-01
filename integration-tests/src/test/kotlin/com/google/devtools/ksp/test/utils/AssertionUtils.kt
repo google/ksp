@@ -1,7 +1,6 @@
 package com.google.devtools.ksp.test.utils
 
-import com.google.devtools.ksp.test.TemporaryTestProject
-import com.google.devtools.ksp.test.printDirectoryTree
+import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import java.io.File
 
 fun assertMergedConfigurationOutput(project: TemporaryTestProject, expectedOutput: String) {
