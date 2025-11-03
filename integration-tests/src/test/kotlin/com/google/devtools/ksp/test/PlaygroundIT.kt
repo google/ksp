@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -44,12 +45,6 @@ class PlaygroundIT() {
         }
 
         extraCheck(result)
-    }
-
-    private fun JarFile.assertContainsNonNullEntry(path: String) {
-        val entry = getEntry(path)
-        Assert.assertNotNull("Entry '$path' should exist in the JAR file.", entry)
-        Assert.assertTrue("Entry '$path' should not be empty.", entry.size > 0)
     }
 
     @Test
