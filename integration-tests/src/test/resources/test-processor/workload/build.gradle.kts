@@ -11,6 +11,7 @@ repositories {
     maven(testRepo)
     mavenCentral()
     maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+    google()
 }
 
 dependencies {
