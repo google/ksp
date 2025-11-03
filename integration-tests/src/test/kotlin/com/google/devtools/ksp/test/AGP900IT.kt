@@ -17,7 +17,7 @@ class AGP900IT() {
     fun testRunsKSP() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.0.0")
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha05")
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha12")
         File(project.root, "gradle.properties").appendText("\nandroid.builtInKotlin=false")
         File(project.root, "gradle.properties").appendText("\nandroid.newDsl=false")
 
