@@ -30,7 +30,7 @@
         errorLine2="                                                                   ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="349"
+            line="347"
             column="68"/>
     </issue>
 
@@ -98,28 +98,6 @@
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
             line="183"
             column="67"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val jdkHome: Property&lt;File>"
-        errorLine2="                 ~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="407"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="FilePropertyDetector"
-        message="`Property&lt;File>` is discouraged. Use `RegularFileProperty` or `DirectoryProperty`."
-        errorLine1="    abstract val projectBaseDir: Property&lt;File>"
-        errorLine2="                 ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="414"
-            column="18"/>
     </issue>
 
     <issue
