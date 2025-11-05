@@ -38,7 +38,8 @@ fun Test.configureCommonSettings() {
 }
 
 val agpCompatibilityTestClasses = listOf(
-    "**/AGP812IT.class", "**/AGP810IT.class", "**/AGP890IT.class", "**/AGP900IT.class", "**/BuiltInKotlinAGP900IT.class"
+    "**/AGP812IT.class", "**/AGP810IT.class", "**/AGP880IT.class", "**/AGP870IT.class", "**/AGP890IT.class",
+    "**/AGP900IT.class", "**/BuiltInKotlinAGP900IT.class"
 )
 
 // Create a new test task for the AGP compatibility tests
