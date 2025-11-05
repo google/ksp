@@ -1,12 +1,12 @@
 package com.google.devtools.ksp.gradle
 
-import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 
@@ -148,9 +148,7 @@ class KspConfigurations(private val project: Project) {
      * and things get worse when you add product flavors. So, we use AGP sets as the source of truth.
      */
     private fun decorateKotlinTarget(target: KotlinTarget, isKotlinMultiplatform: Boolean) {
-        if (target.platformType == KotlinPlatformType.androidJvm &&
-            target !is KotlinMultiplatformAndroidLibraryTarget
-        ) {
+        if (isPlainAndroidTarget(target) || isOldKmpAndroidTarget(target)) {
             if (project.useLegacyVariantApi() || isKotlinMultiplatform) {
                 createAndroidSourceSetConfigurations(target.project, target)
             }
@@ -165,6 +163,24 @@ class KspConfigurations(private val project: Project) {
             }
         }
     }
+
+    // check if this target is the old implementation of android kmp target (using com.android.library)
+    // org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
+    private fun isOldKmpAndroidTarget(target: KotlinTarget): Boolean {
+        val isKotlinAndroidTargetClass = try {
+            target is KotlinAndroidTarget
+        } catch (e: Throwable) {
+            false
+        }
+        return target.platformType == KotlinPlatformType.androidJvm &&
+            isMppProject() && isKotlinAndroidTargetClass
+    }
+
+    private fun isPlainAndroidTarget(target: KotlinTarget): Boolean {
+        return target.platformType == KotlinPlatformType.androidJvm && !isMppProject()
+    }
+
+    private fun isMppProject() = project.pluginManager.hasPlugin("kotlin-multiplatform")
 
     /**
      * Returns the user-facing configurations involved in the given compilation.
@@ -184,9 +200,8 @@ class KspConfigurations(private val project: Project) {
         compilation.kotlinSourceSets.mapTo(results) {
             getKotlinConfigurationName(compilation, it)
         }
-        if (compilation.platformType == KotlinPlatformType.androidJvm &&
-            compilation.target !is KotlinMultiplatformAndroidLibraryTarget
-        ) {
+
+        if (isPlainAndroidTarget(compilation.target) || isOldKmpAndroidTarget(compilation.target)) {
             compilation as KotlinJvmAndroidCompilation
             AndroidPluginIntegration.getCompilationSourceSets(compilation).mapTo(results) {
                 getAndroidConfigurationName(compilation.target, it)
