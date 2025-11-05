@@ -61,7 +61,7 @@ tasks.test {
     maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
 
     // Exclude test classes from agpCompatibilityTest
-    exclude(agpCompatibilityTestClasses)
+    // exclude(agpCompatibilityTestClasses)
 
     // Apply common settings
     configureCommonSettings()
