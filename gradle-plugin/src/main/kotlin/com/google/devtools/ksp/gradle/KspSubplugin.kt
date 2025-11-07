@@ -205,7 +205,12 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // They will be observed by downstreams and violate current build scheme.
             kotlinCompileProvider.configure { it.source(*generatedSources) }
         } else {
-            kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
+            kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
+                kspTaskProvider.map { task -> task.kspConfig.kotlinOutputDir }
+            )
+            kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
+                kspTaskProvider.map { task -> task.kspConfig.javaOutputDir }
+            )
         }
 
         kotlinCompileProvider.configure { kotlinCompile ->
@@ -433,11 +438,6 @@ internal class FileCollectionSubpluginOption(
         }
     }
 }
-
-internal fun FileCollection.nonSelfDeps(selfTaskName: String): List<Task> =
-    buildDependencies.getDependencies(null).filterNot {
-        it.name == selfTaskName
-    }
 
 internal fun getKaptGeneratedClassesDir(project: Project, sourceSetName: String) =
     Kapt3GradleSubplugin.getKaptGeneratedClassesDir(project, sourceSetName)
