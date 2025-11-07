@@ -49,6 +49,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
@@ -56,6 +57,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinSharedNativeCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
+import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -205,7 +207,17 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // They will be observed by downstreams and violate current build scheme.
             kotlinCompileProvider.configure { it.source(*generatedSources) }
         } else {
-            kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
+            val kotlinVersion = KotlinToolingVersion(project.getKotlinPluginVersion())
+            if (kotlinVersion >= KotlinToolingVersion("2.3.0-Beta2")) {
+                kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
+                    kspTaskProvider.map { task -> task.kspConfig.kotlinOutputDir }
+                )
+                kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
+                    kspTaskProvider.map { task -> task.kspConfig.javaOutputDir }
+                )
+            } else {
+                kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
+            }
         }
 
         kotlinCompileProvider.configure { kotlinCompile ->
