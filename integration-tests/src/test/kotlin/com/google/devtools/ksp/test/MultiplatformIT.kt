@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
@@ -30,9 +31,32 @@ class MultiplatformIT() {
         Assert.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+            jarFile.assertContainsNonNullEntry("TestProcessor.log")
+            jarFile.assertContainsNonNullEntry("Generated.class")
+            jarFile.assertContainsNonNullEntry("META-INF/proguard/builder-AClassBuilder.pro")
+            jarFile.assertContainsNonNullEntry("hello/HELLO.class")
+            jarFile.assertContainsNonNullEntry("com/example/AClassBuilder.class")
+            jarFile.assertContainsNonNullEntry("com/example/BClassBuilder.class")
+            jarFile.assertContainsNonNullEntry("com/example/AClass.class")
         }
+    }
+
+    @Test
+    fun testAndroid() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val resultCleanBuild =
+            gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
+
+        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+
+        val classesJar = File(
+            project.root,
+            "workload/build/intermediates/compile_library_classes_jar/androidMain/" +
+                "bundleAndroidMainClassesToCompileJar/classes.jar"
+        )
+        Assert.assertTrue(classesJar.exists())
     }
 }
