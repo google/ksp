@@ -192,9 +192,6 @@ abstract class KspAATask @Inject constructor(
                     cfg.processorClasspath.from(incomingProcessors)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
                     val javaOutputDir = KspGradleSubplugin.getKspJavaOutputDir(project, sourceSetName, target)
-                    val filteredTasks = if (kspExtension.excludedSources.isEmpty.not()) {
-                        kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
-                    } else emptyList()
                     kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                         val filtered = kotlinOutputDir.zip(javaOutputDir) { kotlinOut, javaOut ->
                             sourceSet.kotlin.srcDirs.filter {
@@ -207,9 +204,7 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
-                        kspAATask.dependsOn(
-                            sourceSet.kotlin.nonSelfDeps(kspTaskName).filter { it.name !in filteredTasks }
-                        )
+                        kspAATask.dependsOn(sourceSet.kotlin.buildDependencies)
                     }
                     if (kotlinCompilation is KotlinCommonCompilation) {
                         cfg.commonSourceRoots.from(kotlinCompilation.defaultSourceSet.kotlin)
