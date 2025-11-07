@@ -1,13 +1,22 @@
 plugins {
     kotlin("multiplatform")
+    id("com.android.kotlin.multiplatform.library")
     id("com.google.devtools.ksp")
 }
 
 version = "1.0-SNAPSHOT"
 
 kotlin {
+    android {
+        namespace = "com.example"
+        compileSdk = 36
+        withDeviceTest { }
+        withHostTest { }
+    }
+
     jvm {
     }
+
     linuxX64()
     mingwX64()
     macosX64()
@@ -22,6 +31,13 @@ kotlin {
             dependencies {
                 implementation(project(":test-processor"))
                 project.dependencies.add("kspJvm", project(":test-processor"))
+            }
+            kotlin.srcDir("src/main/java")
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation(project(":test-processor"))
+                project.dependencies.add("kspAndroid", project(":test-processor"))
             }
             kotlin.srcDir("src/main/java")
         }
