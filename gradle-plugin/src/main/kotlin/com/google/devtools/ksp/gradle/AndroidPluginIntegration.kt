@@ -151,7 +151,7 @@ object AndroidPluginIntegration {
                     DirectoryEntry.Kind.KSP
                 )
 
-                (androidComponent.sources.kotlin as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
+                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
                     taskProvider = kspTaskProvider,
                     wiredWith = { task -> task.kspConfig.kotlinOutputDir },
                     DirectoryEntry.Kind.KSP
@@ -267,6 +267,6 @@ object AndroidPluginIntegration {
 
     fun Project.canUseInternalKspApis(): Boolean {
         val agpVersion = project.getAgpVersion() ?: return false
-        return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(12)
+        return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(14)
     }
 }

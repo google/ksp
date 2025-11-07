@@ -73,9 +73,9 @@ class AndroidBuiltInKotlinIT {
 
     @Test
     fun testPlaygroundAndroidWithBuiltInKotlinAGP90AboveAlpha12() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.0.0")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha12")
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha14")
 
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
@@ -105,6 +105,56 @@ class AndroidBuiltInKotlinIT {
             val outputs = result.output.lines()
             assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
             assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
+        }
+    }
+
+    @Test
+    fun testPlaygroundAndroidWithBuiltInKotlinProjectIsolationEnabled() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
+
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha14")
+        File(project.root, "gradle.properties").appendText("\nkotlinVersion=2.3.0-Beta2")
+
+        // override AGP's bundled kotlin gradle plugin version
+        File(project.root, "workload/build.gradle.kts").appendText(
+            """
+                buildscript {
+                    dependencies {
+                        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0-Beta2")
+                    }
+                }
+            """.trimIndent()
+        )
+
+        gradleRunner.withArguments(
+            "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace",
+            "-Dorg.gradle.unsafe.isolated-projects=true"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+
+            val classesJar = File(
+                project.root,
+                "workload/build/intermediates/compile_app_classes_jar/debug/bundleDebugClassesToCompileJar/classes.jar"
+            )
+            JarFile(classesJar).use { jarFile ->
+                jarFile.assertContainsNonNullEntry("Generated.class")
+                jarFile.assertContainsNonNullEntry("hello/HELLO.class")
+                jarFile.assertContainsNonNullEntry("com/example/AClassBuilder.class")
+                jarFile.assertContainsNonNullEntry("com/example/BClassBuilder.class")
+                jarFile.assertContainsNonNullEntry("com/example/AClass.class")
+                jarFile.assertContainsNonNullEntry("com/example/BClass.class")
+            }
+
+            val javaResDir = File(project.root, "workload/build/intermediates/java_res/debug/processDebugJavaRes/out")
+            Assert.assertTrue(File(javaResDir, "TestProcessor.log").exists())
+            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
+            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+            assertMergedConfigurationOutput(project, "-keep class com.example.AClassBuilder { *; }")
+            assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
+
+            val outputs = result.output.lines()
+            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
 }
