@@ -1,0 +1,9 @@
+public class org/jetbrains/kotlin/config/KotlinCompilerVersion {
+	public static final field TEST_IS_PRE_RELEASE_SYSTEM_PROPERTY Ljava/lang/String;
+	public static final field VERSION Ljava/lang/String;
+	public static final field VERSION_FILE_PATH Ljava/lang/String;
+	public fun <init> ()V
+	public static fun getVersion ()Ljava/lang/String;
+	public static fun isPreRelease ()Z
+}
+
