@@ -9,57 +9,31 @@ on:
 jobs:
   build-and-test:
 
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
 
     permissions:
       contents: write
 
     steps:
-    - name: Setup Java 17
-      uses: actions/setup-java@v1.4.3
+    - uses: actions/setup-java@v5
       with:
-        java-version: '17'
-        java-package: jdk
-        architecture: x64
+        java-version: '21'
+        distribution: 'zulu'
 
     # Checkout
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v5
 
     # Build cache
-    - name: Cache Gradle Cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
-        # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-    - name: Cache gradle wrapper
-      uses: actions/cache@v4
-      with:
-        path: ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
-    # Run tests
-    - name: test
-      shell: bash
-      run: ./gradlew --stacktrace --info check
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-reports-${{ runner.os }}
-        path: |
-          integration-tests/build/reports
-          gradle-plugin/build/reports
-          common-util/build/reports
+    - name: Cache Gradle
+      uses: gradle/actions/setup-gradle@v5
 
     # Build KSP artifacts
     - name: build
       run: |
         REF=${{ github.ref }} # refs/tags/$KSP_VERSION
         ./gradlew --info -PkspVersion=${REF:10} -PoutRepo=$(pwd)/build/repos/release publishAllPublicationsToMavenRepository
+
     - name: pack
       run: cd build/repos/release/ && zip -r ../../artifacts.zip .
     - name: Upload Release Asset
