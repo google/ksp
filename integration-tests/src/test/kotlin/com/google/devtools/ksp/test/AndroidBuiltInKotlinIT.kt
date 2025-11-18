@@ -46,8 +46,8 @@ class AndroidBuiltInKotlinIT {
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
-            assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
+            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
 
@@ -103,8 +103,8 @@ class AndroidBuiltInKotlinIT {
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
-            assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
+            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
 }
