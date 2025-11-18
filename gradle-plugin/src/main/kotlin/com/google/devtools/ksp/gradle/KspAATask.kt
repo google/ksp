@@ -240,12 +240,23 @@ abstract class KspAATask @Inject constructor(
                     }
 
                     val classOutputDir = KspGradleSubplugin.getKspClassOutputDir(project, sourceSetName, target)
+                    val compileTask = kotlinCompilation.compileTaskProvider
+                    val defaultKotlinVersion = KSP_KOTLIN_BASE_VERSION
+                        .split('.', '-')
+                        .take(2)
+                        .joinToString(".")
 
-                    val compilerOptions = kotlinCompilation.compilerOptions.options
-                    val langVer = compilerOptions.languageVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
-                    val apiVer = compilerOptions.apiVersion.orNull?.version ?: KSP_KOTLIN_BASE_VERSION
-                    cfg.languageVersion.set(langVer.split('.', '-').take(2).joinToString("."))
-                    cfg.apiVersion.set(apiVer.split('.', '-').take(2).joinToString("."))
+                    cfg.languageVersion.set(
+                        compileTask.flatMap { task ->
+                            task.compilerOptions.languageVersion.map { it.version }.orElse(defaultKotlinVersion)
+                        }
+                    )
+
+                    cfg.apiVersion.set(
+                        compileTask.flatMap { task ->
+                            task.compilerOptions.apiVersion.map { it.version }.orElse(defaultKotlinVersion)
+                        }
+                    )
 
                     cfg.projectBaseDir.set(project.layout.projectDirectory)
                     cfg.cachesDir.set(KspGradleSubplugin.getKspCachesDir(project, sourceSetName, target))
@@ -306,14 +317,24 @@ abstract class KspAATask @Inject constructor(
                         KotlinCompilation.MAIN_COMPILATION_NAME -> project.name
                         else -> "${project.name}_$compilationName"
                     }
-                    if (compilerOptions is KotlinJvmCompilerOptions) {
+
+                    if (kotlinCompilation.platformType == KotlinPlatformType.jvm ||
+                        kotlinCompilation.platformType == KotlinPlatformType.androidJvm
+                    ) {
                         cfg.jdkHome.set(File(System.getProperty("java.home")))
                         val javaVersion = JavaVersion.toVersion(System.getProperty("java.version"))
                         cfg.jdkVersion.value(javaVersion.majorVersion.toInt())
 
-                        val oldJvmDefaultMode = compilerOptions.freeCompilerArgs
-                            .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
-                            .map { it.lastOrNull()?.substringAfter("=") ?: "undefined" }
+                        val oldJvmDefaultMode = compileTask.flatMap { task ->
+                            task.compilerOptions.freeCompilerArgs
+                                .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
+                                .map { it.lastOrNull()?.substringAfter("=") ?: "undefined" }
+                        }
+
+                        val compilerArgument = compileTask.flatMap { task ->
+                            (task.compilerOptions as KotlinJvmCompilerOptions).jvmDefault.map { it.compilerArgument }
+                                .orElse(JvmDefaultMode.ENABLE.compilerArgument)
+                        }
 
                         cfg.jvmDefaultMode.value(
                             project.provider {
@@ -321,12 +342,16 @@ abstract class KspAATask @Inject constructor(
                                     "all" -> "no-compatibility"
                                     "all-compatibility" -> "enable"
                                     "disable" -> "disable"
-                                    else -> compilerOptions.jvmDefault.getOrElse(JvmDefaultMode.ENABLE).compilerArgument
+                                    else -> compilerArgument.get()
                                 }
                             }
                         )
 
-                        cfg.jvmTarget.value(compilerOptions.jvmTarget.map { it.target })
+                        cfg.jvmTarget.value(
+                            compileTask.flatMap { task ->
+                                (task.compilerOptions as KotlinJvmCompilerOptions).jvmTarget.map { it.target }
+                            }
+                        )
 
                         cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
 
@@ -334,7 +359,11 @@ abstract class KspAATask @Inject constructor(
                         // FIXME: figure out how to add user generated libraries.
                         kotlinCompilation.output.classesDirs.from(classOutputDir)
 
-                        cfg.moduleName.set(compilerOptions.moduleName.orElse(moduleName))
+                        cfg.moduleName.set(
+                            compileTask.flatMap { task ->
+                                (task.compilerOptions as KotlinJvmCompilerOptions).moduleName.orElse(moduleName)
+                            }
+                        )
                     } else {
                         cfg.nonJvmLibraries.from(cfg.libraries)
                         cfg.moduleName.value(moduleName)
@@ -511,6 +540,7 @@ val doNotGC = mutableSetOf<Any>()
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config
+        println("inside the task: " + gradleCfg.moduleName.get())
         val kspClasspath = parameters.kspClasspath
         val key = kspClasspath.files.map { it.toURI().toURL() }.joinToString { it.path }
         synchronized(isolatedClassLoaderCache) {
