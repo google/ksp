@@ -540,7 +540,6 @@ val doNotGC = mutableSetOf<Any>()
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config
-        println("inside the task: " + gradleCfg.moduleName.get())
         val kspClasspath = parameters.kspClasspath
         val key = kspClasspath.files.map { it.toURI().toURL() }.joinToString { it.path }
         synchronized(isolatedClassLoaderCache) {
