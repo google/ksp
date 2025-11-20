@@ -33,6 +33,7 @@ abstract class KspExtension @Inject constructor(project: Project) {
      * Setting this value to `false` will have no impact
      */
     @KspExperimental
+    @Deprecated("ksp2 is enforced now, setting this property to false leads to an error")
     abstract val useKsp2: Property<Boolean>
 
     internal val apOptions = project.objects.mapProperty(String::class.java, String::class.java)
