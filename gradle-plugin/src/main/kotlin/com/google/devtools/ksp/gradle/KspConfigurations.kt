@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
+import com.google.devtools.ksp.gradle.utils.kotlinSourceSetsObservable
 import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
