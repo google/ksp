@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.gradle
+package com.google.devtools.ksp.gradle.utils
 
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet

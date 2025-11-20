@@ -5,6 +5,7 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class AndroidViewBindingIT() {
     @Rule
@@ -15,6 +16,7 @@ class AndroidViewBindingIT() {
     fun testPlaygroundAndroid() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha12")
         // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
         gradleRunner.withArguments(
             "clean",

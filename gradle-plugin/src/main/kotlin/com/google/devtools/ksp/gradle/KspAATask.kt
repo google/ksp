@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.gradle
 
+import com.google.devtools.ksp.gradle.utils.allKotlinSourceSetsObservable
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
