@@ -20,7 +20,6 @@ class KaptKspTest() {
         buildFile.writeText(newContent)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha12")
         gradleRunner.withArguments(
             "clean",
             ":app:testDebugUnitTest",
