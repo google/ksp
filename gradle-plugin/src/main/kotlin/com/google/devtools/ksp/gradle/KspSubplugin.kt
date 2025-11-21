@@ -18,8 +18,8 @@ package com.google.devtools.ksp.gradle
 
 import com.android.build.api.variant.Component
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.gradle.AndroidPluginIntegration.useLegacyVariantApi
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
+import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException

@@ -14,3 +14,31 @@ fun Project.getAgpVersion(): AndroidPluginVersion? = try {
     // Perhaps a version of AGP before pluginVersion API was added.
     null
 }
+
+fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
+
+/**
+ * Returns false for AGP versions 8.10.0-alpha03 or higher.
+ *
+ * Returns true for older AGP versions or when AGP version cannot be determined.
+ */
+fun Project.useLegacyVariantApi(): Boolean {
+    val agpVersion = project.getAgpVersion() ?: return true
+
+    // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
+    return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
+}
+
+/**
+ * Returns true for AGP version is 8.12.0-alpha06 or higher.
+ * That is the version where addGeneratedSourceDirectories API was fixed
+ */
+fun Project.canUseAddGeneratedSourceDirectoriesApi(): Boolean {
+    val agpVersion = project.getAgpVersion() ?: return false
+    return agpVersion >= AndroidPluginVersion(8, 12, 0).alpha(6)
+}
+
+fun Project.canUseInternalKspApis(): Boolean {
+    val agpVersion = project.getAgpVersion() ?: return false
+    return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(14)
+}
