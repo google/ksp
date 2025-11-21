@@ -16,7 +16,6 @@
  */
 package com.google.devtools.ksp.gradle
 
-import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Component
@@ -26,14 +25,15 @@ import com.android.build.api.variant.impl.FlatSourceDirectoriesForJavaImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
-import com.google.devtools.ksp.gradle.utils.getAgpVersion
+import com.google.devtools.ksp.gradle.utils.canUseAddGeneratedSourceDirectoriesApi
+import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
+import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.internal.KaptTask
-import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 import java.util.concurrent.Callable
@@ -90,7 +90,7 @@ object AndroidPluginIntegration {
             } else {
                 throw RuntimeException(
                     "KSP is not compatible with Android Gradle Plugin's built-in Kotlin prior to AGP " +
-                        "version 9.0.0-alpha12. Please upgrade to AGP 9.0.0-alpha12 or alternatively disable " +
+                        "version 9.0.0-alpha14. Please upgrade to AGP 9.0.0-alpha14 or alternatively disable " +
                         "built-in kotlin by adding android.builtInKotlin=false and android.newDsl=false to " +
                         "gradle.properties and apply kotlin(\"android\") plugin"
                 )
@@ -151,7 +151,7 @@ object AndroidPluginIntegration {
                     DirectoryEntry.Kind.KSP
                 )
 
-                (androidComponent.sources.kotlin as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
+                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
                     taskProvider = kspTaskProvider,
                     wiredWith = { task -> task.kspConfig.kotlinOutputDir },
                     DirectoryEntry.Kind.KSP
@@ -236,37 +236,5 @@ object AndroidPluginIntegration {
             resourcesOutputDir,
             androidComponent,
         )
-    }
-
-    fun Project.isKotlinBaseApiPluginApplied() = plugins.findPlugin(KotlinBaseApiPlugin::class.java) != null
-
-    fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
-
-    fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
-
-    /**
-     * Returns false for AGP versions 8.10.0-alpha03 or higher.
-     *
-     * Returns true for older AGP versions or when AGP version cannot be determined.
-     */
-    fun Project.useLegacyVariantApi(): Boolean {
-        val agpVersion = project.getAgpVersion() ?: return true
-
-        // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
-        return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
-    }
-
-    /**
-     * Returns true for AGP version is 8.12.0-alpha06 or higher.
-     * That is the version where addGeneratedSourceDirectories API was fixed
-     */
-    fun Project.canUseAddGeneratedSourceDirectoriesApi(): Boolean {
-        val agpVersion = project.getAgpVersion() ?: return false
-        return agpVersion >= AndroidPluginVersion(8, 12, 0).alpha(6)
-    }
-
-    fun Project.canUseInternalKspApis(): Boolean {
-        val agpVersion = project.getAgpVersion() ?: return false
-        return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(12)
     }
 }
