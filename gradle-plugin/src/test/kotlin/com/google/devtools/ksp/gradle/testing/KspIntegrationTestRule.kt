@@ -120,11 +120,8 @@ class KspIntegrationTestRule(
                 )
             }
         )
-        if (enableAgpBuiltInKotlinSupport) {
-            testProject.appModule
-                .plugins
-                .add(PluginDeclaration.id("com.android.experimental.built-in-kotlin", testConfig.androidBaseVersion))
-        } else {
+
+        if (!enableAgpBuiltInKotlinSupport) {
             val contents = """
             android.builtInKotlin=false
             android.newDsl=false
