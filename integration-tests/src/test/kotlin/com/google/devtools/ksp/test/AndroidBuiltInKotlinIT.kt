@@ -52,7 +52,7 @@ class AndroidBuiltInKotlinIT {
     }
 
     @Test
-    fun testPlaygroundAndroidWithBuiltInKotlinAGP90BelowAlpha12() {
+    fun testPlaygroundAndroidWithBuiltInKotlinAGP90BelowAlpha14() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.0.0")
 
         File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha05")
@@ -63,7 +63,7 @@ class AndroidBuiltInKotlinIT {
             Assert.assertTrue(
                 result.output.contains(
                     "KSP is not compatible with Android Gradle Plugin's built-in Kotlin prior to AGP " +
-                        "version 9.0.0-alpha12. Please upgrade to AGP 9.0.0-alpha12 or alternatively disable " +
+                        "version 9.0.0-alpha14. Please upgrade to AGP 9.0.0-alpha14 or alternatively disable " +
                         "built-in kotlin by adding android.builtInKotlin=false and android.newDsl=false to " +
                         "gradle.properties and apply kotlin(\"android\") plugin"
                 )
@@ -72,10 +72,10 @@ class AndroidBuiltInKotlinIT {
     }
 
     @Test
-    fun testPlaygroundAndroidWithBuiltInKotlinAGP90AboveAlpha12() {
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.0.0")
+    fun testPlaygroundAndroidWithBuiltInKotlinAGP90AboveAlpha14() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha12")
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha14")
 
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
