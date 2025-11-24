@@ -4,7 +4,9 @@ import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.utils.ObservableSet
+import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 
 internal val KotlinCompilation<*>.allKotlinSourceSetsObservable
     get() = this.allKotlinSourceSets as ObservableSet<KotlinSourceSet>
@@ -15,3 +17,8 @@ internal val KotlinCompilation<*>.kotlinSourceSetsObservable
 fun Project.isKotlinBaseApiPluginApplied() = plugins.findPlugin(KotlinBaseApiPlugin::class.java) != null
 
 fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
+
+fun Project.canUseGeneratedKotlinApi(): Boolean {
+    val kotlinVersion = KotlinToolingVersion(this.getKotlinPluginVersion())
+    return kotlinVersion >= KotlinToolingVersion("2.3.0-Beta2")
+}
