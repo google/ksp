@@ -56,4 +56,12 @@ class TemporaryTestProject(
     fun appendProperty(property: String) {
         gradleProperties.appendText("\n$property")
     }
+
+    fun setAgpVersion(agpVersion: String) {
+        appendProperty("agpVersion=$agpVersion")
+    }
+
+    fun setKotlinVersion(kotlinVersion: String) {
+        appendProperty("kotlinVersion=$kotlinVersion")
+    }
 }
