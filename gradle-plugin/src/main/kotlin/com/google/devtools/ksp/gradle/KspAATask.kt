@@ -19,6 +19,7 @@ package com.google.devtools.ksp.gradle
 
 import com.google.devtools.ksp.gradle.utils.allKotlinSourceSetsObservable
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
+import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
@@ -209,7 +210,7 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
-                        if (project.canUseGeneratedKotlinApi()) {
+                        if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
                             kspAATask.dependsOn(sourceSet.kotlin.buildDependencies)
                         } else {
                             kspAATask.dependsOn(

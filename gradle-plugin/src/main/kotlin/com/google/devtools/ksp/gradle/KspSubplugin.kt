@@ -20,6 +20,7 @@ import com.android.build.api.variant.Component
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
+import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -206,7 +207,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // They will be observed by downstreams and violate current build scheme.
             kotlinCompileProvider.configure { it.source(*generatedSources) }
         } else {
-            if (project.canUseGeneratedKotlinApi()) {
+            if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
                 kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
                     kspTaskProvider.map { task -> task.kspConfig.kotlinOutputDir }
                 )

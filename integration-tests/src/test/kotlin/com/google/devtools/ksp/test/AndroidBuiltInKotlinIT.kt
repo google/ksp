@@ -114,6 +114,7 @@ class AndroidBuiltInKotlinIT {
 
         File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha14")
         File(project.root, "gradle.properties").appendText("\nkotlinVersion=2.3.0-Beta2")
+        File(project.root, "gradle.properties").appendText("\nksp.project.isolation.enabled=true")
 
         // override AGP's bundled kotlin gradle plugin version
         File(project.root, "workload/build.gradle.kts").appendText(
