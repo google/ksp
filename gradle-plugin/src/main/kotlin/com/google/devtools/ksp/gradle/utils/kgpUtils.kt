@@ -19,6 +19,10 @@ fun Project.isKotlinBaseApiPluginApplied() = plugins.findPlugin(KotlinBaseApiPlu
 fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
 
 fun Project.canUseGeneratedKotlinApi(): Boolean {
-    val kotlinVersion = KotlinToolingVersion(this.getKotlinPluginVersion())
+    val kotlinVersion = KotlinToolingVersion(getKotlinPluginVersion())
     return kotlinVersion >= KotlinToolingVersion("2.3.0-Beta2")
+}
+
+fun Project.enableProjectIsolationCompatibleCodepath(): Boolean {
+    return providers.gradleProperty("ksp.project.isolation.enabled").orNull == "true"
 }
