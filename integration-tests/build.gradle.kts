@@ -37,21 +37,19 @@ fun Test.configureCommonSettings() {
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 
-val agpCompatibilityTestClasses = listOf(
-    "**/AGP812IT.class", "**/AGP810IT.class", "**/AGP880IT.class", "**/AGP870IT.class", "**/AGP890IT.class",
-    "**/AGP900IT.class", "**/BuiltInKotlinAGP900IT.class"
-)
-
 // Create a new test task for the AGP compatibility tests
 val agpCompatibilityTest by tasks.registering(Test::class) {
     description = "Runs AGP compatibility tests with maxParallelForks = 1"
     group = "verification"
 
     // Include only the AGP compatibility tests
-    include(agpCompatibilityTestClasses)
+    include("**/AGPVersionIT.class")
 
     // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
     maxParallelForks = 1
+
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
 
     // Apply common settings
     configureCommonSettings()
@@ -61,7 +59,7 @@ tasks.test {
     maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
 
     // Exclude test classes from agpCompatibilityTest
-    // exclude(agpCompatibilityTestClasses)
+    exclude("**/AGPVersionIT.class")
 
     // Apply common settings
     configureCommonSettings()
