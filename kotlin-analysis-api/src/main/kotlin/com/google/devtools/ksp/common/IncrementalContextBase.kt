@@ -29,6 +29,7 @@ import com.intellij.psi.PsiPackage
 import com.intellij.util.containers.MultiMap
 import java.io.File
 import java.util.Date
+import java.util.concurrent.ConcurrentHashMap
 
 object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>() {
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
@@ -98,6 +99,8 @@ abstract class IncrementalContextBase(
     protected abstract val classLookupCache: LookupStorageWrapper
 
     private val sourceToOutputsMap = FileToFilesMap(File(cachesDir, "sourceToOutputs"))
+
+    private val onDemandImportsCache = ConcurrentHashMap<PsiJavaFile, List<String>>()
 
     private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
     private val KSFile.relativeFile
@@ -406,6 +409,7 @@ abstract class IncrementalContextBase(
 
     fun closeFiles() {
         symbolsMap.flush()
+        onDemandImportsCache.clear()
         sealedMap.flush()
         symbolLookupCache.close()
         classLookupCache.close()
@@ -495,7 +499,9 @@ abstract class IncrementalContextBase(
         //   1. definition of the name in the same package
         //   2. other * imports
         val onDemandImports =
-            psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
+            onDemandImportsCache.getOrPut(psiFile) {
+                psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
+            }
         if (scope in onDemandImports) {
             record(psiFile.packageName, name)
             onDemandImports.forEach {
