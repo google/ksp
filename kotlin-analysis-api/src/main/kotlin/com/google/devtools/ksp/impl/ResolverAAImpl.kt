@@ -85,6 +85,11 @@ class ResolverAAImpl(
             set(value) {
                 ktModule_prop.set(value)
             }
+
+        fun tearDown() {
+            instance_prop.remove()
+            ktModule_prop.remove()
+        }
     }
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
