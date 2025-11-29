@@ -26,7 +26,6 @@ dependencies {
     // replace AGP dependency w/ gradle-api when we have source registering API available.
     compileOnly("com.android.tools.build:gradle:$agpBaseVersion")
     compileOnly(gradleApi())
-    compileOnly(project(":kotlin-analysis-api"))
     // Ensure stdlib version is not inconsistent due to kotlin plugin version.
     compileOnly(kotlin("stdlib", version = kotlinBaseVersion))
     implementation(project(":api"))
