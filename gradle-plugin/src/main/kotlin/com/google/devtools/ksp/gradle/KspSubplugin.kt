@@ -20,7 +20,9 @@ import com.android.build.api.variant.Component
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
+import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
+import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -207,15 +209,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // They will be observed by downstreams and violate current build scheme.
             kotlinCompileProvider.configure { it.source(*generatedSources) }
         } else {
-            if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
-                kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
-                    kspTaskProvider.map { task -> task.kspConfig.kotlinOutputDir }
-                )
-                kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
-                    kspTaskProvider.map { task -> task.kspConfig.javaOutputDir }
-                )
-            } else {
-                kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
+            val skipAddingSources = kotlinCompilation is KotlinJvmAndroidCompilation &&
+                project.isAgpBuiltInKotlinUsed() && project.canUseInternalKspApis()
+
+            if (!skipAddingSources) {
+                registerOutputWithKotlinSrcdirs(project, kotlinCompilation, kspTaskProvider, *generatedSources)
             }
         }
 
@@ -254,6 +252,25 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         }
 
         return project.provider { emptyList() }
+    }
+
+    private fun registerOutputWithKotlinSrcdirs(
+        project: Project,
+        kotlinCompilation: KotlinCompilation<*>,
+        kspTaskProvider: TaskProvider<KspAATask>,
+        vararg generatedSources: FileCollection
+    ) {
+        if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
+            kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
+                kspTaskProvider.map { task -> task.kspConfig.kotlinOutputDir }
+            )
+            kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
+                kspTaskProvider.map { task -> task.kspConfig.javaOutputDir }
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            kotlinCompilation.defaultSourceSet.kotlin.srcDirs(*generatedSources)
+        }
     }
 
     override fun getCompilerPluginId() = KSP_PLUGIN_ID
