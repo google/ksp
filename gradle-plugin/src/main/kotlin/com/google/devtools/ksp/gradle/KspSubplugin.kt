@@ -206,7 +206,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // Do not add generated sources to common source sets.
             // They will be observed by downstreams and violate current build scheme.
             kotlinCompileProvider.configure { it.source(*generatedSources) }
-        } else {
+        } else if (kotlinCompilation !is KotlinJvmAndroidCompilation) {
             if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
                 kotlinCompilation.defaultSourceSet.generatedKotlin.srcDir(
                     kspTaskProvider.map { task -> task.kspConfig.kotlinOutputDir }
