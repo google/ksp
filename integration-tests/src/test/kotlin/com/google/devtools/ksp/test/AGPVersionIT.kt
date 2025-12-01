@@ -38,6 +38,8 @@ class AGPVersionIT(
                 arrayOf("8.12.0-alpha06", "2.3.0-RC", "8.13"),
                 arrayOf("9.0.0-alpha12", "2.2.10", "9.1.0"),
                 arrayOf("9.0.0-alpha12", "2.3.0-RC", "9.1.0"),
+                arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
+                arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
 
                 // AGP 8.7.0
                 arrayOf("8.7.0", "2.3.0-RC", "8.11.1"),
