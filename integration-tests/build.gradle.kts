@@ -44,6 +44,7 @@ val agpCompatibilityTest by tasks.registering(Test::class) {
 
     // Include only the AGP compatibility tests
     include("**/AGPVersionIT.class")
+    include("**/AGPVersionBuiltInKotlinIT.class")
 
     // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
     maxParallelForks = 1
@@ -60,6 +61,7 @@ tasks.test {
 
     // Exclude test classes from agpCompatibilityTest
     exclude("**/AGPVersionIT.class")
+    exclude("**/AGPVersionBuiltInKotlinIT.class")
 
     // Apply common settings
     configureCommonSettings()

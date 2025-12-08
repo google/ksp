@@ -26,6 +26,8 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
 
+    timeout-minutes: 180
+
     steps:
     - name: configure Pagefile
       if: matrix.os == 'windows-latest'
