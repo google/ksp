@@ -484,6 +484,9 @@ abstract class IncrementalContextBase(
 
     // Insert Java file -> names lookup records.
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
+        if (!isIncremental)
+            return
+
         val path = psiFile.virtualFile.path
         val name = fqn.substringAfterLast('.')
         val scope = fqn.substringBeforeLast('.', "<anonymous>")
@@ -511,6 +514,9 @@ abstract class IncrementalContextBase(
     }
 
     fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
+        if (!isIncremental)
+            return
+
         val name = classDeclaration.simpleName.asString()
         val scope = classDeclaration.qualifiedName?.asString()
             ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
