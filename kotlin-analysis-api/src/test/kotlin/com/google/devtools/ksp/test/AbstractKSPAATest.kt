@@ -138,6 +138,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
             resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
             cachesDir = File(testRoot, "kspTest/kspCaches")
             outputBaseDir = File(testRoot, "kspTest")
+            incremental = true
         }.build()
         val exitCode = KotlinSymbolProcessing(kspConfig, listOf(testProcessor), CommandLineKSPLogger()).execute()
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {

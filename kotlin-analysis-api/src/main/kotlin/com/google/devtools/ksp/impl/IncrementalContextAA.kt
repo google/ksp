@@ -137,6 +137,9 @@ class IncrementalContextAA(
     }
 
     fun recordLookup(type: KaType, context: KSNode?) {
+        if (!isIncremental)
+            return
+
         val file = (context?.containingFile as? KSFileJavaImpl)?.psi ?: return
 
         recordWithArgs(type, file)
@@ -160,6 +163,9 @@ class IncrementalContextAA(
     }
 
     fun recordLookupForPropertyOrMethod(declaration: KSDeclaration) {
+        if (!isIncremental)
+            return
+
         val file = (declaration.containingFile as? KSFileJavaImpl)?.psi ?: return
 
         val symbol = when (declaration) {
@@ -172,6 +178,9 @@ class IncrementalContextAA(
     }
 
     internal fun recordLookupForGetAll(supers: List<KaType>, predicate: (KaSymbol) -> Boolean) {
+        if (!isIncremental)
+            return
+
         val visited: MutableSet<KaType> = mutableSetOf()
         analyze {
             supers.forEach {
@@ -208,6 +217,9 @@ class IncrementalContextAA(
         }
 
     fun recordLookupWithSupertypes(ktType: KaType, visited: MutableSet<KaType>, extra: (KaType, PsiJavaFile) -> Unit) {
+        if (!isIncremental)
+            return
+
         analyze {
             fun record(type: KaType) {
                 if (type in visited)
