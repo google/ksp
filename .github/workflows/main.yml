@@ -26,8 +26,6 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 180
-
     steps:
     - name: Free Disk Space (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
@@ -45,7 +43,6 @@ jobs:
         sudo rm -rf /usr/local/graalvm/
         sudo rm -rf /usr/local/share/powershell
         sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
         
         sudo docker image prune --all --force
         
