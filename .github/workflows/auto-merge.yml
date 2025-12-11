@@ -18,7 +18,29 @@ jobs:
       contents: write
 
     steps:
-    # Checkout
+      - name: Free Disk Space (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "Disk space before cleanup:"
+          df -h
+        
+          set -xe
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf /opt/hostedtoolcache/
+          sudo rm -rf /usr/local/graalvm/
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/lib/node_modules
+         
+          sudo docker image prune --all --force
+        
+          echo "Disk space after cleanup:"
+          df -h
+      # Checkout
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
