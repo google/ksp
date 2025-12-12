@@ -167,7 +167,10 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     // No, sourceFileProvider doesn't group files by module unfortunately. Let's do it by ourselves.
     open fun compileModule(module: TestModule, testServices: TestServices) {
         val javaFiles = module.writeJavaFiles()
-        val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
+        val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
+            module,
+            CompilationStage.FIRST
+        )
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
         compilerConfiguration.addJvmClasspathRoots(dependencies)
         compilerConfiguration.addJavaSourceRoot(module.javaDir)
@@ -211,7 +214,10 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         for (lib in libModules) {
             compileModule(lib, testServices)
         }
-        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(mainModule)
+        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
+            mainModule,
+            CompilationStage.FIRST
+        )
         compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
 
         val contents = mainModule.files.first().originalFile.readLines()
