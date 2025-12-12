@@ -19,7 +19,6 @@ jobs:
 
     steps:
       - name: Free Disk Space (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
         run: |
           echo "Disk space before cleanup:"
           df -h
