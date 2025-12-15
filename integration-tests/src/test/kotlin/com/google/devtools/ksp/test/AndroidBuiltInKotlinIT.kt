@@ -75,7 +75,7 @@ class AndroidBuiltInKotlinIT {
     fun testPlaygroundAndroidWithBuiltInKotlinAGP90AboveAlpha14() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha14")
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-beta05")
 
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
@@ -112,7 +112,7 @@ class AndroidBuiltInKotlinIT {
     fun testPlaygroundAndroidWithBuiltInKotlinProjectIsolationEnabled() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
 
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-alpha14")
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-beta05")
         File(project.root, "gradle.properties").appendText("\nkotlinVersion=2.3.0-Beta2")
         File(project.root, "gradle.properties").appendText("\nksp.project.isolation.enabled=true")
 

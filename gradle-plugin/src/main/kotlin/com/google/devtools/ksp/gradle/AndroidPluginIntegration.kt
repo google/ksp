@@ -81,11 +81,14 @@ object AndroidPluginIntegration {
     ) {
         if (androidComponent != null && project.isAgpBuiltInKotlinUsed()) {
             if (project.canUseInternalKspApis()) {
-                val sources =
+                val javaSources =
                     (androidComponent.sources.java as? FlatSourceDirectoriesForJavaImpl)?.allButKspAndKaptGenerators()
 
+                val kotlinSources = androidComponent.sources.kotlin?.static
+
                 kspTaskProvider.configure { task ->
-                    task.kspConfig.javaSourceRoots.from(sources)
+                    task.kspConfig.javaSourceRoots.from(javaSources)
+                    task.kspConfig.javaSourceRoots.from(kotlinSources)
                 }
             } else {
                 throw RuntimeException(
