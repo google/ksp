@@ -59,8 +59,7 @@ jobs:
       uses: actions/setup-java@v5
       with:
         java-version: '17'
-        java-package: jdk
-        architecture: x64
+        distribution: 'zulu'
 
     # Checkout
     - uses: actions/checkout@v6
