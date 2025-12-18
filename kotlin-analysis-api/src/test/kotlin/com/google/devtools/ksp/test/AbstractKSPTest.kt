@@ -25,10 +25,10 @@ import com.intellij.testFramework.TestDataFile
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformDirectives
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformProviderForAnalysisApiTests
 import org.jetbrains.kotlin.cli.common.disposeRootInWriteAction
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.cli.common.output.writeAllTo
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
@@ -176,13 +176,17 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         compilerConfiguration.addJavaSourceRoot(module.javaDir)
 
         // TODO: other platforms
-        val kotlinCoreEnvironment = KotlinCoreEnvironment.createForTests(
-            disposable,
+        val configurationProvider = testServices.compilerConfigurationProvider
+        val project = configurationProvider.getProject(module)
+        val ktFiles = module.loadKtFiles(project)
+        GenerationUtils.compileFiles(
+            ktFiles,
             compilerConfiguration,
-            EnvironmentConfigFiles.JVM_CONFIG_FILES
-        )
-        val ktFiles = module.loadKtFiles(kotlinCoreEnvironment.project)
-        GenerationUtils.compileFilesTo(ktFiles, kotlinCoreEnvironment, module.outDir)
+            ClassBuilderFactories.TEST,
+            configurationProvider.getPackagePartProviderFactory(module)
+        ).first.factory.apply {
+            writeAllTo(module.outDir)
+        }
 
         if (module.javaFiles.isEmpty())
             return
