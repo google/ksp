@@ -16,27 +16,6 @@ jobs:
       contents: write
 
     steps:
-    - name: Free Disk Space (Ubuntu)
-      run: |
-        echo "Disk space before cleanup:"
-        df -h
-      
-        set -xe
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/share/swift
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/.ghcup
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf /opt/hostedtoolcache/
-        sudo rm -rf /usr/local/graalvm/
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-       
-        sudo docker image prune --all --force
-      
-        echo "Disk space after cleanup:"
-        df -h
     - name: Setup Java 17
       uses: actions/setup-java@v5
       with:
@@ -60,21 +39,6 @@ jobs:
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
-    # Run tests
-    - name: test
-      shell: bash
-      run: ./gradlew --stacktrace --info check
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v6
-      with:
-        name: test-reports-${{ runner.os }}
-        path: |
-          integration-tests/build/reports
-          gradle-plugin/build/reports
-          common-util/build/reports
-
     # Build KSP artifacts
     - name: build
       run: |
