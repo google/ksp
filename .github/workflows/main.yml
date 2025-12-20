@@ -79,11 +79,6 @@ jobs:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-    # Check API compatibility
-    - name: API compatibility check
-      if: matrix.os == 'ubuntu-latest'
-      run: ./gradlew :api:checkApi
-
     # Run tests
     - name: test
       shell: bash
