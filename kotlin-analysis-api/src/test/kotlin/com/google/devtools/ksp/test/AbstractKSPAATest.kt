@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
+import org.jetbrains.kotlin.test.services.CompilationStage
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.isKtFile
@@ -110,7 +111,10 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         libModules: List<TestModule>,
         testProcessor: AbstractTestProcessor
     ): List<String> {
-        val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(mainModule)
+        val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
+            mainModule,
+            CompilationStage.FIRST
+        )
         mainModule.kotlinSrc.mkdirs()
 
         // Some underlying service needs files backed by local fs.

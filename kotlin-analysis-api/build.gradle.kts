@@ -17,7 +17,6 @@ val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
 val aaKotlinBaseVersion: String by project
-val aaTestFrameworkVersion: String by project
 val aaIntellijVersion: String by project
 val aaGuavaVersion: String by project
 val aaAsmVersion: String by project
@@ -97,7 +96,11 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion") { isTransitive = false }
+    implementation(
+        "org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion"
+    ) {
+        isTransitive = false
+    }
     implementation(
         "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
     ) {
@@ -119,10 +122,10 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaTestFrameworkVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
-    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaTestFrameworkVersion")
+    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
 
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))
@@ -264,7 +267,11 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
-                        addDependency("org.jetbrains.kotlinx", "kotlinx-coroutines-core-jvm", aaCoroutinesVersion)
+                        addDependency(
+                            "org.jetbrains.intellij.deps.kotlinx",
+                            "kotlinx-coroutines-core-jvm",
+                            aaCoroutinesVersion
+                        )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
