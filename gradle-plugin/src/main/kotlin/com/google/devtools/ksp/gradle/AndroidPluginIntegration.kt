@@ -36,7 +36,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.internal.KaptTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
-import java.util.concurrent.Callable
 
 /**
  * This helper class handles communication with the android plugin.
@@ -107,10 +106,11 @@ object AndroidPluginIntegration {
             val sources = androidVariant?.getSourceFolders(SourceKind.JAVA)
 
             kspTaskProvider.configure { task ->
-                // this is workaround for KAPT generator that prevents circular dependency
-                val filteredSources = Callable {
-                    val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir
-                    val dir = destinationProperty?.get()?.asFile
+                // Workaround for KAPT generator that prevents circular dependency, we can't call kaptProvider.map directly.
+                val filteredSources = project.provider {
+                    @Suppress("EagerGradleConfiguration") // kaptProvider could be gotten in provider.
+                    val kapt = kaptProvider?.get()
+                    val dir = (kapt as? KaptTask)?.destinationDir?.get()?.asFile
                     sources?.filter { source ->
                         dir?.isParentOf(source.dir) != true &&
                             source.dir !in kspExtension.excludedSources

@@ -26,10 +26,10 @@ class KspConfigurations(private val project: Project) {
             ?: true
 
     // The "ksp" configuration, applied to every compilation.
-    private val configurationForAll = project.configurations.create(PREFIX).apply {
-        isCanBeConsumed = false
-        isCanBeResolved = false
-        isVisible = false
+    private val configurationForAll = project.configurations.register(PREFIX) {
+        it.isCanBeConsumed = false
+        it.isCanBeResolved = false
+        it.isVisible = false
     }
 
     private fun configurationNameOf(vararg parts: String): String {
@@ -119,17 +119,19 @@ class KspConfigurations(private val project: Project) {
             is KotlinMultiplatformExtension -> {
                 kotlin.targets.configureEach { decorateKotlinTarget(it, isKotlinMultiplatform = true) }
 
-                var reported = false
-                configurationForAll.dependencies.whenObjectAdded {
-                    if (!reported) {
-                        reported = true
-                        val msg = "The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. " +
-                            "Please use target-specific configurations like 'kspJvm' instead."
+                configurationForAll.configure { configuration ->
+                    var reported = false
+                    configuration.dependencies.configureEach {
+                        if (!reported) {
+                            reported = true
+                            val msg = "The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. " +
+                                "Please use target-specific configurations like 'kspJvm' instead."
 
-                        if (allowAllTargetConfiguration) {
-                            project.logger.warn(msg)
-                        } else {
-                            throw InvalidUserCodeException(msg)
+                            if (allowAllTargetConfiguration) {
+                                project.logger.warn(msg)
+                            } else {
+                                throw InvalidUserCodeException(msg)
+                            }
                         }
                     }
                 }
