@@ -20,7 +20,6 @@ package com.google.devtools.ksp.gradle
 import com.google.devtools.ksp.gradle.utils.allKotlinSourceSetsObservable
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
-import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
 import com.google.devtools.ksp.processing.KSPConfig
@@ -584,8 +583,13 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         val kspGradleLogger = KspGradleLogger(gradleCfg.logLevel.get().ordinal)
 
         if (processorProviders.isEmpty()) {
-            kspGradleLogger.error("No providers found in processor classpath.")
-            throw Exception("KSP failed with exit code: ${KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR}")
+            kspGradleLogger.error(
+                "No providers found in processor classpath.\n" +
+                    "Make sure you have added KSP processor dependencies using 'ksp' configuration.\n" +
+                    "Processors must implement com.google.devtools.ksp.processing.SymbolProcessorProvider and " +
+                    "register the implementation via META-INF/services."
+            )
+            throw Exception("KSP failed with exit code: ${ExitCode.PROCESSING_ERROR}")
         } else {
             kspGradleLogger.info(
                 "loaded provider(s): " +
