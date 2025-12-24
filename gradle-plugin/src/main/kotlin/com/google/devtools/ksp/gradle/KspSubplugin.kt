@@ -21,6 +21,7 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
+import com.google.devtools.ksp.gradle.utils.checkMinimumAgpVersion
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
@@ -116,6 +117,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         registry.register(KspModelBuilder())
 
         target.plugins.withId("com.android.base") {
+            target.checkMinimumAgpVersion()
             val androidComponents =
                 target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
 
