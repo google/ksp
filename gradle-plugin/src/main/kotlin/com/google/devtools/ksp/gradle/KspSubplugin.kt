@@ -16,12 +16,15 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.variant.Component
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
+import com.google.devtools.ksp.gradle.utils.MINIMUM_SUPPORTED_AGP_VERSION
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
+import com.google.devtools.ksp.gradle.utils.getAgpVersion
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.Project
@@ -116,6 +119,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         registry.register(KspModelBuilder())
 
         target.plugins.withId("com.android.base") {
+            checkMinimumAgpVersion(target.getAgpVersion())
             val androidComponents =
                 target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
 
@@ -127,6 +131,15 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                     }
                 }
             }
+        }
+    }
+
+    private fun checkMinimumAgpVersion(agpVersion: AndroidPluginVersion?) {
+        if (agpVersion != null && agpVersion < MINIMUM_SUPPORTED_AGP_VERSION) {
+            throw RuntimeException(
+                "The minimum supported AGP version is ${MINIMUM_SUPPORTED_AGP_VERSION.version}. " +
+                    "Please upgrade the AGP version in your project."
+            )
         }
     }
 
