@@ -17,6 +17,15 @@ fun Project.getAgpVersion(): AndroidPluginVersion? = try {
 
 fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
 
+fun Project.checkMinimumAgpVersion() {
+    if (this.getAgpVersion() != null && this.getAgpVersion()!! < MINIMUM_SUPPORTED_AGP_VERSION) {
+        throw RuntimeException(
+            "The minimum supported AGP version is ${MINIMUM_SUPPORTED_AGP_VERSION.version}. " +
+                "Please upgrade the AGP version in your project."
+        )
+    }
+}
+
 /**
  * Returns false for AGP versions 8.10.0-alpha03 or higher.
  *
@@ -42,3 +51,11 @@ fun Project.canUseInternalKspApis(): Boolean {
     val agpVersion = project.getAgpVersion() ?: return false
     return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(14)
 }
+
+/**
+ * Defines the minimum supported Android Gradle Plugin (AGP) version.
+ *
+ * KSP aims to support AGP versions released approximately within the last year
+ * from the current KSP release date.
+ */
+val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 3, 0)
