@@ -232,7 +232,7 @@ abstract class KspAATask @Inject constructor(
                                 Callable {
                                     kotlinCompileProvider.get().libraries.filter {
                                         !kspOutputDir.get().asFile.isParentOf(it) &&
-                                            !kaptGeneratedClassesDir.isParentOf(it) &&
+                                            !kaptGeneratedClassesDir.get().asFile.isParentOf(it) &&
                                             !(it.isDirectory && it.listFiles()?.isEmpty() == true)
                                     }
                                 }
@@ -359,8 +359,8 @@ abstract class KspAATask @Inject constructor(
                                 (task.compilerOptions as KotlinJvmCompilerOptions).jvmTarget.map { it.target }
                             }
                         )
-
                         cfg.classpathStructure.from(getClassStructureFiles(project, cfg.libraries))
+
 
                         // Don't support binary generation for non-JVM platforms yet.
                         // FIXME: figure out how to add user generated libraries.

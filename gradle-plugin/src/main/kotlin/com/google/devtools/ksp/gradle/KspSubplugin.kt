@@ -41,7 +41,6 @@ import org.gradle.util.GradleVersion
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
-import org.jetbrains.kotlin.gradle.internal.Kapt3GradleSubplugin
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ARTIFACT_TYPE
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
@@ -467,5 +466,10 @@ internal fun FileCollection.nonSelfDeps(selfTaskName: String): List<Task> =
         it.name == selfTaskName
     }
 
-internal fun getKaptGeneratedClassesDir(project: Project, sourceSetName: String) =
-    Kapt3GradleSubplugin.getKaptGeneratedClassesDir(project, sourceSetName)
+internal fun getKaptGeneratedClassesDir(project: Project, sourceSetName: String): Provider<Directory> {
+    return if (project.isAgpBuiltInKotlinUsed()) {
+        project.layout.buildDirectory.dir("intermediates/built_in_kapt_classes_dir/$sourceSetName")
+    } else {
+        project.layout.buildDirectory.dir("tmp/kapt3/classes/$sourceSetName")
+    }
+}
