@@ -17,7 +17,9 @@
 package com.google.devtools.ksp.gradle
 
 import com.android.build.api.variant.Component
+import com.android.build.gradle.api.AndroidBasePlugin
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.gradle.AndroidPluginIntegration.decorateAndroidExtension
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
@@ -115,18 +117,22 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
 
-        target.plugins.withId("com.android.base") {
-            val androidComponents =
-                target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
+        try {
+            target.plugins.withType(AndroidBasePlugin::class.java).configureEach {
+                val androidComponents =
+                    target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
 
-            val selector = androidComponents.selector().all()
-            androidComponents.onVariants(selector) { variant ->
-                for (component in variant.components) {
-                    androidComponentCache.computeIfAbsent(component.name) {
-                        component
+                val selector = androidComponents.selector().all()
+                androidComponents.onVariants(selector) { variant ->
+                    for (component in variant.components) {
+                        androidComponentCache.computeIfAbsent(component.name) {
+                            component
+                        }
                     }
                 }
             }
+        } catch (e: Throwable) {
+            // Android plugin not found, ignore
         }
     }
 
