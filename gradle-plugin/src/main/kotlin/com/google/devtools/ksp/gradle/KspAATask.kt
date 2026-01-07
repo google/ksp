@@ -39,6 +39,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
+import org.gradle.api.services.ServiceReference
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.IgnoreEmptyDirectories
@@ -95,6 +96,9 @@ abstract class KspAATask @Inject constructor(
     @get:Nested
     abstract val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
+    @get:ServiceReference(IsolatedClassLoaderCacheBuildService.KEY)
+    abstract val isolatedClassLoaderCacheBuildService: Property<IsolatedClassLoaderCacheBuildService>
+
     @TaskAction
     fun execute(inputChanges: InputChanges) {
         // FIXME: Create a class loader with clean classpath instead of shadowing existing ones. It'll require either:
@@ -149,12 +153,12 @@ abstract class KspAATask @Inject constructor(
 
         val workerQueue = workerExecutor.noIsolation()
         workerQueue.submit(KspAAWorkerAction::class.java) {
-            it.config = kspConfig
-            it.kspClasspath = kspClasspath
+            it.config.set(kspConfig)
+            it.kspClasspath.from(kspClasspath)
             it.modifiedSources = modifiedSources
             it.removedSources = removedSources
-            it.isInputChangeIncremental = inputChanges.isIncremental
             it.changedClasses = changedClasses
+            it.isolatedClassLoaderCacheBuildService.set(isolatedClassLoaderCacheBuildService)
         }
     }
 
@@ -167,6 +171,11 @@ abstract class KspAATask @Inject constructor(
             kspExtension: KspExtension,
         ): TaskProvider<KspAATask> {
             val project = kotlinCompilation.target.project
+            val isolatedClassLoaderCacheBuildServiceProvider = project.gradle.sharedServices.registerIfAbsent(
+                IsolatedClassLoaderCacheBuildService.KEY,
+                IsolatedClassLoaderCacheBuildService::class.java
+            ) {}
+
             val target = kotlinCompilation.target.name
             val sourceSetName = kotlinCompilation.defaultSourceSet.name
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
@@ -190,6 +199,8 @@ abstract class KspAATask @Inject constructor(
                 kspAATask.onlyIf {
                     !incomingProcessors.isEmpty
                 }
+                kspAATask.usesService(isolatedClassLoaderCacheBuildServiceProvider)
+                kspAATask.isolatedClassLoaderCacheBuildService.set(isolatedClassLoaderCacheBuildServiceProvider)
                 kspAATask.kspClasspath.from(kspAADepCfg.incoming.artifactView { }.files)
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(incomingProcessors)
@@ -533,31 +544,28 @@ abstract class KspGradleConfig @Inject constructor() {
 }
 
 interface KspAAWorkParameter : WorkParameters {
-    var config: KspGradleConfig
-    var kspClasspath: ConfigurableFileCollection
+    val config: Property<KspGradleConfig>
+    val kspClasspath: ConfigurableFileCollection
     var modifiedSources: List<File>
     var removedSources: List<File>
     var changedClasses: List<String>
-    var isInputChangeIncremental: Boolean
+    val isolatedClassLoaderCacheBuildService: Property<IsolatedClassLoaderCacheBuildService>
 }
 
-var isolatedClassLoaderCache = mutableMapOf<String, URLClassLoader>()
 val doNotGC = mutableSetOf<Any>()
 
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
-        val gradleCfg = parameters.config
+        val gradleCfg = parameters.config.get()
         val kspClasspath = parameters.kspClasspath
+        val isolatedClassLoaderCache = parameters.isolatedClassLoaderCacheBuildService.get().isolatedClassLoaderCache
         val key = kspClasspath.files.map { it.toURI().toURL() }.joinToString { it.path }
-        synchronized(isolatedClassLoaderCache) {
-            if (isolatedClassLoaderCache[key] == null) {
-                isolatedClassLoaderCache[key] = URLClassLoader(
-                    kspClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
-                    ClassLoader.getPlatformClassLoader()
-                )
-            }
+        val isolatedClassLoader = isolatedClassLoaderCache.computeIfAbsent(key) {
+            URLClassLoader(
+                kspClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
+                ClassLoader.getPlatformClassLoader()
+            )
         }
-        val isolatedClassLoader = isolatedClassLoaderCache[key]!!
 
         // Clean stale files for now.
         // TODO: support incremental processing.
