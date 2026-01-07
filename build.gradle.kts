@@ -3,6 +3,7 @@ import com.google.devtools.ksp.configureKtlintApplyToIdea
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 val sonatypeUserName: String? by project
 val sonatypePassword: String? by project
@@ -96,6 +97,21 @@ subprojects {
                     url.set("https://github.com/google/ksp")
                 }
             }
+        }
+
+        kotlin {
+            @OptIn(ExperimentalAbiValidation::class)
+            abiValidation {
+                enabled = true
+            }
+        }
+
+        tasks.check {
+            dependsOn(
+                tasks.withType<Test>(),
+                // TODO: https://youtrack.jetbrains.com/issue/KT-78525
+                tasks.checkLegacyAbi,
+            )
         }
     }
 
