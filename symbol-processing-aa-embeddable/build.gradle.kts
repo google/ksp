@@ -278,7 +278,11 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
-                        addDependency("org.jetbrains.kotlinx", "kotlinx-coroutines-core-jvm", aaCoroutinesVersion)
+                        addDependency(
+                            "org.jetbrains.intellij.deps.kotlinx",
+                            "kotlinx-coroutines-core-jvm",
+                            aaCoroutinesVersion
+                        )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
