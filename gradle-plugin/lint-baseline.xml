@@ -3,50 +3,6 @@
 
     <issue
         id="EagerGradleConfiguration"
-        message="Avoid using method get"
-        errorLine1="                    val destinationProperty = (kaptProvider?.get() as? KaptTask)?.destinationDir"
-        errorLine2="                                                             ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/AndroidPluginIntegration.kt"
-            line="109"
-            column="62"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Avoid using method get"
-        errorLine1="                                    kotlinCompileProvider.get().libraries.filter {"
-        errorLine2="                                                          ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="226"
-            column="59"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Avoid using method get"
-        errorLine1="                        cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)"
-        errorLine2="                                                                   ~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="347"
-            column="68"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Use register instead of create"
-        errorLine1="    private val configurationForAll = project.configurations.create(PREFIX).apply {"
-        errorLine2="                                                             ~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
-            line="28"
-            column="62"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
         message="Use register instead of maybeCreate"
         errorLine1="        return project.configurations.maybeCreate(name).apply {"
         errorLine2="                                      ~~~~~~~~~~~">
@@ -54,17 +10,6 @@
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
             line="47"
             column="39"/>
-    </issue>
-
-    <issue
-        id="EagerGradleConfiguration"
-        message="Use configureEach instead of whenObjectAdded"
-        errorLine1="                configurationForAll.dependencies.whenObjectAdded {"
-        errorLine2="                                                 ~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspConfigurations.kt"
-            line="122"
-            column="50"/>
     </issue>
 
     <issue
