@@ -19,7 +19,7 @@ fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotli
 
 fun Project.checkMinimumAgpVersion() {
     if (this.getAgpVersion() != null && this.getAgpVersion()!! < MINIMUM_SUPPORTED_AGP_VERSION) {
-        throw RuntimeException(
+        throw OldAgpDetectedException(
             "The minimum supported AGP version is ${MINIMUM_SUPPORTED_AGP_VERSION.version}. " +
                 "Please upgrade the AGP version in your project."
         )
@@ -59,3 +59,5 @@ fun Project.canUseInternalKspApis(): Boolean {
  * from the current KSP release date.
  */
 val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 3, 0)
+
+class OldAgpDetectedException(message: String) : RuntimeException(message)

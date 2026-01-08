@@ -24,6 +24,7 @@ import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FlatSourceDirectoriesForJavaImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.api.AndroidBasePlugin
 import com.android.build.gradle.api.SourceKind
 import com.google.devtools.ksp.gradle.utils.canUseAddGeneratedSourceDirectoriesApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
@@ -48,9 +49,13 @@ import java.util.concurrent.Callable
 object AndroidPluginIntegration {
 
     fun forEachAndroidSourceSet(project: Project, onSourceSet: (String) -> Unit) {
-        project.pluginManager.withPlugin("com.android.base") {
-            // for android modules, we need a configuration per source set
-            decorateAndroidExtension(project, onSourceSet)
+        try {
+            project.plugins.withType(AndroidBasePlugin::class.java).configureEach {
+                // for android modules, we need a configuration per source set
+                decorateAndroidExtension(project, onSourceSet)
+            }
+        } catch (e: NoClassDefFoundError) {
+            // Android plugin not found, ignore
         }
     }
 

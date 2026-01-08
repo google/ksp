@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.gradle
 
+import com.android.build.gradle.api.AndroidBasePlugin
 import com.google.devtools.ksp.gradle.utils.kotlinSourceSetsObservable
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.InvalidUserCodeException
@@ -104,12 +105,18 @@ class KspConfigurations(private val project: Project) {
             createAndroidSourceSetConfigurations(project, kotlinTarget = null)
         }
 
-        project.pluginManager.withPlugin("com.android.base") {
-            if (!project.useLegacyVariantApi()) {
-                val androidComponents =
-                    project.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
-                androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+        try {
+            project.plugins.withType(AndroidBasePlugin::class.java).configureEach {
+                if (!project.useLegacyVariantApi()) {
+                    val androidComponents =
+                        project.extensions.findByType(
+                            com.android.build.api.variant.AndroidComponentsExtension::class.java
+                        )
+                    androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+                }
             }
+        } catch (e: NoClassDefFoundError) {
+            // Android plugin not found, ignore
         }
     }
 
