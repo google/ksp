@@ -1,0 +1,24 @@
+plugins {
+    id("com.android.application")
+    id("com.android.legacy-kapt")
+    id("com.google.devtools.ksp")
+}
+dependencies {
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    ksp("androidx.room:room-compiler:2.4.2")
+    implementation("androidx.room:room-runtime:2.4.2")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+}
+android {
+    namespace = "com.example.kspandroidtestapp"
+    defaultConfig {
+        minSdk = 24
+    }
+    compileSdk = 34
+    buildFeatures { 
+        viewBinding = true
+    }
+    viewBinding {
+        enable = true
+    }
+}
