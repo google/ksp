@@ -31,6 +31,7 @@ import com.google.devtools.ksp.processing.KspGradleLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.JavaVersion
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.LogLevel
@@ -79,7 +80,6 @@ import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 @CacheableTask
@@ -223,20 +223,18 @@ abstract class KspAATask @Inject constructor(
                     }
 
                     if (kotlinCompilation is KotlinJvmAndroidCompilation) {
-                        // Workaround of a dependency resolution issue of AGP.
-                        // FIXME: figure out how to filter or set variant attributes correctly.
-                        val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
-                        val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
+
                         cfg.libraries.from(
-                            project.files(
-                                Callable {
-                                    kotlinCompileProvider.get().libraries.filter {
-                                        !kspOutputDir.get().asFile.isParentOf(it) &&
-                                            !kaptGeneratedClassesDir.isParentOf(it) &&
-                                            !(it.isDirectory && it.listFiles()?.isEmpty() == true)
-                                    }
-                                }
-                            )
+                            project.provider {
+                                val configuration = project.configurations.getByName(
+                                    kotlinCompilation.compileDependencyConfigurationName
+                                )
+                                configuration.incoming.artifactView { config ->
+                                    config.attributes.attribute(
+                                        Attribute.of("artifactType", String::class.java), "android-classes-jar"
+                                    )
+                                }.files
+                            }
                         )
                     } else {
                         cfg.libraries.from(
