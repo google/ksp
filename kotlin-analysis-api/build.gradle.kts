@@ -45,6 +45,7 @@ dependencies {
         "com.jetbrains.intellij.platform:util-text-matching",
         "com.jetbrains.intellij.platform:util",
         "com.jetbrains.intellij.platform:util-base",
+        "com.jetbrains.intellij.platform:util-coroutines",
         "com.jetbrains.intellij.platform:util-xml-dom",
         "com.jetbrains.intellij.platform:core",
         "com.jetbrains.intellij.platform:core-impl",
@@ -96,11 +97,8 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    implementation(
-        "org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion"
-    ) {
-        isTransitive = false
-    }
+    compileOnly("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    compileOnly("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     implementation(
         "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
     ) {
@@ -126,7 +124,8 @@ dependencies {
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
     testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
-
+    testImplementation("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    testImplementation("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))
     libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
