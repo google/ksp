@@ -132,6 +132,8 @@ dependencies {
     libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 
     depJarsForCheck("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+    depJarsForCheck("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    depJarsForCheck("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     depJarsForCheck(project(":api"))
     depJarsForCheck(project(":common-deps"))
 
