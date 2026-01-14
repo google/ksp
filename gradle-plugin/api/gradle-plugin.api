@@ -1,0 +1,182 @@
+public final class com/google/devtools/ksp/gradle/AndroidPluginIntegration {
+	public static final field INSTANCE Lcom/google/devtools/ksp/gradle/AndroidPluginIntegration;
+	public final fun canUseAddGeneratedSourceDirectoriesApi (Lorg/gradle/api/Project;)Z
+	public final fun canUseInternalKspApis (Lorg/gradle/api/Project;)Z
+	public final fun forEachAndroidSourceSet (Lorg/gradle/api/Project;Lkotlin/jvm/functions/Function1;)V
+	public final fun getCompilationSourceSets (Lorg/jetbrains/kotlin/gradle/plugin/mpp/KotlinJvmAndroidCompilation;)Ljava/util/List;
+	public final fun isAgpBuiltInKotlinUsed (Lorg/gradle/api/Project;)Z
+	public final fun isKotlinAndroidPluginApplied (Lorg/gradle/api/Project;)Z
+	public final fun isKotlinBaseApiPluginApplied (Lorg/gradle/api/Project;)Z
+	public final fun syncSourceSets (Lorg/gradle/api/Project;Lorg/jetbrains/kotlin/gradle/plugin/mpp/KotlinJvmAndroidCompilation;Lorg/gradle/api/tasks/TaskProvider;Lorg/gradle/api/provider/Provider;Lorg/gradle/api/provider/Provider;Lorg/gradle/api/provider/Provider;Lorg/gradle/api/provider/Provider;Lcom/android/build/api/variant/Component;)V
+	public final fun useLegacyVariantApi (Lorg/gradle/api/Project;)Z
+}
+
+public final class com/google/devtools/ksp/gradle/KSPVersionsKt {
+	public static final fun getKSP_COROUTINES_VERSION ()Ljava/lang/String;
+	public static final fun getKSP_KOTLIN_BASE_VERSION ()Ljava/lang/String;
+	public static final fun getKSP_VERSION ()Ljava/lang/String;
+}
+
+public abstract class com/google/devtools/ksp/gradle/KspAATask : org/gradle/api/DefaultTask {
+	public static final field Companion Lcom/google/devtools/ksp/gradle/KspAATask$Companion;
+	public fun <init> (Lorg/gradle/workers/WorkerExecutor;)V
+	public final fun execute (Lorg/gradle/work/InputChanges;)V
+	public abstract fun getCommandLineArgumentProviders ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getKspClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getKspConfig ()Lcom/google/devtools/ksp/gradle/KspGradleConfig;
+}
+
+public final class com/google/devtools/ksp/gradle/KspAATask$Companion {
+}
+
+public final class com/google/devtools/ksp/gradle/KspAATaskKt {
+	public static final fun getDoNotGC ()Ljava/util/Set;
+	public static final fun getIsolatedClassLoaderCache ()Ljava/util/Map;
+	public static final fun setIsolatedClassLoaderCache (Ljava/util/Map;)V
+}
+
+public abstract interface class com/google/devtools/ksp/gradle/KspAAWorkParameter : org/gradle/workers/WorkParameters {
+	public abstract fun getChangedClasses ()Ljava/util/List;
+	public abstract fun getConfig ()Lcom/google/devtools/ksp/gradle/KspGradleConfig;
+	public abstract fun getKspClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getModifiedSources ()Ljava/util/List;
+	public abstract fun getRemovedSources ()Ljava/util/List;
+	public abstract fun isInputChangeIncremental ()Z
+	public abstract fun setChangedClasses (Ljava/util/List;)V
+	public abstract fun setConfig (Lcom/google/devtools/ksp/gradle/KspGradleConfig;)V
+	public abstract fun setInputChangeIncremental (Z)V
+	public abstract fun setKspClasspath (Lorg/gradle/api/file/ConfigurableFileCollection;)V
+	public abstract fun setModifiedSources (Ljava/util/List;)V
+	public abstract fun setRemovedSources (Ljava/util/List;)V
+}
+
+public abstract class com/google/devtools/ksp/gradle/KspAAWorkerAction : org/gradle/workers/WorkAction {
+	public fun <init> ()V
+	public fun execute ()V
+}
+
+public final class com/google/devtools/ksp/gradle/KspConfigurations {
+	public static final field Companion Lcom/google/devtools/ksp/gradle/KspConfigurations$Companion;
+	public fun <init> (Lorg/gradle/api/Project;)V
+	public final fun find (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Ljava/util/Set;
+}
+
+public final class com/google/devtools/ksp/gradle/KspConfigurations$Companion {
+}
+
+public abstract class com/google/devtools/ksp/gradle/KspExtension {
+	public fun <init> (Lorg/gradle/api/Project;)V
+	public fun arg (Ljava/lang/String;Ljava/lang/String;)V
+	public fun arg (Ljava/lang/String;Lorg/gradle/api/provider/Provider;)V
+	public fun arg (Lorg/gradle/process/CommandLineArgumentProvider;)V
+	public fun excludeProcessor (Ljava/lang/String;)V
+	public fun getAllWarningsAsErrors ()Z
+	public fun getAllowSourcesFromOtherPlugins ()Z
+	public fun getArguments ()Ljava/util/Map;
+	public fun getBlockOtherCompilerPlugins ()Z
+	public abstract fun getExcludedSources ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getUseKsp2 ()Lorg/gradle/api/provider/Property;
+	public fun setAllWarningsAsErrors (Z)V
+	public fun setAllowSourcesFromOtherPlugins (Z)V
+	public fun setBlockOtherCompilerPlugins (Z)V
+}
+
+public abstract class com/google/devtools/ksp/gradle/KspGradleConfig {
+	public fun <init> ()V
+	public abstract fun getAllWarningsAsErrors ()Lorg/gradle/api/provider/Property;
+	public abstract fun getApOptions ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getApiVersion ()Lorg/gradle/api/provider/Property;
+	public abstract fun getCachesDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getClassOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getClasspathStructure ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getCommonSourceRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getExcludedProcessors ()Lorg/gradle/api/provider/SetProperty;
+	public abstract fun getIncremental ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIncrementalLog ()Lorg/gradle/api/provider/Property;
+	public abstract fun getJavaOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getJavaSourceRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getJdkHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getJdkVersion ()Lorg/gradle/api/provider/Property;
+	public abstract fun getJvmDefaultMode ()Lorg/gradle/api/provider/Property;
+	public abstract fun getJvmTarget ()Lorg/gradle/api/provider/Property;
+	public abstract fun getKonanHome ()Lorg/gradle/api/provider/Property;
+	public abstract fun getKonanTargetName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getKotlinOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getLanguageVersion ()Lorg/gradle/api/provider/Property;
+	public abstract fun getLibraries ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public abstract fun getModuleName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getNonJvmLibraries ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getOutputBaseDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getPlatformType ()Lorg/gradle/api/provider/Property;
+	public abstract fun getProcessorClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getProcessorOptions ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getProfilingMode ()Lorg/gradle/api/provider/Property;
+	public abstract fun getProjectBaseDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getResourceOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getSourceRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+}
+
+public final class com/google/devtools/ksp/gradle/KspGradleSubplugin : org/jetbrains/kotlin/gradle/plugin/KotlinCompilerPluginSupportPlugin {
+	public static final field Companion Lcom/google/devtools/ksp/gradle/KspGradleSubplugin$Companion;
+	public static final field KSP_API_ID Ljava/lang/String;
+	public static final field KSP_COMPILER_PLUGIN_ID Ljava/lang/String;
+	public static final field KSP_GROUP_ID Ljava/lang/String;
+	public static final field KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME Ljava/lang/String;
+	public static final field KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE Ljava/lang/String;
+	public static final field KSP_PLUGIN_ID Ljava/lang/String;
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+	public fun applyToCompilation (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Lorg/gradle/api/provider/Provider;
+	public fun getCompilerPluginId ()Ljava/lang/String;
+	public static final fun getKspCachesDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public static final fun getKspClassOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public static final fun getKspJavaOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public static final fun getKspKotlinOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public static final fun getKspOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public static final fun getKspResourceOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public fun getPluginArtifact ()Lorg/jetbrains/kotlin/gradle/plugin/SubpluginArtifact;
+	public fun getPluginArtifactForNative ()Lorg/jetbrains/kotlin/gradle/plugin/SubpluginArtifact;
+	public fun isApplicable (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Z
+}
+
+public final class com/google/devtools/ksp/gradle/KspGradleSubplugin$Companion {
+	public final fun getKspCachesDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public final fun getKspClassOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public final fun getKspJavaOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public final fun getKspKotlinOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public final fun getKspOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+	public final fun getKspResourceOutputDir (Lorg/gradle/api/Project;Ljava/lang/String;Ljava/lang/String;)Lorg/gradle/api/provider/Provider;
+}
+
+public abstract interface class com/google/devtools/ksp/gradle/model/Ksp {
+	public abstract fun getModelVersion ()J
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/gradle/model/builder/KspModelBuilder : org/gradle/tooling/provider/model/ToolingModelBuilder {
+	public fun <init> ()V
+	public fun buildAll (Ljava/lang/String;Lorg/gradle/api/Project;)Ljava/lang/Object;
+	public fun canBuild (Ljava/lang/String;)Z
+}
+
+public final class com/google/devtools/ksp/gradle/model/impl/KspImpl : com/google/devtools/ksp/gradle/model/Ksp, java/io/Serializable {
+	public static final field Companion Lcom/google/devtools/ksp/gradle/model/impl/KspImpl$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/google/devtools/ksp/gradle/model/impl/KspImpl;
+	public static synthetic fun copy$default (Lcom/google/devtools/ksp/gradle/model/impl/KspImpl;Ljava/lang/String;ILjava/lang/Object;)Lcom/google/devtools/ksp/gradle/model/impl/KspImpl;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getModelVersion ()J
+	public fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/gradle/model/impl/KspImpl$Companion {
+}
+
+public final class com/google/devtools/ksp/gradle/utils/AgpUtilsKt {
+	public static final fun getAgpVersion (Lorg/gradle/api/Project;)Lcom/android/build/api/AndroidPluginVersion;
+}
+

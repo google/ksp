@@ -1,0 +1,775 @@
+public final class com/google/devtools/ksp/KSTypeNotPresentException : java/lang/RuntimeException {
+	public fun <init> (Lcom/google/devtools/ksp/symbol/KSType;Ljava/lang/Throwable;)V
+	public final fun getKsType ()Lcom/google/devtools/ksp/symbol/KSType;
+}
+
+public final class com/google/devtools/ksp/KSTypesNotPresentException : java/lang/RuntimeException {
+	public fun <init> (Ljava/util/List;Ljava/lang/Throwable;)V
+	public final fun getKsTypes ()Ljava/util/List;
+}
+
+public abstract interface annotation class com/google/devtools/ksp/KspExperimental : java/lang/annotation/Annotation {
+}
+
+public final class com/google/devtools/ksp/UtilsKt {
+	public static final field ExceptionMessage Ljava/lang/String;
+	public static final fun closestClassDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun findActualType (Lcom/google/devtools/ksp/symbol/KSTypeAlias;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun getAllSuperTypes (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;)Lkotlin/sequences/Sequence;
+	public static final fun getAnnotationsByType (Lcom/google/devtools/ksp/symbol/KSAnnotated;Lkotlin/reflect/KClass;)Lkotlin/sequences/Sequence;
+	public static final fun getClassDeclarationByName (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun getConstructors (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;)Lkotlin/sequences/Sequence;
+	public static final fun getContainingFile (Lcom/google/devtools/ksp/symbol/KSNode;)Lcom/google/devtools/ksp/symbol/KSFile;
+	public static final fun getDeclaredFunctions (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;)Lkotlin/sequences/Sequence;
+	public static final fun getDeclaredProperties (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;)Lkotlin/sequences/Sequence;
+	public static final fun getFunctionDeclarationsByName (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;Z)Lkotlin/sequences/Sequence;
+	public static synthetic fun getFunctionDeclarationsByName$default (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;ZILjava/lang/Object;)Lkotlin/sequences/Sequence;
+	public static final fun getInnerArguments (Lcom/google/devtools/ksp/symbol/KSType;)Ljava/util/List;
+	public static final fun getJavaClassByName (Lcom/google/devtools/ksp/processing/Resolver;Lcom/google/devtools/ksp/symbol/KSName;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun getJavaClassByName (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun getKotlinClassByName (Lcom/google/devtools/ksp/processing/Resolver;Lcom/google/devtools/ksp/symbol/KSName;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun getKotlinClassByName (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public static final fun getOuterType (Lcom/google/devtools/ksp/symbol/KSType;)Lcom/google/devtools/ksp/symbol/KSType;
+	public static final fun getPropertyDeclarationByName (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;Z)Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+	public static synthetic fun getPropertyDeclarationByName$default (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;ZILjava/lang/Object;)Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+	public static final fun getVisibility (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Lcom/google/devtools/ksp/symbol/Visibility;
+	public static final fun isAbstract (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;)Z
+	public static final fun isAbstract (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;)Z
+	public static final fun isAnnotationPresent (Lcom/google/devtools/ksp/symbol/KSAnnotated;Lkotlin/reflect/KClass;)Z
+	public static final fun isConstructor (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;)Z
+	public static final fun isDefault (Lcom/google/devtools/ksp/symbol/KSValueArgument;)Z
+	public static final fun isInternal (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isJavaPackagePrivate (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isLocal (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isOpen (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isPrivate (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isProtected (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isPublic (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun isVisibleFrom (Lcom/google/devtools/ksp/symbol/KSDeclaration;Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public static final fun validate (Lcom/google/devtools/ksp/symbol/KSNode;Lkotlin/jvm/functions/Function2;)Z
+	public static synthetic fun validate$default (Lcom/google/devtools/ksp/symbol/KSNode;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Z
+}
+
+public abstract interface class com/google/devtools/ksp/processing/CodeGenerator {
+	public abstract fun associate (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associate$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public abstract fun associateByPath (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associateByPath$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public abstract fun associateWithClasses (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associateWithClasses$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public fun associateWithFunctions (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associateWithFunctions$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public fun associateWithProperties (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associateWithProperties$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public abstract fun createNewFile (Lcom/google/devtools/ksp/processing/Dependencies;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/io/OutputStream;
+	public static synthetic fun createNewFile$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/Dependencies;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/io/OutputStream;
+	public abstract fun createNewFileByPath (Lcom/google/devtools/ksp/processing/Dependencies;Ljava/lang/String;Ljava/lang/String;)Ljava/io/OutputStream;
+	public static synthetic fun createNewFileByPath$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/Dependencies;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/io/OutputStream;
+	public abstract fun getGeneratedFile ()Ljava/util/Collection;
+}
+
+public final class com/google/devtools/ksp/processing/CodeGenerator$DefaultImpls {
+	public static synthetic fun associate$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static synthetic fun associateByPath$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static synthetic fun associateWithClasses$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static fun associateWithFunctions (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associateWithFunctions$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static fun associateWithProperties (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun associateWithProperties$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static synthetic fun createNewFile$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/Dependencies;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/io/OutputStream;
+	public static synthetic fun createNewFileByPath$default (Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/Dependencies;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/io/OutputStream;
+}
+
+public final class com/google/devtools/ksp/processing/Dependencies {
+	public static final field Companion Lcom/google/devtools/ksp/processing/Dependencies$Companion;
+	public fun <init> (Z[Lcom/google/devtools/ksp/symbol/KSFile;)V
+	public final fun getAggregating ()Z
+	public final fun getOriginatingFiles ()Ljava/util/List;
+	public final fun isAllSources ()Z
+}
+
+public final class com/google/devtools/ksp/processing/Dependencies$Companion {
+	public final fun getALL_FILES ()Lcom/google/devtools/ksp/processing/Dependencies;
+}
+
+public final class com/google/devtools/ksp/processing/ExitCode : java/lang/Enum {
+	public static final field OK Lcom/google/devtools/ksp/processing/ExitCode;
+	public static final field PROCESSING_ERROR Lcom/google/devtools/ksp/processing/ExitCode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/processing/ExitCode;
+	public static fun values ()[Lcom/google/devtools/ksp/processing/ExitCode;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/JsPlatformInfo : com/google/devtools/ksp/processing/PlatformInfo {
+}
+
+public abstract interface class com/google/devtools/ksp/processing/JvmPlatformInfo : com/google/devtools/ksp/processing/PlatformInfo {
+	public abstract fun getJvmDefaultMode ()Ljava/lang/String;
+	public abstract fun getJvmTarget ()Ljava/lang/String;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/KSBuiltIns {
+	public abstract fun getAnnotationType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getAnyType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getArrayType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getBooleanType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getByteType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getCharType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getDoubleType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getFloatType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getIntType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getIterableType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getLongType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getNothingType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getNumberType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getShortType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getStringType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getUnitType ()Lcom/google/devtools/ksp/symbol/KSType;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/KSPLogger {
+	public abstract fun error (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public static synthetic fun error$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+	public abstract fun exception (Ljava/lang/Throwable;)V
+	public abstract fun info (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public static synthetic fun info$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+	public abstract fun logging (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public static synthetic fun logging$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+	public abstract fun warn (Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;)V
+	public static synthetic fun warn$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+}
+
+public final class com/google/devtools/ksp/processing/KSPLogger$DefaultImpls {
+	public static synthetic fun error$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+	public static synthetic fun info$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+	public static synthetic fun logging$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+	public static synthetic fun warn$default (Lcom/google/devtools/ksp/processing/KSPLogger;Ljava/lang/String;Lcom/google/devtools/ksp/symbol/KSNode;ILjava/lang/Object;)V
+}
+
+public abstract interface class com/google/devtools/ksp/processing/NativePlatformInfo : com/google/devtools/ksp/processing/PlatformInfo {
+	public abstract fun getTargetName ()Ljava/lang/String;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/PlatformInfo {
+	public abstract fun getPlatformName ()Ljava/lang/String;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/Resolver {
+	public abstract fun createKSTypeReferenceFromKSType (Lcom/google/devtools/ksp/symbol/KSType;)Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun effectiveJavaModifiers (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Ljava/util/Set;
+	public abstract fun getAllFiles ()Lkotlin/sequences/Sequence;
+	public abstract fun getBuiltIns ()Lcom/google/devtools/ksp/processing/KSBuiltIns;
+	public abstract fun getClassDeclarationByName (Lcom/google/devtools/ksp/symbol/KSName;)Lcom/google/devtools/ksp/symbol/KSClassDeclaration;
+	public abstract fun getDeclarationsFromPackage (Ljava/lang/String;)Lkotlin/sequences/Sequence;
+	public abstract fun getDeclarationsInSourceOrder (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;)Lkotlin/sequences/Sequence;
+	public abstract fun getFunctionDeclarationsByName (Lcom/google/devtools/ksp/symbol/KSName;Z)Lkotlin/sequences/Sequence;
+	public static synthetic fun getFunctionDeclarationsByName$default (Lcom/google/devtools/ksp/processing/Resolver;Lcom/google/devtools/ksp/symbol/KSName;ZILjava/lang/Object;)Lkotlin/sequences/Sequence;
+	public abstract fun getJavaWildcard (Lcom/google/devtools/ksp/symbol/KSTypeReference;)Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun getJvmCheckedException (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;)Lkotlin/sequences/Sequence;
+	public abstract fun getJvmCheckedException (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;)Lkotlin/sequences/Sequence;
+	public abstract fun getJvmName (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;)Ljava/lang/String;
+	public abstract fun getJvmName (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;)Ljava/lang/String;
+	public abstract fun getKSNameFromString (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getModuleName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getNewFiles ()Lkotlin/sequences/Sequence;
+	public abstract fun getOwnerJvmClassName (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;)Ljava/lang/String;
+	public abstract fun getOwnerJvmClassName (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;)Ljava/lang/String;
+	public abstract fun getPackageAnnotations (Ljava/lang/String;)Lkotlin/sequences/Sequence;
+	public abstract fun getPackagesWithAnnotation (Ljava/lang/String;)Lkotlin/sequences/Sequence;
+	public abstract fun getPropertyDeclarationByName (Lcom/google/devtools/ksp/symbol/KSName;Z)Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+	public static synthetic fun getPropertyDeclarationByName$default (Lcom/google/devtools/ksp/processing/Resolver;Lcom/google/devtools/ksp/symbol/KSName;ZILjava/lang/Object;)Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+	public abstract fun getSymbolsWithAnnotation (Ljava/lang/String;Z)Lkotlin/sequences/Sequence;
+	public static synthetic fun getSymbolsWithAnnotation$default (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;ZILjava/lang/Object;)Lkotlin/sequences/Sequence;
+	public abstract fun getTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeReference;Lcom/google/devtools/ksp/symbol/Variance;)Lcom/google/devtools/ksp/symbol/KSTypeArgument;
+	public abstract fun isJavaRawType (Lcom/google/devtools/ksp/symbol/KSType;)Z
+	public abstract fun mapJavaNameToKotlin (Lcom/google/devtools/ksp/symbol/KSName;)Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun mapKotlinNameToJava (Lcom/google/devtools/ksp/symbol/KSName;)Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun mapToJvmSignature (Lcom/google/devtools/ksp/symbol/KSDeclaration;)Ljava/lang/String;
+	public abstract fun overrides (Lcom/google/devtools/ksp/symbol/KSDeclaration;Lcom/google/devtools/ksp/symbol/KSDeclaration;)Z
+	public abstract fun overrides (Lcom/google/devtools/ksp/symbol/KSDeclaration;Lcom/google/devtools/ksp/symbol/KSDeclaration;Lcom/google/devtools/ksp/symbol/KSClassDeclaration;)Z
+}
+
+public final class com/google/devtools/ksp/processing/Resolver$DefaultImpls {
+	public static synthetic fun getFunctionDeclarationsByName$default (Lcom/google/devtools/ksp/processing/Resolver;Lcom/google/devtools/ksp/symbol/KSName;ZILjava/lang/Object;)Lkotlin/sequences/Sequence;
+	public static synthetic fun getPropertyDeclarationByName$default (Lcom/google/devtools/ksp/processing/Resolver;Lcom/google/devtools/ksp/symbol/KSName;ZILjava/lang/Object;)Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+	public static synthetic fun getSymbolsWithAnnotation$default (Lcom/google/devtools/ksp/processing/Resolver;Ljava/lang/String;ZILjava/lang/Object;)Lkotlin/sequences/Sequence;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/SymbolProcessor {
+	public fun finish ()V
+	public fun onError ()V
+	public abstract fun process (Lcom/google/devtools/ksp/processing/Resolver;)Ljava/util/List;
+}
+
+public final class com/google/devtools/ksp/processing/SymbolProcessor$DefaultImpls {
+	public static fun finish (Lcom/google/devtools/ksp/processing/SymbolProcessor;)V
+	public static fun onError (Lcom/google/devtools/ksp/processing/SymbolProcessor;)V
+}
+
+public final class com/google/devtools/ksp/processing/SymbolProcessorEnvironment {
+	public fun <init> (Ljava/util/Map;Lkotlin/KotlinVersion;Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/KSPLogger;)V
+	public fun <init> (Ljava/util/Map;Lkotlin/KotlinVersion;Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/KSPLogger;Lkotlin/KotlinVersion;Lkotlin/KotlinVersion;Ljava/util/List;)V
+	public fun <init> (Ljava/util/Map;Lkotlin/KotlinVersion;Lcom/google/devtools/ksp/processing/CodeGenerator;Lcom/google/devtools/ksp/processing/KSPLogger;Lkotlin/KotlinVersion;Lkotlin/KotlinVersion;Ljava/util/List;Lkotlin/KotlinVersion;)V
+	public final fun getApiVersion ()Lkotlin/KotlinVersion;
+	public final fun getCodeGenerator ()Lcom/google/devtools/ksp/processing/CodeGenerator;
+	public final fun getCompilerVersion ()Lkotlin/KotlinVersion;
+	public final fun getKotlinVersion ()Lkotlin/KotlinVersion;
+	public final fun getKspVersion ()Lkotlin/KotlinVersion;
+	public final fun getLogger ()Lcom/google/devtools/ksp/processing/KSPLogger;
+	public final fun getOptions ()Ljava/util/Map;
+	public final fun getPlatforms ()Ljava/util/List;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/SymbolProcessorProvider {
+	public abstract fun create (Lcom/google/devtools/ksp/processing/SymbolProcessorEnvironment;)Lcom/google/devtools/ksp/processing/SymbolProcessor;
+}
+
+public abstract interface class com/google/devtools/ksp/processing/UnknownPlatformInfo : com/google/devtools/ksp/processing/PlatformInfo {
+}
+
+public final class com/google/devtools/ksp/symbol/AnnotationUseSiteTarget : java/lang/Enum {
+	public static final field ALL Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field DELEGATE Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field FIELD Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field FILE Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field GET Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field PARAM Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field PROPERTY Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field RECEIVER Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field SET Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static final field SETPARAM Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+}
+
+public final class com/google/devtools/ksp/symbol/ClassKind : java/lang/Enum {
+	public static final field ANNOTATION_CLASS Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static final field CLASS Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static final field ENUM_CLASS Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static final field ENUM_ENTRY Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static final field INTERFACE Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static final field OBJECT Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getType ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/ClassKind;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/ClassKind;
+}
+
+public final class com/google/devtools/ksp/symbol/FileLocation : com/google/devtools/ksp/symbol/Location {
+	public fun <init> (Ljava/lang/String;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lcom/google/devtools/ksp/symbol/FileLocation;
+	public static synthetic fun copy$default (Lcom/google/devtools/ksp/symbol/FileLocation;Ljava/lang/String;IILjava/lang/Object;)Lcom/google/devtools/ksp/symbol/FileLocation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFilePath ()Ljava/lang/String;
+	public final fun getLineNumber ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/symbol/FunctionKind : java/lang/Enum {
+	public static final field ANONYMOUS Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public static final field LAMBDA Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public static final field MEMBER Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public static final field STATIC Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public static final field TOP_LEVEL Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/FunctionKind;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSAnnotated : com/google/devtools/ksp/symbol/KSNode {
+	public abstract fun getAnnotations ()Lkotlin/sequences/Sequence;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSAnnotation : com/google/devtools/ksp/symbol/KSNode {
+	public abstract fun getAnnotationType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun getArguments ()Ljava/util/List;
+	public abstract fun getDefaultArguments ()Ljava/util/List;
+	public abstract fun getShortName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getUseSiteTarget ()Lcom/google/devtools/ksp/symbol/AnnotationUseSiteTarget;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSCallableReference : com/google/devtools/ksp/symbol/KSReferenceElement {
+	public fun accept (Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getFunctionParameters ()Ljava/util/List;
+	public abstract fun getReceiverType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun getReturnType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+}
+
+public final class com/google/devtools/ksp/symbol/KSCallableReference$DefaultImpls {
+	public static fun accept (Lcom/google/devtools/ksp/symbol/KSCallableReference;Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSClassDeclaration : com/google/devtools/ksp/symbol/KSDeclaration, com/google/devtools/ksp/symbol/KSDeclarationContainer {
+	public abstract fun asStarProjectedType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun asType (Ljava/util/List;)Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getAllFunctions ()Lkotlin/sequences/Sequence;
+	public abstract fun getAllProperties ()Lkotlin/sequences/Sequence;
+	public abstract fun getClassKind ()Lcom/google/devtools/ksp/symbol/ClassKind;
+	public abstract fun getPrimaryConstructor ()Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;
+	public abstract fun getSealedSubclasses ()Lkotlin/sequences/Sequence;
+	public abstract fun getSuperTypes ()Lkotlin/sequences/Sequence;
+	public abstract fun isCompanionObject ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSClassifierReference : com/google/devtools/ksp/symbol/KSReferenceElement {
+	public fun accept (Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getQualifier ()Lcom/google/devtools/ksp/symbol/KSClassifierReference;
+	public abstract fun referencedName ()Ljava/lang/String;
+}
+
+public final class com/google/devtools/ksp/symbol/KSClassifierReference$DefaultImpls {
+	public static fun accept (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSDeclaration : com/google/devtools/ksp/symbol/KSAnnotated, com/google/devtools/ksp/symbol/KSExpectActual, com/google/devtools/ksp/symbol/KSModifierListOwner {
+	public abstract fun getContainingFile ()Lcom/google/devtools/ksp/symbol/KSFile;
+	public abstract fun getDocString ()Ljava/lang/String;
+	public abstract fun getPackageName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getParentDeclaration ()Lcom/google/devtools/ksp/symbol/KSDeclaration;
+	public abstract fun getQualifiedName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getSimpleName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getTypeParameters ()Ljava/util/List;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSDeclarationContainer : com/google/devtools/ksp/symbol/KSNode {
+	public abstract fun getDeclarations ()Lkotlin/sequences/Sequence;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSDefNonNullReference : com/google/devtools/ksp/symbol/KSReferenceElement {
+	public fun accept (Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getEnclosedType ()Lcom/google/devtools/ksp/symbol/KSClassifierReference;
+}
+
+public final class com/google/devtools/ksp/symbol/KSDefNonNullReference$DefaultImpls {
+	public static fun accept (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSDynamicReference : com/google/devtools/ksp/symbol/KSReferenceElement {
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSExpectActual {
+	public abstract fun findActuals ()Lkotlin/sequences/Sequence;
+	public abstract fun findExpects ()Lkotlin/sequences/Sequence;
+	public abstract fun isActual ()Z
+	public abstract fun isExpect ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSFile : com/google/devtools/ksp/symbol/KSAnnotated, com/google/devtools/ksp/symbol/KSDeclarationContainer {
+	public abstract fun getFileName ()Ljava/lang/String;
+	public abstract fun getFilePath ()Ljava/lang/String;
+	public abstract fun getPackageName ()Lcom/google/devtools/ksp/symbol/KSName;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSFunction {
+	public abstract fun getExtensionReceiverType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getParameterTypes ()Ljava/util/List;
+	public abstract fun getReturnType ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun getTypeParameters ()Ljava/util/List;
+	public abstract fun isError ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSFunctionDeclaration : com/google/devtools/ksp/symbol/KSDeclaration, com/google/devtools/ksp/symbol/KSDeclarationContainer {
+	public abstract fun asMemberOf (Lcom/google/devtools/ksp/symbol/KSType;)Lcom/google/devtools/ksp/symbol/KSFunction;
+	public abstract fun findOverridee ()Lcom/google/devtools/ksp/symbol/KSDeclaration;
+	public abstract fun getExtensionReceiver ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun getFunctionKind ()Lcom/google/devtools/ksp/symbol/FunctionKind;
+	public abstract fun getParameters ()Ljava/util/List;
+	public abstract fun getReturnType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun isAbstract ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSModifierListOwner : com/google/devtools/ksp/symbol/KSNode {
+	public abstract fun getModifiers ()Ljava/util/Set;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSName {
+	public abstract fun asString ()Ljava/lang/String;
+	public abstract fun getQualifier ()Ljava/lang/String;
+	public abstract fun getShortName ()Ljava/lang/String;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSNode {
+	public abstract fun accept (Lcom/google/devtools/ksp/symbol/KSVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getLocation ()Lcom/google/devtools/ksp/symbol/Location;
+	public abstract fun getOrigin ()Lcom/google/devtools/ksp/symbol/Origin;
+	public abstract fun getParent ()Lcom/google/devtools/ksp/symbol/KSNode;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSParenthesizedReference : com/google/devtools/ksp/symbol/KSReferenceElement {
+	public abstract fun getElement ()Lcom/google/devtools/ksp/symbol/KSReferenceElement;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSPropertyAccessor : com/google/devtools/ksp/symbol/KSAnnotated, com/google/devtools/ksp/symbol/KSDeclarationContainer, com/google/devtools/ksp/symbol/KSModifierListOwner {
+	public abstract fun getReceiver ()Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSPropertyDeclaration : com/google/devtools/ksp/symbol/KSDeclaration {
+	public abstract fun asMemberOf (Lcom/google/devtools/ksp/symbol/KSType;)Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun findOverridee ()Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;
+	public abstract fun getExtensionReceiver ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun getGetter ()Lcom/google/devtools/ksp/symbol/KSPropertyGetter;
+	public abstract fun getHasBackingField ()Z
+	public abstract fun getSetter ()Lcom/google/devtools/ksp/symbol/KSPropertySetter;
+	public abstract fun getType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun isDelegated ()Z
+	public abstract fun isMutable ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSPropertyGetter : com/google/devtools/ksp/symbol/KSPropertyAccessor {
+	public abstract fun getReturnType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSPropertySetter : com/google/devtools/ksp/symbol/KSPropertyAccessor {
+	public abstract fun getParameter ()Lcom/google/devtools/ksp/symbol/KSValueParameter;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSReferenceElement : com/google/devtools/ksp/symbol/KSNode {
+	public abstract fun getTypeArguments ()Ljava/util/List;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSType {
+	public abstract fun getAnnotations ()Lkotlin/sequences/Sequence;
+	public abstract fun getArguments ()Ljava/util/List;
+	public abstract fun getDeclaration ()Lcom/google/devtools/ksp/symbol/KSDeclaration;
+	public abstract fun getNullability ()Lcom/google/devtools/ksp/symbol/Nullability;
+	public abstract fun isAssignableFrom (Lcom/google/devtools/ksp/symbol/KSType;)Z
+	public abstract fun isCovarianceFlexible ()Z
+	public abstract fun isError ()Z
+	public abstract fun isFunctionType ()Z
+	public abstract fun isMarkedNullable ()Z
+	public abstract fun isMutabilityFlexible ()Z
+	public abstract fun isSuspendFunctionType ()Z
+	public abstract fun makeNotNullable ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun makeNullable ()Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun replace (Ljava/util/List;)Lcom/google/devtools/ksp/symbol/KSType;
+	public abstract fun starProjection ()Lcom/google/devtools/ksp/symbol/KSType;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSTypeAlias : com/google/devtools/ksp/symbol/KSDeclaration {
+	public abstract fun getName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSTypeArgument : com/google/devtools/ksp/symbol/KSAnnotated {
+	public abstract fun getType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun getVariance ()Lcom/google/devtools/ksp/symbol/Variance;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSTypeParameter : com/google/devtools/ksp/symbol/KSDeclaration {
+	public abstract fun getBounds ()Lkotlin/sequences/Sequence;
+	public abstract fun getName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getVariance ()Lcom/google/devtools/ksp/symbol/Variance;
+	public abstract fun isReified ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSTypeReference : com/google/devtools/ksp/symbol/KSAnnotated, com/google/devtools/ksp/symbol/KSModifierListOwner {
+	public abstract fun getElement ()Lcom/google/devtools/ksp/symbol/KSReferenceElement;
+	public abstract fun resolve ()Lcom/google/devtools/ksp/symbol/KSType;
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSValueArgument : com/google/devtools/ksp/symbol/KSAnnotated {
+	public abstract fun getName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getValue ()Ljava/lang/Object;
+	public abstract fun isSpread ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSValueParameter : com/google/devtools/ksp/symbol/KSAnnotated {
+	public abstract fun getHasDefault ()Z
+	public abstract fun getName ()Lcom/google/devtools/ksp/symbol/KSName;
+	public abstract fun getType ()Lcom/google/devtools/ksp/symbol/KSTypeReference;
+	public abstract fun isCrossInline ()Z
+	public abstract fun isNoInline ()Z
+	public abstract fun isVal ()Z
+	public abstract fun isVar ()Z
+	public abstract fun isVararg ()Z
+}
+
+public abstract interface class com/google/devtools/ksp/symbol/KSVisitor {
+	public abstract fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitCallableReference (Lcom/google/devtools/ksp/symbol/KSCallableReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitClassifierReference (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDefNonNullReference (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDynamicReference (Lcom/google/devtools/ksp/symbol/KSDynamicReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitFile (Lcom/google/devtools/ksp/symbol/KSFile;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitModifierListOwner (Lcom/google/devtools/ksp/symbol/KSModifierListOwner;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitNode (Lcom/google/devtools/ksp/symbol/KSNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitParenthesizedReference (Lcom/google/devtools/ksp/symbol/KSParenthesizedReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPropertyAccessor (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPropertyGetter (Lcom/google/devtools/ksp/symbol/KSPropertyGetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPropertySetter (Lcom/google/devtools/ksp/symbol/KSPropertySetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitReferenceElement (Lcom/google/devtools/ksp/symbol/KSReferenceElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTypeAlias (Lcom/google/devtools/ksp/symbol/KSTypeAlias;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public class com/google/devtools/ksp/symbol/KSVisitorVoid : com/google/devtools/ksp/symbol/KSVisitor {
+	public fun <init> ()V
+	public synthetic fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Lkotlin/Unit;)V
+	public synthetic fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Lkotlin/Unit;)V
+	public synthetic fun visitCallableReference (Lcom/google/devtools/ksp/symbol/KSCallableReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCallableReference (Lcom/google/devtools/ksp/symbol/KSCallableReference;Lkotlin/Unit;)V
+	public synthetic fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Lkotlin/Unit;)V
+	public synthetic fun visitClassifierReference (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassifierReference (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Lkotlin/Unit;)V
+	public synthetic fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Lkotlin/Unit;)V
+	public synthetic fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Lkotlin/Unit;)V
+	public synthetic fun visitDefNonNullReference (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDefNonNullReference (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Lkotlin/Unit;)V
+	public synthetic fun visitDynamicReference (Lcom/google/devtools/ksp/symbol/KSDynamicReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDynamicReference (Lcom/google/devtools/ksp/symbol/KSDynamicReference;Lkotlin/Unit;)V
+	public synthetic fun visitFile (Lcom/google/devtools/ksp/symbol/KSFile;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFile (Lcom/google/devtools/ksp/symbol/KSFile;Lkotlin/Unit;)V
+	public synthetic fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Lkotlin/Unit;)V
+	public synthetic fun visitModifierListOwner (Lcom/google/devtools/ksp/symbol/KSModifierListOwner;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitModifierListOwner (Lcom/google/devtools/ksp/symbol/KSModifierListOwner;Lkotlin/Unit;)V
+	public synthetic fun visitNode (Lcom/google/devtools/ksp/symbol/KSNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitNode (Lcom/google/devtools/ksp/symbol/KSNode;Lkotlin/Unit;)V
+	public synthetic fun visitParenthesizedReference (Lcom/google/devtools/ksp/symbol/KSParenthesizedReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitParenthesizedReference (Lcom/google/devtools/ksp/symbol/KSParenthesizedReference;Lkotlin/Unit;)V
+	public synthetic fun visitPropertyAccessor (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyAccessor (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;Lkotlin/Unit;)V
+	public synthetic fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Lkotlin/Unit;)V
+	public synthetic fun visitPropertyGetter (Lcom/google/devtools/ksp/symbol/KSPropertyGetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyGetter (Lcom/google/devtools/ksp/symbol/KSPropertyGetter;Lkotlin/Unit;)V
+	public synthetic fun visitPropertySetter (Lcom/google/devtools/ksp/symbol/KSPropertySetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertySetter (Lcom/google/devtools/ksp/symbol/KSPropertySetter;Lkotlin/Unit;)V
+	public synthetic fun visitReferenceElement (Lcom/google/devtools/ksp/symbol/KSReferenceElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReferenceElement (Lcom/google/devtools/ksp/symbol/KSReferenceElement;Lkotlin/Unit;)V
+	public synthetic fun visitTypeAlias (Lcom/google/devtools/ksp/symbol/KSTypeAlias;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeAlias (Lcom/google/devtools/ksp/symbol/KSTypeAlias;Lkotlin/Unit;)V
+	public synthetic fun visitTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeArgument;Lkotlin/Unit;)V
+	public synthetic fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Lkotlin/Unit;)V
+	public synthetic fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Lkotlin/Unit;)V
+	public synthetic fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Lkotlin/Unit;)V
+	public synthetic fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Lkotlin/Unit;)V
+}
+
+public abstract class com/google/devtools/ksp/symbol/Location {
+}
+
+public final class com/google/devtools/ksp/symbol/Modifier : java/lang/Enum {
+	public static final field ABSTRACT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field ACTUAL Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field ANNOTATION Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field CONST Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field CROSSINLINE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field DATA Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field ENUM Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field EXPECT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field EXTERNAL Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field FINAL Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field FUN Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field IN Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field INFIX Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field INLINE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field INNER Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field INTERNAL Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_DEFAULT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_NATIVE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_STATIC Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_STRICT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_SYNCHRONIZED Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_TRANSIENT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field JAVA_VOLATILE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field LATEINIT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field NOINLINE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field OPEN Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field OPERATOR Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field OUT Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field OVERRIDE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field PRIVATE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field PROTECTED Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field PUBLIC Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field REIFIED Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field SEALED Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field SUSPEND Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field TAILREC Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field VALUE Lcom/google/devtools/ksp/symbol/Modifier;
+	public static final field VARARG Lcom/google/devtools/ksp/symbol/Modifier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/Modifier;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/Modifier;
+}
+
+public final class com/google/devtools/ksp/symbol/NonExistLocation : com/google/devtools/ksp/symbol/Location {
+	public static final field INSTANCE Lcom/google/devtools/ksp/symbol/NonExistLocation;
+}
+
+public final class com/google/devtools/ksp/symbol/Nullability : java/lang/Enum {
+	public static final field NOT_NULL Lcom/google/devtools/ksp/symbol/Nullability;
+	public static final field NULLABLE Lcom/google/devtools/ksp/symbol/Nullability;
+	public static final field PLATFORM Lcom/google/devtools/ksp/symbol/Nullability;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/Nullability;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/Nullability;
+}
+
+public final class com/google/devtools/ksp/symbol/Origin : java/lang/Enum {
+	public static final field JAVA Lcom/google/devtools/ksp/symbol/Origin;
+	public static final field JAVA_LIB Lcom/google/devtools/ksp/symbol/Origin;
+	public static final field KOTLIN Lcom/google/devtools/ksp/symbol/Origin;
+	public static final field KOTLIN_LIB Lcom/google/devtools/ksp/symbol/Origin;
+	public static final field SYNTHETIC Lcom/google/devtools/ksp/symbol/Origin;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/Origin;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/Origin;
+}
+
+public final class com/google/devtools/ksp/symbol/Variance : java/lang/Enum {
+	public static final field CONTRAVARIANT Lcom/google/devtools/ksp/symbol/Variance;
+	public static final field COVARIANT Lcom/google/devtools/ksp/symbol/Variance;
+	public static final field INVARIANT Lcom/google/devtools/ksp/symbol/Variance;
+	public static final field STAR Lcom/google/devtools/ksp/symbol/Variance;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getLabel ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/Variance;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/Variance;
+}
+
+public final class com/google/devtools/ksp/symbol/Visibility : java/lang/Enum {
+	public static final field INTERNAL Lcom/google/devtools/ksp/symbol/Visibility;
+	public static final field JAVA_PACKAGE Lcom/google/devtools/ksp/symbol/Visibility;
+	public static final field LOCAL Lcom/google/devtools/ksp/symbol/Visibility;
+	public static final field PRIVATE Lcom/google/devtools/ksp/symbol/Visibility;
+	public static final field PROTECTED Lcom/google/devtools/ksp/symbol/Visibility;
+	public static final field PUBLIC Lcom/google/devtools/ksp/symbol/Visibility;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/google/devtools/ksp/symbol/Visibility;
+	public static fun values ()[Lcom/google/devtools/ksp/symbol/Visibility;
+}
+
+public abstract class com/google/devtools/ksp/visitor/KSDefaultVisitor : com/google/devtools/ksp/visitor/KSEmptyVisitor {
+	public fun <init> ()V
+	public fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCallableReference (Lcom/google/devtools/ksp/symbol/KSCallableReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassifierReference (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDefNonNullReference (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDynamicReference (Lcom/google/devtools/ksp/symbol/KSDynamicReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFile (Lcom/google/devtools/ksp/symbol/KSFile;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitModifierListOwner (Lcom/google/devtools/ksp/symbol/KSModifierListOwner;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitParenthesizedReference (Lcom/google/devtools/ksp/symbol/KSParenthesizedReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyAccessor (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyGetter (Lcom/google/devtools/ksp/symbol/KSPropertyGetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertySetter (Lcom/google/devtools/ksp/symbol/KSPropertySetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReferenceElement (Lcom/google/devtools/ksp/symbol/KSReferenceElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeAlias (Lcom/google/devtools/ksp/symbol/KSTypeAlias;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class com/google/devtools/ksp/visitor/KSEmptyVisitor : com/google/devtools/ksp/symbol/KSVisitor {
+	public fun <init> ()V
+	public abstract fun defaultHandler (Lcom/google/devtools/ksp/symbol/KSNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCallableReference (Lcom/google/devtools/ksp/symbol/KSCallableReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassifierReference (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDefNonNullReference (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDynamicReference (Lcom/google/devtools/ksp/symbol/KSDynamicReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFile (Lcom/google/devtools/ksp/symbol/KSFile;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitModifierListOwner (Lcom/google/devtools/ksp/symbol/KSModifierListOwner;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitNode (Lcom/google/devtools/ksp/symbol/KSNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitParenthesizedReference (Lcom/google/devtools/ksp/symbol/KSParenthesizedReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyAccessor (Lcom/google/devtools/ksp/symbol/KSPropertyAccessor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyGetter (Lcom/google/devtools/ksp/symbol/KSPropertyGetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertySetter (Lcom/google/devtools/ksp/symbol/KSPropertySetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReferenceElement (Lcom/google/devtools/ksp/symbol/KSReferenceElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeAlias (Lcom/google/devtools/ksp/symbol/KSTypeAlias;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class com/google/devtools/ksp/visitor/KSTopDownVisitor : com/google/devtools/ksp/visitor/KSDefaultVisitor {
+	public fun <init> ()V
+	public fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCallableReference (Lcom/google/devtools/ksp/symbol/KSCallableReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassifierReference (Lcom/google/devtools/ksp/symbol/KSClassifierReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDefNonNullReference (Lcom/google/devtools/ksp/symbol/KSDefNonNullReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitParenthesizedReference (Lcom/google/devtools/ksp/symbol/KSParenthesizedReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyGetter (Lcom/google/devtools/ksp/symbol/KSPropertyGetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertySetter (Lcom/google/devtools/ksp/symbol/KSPropertySetter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReferenceElement (Lcom/google/devtools/ksp/symbol/KSReferenceElement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeAlias (Lcom/google/devtools/ksp/symbol/KSTypeAlias;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeArgument (Lcom/google/devtools/ksp/symbol/KSTypeArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public class com/google/devtools/ksp/visitor/KSValidateVisitor : com/google/devtools/ksp/visitor/KSDefaultVisitor {
+	public fun <init> (Lkotlin/jvm/functions/Function2;)V
+	public fun defaultHandler (Lcom/google/devtools/ksp/symbol/KSNode;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun defaultHandler (Lcom/google/devtools/ksp/symbol/KSNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitAnnotated (Lcom/google/devtools/ksp/symbol/KSAnnotated;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitAnnotation (Lcom/google/devtools/ksp/symbol/KSAnnotation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitClassDeclaration (Lcom/google/devtools/ksp/symbol/KSClassDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitDeclaration (Lcom/google/devtools/ksp/symbol/KSDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitDeclarationContainer (Lcom/google/devtools/ksp/symbol/KSDeclarationContainer;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitFunctionDeclaration (Lcom/google/devtools/ksp/symbol/KSFunctionDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitPropertyDeclaration (Lcom/google/devtools/ksp/symbol/KSPropertyDeclaration;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitTypeParameter (Lcom/google/devtools/ksp/symbol/KSTypeParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitTypeReference (Lcom/google/devtools/ksp/symbol/KSTypeReference;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitValueArgument (Lcom/google/devtools/ksp/symbol/KSValueArgument;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Lcom/google/devtools/ksp/symbol/KSNode;)Ljava/lang/Boolean;
+	public synthetic fun visitValueParameter (Lcom/google/devtools/ksp/symbol/KSValueParameter;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
