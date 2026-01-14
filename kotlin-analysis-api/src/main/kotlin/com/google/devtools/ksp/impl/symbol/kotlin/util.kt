@@ -73,6 +73,7 @@ import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
@@ -223,7 +224,16 @@ internal fun PsiElement?.toLocation(): Location {
     }
     val file = this.containingFile
     val document = KSPCoreEnvironment.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
-    return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
+    val lineNumber = document.getLineNumber(textOffset)
+    val endLineNumber = document.getLineNumber(endOffset)
+
+    return FileLocation(
+        filePath = file.virtualFile.path,
+        lineNumber = lineNumber + 1,
+        column = textOffset - document.getLineStartOffset(lineNumber),
+        endLineNumber = endLineNumber + 1,
+        endColumn = document.getLineEndOffset(endLineNumber) - document.getLineStartOffset(endLineNumber),
+    )
 }
 
 internal fun KaSymbol.toContainingFile(): KSFile? {
