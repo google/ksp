@@ -616,6 +616,7 @@ class KotlinSymbolProcessing(
             maybeRunInWriteAction {
                 Disposer.dispose(projectDisposable)
                 ResolverAAImpl.tearDown()
+                KSPCoreEnvironment.tearDown()
             }
         }
 
