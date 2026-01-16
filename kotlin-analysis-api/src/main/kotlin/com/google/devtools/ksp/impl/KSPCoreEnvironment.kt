@@ -22,7 +22,6 @@ import com.intellij.psi.PsiDocumentManager
 
 class KSPCoreEnvironment(internal val project: MockProject) {
     companion object {
-        // TODO: get rid of singleton.
         val instance_prop: ThreadLocal<KSPCoreEnvironment> = ThreadLocal()
 
         var instance: KSPCoreEnvironment
@@ -30,6 +29,10 @@ class KSPCoreEnvironment(internal val project: MockProject) {
             set(value) {
                 instance_prop.set(value)
             }
+
+        fun tearDown() {
+            instance_prop.remove()
+        }
     }
     init {
         instance = this
