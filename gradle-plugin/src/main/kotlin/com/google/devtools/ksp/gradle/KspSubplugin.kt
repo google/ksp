@@ -76,6 +76,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
 
+        const val agpBasePluginId = "com.android.base"
+        const val agpKmpPluginId = "com.android.kotlin.multiplatform.library"
+
         @JvmStatic
         fun getKspOutputDir(project: Project, sourceSetName: String, target: String): Provider<Directory> =
             project.layout.buildDirectory.dir("generated/ksp/$target/$sourceSetName")
@@ -116,16 +119,18 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         kspConfigurations = KspConfigurations(target)
         registry.register(KspModelBuilder())
 
-        target.plugins.withId("com.android.base") {
-            target.checkMinimumAgpVersion()
-            val androidComponents =
-                target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
+        listOf(agpBasePluginId, agpKmpPluginId).forEach { pluginId ->
+            target.plugins.withId(pluginId) {
+                target.checkMinimumAgpVersion()
+                val androidComponents =
+                    target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
 
-            val selector = androidComponents.selector().all()
-            androidComponents.onVariants(selector) { variant ->
-                for (component in variant.components) {
-                    androidComponentCache.computeIfAbsent(component.name) {
-                        component
+                val selector = androidComponents.selector().all()
+                androidComponents.onVariants(selector) { variant ->
+                    for (component in variant.components) {
+                        androidComponentCache.computeIfAbsent(component.name) {
+                            component
+                        }
                     }
                 }
             }

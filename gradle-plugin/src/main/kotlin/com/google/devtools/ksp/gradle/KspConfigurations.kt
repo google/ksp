@@ -1,5 +1,7 @@
 package com.google.devtools.ksp.gradle
 
+import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.agpBasePluginId
+import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.agpKmpPluginId
 import com.google.devtools.ksp.gradle.utils.kotlinSourceSetsObservable
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.InvalidUserCodeException
@@ -104,11 +106,15 @@ class KspConfigurations(private val project: Project) {
             createAndroidSourceSetConfigurations(project, kotlinTarget = null)
         }
 
-        project.pluginManager.withPlugin("com.android.base") {
-            if (!project.useLegacyVariantApi()) {
-                val androidComponents =
-                    project.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
-                androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+        listOf(agpBasePluginId, agpKmpPluginId).forEach { pluginId ->
+            project.plugins.withId(pluginId) {
+                if (!project.useLegacyVariantApi()) {
+                    val androidComponents =
+                        project.extensions.findByType(
+                            com.android.build.api.variant.AndroidComponentsExtension::class.java
+                        )
+                    androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+                }
             }
         }
     }
