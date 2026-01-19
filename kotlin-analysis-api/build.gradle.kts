@@ -169,7 +169,11 @@ tasks.withType<ShadowJar>().configureEach {
     exclude("kotlin/**")
     exclude("kotlinx/coroutines/**")
     archiveClassifier.set("")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
+    filesMatching("META-INF/services/**") {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
 }
 
 abstract class ValidateShadowJar : DefaultTask() {
