@@ -34,6 +34,10 @@ fun Project.checkMinimumAgpVersion() {
 fun Project.useLegacyVariantApi(): Boolean {
     val agpVersion = project.getAgpVersion() ?: return true
 
+    if (providers.gradleProperty("force.legacy.variant.api").orNull == "true") {
+        return true
+    }
+
     // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
     return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
 }
