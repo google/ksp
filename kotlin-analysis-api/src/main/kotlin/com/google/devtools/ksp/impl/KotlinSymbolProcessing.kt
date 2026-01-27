@@ -100,6 +100,7 @@ import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
+import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
@@ -547,7 +548,10 @@ class KotlinSymbolProcessing(
                 // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
                 // are created.
                 val firSession = ResolverAAImpl.ktModule.getResolutionFacade(project)
-                firSession.useSiteFirSession.registerResolveComponents(dualLookupTracker)
+                firSession.useSiteFirSession.registerResolveComponents(
+                    KtRegisteredDiagnosticFactoriesStorage(),
+                    dualLookupTracker
+                )
 
                 val resolver = ResolverAAImpl(
                     allDirtyKSFiles,
