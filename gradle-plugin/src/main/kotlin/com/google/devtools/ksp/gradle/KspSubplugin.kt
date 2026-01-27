@@ -25,6 +25,7 @@ import com.google.devtools.ksp.gradle.utils.checkMinimumAgpVersion
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
@@ -121,12 +122,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
         listOf(agpBasePluginId, agpKmpPluginId).forEach { pluginId ->
             target.plugins.withId(pluginId) {
-                target.checkMinimumAgpVersion()
-                val androidComponents =
-                    target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)!!
+                val componentsExtension =
+                    target.extensions.findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+                        ?: throw GradleException("Could not find the Android Gradle Plugin (AGP) extension.")
 
-                val selector = androidComponents.selector().all()
-                androidComponents.onVariants(selector) { variant ->
+                checkMinimumAgpVersion(componentsExtension.pluginVersion)
+                val selector = componentsExtension.selector().all()
+                componentsExtension.onVariants(selector) { variant ->
                     for (component in variant.components) {
                         androidComponentCache.computeIfAbsent(component.name) {
                             component
