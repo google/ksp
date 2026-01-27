@@ -17,8 +17,8 @@ fun Project.getAgpVersion(): AndroidPluginVersion? = try {
 
 fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
 
-fun Project.checkMinimumAgpVersion() {
-    if (this.getAgpVersion() != null && this.getAgpVersion()!! < MINIMUM_SUPPORTED_AGP_VERSION) {
+fun checkMinimumAgpVersion(pluginVersion: AndroidPluginVersion) {
+    if (pluginVersion < MINIMUM_SUPPORTED_AGP_VERSION) {
         throw RuntimeException(
             "The minimum supported AGP version is ${MINIMUM_SUPPORTED_AGP_VERSION.version}. " +
                 "Please upgrade the AGP version in your project."
