@@ -219,6 +219,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     private val androidComponentCache = ConcurrentHashMap<String, Component>()
 
+    private var ksp1WarningShown = false
+
     override fun apply(target: Project) {
         val ksp = target.extensions.create("ksp", KspExtension::class.java)
         ksp.useKsp2.convention(
@@ -251,6 +253,16 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val kotlinVersion = KotlinToolingVersion(project.getKotlinPluginVersion())
 
         val useKsp2 = project.extensions.getByType(KspExtension::class.java).useKsp2.get()
+        val dontWarnOnKsp1 = project.providers.gradleProperty("warn.on.ksp1.usage").orNull?.toBoolean() == false
+
+        if (useKsp2.not() && ksp1WarningShown.not() && dontWarnOnKsp1.not()) {
+            project.logger.warn(
+                "We noticed you are using KSP1 which is deprecated and support for it will be removed soon - " +
+                    "please migrate to KSP2 as soon as possible. KSP1 will no longer be compatible with" +
+                    " Android Gradle Plugin 9.0.0 (and above) and Kotlin 2.3.0 (and above)"
+            )
+            ksp1WarningShown = true
+        }
 
         // Check version and show warning by default.
         val noVersionCheck = project.providers.gradleProperty("ksp.version.check").orNull?.toBoolean() == false
