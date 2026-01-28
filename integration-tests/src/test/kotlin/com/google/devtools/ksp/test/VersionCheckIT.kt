@@ -2,7 +2,6 @@ package com.google.devtools.ksp.test
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,23 +16,6 @@ class VersionCheckIT(val useKSP2: Boolean) {
     fun String.containsOnce(substring: String, ignoreCase: Boolean = false): Boolean {
         val firstIndex = this.indexOf(substring, ignoreCase = ignoreCase)
         return firstIndex != -1 && firstIndex == this.lastIndexOf(substring, ignoreCase = ignoreCase)
-    }
-
-    @Test
-    fun testKsp1Usage() {
-        Assume.assumeFalse(useKSP2)
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        val result = gradleRunner.withArguments(
-            "clean", "build"
-        ).run()
-
-        Assert.assertTrue(
-            result.output.containsOnce(
-                "We noticed you are using KSP1 which is deprecated and support for it will be removed " +
-                    "soon - please migrate to KSP2 as soon as possible. KSP1 will no " +
-                    "longer be compatible with Android Gradle Plugin 9.0.0 (and above) and Kotlin 2.3.0 (and above)"
-            )
-        )
     }
 
     @Test
