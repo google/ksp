@@ -37,6 +37,23 @@ class VersionCheckIT(val useKSP2: Boolean) {
     }
 
     @Test
+    fun testKsp1Usage_noWarning() {
+        Assume.assumeFalse(useKSP2)
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        val result = gradleRunner.withArguments(
+            "-Pwarn.on.ksp1.usage=false", "clean", "build"
+        ).run()
+
+        Assert.assertFalse(
+            result.output.containsOnce(
+                "We noticed you are using KSP1 which is deprecated and support for it will be removed " +
+                    "soon - please migrate to KSP2 as soon as possible. KSP1 will no " +
+                    "longer be compatible with Android Gradle Plugin 9.0.0 (and above) and Kotlin 2.3.0 (and above)"
+            )
+        )
+    }
+
+    @Test
     fun testVersion() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val result = gradleRunner.withArguments(
