@@ -9,7 +9,7 @@ val signingKey: String? by project
 val signingPassword: String? by project
 
 val kotlinBaseVersion: String by project
-
+val kotlinxSerializationVersion: String by project
 val junitVersion: String by project
 val junit5Version: String by project
 val junitPlatformVersion: String by project
@@ -79,7 +79,7 @@ dependencies {
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation("com.google.guava:guava:$aaGuavaVersion")
