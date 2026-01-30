@@ -204,7 +204,8 @@ abstract class ValidateShadowJar : DefaultTask() {
         val actualOutput = stdout.toString()
         outputFile.get().asFile.writeText(actualOutput)
         val expectedOutput = baselineFile.get().asFile.readText()
-        if (actualOutput != expectedOutput) {
+        // Compare line by line to avoid CRLF and LF mismatches
+        if (actualOutput.lines() != expectedOutput.lines()) {
             throw Exception(
                 """
                 jdeps missing dependencies output has changed.
