@@ -665,6 +665,12 @@ class KSPAATest : AbstractKSPAATest() {
         runTest("../kotlin-analysis-api/testData/typeAlias.kt")
     }
 
+    @TestMetadata("nestedTypeAlias.kt")
+    @Test
+    fun testNestedTypeAlias() {
+        runTest("../kotlin-analysis-api/testData/nestedTypeAlias.kt")
+    }
+
     @TestMetadata("typeAliasComparison.kt")
     @Test
     fun testTypeAliasComparison() {
