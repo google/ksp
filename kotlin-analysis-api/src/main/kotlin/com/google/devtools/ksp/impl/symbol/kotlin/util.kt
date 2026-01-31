@@ -258,6 +258,7 @@ internal fun KaDeclarationContainerSymbol.declarations(): Sequence<KSDeclaration
                 is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
                 is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(symbol)
                 is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
+                is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
                 else -> throw IllegalStateException()
             }
         }
