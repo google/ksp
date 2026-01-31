@@ -1,10 +1,10 @@
 // TEST PROCESSOR: TypeAliasProcessor
 // EXPECTED:
-// nestedAlias : <ERROR TYPE: C.NestedAlias> = (expanded) <ERROR TYPE: C.NestedAlias>
+// nestedAlias : NestedAlias = String = (expanded) String
 // nestedClass : Nested = (expanded) Nested
-// param w.o. asMemberOf: <ERROR TYPE: C.NestedAlias> = (expanded) <ERROR TYPE: C.NestedAlias>
-// param with asMemberOf: <ERROR TYPE: C.NestedAlias> = (expanded) <ERROR TYPE: C.NestedAlias>
-// nestedAliasparam: null: <ERROR TYPE: C.NestedAlias> = (expanded) <ERROR TYPE: C.NestedAlias>
+// param w.o. asMemberOf: NestedAlias = String = (expanded) String
+// param with asMemberOf: NestedAlias = String = (expanded) String
+// param: C.NestedAlias: NestedAlias = String = (expanded) String
 // END
 
 class C {
@@ -15,4 +15,4 @@ class C {
 val nestedAlias: C.NestedAlias = ""
 val nestedClass: C.Nested = C.Nested()
 
-class Subject(val nestedAliasparam: C.NestedAlias)
+class Subject(val param: C.NestedAlias)
