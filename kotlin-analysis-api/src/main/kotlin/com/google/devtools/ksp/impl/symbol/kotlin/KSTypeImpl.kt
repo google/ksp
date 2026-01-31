@@ -31,9 +31,13 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 
 class KSTypeImpl private constructor(internal val type: KaType) : KSType {
     companion object : KSObjectCache<IdKey<KaType>, KSTypeImpl>() {
@@ -42,9 +46,65 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         }
     }
 
+    /**
+     * Workaround for an issue where Kotlin Analysis API fails to resolve nested type aliases.
+     *
+     * [KaSession.findTypeAlias] fails to resolve type aliases nested inside classes
+     * (e.g., `OuterClass.NestedAlias`) when provided with the corresponding [ClassId], returning `null`.
+     * Consequently, references to such aliases result in a [KaClassErrorType].
+     *
+     * This workaround attempts to recover the correct symbol by:
+     * 1.  Iterating through the segments of the qualified name to find the deepest resolvable container class.
+     * 2.  Once the container class is found (e.g., `OuterClass`), manually inspecting its member scopes
+     *     (both declared and static) to find the nested classifier (e.g., `NestedAlias`).
+     * 3.  If a [KaTypeAliasSymbol] is found, it is returned as a valid [KSDeclaration].
+     */
+    private fun KaSession.tryResolveNestedTypeAlias(type: KaClassErrorType): KSDeclaration? {
+        val qualifierNames = type.qualifiers.map { it.name.asString() }
+        for (i in 0..qualifierNames.size) {
+            val packageName = qualifierNames.subList(0, i).joinToString(".")
+            val className = qualifierNames.subList(i, qualifierNames.size).joinToString(".")
+            if (className.isEmpty()) continue
+
+            val packageFqName = FqName(packageName)
+            val classFqName = FqName(className)
+            val classId = ClassId(packageFqName, classFqName, false)
+
+            val alias = findTypeAlias(classId)
+            if (alias != null) return KSTypeAliasImpl.getCached(alias)
+
+            val clazz = findClass(classId)
+            if (clazz != null) return KSClassDeclarationImpl.getCached(clazz)
+
+            // Try to resolve container class and find nested type alias manually
+            val segments = classFqName.pathSegments()
+            for (j in 1 until segments.size) {
+                val containerName = segments.subList(0, j).joinToString(".")
+                val nestedName = segments.subList(j, segments.size).joinToString(".")
+                val containerClassId = ClassId(packageFqName, FqName(containerName), false)
+                val containerClass = findClass(containerClassId) ?: continue
+
+                // Check simple nested name
+                if (segments.size - j == 1) {
+                    val nestedId = Name.identifier(nestedName)
+                    val found = containerClass.declaredMemberScope.classifiers { it == nestedId }.firstOrNull()
+                        ?: containerClass.staticDeclaredMemberScope.classifiers { it == nestedId }.firstOrNull()
+
+                    if (found is KaTypeAliasSymbol) {
+                        return KSTypeAliasImpl.getCached(found)
+                    }
+                }
+            }
+        }
+        return null
+    }
+
     private fun KaType.toDeclaration(): KSDeclaration {
         return analyze {
             when (this@toDeclaration) {
+                is KaClassErrorType -> tryResolveNestedTypeAlias(this@toDeclaration)
+                    ?: KSErrorTypeClassDeclaration(this@KSTypeImpl)
+
                 is KaClassType -> {
                     when (val symbol = this@toDeclaration.symbol) {
                         is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
@@ -53,7 +113,7 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
                 }
 
                 is KaTypeParameterType -> KSTypeParameterImpl.getCached(symbol)
-                is KaClassErrorType -> KSErrorTypeClassDeclaration(this@KSTypeImpl)
+
                 is KaFlexibleType ->
                     type.lowerBoundIfFlexible().toDeclaration()
 
