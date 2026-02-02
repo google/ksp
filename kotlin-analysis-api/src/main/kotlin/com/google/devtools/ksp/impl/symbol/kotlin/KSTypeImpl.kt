@@ -70,8 +70,10 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
 
     override val nullability: Nullability by lazy {
         when {
-            type is KaFlexibleType && type.lowerBound.nullability != type.upperBound.nullability -> Nullability.PLATFORM
-            analyze { type.canBeNull } -> Nullability.NULLABLE
+            type is KaFlexibleType && analyze {
+                !type.lowerBound.isMarkedNullable && type.upperBound.isMarkedNullable
+            } -> Nullability.PLATFORM
+            analyze { type.isNullable } -> Nullability.NULLABLE
             else -> Nullability.NOT_NULL
         }
     }
@@ -137,18 +139,17 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
 
     override fun makeNullable(): KSType {
         return analyze {
-            getCached(type.withNullability(KaTypeNullability.NULLABLE))
+            getCached(type.withNullability(isMarkedNullable = true))
         }
     }
 
     override fun makeNotNullable(): KSType {
         return analyze {
-            getCached(type.withNullability(KaTypeNullability.NON_NULLABLE))
+            getCached(type.withNullability(isMarkedNullable = false))
         }
     }
 
-    override val isMarkedNullable: Boolean
-        get() = type.nullability == KaTypeNullability.NULLABLE
+    override val isMarkedNullable: Boolean = analyze { type.isMarkedNullable }
 
     override val isError: Boolean
         // TODO: non exist type returns KtNonErrorClassType, check upstream for KtClassErrorType usage.
