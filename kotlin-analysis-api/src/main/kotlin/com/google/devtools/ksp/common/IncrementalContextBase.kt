@@ -24,6 +24,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSDefaultVisitor
+import com.intellij.psi.PsiImportStatement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiPackage
 import com.intellij.util.containers.MultiMap
@@ -448,6 +449,7 @@ abstract class IncrementalContextBase(
                 markDirty(it)
             }
         }
+
         fun isDirty(file: File) = file in dirties
 
         val roots = mutableSetOf(anyChangesWildcard, removedOutputsKey)
@@ -501,10 +503,9 @@ abstract class IncrementalContextBase(
         // Therefore, the potential providers all need to be inserted. They are
         //   1. definition of the name in the same package
         //   2. other * imports
-        val onDemandImports =
-            onDemandImportsCache.getOrPut(psiFile) {
-                psiFile.getOnDemandImports(false, false).mapNotNull { (it as? PsiPackage)?.qualifiedName }
-            }
+        val onDemandImports = onDemandImportsCache.getOrPut(psiFile) {
+            psiFile.getOnDemandImports().mapNotNull { (it.importReference?.resolve() as? PsiPackage)?.qualifiedName }
+        }
         if (scope in onDemandImports) {
             record(psiFile.packageName, name)
             onDemandImports.forEach {
@@ -512,6 +513,14 @@ abstract class IncrementalContextBase(
             }
         }
     }
+
+    /**
+     * Returns all on-demand imports for `this`, i.e., `import X.*`.
+     */
+    private fun PsiJavaFile.getOnDemandImports(): List<PsiImportStatement> =
+        this.importList?.importStatements
+            ?.filter { it.isOnDemand }
+            ?: emptyList()
 
     fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
         if (!isIncremental)
