@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.RelativizingInternalPathProvider
 import com.google.devtools.ksp.RelativizingPathProvider
 import java.io.ByteArrayOutputStream
+import java.util.jar.JarFile
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
 
@@ -37,6 +38,14 @@ plugins {
 val depSourceJars: Configuration by configurations.creating
 val depJarsForCheck: Configuration by configurations.creating
 val compilerJar: Configuration by configurations.creating
+
+val originalLog4j: Configuration by configurations.creating
+val filteredLog4j = tasks.register<Jar>("filteredLog4j") {
+    from(originalLog4j.map { zipTree(it) }) {
+        exclude("org/apache/log4j/jdbc/**")
+    }
+    archiveFileName.set("log4j-filtered.jar")
+}
 
 dependencies {
     listOf(
@@ -91,7 +100,8 @@ dependencies {
     implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
     implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
     implementation("org.jetbrains.intellij.deps:trove4j:1.0.20200330") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps:log4j:1.2.17.2") { isTransitive = false }
+    originalLog4j("org.jetbrains.intellij.deps:log4j:1.2.17.2") { isTransitive = false }
+    implementation(files(filteredLog4j))
     implementation("org.jetbrains.intellij.deps:jdom:2.0.6") { isTransitive = false }
     implementation("io.javaslang:javaslang:2.0.6")
     implementation("javax.inject:javax.inject:1")
@@ -198,7 +208,7 @@ abstract class ValidateShadowJar : DefaultTask() {
                 )
                 standardOutput = stdout
             }
-        } catch (e: org.gradle.process.internal.ExecException) {
+        } catch (_: org.gradle.process.internal.ExecException) {
             throw Exception("Unable to run jdeps")
         }
         val actualOutput = stdout.toString()
@@ -212,6 +222,18 @@ abstract class ValidateShadowJar : DefaultTask() {
                 actual ${outputFile.get().asFile.absolutePath}.
                 """.trimIndent()
             )
+        }
+
+        JarFile(jarJar).use { jarFile ->
+            jarFile.entries().asSequence().forEach {
+                if (it.name.contains("org/apache/log4j/jdbc")) {
+                    throw Exception(
+                        """
+                        Validation failed: Found unexpected package 'org/apache/log4j/jdbc' in the shadow JAR.
+                        """.trimIndent()
+                    )
+                }
+            }
         }
     }
 }
