@@ -136,20 +136,19 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                             }
                     } else {
                         symbol.valueParameters.mapNotNull { valueParameterSymbol ->
-                            valueParameterSymbol.getDefaultValue().let { constantValue ->
-                                KSValueArgumentImpl.getCached(
-                                    KaBaseNamedAnnotationValue(
-                                        valueParameterSymbol.name,
-                                        // null will be returned as the `constantValue` for non array annotation values.
-                                        // fallback to unsupported annotation value to indicate such use cases.
-                                        // when seeing unsupported annotation value we return `null` for the value.
-                                        // which might still be incorrect but there might not be a perfect way.
-                                        constantValue ?: return@let null
-                                    ),
-                                    this@KSAnnotationJavaImpl,
-                                    Origin.SYNTHETIC
-                                )
-                            }
+                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            KSValueArgumentImpl.getCached(
+                                KaBaseNamedAnnotationValue(
+                                    valueParameterSymbol.name,
+                                    // null will be returned as the `constantValue` for non array annotation values.
+                                    // fallback to unsupported annotation value to indicate such use cases.
+                                    // when seeing unsupported annotation value we return `null` for the value.
+                                    // which might still be incorrect but there might not be a perfect way.
+                                    constantValue
+                                ),
+                                this@KSAnnotationJavaImpl,
+                                Origin.SYNTHETIC
+                            )
                         }
                     }
                 }
@@ -185,6 +184,7 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
             JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value)
                 ?: resolved
         }
+
         else -> value?.let {
             JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value)
         }
@@ -196,12 +196,14 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
                     .getClassDeclarationByName(it)?.asStarProjectedType()
             } ?: KSErrorType(result.boxedTypeName)
         }
+
         is PsiArrayType -> {
             val componentType = when (val component = result.componentType) {
                 is PsiPrimitiveType -> component.boxedTypeName?.let { boxedTypeName ->
                     ResolverAAImpl.instance
                         .getClassDeclarationByName(boxedTypeName)?.asStarProjectedType()
                 } ?: KSErrorType(component.boxedTypeName)
+
                 else -> {
                     ResolverAAImpl.instance
                         .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
@@ -213,14 +215,17 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
             ResolverAAImpl.instance
                 .getClassDeclarationByName("kotlin.Array")!!.asType(typeArgs)
         }
+
         is PsiType -> {
             ResolverAAImpl.instance
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
                 ?: KSErrorType(result.canonicalText)
         }
+
         is PsiLiteralValue -> {
             result.value
         }
+
         is PsiField -> {
             // manually handle enums as constant expression evaluator does not seem to be resolving them.
             val containingClass = result.containingClass
@@ -237,6 +242,7 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
                 null
             }
         }
+
         else -> result
     }
 }
