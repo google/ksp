@@ -107,16 +107,15 @@ class KSAnnotationImpl private constructor(
                 } else {
                     symbol.memberScope.constructors.singleOrNull()?.let {
                         it.valueParameters.mapNotNull { valueParameterSymbol ->
-                            valueParameterSymbol.getDefaultValue().let { constantValue ->
-                                KSValueArgumentImpl.getCached(
-                                    KaBaseNamedAnnotationValue(
-                                        valueParameterSymbol.name,
-                                        constantValue ?: return@let null
-                                    ),
-                                    this@KSAnnotationImpl,
-                                    Origin.SYNTHETIC
-                                )
-                            }
+                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            KSValueArgumentImpl.getCached(
+                                KaBaseNamedAnnotationValue(
+                                    valueParameterSymbol.name,
+                                    constantValue
+                                ),
+                                this@KSAnnotationImpl,
+                                Origin.SYNTHETIC
+                            )
                         }
                     }
                 }

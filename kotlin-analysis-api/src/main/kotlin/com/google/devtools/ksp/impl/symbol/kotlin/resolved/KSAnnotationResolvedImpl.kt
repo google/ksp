@@ -42,6 +42,7 @@ class KSAnnotationResolvedImpl private constructor(
                 KSAnnotationResolvedImpl(annotationApplication, parent, origin ?: Origin.SYNTHETIC)
             }
     }
+
     override val annotationType: KSTypeReference by lazy {
         analyze {
             KSTypeReferenceResolvedImpl.getCached(
@@ -104,16 +105,15 @@ class KSAnnotationResolvedImpl private constructor(
                 } else {
                     symbol.memberScope.constructors.singleOrNull()?.let {
                         it.valueParameters.mapNotNull { valueParameterSymbol ->
-                            valueParameterSymbol.getDefaultValue().let { constantValue ->
-                                KSValueArgumentImpl.getCached(
-                                    KaBaseNamedAnnotationValue(
-                                        valueParameterSymbol.name,
-                                        constantValue ?: return@let null
-                                    ),
-                                    this@KSAnnotationResolvedImpl,
-                                    Origin.SYNTHETIC
-                                )
-                            }
+                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            KSValueArgumentImpl.getCached(
+                                KaBaseNamedAnnotationValue(
+                                    valueParameterSymbol.name,
+                                    constantValue
+                                ),
+                                this@KSAnnotationResolvedImpl,
+                                Origin.SYNTHETIC
+                            )
                         }
                     }
                 }
