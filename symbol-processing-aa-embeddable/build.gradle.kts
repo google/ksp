@@ -104,11 +104,13 @@ class AAServiceTransformer : Transformer {
                     )
                     putOneEntry(path, more)
                 }
+
                 path == "META-INF/extensions/compiler.xml" -> {
                     // Keep compiler.xml the same, and patch ksp_compiler.xml.
                     putOneEntry(path, original)
                     putOneEntry("META-INF/extensions/ksp_compiler.xml", patched)
                 }
+
                 else -> {
                     putOneEntry(path, patched)
                 }
@@ -158,17 +160,27 @@ tasks.withType(ShadowJar::class.java).configureEach {
 
     // All bundled dependencies should be renamed.
     doLast {
-        val violatingFiles = mutableListOf<String>()
-        archiveFile.get().asFile.let {
-            for (e in ZipFile(it).entries()) {
-                if (e.name.endsWith(".class") and !validPackages.contains(e.name))
-                    violatingFiles.add(e.name)
+        val validationErrors = mutableListOf<String>()
+        archiveFile.get().asFile.let { file ->
+            ZipFile(file).use { zipFile ->
+                val unrelocatedClasses = zipFile.entries().asSequence()
+                    .map { it.name }
+                    .filter {
+                        it.endsWith(".class") &&
+                            // Explicitly blocked packages should never be included (takes precedence over allowed).
+                            // Not explicitly allowed packages should never be included.
+                            (blockedPackages.contains(it) || !allowedPackages.contains(it))
+                    }
+                    .toList()
+
+                validationErrors.addAll(unrelocatedClasses)
             }
         }
-        if (violatingFiles.isNotEmpty()) {
+
+        if (validationErrors.isNotEmpty()) {
             error(
-                "Detected unrelocated classes that may cause conflicts: " +
-                    violatingFiles.joinToString(System.lineSeparator())
+                "Detected unrelocated classes that may cause conflicts: ${System.lineSeparator()}" +
+                    validationErrors.joinToString(System.lineSeparator())
             )
         }
     }
@@ -228,7 +240,8 @@ class Trie(paths: List<String>) {
     }
 }
 
-val validPackages = Trie(validPaths)
+val allowedPackages = Trie(validPaths)
+val blockedPackages = Trie(listOf("ksp/org/apache/log4j/jdbc"))
 
 val copyDeps = tasks.register<Copy>("copyDeps") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
