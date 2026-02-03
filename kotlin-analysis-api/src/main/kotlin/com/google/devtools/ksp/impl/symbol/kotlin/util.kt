@@ -720,12 +720,12 @@ private fun KaType.canHaveSubtypesIgnoreNullability(): Boolean =
                 return@analyze true
             }
 
-            val type = projection.type
+            val projectionType = projection.type
             val effectiveVariance = getEffectiveVariance(param.variance, projection.variance)
-            if (effectiveVariance == Variance.OUT_VARIANCE && !type.isMostPreciseCovariantArgument()) {
+            if (effectiveVariance == Variance.OUT_VARIANCE && !projectionType.isMostPreciseCovariantArgument()) {
                 return@analyze true
             }
-            if (effectiveVariance == Variance.IN_VARIANCE && !type.isMostPreciseContravariantArgument()) {
+            if (effectiveVariance == Variance.IN_VARIANCE && !projectionType.isMostPreciseContravariantArgument()) {
                 return@analyze true
             }
         }
