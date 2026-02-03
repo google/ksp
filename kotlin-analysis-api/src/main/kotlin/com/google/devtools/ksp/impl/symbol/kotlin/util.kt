@@ -181,8 +181,11 @@ internal fun KaType.render(inFunctionType: Boolean = false): String {
 
                 is KaTypeParameterType -> name.asString()
                 else -> throw IllegalStateException("Unhandled type ${this@render.javaClass}")
-            } + if (nullability == KaTypeNullability.NULLABLE) "?" else ""
+            }
         )
+        if (analyze { isMarkedNullable }) {
+            append("?")
+        }
     }
 }
 
@@ -630,7 +633,7 @@ internal fun KaType.convertToKotlinType(): KaType {
                     argument(typeProjection)
                 }
             }
-            nullability = this@convertToKotlinType.nullability
+            isMarkedNullable = this@convertToKotlinType.isMarkedNullable
         }
     }
 }
@@ -653,7 +656,7 @@ internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
         when (val symbol = classifierSymbol().tryResolveToTypePhase()) {
             is KaClassLikeSymbol -> useSiteSession.buildClassType(symbol) {
                 newArgs.forEach { arg -> argument(arg) }
-                nullability = this@replace.nullability
+                isMarkedNullable = this@replace.isMarkedNullable
             }
             // No need to copy nullability for type parameters
             // because it is overridden to be always nullable in compiler.
@@ -749,10 +752,10 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
                             )
                         )
                         val argType =
-                            arg.type ?: useSiteSession.builtinTypes.any.withNullability(KaTypeNullability.NULLABLE)
+                            arg.type ?: useSiteSession.builtinTypes.any.withNullability(isMarkedNullable = true)
                         argument(argType.toWildcard(genericMode), variance)
                     }
-                    nullability = this@toWildcard.nullability
+                    isMarkedNullable = this@toWildcard.isMarkedNullable
                 }
             }
 
@@ -851,7 +854,7 @@ private fun KaType.asInfoForMangling(): InfoForMangling? {
     val upperBound = upperBoundIfFlexible
     val fqName = upperBound.symbol?.classId?.asSingleFqName()?.toUnsafe() ?: return null
     val isValue = upperBound.requiresMangling()
-    val isNullable = upperBound.nullability.isNullable
+    val isNullable = analyze { upperBound.isNullable }
     return InfoForMangling(fqName = fqName, isValue = isValue, isNullable = isNullable)
 }
 
