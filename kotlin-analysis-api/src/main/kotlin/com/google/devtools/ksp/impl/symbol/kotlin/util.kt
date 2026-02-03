@@ -162,8 +162,6 @@ internal fun KaType.render(inFunctionType: Boolean = false): String {
                                         "${it.variance}" +
                                             (if (it.variance != Variance.INVARIANT) " " else "") +
                                             it.type.render(this@render is KaFunctionType)
-
-                                    else -> throw IllegalStateException("Unhandled type argument type ${it.javaClass}")
                                 }
                             }.also { append(it) }
                         }
