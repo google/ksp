@@ -68,6 +68,7 @@ import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgume
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.ClassIdBasedLocality
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.psi.KtAnnotated
@@ -391,6 +392,7 @@ internal fun KaSymbol.toKSNode(): KSNode {
     }
 }
 
+@OptIn(ClassIdBasedLocality::class)
 internal fun ClassId.toKtClassSymbol(): KaClassSymbol? {
     return analyze {
         if (this@toKtClassSymbol.isLocal) {
