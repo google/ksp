@@ -135,7 +135,21 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.analysis.api.utils.ApiUtilsKt -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.HostConfigurationKt not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration$Builder not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration$Companion not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfigurationKeys not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.util.PropertiesCollection not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.util.PropertiesCollection$Key not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptCompilationConfigurationProvider not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptCompilationConfigurationProviderKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptCompilationConfigurationProviderOverDefinitionProvider not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptRefinedCompilationConfigurationCache not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptRefinedCompilationConfigurationCacheImpl not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptRefinedCompilationConfigurationCacheKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.definitions.ScriptRefinedCompilationConfigurationCacheOverConfigurationsProvider not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirScriptConfiguratorExtensionImpl not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirScriptConfiguratorExtensionImpl$Companion not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirScriptDefinitionProviderService not found
@@ -149,8 +163,6 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider$Companion not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionsSource not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> kotlin.script.experimental.host.ScriptingHostConfiguration$Builder not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> kotlin.script.experimental.jvm.JvmScriptingHostConfigurationKt not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentCommandLineProcessor not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentConfigurationKeys not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.k2.FirAssignmentPluginExtensionRegistrar not found
@@ -917,13 +929,6 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.cli.common.arguments.ArgumentUtilsKt -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.cli.common.arguments.ArgumentUtilsKt -> kotlin.reflect.jvm.ReflectJvmMapping               not found
    org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmInvocableScriptEngine -> kotlin.reflect.full.KClasses                       not found
-   org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM -> org.jetbrains.kotlin.javac.components.JavacBasedClassFinder not found
-   org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM -> org.jetbrains.kotlin.javac.components.JavacBasedSourceElementFactory not found
-   org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM -> org.jetbrains.kotlin.javac.components.StubJavaResolverCache not found
-   org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperKotlinResolverImpl -> org.jetbrains.kotlin.javac.JavacWrapperKotlinResolver not found
-   org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperKotlinResolverImpl -> org.jetbrains.kotlin.javac.resolve.MockKotlinField not found
-   org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperRegistrar -> org.jetbrains.kotlin.javac.JavacWrapper            not found
-   org.jetbrains.kotlin.cli.jvm.javac.JavacWrapperRegistrar -> org.jetbrains.kotlin.javac.JavacWrapperKotlinResolver not found
    org.jetbrains.kotlin.compilerRunner.ArgumentsToStrings -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.compilerRunner.ArgumentsToStrings -> kotlin.reflect.jvm.ReflectJvmMapping               not found
    org.jetbrains.kotlin.fir.pipeline.FirUtilsKt       -> org.jetbrains.kotlin.fir.lightTree.LightTree2Fir   not found
@@ -1066,11 +1071,25 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArgumentsExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArgumentsExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArgumentsExpressionContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayBindingPatternContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayBindingPatternContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayBindingPatternContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayElementContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayElementContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayElementContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayElementContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayElementContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemBindingContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemBindingContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemBindingContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemBindingContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemListContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemListContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemListContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemListContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayItemListContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayLiteralContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayLiteralContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ArrayLiteralContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
@@ -1122,6 +1141,10 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BigintLiteralContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BigintLiteralContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BigintLiteralContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BindingElementContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BindingElementContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BindingElementContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BindingElementContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BitAndExpressionContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BitAndExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$BitAndExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
@@ -1500,6 +1523,11 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedFunctionContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedFunctionContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedFunctionContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedPropertyBindingPatternContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NamedPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NewExpressionContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NewExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NewExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
@@ -1515,6 +1543,11 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NumericLiteralContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NumericLiteralContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$NumericLiteralContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectBindingPatternContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectBindingPatternContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectBindingPatternContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectLiteralContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectLiteralContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ObjectLiteralContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
@@ -1590,6 +1623,7 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ProgramContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ProgramContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyAssignmentContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyBindingPatternContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyExpressionAssignmentContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyExpressionAssignmentContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyExpressionAssignmentContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
@@ -1614,6 +1648,10 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyShorthandContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyShorthandContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$PropertyShorthandContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RegularPropertyBindingPatternContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RegularPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RegularPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RegularPropertyBindingPatternContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RelationalExpressionContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RelationalExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RelationalExpressionContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
@@ -1624,6 +1662,11 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ReservedWordContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ReservedWordContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$ReservedWordContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestBindingElementContext -> org.antlr.v4.runtime.ParserRuleContext             not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestBindingElementContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestBindingElementContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestBindingElementContext -> org.antlr.v4.runtime.tree.RuleNode                 not found
+   org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestBindingElementContext -> org.antlr.v4.runtime.tree.TerminalNode             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestParameterArgContext -> org.antlr.v4.runtime.ParserRuleContext             not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestParameterArgContext -> org.antlr.v4.runtime.tree.ParseTreeListener        not found
    org.jetbrains.kotlin.js.parser.antlr.generated.JavaScriptParser$RestParameterArgContext -> org.antlr.v4.runtime.tree.ParseTreeVisitor         not found

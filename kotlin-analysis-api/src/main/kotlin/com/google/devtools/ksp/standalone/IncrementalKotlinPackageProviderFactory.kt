@@ -23,7 +23,11 @@ class IncrementalKotlinPackageProviderFactory(
     }
 
     fun update(files: Collection<KtFile>) {
-        val staticFactory = KotlinStandalonePackageProviderFactory(project, files, emptyList())
+        val staticFactory = KotlinStandalonePackageProviderFactory(
+            project = project,
+            indexedFiles = files,
+            libraryRoots = emptyList()
+        )
         Disposer.register(this, staticFactory)
         staticFactories.add(staticFactory)
     }
