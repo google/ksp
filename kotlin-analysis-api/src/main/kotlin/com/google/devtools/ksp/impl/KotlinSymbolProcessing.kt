@@ -60,6 +60,7 @@ import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaIdeApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.api.fir.utils.KaFirCacheCleaner
 import org.jetbrains.kotlin.analysis.api.platform.KotlinMessageBusProvider
 import org.jetbrains.kotlin.analysis.api.platform.KotlinPlatformSettings
@@ -117,6 +118,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 import java.nio.file.Path
 
+@OptIn(KaPlatformInterface::class)
 @Suppress("UnstableApiUsage")
 class KotlinSymbolProcessing(
     val kspConfig: KSPConfig,
