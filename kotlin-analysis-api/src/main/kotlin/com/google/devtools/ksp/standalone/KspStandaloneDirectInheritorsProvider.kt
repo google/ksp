@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.psiUtil.contains
 
 // TODO: copied from upstream as a workaround, remove after upstream fixes standalone session builder for KSP.
-@OptIn(LLFirInternals::class, SymbolInternals::class)
+@OptIn(KaPlatformInterface::class, LLFirInternals::class, SymbolInternals::class)
 class KspStandaloneDirectInheritorsProvider(private val project: Project) : KotlinDirectInheritorsProvider {
     private val declarationProviderFactory by lazy {
         (KotlinDeclarationProviderFactory.getInstance(project) as? IncrementalKotlinDeclarationProviderFactory)

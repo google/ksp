@@ -34,6 +34,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsMemberImpl
 import org.jetbrains.kotlin.analysis.api.*
+import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
@@ -201,7 +202,7 @@ internal fun KaType.toClassifierReference(parent: KSTypeReference?): KSReference
     }
 }
 
-@OptIn(KaImplementationDetail::class)
+@OptIn(KaImplementationDetail::class, KaPlatformInterface::class)
 internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
     val variance = when (this.variance) {
         com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT

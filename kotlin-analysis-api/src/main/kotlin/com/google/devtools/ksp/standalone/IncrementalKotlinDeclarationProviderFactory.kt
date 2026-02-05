@@ -3,6 +3,8 @@ package com.google.devtools.ksp.standalone
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinCompositeDeclarationProvider
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProvider
 import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderFactory
@@ -13,6 +15,7 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
+@OptIn(KaPlatformInterface::class, KaImplementationDetail::class)
 class IncrementalKotlinDeclarationProviderFactory(
     private val project: Project,
     private val environment: CoreApplicationEnvironment,
