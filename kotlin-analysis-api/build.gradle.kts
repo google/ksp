@@ -198,19 +198,20 @@ abstract class ValidateShadowJar : DefaultTask() {
         val jarJar = inputFile.get().asFile
         val depJars = classpath.files
         val stdout = ByteArrayOutputStream()
-        try {
-            execOperations.exec {
-                executable = "jdeps"
-                args = listOf(
-                    "--multi-release", "base",
-                    "--missing-deps",
-                    "-cp", depJars.joinToString(File.pathSeparator), jarJar.path
-                )
-                standardOutput = stdout
-            }
-        } catch (_: org.gradle.process.internal.ExecException) {
+        val execResult = execOperations.exec {
+            isIgnoreExitValue = true // Prevent throwing
+            executable = "jdeps"
+            args = listOf(
+                "--multi-release", "base",
+                "--missing-deps",
+                "-cp", depJars.joinToString(File.pathSeparator), jarJar.path
+            )
+            standardOutput = stdout
+        }
+        if (execResult.exitValue != 0) {
             throw Exception("Unable to run jdeps")
         }
+
         val actualOutput = stdout.toString()
         outputFile.get().asFile.writeText(actualOutput)
         val expectedOutput = baselineFile.get().asFile.readText()
