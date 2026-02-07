@@ -11,7 +11,7 @@ import org.junit.Test
 import java.io.File
 import java.util.jar.*
 
-class MultiplatformIT() {
+class MultiplatformIT {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground-mpp", "playground")
@@ -58,5 +58,12 @@ class MultiplatformIT() {
                 "bundleAndroidMainClassesToCompileJar/classes.jar"
         )
         Assert.assertTrue(classesJar.exists())
+
+        JarFile(classesJar).use { jarFile ->
+            jarFile.assertContainsNonNullEntry("com/example/AKt.class")
+            jarFile.assertContainsNonNullEntry("com/example/AClassBuilder.class")
+            jarFile.assertContainsNonNullEntry("com/example/BClassBuilder.class")
+            jarFile.assertContainsNonNullEntry("com/example/AClass.class")
+        }
     }
 }
