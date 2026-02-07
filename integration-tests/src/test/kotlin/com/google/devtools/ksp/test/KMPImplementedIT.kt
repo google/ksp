@@ -12,7 +12,7 @@ import org.junit.Test
 import java.io.File
 import java.util.jar.*
 
-class KMPImplementedIT() {
+class KMPImplementedIT {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("kmp")
@@ -31,7 +31,7 @@ class KMPImplementedIT() {
     private fun verifyKexe(path: String) {
         val artifact = File(project.root, path)
         Assert.assertTrue(artifact.exists())
-        Assert.assertTrue(artifact.readBytes().size > 0)
+        Assert.assertTrue(artifact.readBytes().isNotEmpty())
     }
 
     private fun checkExecutionOptimizations(log: String) {
@@ -39,6 +39,34 @@ class KMPImplementedIT() {
             "Execution optimizations have been disabled",
             log.contains("Execution optimizations have been disabled")
         )
+    }
+
+    @Test
+    fun testAndroid() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-android:build"
+        ).build().let {
+            // Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-android:build")?.outcome)
+            verify(
+                "workload-android/build/intermediates/compile_library_classes_jar/androidMain/" +
+                    "bundleAndroidMainClassesToCompileJar/classes.jar",
+                listOf(
+                    "com/example/Foo.class",
+                    "com/example/Bar.class",
+                    "com/example/Baz.class",
+                    "com/example/ToBeValidated.class"
+                )
+            )
+            Assert.assertFalse(it.output.contains("kotlin scripting plugin:"))
+            Assert.assertTrue(it.output.contains("w: [ksp] platforms: [JVM"))
+            Assert.assertTrue(it.output.contains("w: [ksp] List has superTypes: true"))
+            checkExecutionOptimizations(it.output)
+        }
     }
 
     @Test
