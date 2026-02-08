@@ -240,4 +240,22 @@ object AndroidPluginIntegration {
             androidComponent,
         )
     }
+
+    fun registerGeneratedSourcesKmp(
+        project: Project,
+        kspTaskProvider: TaskProvider<KspAATask>,
+        androidComponent: Component?,
+    ) {
+        if (androidComponent != null && project.canUseInternalKspApis()) {
+            androidComponent.sources.java?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> task.kspConfig.javaOutputDir }
+            )
+
+            androidComponent.sources.kotlin?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> task.kspConfig.kotlinOutputDir }
+            )
+        }
+    }
 }
