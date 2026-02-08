@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.gradle
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidCompilation
 import com.android.build.api.variant.Component
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
@@ -154,7 +155,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
-        val component = androidComponentCache.get(kotlinCompilation.name)
         val kotlinCompileProvider: TaskProvider<AbstractKotlinCompileTool<*>> =
             project.locateTask(kotlinCompilation.compileKotlinTaskName) ?: return project.provider { emptyList() }
         val kspExtension = project.extensions.getByType(KspExtension::class.java)
@@ -248,6 +248,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             }
         }
         if (kotlinCompilation is KotlinJvmAndroidCompilation) {
+            val component = androidComponentCache.get(kotlinCompilation.name)
             AndroidPluginIntegration.syncSourceSets(
                 project = project,
                 kotlinCompilation = kotlinCompilation,
@@ -258,6 +259,20 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourcesOutputDir = resourceOutputDir,
                 androidComponent = component,
             )
+        }
+
+        project.afterEvaluate {
+            try {
+                if (kotlinCompilation is KotlinMultiplatformAndroidCompilation) {
+                    val component = androidComponentCache.get(kotlinCompilation.componentName)
+                    AndroidPluginIntegration.registerGeneratedSourcesKmp(
+                        kspTaskProvider = kspTaskProvider,
+                        androidComponent = component,
+                    )
+                }
+            } catch (e: NoClassDefFoundError) {
+                // ignore
+            }
         }
 
         return project.provider { emptyList() }
