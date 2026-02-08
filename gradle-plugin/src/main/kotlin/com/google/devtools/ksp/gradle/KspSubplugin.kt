@@ -206,7 +206,7 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kotlinCompilation,
             kotlinCompileProvider,
             processorClasspath,
-            kspExtension
+            kspExtension,
         )
 
         val generatedSources = arrayOf(
