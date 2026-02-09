@@ -25,6 +25,7 @@ import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.checkMinimumAgpVersion
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
+import com.google.devtools.ksp.gradle.utils.minimumAndroidKotlinMultiplatformVersion
 import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -261,17 +262,19 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             )
         }
 
+        // The variant API in KMP runs after KotlinCompilerPluginSupportPlugin.applyToCompilation()
+        // afterEvaluate is needed here to ensure the Variant API onVariants callback has run and populated the
+        // androidComponentCache, before we attempt to query for the Component object
         project.afterEvaluate {
-            try {
-                if (kotlinCompilation is KotlinMultiplatformAndroidCompilation) {
-                    val component = androidComponentCache.get(kotlinCompilation.componentName)
-                    AndroidPluginIntegration.registerGeneratedSourcesKmp(
-                        kspTaskProvider = kspTaskProvider,
-                        androidComponent = component,
-                    )
-                }
-            } catch (e: NoClassDefFoundError) {
-                // ignore
+            if (project.isAndroidKmpProject() &&
+                project.minimumAndroidKotlinMultiplatformVersion() &&
+                kotlinCompilation is KotlinMultiplatformAndroidCompilation
+            ) {
+                val component = androidComponentCache.get(kotlinCompilation.componentName)
+                AndroidPluginIntegration.registerGeneratedSourcesKmp(
+                    kspTaskProvider = kspTaskProvider,
+                    androidComponent = component,
+                )
             }
         }
 
@@ -493,3 +496,8 @@ internal fun FileCollection.nonSelfDeps(selfTaskName: String): List<Task> =
 
 internal fun getKaptGeneratedClassesDir(project: Project, sourceSetName: String) =
     Kapt3GradleSubplugin.getKaptGeneratedClassesDir(project, sourceSetName)
+
+private fun Project.isAndroidKmpProject(): Boolean {
+    return project.pluginManager.hasPlugin("kotlin-multiplatform") &&
+        project.pluginManager.hasPlugin("com.android.kotlin.multiplatform.library")
+}

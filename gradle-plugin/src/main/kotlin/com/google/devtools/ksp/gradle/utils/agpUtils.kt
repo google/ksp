@@ -56,6 +56,11 @@ fun Project.canUseInternalKspApis(): Boolean {
     return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(14)
 }
 
+fun Project.minimumAndroidKotlinMultiplatformVersion(): Boolean {
+    val agpVersion = project.getAgpVersion() ?: return false
+    return agpVersion >= AndroidPluginVersion(8, 2, 0)
+}
+
 /**
  * Defines the minimum supported Android Gradle Plugin (AGP) version.
  *
