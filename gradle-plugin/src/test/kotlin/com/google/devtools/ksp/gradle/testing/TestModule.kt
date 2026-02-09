@@ -35,7 +35,7 @@ class TestModule(
     val plugins = LinkedHashSet(plugins)
     val dependencies = LinkedHashSet(dependencies)
     val buildFileAdditions = LinkedHashSet<String>()
-    val name = moduleRoot.name
+    val name: String = moduleRoot.name
 
     init {
         moduleRoot.mkdirs()
@@ -136,18 +136,18 @@ class TestModule(
      */
     fun writeBuildFile() {
         val contents = buildString {
-            appendln("plugins {")
+            appendLine("plugins {")
             plugins.forEach { plugin ->
-                appendln(plugin.toCode().prependIndent("    "))
+                appendLine(plugin.toCode().prependIndent("    "))
             }
-            appendln("}")
-            appendln("dependencies {")
+            appendLine("}")
+            appendLine("dependencies {")
             dependencies.forEach { dependency ->
-                appendln(dependency.toCode().prependIndent("    "))
+                appendLine(dependency.toCode().prependIndent("    "))
             }
-            appendln("}")
+            appendLine("}")
             buildFileAdditions.forEach {
-                appendln(it)
+                appendLine(it)
             }
         }
         buildFile.writeText(contents)
