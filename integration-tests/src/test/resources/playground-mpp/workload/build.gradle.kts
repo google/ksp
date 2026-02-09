@@ -10,6 +10,7 @@ kotlin {
     android {
         namespace = "com.example"
         compileSdk = 36
+        withJava()
         withDeviceTest { }
         withHostTest { }
     }
