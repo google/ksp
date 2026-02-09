@@ -354,7 +354,12 @@ abstract class KspAATask @Inject constructor(
 
                         val oldJvmDefaultMode = compileTask.flatMap { task ->
                             task.compilerOptions.freeCompilerArgs
-                                .map { args -> args.filter { it.startsWith("-Xjvm-default=") } }
+                                .map { args ->
+                                    args.filter {
+                                        // Support both new and deprecated arguments (-Xjvm-* is deprecated)
+                                        it.startsWith("-jvm-default=") || it.startsWith("-Xjvm-default=")
+                                    }
+                                }
                                 .map { it.lastOrNull()?.substringAfter("=") ?: "undefined" }
                         }
 

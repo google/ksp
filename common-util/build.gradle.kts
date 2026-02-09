@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+
 description = "Kotlin Symbol Processing Util"
 
 val junitVersion: String by project
@@ -16,7 +18,7 @@ dependencies {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+        jvmDefault.set(JvmDefaultMode.ENABLE)
     }
 }
 

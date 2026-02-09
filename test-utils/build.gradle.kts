@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+
 plugins {
     kotlin("jvm")
 }
@@ -16,6 +18,6 @@ dependencies {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+        jvmDefault.set(JvmDefaultMode.ENABLE)
     }
 }
