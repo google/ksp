@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 description = "Kotlin Symbol Processor"
@@ -42,7 +43,7 @@ dependencies {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+        jvmDefault.set(JvmDefaultMode.ENABLE)
     }
 }
 

@@ -1,4 +1,5 @@
 import com.google.devtools.ksp.configureMetalava
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "Kotlin Symbol Processing API"
@@ -7,7 +8,9 @@ val signingKey: String? by project
 val signingPassword: String? by project
 
 tasks.withType<KotlinCompile> {
-    compilerOptions.freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+    compilerOptions {
+        jvmDefault.set(JvmDefaultMode.ENABLE)
+    }
 }
 
 plugins {
