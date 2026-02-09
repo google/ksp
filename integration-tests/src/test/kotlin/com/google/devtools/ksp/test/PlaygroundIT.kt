@@ -309,11 +309,16 @@ class PlaygroundIT() {
 
     @Test
     fun testJvmPlatformInfo() {
-        val kotlinCompile = "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
         val buildFile = File(project.root, "workload/build.gradle.kts")
-        buildFile.appendText("\ntasks.withType<$kotlinCompile> {")
-        buildFile.appendText("\n    compilerOptions.freeCompilerArgs.add(\"-Xjvm-default=all\")")
-        buildFile.appendText("\n}")
+        buildFile.appendText(
+            """
+            |tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+            |    compilerOptions {
+            |        jvmDefault.set(org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode.NO_COMPATIBILITY)
+            |    }
+            |}
+            |""".trimMargin()
+        )
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->

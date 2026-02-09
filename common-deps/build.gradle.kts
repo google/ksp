@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+
 description = "Kotlin Symbol Processor"
 
 val junitVersion: String by project
@@ -30,7 +32,7 @@ val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
+        jvmDefault.set(JvmDefaultMode.ENABLE)
     }
 }
 
