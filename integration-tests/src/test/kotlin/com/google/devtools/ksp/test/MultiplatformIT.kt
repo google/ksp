@@ -14,7 +14,7 @@ import java.util.jar.*
 class MultiplatformIT {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp")
 
     @Test
     fun testJVM() {

@@ -51,7 +51,7 @@ class KMPImplementedIT {
             "clean",
             ":workload-android:build"
         ).build().let {
-            // Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-android:build")?.outcome)
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-android:build")?.outcome)
             verify(
                 "workload-android/build/intermediates/compile_library_classes_jar/androidMain/" +
                     "bundleAndroidMainClassesToCompileJar/classes.jar",
