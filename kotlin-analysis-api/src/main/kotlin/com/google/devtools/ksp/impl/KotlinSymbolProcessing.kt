@@ -136,13 +136,34 @@ class KotlinSymbolProcessing(
         // Let exceptions pop through to the caller. Don't catch and convert them to, e.g., INTERNAL_ERROR.
     }
 
+    // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
+    // to avoid accidentally starting the UI thread. But, don't set it if it was set externally.
     init {
-        // We depend on swing (indirectly through PSI or something), so we want to declare headless mode,
-        // to avoid accidentally starting the UI thread. But, don't set it if it was set externally.
         if (System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true")
         }
         setupIdeaStandaloneExecution()
+    }
+
+    private class BinaryFileTypeDecompilersNPEHandler(
+        val parent: Thread.UncaughtExceptionHandler?
+    ) : Thread.UncaughtExceptionHandler {
+        override fun uncaughtException(t: Thread, e: Throwable) {
+            if (t.name.startsWith("AWT-EventQueue") &&
+                e is NullPointerException &&
+                e.stackTrace.any { it.className.contains("BinaryFileTypeDecompilers") }
+            ) {
+                // Ignore safe NPE from BinaryFileTypeDecompilers
+                return
+            }
+            parent?.uncaughtException(t, e) ?: run {
+                // Mimic ThreadGroup.uncaughtException behavior if no parent handler exists
+                if (e !is ThreadDeath) {
+                    System.err.print("Exception in thread \"${t.name}\" ")
+                    e.printStackTrace(System.err)
+                }
+            }
+        }
     }
 
     @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
@@ -448,6 +469,11 @@ class KotlinSymbolProcessing(
     // TODO: performance
     @OptIn(KaImplementationDetail::class)
     fun execute(): ExitCode {
+        val currentHandler = Thread.getDefaultUncaughtExceptionHandler()
+        if (currentHandler !is BinaryFileTypeDecompilersNPEHandler) {
+            Thread.setDefaultUncaughtExceptionHandler(BinaryFileTypeDecompilersNPEHandler(currentHandler))
+        }
+
         val logger = object : KSPLogger by logger {
             var hasError: Boolean = false
 
