@@ -531,11 +531,12 @@ class KotlinSymbolProcessing(
 
             fun dropCaches() {
                 maybeRunInWriteAction {
-                    project.publishGlobalModuleStateModificationEvent()
-                    KaSessionProvider.getInstance(project).clearCaches()
-                    psiManager.dropResolveCaches()
-                    psiManager.dropPsiCaches()
-
+                    if (ApplicationManager.getApplication() != null) {
+                        project.publishGlobalModuleStateModificationEvent()
+                        KaSessionProvider.getInstance(project).clearCaches()
+                        psiManager.dropResolveCaches()
+                        psiManager.dropPsiCaches()
+                    }
                     KSObjectCacheManager.clear()
                 }
             }
@@ -620,7 +621,9 @@ class KotlinSymbolProcessing(
             codeGenerator.closeFiles()
         } finally {
             maybeRunInWriteAction {
-                Disposer.dispose(projectDisposable)
+                if (ApplicationManager.getApplication() != null) {
+                    Disposer.dispose(projectDisposable)
+                }
                 ResolverAAImpl.tearDown()
                 KSPCoreEnvironment.tearDown()
             }
