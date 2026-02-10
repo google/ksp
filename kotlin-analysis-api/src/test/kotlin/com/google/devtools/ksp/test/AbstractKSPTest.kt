@@ -54,7 +54,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInfo
+import java.awt.EventQueue
 import java.io.File
+import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class DisposableTest {
     private var _disposable: Disposable? = null
@@ -241,7 +243,58 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             .takeWhile { !it.startsWith("// END") }
             .map { it.substring(3).trim() }
 
-        val results = runTest(testServices, mainModule, libModules, testProcessor)
+        val results = collectAllExceptions { runTest(testServices, mainModule, libModules, testProcessor) }
         Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
     }
+}
+
+/**
+ * Collects exception from all threads when running `block`.
+ * Throws a [[RuntimeException]] if any exception occurred.
+ *
+ * Note that function is not a perfect solution as it only catches exceptions
+ * that happen during `block`.
+ * Some threads may produce exceptions AFTER this function successfully returns,
+ * but the purpose of this function is to help catch exceptions sometimes.
+ */
+internal fun <A> collectAllExceptions(block: () -> A): A {
+    val exceptions = ConcurrentLinkedQueue<Throwable>()
+
+    // Save original default exception handler
+    val originalDefaultThreadHandler = Thread.getDefaultUncaughtExceptionHandler()
+
+    // Override default handler and collect exceptions in `exceptions`.
+    Thread.setDefaultUncaughtExceptionHandler { _, throwable -> exceptions.add(throwable) }
+
+    // Run the block
+    val result = block()
+
+    // Flush the AWT event queue to process any pending events.
+    // This helps catch exceptions from AWT/Swing components that might
+    // occur asynchronously after the main block has completed.
+    try {
+        EventQueue.invokeAndWait { }
+    } catch (e: Exception) {
+        // If flushing the queue itself causes an error, catch it.
+        exceptions.add(e)
+    }
+
+    // Restore original default exception handler
+    Thread.setDefaultUncaughtExceptionHandler(originalDefaultThreadHandler)
+
+    if (exceptions.isNotEmpty()) {
+        val message = buildString {
+            append("Failed with ")
+            append(exceptions.size)
+            appendLine(" uncaught errors:")
+            exceptions.forEach { exception ->
+                appendLine(exception)
+                exception.stackTrace.forEach { appendLine(it.toString()) }
+                appendLine()
+                appendLine()
+            }
+        }
+        throw Exception(message)
+    }
+    return result
 }
