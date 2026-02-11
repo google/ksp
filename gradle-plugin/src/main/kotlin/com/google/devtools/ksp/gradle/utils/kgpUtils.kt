@@ -15,7 +15,7 @@ internal val KotlinCompilation<*>.allKotlinSourceSetsObservable
 internal val KotlinCompilation<*>.kotlinSourceSetsObservable
     get() = this.kotlinSourceSets as ObservableSet<KotlinSourceSet>
 
-fun Project.isKotlinBaseApiPluginApplied() = plugins.findPlugin(KotlinBaseApiPlugin::class.java) != null
+fun Project.isKotlinBaseApiPluginApplied() = plugins.withType(KotlinBaseApiPlugin::class.java).firstOrNull() != null
 
 fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
 
