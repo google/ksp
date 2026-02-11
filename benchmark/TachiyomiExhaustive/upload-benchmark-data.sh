@@ -26,5 +26,5 @@ BUNDLE_HASH=$(echo $BUNDLE_HASH_AND_NAME | cut -d " " -f 1)
 BUNDLE_UPLOAD_LOCATION=gs://r8-deps/ksp-bench/$BUNDLE_HASH.tar.gz
 BUNDLE_DOWNLOAD_LOCATION=http://storage.googleapis.com/r8-deps/ksp-bench/$BUNDLE_HASH.tar.gz
 echo Uploading to: $BUNDLE_UPLOAD_LOCATION
-gcloud storage cp --predefined-acl=public-read $BUNDLE $BUNDLE_UPLOAD_LOCATION
+gcloud storage cp --predefined-acl=publicRead $BUNDLE $BUNDLE_UPLOAD_LOCATION
 echo Available for download at: $BUNDLE_DOWNLOAD_LOCATION
