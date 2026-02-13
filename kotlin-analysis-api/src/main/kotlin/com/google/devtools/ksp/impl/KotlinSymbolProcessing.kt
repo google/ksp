@@ -50,6 +50,7 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
@@ -464,9 +465,11 @@ class KotlinSymbolProcessing(
         }
 
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
+        var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
         try {
-            val (analysisAPISession, kotlinCoreProjectEnvironment, modules) =
+            val (analysisAPISession, env, modules) =
                 createAASession(projectDisposable)
+            kotlinCoreProjectEnvironment = env
             val project = analysisAPISession.project
             // Initializes it
             KSPCoreEnvironment(project as MockProject)
@@ -478,11 +481,11 @@ class KotlinSymbolProcessing(
 
             // Initializing environments
             val javaFileManager = if (kspConfig is KSPJvmConfig) {
-                IncrementalJavaFileManager(kotlinCoreProjectEnvironment)
+                IncrementalJavaFileManager(env)
             } else null
 
             val allKSFiles =
-                prepareAllKSFiles(kotlinCoreProjectEnvironment, modules, javaFileManager)
+                prepareAllKSFiles(env, modules, javaFileManager)
             val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
             val codeGenerator = CodeGeneratorImpl(
                 kspConfig.classOutputDir,
@@ -586,7 +589,7 @@ class KotlinSymbolProcessing(
                 dropCaches()
 
                 newKSFiles = prepareNewKSFiles(
-                    kotlinCoreProjectEnvironment,
+                    env,
                     javaFileManager,
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
@@ -620,6 +623,7 @@ class KotlinSymbolProcessing(
             codeGenerator.closeFiles()
         } finally {
             maybeRunInWriteAction {
+                (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
                 ResolverAAImpl.tearDown()
                 KSPCoreEnvironment.tearDown()
