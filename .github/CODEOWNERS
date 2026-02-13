@@ -1,0 +1,26 @@
+* @ting-yuan @hfmehmed @jaschdoc
+
+/.github/ @ting-yuan @hfmehmed @jaschdoc
+/buildSrc/ @ting-yuan @hfmehmed
+/gradle-plugin/ @ting-yuan @hfmehmed
+build.gradle.kts @hfmehmed
+settings.gradle.kts @hfmehmed
+gradle.properties @hfmehmed
+gradlew @hfmehmed
+
+/api/ @ting-yuan @jaschdoc
+/symbol-processing/ @ting-yuan @jaschdoc
+/kotlin-analysis-api/ @ting-yuan @jaschdoc
+/symbol-processing-aa-embeddable/ @ting-yuan @hfmehmed @jaschdoc
+
+/integration-tests/ @ting-yuan @hfmehmed
+/benchmark/ @jaschdoc
+/test-utils/ @ting-yuan @jaschdoc 
+/common-util/ @ting-yuan @jaschdoc
+/common-deps/ @ting-yuan @jaschdoc
+
+/docs/ @ting-yuan @hfmehmed @jaschdoc
+/examples/ @ting-yuan @hfmehmed @jaschdoc
+README.md @ting-yuan @hfmehmed @jaschdoc
+CONTRIBUTING.md @ting-yuan @hfmehmed @jaschdoc
+DEVELOPMENT.md @ting-yuan @hfmehmed @jaschdoc
