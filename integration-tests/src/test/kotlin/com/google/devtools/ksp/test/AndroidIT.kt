@@ -6,12 +6,13 @@ import com.google.devtools.ksp.test.utils.assertMergedConfigurationOutput
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.util.jar.JarFile
 
-class AndroidIT() {
+class AndroidIT {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground")
@@ -51,6 +52,27 @@ class AndroidIT() {
             val outputs = result.output.lines()
             assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
             assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
+        }
+    }
+
+    @Test
+    fun testRebuildWindows() {
+        Assume.assumeTrue(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        // first run
+        gradleRunner.withArguments(
+            "clean", "build", "--rerun-tasks", "--info", "--stacktrace"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+        }
+
+        // second run
+        gradleRunner.withArguments(
+            "clean", "build", "--rerun-tasks", "--info", "--stacktrace"
+        ).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
         }
     }
 }
