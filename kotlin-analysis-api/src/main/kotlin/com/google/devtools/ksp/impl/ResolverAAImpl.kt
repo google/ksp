@@ -294,7 +294,7 @@ class ResolverAAImpl(
                     is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
                     else -> null
                 }
-            }?.asSequence() ?: emptySequence()
+            } ?: emptySequence()
         }
     }
 
@@ -344,7 +344,7 @@ class ResolverAAImpl(
         val qualifier = name.getQualifier()
         val functionName = name.getShortName()
         val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()
-            ?.filter { it.simpleName.asString() == functionName }?.asSequence() ?: emptySequence()
+            ?.filter { it.simpleName.asString() == functionName } ?: emptySequence()
         return if (!includeTopLevel) nonTopLevelResult else {
             nonTopLevelResult.plus(
                 analyze {
