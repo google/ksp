@@ -297,8 +297,8 @@ publishing {
                             "kotlinx-coroutines-core-jvm",
                             aaCoroutinesVersion
                         )
-                        addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
-                        addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
+                        addDependency("com.google.devtools.ksp", "symbol-processing-api", version, "compile")
+                        addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version, "compile")
                     }
                 }
             }
