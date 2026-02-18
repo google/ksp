@@ -56,7 +56,7 @@ jobs:
     # Build KSP artifacts
     - name: build
       run: |
-        REF=${{ github.ref }} # refs/tags/$KSP_VERSION
+        REF=${GITHUB_REF} # refs/tags/$KSP_VERSION
         ./gradlew --info -PkspVersion=${REF:10} -PoutRepo=$(pwd)/build/repos/release publishAllPublicationsToMavenRepository
     - name: pack
       run: cd build/repos/release/ && zip -r ../../artifacts.zip .
