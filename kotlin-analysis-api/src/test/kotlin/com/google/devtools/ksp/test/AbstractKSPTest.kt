@@ -186,7 +186,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             compilerConfiguration,
             ClassBuilderFactories.TEST,
             configurationProvider.getPackagePartProviderFactory(module)
-        ).first.factory.apply {
+        ).factory.apply {
             writeAllTo(module.outDir)
         }
 
