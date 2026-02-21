@@ -29,6 +29,9 @@
 // MyClass.suspendMethod: MEMBER
 // MyInterface.method: MEMBER
 // MyInterface.methodWithImpl: MEMBER
+// MyInterfaceImplJava.<init>: MEMBER
+// MyInterfaceImplJava.getProperty: MEMBER
+// MyInterfaceImplJava.method: MEMBER
 // topLevelMethod: TOP_LEVEL
 // topLevelSuspendMethod: TOP_LEVEL
 // END
@@ -51,6 +54,7 @@ class MyClass {
 interface MyInterface {
     fun method()
     fun methodWithImpl() {}
+    val property: Int
 }
 
 // FILE: JavaClass.java
@@ -63,4 +67,13 @@ class JavaClass {
 interface JavaInterface {
     void methodInInterface();
     static void staticMethodInInterface() {}
+}
+
+// FILE: MyInterfaceImplJava.java
+class MyInterfaceImplJava implements MyInterface {
+    @Override
+    public void method() {}
+
+    @Override
+    public int getProperty() { return 0; }
 }

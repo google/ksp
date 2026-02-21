@@ -27,7 +27,12 @@ open class FunctionKindProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         fun KSFunctionDeclaration.pretty(): String {
             val name = if (parentDeclaration != null) {
-                val className = parentDeclaration?.simpleName?.asString() ?: ""
+                val parentClass = when (val parent = parentDeclaration) {
+                    // Fix for https://github.com/google/ksp/issues/2498. Must be removed after fixing the original issue.
+                    is KSPropertyDeclaration -> parent.parentDeclaration
+                    else -> parentDeclaration
+                }
+                val className = parentClass?.simpleName?.asString() ?: ""
                 if (className.isNotEmpty()) {
                     "$className.${simpleName.asString()}"
                 } else {
