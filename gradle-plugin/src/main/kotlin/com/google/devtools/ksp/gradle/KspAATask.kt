@@ -32,6 +32,7 @@ import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processing.KspGradleLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.JavaVersion
+import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
@@ -69,12 +70,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.konan.target.HostManager
+import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
@@ -407,9 +410,10 @@ abstract class KspAATask @Inject constructor(
                         cfg.konanTargetName.value(konanTargetName)
                         cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
 
-                        val isKlibCrossCompilationEnabled: Provider<Boolean> = project.providers.gradleProperty(
-                            "kotlin.native.enableKlibsCrossCompilation"
-                        ).orElse("false").map { it.toBoolean() }
+                        val isKlibCrossCompilationEnabled = getKlibCrossCompilationSupport(
+                            project,
+                            kotlinCompilation
+                        )
                         kspAATask.onlyIf {
                             isKlibCrossCompilationEnabled.get() || HostManager().enabled.any {
                                 it.name == konanTargetName
@@ -428,6 +432,29 @@ abstract class KspAATask @Inject constructor(
             }
 
             return kspTaskProvider
+        }
+
+        /**
+         * Returns a Provider<Boolean> indicating whether klib cross-compilation is enabled.
+         * For Kotlin 2.3.20-Beta2+, uses KotlinNativeCompilation.crossCompilationSupported.
+         * For earlier versions, falls back to checking the gradle property kotlin.native.enableKlibsCrossCompilation.
+         */
+        private fun getKlibCrossCompilationSupport(
+            project: Project,
+            kotlinCompilation: KotlinNativeCompilation
+        ): Provider<Boolean> {
+            val kotlinVersion = project.getKotlinPluginVersion()
+            val isSupportCrossCompilationPropertyAvailable =
+                KotlinToolingVersion(kotlinVersion) >= KotlinToolingVersion("2.3.20-Beta2")
+
+            return if (isSupportCrossCompilationPropertyAvailable) {
+                kotlinCompilation.crossCompilationSupported
+            } else {
+                // Fallback for Kotlin versions before 2.3.20-Beta2
+                project.providers.gradleProperty(
+                    "kotlin.native.enableKlibsCrossCompilation"
+                ).orElse("false").map { it.toBoolean() }
+            }
         }
     }
 }
