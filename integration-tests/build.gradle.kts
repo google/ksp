@@ -12,13 +12,17 @@ plugins {
     kotlin("jvm")
 }
 
+repositories {
+    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
+}
+
 dependencies {
     testImplementation("junit:junit:$junitVersion")
     testImplementation(gradleTestKit())
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    testImplementation("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    testImplementation("com.intellij.platform:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
 }
 
 fun Test.configureCommonSettings() {
