@@ -141,7 +141,7 @@ dependencies {
     libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
     libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 
-    depJarsForCheck("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+    depJarsForCheck("org.jetbrains.kotlin:kotlin-stdlib:$kotlinBaseVersion")
     depJarsForCheck("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
     depJarsForCheck("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     depJarsForCheck(project(":api"))
