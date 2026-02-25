@@ -22,7 +22,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.visitor.KSVisitorVoid
 
 class ClassWithCompanionProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()

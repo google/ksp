@@ -21,6 +21,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.visitor.KSVisitorVoid
 
 class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
     val visitor = ConstructorsVisitor()

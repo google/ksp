@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.visitor.KSVisitorVoid
 
 class AnnotationArgumentProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()

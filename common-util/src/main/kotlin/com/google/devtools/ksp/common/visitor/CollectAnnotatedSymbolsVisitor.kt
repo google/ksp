@@ -27,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSPropertySetter
 import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSValueParameter
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.visitor.KSVisitorVoid
 
 // TODO: Make visitor a generator
 class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVoid() {
