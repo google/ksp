@@ -1,0 +1,182 @@
+dependencies {
+  implementation platform("androidx.compose:compose-bom:2024.06.00")
+  implementation "androidx.compose.ui:ui"
+  implementation "androidx.compose.material3:material3"
+  implementation "androidx.activity:activity-compose:1.9.0"
+  implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.8.0"
+  implementation "com.squareup.retrofit2:retrofit:2.11.0"
+  implementation "com.squareup.retrofit2:converter-moshi:2.11.0"
+  implementation "com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.12"
+  implementation "androidx.datastore:datastore-preferences:1.1.1"
+}<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+<application
+    android:name=".App"
+    android:usesCleartextTraffic="true">
+    <activity
+        android:name=".MainActivity"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent-filter>
+    </activity>
+</application>
+package com.example.aigirlfriend
+
+import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import java.util.Locale
+
+class MainActivity : ComponentActivity() {
+  private lateinit var tts: TextToSpeech
+  private val vm: ChatViewModel by viewModels()
+
+  private val speechLauncher = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result ->
+    val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+    if (!text.isNullOrBlank()) vm.sendUserMessage(text)
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    tts = TextToSpeech(this) { status ->
+      if (status == TextToSpeech.SUCCESS) {
+        tts.language = Locale.US
+        vm.onSpeak = { msg -> tts.speak(msg, TextToSpeech.QUEUE_FLUSH, null, "reply") }
+      }
+    }
+
+    setContent {
+      MaterialTheme {
+        ChatScreen(
+          state = vm.uiState.collectAsState().value,
+          onSend = { vm.sendUserMessage(it) },
+          onMic = {
+            val intent = RecognizerIntent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            speechLauncher.launch(intent)
+          }
+        )
+      }
+    }
+  }
+
+  override fun onDestroy() {
+    tts.stop()
+    tts.shutdown()
+    super.onDestroy()
+  }
+}
+
+@Composable
+fun ChatScreen(
+  state: ChatUiState,
+  onSend: (String) -> Unit,
+  onMic: () -> Unit
+) {
+  var input by remember { mutableStateOf("") }
+
+  Scaffold(
+    bottomBar = {
+      Row(Modifier.padding(8.dp)) {
+        OutlinedTextField(
+          value = input,
+          onValueChange = { input = it },
+          modifier = Modifier.weight(1f),
+          placeholder = { Text("Type a message…") }
+        )
+        Spacer(Modifier.width(8.dp))
+        Button(onClick = { if (input.isNotBlank()) { onSend(input); input = "" } }) { Text("Send") }
+        Spacer(Modifier.width(8.dp))
+        OutlinedButton(onClick = onMic) { Text("🎤") }
+      }
+    }
+  ) { inner ->
+    LazyColumn(Modifier.padding(inner).fillMaxSize(), reverseLayout = true) {
+      items(state.messages.reversed()) { m ->
+        val bg = if (m.role == Role.User) MaterialTheme.colorScheme.primaryContainer
+                 else MaterialTheme.colorScheme.secondaryContainer
+        Surface(Modifier.fillMaxWidth().padding(8.dp), color = bg, shape = MaterialTheme.shapes.medium) {
+          Text(
+            text = (if (m.role == Role.Assistant) "♥ " else "You: ") + m.text,
+            modifier = Modifier.padding(12.dp)
+          )
+        }
+      }
+      if (state.isLoading) {
+        item {
+          Text("Thinking…", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(12.dp))
+        }
+      }
+    }
+  }
+}package com.example.aigirlfriend
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+enum class Role { User, Assistant }
+data class Message(val role: Role, val text: String)
+data class ChatUiState(val messages: List<Message> = emptyList(), val isLoading: Boolean = false)
+
+class ChatViewModel : ViewModel() {
+  private val _uiState = MutableStateFlow(ChatUiState())
+  val uiState = _uiState.asStateFlow()
+
+  // set by activity after TTS is ready
+  var onSpeak: ((String) -> Unit)? = null
+
+  private var persona = """
+You are "Luna", a supportive, flirty-but-respectful virtual girlfriend.
+Keep replies short (1–3 sentences), use emojis sparingly, remember small details,
+and set healthy boundaries. Avoid explicit content.
+  """.trimIndent()
+
+  fun sendUserMessage(text: String) = viewModelScope.launch {
+    val updated = _uiState.value.messages + Message(Role.User, text)
+    _uiState.value = _uiState.value.copy(messages = updated, isLoading = true)
+
+    val reply = try {
+      // TODO: Replace with real API call
+      // val reply = llmService.chat("$persona\nUser: $text\nLuna:")
+      fakeAiReply(text)
+    } catch (e: Exception) {
+      "Oops—network issue. Try again."
+    }
+
+    val withReply = _uiState.value.messages + Message(Role.Assistant, reply)
+    _uiState.value = ChatUiState(messages = withReply, isLoading = false)
+    onSpeak?.invoke(reply)
+  }
+
+  private fun fakeAiReply(text: String): String {
+    val lowers = text.lowercase()
+    return when {
+      "name" in lowers -> "I’m Luna—nice to finally meet you ✨"
+      "game" in lowers -> "Let’s play a truth-or-dare mini game! You first 😉"
+      "joke" in lowers -> "What do you call a romantic robot? A ‘circuit’ heart! "
+      else -> "I’m here for you. Tell me about your day?"
+    }
+  }
+}
