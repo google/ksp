@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+// TODO: T:J.java:73 is expected twice. Why?
+// TODO: Add type parameter to function / method and check that it's returned.
+
 // TEST PROCESSOR: LocationsProcessor
 // EXPECTED:
 // A:K.kt:51
