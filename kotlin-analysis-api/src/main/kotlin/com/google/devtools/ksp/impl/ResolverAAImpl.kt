@@ -31,7 +31,17 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.*
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifierList
+import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiRecursiveElementWalkingVisitor
+import com.intellij.psi.PsiTypeParameter
+import com.intellij.psi.PsiTypeParameterList
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
@@ -60,7 +70,12 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.jvm.JvmPlatform
+import org.jetbrains.kotlin.psi.KtAnnotated
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
+import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
 import org.jetbrains.org.objectweb.asm.Opcodes
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -91,6 +106,7 @@ class ResolverAAImpl(
             ktModule_prop.remove()
         }
     }
+
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
     val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
@@ -153,6 +169,7 @@ class ResolverAAImpl(
                 if (declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE)
                     modifiers.add(Modifier.ABSTRACT)
             }
+
             Origin.KOTLIN -> {
                 addVisibilityModifiers()
                 if (!declaration.isOpen())
@@ -186,16 +203,19 @@ class ResolverAAImpl(
                         if (declaration.classKind == ClassKind.INTERFACE)
                             modifiers.add(Modifier.ABSTRACT)
                     }
+
                     is KSPropertyDeclaration -> {
                         if (declaration.isAbstract())
                             modifiers.add(Modifier.ABSTRACT)
                     }
+
                     is KSFunctionDeclaration -> {
                         if (declaration.isAbstract)
                             modifiers.add(Modifier.ABSTRACT)
                     }
                 }
             }
+
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 if (declaration.hasAnnotation(JVM_STATIC_ANNOTATION_FQN)) {
                     modifiers.add(Modifier.JAVA_STATIC)
@@ -208,6 +228,7 @@ class ResolverAAImpl(
                         if (declaration.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0)
                             modifiers.add(Modifier.JAVA_VOLATILE)
                     }
+
                     is KSFunctionDeclaration -> {
                         if (declaration.jvmAccessFlag and Opcodes.ACC_STRICT != 0)
                             modifiers.add(Modifier.JAVA_STRICT)
@@ -216,6 +237,7 @@ class ResolverAAImpl(
                     }
                 }
             }
+
             else -> Unit
         }
         return modifiers
@@ -230,6 +252,7 @@ class ResolverAAImpl(
                 BinaryClassInfoCache.getCached(classId, fileManager)
                     ?.fieldAccFlags?.get(this.simpleName.asString()) ?: 0
             }
+
             else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
         }
 
@@ -243,6 +266,7 @@ class ResolverAAImpl(
                 BinaryClassInfoCache.getCached(classId, fileManager)
                     ?.methodAccFlags?.get(this.simpleName.asString() + jvmDesc) ?: 0
             }
+
             else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
         }
 
@@ -375,6 +399,7 @@ class ResolverAAImpl(
                     coneType,
                     reference.isReturnTypeOfAnnotationMethod()
                 )
+
                 RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
                 RefPosition.PARAMETER_TYPE -> typeContext.getOptimalModeForValueParameter(coneType)
             }.updateFromParents(ref)
@@ -395,6 +420,7 @@ class ResolverAAImpl(
             Origin.KOTLIN, Origin.SYNTHETIC -> {
                 extractThrowsAnnotation(accessor)
             }
+
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = accessor.findParentOfType<KSClassDeclaration>()
@@ -409,6 +435,7 @@ class ResolverAAImpl(
                         accessor.receiver.simpleName.asString().replaceFirstChar(Char::uppercaseChar)
                 )
             }
+
             else -> emptySequence()
         }
     }
@@ -425,9 +452,11 @@ class ResolverAAImpl(
                     }
                 }
             }
+
             Origin.KOTLIN -> {
                 extractThrowsAnnotation(function)
             }
+
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = function.findParentOfType<KSClassDeclaration>()
@@ -437,6 +466,7 @@ class ResolverAAImpl(
                 val jvmDesc = this.mapToJvmSignature(function)
                 extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
             }
+
             else -> emptySequence()
         }
     }
@@ -550,11 +580,20 @@ class ResolverAAImpl(
         }
         val realAnnotationName = expandedIfAlias ?: annotationName
 
-        return if (inDepth)
-            annotationToSymbolsMapWithLocals[realAnnotationName]?.asSequence() ?: emptySequence()
+        val result = if (inDepth)
+            annotationToSymbolsWithLocalsCache[realAnnotationName]?.asSequence() ?: emptySequence()
         else
-            annotationToSymbolsMap[realAnnotationName]?.asSequence() ?: emptySequence()
+            annotationToSymbolsCache[realAnnotationName]?.asSequence() ?: emptySequence()
+
+        return result
     }
+
+    /**
+     * Optionally returns the [KaType] for the [KSType].
+     * In other words, it unpacks the underlying analysis API type from the KSP type.
+     */
+    private fun KSType.toKaType(): KaType? =
+        (this as? KSTypeImpl)?.type
 
     private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
         val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
@@ -566,30 +605,184 @@ class ResolverAAImpl(
         return visitor.symbols
     }
 
-    private val annotationToSymbolsMap: Map<String, Collection<KSAnnotated>> by lazy {
-        mapAnnotatedSymbols(false)
-    }
-
-    private val annotationToSymbolsMapWithLocals: Map<String, Collection<KSAnnotated>> by lazy {
-        mapAnnotatedSymbols(true)
-    }
-
-    private fun mapAnnotatedSymbols(inDepth: Boolean): Map<String, Collection<KSAnnotated>> {
-        val newSymbols = collectAnnotatedSymbols(inDepth)
-        val withDeferred = newSymbols + deferredSymbolsRestored
-        return mutableMapOf<String, MutableCollection<KSAnnotated>>().apply {
-            withDeferred.forEach { annotated ->
-                for (annotation in annotated.annotations) {
-                    val kaType = (annotation.annotationType.resolve() as? KSTypeImpl)?.type ?: continue
-                    val annotationFqN = kaType.fullyExpand().symbol?.classId?.asFqNameString() ?: continue
-                    getOrPut(annotationFqN, ::mutableSetOf).add(annotated)
+    private val annotationToSymbolsCache: Map<String, Collection<KSAnnotated>> by lazy {
+        annotationToPsiElementsCache
+            .toMutableMap()
+            .apply {
+                deferredSymbolsRestored.forEach { deferredSym ->
+                    deferredSym.getFqnAnnotations().forEach { annotation ->
+                        getOrPut(annotation, ::mutableSetOf).add(deferredSym)
+                    }
                 }
             }
+    }
+
+    private val annotationToSymbolsWithLocalsCache: Map<String, Collection<KSAnnotated>> by lazy {
+        val annotated = collectAnnotatedSymbols(inDepth = true)
+        val all = annotated + deferredSymbolsRestored
+        all.flatGroupBy { it.getFqnAnnotations() }
+    }
+
+    private val annotationToPsiElementsCache: Map<String, MutableSet<KSAnnotated>> by lazy {
+        // TODO: Revert this to method chaining
+        val annotatedPsiElements = newKSFiles
+            .flatMap { collectAnnotatedPsiElementsIn(it) }
+        val distinct = annotatedPsiElements.distinct()
+        val annotationNamesToPsiElement = distinct.flatGroupBy { getAnnotationNamesFor(it) }
+        val result = annotationNamesToPsiElement.mapValues { entry ->
+            entry.value.flatMap { it.toKSAnnotated().filterNotNull() }.toMutableSet()
+        }
+        result
+    }
+
+    /**
+     * Returns all [PsiElement]s that are annotated in `file`.
+     */
+    private fun collectAnnotatedPsiElementsIn(file: KSFile): Collection<PsiElement> {
+        val result = mutableSetOf<PsiElement>()
+        val visitor = object : PsiRecursiveElementWalkingVisitor() {
+            override fun visitElement(element: PsiElement) {
+                when (element) {
+                    // TODO: Add comment explaining why we are interested in parent's parent and fall back to parent
+                    //  Answer: structure of Psi and fallback on type parameters.
+                    is KtAnnotationEntry -> { // Handle Kotlin sources
+                        // TODO: Revert this
+                        val parentsParent = element.parent?.parent as? KtAnnotated
+                        val immediateParent = element.parent
+                        result.add(parentsParent ?: immediateParent)
+                        return
+                    }
+
+                    is PsiAnnotation -> { // Handle Java sources
+                        // TODO: Revert this
+                        val immediateParent = element.parent
+                        val parentsParent = (immediateParent as? PsiModifierList)?.parent
+                        result.add(parentsParent ?: immediateParent)
+                        return
+                    }
+                }
+                super.visitElement(element)
+            }
+        }
+        file.psi?.accept(visitor)
+        return result
+    }
+
+    /**
+     * Returns the fully qualified name of the annotation.
+     * If the annotation is an alias, it first resolves the alias and then returns the fully qualified name
+     * of the resolved type.
+     */
+    private fun getAnnotationNamesFor(element: PsiElement): Collection<String> = analyze {
+        when (element) {
+            is KtAnnotated -> element.annotationEntries.mapNotNull {
+                // TODO: Refactor alias expansion into separate function.
+                it.typeReference?.type?.fullyExpandedType?.expandedSymbol?.classId?.asFqNameString()
+                // TODO: Error if the fqn does not exist
+            }
+
+            is PsiModifierListOwner -> element.annotations.mapNotNull {
+                it.qualifiedName
+                // TODO: Error if the fqn does not exist
+            }
+
+            else -> error("Unexpected PsiElement: $element")
         }
     }
 
-    private val deferredSymbolsRestored: Set<KSAnnotated> by lazy {
-        deferredSymbols.values.flatten().mapNotNull { it.restore() }.toSet()
+    /**
+     * Returns all annotations for the [KSAnnotated] where the fully qualified name is available.
+     */
+    private fun KSAnnotated.getFqnAnnotations(): Set<String> =
+        annotations.mapNotNull { it.getFqn() }.toSet()
+
+    /**
+     * Optionally returns the fully qualified name for the [KSAnnotated].
+     */
+    private fun KSAnnotation.getFqn(): String? =
+        annotationType.resolve().toKaType()?.getFqn()
+
+    /**
+     * Optionally returns the fully qualified name for a [KaType].
+     */
+    private fun KaType.getFqn(): String? =
+        fullyExpand().symbol?.classId?.asFqNameString()
+
+    /**
+     * Returns the Psi handle for [KSFile], if it exists.
+     */
+    private val KSFile.psi: PsiElement?
+        get() = when (this) {
+            is KSFileImpl -> ktFileSymbol.psi
+            is KSFileJavaImpl -> psi
+            else -> null
+        }
+
+    private fun PsiElement.toKSAnnotated(): Collection<KSAnnotated?> = analyze {
+        val result = mutableSetOf<KSAnnotated>()
+        when (this@toKSAnnotated) {
+            is KtDeclaration -> when (val sym = symbol) {
+                is KaValueParameterSymbol -> {
+                    sym.generatedPrimaryConstructorProperty?.toKSAnnotated()?.let {
+                        result.add(it)
+                    }
+                    result.add(sym.toKSAnnotated())
+                }
+
+                else -> result.add(sym.toKSAnnotated())
+            }
+
+            is PsiParameter -> {
+                // TODO: Cleanup
+                val idx = this@toKSAnnotated.parameterIndex()
+                val callableSymbol = (this@toKSAnnotated.parent.parent as? PsiMember)?.callableSymbol
+                val functionDecl = (callableSymbol?.toKSAnnotated()) as? KSFunctionDeclaration
+                functionDecl?.parameters?.get(idx)?.let {
+                    result.add(it)
+                }
+            }
+
+            is PsiTypeParameter -> {
+                // TODO: Cleanup
+                val typeParamList = this@toKSAnnotated.parent as? PsiTypeParameterList
+                val idx = typeParamList?.getTypeParameterIndex(this@toKSAnnotated)!!
+                val nearestConvertibleParent = this@toKSAnnotated.parent.parent
+                // Steps (1) and (2) below are mutually exclusive.
+                // (1) Assume it is a type parameter to a method.
+                val callableSymbol = (nearestConvertibleParent as? PsiMember)?.callableSymbol
+                val functionDecl = (callableSymbol?.toKSAnnotated()) as? KSFunctionDeclaration
+                functionDecl?.typeParameters?.get(idx)?.let {
+                    result.add(it)
+                }
+                // (2) Assume it is a type parameter to a class.
+                val classSymbol = (nearestConvertibleParent as? PsiClass)?.namedClassSymbol
+                val classDecl = (classSymbol?.toKSAnnotated()) as? KSClassDeclaration
+                classDecl?.typeParameters?.get(idx)?.let {
+                    result.add(it)
+                }
+            }
+
+            is PsiClass -> namedClassSymbol?.toKSAnnotated()?.let {
+                result.add(it)
+            }
+
+            is PsiMember -> callableSymbol?.toKSAnnotated()?.let {
+                result.add(it)
+            }
+
+            is KtFile -> symbol.toKSAnnotated().let {
+                result.add(it)
+            }
+
+            else -> // TODO: Better error handling
+                error("unreachable: ${this@toKSAnnotated.javaClass}")
+        }
+
+        result
+    }
+
+    private val deferredSymbolsRestored: List<KSAnnotated> by lazy {
+        deferredSymbols.values.flatten().mapNotNull { it.restore() }.distinct()
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -652,6 +845,7 @@ class ResolverAAImpl(
             } else {
                 overrider.ktFunctionSymbol
             }
+
             is KSPropertyDeclarationImpl -> overrider.ktPropertySymbol
             else -> return false
         }
@@ -685,6 +879,7 @@ class ResolverAAImpl(
                 recordLookupForPropertyOrMethod(it)
                 it.simpleName.asString() == overrider.simpleName.asString()
             }?.let { overrides(it, overridee) } ?: false
+
             is KSFunctionDeclaration -> {
                 val candidates = containingClass.getAllFunctions().filter {
                     it.simpleName.asString() == overridee.simpleName.asString()
@@ -707,6 +902,7 @@ class ResolverAAImpl(
                     }
                 }
             }
+
             else -> false
         }
     }
@@ -743,6 +939,7 @@ class ResolverAAImpl(
             is KSClassDeclaration -> analyze {
                 (ksAnnotated.asStarProjectedType() as KSTypeImpl).toSignature()
             }
+
             is KSFunctionDeclarationImpl -> {
                 analyze {
                     buildString {
@@ -757,11 +954,13 @@ class ResolverAAImpl(
                     }
                 }
             }
+
             is KSPropertyDeclaration -> {
                 analyze {
                     ksAnnotated.type.resolve().toSignature()
                 }
             }
+
             is KSPropertyAccessorImpl -> {
                 analyze {
                     buildString {
@@ -774,6 +973,7 @@ class ResolverAAImpl(
                     }
                 }
             }
+
             else -> null
         }
     }
