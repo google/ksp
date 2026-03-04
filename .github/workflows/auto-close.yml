@@ -15,6 +15,7 @@ jobs:
         with:
           days-before-issue-stale: 365
           days-before-issue-close: 14
+          operations-per-run: 100
           stale-issue-label: "stale"
           stale-issue-message: "This issue is stale because it has been open for 365 days with no activity. Please leave a comment if you are still experiencing this issue in recent KSP releases."
           close-issue-message: "This issue was closed because it has been inactive for 14 days since being marked as stale."
