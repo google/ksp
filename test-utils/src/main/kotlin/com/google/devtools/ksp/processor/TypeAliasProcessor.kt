@@ -90,7 +90,7 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
         var self: KSType? = this
         return buildList {
             while (self != null) {
-                add(self!!.toSignature())
+                add(self.toSignature())
                 self = (self?.declaration as? KSTypeAlias)?.type?.resolve()
             }
         }

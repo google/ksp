@@ -112,12 +112,15 @@ abstract class KspAATask @Inject constructor(
         val removedSources: MutableList<File> = mutableListOf()
 
         if (inputChanges.isIncremental) {
-            listOf(kspConfig.sourceRoots, kspConfig.javaSourceRoots, kspConfig.commonSourceRoots).forEach {
-                inputChanges.getFileChanges(it).forEach {
+            listOf(
+                kspConfig.sourceRoots,
+                kspConfig.javaSourceRoots,
+                kspConfig.commonSourceRoots
+            ).forEach { fileCollection ->
+                inputChanges.getFileChanges(fileCollection).forEach {
                     when (it.changeType) {
                         ChangeType.ADDED, ChangeType.MODIFIED -> modifiedSources.add(it.file)
                         ChangeType.REMOVED -> removedSources.add(it.file)
-                        else -> {}
                     }
                 }
             }

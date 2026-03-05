@@ -12,7 +12,7 @@ import org.junit.Test
 import java.io.File
 import java.util.jar.*
 
-class PlaygroundIT() {
+class PlaygroundIT {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject("playground")
@@ -88,10 +88,10 @@ class PlaygroundIT() {
     fun testConfigurationOfConfiguration() {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
-        gradleRunner.withArguments(":workload:dependencies", "--info").build().let {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
+        gradleRunner.withArguments(":workload:dependencies", "--info").build().let { result ->
             Assert.assertTrue(
-                it.output.lines().none { it.startsWith("The configuration :workload:ksp") }
+                result.output.lines().none { it.startsWith("The configuration :workload:ksp") }
             )
         }
     }
@@ -348,7 +348,7 @@ class PlaygroundIT() {
             }
             """.trimIndent()
         )
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments("clean", "build").buildAndFail().let { result ->
             Assert.assertTrue(
                 result.output.contains("Inconsistent JVM-target compatibility detected for tasks")
@@ -370,7 +370,7 @@ class PlaygroundIT() {
             }
             """.trimIndent()
         )
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("8.0")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments("clean", "build").build().let {
             Assert.assertFalse(
                 it.output.contains(

@@ -160,7 +160,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
                         current.ktClassOrObjectSymbol.typeParameters.forEach { _ ->
                             argument(
                                 KaBaseStarTypeProjection(
-                                    (current as KSClassDeclarationImpl).ktClassOrObjectSymbol.token
+                                    current.ktClassOrObjectSymbol.token
                                 )
                             )
                         }

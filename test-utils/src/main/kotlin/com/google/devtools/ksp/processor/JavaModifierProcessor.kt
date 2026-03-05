@@ -50,7 +50,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
 
         resolver.getClassDeclarationByName("HasTypeAliasFuns")!!.getDeclaredFunctions().forEach { f ->
             val decl = f.returnType!!.resolve().declaration
-            val declName = decl.simpleName.asString().toString()
+            val declName = decl.simpleName.asString()
             val visibility = decl.getVisibility().toString()
             val modifiers = decl.modifiers.map { it.toString() }
             results.add("$declName: Visibility: $visibility")

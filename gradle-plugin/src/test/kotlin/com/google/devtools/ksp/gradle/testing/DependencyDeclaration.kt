@@ -22,6 +22,7 @@ package com.google.devtools.ksp.gradle.testing
  * Value class to declare dependencies between test projects.
  * See builder methods in the companion to create an instance of this.
  */
+@ConsistentCopyVisibility
 data class DependencyDeclaration private constructor(
     val configuration: String,
     val dependency: String
