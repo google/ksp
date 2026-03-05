@@ -9,15 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      pull-requests: write
     steps:
       - uses: actions/stale@v10
         with:
           days-before-issue-stale: 365
           days-before-issue-close: 14
-          operations-per-run: 100
+          operations-per-run: 500
           stale-issue-label: "stale"
-          stale-issue-message: "This issue is stale because it has been open for 365 days with no activity. Please leave a comment if you are still experiencing this issue in recent KSP releases."
+          stale-issue-message: "This issue is stale because it has been open for 365 days with no activity. Please comment within 14 days if you are still experiencing this in recent KSP releases; otherwise, this issue will be closed."
           close-issue-message: "This issue was closed because it has been inactive for 14 days since being marked as stale."
           days-before-pr-stale: -1
           days-before-pr-close: -1
