@@ -47,7 +47,7 @@ fun KSTypeReference.findOuterMostRef(): Pair<KSTypeReference, List<Int>> {
         var parent = parent
         while (parent != null && parent !is KSTypeReference)
             parent = parent.parent
-        return parent as? KSTypeReference
+        return parent
     }
 
     val fallback = Pair<KSTypeReference, List<Int>>(this, emptyList())
@@ -69,5 +69,5 @@ fun KSTypeReference.isReturnTypeOfAnnotationMethod(): Boolean {
     var candidate = this.parent
     while (candidate !is KSClassDeclaration && candidate != null)
         candidate = candidate.parent
-    return (candidate as? KSClassDeclaration)?.classKind == ClassKind.ANNOTATION_CLASS
+    return candidate?.classKind == ClassKind.ANNOTATION_CLASS
 }
