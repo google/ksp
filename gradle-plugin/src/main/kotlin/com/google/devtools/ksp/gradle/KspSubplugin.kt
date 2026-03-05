@@ -433,7 +433,6 @@ internal fun getCPChanges(
                 when (it.changeType) {
                     ChangeType.ADDED, ChangeType.MODIFIED -> modified.add(it.file)
                     ChangeType.REMOVED -> removed.add(it.file)
-                    else -> Unit
                 }
             }
             modified to removed
