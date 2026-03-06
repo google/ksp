@@ -79,6 +79,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
 import java.lang.reflect.InvocationTargetException
+import java.net.URI
 import java.net.URLClassLoader
 import java.nio.file.Paths
 import java.util.*
@@ -136,6 +137,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.processorClasspath,
                     )
                 }
+
                 else -> {
                     if (
                         !inputChanges.isIncremental ||
@@ -183,10 +185,13 @@ abstract class KspAATask @Inject constructor(
                 ),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
                 project.dependencies.create(
-                    "org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
+                    "com.intellij.platform:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
                 ),
             ).apply {
                 isTransitive = false
+            }
+            project.repositories.maven {
+                it.url = URI("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
             }
             val incomingProcessors = processorClasspath.incoming.artifactView { }.files
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
