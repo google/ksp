@@ -452,11 +452,18 @@ class ResolverAAImpl(
             return it
         }
 
-        if (accessor.receiver.closestClassDeclaration()?.classKind == ClassKind.ANNOTATION_CLASS) {
-            return accessor.receiver.simpleName.asString()
-        }
-
         val name = accessor.receiver.simpleName.asString()
+        val containingClass = accessor.receiver.closestClassDeclaration()
+
+        // Annotation classes and @JvmRecord data classes both use bare property names
+        // as accessor names (no get/set prefix).
+        if (containingClass?.classKind == ClassKind.ANNOTATION_CLASS ||
+            containingClass != null && containingClass.annotations.any {
+                it.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.jvm.JvmRecord"
+            }
+        ) {
+            return name
+        }
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
         val prefixedName = when (accessor) {
             is KSPropertyGetter -> JvmAbi.getterName(name)
