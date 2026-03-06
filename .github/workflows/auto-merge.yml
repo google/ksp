@@ -11,34 +11,13 @@ jobs:
     strategy:
       fail-fast: false
 
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
 
     permissions:
       contents: write
 
     steps:
-      - name: Free Disk Space (Ubuntu)
-        run: |
-          echo "Disk space before cleanup:"
-          df -h
-        
-          set -xe
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/share/swift
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/.ghcup
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf /opt/hostedtoolcache/
-          sudo rm -rf /usr/local/graalvm/
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/local/share/chromium
-          sudo rm -rf /usr/local/lib/node_modules
-         
-          sudo docker image prune --all --force
-        
-          echo "Disk space after cleanup:"
-          df -h
       # Checkout
       - uses: actions/checkout@v6
         with:
@@ -62,47 +41,20 @@ jobs:
           TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
           echo Picking $TO_PICK
           if [ -n "$TO_PICK" ]; then git cherry-pick -x --allow-empty $TO_PICK; fi
-  
-      - name: Setup Java 17
-        uses: actions/setup-java@v5
+
+      - uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'zulu'
-  
+
       # Build cache
-      - name: Cache Gradle Cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
-          # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-      - name: Cache gradle wrapper
-        uses: actions/cache@v5
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-  
-      # Check API compatibility
-      - name: API compatibility check
-        run: ./gradlew :api:checkApi
-  
-      # Run ksp generated tests
-      - name: test
-        run: ./gradlew --stacktrace --info check
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      # Run build
+      - name: build
+        run: ./gradlew --stacktrace --info build
 
       - name: push to release branch
         if: success()
         run: git fetch && git rebase && git push origin
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: test-reports
-          path: |
-            integration-tests/build/reports
-            gradle-plugin/build/reports
-            common-util/build/reports
-            kotlin-analysis-api/build/reports
