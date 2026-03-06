@@ -8,6 +8,7 @@ import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.ProjectScope
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
+import org.jetbrains.kotlin.cli.create
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
@@ -20,6 +21,7 @@ import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
 import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
 import org.jetbrains.kotlin.cli.jvm.modules.JavaModuleGraph
 import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 
@@ -34,7 +36,8 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
     ) {
         val project = environment.project
         val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
-        val javaModuleFinder = CliJavaModuleFinder(null, null, javaFileManager, project, null)
+        val compilerConfiguration = CompilerConfiguration.create()
+        val javaModuleFinder = CliJavaModuleFinder(null, compilerConfiguration, javaFileManager, project, null)
         val javaModuleGraph = JavaModuleGraph(javaModuleFinder)
         val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
         val jdkRoots = getDefaultJdkModuleRoots(javaModuleFinder, javaModuleGraph)
