@@ -377,22 +377,21 @@ internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
     }
 }
 
-internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = this.toKSNode() as? KSDeclaration
+internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KSDeclaration
 
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
-internal fun KaSymbol.toKSNode(): KSNode {
-    return when (this) {
-        is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
-        is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(this)
-        is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(this)
-        is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(this)
-        is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(this)
-        is KaFileSymbol -> KSFileImpl.getCached(this)
-        is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
-        is KaTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
-        is KaLocalVariableSymbol -> KSPropertyDeclarationLocalVariableImpl.getCached(this)
-        else -> throw IllegalStateException("Unexpected class for KtSymbol: ${this.javaClass}")
-    }
+internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
+    is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
+    is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(this)
+    is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(this)
+    is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(this)
+    is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(this)
+    is KaFileSymbol -> KSFileImpl.getCached(this)
+    is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
+    is KaTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
+    is KaLocalVariableSymbol -> KSPropertyDeclarationLocalVariableImpl.getCached(this)
+    is KaValueParameterSymbol -> KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+    else -> error("Unexpected class for KtSymbol: ${this.javaClass}")
 }
 
 @OptIn(ClassIdBasedLocality::class)
@@ -560,6 +559,7 @@ internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubsti
             fillInDeepSubstitutor(context.lowerBound, substitutorBuilder)
             return
         }
+
         else -> return
     }
     val parameters = unwrappedType.symbol.typeParameters
@@ -899,6 +899,7 @@ internal val KaPropertyAccessorSymbol.inlineSuffix: String
                     returnType.requiresMangling() && isKotlin && containingDeclaration?.containingDeclaration != null
                 }
             )
+
         is KaPropertySetterSymbol -> mangleInlineSuffix(listOf(parameter.returnType), null, false)
     }
 
@@ -921,10 +922,12 @@ internal val KaDeclarationSymbol.internalSuffix: String
                 if (containingDeclaration?.containingDeclaration == null)
                     return@analyze ""
             }
+
             is KaFunctionSymbol -> {
                 if (containingDeclaration == null)
                     return@analyze ""
             }
+
             else -> {}
         }
 
@@ -939,6 +942,7 @@ internal val KaDeclarationSymbol.internalSuffix: String
                 val moduleName = (firClassSymbol?.fir as? FirRegularClass)?.moduleName
                 (moduleName ?: JvmProtoBufUtil.DEFAULT_MODULE_NAME).toSuffix()
             }
+
             else -> ""
         }
     }
