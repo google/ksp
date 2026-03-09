@@ -41,7 +41,9 @@ import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
 
-abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
+abstract class AbstractKSPAATest( // TODO: Rework this experimental mode
+    experimentalPsiMode: Boolean
+) : AbstractKSPTest(FrontendKinds.FIR, experimentalPsiMode) {
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")
 
@@ -109,7 +111,8 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
         testServices: TestServices,
         mainModule: TestModule,
         libModules: List<TestModule>,
-        testProcessor: AbstractTestProcessor
+        testProcessor: AbstractTestProcessor,
+        kspConfigBuilder: KSPJvmConfig.Builder,
     ): List<String> {
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
             mainModule,
@@ -124,7 +127,7 @@ abstract class AbstractKSPAATest : AbstractKSPTest(FrontendKinds.FIR) {
 
         val testRoot = mainModule.testRoot
 
-        val kspConfig = KSPJvmConfig.Builder().apply {
+        val kspConfig = kspConfigBuilder.apply {
             moduleName = mainModule.name
             sourceRoots = listOf(mainModule.kotlinSrc)
             javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()

@@ -16,6 +16,7 @@
  */
 
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
@@ -98,6 +99,7 @@ class KSValueParameterImpl private constructor(
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktValueParameterSymbol.annotations(this)
     }
+
     override val origin: Origin by lazy {
         val symbolOrigin = mapAAOrigin(ktValueParameterSymbol)
         if (symbolOrigin == Origin.KOTLIN && ktValueParameterSymbol.psi == null) {
@@ -124,5 +126,9 @@ class KSValueParameterImpl private constructor(
         return ktValueParameterSymbol.defer inner@{
             getCached(it, other.restore() ?: return@inner null)
         }
+    }
+
+    val generatedProperty: KSPropertyDeclaration? by lazy {
+        ktValueParameterSymbol.primaryConstructorProperty?.toKSPropertyDeclaration()
     }
 }

@@ -33,6 +33,7 @@ abstract class KSPConfig(
 
     val allWarningsAsErrors: Boolean,
     val mapAnnotationArgumentsInJava: Boolean,
+    val experimentalPsiResolution: Boolean,
 ) : Serializable {
     abstract class Builder {
         lateinit var moduleName: String
@@ -62,6 +63,7 @@ abstract class KSPConfig(
 
         var allWarningsAsErrors: Boolean = false
         var mapAnnotationArgumentsInJava: Boolean = false
+        var experimentalPsiResolution: Boolean = false
     }
 }
 
@@ -98,6 +100,7 @@ class KSPJvmConfig(
 
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
+    experimentalPsiResolution: Boolean,
 ) : KSPConfig(
     moduleName,
     sourceRoots,
@@ -126,6 +129,7 @@ class KSPJvmConfig(
 
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
+    experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspJvmArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
@@ -168,7 +172,8 @@ class KSPJvmConfig(
                 apiVersion,
 
                 allWarningsAsErrors,
-                mapAnnotationArgumentsInJava
+                mapAnnotationArgumentsInJava,
+                experimentalPsiResolution
             )
         }
     }
@@ -203,6 +208,7 @@ class KSPNativeConfig(
 
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
+    experimentalPsiResolution: Boolean,
 ) : KSPConfig(
     moduleName,
     sourceRoots,
@@ -231,6 +237,7 @@ class KSPNativeConfig(
 
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
+    experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspNativeArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
@@ -264,7 +271,8 @@ class KSPNativeConfig(
                 apiVersion,
 
                 allWarningsAsErrors,
-                mapAnnotationArgumentsInJava
+                mapAnnotationArgumentsInJava,
+                experimentalPsiResolution
             )
         }
     }
@@ -299,6 +307,7 @@ class KSPJsConfig(
 
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
+    experimentalPsiResolution: Boolean,
 ) : KSPConfig(
     moduleName,
     sourceRoots,
@@ -327,6 +336,7 @@ class KSPJsConfig(
 
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
+    experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspJsArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
@@ -360,7 +370,8 @@ class KSPJsConfig(
                 apiVersion,
 
                 allWarningsAsErrors,
-                mapAnnotationArgumentsInJava
+                mapAnnotationArgumentsInJava,
+                experimentalPsiResolution
             )
         }
     }
@@ -400,6 +411,7 @@ class KSPCommonConfig(
 
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
+    experimentalPsiResolution: Boolean,
 ) : KSPConfig(
     moduleName,
     sourceRoots,
@@ -428,6 +440,7 @@ class KSPCommonConfig(
 
     allWarningsAsErrors,
     mapAnnotationArgumentsInJava,
+    experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspCommonArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
@@ -461,7 +474,8 @@ class KSPCommonConfig(
                 apiVersion,
 
                 allWarningsAsErrors,
-                mapAnnotationArgumentsInJava
+                mapAnnotationArgumentsInJava,
+                experimentalPsiResolution
             )
         }
     }

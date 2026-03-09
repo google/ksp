@@ -24,6 +24,7 @@ import java.io.File
 class TestProject(
     val rootDir: File,
     val testConfig: TestConfig,
+    val isExperimentalPsiResolution: Boolean = false
 ) {
     val processorModule = TestModule(
         rootDir.resolve("processor")
@@ -59,6 +60,7 @@ class TestProject(
         val contents = """
             
             kotlin.jvm.target.validation.mode=warning
+            ksp.experimental.psi.resolution=$isExperimentalPsiResolution
         """.trimIndent()
         rootDir.resolve("gradle.properties").appendText(contents)
     }

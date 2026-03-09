@@ -1,0 +1,56 @@
+/*
+ * Copyright 2026 Google LLC
+ * Copyright 2010-2026 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.devtools.ksp.common
+
+/**
+ * Applies `transform` to each key-value pair, where the value is a collection,
+ * and merges the resulting collections of values.
+ *
+ * In other words, if `k1 -> [a, b, c], k2 -> [c, d, e]` and
+ * `transform(k1) = transform(k2) = k3`, then the result is
+ * `k3 -> [a, b, c, d, e]`.
+ * Note the list is deduplicated.
+ */
+internal fun <K, V, R> Map<K, Collection<V>>.mergeMapKeys(
+    transform: (Map.Entry<K, Collection<V>>) -> R
+): Map<R, Collection<V>> =
+    mutableMapOf<R, MutableSet<V>>().apply {
+        this@mergeMapKeys.forEach {
+            transform(it).let { newKey ->
+                getOrPut(newKey, ::mutableSetOf).addAll(it.value)
+            }
+        }
+    }
+
+/**
+ * Merges the key-value pairs of `this` and `other`, deduplicating values.
+ *
+ * In other words, if `this = k -> [a, b, c]` and `other = k -> [c, d, e]`,
+ * then the result is `k -> [a, b, c, d, e]`.
+ */
+internal fun <K, V> Map<K, Collection<V>>.merge(
+    other: Map<K, Collection<V>>
+): Map<K, Collection<V>> =
+    mutableMapOf<K, MutableSet<V>>().apply {
+        this@merge.forEach { (k, vs) ->
+            this@apply.getOrPut(k, ::mutableSetOf).addAll(vs)
+        }
+        other.forEach { (k, vs) ->
+            this@apply.getOrPut(k, ::mutableSetOf).addAll(vs)
+        }
+    }
