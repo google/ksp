@@ -350,6 +350,13 @@ abstract class KspAATask @Inject constructor(
                             .orElse(false)
                     )
 
+                    cfg.experimentalPsiResolution.value(
+                        project.providers
+                            .gradleProperty("ksp.experimental.psi.resolution")
+                            .map { it.toBoolean() }
+                            .orElse(false)
+                    )
+
                     // Ref: https://github.com/JetBrains/kotlin/blob/6535f86dfe36effeba976802ebd56a5a56071f45/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/mpp/kotlinCompilations.kt#L92
                     val moduleName = when (val compilationName = kotlinCompilation.name) {
                         KotlinCompilation.MAIN_COMPILATION_NAME -> project.name
@@ -561,6 +568,9 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Input
     abstract val incrementalLog: Property<Boolean>
 
+    @get:Input
+    abstract val experimentalPsiResolution: Property<Boolean>
+
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Incremental
     @get:IgnoreEmptyDirectories
@@ -675,6 +685,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
             incremental = gradleCfg.incremental.get()
             incrementalLog = gradleCfg.incrementalLog.get()
+            experimentalPsiResolution = gradleCfg.experimentalPsiResolution.get()
 
             modifiedSources = parameters.modifiedSources
             removedSources = parameters.removedSources

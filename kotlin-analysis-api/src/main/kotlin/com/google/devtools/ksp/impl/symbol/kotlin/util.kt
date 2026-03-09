@@ -78,6 +78,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as AnnotationUseSiteTargetAA
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
@@ -381,17 +382,136 @@ internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KS
 
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
-    is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
-    is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(this)
-    is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(this)
-    is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(this)
-    is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(this)
-    is KaFileSymbol -> KSFileImpl.getCached(this)
-    is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
-    is KaTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
-    is KaLocalVariableSymbol -> KSPropertyDeclarationLocalVariableImpl.getCached(this)
-    is KaValueParameterSymbol -> KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+    is KaPropertySymbol -> toKSPropertyDeclaration()
+    is KaNamedClassSymbol -> toKSClassDeclaration()
+    is KaFunctionSymbol -> toKSFunctionDeclaration()
+    is KaTypeAliasSymbol -> toKSTypeAlias()
+    is KaJavaFieldSymbol -> this@toKSAnnotated.toKSPropertyDeclaration()
+    is KaFileSymbol -> toKSFile()
+    is KaEnumEntrySymbol -> toKSClassDeclarationEnumEntry()
+    is KaTypeParameterSymbol -> toKSTypeParameter()
+    is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
+    is KaValueParameterSymbol -> toKSValueParameter()
     else -> error("Unexpected class for KtSymbol: ${this.javaClass}")
+}
+
+internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
+    KSPropertyDeclarationImpl.getCached(this)
+
+internal fun KaNamedClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
+    KSClassDeclarationImpl.getCached(this)
+
+internal fun KaFunctionSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl =
+    KSFunctionDeclarationImpl.getCached(this)
+
+internal fun KaCallableSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl? = when (this) {
+    is KaFunctionSymbol -> this.toKSFunctionDeclaration()
+    else -> null
+}
+
+internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration? = when (this) {
+    is KaJavaFieldSymbol -> this.toKSPropertyDeclaration()
+    else -> null
+}
+
+internal fun KaTypeAliasSymbol.toKSTypeAlias(): KSTypeAliasImpl =
+    KSTypeAliasImpl.getCached(this)
+
+internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration =
+    KSPropertyDeclarationJavaImpl.getCached(this)
+
+internal fun KaFileSymbol.toKSFile(): KSFileImpl =
+    KSFileImpl.getCached(this)
+
+internal fun KaEnumEntrySymbol.toKSClassDeclarationEnumEntry(): KSClassDeclarationEnumEntryImpl =
+    KSClassDeclarationEnumEntryImpl.getCached(this)
+
+internal fun KaTypeParameterSymbol.toKSTypeParameter(): KSTypeParameterImpl =
+    KSTypeParameterImpl.getCached(this)
+
+internal fun KaLocalVariableSymbol.toKSPropertyDeclarationLocalVariable(): KSPropertyDeclarationLocalVariableImpl =
+    KSPropertyDeclarationLocalVariableImpl.getCached(this)
+
+internal fun KaValueParameterSymbol.toKSValueParameter(): KSValueParameterImpl =
+    KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+
+internal fun AnnotationUseSiteTargetAA.toKSAnnotationUseSiteTarget(): AnnotationUseSiteTarget = when (this) {
+    AnnotationUseSiteTargetAA.ALL -> AnnotationUseSiteTarget.ALL
+    AnnotationUseSiteTargetAA.FIELD -> AnnotationUseSiteTarget.FIELD
+    AnnotationUseSiteTargetAA.FILE -> AnnotationUseSiteTarget.FILE
+    AnnotationUseSiteTargetAA.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+    AnnotationUseSiteTargetAA.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+    AnnotationUseSiteTargetAA.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+    AnnotationUseSiteTargetAA.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+    AnnotationUseSiteTargetAA.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+    AnnotationUseSiteTargetAA.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+    AnnotationUseSiteTargetAA.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+}
+
+/**
+ * Optionally returns the [KaType] for the [KSType].
+ * In other words, it unpacks the underlying analysis API type from the KSP type.
+ */
+internal fun KSType.toKaType(): KaType? =
+    (this as? KSTypeImpl)?.type
+
+internal fun KSPropertyAccessor.getter(): KSPropertyGetter? = when (this) {
+    is KSPropertyGetter -> this
+    is KSPropertySetter -> null
+    else -> null
+}
+
+internal fun KSPropertyAccessor.setter(): KSPropertySetter? = when (this) {
+    is KSPropertyGetter -> null
+    is KSPropertySetter -> this
+    else -> null
+}
+
+internal fun KSAnnotated.getter(): KSPropertyGetter? = when (this) {
+    is KSDeclaration -> this.getter()
+    is KSFile -> null
+    is KSPropertyAccessor -> this.getter()
+    is KSTypeArgument -> null
+    is KSTypeReference -> null
+    is KSValueArgument -> null
+    is KSValueParameter -> this.getter()
+    else -> null
+}
+
+internal fun KSAnnotated.setter(): KSPropertySetter? = when (this) {
+    is KSDeclaration -> this.setter()
+    is KSFile -> null
+    is KSPropertyAccessor -> this.setter()
+    is KSTypeArgument -> null
+    is KSTypeReference -> null
+    is KSValueArgument -> null
+    is KSValueParameter -> this.setter()
+    else -> null
+}
+
+internal fun KSValueParameter.getter(): KSPropertyGetter? =
+    getGeneratedProperty()?.getter
+
+internal fun KSValueParameter.setter(): KSPropertySetter? =
+    getGeneratedProperty()?.setter
+
+internal fun KSDeclaration.getter(): KSPropertyGetter? = when (this) {
+    is KSPropertyDeclaration -> this.getter
+    else -> null
+}
+
+internal fun KSDeclaration.setter(): KSPropertySetter? = when (this) {
+    is KSPropertyDeclaration -> this.setter
+    else -> null
+}
+
+/**
+ * Returns the generated property if the value parameter is declared as `val` or `var`.
+ */
+internal fun KSValueParameter.getGeneratedProperty(): KSPropertyDeclaration? = when (this) {
+    is KSValueParameterImpl -> if (isVal || isVar) generatedProperty else null
+    is KSValueParameterLiteImpl -> null
+    else -> error("internal error $location")
 }
 
 @OptIn(ClassIdBasedLocality::class)
@@ -455,6 +575,29 @@ internal fun KaType.typeArguments(): List<KaTypeProjection> {
             ?: emptyList()
     }
 }
+
+/**
+ * Optionally returns the fully qualified name for the [KSAnnotated].
+ * This function may be expensive to compute since it must resolve the type of the annotation.
+ */
+internal fun KSAnnotation.getFqn(): String? =
+    annotationType.resolve().toKaType()?.getFqn()
+
+/**
+ * Optionally returns the fully qualified name for a [KaType].
+ */
+internal fun KaType.getFqn(): String? =
+    fullyExpand().symbol?.classId?.asFqNameString()
+
+/**
+ * Returns the Psi element for [KSFile], if it exists.
+ */
+internal val KSFile.psi: PsiElement?
+    get() = when (this) {
+        is KSFileImpl -> ktFileSymbol.psi
+        is KSFileJavaImpl -> psi
+        else -> null
+    }
 
 internal fun KaSymbolVisibility.toModifier(): Modifier {
     return when (this) {
@@ -820,11 +963,11 @@ internal fun TypeMappingMode.updateFromAnnotations(
             return (it.value as? Boolean)?.let(::suppressJvmWildcards) ?: this
         }
     }
-    return if (type.annotations().any {
+    val hasJavaWildCardAnnotation = type.annotations().any {
         it.annotationType.resolve().declaration.qualifiedName?.asString()
             ?.equals(JVM_WILDCARD_ANNOTATION_FQ_NAME.asString()) == true
     }
-    ) {
+    return if (hasJavaWildCardAnnotation) {
         TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
             skipDeclarationSiteWildcards = false,
             isForAnnotationParameter = isForAnnotationParameter,

@@ -51,6 +51,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                     FunctionKind.MEMBER
                 }
             }
+
             KaSymbolLocation.TOP_LEVEL -> FunctionKind.TOP_LEVEL
             else -> throw IllegalStateException("Unexpected location ${ktFunctionSymbol.location}")
         }
@@ -143,6 +144,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                 is PsiMethod -> KSNameImpl.getCached(psi.name)
                 else -> KSNameImpl.getCached(ktFunctionSymbol.callableId?.callableName?.asString() ?: "<no name>")
             }
+
             is KaConstructorSymbol -> KSNameImpl.getCached("<init>")
             else -> throw IllegalStateException("Unexpected function symbol type ${ktFunctionSymbol.javaClass}")
         }
@@ -167,6 +169,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                         is KaDestructuringDeclarationSymbol -> {
                             symbol.entries.mapNotNull { it.toKSDeclaration() }
                         }
+
                         else -> listOfNotNull(symbol.toKSDeclaration())
                     }
                 }
@@ -221,6 +224,14 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     override fun defer(): Restorable? {
         return ktFunctionSymbol.defer(::getCached)
     }
+
+    val isGetter: Boolean by lazy {
+        ktFunctionSymbol is KaPropertyGetterSymbol
+    }
+
+    val isSetter: Boolean by lazy {
+        ktFunctionSymbol is KaPropertySetterSymbol
+    }
 }
 
 internal fun KaFunctionSymbol.toModifiers(): Set<Modifier> {
@@ -232,6 +243,7 @@ internal fun KaFunctionSymbol.toModifiers(): Set<Modifier> {
             }
             result.add(Modifier.FINAL)
         }
+
         is KaNamedFunctionSymbol -> {
             if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
                 result.add(visibility.toModifier())
@@ -262,6 +274,7 @@ internal fun KaFunctionSymbol.toModifiers(): Set<Modifier> {
                 result.add(Modifier.OVERRIDE)
             }
         }
+
         is KaPropertyAccessorSymbol -> {
             if (visibility != KaSymbolVisibility.PACKAGE_PRIVATE) {
                 result.add(visibility.toModifier())
@@ -270,6 +283,7 @@ internal fun KaFunctionSymbol.toModifiers(): Set<Modifier> {
                 result.add(modality.toModifier())
             }
         }
+
         else -> Unit
     }
     return result

@@ -16,6 +16,7 @@
  */
 
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.common.AnyChanges
@@ -174,11 +175,13 @@ class KotlinSymbolProcessing(
                     val jvmTarget = JvmTarget.fromString(kspConfig.jvmTarget) ?: JvmTarget.DEFAULT
                     JvmPlatforms.jvmPlatformByTargetVersion(jvmTarget)
                 }
+
                 is KSPJsConfig -> when (kspConfig.backend) {
                     "WASM" -> WasmPlatforms.wasmJs
                     "JS" -> JsPlatforms.defaultJsPlatform
                     else -> throw IllegalArgumentException("Unknown JS backend: ${kspConfig.backend}")
                 }
+
                 is KSPNativeConfig -> NativePlatforms.nativePlatformByTargetNames(listOf(kspConfig.targetName))
                 is KSPCommonConfig -> CommonPlatforms.defaultCommonPlatform
                 else -> throw IllegalArgumentException("Unknown platform for config: $kspConfig")
@@ -558,12 +561,17 @@ class KotlinSymbolProcessing(
                     dualLookupTracker
                 )
 
+                val resolutionStrategy =
+                    if (kspConfig.experimentalPsiResolution)
+                        PsiResolutionStrategy(newKSFiles, deferredSymbols)
+                    else
+                        AAResolutionStrategy(newKSFiles, deferredSymbols)
+
                 val resolver = ResolverAAImpl(
                     allDirtyKSFiles,
-                    newKSFiles,
-                    deferredSymbols,
                     project,
                     incrementalContext,
+                    resolutionStrategy
                 )
                 ResolverAAImpl.instance = resolver
                 ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
@@ -677,9 +685,11 @@ fun TargetPlatform.getPlatformInfo(kspConfig: KSPConfig): List<PlatformInfo> =
                 jvmTarget = platform.targetVersion.toString(),
                 jvmDefaultMode = (kspConfig as? KSPJvmConfig)?.jvmDefaultMode ?: "disable"
             )
+
             is JsPlatform -> JsPlatformInfoImpl(
                 platformName = platform.platformName
             )
+
             is NativePlatform -> NativePlatformInfoImpl(
                 platformName = platform.platformName,
                 targetName = platform.targetName
