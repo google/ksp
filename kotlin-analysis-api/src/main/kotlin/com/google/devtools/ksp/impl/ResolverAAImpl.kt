@@ -26,6 +26,7 @@ import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.util.*
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
+import com.google.devtools.ksp.impl.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -36,10 +37,8 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParameter
-import com.intellij.psi.PsiRecursiveElementWalkingVisitor
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
 import com.intellij.psi.impl.file.impl.JavaFileManager
@@ -74,8 +73,10 @@ import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
+import org.jetbrains.kotlin.utils.addToStdlib.getOrPut
 import org.jetbrains.org.objectweb.asm.Opcodes
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -580,12 +581,10 @@ class ResolverAAImpl(
         }
         val realAnnotationName = expandedIfAlias ?: annotationName
 
-        val result = if (inDepth)
+        return if (inDepth)
             annotationToSymbolsWithLocalsCache[realAnnotationName]?.asSequence() ?: emptySequence()
         else
             annotationToSymbolsCache[realAnnotationName]?.asSequence() ?: emptySequence()
-
-        return result
     }
 
     /**
@@ -606,7 +605,15 @@ class ResolverAAImpl(
     }
 
     private val annotationToSymbolsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        annotationToPsiElementsCache
+        newKSFiles
+            .flatMap { collectAnnotatedPsiElementsIn(it) }
+            .flatGroupBy { getAnnotationNamesFor(it) }
+            .mapValues { entry ->
+                entry.value.flatMap { it.toKSAnnotated(entry.key).filterNotNull() }.toMutableSet()
+            }
+            .mergeMapKeys {
+                it.key.qualifiedName ?: error("unexpected unqualified name")
+            }
             .toMutableMap()
             .apply {
                 deferredSymbolsRestored.forEach { deferredSym ->
@@ -617,77 +624,86 @@ class ResolverAAImpl(
             }
     }
 
+    private fun <K, V, R> Map<K, MutableSet<V>>.mergeMapKeys(
+        transform: (Map.Entry<K, MutableSet<V>>) -> R
+    ): Map<R, MutableSet<V>> =
+        mutableMapOf<R, MutableSet<V>>().apply {
+            this@mergeMapKeys.forEach {
+                transform(it).let { newKey ->
+                    getOrPut(newKey, ::mutableSetOf).addAll(it.value)
+                }
+            }
+        }
+
     private val annotationToSymbolsWithLocalsCache: Map<String, Collection<KSAnnotated>> by lazy {
         val annotated = collectAnnotatedSymbols(inDepth = true)
         val all = annotated + deferredSymbolsRestored
-        all.flatGroupBy { it.getFqnAnnotations() }
-    }
-
-    private val annotationToPsiElementsCache: Map<String, MutableSet<KSAnnotated>> by lazy {
-        // TODO: Revert this to method chaining
-        val annotatedPsiElements = newKSFiles
-            .flatMap { collectAnnotatedPsiElementsIn(it) }
-        val distinct = annotatedPsiElements.distinct()
-        val annotationNamesToPsiElement = distinct.flatGroupBy { getAnnotationNamesFor(it) }
-        val result = annotationNamesToPsiElement.mapValues { entry ->
-            entry.value.flatMap { it.toKSAnnotated().filterNotNull() }.toMutableSet()
-        }
-        result
+        all.distinct().flatGroupBy { it.getFqnAnnotations() }
     }
 
     /**
-     * Returns all [PsiElement]s that are annotated in `file`.
+     * Returns all [PsiElement]s that are annotated in `file` except for declarations
+     * in function bodies or property accessors.
      */
     private fun collectAnnotatedPsiElementsIn(file: KSFile): Collection<PsiElement> {
-        val result = mutableSetOf<PsiElement>()
-        val visitor = object : PsiRecursiveElementWalkingVisitor() {
-            override fun visitElement(element: PsiElement) {
-                when (element) {
-                    // TODO: Add comment explaining why we are interested in parent's parent and fall back to parent
-                    //  Answer: structure of Psi and fallback on type parameters.
-                    is KtAnnotationEntry -> { // Handle Kotlin sources
-                        // TODO: Revert this
-                        val parentsParent = element.parent?.parent as? KtAnnotated
-                        val immediateParent = element.parent
-                        result.add(parentsParent ?: immediateParent)
-                        return
-                    }
-
-                    is PsiAnnotation -> { // Handle Java sources
-                        // TODO: Revert this
-                        val immediateParent = element.parent
-                        val parentsParent = (immediateParent as? PsiModifierList)?.parent
-                        result.add(parentsParent ?: immediateParent)
-                        return
-                    }
-                }
-                super.visitElement(element)
-            }
-        }
+        val visitor = CollectAnnotatedSymbolsPsiVisitor()
         file.psi?.accept(visitor)
-        return result
+        return visitor.result
     }
+
+    private val useSiteTargets =
+        mutableMapOf<PsiElement, MutableMap<KtAnnotationEntry, MutableSet<AnnotationUseSiteTarget?>>>()
 
     /**
      * Returns the fully qualified name of the annotation.
      * If the annotation is an alias, it first resolves the alias and then returns the fully qualified name
      * of the resolved type.
      */
-    private fun getAnnotationNamesFor(element: PsiElement): Collection<String> = analyze {
+    private fun getAnnotationNamesFor(element: PsiElement): Collection<KtOrPsiAnnotation> = analyze {
         when (element) {
-            is KtAnnotated -> element.annotationEntries.mapNotNull {
-                // TODO: Refactor alias expansion into separate function.
-                it.typeReference?.type?.fullyExpandedType?.expandedSymbol?.classId?.asFqNameString()
-                // TODO: Error if the fqn does not exist
+            is KtAnnotated -> element.annotationEntries.map {
+                useSiteTargets
+                    .getOrPut(element, ::mutableMapOf)
+                    .getOrPut(it, ::mutableSetOf)
+                    .add(
+                        it.useSiteTarget
+                            ?.getAnnotationUseSiteTarget()
+                            ?.toKSAnnotationUseSiteTarget()
+                    )
+                KtEntry(it)
             }
 
-            is PsiModifierListOwner -> element.annotations.mapNotNull {
-                it.qualifiedName
-                // TODO: Error if the fqn does not exist
+            is PsiModifierListOwner -> element.annotations.map {
+                PsiEntry(it)
             }
 
             else -> error("Unexpected PsiElement: $element")
         }
+    }
+
+    private sealed interface KtOrPsiAnnotation {
+        /**
+         * Optionally returns the fully qualified name of the annotation.
+         */
+        val qualifiedName: String?
+    }
+
+    data class KtEntry(val annotation: KtAnnotationEntry) : KtOrPsiAnnotation {
+        override val qualifiedName: String? by lazy {
+            analyze {
+                annotation
+                    .typeReference
+                    ?.type
+                    ?.fullyExpandedType
+                    ?.expandedSymbol
+                    ?.classId
+                    ?.asFqNameString()
+            }
+        }
+    }
+
+    data class PsiEntry(val annotation: PsiAnnotation) : KtOrPsiAnnotation {
+        override val qualifiedName: String? = annotation.qualifiedName
     }
 
     /**
@@ -718,18 +734,151 @@ class ResolverAAImpl(
             else -> null
         }
 
-    private fun PsiElement.toKSAnnotated(): Collection<KSAnnotated?> = analyze {
-        val result = mutableSetOf<KSAnnotated>()
-        when (this@toKSAnnotated) {
-            is KtDeclaration -> when (val sym = symbol) {
-                is KaValueParameterSymbol -> {
-                    sym.generatedPrimaryConstructorProperty?.toKSAnnotated()?.let {
-                        result.add(it)
+    // TODO: Rewrite this call chain as double dispatch visitor.
+    private fun KSAnnotated.getTargetedSymbol(useSiteTarget: AnnotationUseSiteTarget?): Collection<KSAnnotated> =
+        when (useSiteTarget) {
+            null -> when (this) {
+                is KSValueParameterImpl -> {
+                    val generatedPropertySymbol = this.getGeneratedProperty()
+                    if (generatedPropertySymbol != null) {
+                        listOf(this, generatedPropertySymbol)
+                    } else {
+                        listOf(this)
                     }
-                    result.add(sym.toKSAnnotated())
                 }
 
-                else -> result.add(sym.toKSAnnotated())
+                is KSFunctionDeclarationImpl -> when {
+                    this.isGetter -> listOf(
+                        this.parentDeclaration?.getter()
+                            ?: error("missing getter $location")
+                    )
+
+                    this.isSetter -> listOf(
+                        this.parentDeclaration?.setter()
+                            ?: error("missing setter $location")
+                    )
+
+                    else -> listOf(this)
+                }
+
+                else ->
+                    listOf(this)
+            }
+
+            AnnotationUseSiteTarget.FILE ->
+                listOf(
+                    this.containingFile
+                        ?: error("missing file at $location")
+                )
+
+            AnnotationUseSiteTarget.PROPERTY ->
+                listOf(this)
+
+            AnnotationUseSiteTarget.FIELD ->
+                listOf(this)
+
+            AnnotationUseSiteTarget.GET ->
+                listOf(
+                    this.getter()
+                        ?: error("missing getter at $location")
+                )
+
+            AnnotationUseSiteTarget.SET ->
+                listOf(
+                    this.setter()
+                        ?: error("missing setter at $location")
+                )
+
+            AnnotationUseSiteTarget.RECEIVER -> when (this) {
+                is KSFunctionDeclarationImpl -> listOf(
+                    extensionReceiver
+                        ?: error("missing extension receiver at $location")
+                )
+
+                is KSPropertyDeclaration -> listOf(
+                    extensionReceiver
+                        ?: error("missing extension receiver at $location")
+                )
+
+                else -> error("unexpected declaration at $location")
+            }
+
+            AnnotationUseSiteTarget.PARAM ->
+                listOf(this)
+
+            AnnotationUseSiteTarget.SETPARAM ->
+                // Return this, since it's the parameter that's directly annotated.
+                listOf(this)
+
+            AnnotationUseSiteTarget.DELEGATE ->
+                listOf(this)
+
+            AnnotationUseSiteTarget.ALL ->
+                listOf(this) // FIXME: Correct impl
+        }
+
+    private fun KSPropertyAccessor.getter(): KSPropertyGetter? = when (this) {
+        is KSPropertyGetter -> this
+        is KSPropertySetter -> null
+        else -> null
+    }
+
+    private fun KSPropertyAccessor.setter(): KSPropertySetter? = when (this) {
+        is KSPropertyGetter -> null
+        is KSPropertySetter -> this
+        else -> null
+    }
+
+    private fun KSAnnotated.getter(): KSPropertyGetter? = when (this) {
+        is KSDeclaration -> this.getter()
+        is KSFile -> null
+        is KSPropertyAccessor -> this.getter()
+        is KSTypeArgument -> null
+        is KSTypeReference -> null
+        is KSValueArgument -> null
+        is KSValueParameter -> this.getter()
+        else -> null
+    }
+
+    private fun KSAnnotated.setter(): KSPropertySetter? = when (this) {
+        is KSDeclaration -> this.setter()
+        is KSFile -> null
+        is KSPropertyAccessor -> this.setter()
+        is KSTypeArgument -> null
+        is KSTypeReference -> null
+        is KSValueArgument -> null
+        is KSValueParameter -> this.setter()
+        else -> null
+    }
+
+    private fun KSValueParameter.getter(): KSPropertyGetter? =
+        getGeneratedProperty()?.getter
+
+    private fun KSValueParameter.setter(): KSPropertySetter? =
+        getGeneratedProperty()?.setter
+
+    private fun KSDeclaration.getter(): KSPropertyGetter? = when (this) {
+        is KSPropertyDeclaration -> this.getter
+        else -> null
+    }
+
+    private fun KSDeclaration.setter(): KSPropertySetter? = when (this) {
+        is KSPropertyDeclaration -> this.setter
+        else -> null
+    }
+
+    // TODO: Rename this function, resolveToAnnotatedTargetSymbol
+    private fun PsiElement.toKSAnnotated(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated?> = analyze {
+        val result = mutableSetOf<KSAnnotated>()
+        when (this@toKSAnnotated) {
+            is KtDeclaration -> {
+                if (annotationEntry !is KtEntry) {
+                    error("unexpected java annotation entry for kt file")
+                }
+                useSiteTargets[this@toKSAnnotated]!![annotationEntry.annotation]!!
+                    .forEach { useSiteTarget ->
+                        result.addAll(symbol.toKSAnnotated().getTargetedSymbol(useSiteTarget))
+                    }
             }
 
             is PsiParameter -> {
@@ -758,7 +907,13 @@ class ResolverAAImpl(
                 val classSymbol = (nearestConvertibleParent as? PsiClass)?.namedClassSymbol
                 val classDecl = (classSymbol?.toKSAnnotated()) as? KSClassDeclaration
                 classDecl?.typeParameters?.get(idx)?.let {
+                    // Type parameters for classes return two symbols with Analysis API,
+                    // but we return a clone here to maintain KSP API parity.
                     result.add(it)
+                    val clone = object : KSTypeParameter by it {
+                        override fun toString(): String = it.toString()
+                    }
+                    result.add(clone)
                 }
             }
 
@@ -774,7 +929,11 @@ class ResolverAAImpl(
                 result.add(it)
             }
 
-            else -> // TODO: Better error handling
+            is KtTypeReference -> {
+                // Do nothing
+            }
+
+            else ->
                 error("unreachable: ${this@toKSAnnotated.javaClass}")
         }
 

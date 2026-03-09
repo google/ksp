@@ -78,6 +78,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as AnnotationUseSiteTargetAA
 
 internal val ktSymbolOriginToOrigin = mapOf(
     KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
@@ -381,17 +382,86 @@ internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KS
 
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
-    is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(this)
-    is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(this)
-    is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(this)
-    is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(this)
-    is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(this)
-    is KaFileSymbol -> KSFileImpl.getCached(this)
-    is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(this)
-    is KaTypeParameterSymbol -> KSTypeParameterImpl.getCached(this)
-    is KaLocalVariableSymbol -> KSPropertyDeclarationLocalVariableImpl.getCached(this)
-    is KaValueParameterSymbol -> KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+    is KaPropertySymbol -> toKSPropertyDeclaration()
+    is KaNamedClassSymbol -> toKSClassDeclaration()
+    is KaFunctionSymbol -> toKSFunctionDeclaration()
+    is KaTypeAliasSymbol -> toKSTypeAlias()
+    is KaJavaFieldSymbol -> toKSPropertyDeclaration()
+    is KaFileSymbol -> toKSFile()
+    is KaEnumEntrySymbol -> toKSClassDeclarationEnumEntry()
+    is KaTypeParameterSymbol -> toKSTypeParameter()
+    is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
+    is KaValueParameterSymbol -> toKSValueParameter()
     else -> error("Unexpected class for KtSymbol: ${this.javaClass}")
+}
+
+internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
+    KSPropertyDeclarationImpl.getCached(this)
+
+internal fun KaNamedClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
+    KSClassDeclarationImpl.getCached(this)
+
+internal fun KaFunctionSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl =
+    KSFunctionDeclarationImpl.getCached(this)
+
+internal fun KaTypeAliasSymbol.toKSTypeAlias(): KSTypeAliasImpl =
+    KSTypeAliasImpl.getCached(this)
+
+internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration =
+    KSPropertyDeclarationJavaImpl.getCached(this)
+
+internal fun KaFileSymbol.toKSFile(): KSFileImpl =
+    KSFileImpl.getCached(this)
+
+internal fun KaEnumEntrySymbol.toKSClassDeclarationEnumEntry(): KSClassDeclarationEnumEntryImpl =
+    KSClassDeclarationEnumEntryImpl.getCached(this)
+
+internal fun KaTypeParameterSymbol.toKSTypeParameter(): KSTypeParameterImpl =
+    KSTypeParameterImpl.getCached(this)
+
+internal fun KaLocalVariableSymbol.toKSPropertyDeclarationLocalVariable(): KSPropertyDeclarationLocalVariableImpl =
+    KSPropertyDeclarationLocalVariableImpl.getCached(this)
+
+internal fun KaValueParameterSymbol.toKSValueParameter(): KSValueParameterImpl =
+    KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+
+internal fun KaPropertyGetterSymbol.toKSPropertyGetter(): KSPropertyGetter? {
+    val ksDecl = analyze {
+        this@toKSPropertyGetter.containingDeclaration?.toKSDeclaration()
+    }
+    return when (ksDecl) {
+        is KSPropertyDeclaration -> KSPropertyGetterImpl.getCached(ksDecl, this)
+        else -> null
+    }
+}
+
+internal fun KaPropertySetterSymbol.toKSPropertySetter(): KSPropertySetter? {
+    val ksDecl = analyze {
+        this@toKSPropertySetter.containingDeclaration?.toKSDeclaration()
+    }
+    return when (ksDecl) {
+        is KSPropertyDeclaration -> KSPropertySetterImpl.getCached(ksDecl, this)
+        else -> null
+    }
+}
+
+internal fun KSValueParameter.getGeneratedProperty(): KSPropertyDeclaration? = when (this) {
+    is KSValueParameterImpl -> if (isVal || isVar) generatedProperty else null
+    is KSValueParameterLiteImpl -> null
+    else -> error("internal error $location")
+}
+
+internal fun AnnotationUseSiteTargetAA.toKSAnnotationUseSiteTarget(): AnnotationUseSiteTarget = when (this) {
+    AnnotationUseSiteTargetAA.ALL -> AnnotationUseSiteTarget.ALL
+    AnnotationUseSiteTargetAA.FIELD -> AnnotationUseSiteTarget.FIELD
+    AnnotationUseSiteTargetAA.FILE -> AnnotationUseSiteTarget.FILE
+    AnnotationUseSiteTargetAA.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+    AnnotationUseSiteTargetAA.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+    AnnotationUseSiteTargetAA.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+    AnnotationUseSiteTargetAA.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+    AnnotationUseSiteTargetAA.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+    AnnotationUseSiteTargetAA.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+    AnnotationUseSiteTargetAA.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
 }
 
 @OptIn(ClassIdBasedLocality::class)
@@ -820,11 +890,11 @@ internal fun TypeMappingMode.updateFromAnnotations(
             return (it.value as? Boolean)?.let(::suppressJvmWildcards) ?: this
         }
     }
-    return if (type.annotations().any {
+    val hasJavaWildCardAnnotation = type.annotations().any {
         it.annotationType.resolve().declaration.qualifiedName?.asString()
             ?.equals(JVM_WILDCARD_ANNOTATION_FQ_NAME.asString()) == true
     }
-    ) {
+    return if (hasJavaWildCardAnnotation) {
         TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
             skipDeclarationSiteWildcards = false,
             isForAnnotationParameter = isForAnnotationParameter,
