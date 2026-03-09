@@ -32,8 +32,17 @@ import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class GradleCompilationTest() {
+@RunWith(Parameterized::class)
+class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "experimentalPsiResolution={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
+    }
 
     @Rule
     @JvmField
@@ -41,7 +50,7 @@ class GradleCompilationTest() {
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir)
+    val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     @Test
     fun errorMessageFailsCompilation() {

@@ -31,9 +31,18 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class SourceSetConfigurationsTest() {
+@RunWith(Parameterized::class)
+class SourceSetConfigurationsTest(isExperimentalPsiResolution: Boolean) {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "experimentalPsiResolution={0}")
+        fun params() = listOf(arrayOf(true), arrayOf(false))
+    }
 
     @Rule
     @JvmField
@@ -41,7 +50,7 @@ class SourceSetConfigurationsTest() {
 
     @Rule
     @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir)
+    val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     @Test
     fun configurationsForJvmApp() {

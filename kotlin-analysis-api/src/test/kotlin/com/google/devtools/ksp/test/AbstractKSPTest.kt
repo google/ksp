@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -74,7 +75,7 @@ abstract class DisposableTest {
     }
 }
 
-abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
+abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMode: Boolean) : DisposableTest() {
     companion object {
         val TEST_PROCESSOR = "// TEST PROCESSOR:"
         val EXPECTED_RESULTS = "// EXPECTED:"
@@ -110,6 +111,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         mainModule: TestModule,
         libModules: List<TestModule>,
         testProcessor: AbstractTestProcessor,
+        kspConfigBuilder: KSPJvmConfig.Builder
     ): List<String>
 
     private val configure: TestConfigurationBuilder.() -> Unit = {
@@ -203,6 +205,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     }
 
     fun runTest(@TestDataFile path: String) {
+        // TODO: refactor experimental psi mode into separate test class
         val testConfiguration = testConfiguration(path, configure)
         Disposer.register(disposable, testConfiguration.rootDisposable)
         val testServices = testConfiguration.testServices
@@ -237,13 +240,25 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
                 .getDeclaredConstructor().newInstance() as AbstractTestProcessor
 
+        val kspConfigBuilder = KSPJvmConfig.Builder().apply {
+            experimentalPsiResolution = experimentalPsiMode
+        }
+
         val expectedResults = contents
             .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
             .drop(1)
             .takeWhile { !it.startsWith("// END") }
             .map { it.substring(3).trim() }
 
-        val results = collectAllExceptions { runTest(testServices, mainModule, libModules, testProcessor) }
+        val results = collectAllExceptions {
+            runTest(
+                testServices,
+                mainModule,
+                libModules,
+                testProcessor,
+                kspConfigBuilder
+            )
+        }
         Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
     }
 }
