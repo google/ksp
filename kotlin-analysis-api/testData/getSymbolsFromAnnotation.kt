@@ -17,110 +17,110 @@
 
 // TEST PROCESSOR: GetSymbolsFromAnnotationProcessor
 // EXPECTED:
-// ==== Anno superficial====
-// Foo:KSClassDeclaration
-// constructorParameterFoo:KSPropertyDeclaration
-// propertyFoo:KSPropertyDeclaration
-// functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
+// ==== Anno inDepth = false ====
 // <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
-// RGB.B:KSClassDeclaration
-// ==== Anno in depth ====
 // Foo:KSClassDeclaration
+// RGB.B:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
-// propertyFoo:KSPropertyDeclaration
+// constructorParameterFoo:KSValueParameter
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
-// local:KSPropertyDeclaration
+// param:KSValueParameter
+// propertyFoo:KSPropertyDeclaration
+// ==== Anno inDepth = true ====
+// <init>:KSFunctionDeclaration
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
+// Flux:KSTypeAlias
+// Foo:KSClassDeclaration
+// RGB.B:KSClassDeclaration
 // a:KSPropertyDeclaration
-// <init>:KSFunctionDeclaration
+// constructorParameterFoo:KSPropertyDeclaration
 // constructorParameterFoo:KSValueParameter
+// functionFoo:KSFunctionDeclaration
+// local:KSPropertyDeclaration
+// p1:KSValueParameter
 // param:KSValueParameter
-// Bar:KSClassDeclaration
-// Baz:KSClassDeclaration
-// Burp:KSClassDeclaration
-// Flux:KSTypeAlias
-// RGB.B:KSClassDeclaration
-// ==== Bnno superficial====
+// propertyFoo:KSPropertyDeclaration
+// ==== Bnno inDepth = false ====
+// <init>:KSFunctionDeclaration
 // File: Foo.kt:KSFile
-// propertyFoo.getter():KSPropertyAccessorImpl
 // p2:KSValueParameter
+// propertyFoo.getter():KSPropertyAccessorImpl
+// ==== Bnno inDepth = true ====
 // <init>:KSFunctionDeclaration
-// ==== Bnno in depth ====
 // File: Foo.kt:KSFile
-// propertyFoo.getter():KSPropertyAccessorImpl
 // p2:KSValueParameter
+// propertyFoo.getter():KSPropertyAccessorImpl
+// ==== A1 inDepth = false ====
 // <init>:KSFunctionDeclaration
-// ==== A1 superficial====
-// Foo:KSClassDeclaration
-// constructorParameterFoo:KSPropertyDeclaration
-// propertyFoo:KSPropertyDeclaration
-// functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
-// <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
-// RGB.B:KSClassDeclaration
-// ==== A1 in depth ====
 // Foo:KSClassDeclaration
+// RGB.B:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
-// propertyFoo:KSPropertyDeclaration
+// constructorParameterFoo:KSValueParameter
 // functionFoo:KSFunctionDeclaration
 // p1:KSValueParameter
-// local:KSPropertyDeclaration
+// param:KSValueParameter
+// propertyFoo:KSPropertyDeclaration
+// ==== A1 inDepth = true ====
+// <init>:KSFunctionDeclaration
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
+// Flux:KSTypeAlias
+// Foo:KSClassDeclaration
+// RGB.B:KSClassDeclaration
 // a:KSPropertyDeclaration
-// <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
-// Bar:KSClassDeclaration
-// Baz:KSClassDeclaration
-// Burp:KSClassDeclaration
-// Flux:KSTypeAlias
-// RGB.B:KSClassDeclaration
-// ==== A2 superficial====
-// Foo:KSClassDeclaration
 // constructorParameterFoo:KSPropertyDeclaration
-// propertyFoo:KSPropertyDeclaration
-// functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
-// <init>:KSFunctionDeclaration
 // constructorParameterFoo:KSValueParameter
-// param:KSValueParameter
-// Bar:KSClassDeclaration
-// Baz:KSClassDeclaration
-// Burp:KSClassDeclaration
-// Flux:KSTypeAlias
-// RGB.B:KSClassDeclaration
-// ==== A2 in depth ====
-// Foo:KSClassDeclaration
-// constructorParameterFoo:KSPropertyDeclaration
-// propertyFoo:KSPropertyDeclaration
 // functionFoo:KSFunctionDeclaration
-// p1:KSValueParameter
 // local:KSPropertyDeclaration
-// a:KSPropertyDeclaration
-// <init>:KSFunctionDeclaration
-// constructorParameterFoo:KSValueParameter
+// p1:KSValueParameter
 // param:KSValueParameter
+// propertyFoo:KSPropertyDeclaration
+// ==== A2 inDepth = false ====
+// <init>:KSFunctionDeclaration
 // Bar:KSClassDeclaration
 // Baz:KSClassDeclaration
 // Burp:KSClassDeclaration
 // Flux:KSTypeAlias
+// Foo:KSClassDeclaration
 // RGB.B:KSClassDeclaration
-// ==== Cnno in depth ====
 // constructorParameterFoo:KSPropertyDeclaration
+// constructorParameterFoo:KSValueParameter
+// functionFoo:KSFunctionDeclaration
+// p1:KSValueParameter
+// param:KSValueParameter
+// propertyFoo:KSPropertyDeclaration
+// ==== A2 inDepth = true ====
+// <init>:KSFunctionDeclaration
+// Bar:KSClassDeclaration
+// Baz:KSClassDeclaration
+// Burp:KSClassDeclaration
+// Flux:KSTypeAlias
+// Foo:KSClassDeclaration
+// RGB.B:KSClassDeclaration
+// a:KSPropertyDeclaration
+// constructorParameterFoo:KSPropertyDeclaration
+// constructorParameterFoo:KSValueParameter
+// functionFoo:KSFunctionDeclaration
+// local:KSPropertyDeclaration
+// p1:KSValueParameter
+// param:KSValueParameter
+// propertyFoo:KSPropertyDeclaration
+// ==== Cnno inDepth = true ====
+// constructorParameterFoo:KSPropertyDeclaration
+// constructorParameterFoo:KSValueParameter
 // value:KSValueParameter
-// constructorParameterFoo:KSValueParameter
 // x:KSPropertyDeclaration
 // x:KSValueParameter
 // END
