@@ -4,32 +4,36 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
 class GetSymbolsFromAnnotationProcessor : AbstractTestProcessor() {
-    val result = mutableListOf<String>()
-    override fun toResult(): List<String> = result
+    val result = mutableListOf<List<String>>()
+    override fun toResult(): List<String> = result.flatten()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        result.add("==== Anno superficial====")
-        resolver.getSymbolsWithAnnotation("Anno").forEach { result.add(toString(it)) }
-        result.add("==== Anno in depth ====")
-        resolver.getSymbolsWithAnnotation("Anno", true).forEach { result.add(toString(it)) }
-        result.add("==== Bnno superficial====")
-        resolver.getSymbolsWithAnnotation("Bnno").forEach { result.add(toString(it)) }
-        result.add("==== Bnno in depth ====")
-        resolver.getSymbolsWithAnnotation("Bnno", true).forEach { result.add(toString(it)) }
-        result.add("==== A1 superficial====")
-        resolver.getSymbolsWithAnnotation("A1").forEach { result.add(toString(it)) }
-        result.add("==== A1 in depth ====")
-        resolver.getSymbolsWithAnnotation("A1", true).forEach { result.add(toString(it)) }
-        result.add("==== A2 superficial====")
-        resolver.getSymbolsWithAnnotation("A2").forEach { result.add(toString(it)) }
-        result.add("==== A2 in depth ====")
-        resolver.getSymbolsWithAnnotation("A2", true).forEach { result.add(toString(it)) }
-        result.add("==== Cnno in depth ====")
-        resolver.getSymbolsWithAnnotation("Cnno", true).forEach { result.add(toString(it)) }
+        result.add("==== Anno inDepth = false ====")
+        resolver.getSymbolsWithAnnotation("Anno", inDepth = false).prepare().let { result.add(it) }
+        result.add("==== Anno inDepth = true ====")
+        resolver.getSymbolsWithAnnotation("Anno", inDepth = true).prepare().let { result.add(it) }
+        result.add("==== Bnno inDepth = false ====")
+        resolver.getSymbolsWithAnnotation("Bnno", inDepth = false).prepare().let { result.add(it) }
+        result.add("==== Bnno inDepth = true ====")
+        resolver.getSymbolsWithAnnotation("Bnno", inDepth = true).prepare().let { result.add(it) }
+        result.add("==== A1 inDepth = false ====")
+        resolver.getSymbolsWithAnnotation("A1", inDepth = false).prepare().let { result.add(it) }
+        result.add("==== A1 inDepth = true ====")
+        resolver.getSymbolsWithAnnotation("A1", inDepth = true).prepare().let { result.add(it) }
+        result.add("==== A2 inDepth = false ====")
+        resolver.getSymbolsWithAnnotation("A2", inDepth = false).prepare().let { result.add(it) }
+        result.add("==== A2 inDepth = true ====")
+        resolver.getSymbolsWithAnnotation("A2", inDepth = true).prepare().let { result.add(it) }
+        result.add("==== Cnno inDepth = true ====")
+        resolver.getSymbolsWithAnnotation("Cnno", inDepth = true).prepare().let { result.add(it) }
         return emptyList()
     }
 
-    fun toString(annotated: KSAnnotated): String {
+    private fun Sequence<KSAnnotated>.prepare(): List<String> = toList().map { toString(it) }.sorted()
+
+    private fun <A> MutableList<List<A>>.add(el: A) = add(listOf(el))
+
+    private fun toString(annotated: KSAnnotated): String {
         return "$annotated:${annotated::class.supertypes.first().classifier.toString().substringAfterLast('.')}"
     }
 }
