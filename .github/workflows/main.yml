@@ -50,7 +50,7 @@ jobs:
         df -h
     - name: configure Pagefile
       if: matrix.os == 'windows-latest'
-      uses: al-cheb/configure-pagefile-action@v1.2
+      uses: al-cheb/configure-pagefile-action@v1.5
       with:
         minimum-size: 8
         maximum-size: 16
