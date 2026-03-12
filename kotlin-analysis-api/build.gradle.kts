@@ -107,8 +107,8 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    compileOnly("com.intellij.platform:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    compileOnly("com.intellij.platform:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    compileOnly("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    compileOnly("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     implementation(
         "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
     ) {
@@ -134,16 +134,16 @@ dependencies {
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
     testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
-    testImplementation("com.intellij.platform:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    testImplementation("com.intellij.platform:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    testImplementation("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    testImplementation("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))
     libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
     libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 
     depJarsForCheck("org.jetbrains.kotlin:kotlin-stdlib:$kotlinBaseVersion")
-    depJarsForCheck("com.intellij.platform:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    depJarsForCheck("com.intellij.platform:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    depJarsForCheck("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    depJarsForCheck("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     depJarsForCheck(project(":api"))
     depJarsForCheck(project(":common-deps"))
 
@@ -293,7 +293,7 @@ publishing {
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
                         addDependency(
-                            "com.intellij.platform",
+                            "org.jetbrains.intellij.deps.kotlinx",
                             "kotlinx-coroutines-core-jvm",
                             aaCoroutinesVersion
                         )
