@@ -18,6 +18,7 @@
 // TEST PROCESSOR: DeferredSymbolsProcessor
 // EXPECTED:
 // K
+// Q
 // T
 // f1
 // p2
@@ -34,6 +35,10 @@ class K<@Defer T> {
 
     @Defer
     void f1(@Defer int p2) {
+
+    }
+
+    <@Defer Q> void f2() {
 
     }
 
