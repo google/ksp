@@ -184,6 +184,7 @@ abstract class KspAATask @Inject constructor(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
                 ),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
+                project.dependencies.create("org.jetbrains.kotlin:kotlin-reflect:$KSP_KOTLIN_BASE_VERSION"),
                 project.dependencies.create(
                     "com.intellij.platform:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
                 ),
