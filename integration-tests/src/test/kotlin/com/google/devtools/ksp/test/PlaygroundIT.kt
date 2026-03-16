@@ -5,17 +5,25 @@ import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.jar.*
 
 class PlaygroundIT {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground")
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "playground")
+        project.setup()
+    }
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -27,10 +35,10 @@ class PlaygroundIT {
     ) {
         val result = this.withArguments(*args).build()
 
-        Assert.assertEquals(outcome, result.task(":workload:build")?.outcome)
+        Assertions.assertEquals(outcome, result.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
+        Assertions.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
             jarFile.assertContainsNonNullEntry("TestProcessor.log")
@@ -50,7 +58,7 @@ class PlaygroundIT {
     @Test
     fun testPlayground() {
         // FIXME: `clean` fails to delete files on windows.
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build")
         gradleRunner.buildAndCheck("clean", "build")
@@ -59,7 +67,7 @@ class PlaygroundIT {
     @Test
     fun testPlaygroundJDK8() {
         // FIXME: `clean` fails to delete files on windows.
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
 
         File(project.root, "test-processor/build.gradle.kts").appendText(
             """
@@ -87,10 +95,10 @@ class PlaygroundIT {
     @Test
     fun testConfigurationOfConfiguration() {
         // FIXME: `clean` fails to delete files on windows.
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments(":workload:dependencies", "--info").build().let { result ->
-            Assert.assertTrue(
+            Assertions.assertTrue(
                 result.output.lines().none { it.startsWith("The configuration :workload:ksp") }
             )
         }
@@ -101,7 +109,7 @@ class PlaygroundIT {
     @Test
     fun testBlockOtherCompilerPlugins() {
         // FIXME: `clean` fails to delete files on windows.
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/build.gradle.kts")
@@ -124,7 +132,7 @@ class PlaygroundIT {
         // The first build can be FROM_CACHE or SUCCESS, and we only care about the second build.
         gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build")
         gradleRunner.buildAndCheck("--build-cache", ":workload:clean", "build") {
-            Assert.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
         }
     }
 
@@ -134,7 +142,7 @@ class PlaygroundIT {
             .appendText("\nksp {\n  allWarningsAsErrors = true\n}\n")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").buildAndFail().let { result ->
-            Assert.assertTrue(result.output.contains("This is a harmless warning."))
+            Assertions.assertTrue(result.output.contains("This is a harmless warning."))
         }
     }
 
@@ -145,7 +153,7 @@ class PlaygroundIT {
 
         fun buildAndFileAndCheck() {
             gradleRunner.withArguments("build").buildAndFail().let { result ->
-                Assert.assertTrue(result.output.contains("Function declaration must have a name"))
+                Assertions.assertTrue(result.output.contains("Function declaration must have a name"))
             }
         }
 
@@ -167,7 +175,7 @@ class PlaygroundIT {
         ).writeText("RewriteProcessorProvider")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").buildAndFail().let { result ->
-            Assert.assertTrue(result.output.contains("kotlin.io.FileAlreadyExistsException"))
+            Assertions.assertTrue(result.output.contains("kotlin.io.FileAlreadyExistsException"))
         }
     }
 
@@ -195,15 +203,15 @@ class PlaygroundIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val result = gradleRunner.withArguments("clean", "build").build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+        Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
+        Assertions.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
         project.restore(buildFile.path)
     }
@@ -234,15 +242,15 @@ class PlaygroundIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val result = gradleRunner.withArguments("clean", "build").build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+        Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
+        Assertions.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("hello/HELLO.class").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("com/example/AClassBuilder.class").size > 0)
         }
         project.restore(buildFile.path)
         project.restore(gradleProperties.path)
@@ -264,10 +272,10 @@ class PlaygroundIT {
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("language version: 1.9"))
-            Assert.assertTrue(result.output.contains("api version: 1.9"))
+            Assertions.assertTrue(result.output.contains("language version: 1.9"))
+            Assertions.assertTrue(result.output.contains("api version: 1.9"))
             val expectedKspVersion = "2.0"
-            Assert.assertTrue(result.output.contains("ksp version: $expectedKspVersion"))
+            Assertions.assertTrue(result.output.contains("ksp version: $expectedKspVersion"))
         }
         project.restore(buildFile.path)
     }
@@ -289,14 +297,14 @@ class PlaygroundIT {
         File(project.root, "workload/build.gradle.kts")
             .appendText("\n  excludeProcessor(\"NotMatchingAnything\")\n}\n")
         gradleRunner.withArguments("build").buildAndFail().let {
-            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
-            Assert.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
-            Assert.assertTrue("Unresolved reference 'AClassBuilder'" in it.output)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
+            Assertions.assertTrue("Unresolved reference 'AClassBuilder'" in it.output)
         }
         gradleRunner.withArguments("build").buildAndFail().let {
-            Assert.assertEquals(TaskOutcome.UP_TO_DATE, it.task(":workload:kspKotlin")?.outcome)
-            Assert.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
-            Assert.assertTrue("Unresolved reference 'AClassBuilder'" in it.output)
+            Assertions.assertEquals(TaskOutcome.UP_TO_DATE, it.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.FAILED, it.task(":workload:compileKotlin")?.outcome)
+            Assertions.assertTrue("Unresolved reference 'AClassBuilder'" in it.output)
         }
 
         project.restore("workload/build.gradle.kts")
@@ -322,15 +330,15 @@ class PlaygroundIT {
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("platform: JVM"))
-            Assert.assertTrue(result.output.contains("jvm default mode: no-compatibility"))
+            Assertions.assertTrue(result.output.contains("platform: JVM"))
+            Assertions.assertTrue(result.output.contains("jvm default mode: no-compatibility"))
         }
         project.restore(buildFile.path)
     }
 
     @Test
     fun testProjectExtensionCompilerOptions() {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val properties = File(project.root, "gradle.properties")
         properties.writeText(
             properties.readText().replace(
@@ -350,7 +358,7 @@ class PlaygroundIT {
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments("clean", "build").buildAndFail().let { result ->
-            Assert.assertTrue(
+            Assertions.assertTrue(
                 result.output.contains("Inconsistent JVM-target compatibility detected for tasks")
             )
         }
@@ -372,7 +380,7 @@ class PlaygroundIT {
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments("clean", "build").build().let {
-            Assert.assertFalse(
+            Assertions.assertFalse(
                 it.output.contains(
                     "'-progressive' is meaningful only for the latest language version"
                 )
@@ -386,7 +394,7 @@ class PlaygroundIT {
         File(project.root, "workload/build.gradle.kts").createNewFile()
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").build().let { result ->
-            Assert.assertTrue(result.output.contains("Module name is workload"))
+            Assertions.assertTrue(result.output.contains("Module name is workload"))
         }
     }
 
@@ -396,7 +404,7 @@ class PlaygroundIT {
 
         File(project.root, "workload/src/main/java/Empty.kt").appendText("\n\n")
         gradleRunner.withArguments("clean", "assemble", "-Pksp.incremental.log=false").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
     }
 
@@ -411,10 +419,10 @@ class PlaygroundIT {
         ).appendText("BinaryGenProcessorProvider")
         gradleRunner.buildAndCheck("clean", "build") {
             val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-            Assert.assertTrue(artifact.exists())
+            Assertions.assertTrue(artifact.exists())
 
             JarFile(artifact).use { jarFile ->
-                Assert.assertTrue(jarFile.getEntry("BinaryClass.class").size > 0)
+                Assertions.assertTrue(jarFile.getEntry("BinaryClass.class").size > 0)
             }
         }
     }
@@ -428,7 +436,7 @@ class PlaygroundIT {
                 "com.google.devtools.ksp.processing.SymbolProcessorProvider"
         ).delete()
         gradleRunner.withArguments("build").buildAndFail().let { result ->
-            Assert.assertTrue(result.output.contains("No providers found in processor classpath."))
+            Assertions.assertTrue(result.output.contains("No providers found in processor classpath."))
         }
     }
 
@@ -436,12 +444,12 @@ class PlaygroundIT {
     fun testProviderAndRoundLogging() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("--debug", "clean", "build") { result ->
-            Assert.assertTrue(
+            Assertions.assertTrue(
                 result.output.contains(
                     "i: [ksp] loaded provider(s): [TestProcessorProvider, TestProcessorProvider2]"
                 )
             )
-            Assert.assertTrue(result.output.contains("v: [ksp] round 3 of processing"))
+            Assertions.assertTrue(result.output.contains("v: [ksp] round 3 of processing"))
         }
     }
 }

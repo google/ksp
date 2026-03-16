@@ -4,15 +4,24 @@ import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
-class NullabilityAnnotationsIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("nullability-annotations")
+class NullabilityAnnotationsIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "nullability-annotations")
+        project.setup()
+    }
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -24,7 +33,7 @@ class NullabilityAnnotationsIT() {
     ) {
         val result = this.withArguments(*args).build()
 
-        Assert.assertEquals(outcome, result.task(":workload:build")?.outcome)
+        Assertions.assertEquals(outcome, result.task(":workload:build")?.outcome)
 
         extraCheck(result)
     }
@@ -32,18 +41,18 @@ class NullabilityAnnotationsIT() {
     @Test
     fun testNullableAnnotations() {
         // FIXME: `clean` fails to delete files on windows.
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s0: (String..String?)\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s1: String?\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s2: String\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s3: [@Nullable] String?\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s4: [@NotNull] String\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s5: [@Nullable] String?\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s6: [@NonNull] String\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s7: (String..String?)\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s8: (String..String?)\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s0: (String..String?)\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s1: String?\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s2: String\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s3: [@Nullable] String?\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s4: [@NotNull] String\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s5: [@Nullable] String?\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s6: [@NonNull] String\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s7: (String..String?)\n"))
+            Assertions.assertTrue(result.output.contains("w: [ksp] [Nullability check] s8: (String..String?)\n"))
         }
     }
 }

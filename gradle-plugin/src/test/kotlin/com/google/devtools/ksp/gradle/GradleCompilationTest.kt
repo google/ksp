@@ -28,29 +28,27 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.ValueSource
+import java.io.File
 
-@RunWith(Parameterized::class)
-class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
+@ParameterizedClass
+@ValueSource(booleans = [true, false])
+class GradleCompilationTest(private val isExperimentalPsiResolution: Boolean) {
 
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "experimentalPsiResolution={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
+    @TempDir
+    lateinit var tmpDir: File
+
+    lateinit var testRule: KspIntegrationTestRule
+
+    @BeforeEach
+    fun setup() {
+        testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
     }
-
-    @Rule
-    @JvmField
-    val tmpDir = TemporaryFolder()
-
-    @Rule
-    @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     @Test
     fun errorMessageFailsCompilation() {
@@ -204,7 +202,7 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
     @Test
     fun testCommandLineArgumentProvider() {
         // FIXME
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         testRule.setupAppAsAndroidApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
         testRule.appModule.addSource(
@@ -321,7 +319,7 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
 
     @Test
     fun commandLineArgumentIsIncludedInApoptionsWhenAddedInKspTask() {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
             listOf(

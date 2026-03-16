@@ -4,16 +4,24 @@ import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class KotlinConstsInJavaIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kotlin-consts-in-java")
+class KotlinConstsInJavaIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "kotlin-consts-in-java")
+        project.setup()
+    }
 
     private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
         buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
@@ -25,7 +33,7 @@ class KotlinConstsInJavaIT() {
     ) {
         val result = this.withArguments(*args).build()
 
-        Assert.assertEquals(outcome, result.task(":workload:kspKotlin")?.outcome)
+        Assertions.assertEquals(outcome, result.task(":workload:kspKotlin")?.outcome)
 
         extraCheck(result)
     }
@@ -33,7 +41,7 @@ class KotlinConstsInJavaIT() {
     @Test
     fun testKotlinConstsInJava() {
         // FIXME: `clean` fails to delete files on windows.
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck(":workload:kspKotlin")
 

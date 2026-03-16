@@ -3,14 +3,23 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
-class JavaNestedClassIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("javaNestedClass")
+class JavaNestedClassIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "javaNestedClass")
+        project.setup()
+    }
 
     @Test
     fun testJavaNestedClass() {
@@ -18,6 +27,6 @@ class JavaNestedClassIT() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild = gradleRunner.withArguments("clean", "build").build()
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assertions.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
     }
 }

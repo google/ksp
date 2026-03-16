@@ -21,15 +21,23 @@ import com.google.devtools.ksp.test.fixtures.BuildResultFixture
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class AndroidIncrementalIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
+class AndroidIncrementalIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "playground-android-multi", "playground")
+        project.setup()
+    }
 
     private fun testWithExtraFlags() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -37,8 +45,8 @@ class AndroidIncrementalIT() {
         gradleRunner.withArguments(
             "clean", ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:compileDebugKotlin")?.outcome)
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":application:compileDebugKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:compileDebugKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":application:compileDebugKotlin")?.outcome)
         }
 
         project.root.resolve("workload/src/main/java/com/example/A.kt").also {
@@ -53,7 +61,7 @@ class AndroidIncrementalIT() {
         gradleRunner.withArguments(
             ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
         ).build().let { result ->
-            Assert.assertEquals(
+            Assertions.assertEquals(
                 setOf("workload/src/main/java/com/example/A.kt".replace('/', File.separatorChar)),
                 BuildResultFixture(result).compiledKotlinSources,
             )

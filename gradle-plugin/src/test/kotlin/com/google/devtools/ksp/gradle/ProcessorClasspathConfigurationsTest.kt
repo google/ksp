@@ -18,28 +18,26 @@ package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.ValueSource
+import java.io.File
 
-@RunWith(Parameterized::class)
-class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean) {
+@ParameterizedClass
+@ValueSource(booleans = [true, false])
+class ProcessorClasspathConfigurationsTest(private val isExperimentalPsiResolution: Boolean) {
 
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "experimentalPsiResolution={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
+    @TempDir
+    lateinit var tmpDir: File
+
+    lateinit var testRule: KspIntegrationTestRule
+
+    @BeforeEach
+    fun setup() {
+        testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
     }
-
-    @Rule
-    @JvmField
-    val tmpDir = TemporaryFolder()
-
-    @Rule
-    @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     private val kspConfigs by lazy {
         """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""

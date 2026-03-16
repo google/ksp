@@ -3,19 +3,29 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class BuildCacheIT() {
-    @Rule
-    @JvmField
-    val project1: TemporaryTestProject = TemporaryTestProject("buildcache", "playground")
+class BuildCacheIT {
+    @TempDir
+    lateinit var tempDir1: File
 
-    @Rule
-    @JvmField
-    val project2: TemporaryTestProject = TemporaryTestProject("buildcache", "playground")
+    @TempDir
+    lateinit var tempDir2: File
+
+    lateinit var project1: TemporaryTestProject
+    lateinit var project2: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project1 = TemporaryTestProject(tempDir1, "buildcache", "playground")
+        project1.setup()
+        project2 = TemporaryTestProject(tempDir2, "buildcache", "playground")
+        project2.setup()
+    }
 
     @Test
     fun testBuildCache() {
@@ -28,7 +38,7 @@ class BuildCacheIT() {
             ":workload:clean",
             "build"
         ).build().let {
-            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, it.task(":workload:kspKotlin")?.outcome)
         }
 
         GradleRunner.create().withProjectDir(project2.root).withArguments(
@@ -36,7 +46,7 @@ class BuildCacheIT() {
             ":workload:clean",
             "build"
         ).build().let {
-            Assert.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.FROM_CACHE, it.task(":workload:kspKotlin")?.outcome)
         }
     }
 }

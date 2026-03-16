@@ -3,16 +3,23 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class IncrementalEmptyCPIT {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject =
-        TemporaryTestProject("incremental-classpath2", "incremental-classpath")
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "incremental-classpath2", "incremental-classpath")
+        project.setup()
+    }
 
     private val prop2Dirty = listOf(
         "l1/src/main/kotlin/p1/TopProp1.kt" to setOf(
@@ -28,13 +35,13 @@ class IncrementalEmptyCPIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         prop2Dirty.forEach { (src, _) ->
             File(project.root, src).appendText("\n\n")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
     }
@@ -45,13 +52,13 @@ class IncrementalEmptyCPIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         prop2Dirty.forEach { (src, _) ->
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Int = 1")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
     }
@@ -62,15 +69,15 @@ class IncrementalEmptyCPIT {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         prop2Dirty.forEach { (src, expectedDirties) ->
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Boolean = true")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
-                Assert.assertEquals(expectedDirties, dirties)
+                Assertions.assertEquals(expectedDirties, dirties)
             }
         }
     }

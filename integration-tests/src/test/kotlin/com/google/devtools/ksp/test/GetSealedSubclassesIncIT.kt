@@ -2,15 +2,23 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class GetSealedSubclassesIncIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("sealed-subclasses", "test-processor")
+class GetSealedSubclassesIncIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "sealed-subclasses", "test-processor")
+        project.setup()
+    }
 
     @Test
     fun testGetSealedSubclassesInc() {
@@ -38,20 +46,20 @@ class GetSealedSubclassesIncIT() {
 
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }
-            Assert.assertEquals(expected2, outputs)
+            Assertions.assertEquals(expected2, outputs)
         }
 
         File(project.root, "workload/src/main/kotlin/com/example/Impl3.kt").appendText("package com.example\n\n")
         File(project.root, "workload/src/main/kotlin/com/example/Impl3.kt").appendText("class Impl3 : Sealed()\n")
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }
-            Assert.assertEquals(expected3, outputs)
+            Assertions.assertEquals(expected3, outputs)
         }
 
         File(project.root, "workload/src/main/kotlin/com/example/Impl3.kt").delete()
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }
-            Assert.assertEquals(expected2, outputs)
+            Assertions.assertEquals(expected2, outputs)
         }
     }
 }

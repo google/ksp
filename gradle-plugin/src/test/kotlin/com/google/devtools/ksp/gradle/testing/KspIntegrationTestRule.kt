@@ -18,9 +18,9 @@ package com.google.devtools.ksp.gradle.testing
 
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import java.io.File
 import kotlin.reflect.KClass
 
 /**
@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
  * Test must call [setupAppAsAndroidApp] or [setupAppAsJvmApp] before using the [runner].
  */
 class KspIntegrationTestRule(
-    private val tmpFolder: TemporaryFolder,
+    private val tmpFolder: File,
     private val isExperimentalPsiResolution: Boolean = false
 ) : TestWatcher() {
     /**
@@ -189,6 +189,6 @@ class KspIntegrationTestRule(
 
     override fun starting(description: Description) {
         super.starting(description)
-        testProject = TestProject(tmpFolder.newFolder(), testConfig, isExperimentalPsiResolution)
+        testProject = TestProject(tmpFolder, testConfig, isExperimentalPsiResolution)
     }
 }

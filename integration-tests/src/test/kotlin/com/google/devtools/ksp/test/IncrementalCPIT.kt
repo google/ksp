@@ -3,15 +3,23 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class IncrementalCPIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental-classpath")
+class IncrementalCPIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "incremental-classpath")
+        project.setup()
+    }
 
     private val src2Dirty = listOf(
         "l1/src/main/kotlin/p1/L1.kt" to setOf(
@@ -43,14 +51,14 @@ class IncrementalCPIT() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         src2Dirty.forEach { (src, _) ->
             File(project.root, src).appendText("\n\n")
             gradleRunner.withArguments("assemble").build().let { result ->
                 // Trivial changes should not result in re-processing.
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
 
@@ -58,19 +66,19 @@ class IncrementalCPIT() {
         src2Dirty.forEach { (src, expectedDirties) ->
             File(project.root, src).appendText("\n{ val v$i = ${i++} }\n")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
-                Assert.assertEquals(expectedDirties, dirties)
+                Assertions.assertEquals(expectedDirties, dirties)
             }
         }
 
         src2Dirty.forEach { (src, _) ->
             File(project.root, src).appendText("\n\nclass C${i++}\n")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
                 // Non-signature changes should not affect anything.
-                Assert.assertEquals(emptyMessage, dirties)
+                Assertions.assertEquals(emptyMessage, dirties)
             }
         }
     }
@@ -86,7 +94,7 @@ class IncrementalCPIT() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         // Dummy changes
@@ -94,7 +102,7 @@ class IncrementalCPIT() {
             File(project.root, src).appendText("\n\n")
             gradleRunner.withArguments("assemble").build().let { result ->
                 // Trivial changes should not result in re-processing.
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
 
@@ -103,7 +111,7 @@ class IncrementalCPIT() {
             File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Int = 1")
             gradleRunner.withArguments("assemble").build().let { result ->
                 // Value changes should not result in re-processing.
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
 
@@ -111,9 +119,9 @@ class IncrementalCPIT() {
         func2Dirty.forEach { (src, expectedDirties) ->
             File(project.root, src).writeText("package p1\n\nfun MyTopFunc1(): Double = 1.0")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
-                Assert.assertEquals(expectedDirties, dirties)
+                Assertions.assertEquals(expectedDirties, dirties)
             }
         }
     }
@@ -129,7 +137,7 @@ class IncrementalCPIT() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         // Dummy changes
@@ -137,7 +145,7 @@ class IncrementalCPIT() {
             File(project.root, src).appendText("\n\n")
             gradleRunner.withArguments("assemble").build().let { result ->
                 // Trivial changes should not result in re-processing.
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
 
@@ -146,7 +154,7 @@ class IncrementalCPIT() {
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Int = 1")
             gradleRunner.withArguments("assemble").build().let { result ->
                 // Value changes should not result in re-processing.
-                Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
             }
         }
 
@@ -154,9 +162,9 @@ class IncrementalCPIT() {
         prop2Dirty.forEach { (src, expectedDirties) ->
             File(project.root, src).writeText("package p1\n\nval MyTopProp1: Double = 1.0")
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
-                Assert.assertEquals(expectedDirties, dirties)
+                Assertions.assertEquals(expectedDirties, dirties)
             }
         }
     }
@@ -171,7 +179,7 @@ class IncrementalCPIT() {
             "-Pksp.incremental.intermodule=true",
             "assemble"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
         }
 
         gradleRunner.withArguments(
@@ -181,7 +189,7 @@ class IncrementalCPIT() {
             "-Pksp.incremental.intermodule=true",
             "assemble"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
         }
 
         gradleRunner.withArguments(
@@ -191,7 +199,7 @@ class IncrementalCPIT() {
             "-Pksp.incremental.intermodule=false",
             "assemble"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
         }
 
         gradleRunner.withArguments(
@@ -201,7 +209,7 @@ class IncrementalCPIT() {
             "-Pksp.incremental.intermodule=false",
             "assemble"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
         }
     }
 

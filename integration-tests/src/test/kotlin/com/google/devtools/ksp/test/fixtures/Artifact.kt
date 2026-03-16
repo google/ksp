@@ -1,13 +1,13 @@
 package com.google.devtools.ksp.test.fixtures
 
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import java.io.File
 import java.util.zip.ZipFile
 
 // A snapshot of the digest of output jar.
 class Artifact(file: File) {
     private fun getCRCs(file: File): Map<String, Long> {
-        Assert.assertTrue(file.exists())
+        Assertions.assertTrue(file.exists())
         return ZipFile(file).use {
             it.entries().asSequence().map {
                 it.name to it.crc

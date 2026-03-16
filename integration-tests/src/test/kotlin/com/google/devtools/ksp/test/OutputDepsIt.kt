@@ -4,16 +4,24 @@ import com.google.devtools.ksp.test.fixtures.Artifact
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class OutputDepsIt() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("output-deps")
+class OutputDepsIt {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "output-deps")
+        project.setup()
+    }
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(
@@ -125,11 +133,11 @@ class OutputDepsIt() {
     @Test
     fun testOutputDeps() {
         // FIXME
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
         val cleanArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
 
@@ -141,22 +149,22 @@ class OutputDepsIt() {
             srcFile.appendText("\n\n")
             Thread.sleep(1000)
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val dirties = result.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
-                Assert.assertEquals(expectedDirties, dirties)
+                Assertions.assertEquals(expectedDirties, dirties)
 
                 val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
                 outputRoot.walk().filter { it.isFile() }.forEach {
                     if (it.toRelativeString(outputRoot) in src2Output[src]!!) {
-                        Assert.assertTrue(it.lastModified() > srcFile.lastModified())
+                        Assertions.assertTrue(it.lastModified() > srcFile.lastModified())
                     } else {
-                        Assert.assertTrue(it.lastModified() < srcFile.lastModified())
+                        Assertions.assertTrue(it.lastModified() < srcFile.lastModified())
                     }
                 }
             }
         }
         val incrementalArtifact = Artifact(File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar"))
-        Assert.assertEquals(cleanArtifact, incrementalArtifact)
+        Assertions.assertEquals(cleanArtifact, incrementalArtifact)
     }
 
     @Test
@@ -164,18 +172,18 @@ class OutputDepsIt() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("assemble").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
         }
 
         deletedSrc2Output.forEach { (src, expectedDirties) ->
             File(project.root, src).delete()
             gradleRunner.withArguments("assemble").build().let { result ->
-                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+                Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
                 val outputRoot = File(project.root, "workload/build/generated/ksp/main/")
                 val outputs = outputRoot.walk().filter { it.isFile() }.map {
                     it.toRelativeString(outputRoot).replace(File.separatorChar, '/')
                 }.toList().sorted()
-                Assert.assertEquals(expectedDirties, outputs)
+                Assertions.assertEquals(expectedDirties, outputs)
             }
         }
     }

@@ -2,15 +2,23 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class GeneratedSourcesViaAndroidComponentsIT {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "playground-android-multi", "playground")
+        project.setup()
+    }
 
     @Test
     fun `test no circular dependency for other source generating tasks depending on ksp`() {
@@ -66,9 +74,9 @@ class GeneratedSourcesViaAndroidComponentsIT {
         )
 
         gradleRunner.withArguments(":workload:assembleDebug", "--dry-run", "--stacktrace").build().let { result ->
-            Assert.assertTrue(result.output.contains(":workload:kspDebugKotlin"))
-            Assert.assertTrue(result.output.contains(":workload:compileDebugAidl"))
-            Assert.assertTrue(result.output.contains(":workload:generateDebugSource"))
+            Assertions.assertTrue(result.output.contains(":workload:kspDebugKotlin"))
+            Assertions.assertTrue(result.output.contains(":workload:compileDebugAidl"))
+            Assertions.assertTrue(result.output.contains(":workload:generateDebugSource"))
         }
     }
 }

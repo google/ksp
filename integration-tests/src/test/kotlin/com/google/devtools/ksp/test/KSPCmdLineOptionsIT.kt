@@ -2,19 +2,27 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.net.URLClassLoader
 
-class KSPCmdLineOptionsIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("cmd-options")
+class KSPCmdLineOptionsIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "cmd-options")
+        project.setup()
+    }
 
     private fun getKsp2Main(mainClassName: String): Method {
         val repoPath = "../build/repos/test/com/google/devtools/ksp/"
@@ -63,7 +71,7 @@ class KSPCmdLineOptionsIT() {
     }
 
     fun testKsp2(mainClassName: String, platformArgs: List<String>) {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
 
         val sharedArgs = getKsp2SharedArgs()
         val kspMain = getKsp2Main(mainClassName)
@@ -78,15 +86,15 @@ class KSPCmdLineOptionsIT() {
         kspMain.invoke(null, args.toTypedArray())
 
         val status = File(outDir, "Status.log")
-        Assert.assertTrue(status.exists() && status.readText() == "OK")
+        Assertions.assertTrue(status.exists() && status.readText() == "OK")
 
         val args2 = args + listOf("-processor-options", "error=true")
-        Assert.assertThrows(IllegalStateException::class.java) {
+        Assertions.assertThrows(IllegalStateException::class.java) {
             try {
                 kspMain.invoke(null, args2.toTypedArray())
             } catch (e: InvocationTargetException) {
-                Assert.assertTrue(e.targetException is IllegalStateException)
-                Assert.assertTrue(e.targetException.message == "Error on request")
+                Assertions.assertTrue(e.targetException is IllegalStateException)
+                Assertions.assertTrue(e.targetException.message == "Error on request")
                 throw e.targetException
             }
         }

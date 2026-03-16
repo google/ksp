@@ -1,8 +1,8 @@
 package com.google.devtools.ksp
 
 import com.google.devtools.ksp.common.MemoizedSequence
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class MemoizedSequenceTest {
     @Test
@@ -22,7 +22,8 @@ class MemoizedSequenceTest {
                 s2read.add(s2.next())
             }
         }
-        Assert.assertEquals(listOf(1, 2, 3, 4, 5, 6), s1read)
-        Assert.assertEquals(listOf(1, 2, 3, 4, 5, 6), s2read)
+
+        Assertions.assertEquals(listOf(1, 2, 3, 4, 5, 6), s1read)
+        Assertions.assertEquals(listOf(1, 2, 3, 4, 5, 6), s2read)
     }
 }

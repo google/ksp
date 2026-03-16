@@ -4,31 +4,39 @@ import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Assume
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.jar.*
 
 class MultiplatformIT {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-mpp")
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "playground-mpp")
+        project.setup()
+    }
 
     @Test
     fun testJVM() {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild =
             gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assertions.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-jvm-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
+        Assertions.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
             jarFile.assertContainsNonNullEntry("TestProcessor.log")
@@ -43,21 +51,21 @@ class MultiplatformIT {
 
     @Test
     fun testAndroid() {
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
-        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("mac", ignoreCase = true))
+        Assumptions.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild =
             gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assertions.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
         val classesJar = File(
             project.root,
             "workload/build/intermediates/compile_library_classes_jar/androidMain/" +
                 "bundleAndroidMainClassesToCompileJar/classes.jar"
         )
-        Assert.assertTrue(classesJar.exists())
+        Assertions.assertTrue(classesJar.exists())
 
         JarFile(classesJar).use { jarFile ->
             jarFile.assertContainsNonNullEntry("com/example/AKt.class")

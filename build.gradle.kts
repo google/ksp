@@ -104,8 +104,8 @@ subprojects {
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         configure<JavaPluginExtension> {
             toolchain.languageVersion.set(compileJavaVersion)
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
         configure<KotlinJvmProjectExtension> {
             compilerOptions {

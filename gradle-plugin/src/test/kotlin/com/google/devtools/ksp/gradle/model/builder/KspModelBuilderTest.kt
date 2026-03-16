@@ -18,15 +18,14 @@
 package com.google.devtools.ksp.gradle.model.builder
 
 import com.google.devtools.ksp.gradle.model.Ksp
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.jupiter.api.Assertions
 
 class KspModelBuilderTest {
     @Test
     fun testCanBuild() {
         val modelBuilder = KspModelBuilder()
-        assertTrue(modelBuilder.canBuild(Ksp::class.java.name))
-        assertFalse(modelBuilder.canBuild("wrongModel"))
+        Assertions.assertTrue(modelBuilder.canBuild(Ksp::class.java.name))
+        Assertions.assertFalse(modelBuilder.canBuild("wrongModel"))
     }
 }

@@ -16,9 +16,15 @@ plugins {
 
 dependencies {
     compileOnly(project(":api"))
-    testImplementation("junit:junit:$junitVersion")
-
     ksp(project(":cmdline-parser-gen"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitVersion")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 val sourcesJar = tasks.register<Jar>("sourcesJar") {

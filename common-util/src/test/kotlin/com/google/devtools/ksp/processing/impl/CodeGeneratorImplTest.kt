@@ -3,9 +3,9 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.common.AnyChanges
 import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.Dependencies
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Files
 
@@ -14,7 +14,7 @@ class CodeGeneratorImplTest {
     lateinit var codeGenerator: CodeGeneratorImpl
     lateinit var baseDir: File
 
-    @Before
+    @BeforeEach
     fun setup() {
         baseDir = Files.createTempDirectory("project").toFile()
         val classesDir = File(baseDir, "classes")
@@ -45,15 +45,15 @@ class CodeGeneratorImplTest {
         codeGenerator.createNewFile(Dependencies.ALL_FILES, "a.b.c", "Test", "")
 
         val files = codeGenerator.generatedFile.toList()
-        Assert.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
-        Assert.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
-        Assert.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
-        Assert.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
+        Assertions.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
+        Assertions.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
+        Assertions.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
+        Assertions.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
 
         try {
             codeGenerator.outputs
         } catch (e: Exception) {
-            Assert.fail("Failed to get outputs: ${e.message}")
+            Assertions.fail("Failed to get outputs: ${e.message}")
         }
     }
 
@@ -65,15 +65,15 @@ class CodeGeneratorImplTest {
         codeGenerator.createNewFile(Dependencies.ALL_FILES, "a/b/c", "Test", "")
 
         val files = codeGenerator.generatedFile.toList()
-        Assert.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
-        Assert.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
-        Assert.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
-        Assert.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
+        Assertions.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
+        Assertions.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
+        Assertions.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
+        Assertions.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
 
         try {
             codeGenerator.outputs
         } catch (e: Exception) {
-            Assert.fail("Failed to get outputs: ${e.message}")
+            Assertions.fail("Failed to get outputs: ${e.message}")
         }
     }
 
@@ -85,15 +85,15 @@ class CodeGeneratorImplTest {
         codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/Test", "")
 
         val files = codeGenerator.generatedFile.toList()
-        Assert.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
-        Assert.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
-        Assert.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
-        Assert.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
+        Assertions.assertEquals(File(baseDir, "java/a/b/c/Test.java"), files[0])
+        Assertions.assertEquals(File(baseDir, "kotlin/a/b/c/Test.kt"), files[1])
+        Assertions.assertEquals(File(baseDir, "classes/a/b/c/Test.class"), files[2])
+        Assertions.assertEquals(File(baseDir, "resources/a/b/c/Test"), files[3])
 
         try {
             codeGenerator.outputs
         } catch (e: Exception) {
-            Assert.fail("Failed to get outputs: ${e.message}")
+            Assertions.fail("Failed to get outputs: ${e.message}")
         }
     }
 
@@ -105,15 +105,15 @@ class CodeGeneratorImplTest {
         codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "")
 
         val files = codeGenerator.generatedFile.toList()
-        Assert.assertEquals(File(baseDir, "java/a/b/c/dir.with.dot/Test.java"), files[0])
-        Assert.assertEquals(File(baseDir, "kotlin/a/b/c/dir.with.dot/Test.kt"), files[1])
-        Assert.assertEquals(File(baseDir, "classes/a/b/c/dir.with.dot/Test.class"), files[2])
-        Assert.assertEquals(File(baseDir, "resources/a/b/c/dir.with.dot/Test"), files[3])
+        Assertions.assertEquals(File(baseDir, "java/a/b/c/dir.with.dot/Test.java"), files[0])
+        Assertions.assertEquals(File(baseDir, "kotlin/a/b/c/dir.with.dot/Test.kt"), files[1])
+        Assertions.assertEquals(File(baseDir, "classes/a/b/c/dir.with.dot/Test.class"), files[2])
+        Assertions.assertEquals(File(baseDir, "resources/a/b/c/dir.with.dot/Test"), files[3])
 
         try {
             codeGenerator.outputs
         } catch (e: Exception) {
-            Assert.fail("Failed to get outputs: ${e.message}")
+            Assertions.fail("Failed to get outputs: ${e.message}")
         }
     }
 
@@ -121,9 +121,9 @@ class CodeGeneratorImplTest {
     fun testCreatingAFileByPathWithInvalidPath() {
         try {
             codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "../../b/c/Test", "java")
-            Assert.fail()
+            Assertions.fail()
         } catch (e: java.lang.IllegalStateException) {
-            Assert.assertEquals(e.message, "requested path is outside the bounds of the required directory")
+            Assertions.assertEquals(e.message, "requested path is outside the bounds of the required directory")
         }
     }
 }
