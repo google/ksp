@@ -125,9 +125,7 @@ class PsiResolutionStrategy(
     }
 
     /**
-     * Returns the fully qualified name of the annotation.
-     * If the annotation is an alias, it first resolves the alias and then returns the fully qualified name
-     * of the resolved type.
+     * Returns all annotation entries for `element`.
      */
     private fun getAnnotationsFor(element: PsiElement): Collection<KtOrPsiAnnotation> = analyze {
         when (element) {
