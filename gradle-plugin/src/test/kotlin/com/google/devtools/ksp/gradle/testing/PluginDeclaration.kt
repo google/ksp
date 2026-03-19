@@ -26,6 +26,7 @@ package com.google.devtools.ksp.gradle.testing
  *
  * To create an instance, use the helper methods in the companion.
  */
+@ConsistentCopyVisibility
 data class PluginDeclaration private constructor(
     val text: String,
     val version: String

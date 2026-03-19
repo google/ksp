@@ -81,7 +81,7 @@ val KSNode.containingFile: KSFile?
         while (parent != null && parent !is KSFile) {
             parent = parent.parent
         }
-        return parent as? KSFile?
+        return parent
     }
 
 /**
