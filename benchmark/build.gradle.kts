@@ -34,7 +34,7 @@ application {
     mainClass = "com.google.devtools.ksp.BenchRunner"
 }
 tasks.withType<KotlinCompile> {
-    compilerOptions.jvmTarget = "1.8"
+    compilerOptions.jvmTarget = "17"
 }
 tasks.withType<Jar> {
     manifest {

@@ -91,7 +91,7 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
         return buildList {
             while (self != null) {
                 add(self.toSignature())
-                self = (self?.declaration as? KSTypeAlias)?.type?.resolve()
+                self = (self.declaration as? KSTypeAlias)?.type?.resolve()
             }
         }
     }
