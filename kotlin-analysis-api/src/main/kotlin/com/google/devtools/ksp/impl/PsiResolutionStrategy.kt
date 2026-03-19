@@ -92,17 +92,46 @@ class PsiResolutionStrategy(
         AAResolutionStrategy(newKSFiles, deferredSymbols)
     }
 
+    /**
+     * Cache for [getSymbolsWithAnnotation] when `inDepth = false`.
+     */
     private val annotationToSymbolsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        groupSymbolsByAnnotations(newKSFiles).merge(restoreDeferredAnnotationsMapping())
+        groupSymbolsByAnnotations(newKSFiles).merge(deferredSymbolsGroupedByAnnotations)
     }
 
+    /**
+     * Cache of restored [KSAnnotated] symbols computed from the [deferredSymbols] of the previous round.
+     */
     private val deferredSymbolsRestored: List<KSAnnotated> by lazy {
         deferredSymbols.values.flatten().mapNotNull { it.restore() }.distinct()
     }
 
-    private fun restoreDeferredAnnotationsMapping(): Map<String, List<KSAnnotated>> =
+    /**
+     * The [deferredSymbolsRestored] grouped by their fully qualified annotation names.
+     *
+     * See [groupSymbolsByAnnotations] for an example of the grouping.
+     */
+    private val deferredSymbolsGroupedByAnnotations: Map<String, Collection<KSAnnotated>> by lazy {
         deferredSymbolsRestored.flatGroupBy { sym -> sym.annotations.mapNotNull { it.getFqn() }.toSet() }
+    }
 
+    /**
+     * Groups all annotated symbols in [files] by their fully qualified annotation names.
+     *
+     * In other words, if `fun1, fun2, fun3` are annotated as follows:
+     * ```
+     * @Annotation1 fun fun1
+     * @Annotation1 @Annotation2 fun fun2
+     * @Annotation2 @Annotation3 fun fun3
+     * ```
+     * Then the result is
+     *
+     * ```
+     * "Annotation1" -> [fun1, fun2]
+     * "Annotation2" -> [fun2, fun3]
+     * "Annotation3" -> [fun3]
+     * ```
+     */
     private fun groupSymbolsByAnnotations(files: List<KSFile>): Map<String, Collection<KSAnnotated>> =
         files
             .flatMap { collectAnnotatedPsiElementsIn(it) }
@@ -141,6 +170,9 @@ class PsiResolutionStrategy(
         }
     }
 
+    /**
+     * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
+     */
     private fun PsiElement.resolve(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated> =
         when (val element = this@resolve) {
             // Kotlin sources
@@ -173,6 +205,9 @@ class PsiResolutionStrategy(
                 error("Unreachable: ${element.javaClass}")
         }
 
+    /**
+     * Resolves this [KtDeclaration] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
+     */
     private fun KtDeclaration.resolve(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated> {
         // TODO: This perform case distinction instead of getTargetedSymbol
         if (annotationEntry !is KtEntry) {
@@ -182,9 +217,15 @@ class PsiResolutionStrategy(
         return ksSym.getTargetedSymbol(annotationEntry.useSiteTarget)
     }
 
+    /**
+     * Resolves the [KSFileImpl] corresponding to this [KtFile].
+     */
     private fun KtFile.resolve(): KSFileImpl =
         analyze { symbol }.toKSFile()
 
+    /**
+     * Resolves the [KSValueParameter] corresponding to this [PsiParameter].
+     */
     private fun PsiParameter.resolve(): KSValueParameter {
         val functionDecl = callableSymbol.toKSFunctionDeclaration()
             ?: error(
@@ -195,6 +236,9 @@ class PsiResolutionStrategy(
         return functionDecl.parameters[parameterIndex()]
     }
 
+    /**
+     * Resolves the [KSTypeParameter]s corresponding to this [PsiTypeParameter].
+     */
     private fun PsiTypeParameter.resolve(): Collection<KSTypeParameter> = when (val decl = parent.parent) {
         is PsiMethod ->
             listOf(resolveTypeParameterOfMethod(decl))
@@ -206,12 +250,18 @@ class PsiResolutionStrategy(
             error("Unexpected Java declaration at ${decl.toLocation()}: ${decl.javaClass}")
     }
 
+    /**
+     * Resolves the [KSClassDeclarationImpl] corresponding to this [PsiClass].
+     */
     private fun PsiClass.resolve(): KSClassDeclarationImpl {
         val sym = analyze { namedClassSymbol }
             ?: error("Unexpected null named class symbol at ${toLocation()}: $javaClass")
         return sym.toKSClassDeclaration()
     }
 
+    /**
+     * Resolves the [KSPropertyDeclaration] corresponding to this [PsiField].
+     */
     private fun PsiField.resolve(): KSPropertyDeclaration {
         val sym = analyze { this@resolve.callableSymbol }
             ?: error("Unexpected null callable symbol at ${toLocation()}: $javaClass")
@@ -219,6 +269,9 @@ class PsiResolutionStrategy(
             ?: error("Unexpected null KSPropertyDeclaration at ${toLocation()}: $javaClass")
     }
 
+    /**
+     * Resolves the [KSFunctionDeclarationImpl] corresponding to this [PsiMethod].
+     */
     private fun PsiMethod.resolve(): KSFunctionDeclarationImpl {
         val sym = analyze { callableSymbol }
             ?: error("Unexpected null callable symbol at ${toLocation()}: $javaClass")
@@ -314,6 +367,9 @@ class PsiResolutionStrategy(
                 listOf(this) // FIXME: Correct impl
         }
 
+    /**
+     * Resolves this [PsiTypeParameter] to its [KSTypeParameter] representation within [method].
+     */
     private fun PsiTypeParameter.resolveTypeParameterOfMethod(method: PsiMethod): KSTypeParameter {
         val callableSym = analyze { method.callableSymbol }
             ?: error("Unexpected null callable symbol at ${method.toLocation()}: ${method.javaClass}")
@@ -326,6 +382,9 @@ class PsiResolutionStrategy(
         return functionDecl.typeParameters[parameterIndex]
     }
 
+    /**
+     * Resolves this [PsiTypeParameter] to its [KSTypeParameter] representations within [clazz].
+     */
     private fun PsiTypeParameter.resolveTypeParameterOfClass(clazz: PsiClass): List<KSTypeParameter> {
         val classSym = analyze { clazz.namedClassSymbol }
             ?: error("Unexpected named class symbol at ${clazz.toLocation()}: ${clazz.javaClass}")
@@ -394,6 +453,9 @@ class PsiResolutionStrategy(
             }
         }
 
+        /**
+         * The use-site target specified for this annotation entry.
+         */
         val useSiteTarget: AnnotationUseSiteTarget? by lazy {
             annotation.useSiteTarget?.getAnnotationUseSiteTarget()?.toKSAnnotationUseSiteTarget()
         }
