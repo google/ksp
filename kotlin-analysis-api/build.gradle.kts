@@ -96,7 +96,7 @@ dependencies {
     implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
     implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
     implementation("com.fasterxml:aalto-xml:$aaAaltoXmlVersion") { isTransitive = false }
-    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
     implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
     implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
     implementation("org.jetbrains.intellij.deps:trove4j:1.0.20200330") { isTransitive = false }
