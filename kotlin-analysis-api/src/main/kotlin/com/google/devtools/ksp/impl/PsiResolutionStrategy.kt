@@ -137,7 +137,7 @@ class PsiResolutionStrategy(
             .flatMap { collectAnnotatedPsiElementsIn(it) }
             .flatGroupBy { getAnnotationsFor(it) }
             .mapValues { entry ->
-                entry.value.flatMap { it.resolve(entry.key) }
+                entry.value.flatMap { it.resolveToKSAnnotated(entry.key) }
             }
             .mergeMapKeys {
                 it.key.qualifiedName ?: error("Unexpected unqualified name for ${it.key.javaClass}")
@@ -173,8 +173,8 @@ class PsiResolutionStrategy(
     /**
      * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
      */
-    private fun PsiElement.resolve(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated> =
-        when (val element = this@resolve) {
+    private fun PsiElement.resolveToKSAnnotated(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated> =
+        when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
             is KtDeclaration ->
                 element.resolve(annotationEntry)
