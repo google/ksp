@@ -57,7 +57,6 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.extension.kotlin.ContextExtensionsKt not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarArchiveEntry not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarArchiveOutputStream not found
-   com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarConstants not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream not found
    com.intellij.util.io.Decompressor$Tar              -> org.apache.commons.compress.archivers.tar.TarArchiveEntry not found
