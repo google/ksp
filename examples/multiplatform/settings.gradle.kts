@@ -13,5 +13,5 @@ pluginManagement {
 
 rootProject.name = "multiplatform"
 
+include(":processors")
 include(":workload")
-include(":test-processor")
