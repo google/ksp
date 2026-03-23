@@ -13,5 +13,6 @@ pluginManagement {
 
 rootProject.name = "playground"
 
+include(":annotations")
+include(":processors")
 include(":workload")
-include(":test-processor")
