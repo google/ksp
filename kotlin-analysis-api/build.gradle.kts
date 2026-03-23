@@ -1,10 +1,28 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.RelativizingInternalPathProvider
 import com.google.devtools.ksp.RelativizingPathProvider
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.commons.ClassRemapper
+import org.objectweb.asm.commons.Remapper
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.util.jar.JarFile
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.ow2.asm:asm:9.9.1")
+        classpath("org.ow2.asm:asm-commons:9.9.1")
+    }
+}
 
 val signingKey: String? by project
 val signingPassword: String? by project
@@ -47,6 +65,73 @@ val filteredLog4j = tasks.register<Jar>("filteredLog4j") {
     archiveFileName.set("log4j-filtered.jar")
 }
 
+val intellijOriginal: Configuration by configurations.creating {
+    isTransitive = false
+}
+
+/**
+ * Rewrites any use of `kotlinx/coroutines/internal/intellij/IntellijCoroutines` to
+ * `com/intellij/util/IntelliJCoroutinesFacade` in dependencies declared in the
+ * `intellijOriginal` configuration.
+ */
+abstract class TransformIntellijDeps : DefaultTask() {
+    @get:InputFiles
+    abstract val inputJars: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun transform() {
+        val remapper = object : Remapper() {
+            override fun map(internalName: String): String {
+                if (internalName == "kotlinx/coroutines/internal/intellij/IntellijCoroutines") {
+                    return "com/intellij/util/IntelliJCoroutinesFacade"
+                }
+                return super.map(internalName)
+            }
+        }
+
+        outputDir.get().asFile.apply {
+            if (exists()) deleteRecursively()
+            mkdirs()
+        }
+
+        inputJars.forEach { jarFile ->
+            val outputFile = outputDir.file(jarFile.name).get().asFile
+            ZipOutputStream(outputFile.outputStream()).use { zos ->
+                ZipFile(jarFile).use { zip ->
+                    for (entry in zip.entries()) {
+                        if (entry.isDirectory) {
+                            zos.putNextEntry(ZipEntry(entry.name))
+                            zos.closeEntry()
+                            continue
+                        }
+                        val bytes = zip.getInputStream(entry).readBytes()
+                        val newBytes = if (entry.name.endsWith(".class")) {
+                            val cr = ClassReader(bytes)
+                            val cw = ClassWriter(0)
+                            val cv = ClassRemapper(cw, remapper)
+                            cr.accept(cv, 0)
+                            cw.toByteArray()
+                        } else {
+                            bytes
+                        }
+                        zos.putNextEntry(ZipEntry(entry.name))
+                        zos.write(newBytes)
+                        zos.closeEntry()
+                    }
+                }
+            }
+        }
+    }
+}
+
+val transformedIntellijDeps = tasks.register<TransformIntellijDeps>("transformedIntellijDeps") {
+    inputJars.from(intellijOriginal)
+    outputDir.set(layout.buildDirectory.dir("transformedIntellijDeps"))
+}
+
 dependencies {
     listOf(
         "com.jetbrains.intellij.platform:util-rt",
@@ -66,9 +151,10 @@ dependencies {
         "com.jetbrains.intellij.java:java-psi",
         "com.jetbrains.intellij.java:java-psi-impl",
     ).forEach {
-        implementation("$it:$aaIntellijVersion") { isTransitive = false }
+        intellijOriginal("$it:$aaIntellijVersion")
         depSourceJars("$it:$aaIntellijVersion:sources") { isTransitive = false }
     }
+    implementation(files(transformedIntellijDeps.map { it.outputDir.asFileTree }))
 
     listOf(
         "org.jetbrains.kotlin:analysis-api-k2-for-ide",
@@ -183,15 +269,20 @@ tasks.withType<ShadowJar>().configureEach {
 }
 
 abstract class ValidateShadowJar : DefaultTask() {
-    @get:Inject abstract val execOperations: ExecOperations
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
-    @get:InputFile abstract val inputFile: RegularFileProperty
+    @get:InputFile
+    abstract val inputFile: RegularFileProperty
 
-    @get:InputFiles abstract val classpath: ConfigurableFileCollection
+    @get:InputFiles
+    abstract val classpath: ConfigurableFileCollection
 
-    @get:InputFile abstract val baselineFile: RegularFileProperty
+    @get:InputFile
+    abstract val baselineFile: RegularFileProperty
 
-    @get:OutputFile abstract val outputFile: RegularFileProperty
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
     @TaskAction
     fun validate() {
@@ -298,7 +389,12 @@ publishing {
                             aaCoroutinesVersion
                         )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version, "compile")
-                        addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version, "compile")
+                        addDependency(
+                            "com.google.devtools.ksp",
+                            "symbol-processing-common-deps",
+                            version,
+                            "compile"
+                        )
                     }
                 }
             }
