@@ -33,7 +33,7 @@ class AndroidDataBindingBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
             ":app:assemble",
             "--configuration-cache-problems=warn",
             "--info",
-            "--stacktrace"
+            "--stacktrace",
         )
             .build().let { result ->
                 val output = result.output.lines()
