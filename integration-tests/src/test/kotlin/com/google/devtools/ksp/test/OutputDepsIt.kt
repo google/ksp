@@ -8,12 +8,24 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class OutputDepsIt() {
+@RunWith(Parameterized::class)
+class OutputDepsIt(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("output-deps")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "output-deps",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     val src2Dirty = listOf(
         "workload/src/main/java/p1/J1.java" to setOf(

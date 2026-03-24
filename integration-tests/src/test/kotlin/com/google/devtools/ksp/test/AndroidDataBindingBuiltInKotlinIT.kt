@@ -5,11 +5,23 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class AndroidDataBindingBuiltInKotlinIT {
+@RunWith(Parameterized::class)
+class AndroidDataBindingBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("android-data-binding-builtinkotlin")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "android-data-binding-builtinkotlin",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testPlaygroundAndroid() {

@@ -4,12 +4,24 @@ import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class BuildCacheIncrementalIT() {
+@RunWith(Parameterized::class)
+class BuildCacheIncrementalIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("buildcache-incremental")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "buildcache-incremental",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     // See https://github.com/google/ksp/issues/2042 for details
     @Test

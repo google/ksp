@@ -8,13 +8,27 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.JarFile
 
-class AndroidIT() {
+@RunWith(Parameterized::class)
+class AndroidIT(experimentalPsiResolution: Boolean) {
+
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "playground-android",
+        "playground",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testPlaygroundAndroid() {

@@ -7,12 +7,25 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class JavaOnlyIT() {
+@RunWith(Parameterized::class)
+class JavaOnlyIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("java-only", "test-processor")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "java-only",
+        "test-processor",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testJavaOnly() {
