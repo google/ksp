@@ -273,7 +273,7 @@ class PsiResolutionStrategy(
      * Resolves the [KSFunctionDeclarationImpl] corresponding to this [PsiMethod].
      */
     private fun PsiMethod.resolve(): KSFunctionDeclarationImpl {
-        val sym = analyze { callableSymbol }
+        val sym = analyze { this@resolve.callableSymbol }
             ?: error("Unexpected null callable symbol at ${toLocation()}: $javaClass")
         return sym.toKSFunctionDeclaration()
             ?: error("Unexpected null KSFunctionDeclaration at ${toLocation()}: $javaClass")
