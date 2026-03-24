@@ -6,13 +6,25 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.JarFile
 
-class InitPlusProviderIT() {
+@RunWith(Parameterized::class)
+class InitPlusProviderIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("init-plus-provider")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "init-plus-provider",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testInitPlusProvider() {

@@ -7,12 +7,24 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class IncrementalIT() {
+@RunWith(Parameterized::class)
+class IncrementalIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("incremental")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "incremental",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     // K2 did some more lookups, which might be a spec change or potential optimization opportunity.
     // TODO: check with JetBrains.

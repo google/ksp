@@ -6,15 +6,27 @@ import org.junit.Assert
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.net.URLClassLoader
 
-class KSPCmdLineOptionsIT() {
+@RunWith(Parameterized::class)
+class KSPCmdLineOptionsIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("cmd-options")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "cmd-options",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     private fun getKsp2Main(mainClassName: String): Method {
         val repoPath = "../build/repos/test/com/google/devtools/ksp/"

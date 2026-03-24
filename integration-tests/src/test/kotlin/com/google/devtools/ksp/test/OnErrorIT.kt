@@ -5,12 +5,24 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class OnErrorIT() {
+@RunWith(Parameterized::class)
+class OnErrorIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("on-error")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "on-error",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testOnError() {

@@ -6,12 +6,25 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class PartialCleanIT() {
+@RunWith(Parameterized::class)
+class PartialCleanIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("partial-clean", "test-processor")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "partial-clean",
+        "test-processor",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testWorkaroundForIncorrectlyMarkedInputs() {
