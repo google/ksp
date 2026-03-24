@@ -6,6 +6,7 @@ import java.io.File
 class TemporaryTestProject(
     projectName: String,
     baseProject: String? = null,
+    val experimentalPsiResolution: Boolean
 ) : TemporaryFolder() {
     private val testProjectSrc = File("src/test/resources", projectName)
     private val baseProjectSrc = baseProject?.let { File("src/test/resources", baseProject) }
@@ -31,6 +32,7 @@ class TemporaryTestProject(
         appendProperty("org.gradle.configuration-cache=true")
         appendProperty("kotlin.jvm.target.validation.mode=warning")
         appendProperty("ksp.incremental.log=true")
+        appendProperty("ksp.experimental.psi.resolution=$experimentalPsiResolution")
         appendProperty("android.useAndroidX=true")
 
         appendProperty("org.gradle.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m")

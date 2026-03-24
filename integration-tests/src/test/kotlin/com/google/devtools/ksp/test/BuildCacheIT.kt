@@ -6,16 +6,33 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class BuildCacheIT() {
+@RunWith(Parameterized::class)
+class BuildCacheIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project1: TemporaryTestProject = TemporaryTestProject("buildcache", "playground")
+    val project1: TemporaryTestProject = TemporaryTestProject(
+        "buildcache",
+        "playground",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
 
     @Rule
     @JvmField
-    val project2: TemporaryTestProject = TemporaryTestProject("buildcache", "playground")
+    val project2: TemporaryTestProject = TemporaryTestProject(
+        "buildcache",
+        "playground",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testBuildCache() {

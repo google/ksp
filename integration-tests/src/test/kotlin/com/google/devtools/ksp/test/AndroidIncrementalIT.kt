@@ -24,12 +24,26 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
-class AndroidIncrementalIT() {
+@RunWith(Parameterized::class)
+class AndroidIncrementalIT(experimentalPsiResolution: Boolean) {
+
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-multi", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "playground-android-multi",
+        "playground",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     private fun testWithExtraFlags() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)

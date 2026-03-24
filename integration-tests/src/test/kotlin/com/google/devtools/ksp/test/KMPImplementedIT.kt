@@ -9,13 +9,25 @@ import org.junit.Assume
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.util.jar.*
 
-class KMPImplementedIT {
+@RunWith(Parameterized::class)
+class KMPImplementedIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kmp")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "kmp",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     private fun verify(jarName: String, contents: List<String>) {
         val artifact = File(project.root, jarName)

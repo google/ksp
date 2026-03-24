@@ -5,11 +5,24 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class LegacyKaptKspIT {
+@RunWith(Parameterized::class)
+class LegacyKaptKspIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("legacy-kapt", "playground")
+    val project: TemporaryTestProject = TemporaryTestProject(
+        "legacy-kapt",
+        "playground",
+        experimentalPsiResolution = experimentalPsiResolution
+    )
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data(): Collection<Boolean> = listOf(true, false)
+    }
 
     @Test
     fun testPlaygroundAndroid() {
