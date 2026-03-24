@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.common.merge
 import com.google.devtools.ksp.common.mergeMapKeys
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
@@ -80,7 +79,7 @@ class PsiResolutionStrategy(
         if (inDepth)
             aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true)
         else
-            annotationToSymbolsCache[annotationName]?.asSequence() ?: emptySequence()
+            getAnnotatedSymbols(annotationName)
 
     /**
      * Calls to [getSymbolsWithAnnotation] with `inDepth = true` are
@@ -93,26 +92,31 @@ class PsiResolutionStrategy(
     }
 
     /**
+     * Returns the symbols annotated with `annotationName`.
+     */
+    private fun getAnnotatedSymbols(annotationName: String): Sequence<KSAnnotated> {
+        val newSymbols = annotationToSymbolsCache[annotationName]?.value ?: emptyList()
+        val restoredSymbols = deferredSymbolsGroupedByAnnotations[annotationName] ?: emptyList()
+        // N.B.: Convert `newSymbols` to sequence **before** appending `restoredSymbols`
+        // to avoid eagerly appending lists.
+        return newSymbols.asSequence() + restoredSymbols
+    }
+
+    /**
      * Cache for [getSymbolsWithAnnotation] when `inDepth = false`.
      */
-    private val annotationToSymbolsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        groupSymbolsByAnnotations(newKSFiles).merge(deferredSymbolsGroupedByAnnotations)
+    private val annotationToSymbolsCache: Map<String, Lazy<Collection<KSAnnotated>>> by lazy {
+        groupSymbolsByAnnotations(newKSFiles)
     }
 
     /**
-     * Cache of restored [KSAnnotated] symbols computed from the [deferredSymbols] of the previous round.
-     */
-    private val deferredSymbolsRestored: List<KSAnnotated> by lazy {
-        deferredSymbols.values.flatten().mapNotNull { it.restore() }.distinct()
-    }
-
-    /**
-     * The [deferredSymbolsRestored] grouped by their fully qualified annotation names.
+     * [deferredSymbols] grouped by their fully qualified annotation names.
      *
      * See [groupSymbolsByAnnotations] for an example of the grouping.
      */
     private val deferredSymbolsGroupedByAnnotations: Map<String, Collection<KSAnnotated>> by lazy {
-        deferredSymbolsRestored.flatGroupBy { sym -> sym.annotations.mapNotNull { it.getFqn() }.toSet() }
+        deferredSymbols.values.flatten().mapNotNull { it.restore() }.distinct()
+            .flatGroupBy { sym -> sym.annotations.mapNotNull { it.getFqn() }.toSet() }
     }
 
     /**
@@ -132,15 +136,15 @@ class PsiResolutionStrategy(
      * "Annotation3" -> [fun3]
      * ```
      */
-    private fun groupSymbolsByAnnotations(files: List<KSFile>): Map<String, Collection<KSAnnotated>> =
+    private fun groupSymbolsByAnnotations(files: List<KSFile>): Map<String, Lazy<Collection<KSAnnotated>>> =
         files
             .flatMap { collectAnnotatedPsiElementsIn(it) }
             .flatGroupBy { getAnnotationsFor(it) }
             .mapValues { entry ->
-                entry.value.flatMap { it.resolveToKSAnnotated(entry.key) }
+                lazy { entry.value.flatMap { it.resolveToKSAnnotated(entry.key) } }
             }
             .mergeMapKeys {
-                it.key.qualifiedName ?: error("Unexpected unqualified name for ${it.key.javaClass}")
+                it.qualifiedName ?: error("Unexpected unqualified name for ${it.javaClass}")
             }
 
     /**
