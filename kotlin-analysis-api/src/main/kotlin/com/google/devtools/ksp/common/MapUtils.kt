@@ -26,13 +26,21 @@ package com.google.devtools.ksp.common
  * `k3 -> [a, b, c, d, e]`.
  * Note the list is deduplicated.
  */
-internal fun <K, V, R> Map<K, Collection<V>>.mergeMapKeys(
-    transform: (Map.Entry<K, Collection<V>>) -> R
-): Map<R, Collection<V>> =
-    mutableMapOf<R, MutableSet<V>>().apply {
+internal fun <K, V, R> Map<K, Lazy<Collection<V>>>.mergeMapKeys(
+    transform: (K) -> R
+): Map<R, Lazy<Collection<V>>> =
+    mutableMapOf<R, Lazy<Collection<V>>>().apply {
         this@mergeMapKeys.forEach {
-            transform(it).let { newKey ->
-                getOrPut(newKey, ::mutableSetOf).addAll(it.value)
+            transform(it.key).let { newKey ->
+                if (newKey in this) {
+                    // N.B.: Store the old value in a variable so the value is captured in the lazy
+                    // lambda, instead of capturing the indexing expression `this[newKey]`, which
+                    // by recursion results in stack overflow.
+                    val old = this[newKey]!!
+                    this[newKey] = lazy { old.value.plus(it.value.value).toSet() }
+                } else {
+                    this[newKey] = it.value
+                }
             }
         }
     }
