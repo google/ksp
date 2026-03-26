@@ -18,7 +18,7 @@ dependencies {
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    testImplementation("org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
 }
 
 fun Test.configureCommonSettings() {
