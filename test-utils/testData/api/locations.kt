@@ -17,25 +17,33 @@
 
 // TEST PROCESSOR: LocationsProcessor
 // EXPECTED:
-// A:K.kt:49
+// A:K.kt:57
 // File: K.kt:K.kt:1
-// K:J.java:71
-// K:K.kt:52
-// T:J.java:71
-// T:K.kt:52
-// f1:J.java:75
-// f1:K.kt:59
-// p1:K.kt:54
-// p2:J.java:75
-// p2:K.kt:59
-// v1:K.kt:53
-// v1:K.kt:53
-// v2:J.java:72
-// v2:K.kt:56
-// v3.getter():K.kt:64
-// v3.setter():K.kt:65
-// v3:J.java:80
+// K:J.java:81
+// K:K.kt:60
+// Q:J.java:89
+// Q:K.kt:69
+// T:J.java:81
+// T:J.java:81
+// T:K.kt:60
+// delegateProp:K2.kt:116
+// f1:J.java:85
+// f1:K.kt:67
+// fieldProp:K2.kt:111
+// p1:K.kt:62
+// p2:J.java:85
+// p2:K.kt:67
+// v1:K.kt:61
+// v1:K.kt:61
+// v2:J.java:82
+// v2:K.kt:64
+// v3.getter():K.kt:74
+// v3.setter():K.kt:75
+// v3:J.java:94
+// value:K2.kt:119
+// x1.getter():NonExistLocation
 // END
+
 
 // FILE: Location.kt
 
@@ -58,6 +66,8 @@ class K<@Location T>(
     @Location
     fun f1(@Location p2: Int) = Unit
 
+    fun <@Location Q> f2() = Unit
+
     @get:Location
     @set:Location
     var v3: List<Double>
@@ -76,6 +86,37 @@ class K<@Location T> {
 
     }
 
+    <@Location Q> void f2() {
+
+    }
+
     @Location
     List<Double> v3 = List<double>()
+
+    Runnable f3() {
+        return new Runnable() {
+            @Location void run() {}
+        };
+    }
 }
+
+// FILE: K1.kt
+
+class A(@get:Location val x1: Int)
+
+// FILE: K2.kt
+
+class L {
+    @field:Location
+    val fieldProp: Int = 0
+
+    private val backing = 42
+
+    @delegate:Location
+    val delegateProp: Int by backing
+
+    var setParamProp: Int = 0
+        set(@setparam:Location value) { field = value }
+}
+
+fun @receiver:Location String.extFun() = Unit

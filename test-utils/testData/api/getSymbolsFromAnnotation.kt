@@ -1,6 +1,6 @@
 /*
- * Copyright 2022 Google LLC
- * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2024 Google LLC
+ * Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,14 +138,14 @@ import Anno
 import Anno as A3
 
 @Anno
-class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, @Anno param: Int){
-    @Bnno constructor() {
-
+class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, @Anno param: Int) {
+    @Bnno
+    constructor() {
     }
 
     @Anno
     val propertyFoo: String
-    @Bnno get() = TODO()
+        @Bnno get() = TODO()
 
     @Anno
     fun functionFoo(@Anno p1: Int, @Bnno p2: Int) {
@@ -155,6 +155,11 @@ class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, 
 
     @setparam:Cnno
     var a = 1
+
+    fun runner(): Runnable = object : Runnable {
+        @Anno
+        override fun run() {}
+    }
 }
 
 class C(@Cnno val x: Int)
@@ -171,9 +176,20 @@ class Burp
 @Anno
 typealias Flux = String
 
-enum class RGB{
+enum class RGB {
     R,
     G,
     @Anno
     B
+}
+
+//FILE: Bar.java
+class Bar {
+
+    Runnable runner() {
+        return new Runnable() {
+            @Anno
+            void run() {}
+        };
+    }
 }

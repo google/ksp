@@ -26,10 +26,10 @@
 // T:J.java:81
 // T:J.java:81
 // T:K.kt:60
-// delegateProp:K2.kt:110
+// delegateProp:K2.kt:116
 // f1:J.java:85
 // f1:K.kt:67
-// fieldProp:K2.kt:105
+// fieldProp:K2.kt:111
 // p1:K.kt:62
 // p2:J.java:85
 // p2:K.kt:67
@@ -40,7 +40,7 @@
 // v3.getter():K.kt:74
 // v3.setter():K.kt:75
 // v3:J.java:94
-// value:K2.kt:113
+// value:K2.kt:119
 // x1.getter():NonExistLocation
 // END
 
@@ -92,6 +92,12 @@ class K<@Location T> {
 
     @Location
     List<Double> v3 = List<double>()
+
+    Runnable f3() {
+        return new Runnable() {
+            @Location void run() {}
+        };
+    }
 }
 
 // FILE: K1.kt

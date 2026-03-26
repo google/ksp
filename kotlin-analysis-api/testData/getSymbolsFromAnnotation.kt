@@ -138,9 +138,9 @@ import Anno
 import Anno as A3
 
 @Anno
-class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, @Anno param: Int){
-    @Bnno constructor() {
-
+class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, @Anno param: Int) {
+    @Bnno
+    constructor() {
     }
 
     @Anno
@@ -155,6 +155,11 @@ class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, 
 
     @setparam:Cnno
     var a = 1
+
+    fun runner(): Runnable = object : Runnable {
+        @Anno
+        override fun run() {}
+    }
 }
 
 class C(@Cnno val x: Int)
@@ -171,9 +176,20 @@ class Burp
 @Anno
 typealias Flux = String
 
-enum class RGB{
+enum class RGB {
     R,
     G,
     @Anno
     B
+}
+
+//FILE: Bar.java
+class Bar {
+
+    Runnable runner() {
+        return new Runnable() {
+            @Anno
+            void run() {}
+        };
+    }
 }
