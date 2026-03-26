@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.impl.visitor
 
 import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiCodeBlock
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -15,7 +16,8 @@ import org.jetbrains.kotlin.psi.KtFunction
 
 /**
  * A [PsiRecursiveElementWalkingVisitor] that collects [PsiElement]s which
- * are annotated at least once. It does **not** traverse function or method bodies.
+ * are annotated at least once. It does **not** traverse function or method bodies, i.e.,
+ * always assumes `inDepth = false`.
  */
 class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
 
@@ -69,11 +71,13 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
      * An element is skippable if one of the following holds:
      * - It is a Kotlin function body
      * - It is a Java method body
+     * - It is a Java anonymous class
      */
     private fun PsiElement.isSkippable(): Boolean =
         // TODO: Skip elements we are not interested in visiting, e.g., imports.
         isKotlinFunctionBody() ||
-            isJavaMethodBody()
+            isJavaMethodBody() ||
+            isJavaAnonymousClass()
 
     /**
      * Returns `true` if the [PsiElement] is a Kotlin function body.
@@ -89,4 +93,10 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
     private fun PsiElement.isJavaMethodBody(): Boolean =
         this is PsiCodeBlock &&
             this.parent is PsiMethod
+
+    /**
+     * Returns `true` if the [PsiElement] is a Java anonymous class.
+     */
+    private fun PsiElement.isJavaAnonymousClass(): Boolean =
+        this is PsiAnonymousClass
 }
