@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.impl.visitor
 
+import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiCodeBlock
 import com.intellij.psi.PsiElement
@@ -39,7 +40,7 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
                 }
                 else ->
                     // Explicit crash
-                    error("Unexpected Kotlin Psi element: ${parent.javaClass}")
+                    error("Unexpected Kotlin Psi element at ${parent.toLocation()}: ${parent.javaClass}")
             }
 
             // For Java sources, we expect annotated type parameters to have the structure:
@@ -57,7 +58,7 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
                 }
                 else ->
                     // Explicit crash
-                    error("Unexpected Java Psi element: ${parent.javaClass}")
+                    error("Unexpected Java Psi element at ${parent.toLocation()}: ${parent.javaClass}")
             }
         }
         super.visitElement(element)
