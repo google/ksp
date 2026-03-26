@@ -54,6 +54,7 @@ import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiTypeElement
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
@@ -163,6 +164,11 @@ class PsiResolutionStrategy(
             }
 
             is PsiModifierListOwner -> element.annotations.map {
+                PsiEntry(it)
+            }
+
+            is PsiTypeElement -> element.annotations.map {
+                println(it)
                 PsiEntry(it)
             }
 

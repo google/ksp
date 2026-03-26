@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor
+import com.intellij.psi.PsiTypeElement
 import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDeclarationModifierList
@@ -36,10 +37,12 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
                     result.add(parent.parent)
                     return
                 }
+
                 is KtFileAnnotationList -> {
                     result.add(parent.parent)
                     return
                 }
+
                 else ->
                     // Explicit crash
                     error("Unexpected Kotlin Psi element at ${parent.toLocation()}: ${parent.javaClass}")
@@ -54,10 +57,15 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
                     result.add(parent)
                     return
                 }
+
                 is PsiModifierList -> {
                     result.add(parent.parent)
                     return
                 }
+
+                is PsiTypeElement -> // Type argument (type application)
+                    result.add(parent)
+                // error(parent.parent)
                 else ->
                     // Explicit crash
                     error("Unexpected Java Psi element at ${parent.toLocation()}: ${parent.javaClass}")
