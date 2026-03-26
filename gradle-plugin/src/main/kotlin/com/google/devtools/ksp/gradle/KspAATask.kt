@@ -189,7 +189,7 @@ abstract class KspAATask @Inject constructor(
                 ),
                 project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.getKotlinPluginVersion()}"),
                 project.dependencies.create(
-                    "org.jetbrains.intellij.deps.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
+                    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
                 ),
             ).apply {
                 isTransitive = false

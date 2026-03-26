@@ -2,27 +2,21 @@
 package com.intellij.util
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.ApiStatus
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 
-/**
- * Some clients of IntelliJ Platform (like Kotlin Compiler) do now want to depend on IJ's form of Kotlin coroutines
- * Therefore, we proxy [kotlinx.coroutines.internal.intellij.IntellijCoroutines] by introducing a set of no-op methods
- */
 @ApiStatus.Internal
 object IntelliJCoroutinesFacade {
-    val canUseIntelliJCoroutines: Boolean = System.getProperty("ide.can.use.coroutines.fork", "false").toBoolean()
+
+    // Backport from intellij-community to resolve issue with intellij-fork of kotlinx coroutines.
+    // The interface must be exactly the same as the upstream file.
+
+    val canUseIntelliJCoroutines: Boolean = false
 
     fun currentThreadCoroutineContext(): CoroutineContext? {
-        return if (canUseIntelliJCoroutines) {
-            @OptIn(InternalCoroutinesApi::class)
-            kotlinx.coroutines.internal.intellij.IntellijCoroutines.currentThreadCoroutineContext()
-        } else {
-            return null
-        }
+        return null
     }
 
     @Throws(InterruptedException::class)
@@ -30,24 +24,11 @@ object IntelliJCoroutinesFacade {
         context: CoroutineContext,
         block: suspend CoroutineScope.() -> T
     ): T {
-        return if (canUseIntelliJCoroutines) {
-            @OptIn(InternalCoroutinesApi::class)
-            kotlinx.coroutines.internal.intellij.IntellijCoroutines.runBlockingWithParallelismCompensation(
-                context,
-                block
-            )
-        } else {
-            @Suppress("RAW_RUN_BLOCKING")
-            runBlocking(context, block)
-        }
+        @Suppress("RAW_RUN_BLOCKING")
+        return runBlocking(context, block)
     }
 
     fun <T> runAndCompensateParallelism(timeout: Duration, action: () -> T): T {
-        return if (canUseIntelliJCoroutines) {
-            @OptIn(InternalCoroutinesApi::class)
-            kotlinx.coroutines.internal.intellij.IntellijCoroutines.runAndCompensateParallelism(timeout, action)
-        } else {
-            action()
-        }
+        return action()
     }
 }
