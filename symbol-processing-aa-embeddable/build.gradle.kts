@@ -292,7 +292,7 @@ publishing {
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
                         addDependency(
-                            "org.jetbrains.intellij.deps.kotlinx",
+                            "org.jetbrains.kotlinx",
                             "kotlinx-coroutines-core-jvm",
                             aaCoroutinesVersion
                         )
