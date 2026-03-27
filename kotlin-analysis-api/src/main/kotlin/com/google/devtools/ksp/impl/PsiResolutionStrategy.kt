@@ -23,6 +23,7 @@ import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
@@ -168,7 +169,6 @@ class PsiResolutionStrategy(
             }
 
             is PsiTypeElement -> element.annotations.map {
-                println(it)
                 PsiEntry(it)
             }
 
@@ -197,6 +197,9 @@ class PsiResolutionStrategy(
 
             is PsiTypeParameter ->
                 element.resolve()
+
+            is PsiTypeElement ->
+                listOf(element.resolve())
 
             is PsiClass ->
                 listOf(element.resolve())
@@ -257,10 +260,17 @@ class PsiResolutionStrategy(
     }
 
     /**
+     * Resolve the [KSTypeArgumentImpl] corresponding to this [PsiTypeElement].
+     */
+    private fun PsiTypeElement.resolve(): KSTypeArgumentImpl {
+        TODO()
+    }
+
+    /**
      * Resolves the [KSClassDeclarationImpl] corresponding to this [PsiClass].
      */
     private fun PsiClass.resolve(): KSClassDeclarationImpl {
-        val sym = analyze { namedClassSymbol }
+        val sym = analyze { this@resolve.namedClassSymbol }
             ?: error("Unexpected null named class symbol at ${toLocation()}: $javaClass")
         return sym.toKSClassDeclaration()
     }

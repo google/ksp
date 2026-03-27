@@ -53,25 +53,20 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
             // For all other annotated elements, we expect the structure:
             //   PsiAnnotation -> PsiModifierList -> Annotated Element
             is PsiAnnotation -> when (val parent = element.parent) {
-                is PsiTypeParameter -> {
+                is PsiTypeParameter ->
                     result.add(parent)
-                    return
-                }
 
-                is PsiModifierList -> {
+                is PsiModifierList ->
                     result.add(parent.parent)
-                    return
-                }
 
                 is PsiTypeElement -> // Type argument (type application)
                     result.add(parent)
-                // error(parent.parent)
+
                 else ->
                     // Explicit crash
                     error("Unexpected Java Psi element at ${parent.toLocation()}: ${parent.javaClass}")
             }
         }
-        super.visitElement(element)
     }
 
     /**
