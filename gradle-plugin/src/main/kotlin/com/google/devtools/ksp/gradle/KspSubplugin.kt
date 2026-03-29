@@ -74,7 +74,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     companion object {
         const val KSP_PLUGIN_ID = "com.google.devtools.ksp.symbol-processing"
         const val KSP_API_ID = "symbol-processing-api"
-        const val KSP_COMPILER_PLUGIN_ID = "symbol-processing"
         const val KSP_GROUP_ID = "com.google.devtools.ksp"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kspPluginClasspath"
         const val KSP_PLUGIN_CLASSPATH_CONFIGURATION_NAME_NON_EMBEDDABLE = "kspPluginClasspathNonEmbeddable"
@@ -303,8 +302,8 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     override fun getCompilerPluginId() = KSP_PLUGIN_ID
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(
-            groupId = "com.google.devtools.ksp",
-            artifactId = KSP_COMPILER_PLUGIN_ID,
+            groupId = KSP_GROUP_ID,
+            artifactId = KSP_API_ID,
             version = KSP_VERSION
         )
 }
