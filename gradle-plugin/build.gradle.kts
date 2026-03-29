@@ -7,9 +7,9 @@ val kotlinBaseVersion: String by project
 val junitVersion: String by project
 val googleTruthVersion: String by project
 val agpBaseVersion: String by project
+val aaCoroutinesVersion: String? by project
 val signingKey: String? by project
 val signingPassword: String? by project
-val aaCoroutinesVersion: String? by project
 
 plugins {
     kotlin("jvm")
@@ -148,8 +148,6 @@ abstract class WriteVersionSrcTask : DefaultTask() {
     @get:Input
     abstract val kspVersion: Property<String>
     @get:Input
-    abstract val kotlinVersion: Property<String>
-    @get:Input
     abstract val coroutinesVersion: Property<String>
 
     @get:OutputDirectory
@@ -160,7 +158,6 @@ abstract class WriteVersionSrcTask : DefaultTask() {
         outputSrcDir.file("KSPVersions.kt").get().asFile.writeText(
             """
             package com.google.devtools.ksp.gradle
-            val KSP_KOTLIN_BASE_VERSION = "${kotlinVersion.get()}"
             val KSP_VERSION = "${kspVersion.get()}"
             val KSP_COROUTINES_VERSION = "${coroutinesVersion.get()}"
             """.trimIndent()
@@ -170,7 +167,6 @@ abstract class WriteVersionSrcTask : DefaultTask() {
 
 val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
     kspVersion = version.toString()
-    kotlinVersion = kotlinBaseVersion
     coroutinesVersion = aaCoroutinesVersion
     outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
 }

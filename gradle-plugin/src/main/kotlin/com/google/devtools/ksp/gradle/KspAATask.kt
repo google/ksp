@@ -189,7 +189,7 @@ abstract class KspAATask @Inject constructor(
                 project.dependencies.create(
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
                 ),
-                project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:$KSP_KOTLIN_BASE_VERSION"),
+                project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.getKotlinPluginVersion()}"),
                 project.dependencies.create(
                     "com.intellij.platform:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
                 ),
@@ -279,7 +279,7 @@ abstract class KspAATask @Inject constructor(
 
                     val classOutputDir = KspGradleSubplugin.getKspClassOutputDir(project, sourceSetName, target)
                     val compileTask = kotlinCompilation.compileTaskProvider
-                    val defaultKotlinVersion = KSP_KOTLIN_BASE_VERSION
+                    val defaultKotlinVersion = project.getKotlinPluginVersion()
                         .split('.', '-')
                         .take(2)
                         .joinToString(".")
