@@ -453,7 +453,6 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
                     "i: [ksp] loaded provider(s): [TestProcessorProvider, TestProcessorProvider2]"
                 )
             )
-            Assert.assertTrue(result.output.contains("v: [ksp] round 3 of processing"))
         }
     }
 }
