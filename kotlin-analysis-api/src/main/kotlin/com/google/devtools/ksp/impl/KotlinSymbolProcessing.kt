@@ -546,12 +546,10 @@ class KotlinSymbolProcessing(
                 }
             }
 
-            var rounds = 0
             // Run processors until either
             // 1) there is an error
             // 2) there is no more new files.
             while (!logger.hasError) {
-                logger.logging("round ${++rounds} of processing")
                 // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots
                 // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
                 // are created.
