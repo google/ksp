@@ -34,7 +34,10 @@ dependencies {
     implementation(project(":common-deps"))
     testImplementation(gradleApi())
     testImplementation(project(":api"))
-    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitVersion")
     testImplementation("com.google.truth:truth:$googleTruthVersion")
     testImplementation(gradleTestKit())
 

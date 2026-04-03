@@ -1,20 +1,18 @@
 package com.google.devtools.ksp.test.fixtures
 
-import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class TemporaryTestProject(
+    val root: File,
     projectName: String,
     baseProject: String? = null,
-) : TemporaryFolder() {
+) {
     private val testProjectSrc = File("src/test/resources", projectName)
     private val baseProjectSrc = baseProject?.let { File("src/test/resources", baseProject) }
     private val gradleProperties: File
         get() = File(root, "gradle.properties")
 
-    override fun before() {
-        super.before()
-
+    fun setup() {
         baseProjectSrc?.copyRecursively(root)
         testProjectSrc.copyRecursively(root, true)
 

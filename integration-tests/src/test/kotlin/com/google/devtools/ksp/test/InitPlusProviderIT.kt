@@ -3,16 +3,24 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.jar.JarFile
 
-class InitPlusProviderIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("init-plus-provider")
+class InitPlusProviderIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "init-plus-provider")
+        project.setup()
+    }
 
     @Test
     fun testInitPlusProvider() {
@@ -20,15 +28,15 @@ class InitPlusProviderIT() {
 
         val resultCleanBuild = gradleRunner.withArguments("clean", "build").build()
 
-        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assertions.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
         val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
-        Assert.assertTrue(artifact.exists())
+        Assertions.assertTrue(artifact.exists())
 
         JarFile(artifact).use { jarFile ->
-            Assert.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
-            Assert.assertTrue(jarFile.getEntry("HelloFromProvider.class").size > 0)
-            Assert.assertTrue(jarFile.getEntry("GeneratedFromProvider.class").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("TestProcessor.log").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("HelloFromProvider.class").size > 0)
+            Assertions.assertTrue(jarFile.getEntry("GeneratedFromProvider.class").size > 0)
         }
     }
 }

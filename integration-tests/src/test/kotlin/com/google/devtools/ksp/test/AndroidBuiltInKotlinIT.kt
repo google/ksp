@@ -5,16 +5,24 @@ import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
 import com.google.devtools.ksp.test.utils.assertMergedConfigurationOutput
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.jar.JarFile
 
 class AndroidBuiltInKotlinIT {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("playground-android-builtinkotlin", "playground")
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "playground-android-builtinkotlin", "playground")
+        project.setup()
+    }
 
     @Test
     fun testPlaygroundAndroidWithBuiltInKotlin() {
@@ -23,7 +31,7 @@ class AndroidBuiltInKotlinIT {
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 
             val classesJar = File(
                 project.root,
@@ -39,15 +47,15 @@ class AndroidBuiltInKotlinIT {
             }
 
             val javaResDir = File(project.root, "workload/build/intermediates/java_res/debug/processDebugJavaRes/out")
-            Assert.assertTrue(File(javaResDir, "TestProcessor.log").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+            Assertions.assertTrue(File(javaResDir, "TestProcessor.log").exists())
+            Assertions.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
+            Assertions.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
             assertMergedConfigurationOutput(project, "-keep class com.example.AClassBuilder { *; }")
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
-            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            Assertions.assertTrue("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            Assertions.assertTrue("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
 
@@ -60,7 +68,7 @@ class AndroidBuiltInKotlinIT {
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
         ).buildAndFail().let { result ->
-            Assert.assertTrue(
+            Assertions.assertTrue(
                 result.output.contains(
                     "KSP is not compatible with Android Gradle Plugin's built-in Kotlin prior to AGP " +
                         "version 9.0.0-alpha14. Please upgrade to AGP 9.0.0-alpha14 or alternatively disable " +
@@ -80,7 +88,7 @@ class AndroidBuiltInKotlinIT {
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 
             val classesJar = File(
                 project.root,
@@ -96,15 +104,15 @@ class AndroidBuiltInKotlinIT {
             }
 
             val javaResDir = File(project.root, "workload/build/intermediates/java_res/debug/processDebugJavaRes/out")
-            Assert.assertTrue(File(javaResDir, "TestProcessor.log").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+            Assertions.assertTrue(File(javaResDir, "TestProcessor.log").exists())
+            Assertions.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
+            Assertions.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
             assertMergedConfigurationOutput(project, "-keep class com.example.AClassBuilder { *; }")
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
-            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            Assertions.assertTrue("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            Assertions.assertTrue("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
 
@@ -131,7 +139,7 @@ class AndroidBuiltInKotlinIT {
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace",
             "-Dorg.gradle.unsafe.isolated-projects=true"
         ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 
             val classesJar = File(
                 project.root,
@@ -147,15 +155,15 @@ class AndroidBuiltInKotlinIT {
             }
 
             val javaResDir = File(project.root, "workload/build/intermediates/java_res/debug/processDebugJavaRes/out")
-            Assert.assertTrue(File(javaResDir, "TestProcessor.log").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+            Assertions.assertTrue(File(javaResDir, "TestProcessor.log").exists())
+            Assertions.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
+            Assertions.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
             assertMergedConfigurationOutput(project, "-keep class com.example.AClassBuilder { *; }")
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
-            assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            Assertions.assertTrue("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
+            Assertions.assertTrue("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
 }

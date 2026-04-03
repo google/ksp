@@ -2,14 +2,23 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
-class AndroidDataBindingIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("android-data-binding")
+class AndroidDataBindingIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "android-data-binding")
+        project.setup()
+    }
 
     @Test
     fun testPlaygroundAndroid() {
@@ -28,7 +37,7 @@ class AndroidDataBindingIT() {
                 val kspTask = output.filter {
                     it.contains(":app:kspDebugKotlin")
                 }
-                Assert.assertTrue(kspTask.isNotEmpty())
+                Assertions.assertTrue(kspTask.isNotEmpty())
             }
     }
 }

@@ -12,8 +12,6 @@ val signingPassword: String? by project
 val kotlinBaseVersion: String by project
 val kotlinxSerializationVersion: String by project
 val junitVersion: String by project
-val junit5Version: String by project
-val junitPlatformVersion: String by project
 val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
@@ -124,11 +122,10 @@ dependencies {
     implementation(project(":common-util"))
 
     testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
     testImplementation(project(":common-deps"))

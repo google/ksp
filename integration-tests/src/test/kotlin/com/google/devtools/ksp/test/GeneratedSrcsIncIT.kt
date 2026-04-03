@@ -2,15 +2,23 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class GeneratedSrcsIncIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("srcs-gen", "test-processor")
+class GeneratedSrcsIncIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "srcs-gen", "test-processor")
+        project.setup()
+    }
 
     @Test
     fun testGeneratedSrcsInc() {
@@ -24,7 +32,7 @@ class GeneratedSrcsIncIT() {
 
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }.distinct()
-            Assert.assertEquals(expected, outputs)
+            Assertions.assertEquals(expected, outputs)
         }
 
         val expected2 = listOf(
@@ -36,7 +44,7 @@ class GeneratedSrcsIncIT() {
         File(project.root, "workload/src/main/kotlin/com/example/Baz.kt").appendText(System.lineSeparator())
         gradleRunner.withArguments("assemble").build().let { result ->
             val outputs = result.output.lines().filter { it.startsWith("w: [ksp]") }.distinct()
-            Assert.assertEquals(expected2, outputs)
+            Assertions.assertEquals(expected2, outputs)
         }
     }
 }

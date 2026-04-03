@@ -2,25 +2,20 @@ package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.kspJvmArgParser
 import com.google.devtools.ksp.processing.kspJvmArgParserHelp
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 
-@RunWith(Parameterized::class)
+@ParameterizedClass
+@ValueSource(booleans = [true, false])
 class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean) {
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "experimentalPsiResolution={0}")
-        fun params() = listOf(arrayOf(true), arrayOf(false))
-    }
 
     @Test
     fun testJvm() {
         val sep = File.pathSeparator
-        val args = arrayListOf<String>(
+        val args = arrayListOf(
             "-module-name=MyModule",
             "-source-roots", "/path/to/A$sep/path/to/B",
             "/path/to/processorA.jar",
@@ -38,19 +33,19 @@ class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean)
             "/path/to/processorB.jar${sep}rel/to/processorC.jar",
         ).toTypedArray()
         val (config, classpath) = kspJvmArgParser(args)
-        Assert.assertEquals(
+        Assertions.assertEquals(
             listOf("/path/to/A", "/path/to/B").map(::File),
             config.sourceRoots
         )
-        Assert.assertEquals(
+        Assertions.assertEquals(
             "MyModule",
             config.moduleName
         )
-        Assert.assertEquals(
+        Assertions.assertEquals(
             isExperimentalPsiResolution,
             config.experimentalPsiResolution
         )
-        Assert.assertEquals(
+        Assertions.assertEquals(
             listOf("/path/to/processorA.jar", "/path/to/processorB.jar", "rel/to/processorC.jar"),
             classpath
         )
@@ -59,10 +54,10 @@ class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean)
     @Test
     fun testJvmHelp() {
         val helpMsg = kspJvmArgParserHelp()
-        Assert.assertTrue("*   -java-output-dir=File" in helpMsg)
-        Assert.assertTrue("    -libraries=List<File>" in helpMsg)
-        Assert.assertTrue("    -experimental-psi-resolution=Boolean" in helpMsg)
-        Assert.assertTrue("*   <processor classpath>" in helpMsg)
+        Assertions.assertTrue("*   -java-output-dir=File" in helpMsg)
+        Assertions.assertTrue("    -libraries=List<File>" in helpMsg)
+        Assertions.assertTrue("    -experimental-psi-resolution=Boolean" in helpMsg)
+        Assertions.assertTrue("*   <processor classpath>" in helpMsg)
         println(helpMsg)
     }
 }

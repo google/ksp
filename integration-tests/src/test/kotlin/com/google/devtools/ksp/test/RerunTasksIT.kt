@@ -2,18 +2,27 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
 /**
  * This test is used mostly to confirm Windows releases file locks after symbol processing is complete.
  * However, it will run on Linux too for completeness purposes
  */
 class RerunTasksIT {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("android-rerun")
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "android-rerun")
+        project.setup()
+    }
 
     @Test
     fun testPlaygroundAndroid() {
@@ -30,7 +39,7 @@ class RerunTasksIT {
                 val kspTask = output.filter {
                     it.contains(":lib:common:media:kspDebugKotlin")
                 }
-                Assert.assertTrue(kspTask.isNotEmpty())
+                Assertions.assertTrue(kspTask.isNotEmpty())
             }
 
         gradleRunner.withArguments(
@@ -44,7 +53,7 @@ class RerunTasksIT {
                 val kspTask = output.filter {
                     it.contains(":lib:common:media:kspDebugKotlin")
                 }
-                Assert.assertTrue(kspTask.isNotEmpty())
+                Assertions.assertTrue(kspTask.isNotEmpty())
             }
     }
 }

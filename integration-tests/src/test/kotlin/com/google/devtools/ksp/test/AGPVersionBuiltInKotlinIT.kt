@@ -3,41 +3,41 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 
-@RunWith(Parameterized::class)
-class AGPVersionBuiltInKotlinIT(
-    private val agpVersion: String?,
-    private val kotlinVersion: String?,
-    private val gradleVersion: String?
-) {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground-android-builtinkotlin",
-        "playground"
-    )
+class AGPVersionBuiltInKotlinIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}")
-        fun data(): Collection<Array<String?>> {
+        fun data(): Collection<Arguments> {
             return listOf(
-                arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
-                arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
-                arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
-                arrayOf("9.0.0-beta01", "2.2.10", "9.1.0"),
+                Arguments.of("9.0.0-alpha14", "2.2.10", "9.1.0"),
+                Arguments.of("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
+                Arguments.of("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
+                Arguments.of("9.0.0-beta01", "2.2.10", "9.1.0"),
             )
         }
     }
 
-    @Test
-    fun testRunsKSP() {
+    @ParameterizedTest(name = "AGP: {0}, KGP: {1}, Gradle: {2}")
+    @MethodSource("data")
+    fun testRunsKSP(agpVersion: String?, kotlinVersion: String?, gradleVersion: String?) {
+        project = TemporaryTestProject(
+            tempDir,
+            "playground-android-builtinkotlin",
+            "playground"
+        )
+        project.setup()
+
         val gradleRunner = GradleRunner.create()
             .withProjectDir(project.root)
             .withArguments(":workload:compileDebugKotlin")
@@ -50,7 +50,7 @@ class AGPVersionBuiltInKotlinIT(
         }
 
         gradleRunner.build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome)
+            Assertions.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome)
         }
     }
 

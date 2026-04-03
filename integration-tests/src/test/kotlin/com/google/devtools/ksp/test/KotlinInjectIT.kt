@@ -2,14 +2,22 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class KotlinInjectIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("kotlin-inject")
+class KotlinInjectIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "kotlin-inject")
+        project.setup()
+    }
 
     @Test
     fun triggerException() {

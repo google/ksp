@@ -2,15 +2,23 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class OnErrorIT() {
-    @Rule
-    @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject("on-error")
+class OnErrorIT {
+    @TempDir
+    lateinit var tempDir: File
+
+    lateinit var project: TemporaryTestProject
+
+    @BeforeEach
+    fun setup() {
+        project = TemporaryTestProject(tempDir, "on-error")
+        project.setup()
+    }
 
     @Test
     fun testOnError() {
@@ -18,8 +26,8 @@ class OnErrorIT() {
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertTrue(errors[0].endsWith("Error processor: errored at 2"))
-            Assert.assertTrue(errors[1].endsWith("NormalProcessor called error at 2"))
+            Assertions.assertTrue(errors[0].endsWith("Error processor: errored at 2"))
+            Assertions.assertTrue(errors[1].endsWith("NormalProcessor called error at 2"))
         }
     }
 
@@ -30,7 +38,7 @@ class OnErrorIT() {
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in init", errors.first())
+            Assertions.assertEquals("e: [ksp] java.lang.Exception: Test Exception in init", errors.first())
         }
         project.restore("workload/build.gradle.kts")
     }
@@ -42,7 +50,7 @@ class OnErrorIT() {
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+            Assertions.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
         }
         project.restore("workload/build.gradle.kts")
     }
@@ -54,7 +62,7 @@ class OnErrorIT() {
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in finish", errors.first())
+            Assertions.assertEquals("e: [ksp] java.lang.Exception: Test Exception in finish", errors.first())
         }
         project.restore("workload/build.gradle.kts")
     }
@@ -67,8 +75,8 @@ class OnErrorIT() {
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
-            Assert.assertTrue(errors[0].endsWith("Error processor: errored at 2"))
-            Assert.assertTrue(errors[1].endsWith("java.lang.Exception: Test Exception in error"))
+            Assertions.assertTrue(errors[0].endsWith("Error processor: errored at 2"))
+            Assertions.assertTrue(errors[1].endsWith("java.lang.Exception: Test Exception in error"))
         }
         project.restore("workload/build.gradle.kts")
     }
@@ -81,13 +89,13 @@ class OnErrorIT() {
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
-            Assert.assertTrue(
+            Assertions.assertTrue(
                 errors.any {
                     it.startsWith("e: [ksp] kotlin.io.FileAlreadyExistsException:")
                 }
             )
 
-            Assert.assertFalse(result.output.contains("e: java.lang.IllegalStateException: Should not be called!"))
+            Assertions.assertFalse(result.output.contains("e: java.lang.IllegalStateException: Should not be called!"))
         }
         project.restore("workload/build.gradle.kts")
     }
@@ -101,7 +109,7 @@ class OnErrorIT() {
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
-            Assert.assertTrue(
+            Assertions.assertTrue(
                 errors.any {
                     it.startsWith("e: [ksp] kotlin.io.FileAlreadyExistsException:")
                 }

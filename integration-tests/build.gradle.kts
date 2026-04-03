@@ -17,12 +17,15 @@ repositories {
 }
 
 dependencies {
-    testImplementation("junit:junit:$junitVersion")
     testImplementation(gradleTestKit())
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     testImplementation("com.intellij.platform:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitVersion")
 }
 
 fun Test.configureCommonSettings() {
@@ -44,6 +47,7 @@ fun Test.configureCommonSettings() {
 
 // Create a new test task for the AGP compatibility tests
 val agpCompatibilityTest by tasks.registering(Test::class) {
+    useJUnitPlatform()
     description = "Runs AGP compatibility tests with maxParallelForks = 1"
     group = "verification"
 
@@ -62,6 +66,8 @@ val agpCompatibilityTest by tasks.registering(Test::class) {
 }
 
 tasks.test {
+    useJUnitPlatform()
+
     maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
 
     // Exclude test classes from agpCompatibilityTest
