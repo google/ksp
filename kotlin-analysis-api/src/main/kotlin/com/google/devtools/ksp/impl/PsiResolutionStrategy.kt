@@ -156,18 +156,16 @@ class PsiResolutionStrategy(
     /**
      * Returns all annotation entries for `element`.
      */
-    private fun getAnnotationsFor(element: PsiElement): Collection<KtOrPsiAnnotation> = analyze {
-        when (element) {
-            is KtAnnotated -> element.annotationEntries.map {
-                KtEntry(it)
-            }
-
-            is PsiModifierListOwner -> element.annotations.map {
-                PsiEntry(it)
-            }
-
-            else -> error("Unexpected PsiElement at ${element.toLocation()}: ${element.javaClass}")
+    private fun getAnnotationsFor(element: PsiElement): Collection<KtOrPsiAnnotation> = when (element) {
+        is KtAnnotated -> element.annotationEntries.map {
+            KtEntry(it)
         }
+
+        is PsiModifierListOwner -> element.annotations.map {
+            PsiEntry(it)
+        }
+
+        else -> error("Unexpected PsiElement at ${element.toLocation()}: ${element.javaClass}")
     }
 
     /**
