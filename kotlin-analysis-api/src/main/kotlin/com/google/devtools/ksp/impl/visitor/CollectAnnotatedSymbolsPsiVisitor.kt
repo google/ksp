@@ -67,6 +67,7 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
                     error("Unexpected Java Psi element at ${parent.toLocation()}: ${parent.javaClass}")
             }
         }
+        super.visitElement(element)
     }
 
     /**
