@@ -171,17 +171,29 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
                 else -> emptySequence()
             }
         } else {
-            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.flatMap { decl ->
-                analyze {
-                    when (val symbol = decl.symbol) {
-                        is KaDestructuringDeclarationSymbol -> {
-                            symbol.entries.mapNotNull { it.toKSDeclaration() }
+            when (val body = psi.bodyBlockExpression) {
+                null -> error("Predicate 'psi.hasBlockBody()' is true but 'psi.bodyBlockExpression' is null")
+                else -> {
+                    val anonDecls =
+                        body.statements.asSequence().filterIsInstance<KtObjectLiteralExpression>().mapNotNull { obj ->
+                            analyze {
+                                obj.symbol.toKSDeclaration()
+                            }
                         }
+                    val decls = body.statements.asSequence().filterIsInstance<KtDeclaration>().flatMap { decl ->
+                        analyze {
+                            when (val symbol = decl.symbol) {
+                                is KaDestructuringDeclarationSymbol -> {
+                                    symbol.entries.mapNotNull { it.toKSDeclaration() }
+                                }
 
-                        else -> listOfNotNull(symbol.toKSDeclaration())
+                                else -> listOfNotNull(symbol.toKSDeclaration())
+                            }
+                        }
                     }
+                    decls + anonDecls
                 }
-            } ?: emptySequence()
+            }
         }
     }
 
