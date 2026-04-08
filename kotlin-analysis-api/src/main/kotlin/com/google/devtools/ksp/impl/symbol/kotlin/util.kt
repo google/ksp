@@ -383,7 +383,7 @@ internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KS
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaPropertySymbol -> toKSPropertyDeclaration()
-    is KaNamedClassSymbol -> toKSClassDeclaration()
+    is KaClassSymbol -> toKSClassDeclaration()
     is KaFunctionSymbol -> toKSFunctionDeclaration()
     is KaTypeAliasSymbol -> toKSTypeAlias()
     is KaJavaFieldSymbol -> this@toKSAnnotated.toKSPropertyDeclaration()
@@ -398,7 +398,7 @@ internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
 internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
     KSPropertyDeclarationImpl.getCached(this)
 
-internal fun KaNamedClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
+internal fun KaClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
     KSClassDeclarationImpl.getCached(this)
 
 internal fun KaFunctionSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl =

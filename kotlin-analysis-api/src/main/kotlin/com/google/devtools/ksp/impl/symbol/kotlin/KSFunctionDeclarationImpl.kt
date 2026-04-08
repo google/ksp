@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtObjectLiteralExpression
 
 class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbol: KaFunctionSymbol) :
     KSFunctionDeclaration,
@@ -161,7 +162,9 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
         val psi = ktFunctionSymbol.psi as? KtFunction ?: return@lazyMemoizedSequence emptySequence()
         if (!psi.hasBlockBody()) {
-            emptySequence()
+            val decl = psi.bodyExpression as? KtObjectLiteralExpression ?: return@lazyMemoizedSequence emptySequence()
+            val sym = analyze { decl.symbol.toKSDeclaration() } ?: return@lazyMemoizedSequence emptySequence()
+            sequenceOf(sym)
         } else {
             psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.flatMap {
                 analyze {
