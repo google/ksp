@@ -162,13 +162,18 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
     override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
         val psi = ktFunctionSymbol.psi as? KtFunction ?: return@lazyMemoizedSequence emptySequence()
         if (!psi.hasBlockBody()) {
-            val decl = psi.bodyExpression as? KtObjectLiteralExpression ?: return@lazyMemoizedSequence emptySequence()
-            val sym = analyze { decl.symbol.toKSDeclaration() } ?: return@lazyMemoizedSequence emptySequence()
-            sequenceOf(sym)
+            when (val decl = psi.bodyExpression) {
+                is KtObjectLiteralExpression -> {
+                    val sym = analyze { decl.symbol.toKSDeclaration() } ?: return@lazyMemoizedSequence emptySequence()
+                    sequenceOf(sym)
+                }
+
+                else -> emptySequence()
+            }
         } else {
-            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.flatMap {
+            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.flatMap { decl ->
                 analyze {
-                    when (val symbol = it.symbol) {
+                    when (val symbol = decl.symbol) {
                         is KaDestructuringDeclarationSymbol -> {
                             symbol.entries.mapNotNull { it.toKSDeclaration() }
                         }
