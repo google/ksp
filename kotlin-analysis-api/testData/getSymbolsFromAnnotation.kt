@@ -47,6 +47,14 @@
 // p1:KSValueParameter
 // param:KSValueParameter
 // propertyFoo:KSPropertyDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// runJava:KSFunctionDeclaration
+// runJava2:KSFunctionDeclaration
+// runKotlin:KSFunctionDeclaration
+// runKotlin2:KSFunctionDeclaration
 // ==== Bnno inDepth = false ====
 // <init>:KSFunctionDeclaration
 // File: Foo.kt:KSFile
@@ -87,6 +95,14 @@
 // p1:KSValueParameter
 // param:KSValueParameter
 // propertyFoo:KSPropertyDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// runJava:KSFunctionDeclaration
+// runJava2:KSFunctionDeclaration
+// runKotlin:KSFunctionDeclaration
+// runKotlin2:KSFunctionDeclaration
 // ==== A2 inDepth = false ====
 // <init>:KSFunctionDeclaration
 // Bar:KSClassDeclaration
@@ -117,6 +133,14 @@
 // p1:KSValueParameter
 // param:KSValueParameter
 // propertyFoo:KSPropertyDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// run:KSFunctionDeclaration
+// runJava:KSFunctionDeclaration
+// runJava2:KSFunctionDeclaration
+// runKotlin:KSFunctionDeclaration
+// runKotlin2:KSFunctionDeclaration
 // ==== Cnno inDepth = true ====
 // constructorParameterFoo:KSPropertyDeclaration
 // constructorParameterFoo:KSValueParameter
@@ -159,6 +183,22 @@ class Foo @Anno constructor(@Anno @param:Cnno val constructorParameterFoo: Int, 
     fun runner(): Runnable = object : Runnable {
         @Anno
         override fun run() {}
+
+        @Anno
+        fun runKotlin() {}
+    }
+
+    fun runner2(): Runnable {
+        val result = object : Runnable {
+            @Anno
+            override fun run() {
+            }
+
+            @Anno
+            fun runKotlin2() {
+            }
+        }
+        return result
     }
 }
 
@@ -190,6 +230,19 @@ class Bar {
         return new Runnable() {
             @Anno
             void run() {}
+
+            @Anno
+            void runJava() {}
         };
+    }
+    Runnable runner() {
+        Runnable result = new Runnable() {
+            @Anno
+            void run() {}
+
+            @Anno
+            void runJava2() {}
+        };
+        return result;
     }
 }
