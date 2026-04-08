@@ -120,6 +120,7 @@
 // value:KSValueParameter
 // x:KSPropertyDeclaration
 // x:KSValueParameter
+// ==== MyNestedAnnotation inDepth = false ====
 // END
 // MODULE: lib
 //FILE: annotaitons_in_lib.kt
