@@ -75,6 +75,9 @@ class PsiResolutionStrategy(
     override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
 ) : AnnotationResolutionStrategy {
 
+    /**
+     * Returns all symbols annotated with [annotationName].
+     */
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> =
         if (inDepth)
             aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true)
@@ -92,27 +95,39 @@ class PsiResolutionStrategy(
     }
 
     /**
-     * Returns the symbols annotated with `annotationName`.
+     * Returns the symbols annotated with the fully qualified name [annotationName].
      */
-    private fun getAnnotatedSymbols(annotationName: String): Sequence<KSAnnotated> {
-        val newSymbols = annotationToSymbolsCache[annotationName]?.value ?: emptyList()
-        val restoredSymbols = deferredSymbolsGroupedByAnnotations[annotationName] ?: emptyList()
-        // N.B.: Convert `newSymbols` to sequence **before** appending `restoredSymbols`
-        // to avoid eagerly appending lists.
-        return newSymbols.asSequence() + restoredSymbols
+    private fun getAnnotatedSymbols(annotationName: String): Sequence<KSAnnotated> =
+        getAnnotatedJavaSymbols(annotationName) +
+            getAnnotatedKotlinSymbols(annotationName) +
+            getRestoredSymbols(annotationName)
+
+    /**
+     * Returns the Kotlin symbols annotated with the fully qualified name [annotationName].
+     */
+    private fun getAnnotatedKotlinSymbols(annotationName: String): Sequence<KSAnnotated> {
+        val newKotlinSymbols = annotatedKotlinElementsByFullyQualifiedName[annotationName]?.value ?: emptyList()
+        return newKotlinSymbols.asSequence()
     }
 
     /**
-     * Cache for [getSymbolsWithAnnotation] when `inDepth = false`.
+     * Returns the Java symbols annotated with the fully qualified name [annotationName].
      */
-    private val annotationToSymbolsCache: Map<String, Lazy<Collection<KSAnnotated>>> by lazy {
-        groupSymbolsByAnnotations(newKSFiles)
-    }
+    private fun getAnnotatedJavaSymbols(annotationName: String): Sequence<KSAnnotated> =
+        annotatedJavaElementsByFullyQualifiedName.getOrPut(annotationName) {
+            resolveJavaAnnotationByShortName(annotationName)
+        }.asSequence()
+
+    /**
+     * Returns the [deferredSymbols] that are annotated with [annotationName].
+     */
+    private fun getRestoredSymbols(annotationName: String): Sequence<KSAnnotated> =
+        deferredSymbolsGroupedByAnnotations[annotationName]?.asSequence() ?: emptySequence()
 
     /**
      * [deferredSymbols] grouped by their fully qualified annotation names.
      *
-     * See [groupSymbolsByAnnotations] for an example of the grouping.
+     * See [annotatedKotlinElementsByFullyQualifiedName] for an example of the grouping.
      */
     private val deferredSymbolsGroupedByAnnotations: Map<String, Collection<KSAnnotated>> by lazy {
         deferredSymbols.values.flatten().mapNotNull { it.restore() }.distinct()
@@ -120,7 +135,101 @@ class PsiResolutionStrategy(
     }
 
     /**
-     * Groups all annotated symbols in [files] by their fully qualified annotation names.
+     * Returns the Java symbols annotated with the fully qualified name [annotationName].
+     * The function only considers the subset of annotations in the program that share the same
+     * short name / unqualified name.
+     */
+    private fun resolveJavaAnnotationByShortName(annotationName: String): Collection<KSAnnotated> {
+        val annotationShortName = annotationName.substringAfterLast('.')
+        return annotatedJavaElementsByShortName[annotationShortName]?.filter { element ->
+            val annotationsForElement = fullyQualifiedJavaAnnotationNamesByElements[element] ?: emptyMap()
+            annotationsForElement[annotationShortName]?.value?.contains(annotationName) ?: false
+        }?.flatMap {
+            it.resolveToKSAnnotated()
+        } ?: emptyList()
+    }
+
+    /**
+     * All annotated [PsiElement]s in [newKSFiles] from both Kotlin and Java sources.
+     */
+    private val annotatedPsiElements: Collection<PsiElement> by lazy {
+        newKSFiles.flatMap { collectAnnotatedPsiElementsIn(it) }
+    }
+
+    /**
+     * Returns all [PsiElement]s that are annotated in [file] except for declarations
+     * in function bodies or property accessors.
+     */
+    private fun collectAnnotatedPsiElementsIn(file: KSFile): Collection<PsiElement> {
+        val visitor = CollectAnnotatedSymbolsPsiVisitor()
+        file.psi?.accept(visitor)
+        return visitor.result
+    }
+
+    /**
+     * All annotated Java elements.
+     */
+    private val annotatedJavaElements: List<PsiModifierListOwner> by lazy {
+        annotatedPsiElements.filterIsInstance<PsiModifierListOwner>()
+    }
+
+    /**
+     * Groups [annotatedJavaElements] by the short names of their annotations.
+     */
+    private val annotatedJavaElementsByShortName: Map<String, Collection<PsiElement>> by lazy {
+        annotatedJavaElements.flatGroupBy { element ->
+            // N.B.: deduplicate by converting to a set, since
+            // otherwise it will add `element` more than once to the list of values
+            element.annotations.map { it.shortName }.toSet()
+        }
+    }
+
+    /**
+     * A map from Java elements to their annotations' fully qualified names, indexed by short name.
+     */
+    private val fullyQualifiedJavaAnnotationNamesByElements: Map<PsiElement, Map<String, Lazy<Set<String>>>> by lazy {
+        annotatedJavaElements.associate { element ->
+            element to buildMap<String, Lazy<MutableSet<String>>> {
+                element.annotations.forEach { anno ->
+                    val lazyFullyQualifiedNames = this[anno.shortName]
+                    if (lazyFullyQualifiedNames == null) {
+                        this[anno.shortName] = lazy {
+                            mutableSetOf(
+                                anno.qualifiedName
+                                    ?: error("Unexpected unqualified name at ${anno.toLocation()}: ${anno.javaClass}")
+                            )
+                        }
+                    } else {
+                        this[anno.shortName] = lazy {
+                            lazyFullyQualifiedNames.value.add(
+                                anno.qualifiedName
+                                    ?: error("Unexpected unqualified name at ${anno.toLocation()}: ${anno.javaClass}")
+                            )
+                            lazyFullyQualifiedNames.value
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Groups all annotated Java symbols by their fully qualified annotation names.
+     *
+     * @see [annotatedKotlinElementsByFullyQualifiedName] for further explanation.
+     */
+    private val annotatedJavaElementsByFullyQualifiedName: MutableMap<String, Collection<KSAnnotated>> =
+        mutableMapOf()
+
+    /**
+     * All annotated Kotlin elements.
+     */
+    private val annotatedKotlinElements: List<KtAnnotated> by lazy {
+        annotatedPsiElements.filterIsInstance<KtAnnotated>()
+    }
+
+    /**
+     * Groups all annotated Kotlin symbols by their fully qualified annotation names.
      *
      * In other words, if `fun1, fun2, fun3` are annotated as follows:
      * ```
@@ -136,50 +245,33 @@ class PsiResolutionStrategy(
      * "Annotation3" -> [fun3]
      * ```
      */
-    private fun groupSymbolsByAnnotations(files: List<KSFile>): Map<String, Lazy<Collection<KSAnnotated>>> =
-        files
-            .flatMap { collectAnnotatedPsiElementsIn(it) }
-            .flatGroupBy { getAnnotationsFor(it) }
+    private val annotatedKotlinElementsByFullyQualifiedName: Map<String, Lazy<Collection<KSAnnotated>>> by lazy {
+        annotatedKotlinElements
+            .flatGroupBy { element -> element.annotationEntries.map { KtEntry(it) } }
             .mapValues { entry ->
                 lazy { entry.value.flatMap { it.resolveToKSAnnotated(entry.key) } }
             }
             .mergeMapKeys {
                 it.qualifiedName ?: error("Unexpected unqualified name for ${it.javaClass}")
             }
-
-    /**
-     * Returns all [PsiElement]s that are annotated in `file` except for declarations
-     * in function bodies or property accessors.
-     */
-    private fun collectAnnotatedPsiElementsIn(file: KSFile): Collection<PsiElement> {
-        val visitor = CollectAnnotatedSymbolsPsiVisitor()
-        file.psi?.accept(visitor)
-        return visitor.result
     }
 
     /**
-     * Returns all annotation entries for `element`.
+     * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotation].
+     *
+     * The [annotation] is only required for Kotlin sources since annotations may have use site targets.
+     * Java sources never require an [annotation] to be present since annotations directly target the element
+     * being annotated.
      */
-    private fun getAnnotationsFor(element: PsiElement): Collection<KtOrPsiAnnotation> = when (element) {
-        is KtAnnotated -> element.annotationEntries.map {
-            KtEntry(it)
-        }
-
-        is PsiModifierListOwner -> element.annotations.map {
-            PsiEntry(it)
-        }
-
-        else -> error("Unexpected PsiElement at ${element.toLocation()}: ${element.javaClass}")
-    }
-
-    /**
-     * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
-     */
-    private fun PsiElement.resolveToKSAnnotated(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated> =
+    private fun PsiElement.resolveToKSAnnotated(annotation: KtEntry? = null): Collection<KSAnnotated> =
         when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
-            is KtDeclaration ->
-                element.resolve(annotationEntry)
+            is KtDeclaration -> {
+                if (annotation == null) {
+                    error("Unexpected null annotation at ${toLocation()} : $javaClass")
+                }
+                element.resolve(annotation)
+            }
 
             is KtFile ->
                 listOf(element.resolve())
@@ -210,11 +302,8 @@ class PsiResolutionStrategy(
     /**
      * Resolves this [KtDeclaration] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
      */
-    private fun KtDeclaration.resolve(annotationEntry: KtOrPsiAnnotation): Collection<KSAnnotated> {
-        // TODO: This perform case distinction instead of getTargetedSymbol
-        if (annotationEntry !is KtEntry) {
-            error("Unexpected Java annotation entry for kt file at ${toLocation()}: $javaClass")
-        }
+    private fun KtDeclaration.resolve(annotationEntry: KtEntry): Collection<KSAnnotated> {
+        // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
         return ksSym.getTargetedSymbol(annotationEntry.useSiteTarget)
     }
@@ -401,6 +490,14 @@ class PsiResolutionStrategy(
     }
 
     /**
+     * Returns the short name used at the annotation site.
+     * Throws an exception if the name is `null`.
+     */
+    private val PsiAnnotation.shortName: String
+        get() = this.nameReferenceElement?.referenceName
+            ?: error("Unexpected nullable annotation short name at ${toLocation()}: $javaClass")
+
+    /**
      * Returns the callable symbol, i.e., the method symbol for the Java parameter `this`.
      * Assumes that `this` is a parameter to a method.
      */
@@ -429,21 +526,15 @@ class PsiResolutionStrategy(
         }
 
     /**
-     * A supertype representing either a Kotlin or Java annotation.
-     */
-    private sealed interface KtOrPsiAnnotation {
-
-        /**
-         * Optionally returns the fully qualified name of the annotation.
-         */
-        val qualifiedName: String?
-    }
-
-    /**
      * Represents a Kotlin annotation.
      */
-    data class KtEntry(val annotation: KtAnnotationEntry) : KtOrPsiAnnotation {
-        override val qualifiedName: String? by lazy {
+    data class KtEntry(val annotation: KtAnnotationEntry) {
+
+        /**
+         * The fully qualified name of the annotation entry.
+         * This member is expensive to compute on first access.
+         */
+        val qualifiedName: String? by lazy {
             analyze {
                 annotation
                     .typeReference
@@ -461,12 +552,5 @@ class PsiResolutionStrategy(
         val useSiteTarget: AnnotationUseSiteTarget? by lazy {
             annotation.useSiteTarget?.getAnnotationUseSiteTarget()?.toKSAnnotationUseSiteTarget()
         }
-    }
-
-    /**
-     * Represents a Java annotation.
-     */
-    data class PsiEntry(val annotation: PsiAnnotation) : KtOrPsiAnnotation {
-        override val qualifiedName: String? = annotation.qualifiedName
     }
 }
