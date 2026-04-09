@@ -53,6 +53,11 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
             it.annotations.forEach { it.arguments.forEach { it.accept(visitor, Unit) } }
         }
 
+        resolver.getSymbolsWithAnnotation("Email").forEach {
+            results.add(it.toString())
+            it.annotations.forEach { it.arguments.forEach { it.accept(visitor, Unit) } }
+        }
+
         val C = resolver.getClassDeclarationByName("C")
         C?.annotations?.first()?.arguments?.forEach { results.add(it.value.toString()) }
         val ThrowsClass = resolver.getClassDeclarationByName("ThrowsClass")
