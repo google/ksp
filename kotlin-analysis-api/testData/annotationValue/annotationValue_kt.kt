@@ -34,6 +34,8 @@
 // RGB.G
 // JavaEnum.ONE
 // 31
+// IsEmailClass
+// user@example.com
 // Throws
 // Sub: [i:42]
 // Cls: argToA: b
@@ -76,6 +78,9 @@ annotation class ClsA(val b: ClsB)
 
 @ClsA(b = ClsB(i = 42))
 class Cls
+
+// FILE: Email.kt
+annotation class Email(val value: String)
 
 // FILE: OtherAnnotation.java
 import java.lang.annotation.Retention;
@@ -192,3 +197,7 @@ class TestNestedAnnotationDefaults {}
 @JavaAnnotationWithDefaults
 @KotlinAnnotationWithDefaults
 class TestValueArgEquals {}
+
+// FILE: IsEmailClass.kt
+@Email(value = "user@example.com")
+class IsEmailClass

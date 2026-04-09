@@ -39,6 +39,8 @@
 // RGB.G
 // JavaEnum.ONE
 // 31
+// IsEmailClass
+// user@example.com
 // [warning1, warning 2]
 // Sub: [i:42]
 // TestJavaLib: OtherAnnotation
@@ -83,6 +85,11 @@ public @interface JavaAnnotationWithDefaults {
     OtherAnnotation otherAnnotationVal() default @OtherAnnotation("def");
 }
 
+// FILE: Email.java
+public @interface Email {
+    String value ();
+}
+
 // FILE: KotlinAnnotationWithDefaults.kt
 annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
 
@@ -117,6 +124,11 @@ annotation class Bar(
 class C {
 
 }
+
+// FILE: IsEmailClass.java
+@Email(value = "user@example.com")
+class IsEmailClass {}
+
 // FILE: JavaAnnotated.java
 @Default
 @Bar(argStr = "Str",

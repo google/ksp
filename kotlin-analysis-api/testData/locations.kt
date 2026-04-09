@@ -114,3 +114,23 @@ class L {
 }
 
 fun @receiver:Location String.extFun() = Unit
+
+interface <A> Foo<A>
+
+abstract class Abs {
+    fun <A> bar1(baz: Foo<@Location A>): Foo<A>
+    fun <A> bar2(baz: Foo<A>): Foo<@Location A>
+}
+
+// FILE: J2.java
+
+interface <A> Foo2<A> {}
+
+abstract class Abs2 {
+    Foo2<String> bar1(Foo2<@Location Boolean> baz)
+    Foo2<@Location A> bar2(Foo2<A> baz)
+}
+
+// FILE: ExpressionAnnotation.kt
+
+val x = @Location listOf(1, 2, 3)
