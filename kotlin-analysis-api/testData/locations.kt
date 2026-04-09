@@ -127,6 +127,6 @@ abstract class Abs {
 interface <A> Foo2<A> {}
 
 abstract class Abs2 {
-    Foo2<A> bar1(Foo2<@Location A> baz)
+    Foo2<String> bar1(Foo2<@Location Boolean> baz)
     Foo2<@Location A> bar2(Foo2<A> baz)
 }
