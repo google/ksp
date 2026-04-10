@@ -123,6 +123,9 @@
 // value:KSValueParameter
 // x:KSPropertyDeclaration
 // x:KSValueParameter
+// ==== MyNestedAnnotation inDepth = false ====
+// UsesTwoAnnotationsWithSameShortNames:KSClassDeclaration, AnnotationContainer1.MyNestedAnnotation, AnnotationContainer2.MyNestedAnnotation
+// UsesTwoAnnotationsWithSameShortNames:KSClassDeclaration, AnnotationContainer1.MyNestedAnnotation, AnnotationContainer2.MyNestedAnnotation
 // END
 //FILE: annotations.kt
 annotation class Anno
@@ -177,3 +180,25 @@ enum class RGB{
     @Anno
     B
 }
+
+// FILE: AnnotationContainer1.java
+
+public class AnnotationContainer1 {
+    public @interface MyNestedAnnotation {
+        String value();
+    }
+}
+
+// FILE: AnnotationContainer2.java
+
+public class AnnotationContainer2 {
+    public @interface MyNestedAnnotation {
+        String value();
+    }
+}
+
+// FILE: UsesTwoAnnotationsWithSameShortNames.java
+
+@AnnotationContainer1.MyNestedAnnotation("value")
+@AnnotationContainer2.MyNestedAnnotation("value")
+public class UsesTwoAnnotationsWithSameShortNames {}
