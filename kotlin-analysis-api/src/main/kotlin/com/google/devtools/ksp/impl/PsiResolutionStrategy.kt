@@ -189,6 +189,8 @@ class PsiResolutionStrategy(
      */
     private val fullyQualifiedJavaAnnotationNamesByElements: Map<PsiElement, Map<String, Lazy<Set<String>>>> by lazy {
         annotatedJavaElements.associate { element ->
+            // N.B.: Performance: Lazily compute the set of qualified names to avoid resolution until requested
+            //  for a specific annotation.
             element to buildMap<String, Lazy<MutableSet<String>>> {
                 element.annotations.forEach { anno ->
                     val lazyFullyQualifiedNames = this[anno.shortName]
