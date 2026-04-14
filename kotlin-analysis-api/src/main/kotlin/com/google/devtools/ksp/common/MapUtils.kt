@@ -18,20 +18,22 @@
 package com.google.devtools.ksp.common
 
 /**
- * Applies `transform` to each key-value pair, where the value is a collection,
+ * Applies [transform] to each key-value pair, where the value is a collection,
  * and merges the resulting collections of values.
+ *
+ * It will exclude any key-value pair where `transform(key)` is `null`.
  *
  * In other words, if `k1 -> [a, b, c], k2 -> [c, d, e]` and
  * `transform(k1) = transform(k2) = k3`, then the result is
  * `k3 -> [a, b, c, d, e]`.
  * Note the list is deduplicated.
  */
-internal fun <K, V, R> Map<K, Lazy<Collection<V>>>.mergeMapKeys(
-    transform: (K) -> R
+internal fun <K, V, R> Map<K, Lazy<Collection<V>>>.mergeMapNotNullKeys(
+    transform: (K) -> R?
 ): Map<R, Lazy<Collection<V>>> =
     mutableMapOf<R, Lazy<Collection<V>>>().apply {
-        this@mergeMapKeys.forEach {
-            transform(it.key).let { newKey ->
+        this@mergeMapNotNullKeys.forEach {
+            transform(it.key)?.let { newKey ->
                 if (newKey in this) {
                     // N.B.: Store the old value in a variable so the value is captured in the lazy
                     // lambda, instead of capturing the indexing expression `this[newKey]`, which
