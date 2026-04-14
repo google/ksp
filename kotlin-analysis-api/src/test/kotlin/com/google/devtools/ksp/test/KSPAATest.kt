@@ -442,6 +442,12 @@ class KSPAATest : AbstractKSPAATest(false) {
         runTest("../kotlin-analysis-api/testData/libOrigins.kt")
     }
 
+    @TestMetadata("localClasses")
+    @Test
+    fun testLocalClasses() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/localClasses.kt")
+    }
+
     @TestMetadata("locations.kt")
     @Test
     fun testLocations() {
