@@ -1,26 +1,27 @@
-* @ting-yuan @hfmehmed @jaschdoc
+* @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
 
-/.github/ @ting-yuan @hfmehmed @jaschdoc
-/buildSrc/ @ting-yuan @hfmehmed
-/gradle-plugin/ @ting-yuan @hfmehmed
-build.gradle.kts @hfmehmed
-settings.gradle.kts @hfmehmed
-gradle.properties @hfmehmed
-gradlew @hfmehmed
+/.github/ @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+/buildSrc/ @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+/gradle-plugin/ @ting-yuan @hfmehmed @troelsbjerre
+build.gradle.kts @hfmehmed @jaschdoc
+settings.gradle.kts @hfmehmed @jaschdoc
+gradle.properties @hfmehmed @jaschdoc
+gradlew @hfmehmed @jaschdoc
 
-/api/ @ting-yuan @jaschdoc
-/symbol-processing/ @ting-yuan @jaschdoc
-/kotlin-analysis-api/ @ting-yuan @jaschdoc
-/symbol-processing-aa-embeddable/ @ting-yuan @hfmehmed @jaschdoc
+/api/ @ting-yuan @jaschdoc @troelsbjerre
+/symbol-processing/ @ting-yuan @jaschdoc @troelsbjerre
+/kotlin-analysis-api/ @ting-yuan @jaschdoc @troelsbjerre
+/symbol-processing-aa-embeddable/ @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
 
-/integration-tests/ @ting-yuan @hfmehmed
-/benchmark/ @jaschdoc
-/test-utils/ @ting-yuan @jaschdoc 
-/common-util/ @ting-yuan @jaschdoc
-/common-deps/ @ting-yuan @jaschdoc
+/integration-tests/ @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+/benchmark/ @jaschdoc @troelsbjerre
+/test-utils/ @ting-yuan @jaschdoc @troelsbjerre
+/common-util/ @ting-yuan @jaschdoc @troelsbjerre
+/common-deps/ @ting-yuan @jaschdoc @troelsbjerre
 
-/docs/ @ting-yuan @hfmehmed @jaschdoc
-/examples/ @ting-yuan @hfmehmed @jaschdoc
-README.md @ting-yuan @hfmehmed @jaschdoc
-CONTRIBUTING.md @ting-yuan @hfmehmed @jaschdoc
-DEVELOPMENT.md @ting-yuan @hfmehmed @jaschdoc
+/docs/ @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+/examples/ @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+README.md @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+CONTRIBUTING.md @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+DEVELOPMENT.md @ting-yuan @hfmehmed @jaschdoc @troelsbjerre
+
