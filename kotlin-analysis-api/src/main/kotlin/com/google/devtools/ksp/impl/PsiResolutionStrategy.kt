@@ -254,7 +254,13 @@ class PsiResolutionStrategy(
                 lazy { entry.value.flatMap { it.resolveToKSAnnotated(entry.key) } }
             }
             .mergeMapKeys {
-                it.qualifiedName ?: error("Unexpected unqualified name for ${it.javaClass}")
+                it.qualifiedName
+                    ?: error(
+                        "Unexpected unqualified name for annotation with short name: " +
+                            "'${it.annotation.shortName}' " +
+                            "at ${it.annotation.toLocation()} " +
+                            "${it.annotation.javaClass}"
+                    )
             }
     }
 
