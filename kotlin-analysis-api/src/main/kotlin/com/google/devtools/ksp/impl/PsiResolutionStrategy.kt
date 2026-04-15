@@ -249,7 +249,7 @@ class PsiResolutionStrategy(
      */
     private val annotatedKotlinElementsByFullyQualifiedName: Map<String, Lazy<Collection<KSAnnotated>>> by lazy {
         annotatedKotlinElements
-            .flatGroupBy { element -> element.annotationEntries.map { KtEntry(it) } }
+            .flatGroupBy { element -> element.annotationEntries }
             .mapValues { entry ->
                 lazy { entry.value.flatMap { it.resolveToKSAnnotated(entry.key) } }
             }
@@ -257,9 +257,9 @@ class PsiResolutionStrategy(
                 it.qualifiedName
                     ?: error(
                         "Unexpected unqualified name for annotation with short name: " +
-                            "'${it.annotation.shortName}' " +
-                            "at ${it.annotation.toLocation()} " +
-                            "${it.annotation.javaClass}"
+                            "'${it.shortName}' " +
+                            "at ${it.toLocation()} " +
+                            "${it.javaClass}"
                     )
             }
     }
@@ -271,7 +271,7 @@ class PsiResolutionStrategy(
      * Java sources never require an [annotation] to be present since annotations directly target the element
      * being annotated.
      */
-    private fun PsiElement.resolveToKSAnnotated(annotation: KtEntry? = null): Collection<KSAnnotated> =
+    private fun PsiElement.resolveToKSAnnotated(annotation: KtAnnotationEntry? = null): Collection<KSAnnotated> =
         when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
             is KtDeclaration -> {
@@ -310,10 +310,10 @@ class PsiResolutionStrategy(
     /**
      * Resolves this [KtDeclaration] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
      */
-    private fun KtDeclaration.resolve(annotationEntry: KtEntry): Collection<KSAnnotated> {
+    private fun KtDeclaration.resolve(annotationEntry: KtAnnotationEntry): Collection<KSAnnotated> {
         // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
-        return ksSym.getTargetedSymbol(annotationEntry.useSiteTarget)
+        return ksSym.getTargetedSymbol(annotationEntry.ksUseSiteTarget)
     }
 
     /**
@@ -534,31 +534,22 @@ class PsiResolutionStrategy(
         }
 
     /**
-     * Represents a Kotlin annotation.
+     * The fully qualified name of the annotation entry.
+     * This member is expensive to compute.
      */
-    data class KtEntry(val annotation: KtAnnotationEntry) {
-
-        /**
-         * The fully qualified name of the annotation entry.
-         * This member is expensive to compute on first access.
-         */
-        val qualifiedName: String? by lazy {
-            analyze {
-                annotation
-                    .typeReference
-                    ?.type
-                    ?.fullyExpandedType
-                    ?.expandedSymbol
-                    ?.classId
-                    ?.asFqNameString()
-            }
+    private val KtAnnotationEntry.qualifiedName: String?
+        get() = analyze {
+            this@qualifiedName.typeReference
+                ?.type
+                ?.fullyExpandedType
+                ?.expandedSymbol
+                ?.classId
+                ?.asFqNameString()
         }
 
-        /**
-         * The use-site target specified for this annotation entry.
-         */
-        val useSiteTarget: AnnotationUseSiteTarget? by lazy {
-            annotation.useSiteTarget?.getAnnotationUseSiteTarget()?.toKSAnnotationUseSiteTarget()
-        }
-    }
+    /**
+     * The use-site target specified for this annotation entry.
+     */
+    private val KtAnnotationEntry.ksUseSiteTarget: AnnotationUseSiteTarget?
+        get() = useSiteTarget?.getAnnotationUseSiteTarget()?.toKSAnnotationUseSiteTarget()
 }
