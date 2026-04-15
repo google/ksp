@@ -16,17 +16,19 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
+// TEST ANNOTATIONS: Anno
 // EXPECTED:
-// Outer
-// Outer.<no name provided>
-// Outer.Companion
-// Outer.Inner
-// Outer.Local
-// Outer.PrivateInner
-// Outer.PrivateLocal
+// Anno: Outer
+// Anno: Outer.<no name provided>
+// Anno: Outer.Companion
+// Anno: Outer.Inner
+// Anno: Outer.Local
+// Anno: Outer.PrivateInner
+// Anno: Outer.PrivateLocal
 // END
 
 // FILE: Anno.kt
+
 annotation class Anno
 
 // FILE: LocalClasses.kt

@@ -77,8 +77,10 @@ abstract class DisposableTest {
 
 abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMode: Boolean) : DisposableTest() {
     companion object {
-        val TEST_PROCESSOR = "// TEST PROCESSOR:"
-        val EXPECTED_RESULTS = "// EXPECTED:"
+        const val TEST_PROCESSOR = "// TEST PROCESSOR:"
+        const val TEST_ANNOTATIONS = "// TEST ANNOTATIONS:"
+        const val EXPECTED_RESULTS = "// EXPECTED:"
+        const val EXPECTED_RESULTS_END = "// END"
     }
 
     val kspTestRoot = KtTestUtil.tmpDir("com/google/devtools/ksp/test/testgoogle/devtools/ksp/test/test")
@@ -232,13 +234,30 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMod
         val contents = mainModule.files.first().originalFile.readLines()
 
         val testProcessorName = contents
-            .filter { it.startsWith(TEST_PROCESSOR) }
-            .single()
+            .single { it.startsWith(TEST_PROCESSOR) }
             .substringAfter(TEST_PROCESSOR)
             .trim()
+
+        val testAnnotationNames = contents
+            .find { it.startsWith(TEST_ANNOTATIONS) }
+            ?.substringAfter(TEST_ANNOTATIONS)
+            ?.split(',')
+            ?.map { it.trim() }
+
+        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
+
         val testProcessor: AbstractTestProcessor =
-            Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
-                .getDeclaredConstructor().newInstance() as AbstractTestProcessor
+            if (testAnnotationNames == null) {
+                // Instantiate processor class without constructor params
+                processorClass
+                    .getDeclaredConstructor()
+                    .newInstance() as AbstractTestProcessor
+            } else {
+                // Instantiate parameterized processor class
+                processorClass
+                    .getDeclaredConstructor(List::class.java)
+                    .newInstance(testAnnotationNames) as AbstractTestProcessor
+            }
 
         val kspConfigBuilder = KSPJvmConfig.Builder().apply {
             experimentalPsiResolution = experimentalPsiMode
@@ -247,7 +266,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMod
         val expectedResults = contents
             .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
             .drop(1)
-            .takeWhile { !it.startsWith("// END") }
+            .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
             .map { it.substring(3).trim() }
 
         val results = collectAllExceptions {

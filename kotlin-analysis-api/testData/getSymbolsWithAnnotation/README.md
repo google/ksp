@@ -22,3 +22,22 @@ they follow the same execution path.
 * **Isolation**: By keeping these tests separate, we avoid cluttering broader API tests while
 still ensuring that any changes to the resolution strategies are thoroughly validated across various
 code constructs (like nested or local classes).
+
+### Important note when writing tests
+
+Tests that use `GetSymbolsWithAnnotationProcessor` must always have a comment containing the fully
+qualified names of the annotations the processor should use to look up symbols. For instance,
+the `localClasses.kt` file declares an annotation class `Anno` and contains the line:
+
+```kotlin
+// TEST ANNOTATIONS: Anno
+```
+
+Likewise, the `metaAnnotations.kt` file contains the line:
+
+```kotlin
+// TEST ANNOTATIONS: kotlin.annotation.Retention, kotlin.annotation.Target
+```
+
+It then finds all symbols annotated with `kotlin.annotation.Retention` and finds all symbols
+annotated with `kotlin.annotation.Target`.
