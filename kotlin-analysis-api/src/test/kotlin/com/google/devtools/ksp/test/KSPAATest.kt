@@ -472,6 +472,12 @@ class KSPAATest : AbstractKSPAATest(false) {
         runTest("../kotlin-analysis-api/testData/mangledNames.kt")
     }
 
+    @TestMetadata("metaAnnotations")
+    @Test
+    fun testMetaAnnotations() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/metaAnnotations.kt")
+    }
+
     @TestMetadata("multipleModules.kt")
     @Test
     fun testMultipleModules() {

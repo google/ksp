@@ -5,7 +5,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 
-class GetSymbolsWithAnnotationProcessor : AbstractTestProcessor() {
+class GetSymbolsWithAnnotationProcessor(val annotationNames: List<String>) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -13,8 +13,10 @@ class GetSymbolsWithAnnotationProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getSymbolsWithAnnotation("Anno").forEach {
-            results.add(it.fqn)
+        annotationNames.forEach { annotationName ->
+            resolver.getSymbolsWithAnnotation(annotationName).forEach {
+                results.add("$annotationName: ${it.fqn}")
+            }
         }
         return emptyList()
     }
