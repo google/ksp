@@ -16,19 +16,14 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: Anno
+// TEST ANNOTATIONS: kotlin.annotation.Retention, kotlin.annotation.Target
 // EXPECTED:
+// kotlin.annotation.Retention: Anno
+// kotlin.annotation.Target: Anno
 // END
 
 // FILE: Anno.kt
 
-annotation class Anno {
-    companion object {
-        val instance = this
-    }
-}
-
-// FILE: Target.kt
-
-@Anno.instance
-class Target
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.CLASS)
+annotation class Anno
