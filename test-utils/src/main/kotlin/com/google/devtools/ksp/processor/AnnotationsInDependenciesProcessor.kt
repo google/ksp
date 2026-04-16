@@ -47,14 +47,14 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
 
     private fun KSAnnotated.toSignature(): String {
         return when (this) {
-            is KSClassDeclaration -> "class " + (qualifiedName ?: simpleName).asString()
-            is KSPropertyDeclaration -> "property ${simpleName.asString()}"
-            is KSFunctionDeclaration -> "function ${simpleName.asString()}"
+            is KSClassDeclaration -> "class ${(qualifiedName ?: simpleName).asString()} ${this.location.lineNumber}"
+            is KSPropertyDeclaration -> "property ${simpleName.asString()} ${this.location.lineNumber}"
+            is KSFunctionDeclaration -> "function ${simpleName.asString()} ${this.location.lineNumber}"
             is KSValueParameter -> name?.let {
-                "parameter ${it.asString()}"
-            } ?: "no-name-value-parameter"
-            is KSPropertyGetter -> "getter of ${receiver.toSignature()}"
-            is KSPropertySetter -> "setter of ${receiver.toSignature()}"
+                "parameter ${it.asString()} ${this.location.lineNumber}"
+            } ?: "no-name-value-parameter ${this.location.lineNumber}"
+            is KSPropertyGetter -> "getter of ${receiver.toSignature()}" // lineNumber handled by recursive call
+            is KSPropertySetter -> "setter of ${receiver.toSignature()}" // lineNumber handled by recursive call
             else -> {
                 error("unexpected annotated")
             }
@@ -66,10 +66,16 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
             (it.qualifiedName ?: it.simpleName).asString()
         }
         val args = this.arguments.map {
-            "[${it.name?.asString()} = ${it.value}]"
+            "[${it.name?.asString()} = ${it.value} : ${it.location.lineNumber}]"
         }.joinToString(",")
-        return "$type{$args}"
+        return "$type{$args} : ${this.location.lineNumber}"
     }
+
+    private val Location.lineNumber: String
+        get() = when (this) {
+            is FileLocation -> this.lineNumber.toString()
+            is NonExistLocation -> "<no line>"
+        }
 
     class AnnotationVisitor : KSTopDownVisitor<MutableMap<KSAnnotated, List<KSAnnotation>>, Unit>() {
         override fun defaultHandler(node: KSNode, data: MutableMap<KSAnnotated, List<KSAnnotation>>) {
