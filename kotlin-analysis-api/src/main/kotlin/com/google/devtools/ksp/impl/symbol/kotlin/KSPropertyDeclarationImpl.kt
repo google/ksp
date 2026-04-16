@@ -64,14 +64,6 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             .filter { !it.isUseSiteTargetAnnotation() }
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
             .plus(
-                if (ktPropertySymbol.isFromPrimaryConstructor) {
-                    (parentDeclaration as? KSClassDeclaration)?.primaryConstructor?.parameters?.singleOrNull {
-                        it.name == simpleName
-                    }?.annotations?.filter { it.isValidOnProperty() } ?: emptySequence()
-                } else {
-                    emptySequence()
-                }
-            ).plus(
                 // TODO: optimize for psi
                 ktPropertySymbol.backingFieldSymbol?.annotations?.map {
                     KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl, definitionOrigin)
