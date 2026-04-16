@@ -18,6 +18,7 @@
 // TEST PROCESSOR: AnnotationOnConstructorParameterProcessor
 // EXPECTED:
 // Anno
+// Anno
 // true
 // true
 // END
