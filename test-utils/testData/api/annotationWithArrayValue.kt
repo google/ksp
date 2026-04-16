@@ -49,6 +49,10 @@ annotation class MyAnnotation(val tag: ByteArray)
 class KotlinAnnotated
 
 class Main(
+
+    // Note: The AnnotationArrayValueProcessor asks for the *properties* of `Main` (not the value parameters)
+    //  so only one p0 should be returned, namely the property declared in the constructor parameter,
+    //  and **NOT** the p0 constructor value parameter of main
     @MyAnnotation(
         tag = [1.toByte(), 2.toByte(), 3.toByte()]
     )

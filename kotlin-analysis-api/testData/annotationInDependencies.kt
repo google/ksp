@@ -19,22 +19,25 @@
 // TEST PROCESSOR: AnnotationsInDependenciesProcessor
 // EXPECTED:
 // main.KotlinClass ->
-// class main.KotlinClass 174 : annotations.ClassTarget{[value = onClass : 173]} : 173
-// class main.KotlinClass 174 : annotations.NoTargetAnnotation{[value = onClass : 172]} : 172
-// function myFun 187 : annotations.FunctionTarget{[value = onMyFun : 186]} : 186
-// function myFun 187 : annotations.NoTargetAnnotation{[value = onMyFun : 185]} : 185
-// getter of property prop 183 : annotations.PropertyGetterTarget{[value = get: : 179]} : <no line>
-// parameter param1 190 : annotations.NoTargetAnnotation{[value = onParam1 : 188]} : <no line>
-// parameter param1 190 : annotations.ValueParameterTarget{[value = onParam1 : 189]} : <no line>
-// parameter param2 193 : annotations.NoTargetAnnotation{[value = onParam2 : 191]} : <no line>
-// parameter param2 193 : annotations.ValueParameterTarget{[value = onParam2 : 192]} : <no line>
-// parameter value <no line> : annotations.ValueParameterTarget{[value = onProp : 181]} : <no line>
-// property prop 183 : annotations.AllTarget{[value = all: : 182]} : <no line>
-// property prop 183 : annotations.FieldTarget2{[value = field: : 180]} : <no line>
-// property prop 183 : annotations.FieldTarget{[value = onProp : 176]} : <no line>
-// property prop 183 : annotations.NoTargetAnnotation{[value = onProp : 175]} : <no line>
-// property prop 183 : annotations.PropertyTarget{[value = onProp : 177]} : <no line>
-// setter of property prop 183 : annotations.PropertySetterTarget{[value = set: : 178]} : <no line>
+// class main.KotlinClass 180 : annotations.ClassTarget{[value = onClass : 179]} : 179
+// class main.KotlinClass 180 : annotations.NoTargetAnnotation{[value = onClass : 178]} : 178
+// function myFun 193 : annotations.FunctionTarget{[value = onMyFun : 192]} : 192
+// function myFun 193 : annotations.NoTargetAnnotation{[value = onMyFun : 191]} : 191
+// getter of property prop 189 : annotations.AllTarget{[value = all: : 188]} : <no line>
+// getter of property prop 189 : annotations.PropertyGetterTarget{[value = get: : 185]} : <no line>
+// parameter param1 196 : annotations.NoTargetAnnotation{[value = onParam1 : 194]} : <no line>
+// parameter param1 196 : annotations.ValueParameterTarget{[value = onParam1 : 195]} : <no line>
+// parameter param2 199 : annotations.NoTargetAnnotation{[value = onParam2 : 197]} : <no line>
+// parameter param2 199 : annotations.ValueParameterTarget{[value = onParam2 : 198]} : <no line>
+// parameter value <no line> : annotations.AllTarget{[value = all: : 188]} : <no line>
+// parameter value <no line> : annotations.ValueParameterTarget{[value = onProp : 187]} : <no line>
+// property prop 189 : annotations.AllTarget{[value = all: : 188]} : <no line>
+// property prop 189 : annotations.AllTarget{[value = all: : 188]} : <no line>
+// property prop 189 : annotations.FieldTarget2{[value = field: : 186]} : <no line>
+// property prop 189 : annotations.FieldTarget{[value = onProp : 182]} : <no line>
+// property prop 189 : annotations.NoTargetAnnotation{[value = onProp : 181]} : <no line>
+// property prop 189 : annotations.PropertyTarget{[value = onProp : 183]} : <no line>
+// setter of property prop 189 : annotations.PropertySetterTarget{[value = set: : 184]} : <no line>
 // lib.KotlinClass ->
 // class lib.KotlinClass <no line> : annotations.ClassTarget{[value = onClass : <no line>]} : <no line>
 // class lib.KotlinClass <no line> : annotations.NoTargetAnnotation{[value = onClass : <no line>]} : <no line>
@@ -56,21 +59,23 @@
 // property prop <no line> : annotations.PropertyTarget{[value = onProp : <no line>]} : <no line>
 // setter of property prop <no line> : annotations.PropertySetterTarget{[value = set: : <no line>]} : <no line>
 // main.DataClass ->
-// class main.DataClass 200 : annotations.ClassTarget{[value = onDataClass : 199]} : 199
-// class main.DataClass 200 : annotations.NoTargetAnnotation{[value = onDataClass : 198]} : 198
-// getter of property constructorParam 211 : annotations.PropertyGetterTarget{[value = get: : 205]} : <no line>
-// parameter constructorParam 211 : annotations.AllTarget{[value = all: : 210]} : <no line>
-// parameter constructorParam 211 : annotations.NoTargetAnnotation{[value = onConstructorParam : 201]} : <no line>
-// parameter constructorParam 211 : annotations.ValueParameterTarget{[value = onConstructorParam : 209]} : <no line>
-// parameter value <no line> : annotations.ValueParameterTarget{[value = onConstructorParam : 208]} : <no line>
-// property constructorParam 211 : annotations.AllTarget{[value = all: : 210]} : <no line>
-// property constructorParam 211 : annotations.AllTarget{[value = all: : 210]} : <no line>
-// property constructorParam 211 : annotations.FieldTarget2{[value = field: : 206]} : <no line>
-// property constructorParam 211 : annotations.FieldTarget{[value = onConstructorParam : 202]} : <no line>
-// property constructorParam 211 : annotations.NoTargetAnnotation{[value = onConstructorParam : 201]} : <no line>
-// property constructorParam 211 : annotations.PropertyTarget{[value = onConstructorParam : 203]} : <no line>
-// property constructorParam 211 : annotations.ValueParameterAndFieldTarget{[value = valueParameterAndField : 207]} : <no line>
-// setter of property constructorParam 211 : annotations.PropertySetterTarget{[value = set: : 204]} : <no line>
+// class main.DataClass 206 : annotations.ClassTarget{[value = onDataClass : 205]} : 205
+// class main.DataClass 206 : annotations.NoTargetAnnotation{[value = onDataClass : 204]} : 204
+// getter of property constructorParam 217 : annotations.AllTarget{[value = all: : 216]} : <no line>
+// getter of property constructorParam 217 : annotations.PropertyGetterTarget{[value = get: : 211]} : <no line>
+// parameter constructorParam 217 : annotations.AllTarget{[value = all: : 216]} : <no line>
+// parameter constructorParam 217 : annotations.NoTargetAnnotation{[value = onConstructorParam : 207]} : <no line>
+// parameter constructorParam 217 : annotations.ValueParameterTarget{[value = onConstructorParam : 215]} : <no line>
+// parameter value <no line> : annotations.AllTarget{[value = all: : 216]} : <no line>
+// parameter value <no line> : annotations.ValueParameterTarget{[value = onConstructorParam : 214]} : <no line>
+// property constructorParam 217 : annotations.AllTarget{[value = all: : 216]} : <no line>
+// property constructorParam 217 : annotations.AllTarget{[value = all: : 216]} : <no line>
+// property constructorParam 217 : annotations.FieldTarget2{[value = field: : 212]} : <no line>
+// property constructorParam 217 : annotations.FieldTarget{[value = onConstructorParam : 208]} : <no line>
+// property constructorParam 217 : annotations.NoTargetAnnotation{[value = onConstructorParam : 207]} : <no line>
+// property constructorParam 217 : annotations.PropertyTarget{[value = onConstructorParam : 209]} : <no line>
+// property constructorParam 217 : annotations.ValueParameterAndFieldTarget{[value = valueParameterAndField : 213]} : <no line>
+// setter of property constructorParam 217 : annotations.PropertySetterTarget{[value = set: : 210]} : <no line>
 // lib.DataClass ->
 // class lib.DataClass <no line> : annotations.ClassTarget{[value = onDataClass : <no line>]} : <no line>
 // class lib.DataClass <no line> : annotations.NoTargetAnnotation{[value = onDataClass : <no line>]} : <no line>
@@ -83,6 +88,7 @@
 // property constructorParam <no line> : annotations.AllTarget{[value = all: : <no line>]} : <no line>
 // property constructorParam <no line> : annotations.FieldTarget2{[value = field: : <no line>]} : <no line>
 // property constructorParam <no line> : annotations.FieldTarget{[value = onConstructorParam : <no line>]} : <no line>
+// property constructorParam <no line> : annotations.NoTargetAnnotation{[value = onConstructorParam : <no line>]} : <no line>
 // property constructorParam <no line> : annotations.PropertyTarget{[value = onConstructorParam : <no line>]} : <no line>
 // setter of property constructorParam <no line> : annotations.PropertySetterTarget{[value = set: : <no line>]} : <no line>
 // END
