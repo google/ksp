@@ -252,6 +252,12 @@ abstract class KSPUnitTestSuite(
         runTest("$UTIL_PATH/declarationsInAccessor.kt")
     }
 
+    @TestMetadata("declarationsInClass.kt")
+    @Test
+    fun testDeclarationsInClass() {
+        runTest("$UTIL_PATH/declarationsInClass.kt")
+    }
+
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
