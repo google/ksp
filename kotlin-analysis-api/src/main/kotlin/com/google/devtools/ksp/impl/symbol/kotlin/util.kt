@@ -94,6 +94,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.KaSyntheticJavaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaValueParameterSymbol
@@ -117,6 +118,8 @@ import org.jetbrains.kotlin.analysis.api.types.KaTypeProjection
 import org.jetbrains.kotlin.analysis.api.types.KaUsualClassType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap.mapJavaToKotlin
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap.mapKotlinToJava
 import org.jetbrains.kotlin.codegen.state.InfoForMangling
 import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
 import org.jetbrains.kotlin.codegen.state.md5base64
@@ -136,6 +139,7 @@ import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.ClassIdBasedLocality
+import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.psi.KtAnnotated
@@ -1195,6 +1199,125 @@ internal val KaDeclarationSymbol.internalSuffix: String
             else -> ""
         }
     }
+
+/**
+ * Checks if this symbol is an artifact of inheritance that the Kotlin Analysis API (FIR)
+ * incorrectly leaked into the current class's declarations list.
+ *
+ * KSP's contract dictates that `KSClassDeclaration.declarations` should only return
+ * explicitly declared members. This method identifies leaked or synthesized members
+ * so they can be filtered out.
+ *
+ * It specifically identifies the following Analysis API leaks:
+ *
+ * **1. Compiler-Generated Intersection Overrides**
+ * An intersection override occurs when a class inherits from multiple supertypes that
+ * declare the same member with the same signature. The compiler synthesizes a new member
+ * in the subclass.
+ * ```kotlin
+ * interface A { fun execute() }
+ * interface B { fun execute() }
+ * // FIR synthesizes an intersection override for `execute()` inside C.
+ * interface C : A, B
+ * ```
+ *
+ * **2. Compiler-Generated Substitution Overrides**
+ * A substitution override is created when a generic type parameter from a supertype
+ * is substituted with a concrete type in the subclass.
+ * ```kotlin
+ * interface Base<T> { fun process(item: T) }
+ * // FIR synthesizes a substitution override `fun process(item: String)` inside Derived.
+ * interface Derived : Base<String>
+ * ```
+ *
+ * **3. Inherited Synthetic Java Properties**
+ * The Analysis API exposes Java getter/setter methods that override a Kotlin property
+ * as synthetic property symbols. Due to a quirk in the FIR provider, these can leak
+ * into a subclass's declarations even if only inherited.
+ * ```kotlin
+ * interface FooProvider1 { val foo: Foo }
+ * ```
+ * ```java
+ * interface FooProvider2 { Foo getFoo(); }
+ * // App is empty, but FIR leaks a synthetic property for `foo`/`getFoo` into App's declarations.
+ * interface App extends FooProvider1, FooProvider2 {}
+ * ```
+ */
+internal fun KSDeclaration.isLeakedInheritedMember(currentClass: KSClassDeclarationImpl): Boolean {
+    val declarationSymbol = (this as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol ?: return false
+    val origin = declarationSymbol.origin
+    if (origin == KaSymbolOrigin.INTERSECTION_OVERRIDE || origin == KaSymbolOrigin.SUBSTITUTION_OVERRIDE) {
+        return true
+    }
+
+    if (declarationSymbol is KaSyntheticJavaPropertySymbol) {
+        val getterClassId = declarationSymbol.javaGetterSymbol.callableId?.classId ?: return false
+        val currentClassId = currentClass.ktClassOrObjectSymbol.classId ?: return false
+        return getterClassId != currentClassId
+    }
+
+    return false
+}
+
+/**
+ * Performs a Breadth-First Search (BFS) over the FIR supertype hierarchy to determine if this
+ * class inherits from a Kotlin built-in type that structurally alters its Java members.
+ *
+ * This FIR-based traversal is required because PSI-based hierarchy checks (e.g.,
+ * `InheritanceUtil.isInheritor`) are unreliable for compiled library dependencies
+ * (`Origin.JAVA_LIB`) in KSP's isolated environments due to incomplete ASTs.
+ *
+ * If this returns true, KSP must bypass the PSI fast path to avoid exposing Java methods
+ * that FIR intentionally hides or renames (such as `remove(int)` or `entrySet()`), which
+ * would otherwise cause symbol resolution crashes during validation.
+ *
+ * @return `true` if this class or any of its supertypes requires specialized compiler mapping.
+ */
+fun KaClassSymbol.isOrInheritsFromKotlinAlteredType(): Boolean {
+    return analyze {
+        val queue = ArrayDeque<KaClassSymbol>()
+        val visited = mutableSetOf<KaClassSymbol>()
+        queue.add(this@isOrInheritsFromKotlinAlteredType)
+
+        while (queue.isNotEmpty()) {
+            val curr = queue.removeFirst()
+            if (!visited.add(curr)) continue
+
+            val fqName = curr.classId?.asFqNameString()
+            if (fqName != null && isKotlinAlteredType(fqName)) {
+                return@analyze true
+            }
+
+            // Traverse up the FIR hierarchy
+            curr.superTypes.forEach { superType -> superType.expandedSymbol?.let { queue.add(it) } }
+        }
+        false
+    }
+}
+
+/**
+ * Checks if the given fully qualified name belongs to a Kotlin built-in type that applies
+ * specialized mapping to its Java members.
+ *
+ * The Kotlin Analysis API (FIR) intentionally hides Java collection mutator methods and
+ * maps methods from specific types to properties or renamed identifiers (e.g., mapping
+ * `length()` to a property for `CharSequence`, or `remove` to `removeAt`). KSP must
+ * fall back to the Analysis API slow path for these types to maintain behavioral consistency.
+ */
+private fun isKotlinAlteredType(fqName: String): Boolean {
+    // Exclude benign mapped types that do not structurally alter Java members.
+    // kotlin.Any is at the root of every hierarchy, so it must be ignored to prevent
+    // the PSI fast path from being universally bypassed.
+    when (fqName) {
+        "kotlin.Any",
+        "kotlin.Cloneable",
+        "kotlin.Comparable",
+        "kotlin.Annotation" -> return false
+    }
+
+    // Check if the type is in the compiler's official mapped types list.
+    return mapKotlinToJava(FqNameUnsafe(fqName)) != null
+}
 
 // Annotations on deeply synthesized members like getter of Java annotation arguments can be defined in src.
 internal val KSNode.definitionOrigin: Origin

@@ -74,6 +74,9 @@ class JavaModifierProcessor : AbstractTestProcessor() {
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
             results.add(function.toSignature())
+            if (function.modifiers.contains(Modifier.ABSTRACT) != function.isAbstract) {
+                results.add("Mismatched abstract modifiers")
+            }
         }
 
         @OptIn(KspExperimental::class)

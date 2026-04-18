@@ -31,8 +31,9 @@ class KSTypeParameterImpl private constructor(
     private val boundsSubstitued: List<KaType>?
 ) :
     KSTypeParameter,
-    AbstractKSDeclarationImpl(ktTypeParameterSymbol),
+    AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktTypeParameterSymbol) {
+    override val ktDeclarationSymbol get() = ktTypeParameterSymbol
     companion object : KSObjectCache<Pair<KaTypeParameterSymbol, List<KaType>?>, KSTypeParameterImpl>() {
         fun getCached(ktTypeParameterSymbol: KaTypeParameterSymbol, bounds: List<KaType>? = null) =
             cache.getOrPut(Pair(ktTypeParameterSymbol, bounds)) {

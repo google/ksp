@@ -31,8 +31,6 @@
 // Validating kotlinLibFuntion
 // Validating kotlinLibProperty
 // Validating File: App.java
-// Exception: [File: App.java, App, foo, getFoo, Foo]: SYNTHETIC
-// Exception: [File: App.java, App, foo, getFoo]: SYNTHETIC
 // Validating File: FooProvider1.kt
 // Exception: [File: FooProvider1.kt, FooProvider1, Any]: SYNTHETIC
 // Exception: [File: FooProvider1.kt, FooProvider1, foo, foo.getter(), Foo, Foo]: SYNTHETIC

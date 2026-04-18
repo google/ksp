@@ -17,8 +17,9 @@ import org.jetbrains.kotlin.psi.KtProperty
 class KSPropertyDeclarationLocalVariableImpl private constructor(
     private val ktLocalVariableSymbol: KaLocalVariableSymbol
 ) : KSPropertyDeclaration,
-    AbstractKSDeclarationImpl(ktLocalVariableSymbol),
+    AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktLocalVariableSymbol) {
+    override val ktDeclarationSymbol get() = ktLocalVariableSymbol
     companion object : KSObjectCache<KaLocalVariableSymbol, KSPropertyDeclarationLocalVariableImpl>() {
         fun getCached(ktLocalVariableSymbol: KaLocalVariableSymbol) =
             cache.getOrPut(ktLocalVariableSymbol) { KSPropertyDeclarationLocalVariableImpl(ktLocalVariableSymbol) }
