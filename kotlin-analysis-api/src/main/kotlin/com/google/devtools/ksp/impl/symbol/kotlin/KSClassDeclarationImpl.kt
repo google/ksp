@@ -21,6 +21,8 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.errorTypeOnInconsistentArguments
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
+import com.google.devtools.ksp.common.isMappedToKotlinType
+import com.google.devtools.ksp.common.isObjectOverride
 import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordGetSealedSubclasses
@@ -29,17 +31,25 @@ import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
 import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtClassOrObject
 
 class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSymbol: KaClassSymbol) :
     KSClassDeclaration,
-    AbstractKSDeclarationImpl(ktClassOrObjectSymbol),
+    AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktClassOrObjectSymbol) {
+    private val isExperimentalPsiResolutionEnabled: Boolean by lazy {
+        runCatching { ResolverAAImpl.instance }.getOrNull()?.kspConfig?.experimentalPsiResolution == true
+    }
+
+    override val ktDeclarationSymbol = ktClassOrObjectSymbol
+
     companion object : KSObjectCache<KaClassSymbol, KSClassDeclarationImpl>() {
         fun getCached(ktClassOrObjectSymbol: KaClassSymbol) =
             cache.getOrPut(ktClassOrObjectSymbol) { KSClassDeclarationImpl(ktClassOrObjectSymbol) }
@@ -180,8 +190,90 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
-        val decls = ktClassOrObjectSymbol.declarations()
-        if (origin == Origin.JAVA && classKind != ClassKind.ANNOTATION_CLASS) {
+        // FAST PATH: Use PSI directly for Java classes
+        if (isExperimentalPsiResolutionEnabled) {
+            ktClassOrObjectSymbol.psi?.let { psi ->
+                if (psi is PsiClass && canUsePsiResolution(psi)) {
+                    psi.getDeclarationsFromPsi()?.let { return@lazyMemoizedSequence it }
+                }
+            }
+        }
+
+        // SLOW PATH: Original AA fallback for Kotlin classes (or if ASM failed)
+        getDeclarationsFromAnalysisApi()
+    }
+
+    fun canUsePsiResolution(psiClass: PsiClass): Boolean {
+        return (origin == Origin.JAVA || origin == Origin.JAVA_LIB) &&
+            // Java annotations, enums, and types that map to Kotlin types (e.g. java.lang.String -> kotlin.String) have
+            // additional properties added by the Analysis API that don't actually exist in the Java type so just skip
+            // them to avoid this complexity.
+            classKind != ClassKind.ANNOTATION_CLASS &&
+            classKind != ClassKind.ENUM_CLASS &&
+            !psiClass.isMappedToKotlinType() &&
+            !ktClassOrObjectSymbol.inheritsFromKotlinAlteredType()
+    }
+
+    private fun PsiClass.getDeclarationsFromPsi(): Sequence<KSDeclaration>? {
+        // 1. Fields
+        val fields = fields.asSequence()
+            .map { KSPropertyDeclarationJavaImpl.getCached(psi = it, parent = this@KSClassDeclarationImpl) }
+
+        // 2. Methods (Non-constructors)
+        val methods = methods.asSequence()
+            // Mimic FIR dropping malformed constructors that don't match class name, e.g. `class Foo { Bar() {} }`
+            .filter { !it.isConstructor }
+            // Mimic FIR dropping Object overrides in Java interfaces (e.g. `@Override boolean equals(Object)`).
+            .filter { !(isInterface && it.isObjectOverride()) }
+            .map { KSFunctionDeclarationImpl.getCached(psi = it, parent = this@KSClassDeclarationImpl) }
+
+        // 3a. Explicit Constructors
+        val explicitConstructors =
+            constructors.asSequence()
+                .map { KSFunctionDeclarationImpl.getCached(psi = it, parent = this@KSClassDeclarationImpl) }
+
+        // 3b. Implicit Default Constructor
+        // IntelliJ's PSI lacks implicit constructors. If none are explicitly declared,
+        // we must fetch the synthesized constructor from the Analysis API.
+        val implicitConstructors = if (constructors.isEmpty() && !isInterface) {
+            analyze {
+                ktClassOrObjectSymbol.declaredMemberScope.constructors.map {
+                    KSFunctionDeclarationImpl.getCached(it)
+                }
+            }
+        } else {
+            emptySequence()
+        }
+
+        // 4. Inner Classes
+        val innerClasses = innerClasses.asSequence()
+            .mapNotNull { psiInnerClass ->
+                analyze {
+                    val name = psiInnerClass.name?.let { Name.identifier(it) } ?: return@analyze null
+                    val instanceSymbols = ktClassOrObjectSymbol.declaredMemberScope.classifiers(name)
+                    val staticSymbols = ktClassOrObjectSymbol.staticDeclaredMemberScope.classifiers(name)
+                    (instanceSymbols + staticSymbols)
+                        .filterIsInstance<KaNamedClassSymbol>()
+                        .find { it.psi?.isEquivalentTo(psiInnerClass) == true || it.psi == psiInnerClass }
+                        ?.let { KSClassDeclarationImpl.getCached(it) }
+                }
+            }
+
+        // Note: We could return declarations in source order by iterating over PsiClass.declarations directly.
+        // However, this ordering matches how things are done using the Analysis API to keep things consistent.
+        return fields + methods + innerClasses + explicitConstructors + implicitConstructors
+    }
+
+    private fun getDeclarationsFromAnalysisApi(): Sequence<KSDeclaration> {
+        val decls = ktClassOrObjectSymbol.declarations().filter { decl ->
+            // The Analysis API leaks compiler-generated intersection and substitution overrides. These are artifacts of
+            // inheritance, not explicitly declared members. We strip them here because they shouldn't be included in
+            // the declarations.
+            val aaOrigin = (decl as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol?.origin
+            aaOrigin != KaSymbolOrigin.INTERSECTION_OVERRIDE && aaOrigin != KaSymbolOrigin.SUBSTITUTION_OVERRIDE
+        }
+
+        return if (origin == Origin.JAVA && classKind != ClassKind.ANNOTATION_CLASS) {
             decls.flatMap { decl ->
                 if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KaSyntheticJavaPropertySymbol) {
                     sequenceOf(decl.getter, decl.setter).mapNotNull { accessor ->

@@ -240,6 +240,12 @@ abstract class ConfigurableKSPTest(
         runTest("../test-utils/testData/api/declarationsInAccessor.kt")
     }
 
+    @TestMetadata("declarationsInClass.kt")
+    @Test
+    fun testDeclarationsInClass() {
+        runTest("../test-utils/testData/api/declarationsInClass.kt")
+    }
+
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {

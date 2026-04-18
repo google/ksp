@@ -24,8 +24,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 
 class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KaTypeAliasSymbol) :
     KSTypeAlias,
-    AbstractKSDeclarationImpl(ktTypeAliasSymbol),
+    AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktTypeAliasSymbol) {
+    override val ktDeclarationSymbol get() = ktTypeAliasSymbol
     companion object : KSObjectCache<KaTypeAliasSymbol, KSTypeAliasImpl>() {
         fun getCached(ktTypeAliasSymbol: KaTypeAliasSymbol) =
             cache.getOrPut(ktTypeAliasSymbol) { KSTypeAliasImpl(ktTypeAliasSymbol) }
