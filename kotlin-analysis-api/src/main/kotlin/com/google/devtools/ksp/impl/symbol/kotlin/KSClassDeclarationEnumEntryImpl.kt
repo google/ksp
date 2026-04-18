@@ -25,8 +25,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaNamedClassSymbol
 
 class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntrySymbol: KaEnumEntrySymbol) :
     KSClassDeclaration,
-    AbstractKSDeclarationImpl(ktEnumEntrySymbol),
+    AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktEnumEntrySymbol) {
+    override val ktDeclarationSymbol get() = ktEnumEntrySymbol
     companion object : KSObjectCache<KaEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
         fun getCached(ktEnumEntrySymbol: KaEnumEntrySymbol) =
             cache.getOrPut(ktEnumEntrySymbol) { KSClassDeclarationEnumEntryImpl(ktEnumEntrySymbol) }

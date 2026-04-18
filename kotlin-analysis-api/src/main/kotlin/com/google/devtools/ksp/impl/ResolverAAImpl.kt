@@ -86,6 +86,7 @@ import com.google.devtools.ksp.isProtected
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.KSBuiltIns
+import com.google.devtools.ksp.processing.KSPConfig
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -159,21 +160,30 @@ class ResolverAAImpl(
 ) : Resolver {
     companion object {
         private val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
-        private val ktModule_prop: ThreadLocal<KaSourceModule> = ThreadLocal()
         var instance: ResolverAAImpl
             get() = instance_prop.get()
             set(value) {
                 instance_prop.set(value)
             }
+
+        private val ktModule_prop: ThreadLocal<KaSourceModule> = ThreadLocal()
         var ktModule: KaSourceModule
             get() = ktModule_prop.get()
             set(value) {
                 ktModule_prop.set(value)
             }
 
+        private val kspConfig_prop: ThreadLocal<KSPConfig> = ThreadLocal()
+        var kspConfig: KSPConfig
+            get() = kspConfig_prop.get()
+            set(value) {
+                kspConfig_prop.set(value)
+            }
+
         fun tearDown() {
             instance_prop.remove()
             ktModule_prop.remove()
+            kspConfig_prop.remove()
         }
     }
 
@@ -583,6 +593,12 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(declaration: KSFunctionDeclaration): String {
+        // FAST PATH: Java methods do not have Kotlin name mangling or @JvmName.
+        // Their JVM name is always exactly their simple name.
+        if (declaration.origin == Origin.JAVA || declaration.origin == Origin.JAVA_LIB) {
+            return declaration.simpleName.asString()
+        }
+
         val symbol: KaFunctionSymbol? = when (declaration) {
             is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol
             else -> null
@@ -814,10 +830,6 @@ class ResolverAAImpl(
         fun KSType.toSignature(): String {
             return if (this is KSTypeImpl) {
                 analyze {
-                    val decl = (this@toSignature.declaration as? KSClassDeclaration)
-                    // Force inline value class to be unwrapped.
-                    // Do not remove until AA fixes this.
-                    decl?.primaryConstructor
                     type.toSignature()
                 }
             } else {

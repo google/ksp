@@ -49,8 +49,9 @@ import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KaPropertySymbol) :
     KSPropertyDeclaration,
-    AbstractKSDeclarationImpl(ktPropertySymbol),
+    AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktPropertySymbol) {
+    override val ktDeclarationSymbol get() = ktPropertySymbol
     companion object : KSObjectCache<KaPropertySymbol, KSPropertyDeclarationImpl>() {
         fun getCached(ktPropertySymbol: KaPropertySymbol) =
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }

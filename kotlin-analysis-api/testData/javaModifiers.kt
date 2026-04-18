@@ -65,6 +65,9 @@
 // DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
 // HasTypeAliasFuns: Modifiers: []
 // HasTypeAliasFuns: Visibility: PUBLIC
+// JavaInterfaceImpl.<init>: FINAL PUBLIC : FINAL PUBLIC
+// JavaInterfaceImpl.otherInterfaceMethod: PUBLIC : PUBLIC
+// JavaInterfaceImpl: ABSTRACT PUBLIC : ABSTRACT PUBLIC
 // OuterJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterJavaClass.InnerJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterJavaClass.InnerJavaClass: PUBLIC : PUBLIC
@@ -188,6 +191,9 @@ class JavaDependency : DependencyOuterJavaClass()
 @Test
 class KotlinDependency : DependencyOuterKotlinClass()
 
+@Test
+class JavaInterfaceDependency : JavaInterfaceImpl {
+
 // FILE: C.java
 
 public abstract class C {
@@ -252,4 +258,16 @@ open class OuterKotlinClass {
 
     @Synchronized
     fun synchronizedFun(): String = ""
+}
+
+// FILE: JavaInterface.java
+public interface JavaInterface {
+    void interfaceMethod();
+    void otherInterfaceMethod();
+}
+
+// FILE: JavaInterfaceImpl.java
+public abstract class JavaInterfaceImpl implements JavaInterface {
+    @Override
+    public void otherInterfaceMethod() {}
 }
