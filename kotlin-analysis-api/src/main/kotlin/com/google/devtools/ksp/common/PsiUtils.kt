@@ -23,6 +23,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 
 val jvmModifierMap = mapOf(
@@ -101,4 +102,21 @@ inline fun <T> lazyMemoizedSequence(crossinline initializer: () -> Sequence<T>):
         value
     else
         value.memoized()
+}
+
+/**
+ * Returns `true` if this [PsiMethod] represents one of the public instance methods
+ * from `java.lang.Object` (i.e., `equals`, `hashCode`, or `toString`).
+ */
+fun PsiMethod.isObjectOverride(): Boolean {
+    if (parameterList.parametersCount == 0) {
+        return name == "hashCode" || name == "toString"
+    }
+
+    if (parameterList.parametersCount == 1 && name == "equals") {
+        val paramType = parameterList.parameters[0].type.canonicalText
+        return paramType == "java.lang.Object" || paramType == "Object"
+    }
+
+    return false
 }
