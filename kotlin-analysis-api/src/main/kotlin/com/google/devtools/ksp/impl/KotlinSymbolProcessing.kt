@@ -103,6 +103,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
@@ -222,7 +223,11 @@ class KotlinSymbolProcessing(
                 val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
                 languageVersionSettings = LanguageVersionSettingsImpl(
                     languageVersion,
-                    ApiVersion.createByLanguageVersion(apiVersion)
+                    ApiVersion.createByLanguageVersion(apiVersion),
+                    specificFeatures = mapOf(
+                        LanguageFeature.AnnotationDefaultTargetMigrationWarning to LanguageFeature.State.ENABLED,
+                        LanguageFeature.PropertyParamAnnotationDefaultTargetMode to LanguageFeature.State.ENABLED
+                    )
                 )
 
                 this.platform = platform
