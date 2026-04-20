@@ -18,12 +18,17 @@
 package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
+import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.fullyExpand
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSValueParameter
 import org.jetbrains.kotlin.analysis.api.types.symbol
 
 /**
@@ -66,7 +71,8 @@ class AAResolutionStrategy(
                 for (annotation in annotated.annotations) {
                     val kaType = (annotation.annotationType.resolve() as? KSTypeImpl)?.type ?: continue
                     val annotationFqN = kaType.fullyExpand().symbol?.classId?.asFqNameString() ?: continue
-                    getOrPut(annotationFqN, ::mutableSetOf).add(annotated)
+                    val annotatedTarget = annotation.useSiteTarget.findTargetedSymbolFor(annotated)
+                    getOrPut(annotationFqN, ::mutableSetOf).addAll(annotatedTarget)
                 }
             }
         }
@@ -75,4 +81,42 @@ class AAResolutionStrategy(
     private val deferredSymbolsRestored: Set<KSAnnotated> by lazy {
         deferredSymbols.values.flatten().mapNotNull { it.restore() }.toSet()
     }
+
+    /**
+     * Returns the symbol(s) in [annotated], targeted by the [AnnotationUseSiteTarget].
+     */
+    private fun AnnotationUseSiteTarget?.findTargetedSymbolFor(annotated: KSAnnotated): Collection<KSAnnotated> =
+        buildList {
+            when (this@findTargetedSymbolFor) {
+                null -> add(annotated)
+                AnnotationUseSiteTarget.FILE -> when (annotated) {
+                    is KSFile -> add(annotated)
+                    else -> annotated.containingFile?.let { add(it) }
+                }
+
+                AnnotationUseSiteTarget.PROPERTY -> add(annotated)
+                AnnotationUseSiteTarget.FIELD -> add(annotated)
+                AnnotationUseSiteTarget.GET -> add(annotated)
+                AnnotationUseSiteTarget.SET -> add(annotated)
+                AnnotationUseSiteTarget.RECEIVER -> when (annotated) {
+                    is KSPropertyDeclaration -> annotated.extensionReceiver?.let { add(it) }
+                    is KSFunctionDeclaration -> annotated.extensionReceiver?.let { add(it) }
+                }
+
+                AnnotationUseSiteTarget.PARAM -> (annotated as? KSValueParameter)?.let { add(it) }
+                AnnotationUseSiteTarget.SETPARAM -> add(annotated)
+                AnnotationUseSiteTarget.DELEGATE -> add(annotated) // TODO: Add proper support for backing fields.
+                AnnotationUseSiteTarget.ALL -> when (annotated) {
+                    is KSValueParameter -> add(annotated)
+                    is KSPropertyDeclaration -> {
+                        // TODO: Add proper support for backing fields, the ALL use site target also targets the field
+                        // TODO: Add support for JvmRecord annotation according to KEEP 402
+                        add(annotated)
+                        annotated.getter?.let { add(it) }
+                        annotated.setter?.let { add(it) }
+                        annotated.setter?.parameter?.let { add(it) }
+                    }
+                }
+            }
+        }
 }
