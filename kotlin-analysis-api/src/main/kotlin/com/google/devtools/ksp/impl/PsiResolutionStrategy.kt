@@ -17,7 +17,7 @@
 
 package com.google.devtools.ksp.impl
 
-import com.google.devtools.ksp.common.mergeMapKeys
+import com.google.devtools.ksp.common.mergeMapNotNullKeys
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
@@ -253,15 +253,9 @@ class PsiResolutionStrategy(
             .mapValues { entry ->
                 lazy { entry.value.flatMap { it.resolveToKSAnnotated(entry.key) } }
             }
-            .mergeMapKeys {
-                it.qualifiedName
-                    ?: error(
-                        "Unexpected unqualified name for annotation with short name: " +
-                            "'${it.shortName}' " +
-                            "at ${it.toLocation()} " +
-                            "${it.javaClass}"
-                    )
-            }
+            // N.B.: Skip nullable qualified names without error. This is what the AA-based implementation does.
+            //   For now, this is the intended behavior. If it is changed in the future, then it is an API change.
+            .mergeMapNotNullKeys { it.qualifiedName }
     }
 
     /**
