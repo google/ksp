@@ -17,9 +17,9 @@
 
 package com.google.devtools.ksp.common.impl
 
-import com.google.devtools.ksp.common.mergeMapNotNullKeys
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.containingFile
+import com.google.devtools.ksp.impl.FileCache
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
@@ -57,6 +57,12 @@ import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
 import com.intellij.util.containers.addIfNotNull
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
+import org.jetbrains.kotlin.analysis.api.types.symbol
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDeclaration
@@ -64,7 +70,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
-import kotlin.collections.buildList
+import kotlin.collections.mapValues
 
 /**
  * An [AnnotationResolutionStrategy] that uses a combination of Psi and Kotlin's Analysis API to resolve
@@ -249,15 +255,105 @@ class PsiResolutionStrategy(
      * "Annotation3" -> [fun3]
      * ```
      */
-    private val annotatedKotlinElementsByFullyQualifiedName: Map<String, Lazy<Collection<KSAnnotated>>> by lazy {
-        annotatedKotlinElements
-            .flatGroupBy { element -> element.annotationEntries }
-            .mapValues { entry ->
-                lazy { entry.value.flatMap { it.resolveToKSAnnotated(entry.key) } }
+    private val annotatedKotlinElementsByFullyQualifiedName: Map<String, Lazy<List<KSAnnotated>>> by lazy {
+        buildMap {
+            val fileCaches = mutableMapOf<KtFile, FileCache>()
+            annotatedKotlinElements.forEach { annotated ->
+                val file = annotated.containingKtFile
+                annotated.annotationEntries.forEach { annotationEntry ->
+                    // TODO: Cache (file, annotation.shortName) -> classId. Shadowing is a problem
+                    //  so we should only cache for known unique declarations in the file.
+                    //  See test shadowingAnnotations.kt
+                    val fileCache = fileCaches.getOrPut(file) { FileCache(file) }
+                    val classId = resolveAnnotationEntryClassId(annotationEntry, fileCache)
+                    // N.B.: Skip nullable qualified names without error. This is what the AA-based implementation does.
+                    //   For now, this is the intended behavior. If it is changed in the future, then it is an API change.
+                    val fqn = classId?.asFqNameString() ?: return@forEach
+                    getOrPut(fqn, ::mutableListOf)
+                        .add(annotated to annotationEntry)
+                }
             }
-            // N.B.: Skip nullable qualified names without error. This is what the AA-based implementation does.
-            //   For now, this is the intended behavior. If it is changed in the future, then it is an API change.
-            .mergeMapNotNullKeys { it.qualifiedName }
+        }.mapValues { entry ->
+            lazy {
+                entry.value.flatMap { (annotated, annotationEntry) ->
+                    annotated.resolveToKSAnnotated(annotationEntry)
+                }
+            }
+        }
+    }
+
+    /**
+     * Resolves the [ClassId] for a given [KtAnnotationEntry].
+     *
+     * It first attempts a [fastResolveClassId] and falls back to [slowResolveClassId] if that fails.
+     */
+    private fun resolveAnnotationEntryClassId(annotationEntry: KtAnnotationEntry, fileCache: FileCache): ClassId? =
+        fastResolveClassId(annotationEntry, fileCache)
+            ?: slowResolveClassId(annotationEntry)
+
+    /**
+     * Attempts to resolve the [ClassId] of an [annotationEntry] without full type resolution,
+     * by trying to guess the [ClassId] and asking the Analysis API if it is a type alias.
+     */
+    private fun fastResolveClassId(annotationEntry: KtAnnotationEntry, fileCache: FileCache): ClassId? {
+        val shortName = annotationEntry.shortName?.asString() ?: return null
+        val unresolvedTypeName = annotationEntry.typeReference?.text ?: return null
+
+        if (shortName != unresolvedTypeName) {
+            return null
+        }
+
+        val isPotentiallyShadowed = shortName in fileCache.localDeclarations
+        if (isPotentiallyShadowed) {
+            return null
+        }
+
+        // Check for explicit name import.
+        // If it exists, we have found the name, otherwise fall back to checking other candidates.
+        val candidateClassIds = fileCache.explicitImports[shortName]?.let { explicitFqn ->
+            // Direct name import found. Do not consider other imports.
+            listOf((ClassId.topLevel(explicitFqn)))
+        } ?: buildList {
+            // No direct name import found. Consider package imports, star imports, and default imports.
+            add(mkClassId(fileCache.packageName, shortName))
+            fileCache.starImports.forEach { add(mkClassId(it, shortName)) }
+            FileCache.DEFAULT_IMPORTS.forEach {
+                add(mkClassId(FqName(it), shortName))
+            }
+        }
+
+        return analyze {
+            candidateClassIds.firstNotNullOfOrNull { classId ->
+                when (val symbol = findClassLike(classId)) {
+                    null -> null
+
+                    is KaClassSymbol -> {
+                        // Class id found, return it!
+                        symbol.classId
+                    }
+
+                    is KaTypeAliasSymbol -> {
+                        // The symbol is a type alias. Fall back to expensive resolution
+                        symbol.expandedType.fullyExpandedType.symbol?.classId
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates a [ClassId] from a package name and a top-level class name.
+     */
+    private fun mkClassId(packageFqName: FqName, topLevelName: String): ClassId =
+        ClassId(packageFqName, Name.identifier(topLevelName))
+
+    /**
+     * Resolves the [ClassId] of an [annotationEntry] using full Analysis API resolution.
+     *
+     * This is used as a fallback when [fastResolveClassId] cannot determine the class ID.
+     */
+    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? = analyze {
+        annotationEntry.typeReference?.type?.fullyExpandedType?.expandedSymbol?.classId
     }
 
     /**
