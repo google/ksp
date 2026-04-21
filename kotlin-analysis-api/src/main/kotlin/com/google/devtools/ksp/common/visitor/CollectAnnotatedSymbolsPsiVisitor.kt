@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.impl.visitor
+package com.google.devtools.ksp.common.visitor
 
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.intellij.psi.PsiAnnotation

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.impl
+package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.processing.SymbolProcessor
