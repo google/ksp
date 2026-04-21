@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.impl
+package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.common.mergeMapNotNullKeys
+import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
@@ -37,7 +38,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.toKSFile
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFunctionDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSPropertyDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
-import com.google.devtools.ksp.impl.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
