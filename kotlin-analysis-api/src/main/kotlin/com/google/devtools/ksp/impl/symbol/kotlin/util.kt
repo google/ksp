@@ -19,7 +19,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
@@ -97,7 +97,11 @@ internal val ktSymbolOriginToOrigin = mapOf(
 
 internal fun mapAAOrigin(ktSymbol: KaSymbol): Origin {
     val symbolOrigin = ktSymbolOriginToOrigin[ktSymbol.origin]
-        ?: throw IllegalStateException("unhandled origin ${ktSymbol.origin.name}")
+        ?: throw InternalKSPException(
+            "Unhandled origin ${ktSymbol.origin.name}",
+            ktSymbol.psi.toLocation(),
+            ktSymbol.javaClass,
+        )
     return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
         Origin.JAVA_LIB
     } else {
@@ -132,7 +136,11 @@ internal fun KaAnnotationValue.render(): String {
             if (type.isError) type.toString() else "$type::class"
         }
 
-        is KaAnnotationValue.UnsupportedValue -> throw IllegalStateException("Unsupported annotation value: $this")
+        is KaAnnotationValue.UnsupportedValue -> throw InternalKSPException(
+            "Unsupported annotation value: $this",
+            NonExistLocation,
+            this.javaClass
+        )
     }
 }
 
@@ -181,7 +189,11 @@ internal fun KaType.render(inFunctionType: Boolean = false): String {
                         .joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render(inFunctionType) }
 
                 is KaTypeParameterType -> name.asString()
-                else -> throw IllegalStateException("Unhandled type ${this@render.javaClass}")
+                else -> throw InternalKSPException(
+                    "Unhandled type",
+                    NonExistLocation,
+                    this@render.javaClass
+                )
             }
         )
         if (analyze { isMarkedNullable }) {
@@ -199,7 +211,11 @@ internal fun KaType.toClassifierReference(parent: KSTypeReference?): KSReference
         is KaErrorType -> null
         is KaTypeParameterType -> KSClassifierParameterImpl.getCached(ktType, parent)
         is KaDefinitelyNotNullType -> KSDefNonNullReferenceImpl.getCached(ktType, parent)
-        else -> throw IllegalStateException("Unexpected type element ${ktType.javaClass}, $ExceptionMessage")
+        else -> throw InternalKSPException(
+            "Unexpected type element",
+            NonExistLocation,
+            ktType.javaClass,
+        )
     }
 }
 
@@ -260,7 +276,11 @@ internal fun KaDeclarationContainerSymbol.declarations(): Sequence<KSDeclaration
                 is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(symbol)
                 is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
                 is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
-                else -> throw IllegalStateException()
+                else -> throw InternalKSPException(
+                    "Unexpected declaration symbol",
+                    symbol.psi.toLocation(),
+                    symbol.javaClass
+                )
             }
         }
     }
@@ -392,7 +412,11 @@ internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaTypeParameterSymbol -> toKSTypeParameter()
     is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
     is KaValueParameterSymbol -> toKSValueParameter()
-    else -> error("Unexpected class for KtSymbol: ${this.javaClass}")
+    else -> throw InternalKSPException(
+        "Unexpected class for KtSymbol",
+        this.psi.toLocation(),
+        this.javaClass
+    )
 }
 
 internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
@@ -511,7 +535,11 @@ internal fun KSDeclaration.setter(): KSPropertySetter? = when (this) {
 internal fun KSValueParameter.getGeneratedProperty(): KSPropertyDeclaration? = when (this) {
     is KSValueParameterImpl -> if (isVal || isVar) generatedProperty else null
     is KSValueParameterLiteImpl -> null
-    else -> error("internal error $location")
+    else -> throw InternalKSPException(
+        "Unexpected KSValueParameter type",
+        this.location,
+        this.javaClass
+    )
 }
 
 @OptIn(ClassIdBasedLocality::class)
@@ -556,7 +584,11 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             is KaFlexibleType -> lowerBound.classifierSymbol()
             // TODO: KSP does not support intersection type.
             is KaIntersectionType -> null
-            else -> throw IllegalStateException("Unexpected type ${this.javaClass}")
+            else -> throw InternalKSPException(
+                "Unexpected type",
+                NonExistLocation,
+                this.javaClass
+            )
         }
     } catch (e: KotlinExceptionWithAttachments) {
         // The implementation for getting symbols from a type throws an exception
@@ -688,7 +720,11 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
                 }
             }
 
-            else -> throw IllegalStateException("Unhandled default value type ${psiElement.javaClass}")
+            else -> throw InternalKSPException(
+                "Unhandled default value type",
+                psiElement.toLocation(),
+                psiElement.javaClass,
+            )
         }
     }
 }
@@ -708,7 +744,11 @@ internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubsti
     val parameters = unwrappedType.symbol.typeParameters
     val arguments = unwrappedType.typeArguments
     if (parameters.size != arguments.size) {
-        throw IllegalStateException("invalid substitution for $context")
+        throw InternalKSPException(
+            "Unexpected invalid substitution for $context",
+            NonExistLocation,
+            context.javaClass
+        )
     }
     parameters.zip(arguments).forEach { (param, projection) ->
         val arg = projection.type ?: param.upperBounds.firstOrNull() ?: analyze { useSiteSession.builtinTypes.any }
