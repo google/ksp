@@ -25,25 +25,35 @@ import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtPackageDirective
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
 /**
+ * Collects classifier names in the [KtFile] using
+ * [CollectClassifierNameVisitor].
+ */
+fun KtFile.collectClassifierNames(): Set<String> {
+    val visitor = CollectClassifierNameVisitor()
+    accept(visitor)
+    return visitor.result
+}
+
+/**
  * A [PsiRecursiveElementWalkingVisitor] that collects the names of classes, objects and type aliases.
  */
-class DeclarationNameVisitor : PsiRecursiveElementWalkingVisitor() {
+private class CollectClassifierNameVisitor : PsiRecursiveElementWalkingVisitor() {
 
-    private val internalResult = mutableSetOf<String>()
-    val result: Set<String> = internalResult
+    val result = mutableSetOf<String>()
 
     override fun visitElement(element: PsiElement) {
         if (element.isSkippable()) {
             return
         }
         when (element) {
-            is KtClassOrObject -> element.name?.let { internalResult.add(it) }
-            is KtTypeAlias -> element.name?.let { internalResult.add(it) }
+            is KtClassOrObject -> element.name?.let { result.add(it) }
+            is KtTypeAlias -> element.name?.let { result.add(it) }
         }
         super.visitElement(element)
     }
