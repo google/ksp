@@ -17,7 +17,8 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
-import com.google.devtools.ksp.*
+import com.google.devtools.ksp.InternalKSPException
+import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.lazyMemoizedSequence
@@ -25,10 +26,37 @@ import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.isConstructor
+import com.google.devtools.ksp.isPublic
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FunctionKind
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSExpectActual
+import com.google.devtools.ksp.symbol.KSFunction
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
+import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
-import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaDestructuringDeclarationSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaNamedFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyAccessorSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyGetterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySetterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolLocation
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
@@ -53,7 +81,11 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             }
 
             KaSymbolLocation.TOP_LEVEL -> FunctionKind.TOP_LEVEL
-            else -> throw IllegalStateException("Unexpected location ${ktFunctionSymbol.location}")
+            else -> throw InternalKSPException(
+                "Unexpected location ${ktFunctionSymbol.location}",
+                this.location,
+                ktFunctionSymbol.javaClass
+            )
         }
     }
 
@@ -146,7 +178,11 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             }
 
             is KaConstructorSymbol -> KSNameImpl.getCached("<init>")
-            else -> throw IllegalStateException("Unexpected function symbol type ${ktFunctionSymbol.javaClass}")
+            else -> throw InternalKSPException(
+                "Unexpected function symbol type ${ktFunctionSymbol.javaClass}",
+                this.location,
+                ktFunctionSymbol.javaClass
+            )
         }
     }
 

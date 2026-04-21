@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.lazyMemoizedSequence
@@ -47,7 +48,11 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
     override val packageName: KSName by lazy {
         when (psi) {
             is KtFile -> KSNameImpl.getCached((psi as KtFile).packageFqName.asString())
-            else -> throw IllegalStateException("Unhandled psi file type ${psi.javaClass}")
+            else -> throw InternalKSPException(
+                "Unhandled psi file type",
+                psi.toLocation(),
+                psi.javaClass
+            )
         }
     }
 
@@ -67,7 +72,11 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
                     is KaNamedFunctionSymbol -> KSFunctionDeclarationImpl.getCached(it)
                     is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
                     is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(it)
-                    else -> throw IllegalStateException("Unhandled ${it.javaClass}")
+                    else -> throw InternalKSPException(
+                        "Unhandled case in 'declarations'",
+                        it.psi.toLocation(),
+                        it.javaClass,
+                    )
                 }
             }
         }

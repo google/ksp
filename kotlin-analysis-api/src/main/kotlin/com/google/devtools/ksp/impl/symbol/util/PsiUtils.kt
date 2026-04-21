@@ -17,7 +17,8 @@
 
 package com.google.devtools.ksp.impl.symbol.util
 
-import com.google.devtools.ksp.ExceptionMessage
+import com.google.devtools.ksp.InternalKSPException
+import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.Modifier
 import com.intellij.psi.PsiComment
@@ -107,6 +108,11 @@ fun KtClassOrObject.getClassType(): ClassKind {
             this.isAnnotation() -> ClassKind.ANNOTATION_CLASS
             else -> ClassKind.CLASS
         }
-        else -> throw IllegalStateException("Unexpected psi type ${this.javaClass}, $ExceptionMessage")
+
+        else -> throw InternalKSPException(
+            "Unexpected psi type",
+            this.toLocation(),
+            this.javaClass,
+        )
     }
 }
