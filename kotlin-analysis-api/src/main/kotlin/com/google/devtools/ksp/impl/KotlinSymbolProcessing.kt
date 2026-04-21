@@ -21,10 +21,12 @@ package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.common.AnyChanges
 import com.google.devtools.ksp.common.KSObjectCacheManager
+import com.google.devtools.ksp.common.impl.AAResolutionStrategy
 import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.common.impl.JsPlatformInfoImpl
 import com.google.devtools.ksp.common.impl.JvmPlatformInfoImpl
 import com.google.devtools.ksp.common.impl.NativePlatformInfoImpl
+import com.google.devtools.ksp.common.impl.PsiResolutionStrategy
 import com.google.devtools.ksp.common.impl.UnknownPlatformInfoImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
