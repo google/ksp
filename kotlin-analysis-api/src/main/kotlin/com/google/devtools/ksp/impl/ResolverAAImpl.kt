@@ -19,6 +19,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.*
+import com.google.devtools.ksp.InternalKSPException.Companion.render
 import com.google.devtools.ksp.common.*
 import com.google.devtools.ksp.common.impl.*
 import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
@@ -235,7 +236,11 @@ class ResolverAAImpl(
                     ?.fieldAccFlags?.get(this.simpleName.asString()) ?: 0
             }
 
-            else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
+            else -> throw InternalKSPException(
+                "Unexpected origin: '$origin', expected 'KOTLIN_LIB' or 'JAVA_LIB'",
+                this.location,
+                this.javaClass
+            )
         }
 
     internal val KSFunctionDeclaration.jvmAccessFlag: Int
@@ -249,7 +254,11 @@ class ResolverAAImpl(
                     ?.methodAccFlags?.get(this.simpleName.asString() + jvmDesc) ?: 0
             }
 
-            else -> throw IllegalStateException("this function expects only KOTLIN_LIB or JAVA_LIB")
+            else -> throw InternalKSPException(
+                "Unexpected origin: '$origin', expected 'KOTLIN_LIB' or 'JAVA_LIB'",
+                this.location,
+                this.javaClass,
+            )
         }
 
     override fun getAllFiles(): Sequence<KSFile> {
@@ -282,7 +291,11 @@ class ResolverAAImpl(
             when (it) {
                 is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(it)
                 is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
-                else -> throw IllegalStateException()
+                else -> throw InternalKSPException(
+                    "Unexpected class declaration symbol: '$it'",
+                    it.psi.toLocation(),
+                    it.javaClass,
+                )
             }
         }
     }
@@ -549,7 +562,17 @@ class ResolverAAImpl(
                 }
                 )
             if (topLevelResult != null && nonTopLevelResult != null) {
-                throw IllegalStateException("Found multiple properties with same qualified name")
+                throw InternalKSPException(
+                    buildString {
+                        appendLine("Found multiple properties with same qualified name.")
+                        appendLine("Top-level: '$topLevelResult' at ${topLevelResult.location.render()}")
+                        appendLine(
+                            "Non-top-level: '$nonTopLevelResult' at ${nonTopLevelResult.location.render()}"
+                        )
+                    },
+                    topLevelResult.location,
+                    topLevelResult.javaClass
+                )
             }
             nonTopLevelResult ?: topLevelResult
         }
@@ -790,8 +813,10 @@ class ResolverAAImpl(
                         var cnt = 0
                         while (it.substitute(result) != result) {
                             if (cnt > 100) {
-                                throw IllegalStateException(
-                                    "Potential infinite loop in type substitution for computeAsMemberOf"
+                                throw InternalKSPException(
+                                    message = "Potential infinite loop in type substitution for computeAsMemberOf",
+                                    property.location,
+                                    property.javaClass
                                 )
                             }
                             result = it.substitute(result)
@@ -845,8 +870,10 @@ class ResolverAAImpl(
                             funcToSub.receiverType != next.receiverType
                         ) {
                             if (cnt > 100) {
-                                throw IllegalStateException(
-                                    "Potential infinite loop in type substitution for computeAsMemberOf"
+                                throw InternalKSPException(
+                                    message = "Potential infinite loop in type substitution for computeAsMemberOf",
+                                    function.location,
+                                    function.javaClass
                                 )
                             }
                             funcToSub = next

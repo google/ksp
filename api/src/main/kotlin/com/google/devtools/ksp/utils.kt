@@ -179,7 +179,11 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                 is KSClassDeclaration -> sequenceOf(resolvedDeclaration)
                 is KSTypeAlias -> sequenceOf(resolvedDeclaration.findActualType())
                 is KSTypeParameter -> resolvedDeclaration.getTypesUpperBound()
-                else -> throw IllegalStateException("unhandled type parameter bound, $ExceptionMessage")
+                else -> throw InternalKSPException(
+                    "Unhandled type parameter bound",
+                    resolvedDeclaration.location,
+                    resolvedDeclaration.javaClass,
+                )
             }
         }
 
@@ -188,12 +192,16 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
         .plus(
             this.superTypes
                 .map { it.resolve().declaration }
-                .flatMap { declaration ->
-                    when (declaration) {
-                        is KSClassDeclaration -> declaration.getAllSuperTypes()
-                        is KSTypeAlias -> declaration.findActualType().getAllSuperTypes()
-                        is KSTypeParameter -> declaration.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
-                        else -> throw IllegalStateException("unhandled super type kind, $ExceptionMessage")
+                .flatMap {
+                    when (it) {
+                        is KSClassDeclaration -> it.getAllSuperTypes()
+                        is KSTypeAlias -> it.findActualType().getAllSuperTypes()
+                        is KSTypeParameter -> it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
+                        else -> throw InternalKSPException(
+                            "Unhandled super type kind",
+                            it.location,
+                            it.javaClass,
+                        )
                     }
                 }
         )

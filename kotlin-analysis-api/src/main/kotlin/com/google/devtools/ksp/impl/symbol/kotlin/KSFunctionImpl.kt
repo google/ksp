@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
@@ -55,8 +56,11 @@ class KSFunctionImpl @OptIn(KaExperimentalApi::class) constructor(
                     while (prev != curr) {
                         val pair = Pair(prev, curr)
                         if (pair in seen) {
-                            val msg = "Recurrent substitution of bounds of $typeParam: $bound by $substitutor"
-                            throw IllegalStateException(msg)
+                            throw InternalKSPException(
+                                "Recurrent substitution of bounds of $typeParam: $bound by $substitutor",
+                                typeParam.psi.toLocation(),
+                                typeParam.javaClass
+                            )
                         }
                         seen.add(pair)
                         prev = curr

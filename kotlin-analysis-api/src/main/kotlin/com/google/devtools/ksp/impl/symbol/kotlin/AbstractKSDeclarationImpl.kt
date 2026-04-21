@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.common.toKSModifiers
@@ -64,13 +65,21 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
                 is KaFunctionSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaTypeAliasSymbol -> ktDeclarationSymbol.toModifiers()
-                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.javaClass}")
+                else -> throw InternalKSPException(
+                    "Unexpected symbol type: $ktDeclarationSymbol",
+                    this.location,
+                    ktDeclarationSymbol.javaClass
+                )
             }
         } else {
             when (val psi = ktDeclarationSymbol.psi) {
                 is KtModifierListOwner -> psi.toKSModifiers()
                 is PsiModifierListOwner -> psi.toKSModifiers()
-                else -> throw IllegalStateException("Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}")
+                else -> throw InternalKSPException(
+                    "Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}",
+                    this.location,
+                    psi?.javaClass ?: this.javaClass
+                )
             }
         }
     }
@@ -92,7 +101,11 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
             }?.let { KSNameImpl.getCached(it) }
                 //  null -> non top level declaration, find in parent
                 ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
-                ?: throw IllegalStateException("failed to find package name for $this")
+                ?: throw InternalKSPException(
+                    "failed to find package name for $this",
+                    this.location,
+                    ktDeclarationSymbol.javaClass,
+                )
         }
     }
 
