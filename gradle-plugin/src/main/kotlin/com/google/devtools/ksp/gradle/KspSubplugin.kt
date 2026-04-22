@@ -25,8 +25,6 @@ import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.checkMinimumAgpVersion
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
-import com.google.devtools.ksp.gradle.utils.minimumAndroidKotlinMultiplatformVersion
-import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -169,7 +167,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         val processorClasspath =
             project.configurations.maybeCreate("${kspTaskName}ProcessorClasspath").markResolvable()
         if (kotlinCompilation.platformType != KotlinPlatformType.androidJvm ||
-            project.useLegacyVariantApi() ||
             project.pluginManager.hasPlugin("kotlin-multiplatform")
         ) {
             val nonEmptyKspConfigurations =
@@ -266,7 +263,6 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
         // androidComponentCache, before we attempt to query for the Component object
         project.afterEvaluate {
             if (project.isAndroidKmpProject() &&
-                project.minimumAndroidKotlinMultiplatformVersion() &&
                 kotlinCompilation is KotlinMultiplatformAndroidCompilation
             ) {
                 val component = androidComponentCache.get(kotlinCompilation.componentName)
