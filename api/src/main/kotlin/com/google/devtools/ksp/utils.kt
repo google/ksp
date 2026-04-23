@@ -150,15 +150,18 @@ fun KSDeclaration.getVisibility(): Visibility {
                 else -> null
             } ?: Visibility.PUBLIC
         }
+
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) ||
             this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
+
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
         // for synthetic origin from Java source, synthetic members follow visibility from parent to avoid
         // package private synthetic members being mishandled as public.
         this.origin == Origin.SYNTHETIC && this.parentDeclaration?.origin == Origin.JAVA ->
             this.parentDeclaration!!.getVisibility()
+
         else -> if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB)
             Visibility.PUBLIC else Visibility.JAVA_PACKAGE
     }
@@ -284,10 +287,12 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
         this.isPublic() -> true
         this.isInternal() && other.containingFile != null && this.containingFile != null -> true
         this.isJavaPackagePrivate() -> this.isSamePackage(other)
-        this.isProtected() -> this.isVisibleInPrivate(other) || this.isSamePackage(other) ||
-            other.closestClassDeclaration()?.let {
-            this.closestClassDeclaration()!!.asStarProjectedType().isAssignableFrom(it.asStarProjectedType())
-        } ?: false
+        this.isProtected() -> {
+            this.isVisibleInPrivate(other) || this.isSamePackage(other) || other.closestClassDeclaration()?.let {
+                this.closestClassDeclaration()!!.asStarProjectedType().isAssignableFrom(it.asStarProjectedType())
+            } ?: false
+        }
+
         else -> false
     }
 }
@@ -373,6 +378,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                     val value = { result.asArray(method, clazz) }
                     cache.getOrPut(Pair(method.returnType, result), value)
                 }
+
                 else -> {
                     when {
                         // Workaround for java annotation value array type
@@ -385,14 +391,17 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                                 throw IllegalStateException("unhandled value type, $ExceptionMessage")
                             }
                         }
+
                         method.returnType.isEnum -> {
                             val value = { result.asEnum(method.returnType) }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         method.returnType.isAnnotation -> {
                             val value = { (result as KSAnnotation).asAnnotation(method.returnType) }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         method.returnType.name == "java.lang.Class" -> {
                             cache.getOrPut(Pair(method.returnType, result)) {
                                 when (result) {
@@ -407,26 +416,32 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                                 }
                             }
                         }
+
                         method.returnType.name == "byte" -> {
                             val value = { result.asByte() }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         method.returnType.name == "short" -> {
                             val value = { result.asShort() }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         method.returnType.name == "long" -> {
                             val value = { result.asLong() }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         method.returnType.name == "float" -> {
                             val value = { result.asFloat() }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         method.returnType.name == "double" -> {
                             val value = { result.asDouble() }
                             cache.getOrPut(Pair(method.returnType, result), value)
                         }
+
                         else -> result // original value
                     }
                 }
@@ -465,11 +480,13 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
                 method.returnType.componentType.isEnum -> {
                     this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
                 }
+
                 method.returnType.componentType.isAnnotation -> {
                     this.toArray(method) { result ->
                         (result as KSAnnotation).asAnnotation(method.returnType.componentType)
                     }
                 }
+
                 else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
             }
         }
@@ -514,6 +531,7 @@ private fun Any.asDouble(): Double = if (this is Int) this.toDouble() else this 
 // for Class/KClass member
 @KspExperimental
 class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) : RuntimeException(cause)
+
 // for Class[]/Array<KClass<*>> member.
 @KspExperimental
 class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) : RuntimeException(cause)
