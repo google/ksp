@@ -655,6 +655,12 @@ abstract class ConfigurableKSPTest(
         runTest("../test-utils/testData/api/sealedClass.kt")
     }
 
+    @TestMetadata("shadowingAnnotations.kt")
+    @Test
+    fun testShadowingAnnotations() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/shadowingAnnotations.kt")
+    }
+
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
