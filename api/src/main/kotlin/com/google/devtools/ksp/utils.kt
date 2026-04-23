@@ -239,11 +239,7 @@ fun KSDeclaration.isPrivate() = this.modifiers.contains(Modifier.PRIVATE)
 fun KSDeclaration.isJavaPackagePrivate() = this.getVisibility() == Visibility.JAVA_PACKAGE
 
 fun KSDeclaration.closestClassDeclaration(): KSClassDeclaration? {
-    return if (this is KSClassDeclaration) {
-        this
-    } else {
-        this.parentDeclaration?.closestClassDeclaration()
-    }
+    return this as? KSClassDeclaration ?: this.parentDeclaration?.closestClassDeclaration()
 }
 
 // TODO: cross module visibility is not handled
@@ -507,12 +503,18 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
     returnType.getDeclaredMethod("valueOf", String::class.java)
         .invoke(
             null,
-            if (this is KSType) {
-                this.declaration.simpleName.getShortName()
-            } else if (this is KSClassDeclaration) {
-                this.simpleName.getShortName()
-            } else {
-                this.toString()
+            when (this) {
+                is KSType -> {
+                    this.declaration.simpleName.getShortName()
+                }
+
+                is KSClassDeclaration -> {
+                    this.simpleName.getShortName()
+                }
+
+                else -> {
+                    this.toString()
+                }
             }
         ) as T
 
