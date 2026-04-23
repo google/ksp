@@ -65,7 +65,7 @@ fun Project.configureKtlint() {
         task.configureCommonKtlintParams(this@configureKtlint)
         task.description = "Fix Kotlin code style deviations."
         task.group = "formatting"
-        task.args = listOf("-F") + task.args!!
+        task.args = listOf("-F") + task.args
     }
 }
 
