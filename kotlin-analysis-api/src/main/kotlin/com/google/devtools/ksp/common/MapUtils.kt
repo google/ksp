@@ -46,21 +46,3 @@ internal fun <K, V, R> Map<K, Lazy<Collection<V>>>.mergeMapNotNullKeys(
             }
         }
     }
-
-/**
- * Merges the key-value pairs of `this` and `other`, deduplicating values.
- *
- * In other words, if `this = k -> [a, b, c]` and `other = k -> [c, d, e]`,
- * then the result is `k -> [a, b, c, d, e]`.
- */
-internal fun <K, V> Map<K, Collection<V>>.merge(
-    other: Map<K, Collection<V>>
-): Map<K, Collection<V>> =
-    mutableMapOf<K, MutableSet<V>>().apply {
-        this@merge.forEach { (k, vs) ->
-            this@apply.getOrPut(k, ::mutableSetOf).addAll(vs)
-        }
-        other.forEach { (k, vs) ->
-            this@apply.getOrPut(k, ::mutableSetOf).addAll(vs)
-        }
-    }
