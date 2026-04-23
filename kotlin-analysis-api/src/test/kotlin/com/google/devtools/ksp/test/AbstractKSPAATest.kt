@@ -41,9 +41,7 @@ import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
 
-abstract class AbstractKSPAATest( // TODO: Rework this experimental mode
-    experimentalPsiMode: Boolean
-) : AbstractKSPTest(FrontendKinds.FIR, experimentalPsiMode) {
+abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : AbstractKSPTest(FrontendKinds.FIR) {
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")
 
@@ -112,7 +110,6 @@ abstract class AbstractKSPAATest( // TODO: Rework this experimental mode
         mainModule: TestModule,
         libModules: List<TestModule>,
         testProcessor: AbstractTestProcessor,
-        kspConfigBuilder: KSPJvmConfig.Builder,
     ): List<String> {
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
             mainModule,
@@ -127,7 +124,7 @@ abstract class AbstractKSPAATest( // TODO: Rework this experimental mode
 
         val testRoot = mainModule.testRoot
 
-        val kspConfig = kspConfigBuilder.apply {
+        val kspConfig = KSPJvmConfig.Builder().apply {
             moduleName = mainModule.name
             sourceRoots = listOf(mainModule.kotlinSrc)
             javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
@@ -146,6 +143,7 @@ abstract class AbstractKSPAATest( // TODO: Rework this experimental mode
             cachesDir = File(testRoot, "kspTest/kspCaches")
             outputBaseDir = File(testRoot, "kspTest")
             incremental = true
+            experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
         }.build()
         val exitCode = KotlinSymbolProcessing(kspConfig, listOf(testProcessor), CommandLineKSPLogger()).execute()
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {

@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.test
 
-import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -75,7 +74,7 @@ abstract class DisposableTest {
     }
 }
 
-abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMode: Boolean) : DisposableTest() {
+abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     companion object {
         const val TEST_PROCESSOR = "// TEST PROCESSOR:"
         const val TEST_ANNOTATIONS = "// TEST ANNOTATIONS:"
@@ -113,7 +112,6 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMod
         mainModule: TestModule,
         libModules: List<TestModule>,
         testProcessor: AbstractTestProcessor,
-        kspConfigBuilder: KSPJvmConfig.Builder
     ): List<String>
 
     private val configure: TestConfigurationBuilder.() -> Unit = {
@@ -259,10 +257,6 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMod
                     .newInstance(testAnnotationNames) as AbstractTestProcessor
             }
 
-        val kspConfigBuilder = KSPJvmConfig.Builder().apply {
-            experimentalPsiResolution = experimentalPsiMode
-        }
-
         val expectedResults = contents
             .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
             .drop(1)
@@ -275,7 +269,6 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val experimentalPsiMod
                 mainModule,
                 libModules,
                 testProcessor,
-                kspConfigBuilder
             )
         }
         Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
