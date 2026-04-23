@@ -32,7 +32,7 @@ fun Project.configureMetalava() {
         task.configureCommonMetalavaArgs(this@configureMetalava)
         task.description = "Check API compatibility."
         task.group = "Verification"
-        task.args = listOf("--check-compatibility:api:released", API_BASE_FILE) + task.args!!
+        task.args = listOf("--check-compatibility:api:released", API_BASE_FILE) + task.args
         task.inputs.files(API_BASE_FILE).withPropertyName("apiCheckBaseFile").withPathSensitivity(PathSensitivity.RELATIVE)
 
         val outFile = project.layout.buildDirectory.file("reports/checkApi/checkApiSuccess.txt")
@@ -55,7 +55,7 @@ fun Project.configureMetalava() {
         task.configureCommonMetalavaArgs(this@configureMetalava)
         task.description = "Update API base file."
         task.group = "formatting"
-        task.args = listOf("--api", API_BASE_FILE) + task.args!!
+        task.args = listOf("--api", API_BASE_FILE) + task.args
         task.outputs.file(API_BASE_FILE).withPropertyName("updateApiOutputBaseFile")
     }
 }
