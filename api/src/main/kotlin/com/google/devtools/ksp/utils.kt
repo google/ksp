@@ -174,7 +174,7 @@ fun KSDeclaration.getVisibility(): Visibility {
 fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
 
     fun KSTypeParameter.getTypesUpperBound(): Sequence<KSClassDeclaration> =
-        this.bounds.asSequence().flatMap {
+        this.bounds.flatMap {
             when (val resolvedDeclaration = it.resolve().declaration) {
                 is KSClassDeclaration -> sequenceOf(resolvedDeclaration)
                 is KSTypeAlias -> sequenceOf(resolvedDeclaration.findActualType())
@@ -184,17 +184,15 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
         }
 
     return this.superTypes
-        .asSequence()
         .map { it.resolve() }
         .plus(
             this.superTypes
-                .asSequence()
-                .mapNotNull { it.resolve().declaration }
-                .flatMap {
-                    when (it) {
-                        is KSClassDeclaration -> it.getAllSuperTypes()
-                        is KSTypeAlias -> it.findActualType().getAllSuperTypes()
-                        is KSTypeParameter -> it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
+                .map { it.resolve().declaration }
+                .flatMap { declaration ->
+                    when (declaration) {
+                        is KSClassDeclaration -> declaration.getAllSuperTypes()
+                        is KSTypeAlias -> declaration.findActualType().getAllSuperTypes()
+                        is KSTypeParameter -> declaration.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
                         else -> throw IllegalStateException("unhandled super type kind, $ExceptionMessage")
                     }
                 }
