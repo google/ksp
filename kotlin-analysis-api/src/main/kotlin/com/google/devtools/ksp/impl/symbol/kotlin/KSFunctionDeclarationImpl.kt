@@ -53,6 +53,7 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             }
 
             KaSymbolLocation.TOP_LEVEL -> FunctionKind.TOP_LEVEL
+            KaSymbolLocation.PROPERTY -> FunctionKind.MEMBER
             else -> throw IllegalStateException("Unexpected location ${ktFunctionSymbol.location}")
         }
     }
