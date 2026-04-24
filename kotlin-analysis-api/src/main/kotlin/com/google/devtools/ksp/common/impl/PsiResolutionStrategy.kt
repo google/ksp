@@ -23,7 +23,6 @@ import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
-import com.google.devtools.ksp.impl.symbol.kotlin.KSValueParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
@@ -42,6 +41,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSValueParameter
@@ -55,6 +55,7 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
+import com.intellij.util.containers.addIfNotNull
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -63,6 +64,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
+import kotlin.collections.buildList
 
 /**
  * An [AnnotationResolutionStrategy] that uses a combination of Psi and Kotlin's Analysis API to resolve
@@ -307,7 +309,7 @@ class PsiResolutionStrategy(
     private fun KtDeclaration.resolve(annotationEntry: KtAnnotationEntry): Collection<KSAnnotated> {
         // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
-        return ksSym.getTargetedSymbol(annotationEntry.ksUseSiteTarget)
+        return ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget)
     }
 
     /**
@@ -375,20 +377,12 @@ class PsiResolutionStrategy(
     /**
      * Returns the targeted symbols by a given annotated symbol at its use site target.
      *
-     * E.g., `class A(@MyAnno val p: Int)` returns `p, p.getter`
+     * E.g., `class A(@MyAnno val p: Int)` returns `p, p`, once for the parameter and once for the property.
      */
-    private fun KSAnnotated.getTargetedSymbol(useSiteTarget: AnnotationUseSiteTarget?): Collection<KSAnnotated> =
-        // TODO: Rewrite this call chain as double dispatch visitor.
+    private fun KSAnnotated.findTargetedSymbol(useSiteTarget: AnnotationUseSiteTarget?): Collection<KSAnnotated> =
         when (useSiteTarget) {
             null -> when (this) {
-                is KSValueParameterImpl -> {
-                    val generatedPropertySymbol = this.getGeneratedProperty()
-                    if (generatedPropertySymbol != null) {
-                        listOf(this, generatedPropertySymbol)
-                    } else {
-                        listOf(this)
-                    }
-                }
+                is KSValueParameter -> listOfNotNull(this, this.getGeneratedProperty())
 
                 is KSFunctionDeclarationImpl -> when {
                     this.isGetter -> listOf(
@@ -404,21 +398,32 @@ class PsiResolutionStrategy(
                     else -> listOf(this)
                 }
 
-                else ->
-                    listOf(this)
+                else -> listOf(this)
             }
 
-            AnnotationUseSiteTarget.FILE ->
-                listOf(
+            AnnotationUseSiteTarget.FILE -> when (this) {
+                is KSFile -> listOf(this)
+                else -> listOf(
                     this.containingFile
                         ?: error("Missing file at $location: $javaClass")
                 )
+            }
 
-            AnnotationUseSiteTarget.PROPERTY ->
-                listOf(this)
+            AnnotationUseSiteTarget.PROPERTY -> when (this) {
+                is KSValueParameter -> listOf(
+                    this.getGeneratedProperty() ?: error("Missing property for parameter at $location: $javaClass")
+                )
 
-            AnnotationUseSiteTarget.FIELD ->
-                listOf(this)
+                else -> listOf(this)
+            }
+
+            AnnotationUseSiteTarget.FIELD -> when (this) {
+                is KSValueParameter -> listOf(
+                    this.getGeneratedProperty() ?: error("Missing property for parameter at $location: $javaClass")
+                )
+
+                else -> listOf(this)
+            }
 
             AnnotationUseSiteTarget.GET ->
                 listOf(
@@ -446,18 +451,54 @@ class PsiResolutionStrategy(
                 else -> error("Unexpected declaration at $location: $javaClass")
             }
 
-            AnnotationUseSiteTarget.PARAM ->
-                listOf(this)
+            AnnotationUseSiteTarget.PARAM -> when (this) {
+                is KSValueParameter -> listOf(this)
+                else -> error("Unexpected annotated symbol with param use-site target at $location: $javaClass")
+            }
 
-            AnnotationUseSiteTarget.SETPARAM ->
-                // Return this, since it's the parameter that's directly annotated.
-                listOf(this)
+            AnnotationUseSiteTarget.SETPARAM -> when (this) {
+                is KSValueParameter -> {
+                    listOf(
+                        (this.parent as? KSFunctionDeclaration)?.parameters?.singleOrNull()
+                            ?: error("Missing setter parameter at $location: $javaClass")
+                    )
+                }
+
+                is KSPropertyDeclaration -> listOf(
+                    setter?.parameter
+                        ?: error("Missing setter parameter at $location: $javaClass")
+                )
+
+                else -> error("Unexpected annotated symbol with 'setparam' use-site target at $location: $javaClass")
+            }
 
             AnnotationUseSiteTarget.DELEGATE ->
+                // TODO: Better impl for this
                 listOf(this)
 
-            AnnotationUseSiteTarget.ALL ->
-                listOf(this) // FIXME: Correct impl
+            AnnotationUseSiteTarget.ALL -> when (this) {
+                is KSValueParameter -> {
+                    buildList {
+                        add(this@findTargetedSymbol)
+                        this@findTargetedSymbol.getGeneratedProperty()?.findTargetedSymbol(useSiteTarget)
+                            ?.let { symbols ->
+                                symbols.forEach { addIfNotNull(it) }
+                            }
+                    }
+                }
+
+                is KSPropertyDeclaration ->
+                    // TODO: Add proper support for backing fields, the ALL use site target also targets the field
+                    // TODO: Add support for JvmRecord annotation according to KEEP 402
+                    buildList {
+                        add(this@findTargetedSymbol)
+                        addIfNotNull(this@findTargetedSymbol.getter)
+                        addIfNotNull(this@findTargetedSymbol.setter)
+                        addIfNotNull(this@findTargetedSymbol.setter?.parameter)
+                    }
+
+                else -> error("Unexpected annotated symbol with 'all' use-site target at $location: $javaClass")
+            }
         }
 
     /**
