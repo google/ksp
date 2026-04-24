@@ -721,6 +721,12 @@ abstract class ConfigurableKSPTest(
         runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
     }
 
+    @TestMetadata("useSiteTargets.kt")
+    @Test
+    fun testUseSiteTargets() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/useSiteTargets.kt")
+    }
+
     @TestMetadata("valueParameter.kt")
     @Test
     fun testValueParameter() {
