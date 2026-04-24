@@ -34,6 +34,8 @@ class AGPVersionIT(
                 arrayOf(null, null, null),
 
                 // Alpha/beta versions
+                arrayOf("8.10.0-alpha03", "2.2.10", "8.11.1"),
+                arrayOf("8.10.0-alpha03", "2.3.0-RC", "8.11.1"),
                 arrayOf("8.12.0-alpha06", "2.2.10", "8.13"),
                 arrayOf("8.12.0-alpha06", "2.3.0-RC", "8.13"),
                 arrayOf("9.0.0-alpha12", "2.2.10", "9.1.0"),
@@ -41,6 +43,15 @@ class AGPVersionIT(
                 arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
 
+                // AGP 8.7.0
+                arrayOf("8.7.0", "2.3.0-RC", "8.11.1"),
+                arrayOf("8.7.0", "2.2.10", "8.11.1"),
+                // AGP 8.8.0
+                arrayOf("8.8.0", "2.3.0-RC", "8.11.1"),
+                arrayOf("8.8.0", "2.2.10", "8.11.1"),
+                // AGP 8.9.0
+                arrayOf("8.9.0", "2.3.0-RC", "8.11.1"),
+                arrayOf("8.9.0", "2.2.10", "8.11.1"),
                 // AGP 8.10.0
                 arrayOf("8.10.0", "2.3.0-RC", "8.11.1"),
                 arrayOf("8.10.0", "2.2.10", "8.11.1"),

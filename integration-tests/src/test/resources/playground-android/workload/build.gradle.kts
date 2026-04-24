@@ -38,7 +38,6 @@ android {
             // For regression testing https://github.com/google/ksp/pull/467
             proguardFiles.add(file("proguard-rules.pro"))
             isMinifyEnabled = true
-            isShrinkResources = true
         }
     }
 }

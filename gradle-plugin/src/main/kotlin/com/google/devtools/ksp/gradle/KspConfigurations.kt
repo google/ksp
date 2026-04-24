@@ -3,6 +3,7 @@ package com.google.devtools.ksp.gradle
 import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.agpBasePluginId
 import com.google.devtools.ksp.gradle.KspGradleSubplugin.Companion.agpKmpPluginId
 import com.google.devtools.ksp.gradle.utils.kotlinSourceSetsObservable
+import com.google.devtools.ksp.gradle.utils.useLegacyVariantApi
 import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -107,11 +108,13 @@ class KspConfigurations(private val project: Project) {
 
         listOf(agpBasePluginId, agpKmpPluginId).forEach { pluginId ->
             project.plugins.withId(pluginId) {
-                val androidComponents =
-                    project.extensions.findByType(
-                        com.android.build.api.variant.AndroidComponentsExtension::class.java
-                    )
-                androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+                if (!project.useLegacyVariantApi()) {
+                    val androidComponents =
+                        project.extensions.findByType(
+                            com.android.build.api.variant.AndroidComponentsExtension::class.java
+                        )
+                    androidComponents?.addKspConfigurations(useGlobalConfiguration = allowAllTargetConfiguration)
+                }
             }
         }
     }
@@ -153,7 +156,7 @@ class KspConfigurations(private val project: Project) {
      */
     private fun decorateKotlinTarget(target: KotlinTarget, isKotlinMultiplatform: Boolean) {
         if (isPlainAndroidTarget(target) || isOldKmpAndroidTarget(target)) {
-            if (isKotlinMultiplatform) {
+            if (project.useLegacyVariantApi() || isKotlinMultiplatform) {
                 createAndroidSourceSetConfigurations(target.project, target)
             }
         } else {

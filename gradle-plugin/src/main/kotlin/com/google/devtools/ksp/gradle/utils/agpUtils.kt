@@ -27,6 +27,22 @@ fun checkMinimumAgpVersion(pluginVersion: AndroidPluginVersion) {
 }
 
 /**
+ * Returns false for AGP versions 8.10.0-alpha03 or higher.
+ *
+ * Returns true for older AGP versions or when AGP version cannot be determined.
+ */
+fun Project.useLegacyVariantApi(): Boolean {
+    val agpVersion = project.getAgpVersion() ?: return true
+
+    if (providers.gradleProperty("force.legacy.variant.api").orNull == "true") {
+        return true
+    }
+
+    // Fall back to using the legacy Variant API if the AGP version can't be determined for now.
+    return agpVersion < AndroidPluginVersion(8, 10, 0).alpha(3)
+}
+
+/**
  * Returns true for AGP version is 8.12.0-alpha06 or higher.
  * That is the version where addGeneratedSourceDirectories API was fixed
  */
@@ -40,10 +56,15 @@ fun Project.canUseInternalKspApis(): Boolean {
     return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(14)
 }
 
+fun Project.minimumAndroidKotlinMultiplatformVersion(): Boolean {
+    val agpVersion = project.getAgpVersion() ?: return false
+    return agpVersion >= AndroidPluginVersion(8, 2, 0)
+}
+
 /**
  * Defines the minimum supported Android Gradle Plugin (AGP) version.
  *
  * KSP aims to support AGP versions released approximately within the last year
  * from the current KSP release date.
  */
-val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 10, 0)
+val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 3, 0)
