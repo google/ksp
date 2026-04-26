@@ -19,7 +19,7 @@ Taking `KSPJvmMain` for example,
 java -cp \
 symbol-processing-aa-2.2.10-2.0.2.jar:kotlin-analysis-api-2.2.10-2.0.2.jar:common-deps-2.2.10-2.0.2.jar:symbol-processing-api-2.2.10-2.0.2.jar:kotlin-stdlib-2.2.10.jar:kotlinx-coroutines-core-jvm-1.10.2.jar \
 com.google.devtools.ksp.cmdline.KSPJvmMain \
--jvm-target 11 \
+-jvm-target 17 \
 -module-name=main \
 -source-roots project_dir/src/kotlin/main \
 -project-base-dir project_dir/ \
