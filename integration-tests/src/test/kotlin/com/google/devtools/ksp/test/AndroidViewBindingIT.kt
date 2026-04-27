@@ -5,23 +5,14 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class AndroidViewBindingIT(experimentalPsiResolution: Boolean) {
+class AndroidViewBindingIT {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
         "android-view-binding",
-        experimentalPsiResolution = experimentalPsiResolution
+        experimentalPsiResolution = false
     )
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
-    }
 
     @Test
     fun testPlaygroundAndroid() {

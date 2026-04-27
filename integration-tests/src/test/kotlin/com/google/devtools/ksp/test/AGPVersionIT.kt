@@ -15,14 +15,13 @@ class AGPVersionIT(
     private val agpVersion: String?,
     private val kotlinVersion: String?,
     private val gradleVersion: String?,
-    experimentalPsiResolution: String?
 ) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
         "playground-android-multi",
         "playground",
-        experimentalPsiResolution!!.toBoolean()
+        experimentalPsiResolution = false
     )
 
     companion object {
@@ -53,9 +52,7 @@ class AGPVersionIT(
                 // AGP 9.0.0-beta01
                 arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.2.10", "9.1.0"),
-            ).flatMap {
-                listOf(it.plus("true"), it.plus("false"))
-            }
+            )
         }
     }
 

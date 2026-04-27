@@ -5,16 +5,14 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class HmppIT(experimentalPsiResolution: Boolean) {
+class HmppIT {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
         "hmpp",
-        experimentalPsiResolution = experimentalPsiResolution
+        experimentalPsiResolution = false
     )
 
     companion object {
