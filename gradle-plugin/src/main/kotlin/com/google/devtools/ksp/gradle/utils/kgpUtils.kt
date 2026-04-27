@@ -25,7 +25,5 @@ fun Project.canUseGeneratedKotlinApi(): Boolean {
 }
 
 fun Project.enableProjectIsolationCompatibleCodepath(): Boolean {
-    return providers.gradleProperty("ksp.project.isolation.enabled").orNull == "true" ||
-        providers.gradleProperty("org.gradle.unsafe.isolated-projects").orNull == "true" ||
-        providers.systemProperty("org.gradle.unsafe.isolated-projects").orNull == "true"
+    return providers.gradleProperty("ksp.project.isolation.enabled").orNull == "true"
 }
