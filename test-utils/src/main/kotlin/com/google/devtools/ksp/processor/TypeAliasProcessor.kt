@@ -57,6 +57,19 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
                 assert(sameTypeAliases.map { it.hashCode() }.distinct().size == 1) {
                     "different hashcodes for members of $signature"
                 }
+                // Hash stability: repeated hashCode() calls on the same instance
+                // must return the same value. Guards the KSTypeImpl hashCode
+                // cache (github.com/google/ksp/issues/2576) against regressions
+                // where a second call recomputes a different value or fails to
+                // use the cached result.
+                for (t in sameTypeAliases) {
+                    val first = t.hashCode()
+                    val second = t.hashCode()
+                    val third = t.hashCode()
+                    assert(first == second && second == third) {
+                        "hashCode not stable for $t: $first, $second, $third"
+                    }
+                }
             }
         }
 
