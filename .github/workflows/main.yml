@@ -80,7 +80,7 @@ jobs:
     # Run tests
     - name: test
       shell: bash
-      run: ./gradlew --stacktrace --info check
+      run: ./gradlew --stacktrace --info -Dorg.gradle.jvmargs="-Xmx8g -XX:MaxMetaspaceSize=4g" check
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v7
