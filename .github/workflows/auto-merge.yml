@@ -86,11 +86,11 @@ jobs:
   
       # Check API compatibility
       - name: API compatibility check
-        run: ./gradlew :api:checkApi
+        run: ./gradlew --console=plain :api:checkApi
   
       # Run ksp generated tests
       - name: test
-        run: ./gradlew --stacktrace --info check
+        run: ./gradlew --console=plain --stacktrace --info check
 
       - name: push to release branch
         if: success()

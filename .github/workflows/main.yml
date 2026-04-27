@@ -75,12 +75,12 @@ jobs:
     # Check API compatibility
     - name: API compatibility check
       if: matrix.os == 'ubuntu-latest'
-      run: ./gradlew :api:checkApi
+      run: ./gradlew --console=plain :api:checkApi
 
     # Run tests
     - name: test
       shell: bash
-      run: ./gradlew --stacktrace --info check
+      run: ./gradlew --console=plain --stacktrace --info check
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v7
