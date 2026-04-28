@@ -96,6 +96,18 @@ abstract class ConfigurableKSPTest(
         runTest("../test-utils/testData/api/annotationTargets.kt")
     }
 
+    @TestMetadata("annotationTypeArguments.kt")
+    @Test
+    fun testAnnotationTypeArguments() {
+        runTest("../kotlin-analysis-api/testData/annotationTypeArguments.kt")
+    }
+
+    @TestMetadata("annotationTypeArgumentsInLibrary.kt")
+    @Test
+    fun testAnnotationTypeArgumentsInLibrary() {
+        runTest("../kotlin-analysis-api/testData/annotationTypeArgumentsInLibrary.kt")
+    }
+
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {

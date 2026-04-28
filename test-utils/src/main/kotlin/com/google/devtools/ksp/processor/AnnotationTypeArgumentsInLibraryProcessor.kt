@@ -17,29 +17,43 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSDeclaration
 
-class AnnotationTypeArgumentsProcessor : AbstractTestProcessor() {
+class AnnotationTypeArgumentsInLibraryProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getSymbolsWithAnnotation("MapConvert").forEach { annotated ->
-            val name = (annotated as KSDeclaration).simpleName.asString()
-            val annotation = annotated.annotations.single { it.shortName.asString() == "MapConvert" }
-            results.addAll(renderAnnotation(name, annotation))
-        }
-
-        resolver.getSymbolsWithAnnotation("Container").forEach { annotated ->
-            val name = (annotated as KSDeclaration).simpleName.asString()
-            val containerAnnotation = annotated.annotations.single { it.shortName.asString() == "Container" }
-            val nestedAnnotation = containerAnnotation.arguments.single().value as KSAnnotation
-            results.addAll(renderAnnotation("$name.nested", nestedAnnotation))
-        }
-
+        renderAnnotationIfVisible(
+            resolver,
+            className = "com.example.SourceRetentionTarget",
+            annotationName = "SourceRetentionAnno",
+        )
+        renderAnnotationIfVisible(
+            resolver,
+            className = "com.example.BinaryRetentionTarget",
+            annotationName = "BinaryRetentionAnno",
+        )
+        renderAnnotationIfVisible(
+            resolver,
+            className = "com.example.RuntimeRetentionTarget",
+            annotationName = "RuntimeRetentionAnno",
+        )
         return emptyList()
+    }
+
+    private fun renderAnnotationIfVisible(
+        resolver: Resolver,
+        className: String,
+        annotationName: String,
+    ) {
+        val declaration = resolver.getClassDeclarationByName(className) ?: return
+        val annotation = declaration.annotations.singleOrNull {
+            it.shortName.asString() == annotationName
+        } ?: return
+        results.addAll(renderAnnotation(declaration.simpleName.asString(), annotation))
     }
 
     private fun renderAnnotation(label: String, annotation: KSAnnotation): List<String> {

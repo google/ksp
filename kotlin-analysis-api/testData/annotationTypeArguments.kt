@@ -21,8 +21,6 @@
 // ContainerTarget.nested.annotationType: MapConvert<SourceObject, DestinationObject, DestinationConverter>
 // ContainerTarget.nested.typeArgCount: 3
 // ContainerTarget.nested.typeArgs: SourceObject, DestinationObject, DestinationConverter
-// LibClass.annotationType: LibAnno
-// LibClass.typeArgCount: 0
 // NestedTarget.annotationType: MapConvert<INVARIANT List<INVARIANT SourceObject>, INVARIANT Map<INVARIANT String, INVARIANT DestinationObject>, INVARIANT NestedDestinationConverter>
 // NestedTarget.typeArgCount: 3
 // NestedTarget.typeArgs: kotlin.collections.List, kotlin.collections.Map, NestedDestinationConverter
@@ -31,26 +29,6 @@
 // Target.typeArgs: SourceObject, DestinationObject, DestinationConverter
 // END
 
-// MODULE: lib
-// FILE: LibAnno.kt
-package com.example
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class LibAnno<A : Any>
-
-// FILE: LibAnnoValue.kt
-package com.example
-
-class LibAnnoValue
-
-// FILE: LibClass.kt
-package com.example
-
-@LibAnno<LibAnnoValue>
-class LibClass
-
-// MODULE: main(lib)
 interface Converter<S : Any, D : Any>
 
 @Target(AnnotationTarget.CLASS)
