@@ -90,7 +90,7 @@ jobs:
   
       # Run ksp generated tests
       - name: test
-        run: ./gradlew --stacktrace --info check
+        run: ./gradlew --no-parallel --stacktrace --info check
 
       - name: push to release branch
         if: success()
