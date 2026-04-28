@@ -90,7 +90,7 @@ jobs:
   
       # Run ksp generated tests
       - name: test
-        run: ./gradlew --stacktrace --info check
+        run: ./gradlew check --stacktrace --info --scan --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
       - name: push to release branch
         if: success()
