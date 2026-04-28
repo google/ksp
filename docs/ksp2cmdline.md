@@ -2,22 +2,22 @@
 
 KSP2 has 4 main classes, one for each platform: `KSPJvmMain`, `KSPJsMain`, `KSPNativeMain`, `KSPCommonMain`. They reside
 in the same jars from the
-[artifacts.zip](https://github.com/google/ksp/releases/download/2.2.10-2.0.2/artifacts.zip) in the
-[release page](https://github.com/google/ksp/releases/tag/2.2.10-2.0.2):
-* `symbol-processing-aa-2.2.10-2.0.2.jar`
+[artifacts.zip](https://github.com/google/ksp/releases/download/2.3.7/artifacts.zip) in the
+[release page](https://github.com/google/ksp/releases/tag/2.3.7):
+* `symbol-processing-aa-2.3.7.jar`
 
 and depend on:
-* `symbol-processing-common-deps-2.2.10-2.0.2.jar`
+* `symbol-processing-common-deps-2.3.7.jar`
 
 You’ll also need the Kotlin runtime:
-* `kotlin-stdlib-2.2.10.jar`
+* `kotlin-stdlib-2.3.20.jar`
 * `kotlinx-coroutines-core-jvm-1.10.2.jar`
 
 Taking `KSPJvmMain` for example,
 
 ```
 java -cp \
-symbol-processing-aa-2.2.10-2.0.2.jar:kotlin-analysis-api-2.2.10-2.0.2.jar:common-deps-2.2.10-2.0.2.jar:symbol-processing-api-2.2.10-2.0.2.jar:kotlin-stdlib-2.2.10.jar:kotlinx-coroutines-core-jvm-1.10.2.jar \
+symbol-processing-aa-2.3.7.jar:kotlin-analysis-api-2.3.7.jar:common-deps-2.3.7.jar:symbol-processing-api-2.3.7.jar:kotlin-stdlib-2.3.20.jar:kotlinx-coroutines-core-jvm-1.10.2.jar \
 com.google.devtools.ksp.cmdline.KSPJvmMain \
 -jvm-target 11 \
 -module-name=main \
@@ -83,4 +83,4 @@ where:
 
 ### Jvm Parameters
 
-* `-Dksp.logging` - logging level, one of `error`, `warn` or `warning`, `info`, `debug`. Default is `warn`. If an unrecognised level is specified, it will be treated as `warn`.
+* `-Dksp.logging` - logging level, one of `error`, `warn` or `warning`, `info`, `debug`. Default is `warn`. If an unrecognized level is specified, it will be treated as `warn`.
