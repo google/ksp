@@ -13,6 +13,10 @@ You’ll also need the Kotlin runtime:
 * `kotlin-stdlib-2.3.20.jar`
 * `kotlinx-coroutines-core-jvm-1.10.2.jar`
 
+> Note: You can find the latest release here: https://github.com/google/ksp/releases/latest.
+>
+> Replace any occurrence of `2.3.7` in this document with the version you are using.
+
 Taking `KSPJvmMain` for example,
 
 ```
