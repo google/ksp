@@ -56,6 +56,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolLocation
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.name
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtDeclaration
@@ -174,7 +175,24 @@ class KSFunctionDeclarationImpl private constructor(internal val ktFunctionSymbo
             is KaNamedFunctionSymbol -> KSNameImpl.getCached(ktFunctionSymbol.name.asString())
             is KaPropertyAccessorSymbol -> when (val psi = ktFunctionSymbol.psi) {
                 is PsiMethod -> KSNameImpl.getCached(psi.name)
-                else -> KSNameImpl.getCached(ktFunctionSymbol.callableId?.callableName?.asString() ?: "<no name>")
+                else -> {
+                    // 1. Try to get the callable id
+                    // 2. Try to synthetically construct the getter or setter as e.g., "propertyName.getter()"
+                    // 3. Fall back to <no name>
+                    val name = ktFunctionSymbol.callableId?.callableName?.asString()
+                        ?: analyze { ktFunctionSymbol.containingSymbol?.name?.asString() }?.let { propertyName ->
+                            buildString {
+                                append(propertyName)
+                                append(".")
+                                when (ktFunctionSymbol) {
+                                    is KaPropertyGetterSymbol -> append("getter")
+                                    is KaPropertySetterSymbol -> append("setter")
+                                }
+                                append("()")
+                            }
+                        } ?: "<no name>"
+                    KSNameImpl.getCached(name)
+                }
             }
 
             is KaConstructorSymbol -> KSNameImpl.getCached("<init>")
