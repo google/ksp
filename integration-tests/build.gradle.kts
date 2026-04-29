@@ -58,7 +58,9 @@ val agpCompatibilityTest by tasks.registering(Test::class) {
 }
 
 tasks.test {
-    maxParallelForks = max(1, Runtime.getRuntime().availableProcessors() / 2)
+    // Disable parallelism on Windows to avoid file locking issues
+    val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+    maxParallelForks = if (isWindows) 1 else max(1, Runtime.getRuntime().availableProcessors() / 2)
 
     // Exclude test classes from agpCompatibilityTest
     exclude("**/AGPVersionIT.class")
