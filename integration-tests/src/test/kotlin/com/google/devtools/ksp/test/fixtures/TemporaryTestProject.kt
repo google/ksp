@@ -35,6 +35,11 @@ class TemporaryTestProject(
         appendProperty("ksp.experimental.psi.resolution=$experimentalPsiResolution")
         appendProperty("android.useAndroidX=true")
 
+        if (System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
+            // Disable parallelism on Windows to avoid file locking issues
+            appendProperty("org.gradle.parallel=false")
+        }
+
         appendProperty("org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m")
         appendProperty("kotlin.daemon.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=1024m")
 
