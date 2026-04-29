@@ -30,7 +30,7 @@ class AnnotationOnConstructorParameterProcessor : AbstractTestProcessor() {
             clz as KSClassDeclaration
             val prop1 = clz.getAllProperties().single { it.simpleName.asString() == "fullName" }
             val prop2 = clz.getDeclaredProperties().single { it.simpleName.asString() == "fullName" }
-            prop1.annotations.forEach { anno ->
+            prop1.annotations.plus(prop2.annotations).forEach { anno ->
                 results.add(anno.shortName.asString())
             }
             results.add((prop1 === prop2).toString())

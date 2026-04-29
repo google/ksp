@@ -118,7 +118,6 @@
 // param:KSValueParameter
 // propertyFoo:KSPropertyDeclaration
 // ==== Cnno inDepth = true ====
-// constructorParameterFoo:KSPropertyDeclaration
 // constructorParameterFoo:KSValueParameter
 // value:KSValueParameter
 // x:KSPropertyDeclaration

@@ -37,12 +37,13 @@ class AnnotationArrayValueProcessor : AbstractTestProcessor() {
 
         val declaration = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Main"))!!
         declaration.getAllProperties().forEach { prop ->
-            val annotation = prop.annotations.singleOrNull() ?: return@forEach
-            val annotationName = annotation.shortName.asString()
-            val annotationArgument = annotation.arguments.single()
-            result.add(
-                "$prop: $annotationName(${annotationArgument.name?.asString()}: ${annotationArgument.value})"
-            )
+            prop.annotations.forEach { annotation ->
+                val annotationName = annotation.shortName.asString()
+                val annotationArgument = annotation.arguments.single()
+                result.add(
+                    "$prop: $annotationName(${annotationArgument.name?.asString()}: ${annotationArgument.value})"
+                )
+            }
         }
         return emptyList()
     }
