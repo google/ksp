@@ -80,7 +80,7 @@ jobs:
     # Run tests
     - name: test
       shell: bash
-      run: ./gradlew --stacktrace --info check
+      run: ./gradlew check --stacktrace --info -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v7
