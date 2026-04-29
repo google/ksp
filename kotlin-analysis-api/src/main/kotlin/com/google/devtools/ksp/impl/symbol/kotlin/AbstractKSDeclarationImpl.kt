@@ -34,10 +34,19 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiJvmModifiersOwner
 import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.util.parentOfType
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.symbols.*
+import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaJavaFieldSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KaNamedSymbol
-import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
+import org.jetbrains.kotlin.analysis.api.symbols.typeParameters
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
@@ -98,8 +107,9 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
                 is KaClassLikeSymbol -> ktDeclarationSymbol.classId?.packageFqName?.asString()
                 is KaCallableSymbol -> ktDeclarationSymbol.callableId?.packageName?.asString()
                 else -> null
-            }?.let { KSNameImpl.getCached(it) }
-                //  null -> non top level declaration, find in parent
+            }?.let {
+                KSNameImpl.getCached(it)
+            } //  null -> non top level declaration, find in parent
                 ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
                 ?: throw InternalKSPException(
                     "failed to find package name for $this",
@@ -122,7 +132,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
         analyze {
             ktDeclarationSymbol.containingSymbol?.let {
                 ktDeclarationSymbol.getContainingKSSymbol()
-            } ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>())?.namedClassSymbol?.let {
+            } ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>(withSelf = false))?.namedClassSymbol?.let {
                 KSClassDeclarationImpl.getCached(it)
             } ?: ktDeclarationSymbol.toContainingFile()
         }
