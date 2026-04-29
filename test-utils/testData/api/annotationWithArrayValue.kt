@@ -31,6 +31,7 @@
 // stringArray = [j-x, j-y, null, j-z]
 // classArray = [Integer, Character]
 // p0: MyAnnotation(tag: [1, 2, 3])
+// p0: MyAnnotation(tag: [1, 2, 3])
 // END
 // FILE: a.kt
 

@@ -56,7 +56,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
         rootsIndex = JvmDependenciesDynamicCompoundIndex(true).apply {
-            addIndex(JvmDependenciesIndexImpl(roots, true))
+            addIndex(JvmDependenciesIndexImpl(roots))
         }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
@@ -106,7 +106,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
         rootsIndex.apply {
-            addIndex(JvmDependenciesIndexImpl(roots, true))
+            addIndex(JvmDependenciesIndexImpl(roots))
         }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
