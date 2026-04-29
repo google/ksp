@@ -571,6 +571,7 @@ class KotlinSymbolProcessing(
                     allDirtyKSFiles,
                     project,
                     incrementalContext,
+                    kspConfig,
                     resolutionStrategy
                 )
                 ResolverAAImpl.instance = resolver

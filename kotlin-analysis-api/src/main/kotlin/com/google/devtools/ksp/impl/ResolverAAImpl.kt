@@ -26,6 +26,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.*
 import com.google.devtools.ksp.impl.symbol.util.*
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
 import com.google.devtools.ksp.processing.KSBuiltIns
+import com.google.devtools.ksp.processing.KSPConfig
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.intellij.openapi.project.Project
@@ -67,6 +68,7 @@ class ResolverAAImpl(
     val allKSFiles: List<KSFile>,
     val project: Project,
     val incrementalContext: IncrementalContextAA,
+    val kspConfig: KSPConfig,
     val resolutionStrategy: AnnotationResolutionStrategy,
 ) : Resolver {
     companion object {
@@ -483,6 +485,12 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(declaration: KSFunctionDeclaration): String {
+        // FAST PATH: Java methods do not have Kotlin name mangling or @JvmName.
+        // Their JVM name is always exactly their simple name.
+        if (declaration.origin == Origin.JAVA || declaration.origin == Origin.JAVA_LIB) {
+            return declaration.simpleName.asString()
+        }
+
         val symbol: KaFunctionSymbol? = when (declaration) {
             is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol
             else -> null
@@ -704,10 +712,6 @@ class ResolverAAImpl(
         fun KSType.toSignature(): String {
             return if (this is KSTypeImpl) {
                 analyze {
-                    val decl = (this@toSignature.declaration as? KSClassDeclaration)
-                    // Force inline value class to be unwrapped.
-                    // Do not remove until AA fixes this.
-                    decl?.primaryConstructor
                     type.toSignature()
                 }
             } else {

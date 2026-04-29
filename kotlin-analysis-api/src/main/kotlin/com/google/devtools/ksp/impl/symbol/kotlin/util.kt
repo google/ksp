@@ -1090,6 +1090,57 @@ internal val KaDeclarationSymbol.internalSuffix: String
         }
     }
 
+/**
+ * Performs a Breadth-First Search (BFS) over the FIR supertype hierarchy to determine if this
+ * class inherits from a Kotlin built-in type that structurally alters its Java members.
+ *
+ * This FIR-based traversal is required because PSI-based hierarchy checks (e.g.,
+ * `InheritanceUtil.isInheritor`) are unreliable for compiled library dependencies
+ * (`Origin.JAVA_LIB`) in KSP's isolated environments due to incomplete ASTs.
+ *
+ * If this returns true, KSP must bypass the PSI fast path to avoid exposing Java methods
+ * that FIR intentionally hides or renames (such as `remove(int)` or `entrySet()`), which
+ * would otherwise cause symbol resolution crashes during validation.
+ *
+ * @return `true` if this class or any of its supertypes requires specialized compiler mapping.
+ */
+fun KaClassSymbol.inheritsFromKotlinAlteredType(): Boolean {
+    return analyze {
+        val queue = ArrayDeque<KaClassSymbol>()
+        val visited = mutableSetOf<KaClassSymbol>()
+        queue.add(this@inheritsFromKotlinAlteredType)
+
+        while (queue.isNotEmpty()) {
+            val curr = queue.removeFirst()
+            if (!visited.add(curr)) continue
+
+            val fqName = curr.classId?.asFqNameString()
+            if (fqName != null && isKotlinAlteredType(fqName)) {
+                return@analyze true
+            }
+
+            // Traverse up the FIR hierarchy
+            curr.superTypes.forEach { superType -> superType.expandedSymbol?.let { queue.add(it) } }
+        }
+        false
+    }
+}
+
+/**
+ * Checks if the given fully qualified name belongs to a Kotlin built-in type that applies
+ * specialized mapping to its Java members.
+ *
+ * The Kotlin Analysis API (FIR) intentionally hides Java collection mutator methods and
+ * maps methods from specific types to properties or renamed identifiers (e.g., mapping
+ * `length()` to a property for `CharSequence`, or `remove` to `removeAt`). KSP must
+ * fall back to the Analysis API slow path for these types to maintain behavioral consistency.
+ */
+fun isKotlinAlteredType(fqName: String) =
+    fqName.startsWith("kotlin.collections.") ||
+        fqName == "kotlin.CharSequence" ||
+        fqName == "kotlin.Throwable" ||
+        fqName == "kotlin.Number"
+
 // Annotations on deeply synthesized members like getter of Java annotation arguments can be defined in src.
 internal val KSNode.definitionOrigin: Origin
     get() = containingFile?.origin ?: origin

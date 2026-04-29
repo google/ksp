@@ -40,7 +40,9 @@ import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 
-abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationSymbol) : KSDeclaration, Deferrable {
+abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
+    abstract val ktDeclarationSymbol: KaDeclarationSymbol
+
     override val origin: Origin by lazy {
         mapAAOrigin(ktDeclarationSymbol)
     }
@@ -58,7 +60,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
 
     override val modifiers: Set<Modifier> by lazy {
         if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
-            when (ktDeclarationSymbol) {
+            when (val ktDeclarationSymbol = this.ktDeclarationSymbol) {
                 is KaPropertySymbol -> ktDeclarationSymbol.toModifiers()
                 is KaClassSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaFunctionSymbol -> ktDeclarationSymbol.toModifiers()
@@ -85,7 +87,7 @@ abstract class AbstractKSDeclarationImpl(val ktDeclarationSymbol: KaDeclarationS
             containingFile!!.packageName
         } else {
             // top level declaration
-            when (ktDeclarationSymbol) {
+            when (val ktDeclarationSymbol = this.ktDeclarationSymbol) {
                 is KaClassLikeSymbol -> ktDeclarationSymbol.classId?.packageFqName?.asString()
                 is KaCallableSymbol -> ktDeclarationSymbol.callableId?.packageName?.asString()
                 else -> null

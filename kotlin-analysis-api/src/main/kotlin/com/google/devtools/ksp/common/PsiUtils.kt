@@ -20,10 +20,14 @@ package com.google.devtools.ksp.common
 import com.google.devtools.ksp.symbol.*
 import com.intellij.lang.jvm.JvmModifier
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap.mapJavaToKotlin
+import org.jetbrains.kotlin.name.FqName
 
 val jvmModifierMap = mapOf(
     JvmModifier.PUBLIC to Modifier.PUBLIC,
@@ -101,4 +105,23 @@ inline fun <T> lazyMemoizedSequence(crossinline initializer: () -> Sequence<T>):
         value
     else
         value.memoized()
+}
+
+/**
+ * Returns `true` if the [PsiClass] is mapped to a Kotlin type.
+ *
+ * For example:
+ *
+ *   - `java.lang.String -> kotlin.String`
+ *   - `java.util.Map.Entry -> kotlin.Map.Entry`
+ *   - `kotlin.jvm.functions.Function3 -> kotlin.Function3`
+ */
+fun PsiClass.isMappedToKotlinType(): Boolean {
+    return qualifiedName?.let { mapJavaToKotlin(FqName(it)) } != null
+}
+
+fun PsiMethod.isObjectOverride(): Boolean {
+    return (name == "equals" && parameterList.parametersCount == 1) ||
+        (name == "hashCode" && parameterList.parametersCount == 0) ||
+        (name == "toString" && parameterList.parametersCount == 0)
 }
