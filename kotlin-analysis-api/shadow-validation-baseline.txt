@@ -134,6 +134,19 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.analysis.api.utils.ApiUtilsKt -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.api.ReplDataKt          not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.api.ReplScriptingHostConfigurationBuilder not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.api.ReplScriptingHostConfigurationKeys not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.HostConfigurationKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration$Builder not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfigurationKeys not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.util.PropertiesCollection not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.util.PropertiesCollection$Builder not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.util.PropertiesCollection$Key not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirReplSnippetConfiguratorExtensionImpl not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirReplSnippetConfiguratorExtensionImpl$Companion not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.compiler.plugin.services.FirReplSnippetConfiguratorExtensionImplKt not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.HostConfigurationKt not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> kotlin.script.experimental.host.ScriptingHostConfiguration$Builder not found
@@ -161,17 +174,17 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider$Companion not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionsSource not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentCommandLineProcessor not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentConfigurationKeys not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.k2.FirAssignmentPluginExtensionRegistrar not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.FirScriptingSamWithReceiverExtensionRegistrar not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.impl.CompilationContextKt not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.definitions.DefinitionsKt not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinition not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentCommandLineProcessor not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentConfigurationKeys not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.k2.FirAssignmentPluginExtensionRegistrar not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.FirScriptingSamWithReceiverExtensionRegistrar not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.impl.CompilationContextKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.definitions.DefinitionsKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinition not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.structure.UtilsKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
-   org.jetbrains.kotlin.analysis.utils.relfection.ToStringDataClassLikeKt -> kotlin.reflect.full.KClasses                       not found
-   org.jetbrains.kotlin.analysis.utils.relfection.ToStringDataClassLikeKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
+   org.jetbrains.kotlin.analysis.utils.reflection.ToStringDataClassLikeKt -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.analysis.utils.reflection.ToStringDataClassLikeKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.backend.common.serialization.IrBodyDeserializer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.backend.common.serialization.IrDeclarationDeserializer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.backend.konan.NativePreSerializationLoweringContext -> org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr not found
