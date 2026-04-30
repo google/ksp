@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.GenerationUtils
+import org.jetbrains.kotlin.codegen.forTestCompile.TestCompilePaths
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
@@ -80,6 +81,20 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         const val TEST_ANNOTATIONS = "// TEST ANNOTATIONS:"
         const val EXPECTED_RESULTS = "// EXPECTED:"
         const val EXPECTED_RESULTS_END = "// END"
+    }
+
+    init {
+        // Set system properties for runtime jars needed for Kotlin.
+        // See https://github.com/JetBrains/kotlin/commit/ad4cd812a64fa7c8241424abaf3998aa3b7f6b60
+        // Keep in sync with Gradle build configurations `libsForTesting` and `libsForTestingCommon`
+        System.setProperty(TestCompilePaths.KOTLIN_FULL_STDLIB_PATH, "dist/kotlinc/lib/kotlin-stdlib.jar")
+        System.setProperty(TestCompilePaths.KOTLIN_COMMON_STDLIB_PATH, "dist/common/lib/kotlin-stdlib.jar")
+        System.setProperty(TestCompilePaths.KOTLIN_TEST_JAR_PATH, "dist/kotlinc/lib/kotlin-test.jar")
+        System.setProperty(TestCompilePaths.KOTLIN_SCRIPT_RUNTIME_PATH, "dist/kotlinc/lib/kotlin-script-runtime.jar")
+        System.setProperty(
+            TestCompilePaths.KOTLIN_MOCKJDK_ANNOTATIONS_PATH,
+            "third-party/mockJDKs/mockJDK/jre/lib/annotations.jar"
+        )
     }
 
     val kspTestRoot = KtTestUtil.tmpDir("com/google/devtools/ksp/test/testgoogle/devtools/ksp/test/test")
