@@ -222,6 +222,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+
+    // See AbstractKSPTest's init block if you change any of the `libsForTesting` or `libsForTestingCommon` dependencies.
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
     libsForTesting(kotlin("test", aaKotlinBaseVersion))
     libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
