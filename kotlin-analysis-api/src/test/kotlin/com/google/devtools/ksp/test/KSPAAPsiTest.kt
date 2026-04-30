@@ -17,4 +17,4 @@
 
 package com.google.devtools.ksp.test
 
-class KSPAAPsiTest : ConfigurableKSPTest(experimentalPsiResolution = true)
+class KSPAAPsiTest : KSPUnitTestSuite(experimentalPsiResolution = true)
