@@ -134,6 +134,8 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.analysis.api.utils.ApiUtilsKt -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.analysis.api.utils.ClassRenderingUtilsKt -> kotlin.reflect.full.KClasses                       not found
+   org.jetbrains.kotlin.analysis.api.utils.ClassRenderingUtilsKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.api.ReplDataKt          not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.api.ReplScriptingHostConfigurationBuilder not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirReplCompilerExtensionIdeRegistrar -> kotlin.script.experimental.api.ReplScriptingHostConfigurationKeys not found
@@ -174,17 +176,15 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider$Companion not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirScriptingCompilerExtensionIdeRegistrar -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionsSource not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentCommandLineProcessor not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentConfigurationKeys not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.assignment.plugin.k2.FirAssignmentPluginExtensionRegistrar not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.FirScriptingSamWithReceiverExtensionRegistrar not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.impl.CompilationContextKt not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.definitions.DefinitionsKt not found
-   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirAbstractSessionFactory -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinition not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> kotlin.script.experimental.host.ScriptingHostConfiguration not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentCommandLineProcessor not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.assignment.plugin.AssignmentConfigurationKeys not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.assignment.plugin.k2.FirAssignmentPluginExtensionRegistrar not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.FirScriptingSamWithReceiverExtensionRegistrar not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.scripting.compiler.plugin.impl.CompilationContextKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.scripting.definitions.DefinitionsKt not found
+   org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.factory.LLFirSessionFactory -> org.jetbrains.kotlin.scripting.definitions.ScriptDefinition not found
    org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.structure.UtilsKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
-   org.jetbrains.kotlin.analysis.utils.reflection.ToStringDataClassLikeKt -> kotlin.reflect.full.KClasses                       not found
-   org.jetbrains.kotlin.analysis.utils.reflection.ToStringDataClassLikeKt -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.backend.common.serialization.IrBodyDeserializer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.backend.common.serialization.IrDeclarationDeserializer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.backend.konan.NativePreSerializationLoweringContext -> org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr not found
@@ -266,6 +266,7 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExnRefType        not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExpressionBuilder not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.BodyGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Any not found
@@ -469,6 +470,7 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.RecursiveTypesUtilsKt -> org.jetbrains.kotlin.wasm.ir.WasmV128              not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.RttiGlobalSymbol -> org.jetbrains.kotlin.wasm.ir.WasmImmediate         not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.RttiGlobalSymbol -> org.jetbrains.kotlin.wasm.ir.WasmImmediate$GlobalIdx not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.SyntheticsKt -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.TypeGenerator -> org.jetbrains.kotlin.wasm.ir.WasmArrayDeclaration  not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.TypeGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.TypeGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
@@ -601,6 +603,7 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmExternRef         not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmF32               not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmF64               not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmFunctionType      not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmTypeTransformer -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple$Extern not found
