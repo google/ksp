@@ -17,7 +17,6 @@
 
 package com.google.devtools.ksp.common.impl
 
-import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.FileCache
@@ -57,6 +56,9 @@ import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
 import com.intellij.util.containers.addIfNotNull
+import org.jetbrains.kotlin.analysis.api.resolution.KaAnnotationCall
+import org.jetbrains.kotlin.analysis.api.resolution.successfulCallOrNull
+import org.jetbrains.kotlin.analysis.api.resolution.symbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
@@ -353,28 +355,7 @@ class PsiResolutionStrategy(
      *
      * This is used as a fallback when [fastResolveClassId] cannot determine the class ID.
      */
-    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? {
-        // Prepare error message in case of exception.
-        val error = { stackTrace: String ->
-            throw InternalKSPException(
-                buildString {
-                    appendLine("Unexpected exception occurred in Analysis API:")
-                    append("  ")
-                    append(stackTrace)
-                },
-                annotationEntry.toLocation(),
-                annotationEntry.javaClass
-            )
-        }
-        // Catch exception twice due to race conditions.
-        try {
-            return analyze { annotationEntry.typeReference?.type?.fullyExpandedType?.expandedSymbol?.classId }
-        } catch (e: Exception) {
-            error(e.stackTraceToString())
-        } catch (e: AssertionError) {
-            error(e.stackTraceToString())
-        }
-    }
+    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? = annotationEntry.classId
 
     /**
      * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotation].
@@ -685,17 +666,17 @@ class PsiResolutionStrategy(
         }
 
     /**
-     * The fully qualified name of the annotation entry.
+     * The fully expanded [ClassId] of the annotation entry.
      * This member is expensive to compute.
      */
-    private val KtAnnotationEntry.qualifiedName: String?
+    private val KtAnnotationEntry.classId: ClassId?
         get() = analyze {
-            this@qualifiedName.typeReference
-                ?.type
-                ?.fullyExpandedType
-                ?.expandedSymbol
-                ?.classId
-                ?.asFqNameString()
+            // N.B. do not use typeReference.type to get the ClassId because that can fail in certain edge cases, e.g.
+            //  https://github.com/google/ksp/issues/2913
+            this@classId.resolveToCall()
+                ?.successfulCallOrNull<KaAnnotationCall>()
+                ?.symbol
+                ?.containingClassId
         }
 
     /**
