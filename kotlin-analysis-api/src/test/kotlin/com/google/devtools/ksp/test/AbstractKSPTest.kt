@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -220,7 +221,6 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     }
 
     fun runTest(@TestDataFile path: String) {
-        // TODO: refactor experimental psi mode into separate test class
         val testConfiguration = testConfiguration(path, configure)
         Disposer.register(disposable, testConfiguration.rootDisposable)
         val testServices = testConfiguration.testServices
@@ -286,6 +286,139 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             )
         }
         Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
+    }
+
+    fun runFailingTest(@TestDataFile path: String) {
+        val testConfiguration = testConfiguration(path, configure)
+        Disposer.register(disposable, testConfiguration.rootDisposable)
+        val testServices = testConfiguration.testServices
+        val moduleStructure = testConfiguration.moduleStructureExtractor.splitTestDataByModules(
+            path,
+            testConfiguration.directives,
+        )
+        testServices.registerArtifactsProvider(ArtifactsProvider())
+        testServices.register(TestModuleStructure::class, moduleStructure)
+
+        val mainModule = moduleStructure.modules.last()
+        val libModules = moduleStructure.modules.dropLast(1)
+
+        for (lib in libModules) {
+            compileModule(lib, testServices)
+        }
+        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
+            mainModule,
+            CompilationStage.FIRST
+        )
+        compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
+
+        val contents = mainModule.files.first().originalFile.readLines()
+
+        val testProcessorName = contents
+            .single { it.startsWith(TEST_PROCESSOR) }
+            .substringAfter(TEST_PROCESSOR)
+            .trim()
+
+        val testAnnotationNames = contents
+            .find { it.startsWith(TEST_ANNOTATIONS) }
+            ?.substringAfter(TEST_ANNOTATIONS)
+            ?.split(',')
+            ?.map { it.trim() }
+
+        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
+
+        val testProcessor: AbstractTestProcessor =
+            if (testAnnotationNames == null) {
+                // Instantiate processor class without constructor params
+                processorClass
+                    .getDeclaredConstructor()
+                    .newInstance() as AbstractTestProcessor
+            } else {
+                // Instantiate parameterized processor class
+                processorClass
+                    .getDeclaredConstructor(List::class.java)
+                    .newInstance(testAnnotationNames) as AbstractTestProcessor
+            }
+
+        val expectedResults = contents
+            .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
+            .drop(1)
+            .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
+            .map { it.substring(3).trim() }
+
+        val results = collectAllExceptions {
+            runTest(
+                testServices,
+                mainModule,
+                libModules,
+                testProcessor,
+            )
+        }
+        Assertions.assertNotEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
+    }
+
+    fun runThrowingTest(@TestDataFile path: String) {
+        val testConfiguration = testConfiguration(path, configure)
+        Disposer.register(disposable, testConfiguration.rootDisposable)
+        val testServices = testConfiguration.testServices
+        val moduleStructure = testConfiguration.moduleStructureExtractor.splitTestDataByModules(
+            path,
+            testConfiguration.directives,
+        )
+        testServices.registerArtifactsProvider(ArtifactsProvider())
+        testServices.register(TestModuleStructure::class, moduleStructure)
+
+        val mainModule = moduleStructure.modules.last()
+        val libModules = moduleStructure.modules.dropLast(1)
+
+        for (lib in libModules) {
+            compileModule(lib, testServices)
+        }
+        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
+            mainModule,
+            CompilationStage.FIRST
+        )
+        compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
+
+        val contents = mainModule.files.first().originalFile.readLines()
+
+        val testProcessorName = contents
+            .single { it.startsWith(TEST_PROCESSOR) }
+            .substringAfter(TEST_PROCESSOR)
+            .trim()
+
+        val testAnnotationNames = contents
+            .find { it.startsWith(TEST_ANNOTATIONS) }
+            ?.substringAfter(TEST_ANNOTATIONS)
+            ?.split(',')
+            ?.map { it.trim() }
+
+        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
+
+        val testProcessor: AbstractTestProcessor =
+            if (testAnnotationNames == null) {
+                // Instantiate processor class without constructor params
+                processorClass
+                    .getDeclaredConstructor()
+                    .newInstance() as AbstractTestProcessor
+            } else {
+                // Instantiate parameterized processor class
+                processorClass
+                    .getDeclaredConstructor(List::class.java)
+                    .newInstance(testAnnotationNames) as AbstractTestProcessor
+            }
+
+        try {
+            collectAllExceptions {
+                runTest(
+                    testServices,
+                    mainModule,
+                    libModules,
+                    testProcessor,
+                )
+            }
+            Assertions.fail()
+        } catch (_: InternalKSPException) {
+        }
     }
 }
 
