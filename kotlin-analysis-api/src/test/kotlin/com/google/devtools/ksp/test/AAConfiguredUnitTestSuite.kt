@@ -22,11 +22,9 @@ import org.junit.jupiter.api.Test
 
 class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = false) {
 
-    @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
+    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
-    override fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
-        runTest(
-            "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
-        )
+    override fun testAllUseSiteTargetAppliedToAnnotationList() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 }
