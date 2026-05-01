@@ -26,6 +26,8 @@ import com.google.devtools.ksp.symbol.NonExistLocation
  *
  * Copy of InternalKSPException in API package which is also marked
  * internal to avoid users depending on the type.
+ * Importantly, this class is in a different package than in the API module
+ * to avoid classpath collisions/shadowing.
  */
 internal class InternalKSPException(
     message: String,
@@ -47,7 +49,7 @@ internal class InternalKSPException(
         appendLine("   |")
     }
 ) {
-    internal companion object {
+    companion object {
         fun Location.render(): String {
             return when (this) {
                 is FileLocation -> "${this.filePath}:${this.lineNumber}"

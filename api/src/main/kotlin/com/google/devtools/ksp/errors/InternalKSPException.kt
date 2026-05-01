@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp
+package com.google.devtools.ksp.errors
 
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.Location
@@ -47,7 +47,7 @@ internal class InternalKSPException(
     }
 ) {
     internal companion object {
-        fun Location.render(): String {
+        private fun Location.render(): String {
             return when (this) {
                 is FileLocation -> "${this.filePath}:${this.lineNumber}"
                 is NonExistLocation -> "<unknown location>"
