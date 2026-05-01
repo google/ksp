@@ -660,6 +660,8 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/referenceElement.kt")
     }
 
+    abstract fun testRepeatedNonRepeatableAnnotations()
+
     @TestMetadata("replaceWithErrorTypeArgs.kt")
     @Test
     fun testReplaceWithErrorTypeArgs() {
