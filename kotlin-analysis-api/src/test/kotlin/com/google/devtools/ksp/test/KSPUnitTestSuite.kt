@@ -336,6 +336,12 @@ abstract class KSPUnitTestSuite(
         runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotationInLib.kt")
     }
 
+    @TestMetadata("groupedAnnotations.kt")
+    @Test
+    fun testGroupedAnnotations() {
+        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/groupedAnnotations.kt")
+    }
+
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {
