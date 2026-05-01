@@ -24,10 +24,13 @@ import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.components.resolveCall
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtFile
 
 class KSAnnotationResolvedImpl private constructor(
@@ -43,9 +46,18 @@ class KSAnnotationResolvedImpl private constructor(
             }
     }
 
+    @OptIn(KaExperimentalApi::class)
     override val annotationType: KSTypeReference by lazy {
         analyze {
-            KSTypeReferenceResolvedImpl.getCached(
+            // Try source-level type reference first (preserves type arguments from source),
+            // then fall back to resolved call signature, and finally build from classId.
+            val sourceTypeReference = lazy { (annotationApplication.psi as? KtAnnotationEntry)?.typeReference }
+            val resolvedReturnType = lazy { annotationApplication.psi?.resolveCall()?.signature?.returnType }
+            sourceTypeReference.value?.let {
+                KSTypeReferenceImpl.getCached(it, this@KSAnnotationResolvedImpl)
+            } ?: resolvedReturnType.value?.let {
+                KSTypeReferenceResolvedImpl.getCached(it, parent = this@KSAnnotationResolvedImpl)
+            } ?: KSTypeReferenceResolvedImpl.getCached(
                 buildClassType(annotationApplication.classId!!),
                 parent = this@KSAnnotationResolvedImpl
             )
