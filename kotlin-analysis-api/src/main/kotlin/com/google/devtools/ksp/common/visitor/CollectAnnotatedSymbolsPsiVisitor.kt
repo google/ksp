@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.common.visitor
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
@@ -74,7 +75,11 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
 
                 else ->
                     // Explicit crash
-                    error("Unexpected Kotlin Psi element at ${parent.toLocation()}: ${parent.javaClass}")
+                    throw InternalKSPException(
+                        "Unexpected Kotlin Psi element",
+                        parent.toLocation(),
+                        parent.javaClass
+                    )
             }
 
             is PsiAnnotation -> when (val owner = element.owner) {
@@ -121,7 +126,11 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
 
                 else ->
                     // Explicit crash
-                    error("Unexpected Java Psi element at ${(owner as? PsiElement).toLocation()}: ${owner.javaClass}")
+                    throw InternalKSPException(
+                        "Unexpected Java Psi element",
+                        (owner as? PsiElement).toLocation(),
+                        owner.javaClass
+                    )
             }
         }
         super.visitElement(element)
