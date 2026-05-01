@@ -71,6 +71,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/allFunctions_kt_inherits_java.kt")
     }
 
+    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
+    @Test
+    fun testAllUseSiteTargetAppliedToAnnotationList() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
+    }
+
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
