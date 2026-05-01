@@ -15,15 +15,21 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.test
+// TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
+// TEST ANNOTATIONS: Anno
+// EXPECTED:
+// Anno: MyClass
+// Anno: MyJavaClass
+// END
 
-import org.jetbrains.kotlin.test.TestMetadata
-import org.junit.jupiter.api.Test
+// FILE: Main.kt
 
-class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true) {
-    @TestMetadata("repeatedNonRepeatableAnnotations.kt")
-    @Test
-    override fun testRepeatedNonRepeatableAnnotations() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
-    }
-}
+annotation class Anno
+
+@Anno @Anno @[Anno Anno]
+class MyClass
+
+// Other.java
+
+@Anno @Anno
+class MyJavaClass {}
