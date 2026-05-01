@@ -277,7 +277,7 @@ class PsiResolutionStrategy(
             lazy {
                 entry.value.flatMap { (annotated, annotationEntry) ->
                     annotated.resolveToKSAnnotated(annotationEntry)
-                }
+                }.distinct()
             }
         }
     }
