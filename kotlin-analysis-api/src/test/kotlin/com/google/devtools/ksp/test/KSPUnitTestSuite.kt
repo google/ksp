@@ -342,6 +342,14 @@ abstract class KSPUnitTestSuite(
         runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/groupedAnnotations.kt")
     }
 
+    @TestMetadata("groupedAnnotationsWithUseSiteTargets.kt")
+    @Test
+    fun testGroupedAnnotationsWithUseSiteTargets() {
+        runTest(
+            "../kotlin-analysis-api/testData/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt"
+        )
+    }
+
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {
