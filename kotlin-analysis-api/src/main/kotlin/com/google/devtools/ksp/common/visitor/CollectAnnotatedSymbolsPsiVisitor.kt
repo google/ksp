@@ -17,6 +17,7 @@ import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.javadoc.PsiDocComment
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.KtAnnotatedExpression
+import org.jetbrains.kotlin.psi.KtAnnotation
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDeclarationModifierList
 import org.jetbrains.kotlin.psi.KtExpression
@@ -63,6 +64,13 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
                 is KtAnnotatedExpression ->
                     // Do nothing - KSP does not consider expressions / values
                     return
+
+                // A group of annotations. Example:
+                // @[MyAnnotation1, MyAnnotation2] class MyClass
+                is KtAnnotation -> {
+                    result.add(parent.parent.parent)
+                    return
+                }
 
                 else ->
                     // Explicit crash
