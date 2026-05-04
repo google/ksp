@@ -17,13 +17,4 @@
 
 package com.google.devtools.ksp.test
 
-import org.jetbrains.kotlin.test.TestMetadata
-import org.junit.jupiter.api.Test
-
-class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true) {
-    @TestMetadata("repeatedNonRepeatableAnnotations.kt")
-    @Test
-    override fun testRepeatedNonRepeatableAnnotations() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
-    }
-}
+class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true)
