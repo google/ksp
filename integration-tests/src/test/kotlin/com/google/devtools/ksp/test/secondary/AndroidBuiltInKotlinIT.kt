@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.primary
+package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
