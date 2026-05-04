@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.primary
+package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner

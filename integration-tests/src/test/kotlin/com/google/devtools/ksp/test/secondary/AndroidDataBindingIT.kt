@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.primary
+package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
@@ -7,15 +7,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
-class KaptKspTest(experimentalPsiResolution: Boolean) {
+class AndroidDataBindingIT(experimentalPsiResolution: Boolean) {
+
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
-        "android-view-binding",
-        "playground",
+        "android-data-binding",
         experimentalPsiResolution = experimentalPsiResolution
     )
 
@@ -27,24 +26,22 @@ class KaptKspTest(experimentalPsiResolution: Boolean) {
 
     @Test
     fun testPlaygroundAndroid() {
-        val buildFile = File(project.root, "app/build.gradle.kts")
-        val content = buildFile.readText()
-        val newContent = content.replace("kotlin(\"android\")", "kotlin(\"android\")\n kotlin(\"kapt\")\n")
-        buildFile.writeText(newContent)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
+        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
         gradleRunner.withArguments(
             "clean",
-            ":app:testDebugUnitTest",
+            ":app:assemble",
             "--configuration-cache-problems=warn",
             "--info",
             "--stacktrace"
-        ).build().let { result ->
-            val output = result.output.lines()
-            val kspTask = output.filter { it.contains(":app:kspDebugKotlin") }
-            val kaptTask = output.filter { it.contains(":app:kaptDebugKotlin") }
-            Assert.assertTrue(kspTask.isNotEmpty())
-            Assert.assertTrue(kaptTask.isNotEmpty())
-        }
+        )
+            .build().let { result ->
+                val output = result.output.lines()
+                val kspTask = output.filter {
+                    it.contains(":app:kspDebugKotlin")
+                }
+                Assert.assertTrue(kspTask.isNotEmpty())
+            }
     }
 }
