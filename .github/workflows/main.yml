@@ -11,22 +11,24 @@ on:
     branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
 
 jobs:
-  build-and-test:
+  test:
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-
-    # The type of runner that the job will run on
+        test-suite: [ api-check, unit-test, integration-test-primary, integration-test-secondary, gradle-check ]
     runs-on: ${{ matrix.os }}
-
+    continue-on-error: ${{ matrix.test-suite == 'integration-test-secondary' }}
+    defaults:
+      run:
+        shell: bash
     steps:
     - name: Free Disk Space (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         echo "Disk space before cleanup:"
         df -h
-        
+
         set -xe
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/share/swift
@@ -37,9 +39,9 @@ jobs:
         sudo rm -rf /usr/local/graalvm/
         sudo rm -rf /usr/local/share/powershell
         sudo rm -rf /usr/local/share/chromium
-        
+
         sudo docker image prune --all --force
-        
+
         echo "Disk space after cleanup:"
         df -h
 
@@ -68,21 +70,31 @@ jobs:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-    # Check API compatibility
     - name: API compatibility check
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-latest' && matrix.test-suite == 'api-check'
       run: ./gradlew :api:checkApi
 
-    # Run tests
-    - name: test
-      shell: bash
-      run: ./gradlew check --stacktrace --info --scan --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+    - name: Run unit tests
+      if: matrix.test-suite == 'unit-test'
+      run: ./gradlew :kotlin-analysis-api:test --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
+    - name: Run primary integration tests
+      if: matrix.test-suite == 'integration-test-primary'
+      run: ./gradlew :integration-tests:primaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
+    - name: Run secondary integration tests
+      if: matrix.test-suite == 'integration-test-secondary'
+      run: ./gradlew :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
+    - name: Run remaining tests and checks
+      if: matrix.test-suite == 'gradle-check'
+      run: ./gradlew check -x :kotlin-analysis-api:test -x :integration-tests:primaryTest -x :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: test-reports-${{ matrix.branch }}-${{ matrix.os }}
+        name: test-reports-${{ matrix.test-suite }}-${{ matrix.os }}
         path: |
           integration-tests/build/reports
           gradle-plugin/build/reports
