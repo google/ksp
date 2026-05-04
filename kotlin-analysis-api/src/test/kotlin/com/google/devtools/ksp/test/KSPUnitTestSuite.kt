@@ -30,787 +30,790 @@ abstract class KSPUnitTestSuite(
     experimentalPsiResolution: Boolean
 ) : AbstractKSPAATest(experimentalPsiResolution) {
 
+    companion object {
+        internal const val AA_PATH: String = "../kotlin-analysis-api/testData"
+        internal const val UTIL_PATH: String = "../test-utils/testData/api"
+    }
+
     @TestMetadata("annotatedUtil.kt")
     @Test
     fun testAnnotatedUtil() {
-        runTest("../test-utils/testData/api/annotatedUtil.kt")
+        runTest("$UTIL_PATH/annotatedUtil.kt")
     }
 
     @TestMetadata("javaAnnotatedUtil.kt")
     @Test
     fun testJavaAnnotatedUtil() {
-        runTest("../test-utils/testData/api/javaAnnotatedUtil.kt")
+        runTest("$UTIL_PATH/javaAnnotatedUtil.kt")
     }
 
     @TestMetadata("abstractFunctions.kt")
     @Test
     fun testAbstractFunctions() {
-        runTest("../test-utils/testData/api/abstractFunctions.kt")
+        runTest("$UTIL_PATH/abstractFunctions.kt")
     }
 
     @TestMetadata("allFunctions_java_inherits_kt.kt")
     @Test
     fun testAllFunctions_java_inherits_kt() {
-        runTest("../test-utils/testData/api/allFunctions_java_inherits_kt.kt")
+        runTest("$UTIL_PATH/allFunctions_java_inherits_kt.kt")
     }
 
     @TestMetadata("allFunctions_kotlin.kt")
     @Test
     fun testAllFunctions_kotlin() {
-        runTest("../test-utils/testData/api/allFunctions_java_inherits_kt.kt")
+        runTest("$UTIL_PATH/allFunctions_java_inherits_kt.kt")
     }
 
     @TestMetadata("allFunctions_kt_inherits_java.kt")
     @Test
     fun testAllFunctions_kt_inherits_java() {
-        runTest("../kotlin-analysis-api/testData/allFunctions_kt_inherits_java.kt")
+        runTest("$AA_PATH/allFunctions_kt_inherits_java.kt")
     }
 
     @TestMetadata("annotationInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
-        runTest("../kotlin-analysis-api/testData/annotationInDependencies.kt")
+        runTest("$AA_PATH/annotationInDependencies.kt")
     }
 
     @TestMetadata("annotationOnConstructorParameter.kt")
     @Test
     fun testAnnotationOnConstructorParameter() {
-        runTest("../test-utils/testData/api/annotationOnConstructorParameter.kt")
+        runTest("$UTIL_PATH/annotationOnConstructorParameter.kt")
     }
 
     @TestMetadata("annotationOnReceiver.kt")
     @Test
     fun testAnnotationOnReceiver() {
-        runTest("../test-utils/testData/api/annotationOnReceiver.kt")
+        runTest("$UTIL_PATH/annotationOnReceiver.kt")
     }
 
     @TestMetadata("annotationsRepeatable.kt")
     @Test
     fun testAnnotationsRepeatable() {
-        runTest("../kotlin-analysis-api/testData/annotationsRepeatable.kt")
+        runTest("$AA_PATH/annotationsRepeatable.kt")
     }
 
     @TestMetadata("annotationTargets.kt")
     @Test
     fun testAnnotationTargets() {
-        runTest("../test-utils/testData/api/annotationTargets.kt")
+        runTest("$UTIL_PATH/annotationTargets.kt")
     }
 
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
-        runTest("../test-utils/testData/api/annotationWithArbitraryClassValue.kt")
+        runTest("$UTIL_PATH/annotationWithArbitraryClassValue.kt")
     }
 
     @TestMetadata("annotationWithNestedClassValue.kt")
     @Test
     fun testAnnotationWithNestedClassValue() {
-        runTest("../test-utils/testData/api/annotationWithNestedClassValue.kt")
+        runTest("$UTIL_PATH/annotationWithNestedClassValue.kt")
     }
 
     @TestMetadata("defaultKClassValue.kt")
     @Test
     fun testAnnotationValue_defaultKClassValue() {
-        runTest("../kotlin-analysis-api/testData/annotationValue/defaultKClassValue.kt")
+        runTest("$AA_PATH/annotationValue/defaultKClassValue.kt")
     }
 
     @TestMetadata("annotationValue_java.kt")
     @Test
     fun testAnnotationValue_java() {
-        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java.kt")
+        runTest("$AA_PATH/annotationValue/annotationValue_java.kt")
     }
 
     @TestMetadata("annotationValue_java2.kt")
     @Test
     fun testAnnotationValue_java2() {
-        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_java2.kt")
+        runTest("$AA_PATH/annotationValue/annotationValue_java2.kt")
     }
 
     @TestMetadata("annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
-        runTest("../kotlin-analysis-api/testData/annotationValue/annotationValue_kt.kt")
+        runTest("$AA_PATH/annotationValue/annotationValue_kt.kt")
     }
 
     @TestMetadata("annotationWithArrayValue.kt")
     @Test
     fun testAnnotationWithArrayValue() {
-        runTest("../test-utils/testData/api/annotationWithArrayValue.kt")
+        runTest("$UTIL_PATH/annotationWithArrayValue.kt")
     }
 
     @TestMetadata("annotationWithDefault.kt")
     @Test
     fun testAnnotationWithDefault() {
-        runTest("../kotlin-analysis-api/testData/annotationWithDefault.kt")
+        runTest("$AA_PATH/annotationWithDefault.kt")
     }
 
     @TestMetadata("annotationWithDefaultValues.kt")
     @Test
     fun testAnnotationWithDefaultValues() {
-        runTest("../kotlin-analysis-api/testData/annotationWithDefaultValues.kt")
+        runTest("$AA_PATH/annotationWithDefaultValues.kt")
     }
 
     @TestMetadata("annotationWithJavaTypeValue.kt")
     @Test
     fun testAnnotationWithJavaTypeValue() {
-        runTest("../test-utils/testData/api/annotationWithJavaTypeValue.kt")
+        runTest("$UTIL_PATH/annotationWithJavaTypeValue.kt")
     }
 
     @TestMetadata("asMemberOf.kt")
     @Test
     fun testAsMemberOf() {
-        runTest("../kotlin-analysis-api/testData/asMemberOf.kt")
+        runTest("$AA_PATH/asMemberOf.kt")
     }
 
     @TestMetadata("backingFields.kt")
     @Test
     fun testBackingFields() {
-        runTest("../test-utils/testData/api/backingFields.kt")
+        runTest("$UTIL_PATH/backingFields.kt")
     }
 
     @TestMetadata("builtInTypes.kt")
     @Test
     fun testBuiltInTypes() {
-        runTest("../test-utils/testData/api/builtInTypes.kt")
+        runTest("$UTIL_PATH/builtInTypes.kt")
     }
 
     @TestMetadata("objCacheA.kt")
     @Test
     fun testObjCacheA() {
-        runTest("../test-utils/testData/api/objCacheA.kt")
+        runTest("$UTIL_PATH/objCacheA.kt")
     }
 
     @TestMetadata("objCacheB.kt")
     @Test
     fun testObjCacheB() {
-        runTest("../test-utils/testData/api/objCacheB.kt")
+        runTest("$UTIL_PATH/objCacheB.kt")
     }
 
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
-        runTest("../kotlin-analysis-api/testData/checkOverride.kt")
+        runTest("$AA_PATH/checkOverride.kt")
     }
 
     @TestMetadata("classKinds.kt")
     @Test
     fun testClassKinds() {
-        runTest("../test-utils/testData/api/classKinds.kt")
+        runTest("$UTIL_PATH/classKinds.kt")
     }
 
     @TestMetadata("companion.kt")
     @Test
     fun testCompanion() {
-        runTest("../test-utils/testData/api/companion.kt")
+        runTest("$UTIL_PATH/companion.kt")
     }
 
     @TestMetadata("constProperties.kt")
     @Test
     fun testConstProperties() {
-        runTest("../test-utils/testData/api/constProperties.kt")
+        runTest("$UTIL_PATH/constProperties.kt")
     }
 
     @TestMetadata("constructorDeclarations.kt")
     @Test
     fun testConstructorDeclarations() {
-        runTest("../test-utils/testData/api/constructorDeclarations.kt")
+        runTest("$UTIL_PATH/constructorDeclarations.kt")
     }
 
     @TestMetadata("crossModuleTypeAlias.kt")
     @Test
     fun testCrossModuleTypeAlias() {
-        runTest("../test-utils/testData/api/crossModuleTypeAlias.kt")
+        runTest("$UTIL_PATH/crossModuleTypeAlias.kt")
     }
 
     @TestMetadata("declarationInconsistency.kt")
     @Test
     fun testDeclarationInconsistency() {
-        runTest("../test-utils/testData/api/declarationInconsistency.kt")
+        runTest("$UTIL_PATH/declarationInconsistency.kt")
     }
 
     @TestMetadata("declarationPackageName.kt")
     @Test
     fun testDeclarationPackageName() {
-        runTest("../test-utils/testData/api/declarationPackageName.kt")
+        runTest("$UTIL_PATH/declarationPackageName.kt")
     }
 
     @TestMetadata("declarationsInAccessor.kt")
     @Test
     fun testDeclarationsInAccessor() {
-        runTest("../test-utils/testData/api/declarationsInAccessor.kt")
+        runTest("$UTIL_PATH/declarationsInAccessor.kt")
     }
 
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
-        runTest("../kotlin-analysis-api/testData/declarationOrder.kt")
+        runTest("$AA_PATH/declarationOrder.kt")
     }
 
     @TestMetadata("declarationUtil.kt")
     @Test
     fun testDeclarationUtil() {
-        runTest("../kotlin-analysis-api/testData/declarationUtil.kt")
+        runTest("$AA_PATH/declarationUtil.kt")
     }
 
     @TestMetadata("declared.kt")
     @Test
     fun testDeclared() {
-        runTest("../test-utils/testData/api/declared.kt")
+        runTest("$UTIL_PATH/declared.kt")
     }
 
     @TestMetadata("docString.kt")
     @Test
     fun testDocString() {
-        runTest("../test-utils/testData/api/docString.kt")
+        runTest("$UTIL_PATH/docString.kt")
     }
 
     @TestMetadata("equals.kt")
     @Test
     fun testEquals() {
-        runTest("../test-utils/testData/api/equals.kt")
+        runTest("$UTIL_PATH/equals.kt")
     }
 
     @TestMetadata("equivalentJavaWildcards.kt")
     @Test
     fun testEquivalentJavaWildcards() {
-        runTest("../kotlin-analysis-api/testData/equivalentJavaWildcards.kt")
+        runTest("$AA_PATH/equivalentJavaWildcards.kt")
     }
 
     @TestMetadata("errorTypes.kt")
     @Test
     fun testErrorTypes() {
-        runTest("../kotlin-analysis-api/testData/errorTypes.kt")
+        runTest("$AA_PATH/errorTypes.kt")
     }
 
     @TestMetadata("functionTypeAlias.kt")
     @Test
     fun testFunctionTypeAlias() {
-        runTest("../test-utils/testData/api/functionTypeAlias.kt")
+        runTest("$UTIL_PATH/functionTypeAlias.kt")
     }
 
     @TestMetadata("functionTypeAnnotation.kt")
     @Test
     fun testFunctionTypeAnnotation() {
-        runTest("../test-utils/testData/api/functionTypeAnnotation.kt")
+        runTest("$UTIL_PATH/functionTypeAnnotation.kt")
     }
 
     @TestMetadata("functionTypes.kt")
     @Test
     fun testFunctionTypes() {
-        runTest("../test-utils/testData/api/functionTypes.kt")
+        runTest("$UTIL_PATH/functionTypes.kt")
     }
 
     @TestMetadata("functionKinds.kt")
     @Test
     fun testFunctionKinds() {
-        runTest("../test-utils/testData/api/functionKinds.kt")
+        runTest("$UTIL_PATH/functionKinds.kt")
     }
 
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
     @Test
     fun testGetAnnotationByTypeWithInnerDefault() {
-        runTest("../test-utils/testData/api/getAnnotationByTypeWithInnerDefault.kt")
+        runTest("$UTIL_PATH/getAnnotationByTypeWithInnerDefault.kt")
     }
 
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
-        runTest("../kotlin-analysis-api/testData/getPackage.kt")
+        runTest("$AA_PATH/getPackage.kt")
     }
 
     @TestMetadata("getByName.kt")
     @Test
     fun testGetByName() {
-        runTest("../test-utils/testData/api/getByName.kt")
+        runTest("$UTIL_PATH/getByName.kt")
     }
 
     @TestMetadata("getSymbolsFromAnnotation.kt")
     @Test
     fun testGetSymbolsFromAnnotation() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotation.kt")
+        runTest("$AA_PATH/getSymbolsFromAnnotation.kt")
     }
 
     @TestMetadata("getSymbolsFromAnnotationInLib.kt")
     @Test
     fun testGetSymbolsFromAnnotationInLib() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsFromAnnotationInLib.kt")
+        runTest("$AA_PATH/getSymbolsFromAnnotationInLib.kt")
     }
 
     @TestMetadata("groupedAnnotations.kt")
     @Test
     fun testGroupedAnnotations() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/groupedAnnotations.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotations.kt")
     }
 
     @TestMetadata("groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     fun testGroupedAnnotationsWithUseSiteTargets() {
-        runTest(
-            "../kotlin-analysis-api/testData/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt"
-        )
+        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {
-        runTest("../test-utils/testData/api/hello.kt")
+        runTest("$UTIL_PATH/hello.kt")
     }
 
     @TestMetadata("implicitElements.kt")
     @Test
     fun testImplicitElements() {
-        runTest("../test-utils/testData/api/implicitElements.kt")
+        runTest("$UTIL_PATH/implicitElements.kt")
     }
 
     @TestMetadata("implicitPropertyAccessors.kt")
     @Test
     fun testImplicitPropertyAccessors() {
-        runTest("../kotlin-analysis-api/testData/implicitPropertyAccessors.kt")
+        runTest("$AA_PATH/implicitPropertyAccessors.kt")
     }
 
     @TestMetadata("internalOfFriends.kt")
     @Test
     fun testInternalOfFriends() {
-        runTest("../test-utils/testData/api/internalOfFriends.kt")
+        runTest("$UTIL_PATH/internalOfFriends.kt")
     }
 
     @TestMetadata("inheritedTypeAlias.kt")
     @Test
     fun testInheritedTypeAlias() {
-        runTest("../test-utils/testData/api/inheritedTypeAlias.kt")
+        runTest("$UTIL_PATH/inheritedTypeAlias.kt")
     }
 
     @TestMetadata("innerTypes.kt")
     @Test
     fun testInnerTypes() {
-        runTest("../kotlin-analysis-api/testData/innerTypes.kt")
+        runTest("$AA_PATH/innerTypes.kt")
     }
 
     @TestMetadata("interfaceWithDefault.kt")
     @Test
     fun testInterfaceWithDefault() {
-        runTest("../test-utils/testData/api/interfaceWithDefault.kt")
+        runTest("$UTIL_PATH/interfaceWithDefault.kt")
     }
 
     @TestMetadata("isMutable.kt")
     @Test
     fun testIsMutable() {
-        runTest("../test-utils/testData/api/isMutable.kt")
+        runTest("$UTIL_PATH/isMutable.kt")
     }
 
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
-        runTest("../kotlin-analysis-api/testData/javaModifiers.kt")
+        runTest("$AA_PATH/javaModifiers.kt")
     }
 
     @TestMetadata("javaNonNullTypes.kt")
     @Test
     fun testJavaNonNullTypes() {
-        runTest("../test-utils/testData/api/javaNonNullTypes.kt")
+        runTest("$UTIL_PATH/javaNonNullTypes.kt")
     }
 
     @TestMetadata("javaSubtype.kt")
     @Test
     fun testJavaSubtype() {
-        runTest("../test-utils/testData/api/javaSubtype.kt")
+        runTest("$UTIL_PATH/javaSubtype.kt")
     }
 
     @TestMetadata("javaToKotlinMapper.kt")
     @Test
     fun testJavaToKotlinMapper() {
-        runTest("../test-utils/testData/api/javaToKotlinMapper.kt")
+        runTest("$UTIL_PATH/javaToKotlinMapper.kt")
     }
 
     @TestMetadata("javaTypes.kt")
     @Test
     fun testJavaTypes() {
-        runTest("../test-utils/testData/api/javaTypes.kt")
+        runTest("$UTIL_PATH/javaTypes.kt")
     }
 
     @TestMetadata("javaTypes2.kt")
     @Test
     fun testJavaTypes2() {
-        runTest("../test-utils/testData/api/javaTypes2.kt")
+        runTest("$UTIL_PATH/javaTypes2.kt")
     }
 
     @TestMetadata("javaWildcards2.kt")
     @Test
     fun testJavaWildcards2() {
-        runTest("../kotlin-analysis-api/testData/javaWildcards2.kt")
+        runTest("$AA_PATH/javaWildcards2.kt")
     }
 
     @TestMetadata("jvmName.kt")
     @Test
     fun testJvmName() {
-        runTest("../kotlin-analysis-api/testData/jvmName.kt")
+        runTest("$AA_PATH/jvmName.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
-        runTest("../test-utils/testData/api/lateinitProperties.kt")
+        runTest("$UTIL_PATH/lateinitProperties.kt")
     }
 
     @TestMetadata("libOrigins.kt")
     @Test
     fun testLibOrigins() {
-        runTest("../kotlin-analysis-api/testData/libOrigins.kt")
+        runTest("$AA_PATH/libOrigins.kt")
     }
 
     @TestMetadata("localAnnotationClass")
     @Test
     fun testLocalAnnotationClass() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/localAnnotationClass.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/localAnnotationClass.kt")
     }
 
     @TestMetadata("localClasses")
     @Test
     fun testLocalClasses() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/localClasses.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/localClasses.kt")
     }
 
     @TestMetadata("locations.kt")
     @Test
     fun testLocations() {
-        runTest("../kotlin-analysis-api/testData/locations.kt")
+        runTest("$AA_PATH/locations.kt")
     }
 
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
-        runTest("../test-utils/testData/api/makeNullable.kt")
+        runTest("$UTIL_PATH/makeNullable.kt")
     }
 
     @TestMetadata("mangledNames.kt")
     @Test
     fun testMangledNames() {
-        runTest("../kotlin-analysis-api/testData/mangledNames.kt")
+        runTest("$AA_PATH/mangledNames.kt")
     }
 
     @TestMetadata("metaAnnotations")
     @Test
     fun testMetaAnnotations() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/metaAnnotations.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/metaAnnotations.kt")
     }
 
     @TestMetadata("multipleModules.kt")
     @Test
     fun testMultipleModules() {
-        runTest("../test-utils/testData/api/multipleModules.kt")
+        runTest("$UTIL_PATH/multipleModules.kt")
     }
 
     @TestMetadata("nestedAnnotations.kt")
     @Test
     fun testNestedAnnotations() {
-        runTest("../test-utils/testData/api/nestedAnnotations.kt")
+        runTest("$UTIL_PATH/nestedAnnotations.kt")
     }
 
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
-        runTest("../kotlin-analysis-api/testData/nestedClassType.kt")
+        runTest("$AA_PATH/nestedClassType.kt")
     }
 
     @TestMetadata("nullableTypes.kt")
     @Test
     fun testNullableTypes() {
-        runTest("../test-utils/testData/api/nullableTypes.kt")
+        runTest("$UTIL_PATH/nullableTypes.kt")
     }
 
     @TestMetadata("conflictingOverride.kt")
     @Test
     fun testConflictingOverride() {
-        runTest("../test-utils/testData/api/overridee/conflictingOverride.kt")
+        runTest("$UTIL_PATH/overridee/conflictingOverride.kt")
     }
 
     @TestMetadata("javaAccessor.kt")
     @Test
     fun testJavaAccessor() {
-        runTest("../test-utils/testData/api/overridee/javaAccessor.kt")
+        runTest("$UTIL_PATH/overridee/javaAccessor.kt")
     }
 
     @TestMetadata("javaAnno.kt")
     @Test
     fun testJavaAnno() {
-        runTest("../kotlin-analysis-api/testData/overridee/javaAnno.kt")
+        runTest("$AA_PATH/overridee/javaAnno.kt")
     }
 
     @TestMetadata("javaOverrideInSource.kt")
     @Test
     fun testJavaOverrideInSource() {
-        runTest("../test-utils/testData/api/overridee/javaOverrideInSource.kt")
+        runTest("$UTIL_PATH/overridee/javaOverrideInSource.kt")
     }
 
     @TestMetadata("noOverride.kt")
     @Test
     fun testNoOverride() {
-        runTest("../test-utils/testData/api/overridee/noOverride.kt")
+        runTest("$UTIL_PATH/overridee/noOverride.kt")
     }
 
     @TestMetadata("overrideInLib.kt")
     @Test
     fun testOverrideInLib() {
-        runTest("../test-utils/testData/api/overridee/overrideInLib.kt")
+        runTest("$UTIL_PATH/overridee/overrideInLib.kt")
     }
 
     @TestMetadata("overrideInSource.kt")
     @Test
     fun testOverrideInSource() {
-        runTest("../test-utils/testData/api/overridee/overrideInSource.kt")
+        runTest("$UTIL_PATH/overridee/overrideInSource.kt")
     }
 
     @TestMetadata("overrideOrder.kt")
     @Test
     fun testOverrideOrder() {
-        runTest("../kotlin-analysis-api/testData/overridee/overrideOrder.kt")
+        runTest("$AA_PATH/overridee/overrideOrder.kt")
     }
 
     @TestMetadata("packageAnnotations.kt")
     @Test
     fun testPackageAnnotation() {
-        runTest("../test-utils/testData/api/packageAnnotations.kt")
+        runTest("$UTIL_PATH/packageAnnotations.kt")
     }
 
     @TestMetadata("primaryConstructorOverride.kt")
     @Test
     fun testPrimaryConstructorOverride() {
-        runTest("../test-utils/testData/api/overridee/primaryConstructorOverride.kt")
+        runTest("$UTIL_PATH/overridee/primaryConstructorOverride.kt")
     }
 
     @TestMetadata("parameterTypes.kt")
     @Test
     fun testParameterTypes() {
-        runTest("../test-utils/testData/api/parameterTypes.kt")
+        runTest("$UTIL_PATH/parameterTypes.kt")
     }
 
     @TestMetadata("parent.kt")
     @Test
     fun testParent() {
-        runTest("../kotlin-analysis-api/testData/parent.kt")
+        runTest("$AA_PATH/parent.kt")
     }
 
     @Disabled
     @TestMetadata("platformDeclaration.kt")
     @Test
     fun testPlatformDeclaration() {
-        runTest("../test-utils/testData/api/platformDeclaration.kt")
+        runTest("$UTIL_PATH/platformDeclaration.kt")
     }
 
     @TestMetadata("rawTypes.kt")
     @Test
     fun testRawTypes() {
-        runTest("../test-utils/testData/api/rawTypes.kt")
+        runTest("$UTIL_PATH/rawTypes.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaAnnotationTypes.kt")
     @Test
     fun testRecordJavaAnnotationTypes() {
-        runTest("../kotlin-analysis-api/testData/recordJavaAnnotationTypes.kt")
+        runTest("$AA_PATH/recordJavaAnnotationTypes.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaAsMemberOf.kt")
     @Test
     fun testRecordJavaAsMemberOf() {
-        runTest("../kotlin-analysis-api/testData/recordJavaAsMemberOf.kt")
+        runTest("$AA_PATH/recordJavaAsMemberOf.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaGetAllMembers.kt")
     @Test
     fun testRecordJavaGetAllMembers() {
-        runTest("../kotlin-analysis-api/testData/recordJavaGetAllMembers.kt")
+        runTest("$AA_PATH/recordJavaGetAllMembers.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaOverrides.kt")
     @Test
     fun testRecordJavaOverrides() {
-        runTest("../kotlin-analysis-api/testData/recordJavaOverrides.kt")
+        runTest("$AA_PATH/recordJavaOverrides.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaResolutions.kt")
     @Test
     fun testRecordJavaResolutions() {
-        runTest("../kotlin-analysis-api/testData/recordJavaResolutions.kt")
+        runTest("$AA_PATH/recordJavaResolutions.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {
-        runTest("../kotlin-analysis-api/testData/recordJavaSupertypes.kt")
+        runTest("$AA_PATH/recordJavaSupertypes.kt")
     }
 
     @TestMetadata("referenceElement.kt")
     @Test
     fun testReferenceElement() {
-        runTest("../kotlin-analysis-api/testData/referenceElement.kt")
+        runTest("$AA_PATH/referenceElement.kt")
     }
 
     @TestMetadata("replaceWithErrorTypeArgs.kt")
     @Test
     fun testReplaceWithErrorTypeArgs() {
-        runTest("../kotlin-analysis-api/testData/replaceWithErrorTypeArgs.kt")
+        runTest("$AA_PATH/replaceWithErrorTypeArgs.kt")
     }
 
     @TestMetadata("resolveJavaType.kt")
     @Test
     fun testResolveJavaType() {
-        runTest("../kotlin-analysis-api/testData/resolveJavaType.kt")
+        runTest("$AA_PATH/resolveJavaType.kt")
     }
 
     @TestMetadata("sealedClass.kt")
     @Test
     fun testSealedClass() {
-        runTest("../test-utils/testData/api/sealedClass.kt")
+        runTest("$UTIL_PATH/sealedClass.kt")
     }
 
     @TestMetadata("shadowingAnnotations.kt")
     @Test
     fun testShadowingAnnotations() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/shadowingAnnotations.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/shadowingAnnotations.kt")
     }
 
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
-        runTest("../kotlin-analysis-api/testData/signatureMapper.kt")
+        runTest("$AA_PATH/signatureMapper.kt")
     }
 
     @TestMetadata("superTypes.kt")
     @Test
     fun testSuperTypes() {
-        runTest("../test-utils/testData/api/superTypes.kt")
+        runTest("$UTIL_PATH/superTypes.kt")
     }
 
     @TestMetadata("throwList.kt")
     @Test
     fun testThrowList() {
-        runTest("../test-utils/testData/api/throwList.kt")
+        runTest("$UTIL_PATH/throwList.kt")
     }
 
     @TestMetadata("topLevelMembers.kt")
     @Test
     fun testTopLevelMembers() {
-        runTest("../test-utils/testData/api/topLevelMembers.kt")
+        runTest("$UTIL_PATH/topLevelMembers.kt")
     }
 
     @TestMetadata("typeAlias.kt")
     @Test
     fun testTypeAlias() {
-        runTest("../kotlin-analysis-api/testData/typeAlias.kt")
+        runTest("$AA_PATH/typeAlias.kt")
     }
 
     @TestMetadata("nestedTypeAlias.kt")
     @Test
     fun testNestedTypeAlias() {
-        runTest("../kotlin-analysis-api/testData/nestedTypeAlias.kt")
+        runTest("$AA_PATH/nestedTypeAlias.kt")
     }
 
     @TestMetadata("typeAliasComparison.kt")
     @Test
     fun testTypeAliasComparison() {
-        runTest("../test-utils/testData/api/typeAliasComparison.kt")
+        runTest("$UTIL_PATH/typeAliasComparison.kt")
     }
 
     @TestMetadata("typeComposure.kt")
     @Test
     fun testTypeComposure() {
-        runTest("../test-utils/testData/api/typeComposure.kt")
+        runTest("$UTIL_PATH/typeComposure.kt")
     }
 
     @TestMetadata("typeComparison2.kt")
     @Test
     fun testTypeComparison2() {
-        runTest("../test-utils/testData/api/typeComparison2.kt")
+        runTest("$UTIL_PATH/typeComparison2.kt")
     }
 
     @TestMetadata("typeParameterReference.kt")
     @Test
     fun testTypeParameterReference() {
-        runTest("../kotlin-analysis-api/testData/typeParameterReference.kt")
+        runTest("$AA_PATH/typeParameterReference.kt")
     }
 
     @TestMetadata("typeParameterVariance.kt")
     @Test
     fun testTypeParameterVariance() {
-        runTest("../kotlin-analysis-api/testData/typeParameterVariance.kt")
+        runTest("$AA_PATH/typeParameterVariance.kt")
     }
 
     @TestMetadata("useSiteTargets.kt")
     @Test
     fun testUseSiteTargets() {
-        runTest("../kotlin-analysis-api/testData/getSymbolsWithAnnotation/useSiteTargets.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/useSiteTargets.kt")
     }
 
     @TestMetadata("valueParameter.kt")
     @Test
     fun testValueParameter() {
-        runTest("../kotlin-analysis-api/testData/valueParameter.kt")
+        runTest("$AA_PATH/valueParameter.kt")
     }
 
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {
-        runTest("../test-utils/testData/api/varianceTypeCheck.kt")
+        runTest("$UTIL_PATH/varianceTypeCheck.kt")
     }
 
     @TestMetadata("validateTypes.kt")
     @Test
     fun testValidateTypes() {
-        runTest("../test-utils/testData/api/validateTypes.kt")
+        runTest("$UTIL_PATH/validateTypes.kt")
     }
 
     @TestMetadata("vararg.kt")
     @Test
     fun testVararg() {
-        runTest("../test-utils/testData/api/vararg.kt")
+        runTest("$UTIL_PATH/vararg.kt")
     }
 
     @TestMetadata("visibilities.kt")
     @Test
     fun testVisibilities() {
-        runTest("../kotlin-analysis-api/testData/visibilities.kt")
+        runTest("$AA_PATH/visibilities.kt")
     }
 
     @TestMetadata("multipleround.kt")
     @Test
     fun testMultipleround() {
-        runTest("../test-utils/testData/api/multipleround.kt")
+        runTest("$UTIL_PATH/multipleround.kt")
     }
 
     @TestMetadata("deferredSymbols.kt")
     @Test
     fun testDeferredSymbols() {
-        runTest("../test-utils/testData/api/deferredSymbols.kt")
+        runTest("$UTIL_PATH/deferredSymbols.kt")
     }
 
     @TestMetadata("deferredJavaSymbols.kt")
     @Test
     fun testDeferredJavaSymbols() {
-        runTest("../test-utils/testData/api/deferredJavaSymbols.kt")
+        runTest("$UTIL_PATH/deferredJavaSymbols.kt")
     }
 
     @Disabled
     @TestMetadata("deferredTypeRefs.kt")
     @Test
     fun testDeferredTypeRefs() {
-        runTest("../test-utils/testData/api/deferredTypeRefs.kt")
+        runTest("$UTIL_PATH/deferredTypeRefs.kt")
     }
 
     @TestMetadata("exitCode.kt")
     @Test
     fun testExitCode() {
-        runTest("../test-utils/testData/api/exitCode.kt")
+        runTest("$UTIL_PATH/exitCode.kt")
     }
 
     @TestMetadata("packageProviderForGenerated.kt")
     @Test
     fun testPackageProviderForGenerated() {
-        runTest("../test-utils/testData/api/packageProviderForGenerated.kt")
+        runTest("$UTIL_PATH/packageProviderForGenerated.kt")
     }
 }
