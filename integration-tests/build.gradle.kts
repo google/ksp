@@ -40,30 +40,13 @@ fun Test.configureCommonSettings() {
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
 
-// Create a new test task for the AGP compatibility tests
-val agpCompatibilityTest by tasks.registering(Test::class) {
-    description = "Runs AGP compatibility tests with maxParallelForks = 1"
-    group = "verification"
-
-    // Include only the AGP compatibility tests
-    include("**/AGPVersionIT.class")
-    include("**/AGPVersionBuiltInKotlinIT.class")
-
-    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
-    maxParallelForks = 1
-
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-
-    // Apply common settings
-    configureCommonSettings()
-}
-
 // Create a new test task for the primary package
 val primaryTest by tasks.registering(Test::class) {
     description = "Runs integration tests in the primary package"
     group = "verification"
     include("com/google/devtools/ksp/test/primary/*.class")
+    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+    maxParallelForks = 1
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     configureCommonSettings()
@@ -74,16 +57,16 @@ val secondaryTest by tasks.registering(Test::class) {
     description = "Runs integration tests in the secondary package"
     group = "verification"
     include("com/google/devtools/ksp/test/secondary/*.class")
+    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+    maxParallelForks = 1
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     configureCommonSettings()
 }
 
 tasks.test {
+    exclude("**/*")
     dependsOn(primaryTest, secondaryTest)
-
-    // Ensure that 'test' runs after 'compatibilityTest'
-    dependsOn(agpCompatibilityTest)
 }
 
 java {
