@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.primary
+package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
@@ -9,11 +9,12 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class AndroidViewBindingIT(experimentalPsiResolution: Boolean) {
+class LegacyKaptKspIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
-        "android-view-binding",
+        "legacy-kapt",
+        "playground",
         experimentalPsiResolution = experimentalPsiResolution
     )
 
@@ -26,21 +27,18 @@ class AndroidViewBindingIT(experimentalPsiResolution: Boolean) {
     @Test
     fun testPlaygroundAndroid() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-
-        // Disabling configuration cache. See https://github.com/google/ksp/issues/299 for details
         gradleRunner.withArguments(
             "clean",
-            ":app:assemble",
+            ":app:testDebugUnitTest",
             "--configuration-cache-problems=warn",
             "--info",
             "--stacktrace"
-        )
-            .build().let { result ->
-                val output = result.output.lines()
-                val kspTask = output.filter {
-                    it.contains(":app:kspDebugKotlin")
-                }
-                Assert.assertTrue(kspTask.isNotEmpty())
-            }
+        ).build().let { result ->
+            val output = result.output.lines()
+            val kspTask = output.filter { it.contains(":app:kspDebugKotlin") }
+            val kaptTask = output.filter { it.contains(":app:kaptDebugKotlin") }
+            Assert.assertTrue(kspTask.isNotEmpty())
+            Assert.assertTrue(kaptTask.isNotEmpty())
+        }
     }
 }
