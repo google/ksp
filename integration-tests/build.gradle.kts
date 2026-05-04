@@ -22,6 +22,8 @@ dependencies {
 }
 
 fun Test.configureCommonSettings() {
+    val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+    maxParallelForks = if (isWindows) 1 else max(1, Runtime.getRuntime().availableProcessors() / 2)
     systemProperty("kotlinVersion", kotlinBaseVersion)
     systemProperty("kspVersion", version)
     systemProperty("agpVersion", agpBaseVersion)
@@ -57,23 +59,30 @@ val agpCompatibilityTest by tasks.registering(Test::class) {
     configureCommonSettings()
 }
 
-tasks.test {
-    // Disable parallelism on Windows to avoid file locking issues
-    val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
-    maxParallelForks = if (isWindows) 1 else max(1, Runtime.getRuntime().availableProcessors() / 2)
-
-    // Exclude test classes from agpCompatibilityTest
-    exclude("**/AGPVersionIT.class")
-    exclude("**/AGPVersionBuiltInKotlinIT.class")
-
-    // Apply common settings
+// Create a new test task for the primary package
+val primaryTest by tasks.registering(Test::class) {
+    description = "Runs integration tests in the primary package"
+    group = "verification"
+    include("com/google/devtools/ksp/test/primary/*.class")
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     configureCommonSettings()
-
-    // Ensure that 'test' runs after 'compatibilityTest'
-    mustRunAfter(agpCompatibilityTest)
 }
 
-tasks.check {
+// Create a new test task for the secondary package
+val secondaryTest by tasks.registering(Test::class) {
+    description = "Runs integration tests in the secondary package"
+    group = "verification"
+    include("com/google/devtools/ksp/test/secondary/*.class")
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    configureCommonSettings()
+}
+
+tasks.test {
+    dependsOn(primaryTest, secondaryTest)
+
+    // Ensure that 'test' runs after 'compatibilityTest'
     dependsOn(agpCompatibilityTest)
 }
 
