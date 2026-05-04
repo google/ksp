@@ -7,13 +7,13 @@ on:
     branches: [ main ]
 
 jobs:
-  pick-test-push:
+  test:
     strategy:
       fail-fast: false
-
-    # The type of runner that the job will run on
+      matrix:
+        test-suite: [ api-check, unit-test, integration-test-primary, integration-test-secondary, gradle-check ]
     runs-on: ubuntu-latest
-
+    continue-on-error: ${{ matrix.test-suite == 'integration-test-secondary' }}
     permissions:
       contents: write
 
@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "Disk space before cleanup:"
           df -h
-        
+
           set -xe
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/share/swift
@@ -34,17 +34,18 @@ jobs:
           sudo rm -rf /usr/local/share/powershell
           sudo rm -rf /usr/local/share/chromium
           sudo rm -rf /usr/local/lib/node_modules
-         
+
           sudo docker image prune --all --force
-        
+
           echo "Disk space after cleanup:"
           df -h
+
       # Checkout
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: 2.3.8-release
-  
+
       - name: merge commits from main to release branch
         run: |
           # Cherry pick new changes from main, except for version bumps.
@@ -62,13 +63,13 @@ jobs:
           TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
           echo Picking $TO_PICK
           if [ -n "$TO_PICK" ]; then git cherry-pick -x --allow-empty $TO_PICK; fi
-  
+
       - name: Setup Java 17
         uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'zulu'
-  
+
       # Build cache
       - name: Cache Gradle Cache
         uses: actions/cache@v5
@@ -83,26 +84,68 @@ jobs:
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-  
+
       # Check API compatibility
       - name: API compatibility check
+        if: matrix.test-suite == 'api-check'
         run: ./gradlew :api:checkApi
-  
-      # Run ksp generated tests
-      - name: test
-        run: ./gradlew check --stacktrace --info --scan --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
-      - name: push to release branch
-        if: success()
-        run: git fetch && git rebase && git push origin
+      - name: Run unit tests
+        if: matrix.test-suite == 'unit-test'
+        run: ./gradlew :kotlin-analysis-api:test --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
+      - name: Run primary integration tests
+        if: matrix.test-suite == 'integration-test-primary'
+        run: ./gradlew :integration-tests:primaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
+      - name: Run secondary integration tests
+        if: matrix.test-suite == 'integration-test-secondary'
+        run: ./gradlew :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
+      - name: Run remaining tests and checks
+        if: matrix.test-suite == 'gradle-check'
+        run: ./gradlew check -x :kotlin-analysis-api:test -x :integration-tests:primaryTest -x :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-reports
+          name: test-reports-${{ matrix.test-suite }}
           path: |
             integration-tests/build/reports
             gradle-plugin/build/reports
             common-util/build/reports
             kotlin-analysis-api/build/reports
+
+  push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Checkout
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: 2.3.8-release
+
+      - name: merge commits from main to release branch
+        run: |
+          # Cherry pick new changes from main, except for version bumps.
+          # A commit is a version bump IFF it touches third_party/prebuilt/repo
+          DONT_PICK=$(cat <<EOF
+          5c073ba9c1283190467937b4456be9174b9be86c
+          EOF
+          )
+          git config --global user.email "kotlin-symbol-processing@google.com"
+          git config --global user.name "KSP Auto Pick"
+          MERGE_BASE=$(git merge-base HEAD origin/main)
+          CANDIDATES=$(git log --pretty=%H $MERGE_BASE..origin/main)
+          PICKED=$(git log $MERGE_BASE..HEAD | sed -n "s/^[ ]*(cherry picked from commit \([a-z0-9]*\))$/\1/p")
+          VERSION_BUMPS=$(git log $MERGE_BASE..origin/main --pretty=%H --grep UPDATE_KOTLIN_VERSION)
+          TO_PICK=$(grep -Fxv -f <(echo "$PICKED"; echo "$VERSION_BUMPS"; echo "$DONT_PICK") <(echo "$CANDIDATES") | awk '{a[i++]=$0} END {for (j=i-1; j>=0;) print a[j--] }')
+          echo Picking $TO_PICK
+          if [ -n "$TO_PICK" ]; then git cherry-pick -x --allow-empty $TO_PICK; fi
+
+      - name: push to release branch
+        run: git fetch && git rebase && git push origin
