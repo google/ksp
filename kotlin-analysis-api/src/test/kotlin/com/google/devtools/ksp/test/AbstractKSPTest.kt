@@ -220,75 +220,45 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         compileJavaFiles(javaFiles, options)
     }
 
+    /**
+     * Runs a positive test, asserting the actual output matches the expected output.
+     */
     fun runTest(@TestDataFile path: String) {
-        val testConfiguration = testConfiguration(path, configure)
-        Disposer.register(disposable, testConfiguration.rootDisposable)
-        val testServices = testConfiguration.testServices
-        val moduleStructure = testConfiguration.moduleStructureExtractor.splitTestDataByModules(
-            path,
-            testConfiguration.directives,
-        )
-        testServices.registerArtifactsProvider(ArtifactsProvider())
-        testServices.register(TestModuleStructure::class, moduleStructure)
-
-        val mainModule = moduleStructure.modules.last()
-        val libModules = moduleStructure.modules.dropLast(1)
-
-        for (lib in libModules) {
-            compileModule(lib, testServices)
-        }
-        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
-            mainModule,
-            CompilationStage.FIRST
-        )
-        compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
-
-        val contents = mainModule.files.first().originalFile.readLines()
-
-        val testProcessorName = contents
-            .single { it.startsWith(TEST_PROCESSOR) }
-            .substringAfter(TEST_PROCESSOR)
-            .trim()
-
-        val testAnnotationNames = contents
-            .find { it.startsWith(TEST_ANNOTATIONS) }
-            ?.substringAfter(TEST_ANNOTATIONS)
-            ?.split(',')
-            ?.map { it.trim() }
-
-        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
-
-        val testProcessor: AbstractTestProcessor =
-            if (testAnnotationNames == null) {
-                // Instantiate processor class without constructor params
-                processorClass
-                    .getDeclaredConstructor()
-                    .newInstance() as AbstractTestProcessor
-            } else {
-                // Instantiate parameterized processor class
-                processorClass
-                    .getDeclaredConstructor(List::class.java)
-                    .newInstance(testAnnotationNames) as AbstractTestProcessor
-            }
-
-        val expectedResults = contents
-            .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
-            .drop(1)
-            .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
-            .map { it.substring(3).trim() }
-
-        val results = collectAllExceptions {
-            runTest(
-                testServices,
-                mainModule,
-                libModules,
-                testProcessor,
-            )
-        }
-        Assertions.assertEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
+        val (expected, actual) = loadTest(path)
+        Assertions.assertEquals(expected, collectAllExceptions { actual() })
     }
 
+    /**
+     * Runs a negative test, asserting the actual output does not match the expected output.
+     */
     fun runFailingTest(@TestDataFile path: String) {
+        val (expected, actual) = loadTest(path)
+        Assertions.assertNotEquals(expected, collectAllExceptions { actual() })
+    }
+
+    /**
+     * Runs a negative test, asserting that the implementation throws an [InternalKSPException].
+     * The test fails if that particular exception is not thrown, e.g., by not throwing at all
+     * or by throwing a different exception.
+     */
+    fun runThrowingTest(@TestDataFile path: String) {
+        val (_, run) = loadTest(path)
+        try {
+            run()
+            Assertions.fail("Expected InternalKSPException, but the run was successful.")
+        } catch (_: InternalKSPException) {
+            // Succeed by returning
+        }
+    }
+
+    /**
+     * Loads the located at test at [path].
+     *
+     * @return a [Pair] containing the expected results in the first entry
+     * and in the second entry a lambda that runs the test and returns the actual results.
+     * The expected results can be directly compared with the results of the lambda in the second entry.
+     */
+    private fun loadTest(@TestDataFile path: String): Pair<String, () -> String> {
         val testConfiguration = testConfiguration(path, configure)
         Disposer.register(disposable, testConfiguration.rootDisposable)
         val testServices = testConfiguration.testServices
@@ -311,14 +281,14 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         )
         compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
 
-        val contents = mainModule.files.first().originalFile.readLines()
+        val fileContents = mainModule.files.first().originalFile.readLines()
 
-        val testProcessorName = contents
+        val testProcessorName = fileContents
             .single { it.startsWith(TEST_PROCESSOR) }
             .substringAfter(TEST_PROCESSOR)
             .trim()
 
-        val testAnnotationNames = contents
+        val testAnnotationNames = fileContents
             .find { it.startsWith(TEST_ANNOTATIONS) }
             ?.substringAfter(TEST_ANNOTATIONS)
             ?.split(',')
@@ -339,92 +309,31 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
                     .newInstance(testAnnotationNames) as AbstractTestProcessor
             }
 
-        val expectedResults = contents
+        val expected = fileContents
             .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
             .drop(1)
             .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
-            .map { it.substring(3).trim() }
+            .joinToString("\n") {
+                // Remove '// ' prefix
+                it.substring(3).trim()
+            }
 
-        val results = collectAllExceptions {
+        val actual = {
             runTest(
                 testServices,
                 mainModule,
                 libModules,
-                testProcessor,
-            )
+                testProcessor
+            ).joinToString("\n")
         }
-        Assertions.assertNotEquals(expectedResults.joinToString("\n"), results.joinToString("\n"))
-    }
 
-    fun runThrowingTest(@TestDataFile path: String) {
-        val testConfiguration = testConfiguration(path, configure)
-        Disposer.register(disposable, testConfiguration.rootDisposable)
-        val testServices = testConfiguration.testServices
-        val moduleStructure = testConfiguration.moduleStructureExtractor.splitTestDataByModules(
-            path,
-            testConfiguration.directives,
-        )
-        testServices.registerArtifactsProvider(ArtifactsProvider())
-        testServices.register(TestModuleStructure::class, moduleStructure)
-
-        val mainModule = moduleStructure.modules.last()
-        val libModules = moduleStructure.modules.dropLast(1)
-
-        for (lib in libModules) {
-            compileModule(lib, testServices)
-        }
-        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
-            mainModule,
-            CompilationStage.FIRST
-        )
-        compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
-
-        val contents = mainModule.files.first().originalFile.readLines()
-
-        val testProcessorName = contents
-            .single { it.startsWith(TEST_PROCESSOR) }
-            .substringAfter(TEST_PROCESSOR)
-            .trim()
-
-        val testAnnotationNames = contents
-            .find { it.startsWith(TEST_ANNOTATIONS) }
-            ?.substringAfter(TEST_ANNOTATIONS)
-            ?.split(',')
-            ?.map { it.trim() }
-
-        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
-
-        val testProcessor: AbstractTestProcessor =
-            if (testAnnotationNames == null) {
-                // Instantiate processor class without constructor params
-                processorClass
-                    .getDeclaredConstructor()
-                    .newInstance() as AbstractTestProcessor
-            } else {
-                // Instantiate parameterized processor class
-                processorClass
-                    .getDeclaredConstructor(List::class.java)
-                    .newInstance(testAnnotationNames) as AbstractTestProcessor
-            }
-
-        try {
-            collectAllExceptions {
-                runTest(
-                    testServices,
-                    mainModule,
-                    libModules,
-                    testProcessor,
-                )
-            }
-            Assertions.fail()
-        } catch (_: InternalKSPException) {
-        }
+        return Pair(expected, actual)
     }
 }
 
 /**
  * Collects exception from all threads when running `block`.
- * Throws a [[RuntimeException]] if any exception occurred.
+ * Throws an [Exception] if any exception occurred.
  *
  * Note that function is not a perfect solution as it only catches exceptions
  * that happen during `block`.
