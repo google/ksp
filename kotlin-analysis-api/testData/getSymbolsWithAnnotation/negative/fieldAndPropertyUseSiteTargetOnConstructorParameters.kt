@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.test
+// TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
+// TEST ANNOTATIONS: Anno
+// EXPECTED:
+// END
 
-import org.jetbrains.kotlin.test.TestMetadata
-import org.junit.jupiter.api.Test
+annotation class Anno
 
-class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true) {
-    @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
-    @Test
-    override fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
-        runThrowingTest(
-            "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
-        )
-    }
-}
+class MyClass(
+    // These parameters do not have backing fields, so the annotations are invalid
+    @field:Anno param1: Int,
+    @property:Anno param2: Bool
+    @field:Anno @property:Anno param3: String
+)
