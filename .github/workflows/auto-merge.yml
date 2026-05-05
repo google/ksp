@@ -11,9 +11,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-suite: [ api-check, unit-test, integration-test-primary, integration-test-secondary, gradle-check ]
+        test-suite: [ api-check, unit-test, integration-test-primary, integration-test-secondary, integration-test-agp, gradle-check ]
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.test-suite == 'integration-test-secondary' }}
+    continue-on-error: ${{ matrix.test-suite == 'integration-test-secondary' || matrix.test-suite == 'integration-test-agp' }}
     permissions:
       contents: write
 
@@ -102,9 +102,13 @@ jobs:
         if: matrix.test-suite == 'integration-test-secondary'
         run: ./gradlew :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
+      - name: Run agp integration tests
+        if: matrix.test-suite == 'integration-test-agp'
+        run: ./gradlew :integration-tests:agpTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+
       - name: Run remaining tests and checks
         if: matrix.test-suite == 'gradle-check'
-        run: ./gradlew check -x :kotlin-analysis-api:test -x :integration-tests:primaryTest -x :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
+        run: ./gradlew check -x :kotlin-analysis-api:test -x :integration-tests:primaryTest -x :integration-tests:secondaryTest -x :integration-tests:agpTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
       - name: Upload test results
         if: always()
