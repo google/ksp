@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.common.impl
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.FileCache
@@ -352,8 +353,27 @@ class PsiResolutionStrategy(
      *
      * This is used as a fallback when [fastResolveClassId] cannot determine the class ID.
      */
-    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? = analyze {
-        annotationEntry.typeReference?.type?.fullyExpandedType?.expandedSymbol?.classId
+    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? {
+        // Prepare error message in case of exception.
+        val error = { stackTrace: String ->
+            throw InternalKSPException(
+                buildString {
+                    appendLine("Unexpected exception occurred in Analysis API:")
+                    append("  ")
+                    append(stackTrace)
+                },
+                annotationEntry.toLocation(),
+                annotationEntry.javaClass
+            )
+        }
+        // Catch exception twice due to race conditions.
+        try {
+            return analyze { annotationEntry.typeReference?.type?.fullyExpandedType?.expandedSymbol?.classId }
+        } catch (e: Exception) {
+            error(e.stackTraceToString())
+        } catch (e: AssertionError) {
+            error(e.stackTraceToString())
+        }
     }
 
     /**
