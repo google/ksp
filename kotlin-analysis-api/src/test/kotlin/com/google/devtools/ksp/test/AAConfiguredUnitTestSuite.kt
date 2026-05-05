@@ -17,4 +17,16 @@
 
 package com.google.devtools.ksp.test
 
-class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = false)
+import org.jetbrains.kotlin.test.TestMetadata
+import org.junit.jupiter.api.Test
+
+class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = false) {
+
+    @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
+    @Test
+    override fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
+        runTest(
+            "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
+        )
+    }
+}

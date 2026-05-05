@@ -293,6 +293,8 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/errorTypes.kt")
     }
 
+    abstract fun testFieldAndPropertyUseSiteTargetOnConstructorParameters()
+
     @TestMetadata("functionTypeAlias.kt")
     @Test
     fun testFunctionTypeAlias() {
