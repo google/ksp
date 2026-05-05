@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.secondary
+package com.google.devtools.ksp.test.agp
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
@@ -11,46 +11,27 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class AGPVersionIT(
-    private val agpVersion: String?,
-    private val kotlinVersion: String?,
-    private val gradleVersion: String?,
-    experimentalPsiResolution: String?
+class AGPVersionBuiltInKotlinIT(
+    private val agpVersion: String,
+    private val kotlinVersion: String,
+    private val gradleVersion: String,
+    experimentalPsiResolution: String
 ) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
-        "playground-android-multi",
+        "playground-android-builtinkotlin",
         "playground",
-        experimentalPsiResolution!!.toBoolean()
+        experimentalPsiResolution.toBoolean()
     )
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}")
-        fun data(): Collection<Array<String?>> {
-            return listOf<Array<String?>>(
-                // Latest
-                arrayOf(null, null, null),
-
-                // Alpha/beta versions
-                arrayOf("8.12.0-alpha06", "2.2.10", "8.13"),
-                arrayOf("8.12.0-alpha06", "2.3.0-RC", "8.13"),
-                arrayOf("9.0.0-alpha12", "2.2.10", "9.1.0"),
-                arrayOf("9.0.0-alpha12", "2.3.0-RC", "9.1.0"),
+        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, Experimental: {3}")
+        fun data(): Collection<Array<String>> {
+            return listOf(
                 arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
-
-                // AGP 8.10.0
-                arrayOf("8.10.0", "2.3.0-RC", "8.11.1"),
-                arrayOf("8.10.0", "2.2.10", "8.11.1"),
-                // AGP 8.11.0
-                arrayOf("8.11.0", "2.3.0-RC", "8.13"),
-                arrayOf("8.11.0", "2.2.10", "8.13"),
-                // AGP 8.12.0
-                arrayOf("8.12.0", "2.3.0-RC", "8.13"),
-                arrayOf("8.12.0", "2.2.10", "8.13"),
-                // AGP 9.0.0-beta01
                 arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.2.10", "9.1.0"),
             ).flatMap {
@@ -64,10 +45,10 @@ class AGPVersionIT(
         val gradleRunner = GradleRunner.create()
             .withProjectDir(project.root)
             .withArguments(":workload:compileDebugKotlin")
-        gradleVersion?.let { gradleRunner.withGradleVersion(it) }
+        gradleVersion.let { gradleRunner.withGradleVersion(it) }
 
-        agpVersion?.let { project.setAgpVersion(it) }
-        kotlinVersion?.let {
+        agpVersion.let { project.setAgpVersion(it) }
+        kotlinVersion.let {
             project.setKotlinVersion(it)
             setKotlinInBuildClasspath(it)
         }
