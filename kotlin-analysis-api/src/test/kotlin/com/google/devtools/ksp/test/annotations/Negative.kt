@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.test
+package com.google.devtools.ksp.test.annotations
 
 /**
  * Indicates that a test case is a "negative test," validating how KSP handles invalid or problematic input.
