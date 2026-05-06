@@ -24,9 +24,10 @@ package com.google.devtools.ksp.test.annotations
  * (e.g., GitHub issues, YouTrack tickets).
  *
  * @property id The unique identifier of the issue (e.g., a GitHub issue link or `KT-` identifier).
+ * @property state The current resolution status of the bug (e.g., whether it is still open or fixed).
  * @property description An optional brief explanation of the bug or why the test was added.
  */
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Repeatable
-annotation class Bug(val id: String, val description: String = "")
+annotation class Bug(val id: String, val state: BugState, val description: String = "")
