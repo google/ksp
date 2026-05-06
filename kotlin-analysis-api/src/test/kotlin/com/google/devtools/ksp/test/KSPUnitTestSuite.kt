@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.BugState
 import com.google.devtools.ksp.test.annotations.Negative
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Disabled
@@ -75,7 +76,7 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
-    @Bug("https://github.com/google/ksp/issues/2912")
+    @Bug("https://github.com/google/ksp/issues/2912", BugState.OPEN)
     @Negative("KEEP-402 specifies that the :all meta-target cannot be applied to annotation groups.")
     fun testAllUseSiteTargetAppliedToAnnotationList() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
@@ -297,7 +298,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/errorTypes.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2913")
+    @Bug("https://github.com/google/ksp/issues/2913", BugState.OPEN)
     @Negative("Constructor params not declared with val do not have generated properties or backing fields.")
     abstract fun testFieldAndPropertyUseSiteTargetOnConstructorParameters()
 
@@ -670,7 +671,7 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("repeatedNonRepeatableAnnotations.kt")
     @Test
-    @Bug("https://github.com/google/ksp/issues/2919")
+    @Bug("https://github.com/google/ksp/issues/2919", BugState.FIXED)
     fun testRepeatedNonRepeatableAnnotations() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
     }
