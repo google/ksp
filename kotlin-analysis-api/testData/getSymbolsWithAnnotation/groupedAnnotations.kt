@@ -16,7 +16,7 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: Anno1, Anno2, Anno3
+// PROCESSOR INPUT: Anno1, Anno2, Anno3
 // EXPECTED:
 // Anno1: File: Main.kt
 // Anno1: File: Other.kt

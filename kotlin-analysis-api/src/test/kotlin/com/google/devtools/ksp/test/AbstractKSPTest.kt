@@ -79,7 +79,7 @@ abstract class DisposableTest {
 abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     companion object {
         const val TEST_PROCESSOR = "// TEST PROCESSOR:"
-        const val TEST_ANNOTATIONS = "// TEST ANNOTATIONS:"
+        const val PROCESSOR_INPUT = "// PROCESSOR INPUT:"
         const val EXPECTED_RESULTS = "// EXPECTED:"
         const val EXPECTED_RESULTS_END = "// END"
     }
@@ -289,8 +289,8 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             .trim()
 
         val testAnnotationNames = fileContents
-            .find { it.startsWith(TEST_ANNOTATIONS) }
-            ?.substringAfter(TEST_ANNOTATIONS)
+            .find { it.startsWith(PROCESSOR_INPUT) }
+            ?.substringAfter(PROCESSOR_INPUT)
             ?.split(',')
             ?.map { it.trim() }
 

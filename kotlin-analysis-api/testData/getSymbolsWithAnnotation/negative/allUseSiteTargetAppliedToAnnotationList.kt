@@ -16,7 +16,7 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: Anno1, Anno2
+// PROCESSOR INPUT: Anno1, Anno2
 // EXPECTED:
 // END
 
