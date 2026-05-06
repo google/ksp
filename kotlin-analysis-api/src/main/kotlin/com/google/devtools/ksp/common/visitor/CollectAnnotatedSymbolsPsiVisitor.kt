@@ -3,12 +3,14 @@ package com.google.devtools.ksp.common.visitor
 import com.intellij.psi.PsiAnnotationOwner
 import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiCodeBlock
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiImportList
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiPackageStatement
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.javadoc.PsiDocComment
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.KtAnnotated
@@ -31,6 +33,30 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
         if (element.isSkippable()) {
             return
         }
+        buildString {
+            appendLine("ELEMENT:")
+            append("  ")
+            append("element = ")
+            appendLine(element)
+            append("  ")
+            append("element.javaClass = ")
+            appendLine(element.javaClass)
+            append("  ")
+            append("element is KtAnnotated = ")
+            appendLine(element is KtAnnotated)
+            append("  ")
+            append("element.annotationEntries = ")
+            appendLine(if (element is KtAnnotated) element.annotationEntries else emptyList())
+            append("  ")
+            append("element.annotations = ")
+            appendLine(if (element is KtAnnotated) element.annotations else emptyList())
+            append("  ")
+            append("element is PsiAnnotationOwner = ")
+            appendLine(element is PsiAnnotationOwner)
+            append("  ")
+            append("element.annotations = ")
+            appendLine(if (element is PsiAnnotationOwner) element.annotations else "nothing")
+        }.let { println(it) }
         when (element) {
             is KtAnnotated -> {
                 // N.B.: Do not include annotated expressions, since KSP does not provide access to them.
@@ -61,7 +87,7 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
     private fun PsiElement.isSkippable(): Boolean =
         isPackageDirective() ||
             isImport() ||
-            isDocComment() ||
+            isComment() ||
             isFunctionOrMethodBody() ||
             isObjectOrAnonymousClass()
 
@@ -75,9 +101,9 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
         isKotlinImportList() || isJavaImportList()
 
     /**
-     * Return `true` if the [PsiElement] is either a Kotlin or Java doc-comment.
+     * Return `true` if the [PsiElement] is either a Kotlin doc-comment or Java comment.
      */
-    private fun PsiElement.isDocComment(): Boolean =
+    private fun PsiElement.isComment(): Boolean =
         isKotlinDocComment() || isJavaDocComment()
 
     /**
@@ -123,10 +149,10 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
         this is KDoc
 
     /**
-     * Returns `true` if the [PsiElement] is a Java doc-comment.
+     * Returns `true` if the [PsiElement] is a Java comment.
      */
     private fun PsiElement.isJavaDocComment(): Boolean =
-        this is PsiDocComment
+        this is PsiDocComment || this is PsiWhiteSpace || this is PsiComment
 
     /**
      * Returns `true` if the [PsiElement] is a Kotlin function body.
