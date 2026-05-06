@@ -16,7 +16,7 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: com.example.Anno, com.example.FileAnno
+// PROCESSOR INPUT: com.example.Anno, com.example.FileAnno
 // EXPECTED:
 // com.example.Anno: TargetClass
 // com.example.Anno: TargetClass.<init>.allUseSite
