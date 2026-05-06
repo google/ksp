@@ -292,6 +292,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/equivalentJavaWildcards.kt")
     }
 
+    @TestMetadata("enumModifiers.kt")
+    @Test
+    @Bug("https://github.com/google/ksp/issues/2271", BugState.OPEN)
+    fun testEnumModifiers() {
+        runThrowingTest("$AA_PATH/enumModifiers.kt")
+    }
+
     @TestMetadata("errorTypes.kt")
     @Test
     fun testErrorTypes() {
