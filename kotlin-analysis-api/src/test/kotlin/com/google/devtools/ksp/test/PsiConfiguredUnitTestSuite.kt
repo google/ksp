@@ -21,11 +21,10 @@ import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
 class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true) {
-    @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
+
+    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
-    override fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
-        runThrowingTest(
-            "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
-        )
+    override fun testAllUseSiteTargetAppliedToAnnotationList() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 }

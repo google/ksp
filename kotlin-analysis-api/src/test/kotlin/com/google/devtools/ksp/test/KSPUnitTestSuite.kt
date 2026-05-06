@@ -71,13 +71,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/allFunctions_kt_inherits_java.kt")
     }
 
-    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
-    @Test
     @Bug("https://github.com/google/ksp/issues/2912")
     @Negative("KEEP-402 specifies that the :all meta-target cannot be applied to annotation groups.")
-    fun testAllUseSiteTargetAppliedToAnnotationList() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
-    }
+    abstract fun testAllUseSiteTargetAppliedToAnnotationList()
 
     @TestMetadata("annotationInDependencies.kt")
     @Test
@@ -295,9 +291,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/errorTypes.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2913")
-    @Negative("Constructor params not declared with val do not have generated properties or backing fields.")
-    abstract fun testFieldAndPropertyUseSiteTargetOnConstructorParameters()
+    @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
+    @Test
+    fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
+        runTest(
+            "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
+        )
+    }
 
     @TestMetadata("functionTypeAlias.kt")
     @Test
