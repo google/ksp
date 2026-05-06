@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.Negative
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
