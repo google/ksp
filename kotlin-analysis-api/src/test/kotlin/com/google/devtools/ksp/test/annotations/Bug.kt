@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.test
+package com.google.devtools.ksp.test.annotations
 
 /**
  * Indicates that a test case was introduced to reproduce or verify a fix for a specific bug.
