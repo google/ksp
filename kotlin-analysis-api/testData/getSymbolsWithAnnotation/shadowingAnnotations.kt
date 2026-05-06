@@ -16,7 +16,7 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: FooAnno, Container.FooAnno
+// PROCESSOR INPUT: FooAnno, Container.FooAnno
 // EXPECTED:
 // Container.FooAnno: Container.member
 // FooAnno: Container

@@ -16,7 +16,7 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: kotlin.annotation.Retention, kotlin.annotation.Target
+// PROCESSOR INPUT: kotlin.annotation.Retention, kotlin.annotation.Target
 // EXPECTED:
 // kotlin.annotation.Retention: Anno
 // kotlin.annotation.Target: Anno

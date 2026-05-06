@@ -30,13 +30,13 @@ qualified names of the annotations the processor should use to look up symbols. 
 the `localClasses.kt` file declares an annotation class `Anno` and contains the line:
 
 ```kotlin
-// TEST ANNOTATIONS: Anno
+// PROCESSOR INPUT: Anno
 ```
 
 Likewise, the `metaAnnotations.kt` file contains the line:
 
 ```kotlin
-// TEST ANNOTATIONS: kotlin.annotation.Retention, kotlin.annotation.Target
+// PROCESSOR INPUT: kotlin.annotation.Retention, kotlin.annotation.Target
 ```
 
 It then finds all symbols annotated with `kotlin.annotation.Retention` and finds all symbols

@@ -16,7 +16,7 @@
  */
 
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
-// TEST ANNOTATIONS: Anno
+// PROCESSOR INPUT: Anno
 // EXPECTED:
 // Anno: MyClass
 // Anno: MyJavaClass
