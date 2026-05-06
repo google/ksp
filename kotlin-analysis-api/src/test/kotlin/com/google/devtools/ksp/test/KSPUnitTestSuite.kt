@@ -73,6 +73,7 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
+    @Bug("https://github.com/google/ksp/issues/2912")
     fun testAllUseSiteTargetAppliedToAnnotationList() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
@@ -293,6 +294,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/errorTypes.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2913")
     abstract fun testFieldAndPropertyUseSiteTargetOnConstructorParameters()
 
     @TestMetadata("functionTypeAlias.kt")
@@ -664,6 +666,7 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("repeatedNonRepeatableAnnotations.kt")
     @Test
+    @Bug("https://github.com/google/ksp/issues/2919")
     fun testRepeatedNonRepeatableAnnotations() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
     }
