@@ -27,4 +27,10 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
+
+    @TestMetadata("javaSubtypeOfKotlinInterface.kt")
+    @Test
+    override fun testJavaSubtypeOfKotlinInterface() {
+        runTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
+    }
 }

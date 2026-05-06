@@ -15,22 +15,29 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.test
+// TEST PROCESSOR: GetDeclarationsProcessor
+// PROCESSOR INPUT: MyInterface, MyClass
+// EXPECTED:
+// Declaration simpleName: Foo
+// Declaration qualifiedName: MyInterface.Foo (Origin: KOTLIN)
+// Declaration simpleName: getFoo
+// Declaration qualifiedName: MyClass.getFoo (Origin: JAVA)
+// Declaration simpleName: getFoo
+// Declaration qualifiedName: MyClass.getFoo (Origin: SYNTHETIC)
+// Declaration simpleName: <init>
+// END
 
-import org.jetbrains.kotlin.test.TestMetadata
-import org.junit.jupiter.api.Test
+// FILE: MyInterface.kt
 
-class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true) {
+interface MyInterface {
+    val Foo: String
+}
 
-    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
-    @Test
-    override fun testAllUseSiteTargetAppliedToAnnotationList() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
-    }
+// FILE: MyClass.java
 
-    @TestMetadata("javaSubtypeOfKotlinInterface.kt")
-    @Test
-    override fun testJavaSubtypeOfKotlinInterface() {
-        runFailingTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
+class MyClass implements MyInterface {
+    @Override
+    public String getFoo() {
+        return ""
     }
 }
