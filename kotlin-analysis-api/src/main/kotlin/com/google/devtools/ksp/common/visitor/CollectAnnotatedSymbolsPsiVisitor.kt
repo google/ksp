@@ -1,28 +1,18 @@
 package com.google.devtools.ksp.common.visitor
 
-import com.google.devtools.ksp.InternalKSPException
-import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
-import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiAnnotationOwner
 import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiCodeBlock
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiImportList
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiPackageStatement
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor
-import com.intellij.psi.PsiType
-import com.intellij.psi.PsiTypeElement
-import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.javadoc.PsiDocComment
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
-import org.jetbrains.kotlin.psi.KtAnnotatedExpression
-import org.jetbrains.kotlin.psi.KtAnnotation
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
-import org.jetbrains.kotlin.psi.KtDeclarationModifierList
+import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtExpression
-import org.jetbrains.kotlin.psi.KtFileAnnotationList
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtObjectLiteralExpression
@@ -42,95 +32,17 @@ class CollectAnnotatedSymbolsPsiVisitor : PsiRecursiveElementWalkingVisitor() {
             return
         }
         when (element) {
-            is KtAnnotationEntry -> when (val parent = element.parent) {
-                // Annotations on declarations. Examples:
-                // @MyAnnotation class MyClass
-                // @MyAnnotation val myVal = "";
-                // @MyAnnotation fun myFun() {}
-                // fun myMethodWithParameter(@MyAnnotation myParam: Int) {}
-                is KtDeclarationModifierList -> {
-                    result.add(parent.parent)
-                    return
+            is KtAnnotated -> {
+                // N.B.: Do not include annotated expressions, since KSP does not provide access to them.
+                if (element !is KtExpression && element.annotationEntries.isNotEmpty()) {
+                    result.add(element)
                 }
-
-                // Annotations at the file level. Example:
-                // @file:MyAnnotation
-                is KtFileAnnotationList -> {
-                    result.add(parent.parent)
-                    return
-                }
-
-                // Annotations on expressions. Example:
-                // val x = @Suppress("UNCHECKED_CAST") list as List<String>
-                is KtAnnotatedExpression ->
-                    // Do nothing - KSP does not consider expressions / values
-                    return
-
-                // A group of annotations. Example:
-                // @[MyAnnotation1, MyAnnotation2] class MyClass
-                is KtAnnotation -> {
-                    result.add(parent.parent.parent)
-                    return
-                }
-
-                else ->
-                    // Explicit crash
-                    throw InternalKSPException(
-                        "Unexpected Kotlin Psi element",
-                        parent.toLocation(),
-                        parent.javaClass
-                    )
             }
 
-            is PsiAnnotation -> when (val owner = element.owner) {
-                // Annotations on declarations. Examples:
-                // @MyAnnotation class MyClass {}
-                // @MyAnnotation String myField = "";
-                // @MyAnnotation void myMethod() {}
-                // void myMethodWithParameter(@MyAnnotation int myParam) {}
-                is PsiModifierList -> {
-                    result.add(owner.parent)
-                    return
+            is PsiAnnotationOwner -> {
+                if (element.annotations.isNotEmpty()) {
+                    result.add(element.parent)
                 }
-
-                // Type parameter annotations. Examples:
-                // class MyClass<@MyAnnotation A>
-                // fun <@MyAnnotation A> myFun() {}
-                is PsiTypeParameter -> {
-                    result.add(owner)
-                    return
-                }
-
-                is PsiTypeElement -> {
-                    result.add(owner)
-                    return
-                }
-
-                // Type argument annotation / type application. Example:
-                // interface <A> Foo<A> {}
-                // abstract class Abs {
-                //     Foo<String> bar(Foo2<@MyAnnotation Boolean> baz)
-                //     Foo<@MyAnnotation A> baz(Foo2<A> baz)
-                // }
-                is PsiType ->
-                    // Do nothing - Analysis API implementation does not collect these
-                    return
-
-                // Annotations used as values. Example with other annotation used as default value
-                // @interface MyAnnotation {
-                //     MyOtherAnnotation value() default @MyOtherAnnotation("default value here");
-                // }
-                null ->
-                    // Do nothing - Analysis API implementation does not collect these
-                    return
-
-                else ->
-                    // Explicit crash
-                    throw InternalKSPException(
-                        "Unexpected Java Psi element",
-                        (owner as? PsiElement).toLocation(),
-                        owner.javaClass
-                    )
             }
         }
         super.visitElement(element)
