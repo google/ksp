@@ -449,6 +449,9 @@ abstract class KSPUnitTestSuite(
         runTest("$UTIL_PATH/javaSubtype.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2925", BugState.OPEN)
+    abstract fun testJavaSubtypeOfKotlinInterface()
+
     @TestMetadata("javaToKotlinMapper.kt")
     @Test
     fun testJavaToKotlinMapper() {
