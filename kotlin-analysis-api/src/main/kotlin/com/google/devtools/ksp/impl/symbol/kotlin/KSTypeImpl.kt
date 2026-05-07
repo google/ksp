@@ -36,6 +36,16 @@ import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 
 class KSTypeImpl private constructor(internal val type: KaType) : KSType {
+
+    // Per github.com/google/ksp/issues/2576: fullyExpand() opens a fresh
+    // Analysis API session every call, and hashCode() is called by every
+    // HashMap/HashSet containing this KSTypeImpl.
+    //
+    // Idempotent computation makes any lost write safe - 
+    // a racing thread just recomputes the same value.
+    private var cachedHash: Int = 0
+    private var cachedHashIsZero: Boolean = false
+
     companion object : KSObjectCache<IdKey<KaType>, KSTypeImpl>() {
         fun getCached(type: KaType): KSTypeImpl = cache.getOrPut(IdKey(type)) {
             KSTypeImpl(type)
@@ -162,7 +172,16 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         get() = type is KaFunctionType && type.isSuspend
 
     override fun hashCode(): Int {
-        return type.fullyExpand().hashCode()
+        var h = cachedHash
+        if (h == 0 && !cachedHashIsZero) {
+            h = type.fullyExpand().hashCode()
+            if (h == 0) {
+                cachedHashIsZero = true
+            } else {
+                cachedHash = h
+            }
+        }
+        return h
     }
 
     override fun equals(other: Any?): Boolean {
