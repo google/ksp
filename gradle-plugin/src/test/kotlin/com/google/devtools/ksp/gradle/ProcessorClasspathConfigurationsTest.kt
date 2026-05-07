@@ -18,6 +18,7 @@ package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
 import com.google.devtools.ksp.gradle.testing.KspIntegrationTestRule
+import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -42,7 +43,21 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
     val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     private val kspConfigs by lazy {
-        """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""
+        """ if (
+            |configurations.matching {
+            |    it.name.startsWith("ksp") &&
+            |        it.name != "ksp" &&
+            |        !it.name.endsWith("ProcessorClasspath")
+            |}.isEmpty()
+            |) {
+            |    throw Exception("kspConfigs is empty")
+            |}
+            |
+            |configurations.matching {
+            |    it.name.startsWith("ksp") &&
+            |        it.name != "ksp" &&
+            |        !it.name.endsWith("ProcessorClasspath")
+            |}""".trimMargin()
     }
 
     // config name is <KotlinCompileTaskName>.replace("compile", "ksp") + "ProcessorClasspath"
@@ -63,8 +78,8 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                     doLast {
                         val main = configurations["kspKotlinProcessorClasspath"]
                         val test = configurations["kspTestKotlinProcessorClasspath"]
-                        require(main.extendsFrom.map { it.name } == listOf("ksp"))
-                        require(test.extendsFrom.map { it.name } == listOf("kspTest", "ksp"))
+                        require(main.extendsFrom.map { it.name } == listOf("kspJvm"))
+                        require(test.extendsFrom.map { it.name } == listOf("kspTestJvm", "kspJvm"))
                     }
                 }
             """.trimIndent()

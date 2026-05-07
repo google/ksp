@@ -94,16 +94,25 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
                 }
             """.trimIndent()
         )
-        val kspConfigs =
-            """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""
-        testRule.appModule.buildFileAdditions.add(
+        val configs =
             """
-                $kspConfigs.all {
-                    // Make sure ksp configs are not empty.
-                    project.dependencies.add(name, project(":${testRule.processorModule.name}"))
-                }
-            """.trimIndent()
-        )
+            |val kspConfigs = configurations.matching {
+            |    it.name.startsWith("ksp") &&
+            |        it.name != "ksp" &&
+            |        !it.name.endsWith("ProcessorClasspath")
+            |}
+            |
+            |if (kspConfigs.isEmpty()) {
+            |    throw Exception("kspConfigs is empty")
+            |}
+            |
+            |kspConfigs.all {
+            |    // Make sure ksp configs are not empty.
+            |    project.dependencies.add(name, project(":${testRule.processorModule.name}"))
+            |}
+            |
+            |""".trimMargin()
+        testRule.appModule.buildFileAdditions.add(configs)
 
         class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
             var count = 0
