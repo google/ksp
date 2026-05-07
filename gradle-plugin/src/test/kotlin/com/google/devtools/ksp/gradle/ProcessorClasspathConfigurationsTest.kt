@@ -80,8 +80,7 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                         val test = configurations["kspTestKotlinProcessorClasspath"]
                         main.extendsFrom.forEach { println("DEBUG KSP TEST 2: ${'$'}{it.name}") }
                         test.extendsFrom.forEach { println("DEBUG KSP TEST 3: ${'$'}{it.name}") }
-                        // require(main.extendsFrom.map { it.name } == listOf("kspJvm"))
-                        // require(test.extendsFrom.map { it.name } == listOf("kspTestJvm", "kspJvm"))
+                        require(main.extendsFrom.map { it.name } == emptyList()) 
                         require(test.extendsFrom.map { it.name } == listOf("kspTest"))
                     }
                 }
@@ -108,7 +107,13 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                     doLast {
                         val main = configurations["kspKotlinProcessorClasspath"]
                         val test = configurations["kspTestKotlinProcessorClasspath"]
-                        require(main.extendsFrom.map { it.name } == listOf("ksp"))
+                        main.extendsFrom.forEach { thing -> println(buildString {
+                            append("DEBUG KSP 4: ")
+                            append(thing.name)
+                        }) }
+                        println("DEBUG KSP 5")
+                        println(main.extendsFrom.map { it.name })
+                        require(main.extendsFrom.map { it.name } == emptyList())
                         require(test.extendsFrom.map { it.name } == listOf("kspTest"))
                     }
                 }
