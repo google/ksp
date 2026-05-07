@@ -488,6 +488,7 @@ class KotlinSymbolProcessing(
             val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
             // KspModuleBuilder ensures this is always a KtSourceModule
             ResolverAAImpl.ktModule = modules.single() as KaSourceModule
+            ResolverAAImpl.kspConfig = kspConfig
 
             // Initializing environments
             val javaFileManager = if (kspConfig is KSPJvmConfig) {
