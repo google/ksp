@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.common.impl
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.FileCache
@@ -209,14 +210,22 @@ class PsiResolutionStrategy(
                         this[anno.shortName] = lazy {
                             mutableSetOf(
                                 anno.qualifiedName
-                                    ?: error("Unexpected unqualified name at ${anno.toLocation()}: ${anno.javaClass}")
+                                    ?: throw InternalKSPException(
+                                        "Unexpected unqualified name",
+                                        anno.toLocation(),
+                                        anno.javaClass
+                                    )
                             )
                         }
                     } else {
                         this[anno.shortName] = lazy {
                             lazyFullyQualifiedNames.value.add(
                                 anno.qualifiedName
-                                    ?: error("Unexpected unqualified name at ${anno.toLocation()}: ${anno.javaClass}")
+                                    ?: throw InternalKSPException(
+                                        "Unexpected unqualified name",
+                                        anno.toLocation(),
+                                        anno.javaClass
+                                    )
                             )
                             lazyFullyQualifiedNames.value
                         }
@@ -369,7 +378,11 @@ class PsiResolutionStrategy(
             // Kotlin sources
             is KtDeclaration -> {
                 if (annotation == null) {
-                    error("Unexpected null annotation at ${toLocation()} : $javaClass")
+                    throw InternalKSPException(
+                        "Unexpected null annotation",
+                        toLocation(),
+                        javaClass
+                    )
                 }
                 element.resolve(annotation)
             }
@@ -397,7 +410,11 @@ class PsiResolutionStrategy(
                 listOf(element.resolve())
 
             else ->
-                error("Unreachable: ${element.javaClass}")
+                throw InternalKSPException(
+                    "Unreachable branch",
+                    element.toLocation(),
+                    element.javaClass
+                )
         }
 
     /**
@@ -420,10 +437,10 @@ class PsiResolutionStrategy(
      */
     private fun PsiParameter.resolve(): KSValueParameter {
         val functionDecl = callableSymbol.toKSFunctionDeclaration()
-            ?: error(
-                "Failed to convert callable symbol to KSFunctionDeclaration at " +
-                    "${toLocation()}: " +
-                    "${callableSymbol.javaClass}"
+            ?: throw InternalKSPException(
+                "Failed to convert callable symbol to KSFunctionDeclaration",
+                toLocation(),
+                callableSymbol.javaClass
             )
         return functionDecl.parameters[parameterIndex()]
     }
@@ -439,7 +456,11 @@ class PsiResolutionStrategy(
             resolveTypeParameterOfClass(decl)
 
         else ->
-            error("Unexpected Java declaration at ${decl.toLocation()}: ${decl.javaClass}")
+            throw InternalKSPException(
+                "Unexpected Java declaration",
+                decl.toLocation(),
+                decl.javaClass
+            )
     }
 
     /**
@@ -447,7 +468,11 @@ class PsiResolutionStrategy(
      */
     private fun PsiClass.resolve(): KSClassDeclarationImpl {
         val sym = analyze { namedClassSymbol }
-            ?: error("Unexpected null named class symbol at ${toLocation()}: $javaClass")
+            ?: throw InternalKSPException(
+                "Unexpected null named class symbol",
+                toLocation(),
+                javaClass
+            )
         return sym.toKSClassDeclaration()
     }
 
@@ -456,9 +481,17 @@ class PsiResolutionStrategy(
      */
     private fun PsiField.resolve(): KSPropertyDeclaration {
         val sym = analyze { this@resolve.callableSymbol }
-            ?: error("Unexpected null callable symbol at ${toLocation()}: $javaClass")
+            ?: throw InternalKSPException(
+                "Unexpected null callable symbol",
+                toLocation(),
+                javaClass
+            )
         return sym.toKSPropertyDeclaration()
-            ?: error("Unexpected null KSPropertyDeclaration at ${toLocation()}: $javaClass")
+            ?: throw InternalKSPException(
+                "Unexpected null KSPropertyDeclaration",
+                toLocation(),
+                javaClass
+            )
     }
 
     /**
@@ -466,9 +499,17 @@ class PsiResolutionStrategy(
      */
     private fun PsiMethod.resolve(): KSFunctionDeclarationImpl {
         val sym = analyze { this@resolve.callableSymbol }
-            ?: error("Unexpected null callable symbol at ${toLocation()}: $javaClass")
+            ?: throw InternalKSPException(
+                "Unexpected null callable symbol",
+                toLocation(),
+                javaClass
+            )
         return sym.toKSFunctionDeclaration()
-            ?: error("Unexpected null KSFunctionDeclaration at ${toLocation()}: $javaClass")
+            ?: throw InternalKSPException(
+                "Unexpected null KSFunctionDeclaration",
+                toLocation(),
+                javaClass
+            )
     }
 
     /**
@@ -484,12 +525,20 @@ class PsiResolutionStrategy(
                 is KSFunctionDeclarationImpl -> when {
                     this.isGetter -> listOf(
                         this.parentDeclaration?.getter()
-                            ?: error("Missing getter $location: $javaClass")
+                            ?: throw InternalKSPException(
+                                "Unexpected missing getter",
+                                location,
+                                javaClass
+                            )
                     )
 
                     this.isSetter -> listOf(
                         this.parentDeclaration?.setter()
-                            ?: error("Missing setter $location: $javaClass")
+                            ?: throw InternalKSPException(
+                                "Unexpected missing setter",
+                                location,
+                                javaClass
+                            )
                     )
 
                     else -> listOf(this)
@@ -502,13 +551,21 @@ class PsiResolutionStrategy(
                 is KSFile -> listOf(this)
                 else -> listOf(
                     this.containingFile
-                        ?: error("Missing file at $location: $javaClass")
+                        ?: throw InternalKSPException(
+                            "Unexpected missing file",
+                            location,
+                            javaClass
+                        )
                 )
             }
 
             AnnotationUseSiteTarget.PROPERTY -> when (this) {
                 is KSValueParameter -> listOf(
-                    this.getGeneratedProperty() ?: error("Missing property for parameter at $location: $javaClass")
+                    this.getGeneratedProperty() ?: throw InternalKSPException(
+                        "Unexpected missing property for parameter",
+                        location,
+                        javaClass
+                    )
                 )
 
                 else -> listOf(this)
@@ -516,7 +573,11 @@ class PsiResolutionStrategy(
 
             AnnotationUseSiteTarget.FIELD -> when (this) {
                 is KSValueParameter -> listOf(
-                    this.getGeneratedProperty() ?: error("Missing property for parameter at $location: $javaClass")
+                    this.getGeneratedProperty() ?: throw InternalKSPException(
+                        "Unexpected missing property for parameter",
+                        location,
+                        javaClass
+                    )
                 )
 
                 else -> listOf(this)
@@ -525,48 +586,84 @@ class PsiResolutionStrategy(
             AnnotationUseSiteTarget.GET ->
                 listOf(
                     this.getter()
-                        ?: error("Missing getter at $location: $javaClass")
+                        ?: throw InternalKSPException(
+                            "Unexpected missing getter",
+                            location,
+                            javaClass
+                        )
                 )
 
             AnnotationUseSiteTarget.SET ->
                 listOf(
                     this.setter()
-                        ?: error("Missing setter at $location: $javaClass")
+                        ?: throw InternalKSPException(
+                            "Unexpected missing setter",
+                            location,
+                            javaClass
+                        )
                 )
 
             AnnotationUseSiteTarget.RECEIVER -> when (this) {
                 is KSFunctionDeclarationImpl -> listOf(
                     extensionReceiver
-                        ?: error("Missing extension receiver at $location: $javaClass")
+                        ?: throw InternalKSPException(
+                            "Unexpected missing extension receiver",
+                            location,
+                            javaClass
+                        )
                 )
 
                 is KSPropertyDeclaration -> listOf(
                     extensionReceiver
-                        ?: error("Missing extension receiver at $location: $javaClass")
+                        ?: throw InternalKSPException(
+                            "Unexpected missing extension receiver",
+                            location,
+                            javaClass
+                        )
                 )
 
-                else -> error("Unexpected declaration at $location: $javaClass")
+                else -> throw InternalKSPException(
+                    "Unexpected declaration",
+                    location,
+                    javaClass
+                )
             }
 
             AnnotationUseSiteTarget.PARAM -> when (this) {
                 is KSValueParameter -> listOf(this)
-                else -> error("Unexpected annotated symbol with param use-site target at $location: $javaClass")
+                else -> throw InternalKSPException(
+                    "Unexpected annotated symbol with param use-site target",
+                    location,
+                    javaClass
+                )
             }
 
             AnnotationUseSiteTarget.SETPARAM -> when (this) {
                 is KSValueParameter -> {
                     listOf(
                         (this.parent as? KSFunctionDeclaration)?.parameters?.singleOrNull()
-                            ?: error("Missing setter parameter at $location: $javaClass")
+                            ?: throw InternalKSPException(
+                                "Unexpected missing setter parameter",
+                                location,
+                                javaClass
+                            )
                     )
                 }
 
                 is KSPropertyDeclaration -> listOf(
                     setter?.parameter
-                        ?: error("Missing setter parameter at $location: $javaClass")
+                        ?: throw InternalKSPException(
+                            "Unexpected missing setter parameter",
+                            location,
+                            javaClass
+                        )
                 )
 
-                else -> error("Unexpected annotated symbol with 'setparam' use-site target at $location: $javaClass")
+                else -> throw InternalKSPException(
+                    "Unexpected annotated symbol with 'setparam' use-site target",
+                    location,
+                    javaClass
+                )
             }
 
             AnnotationUseSiteTarget.DELEGATE ->
@@ -594,7 +691,11 @@ class PsiResolutionStrategy(
                         addIfNotNull(this@findTargetedSymbol.setter?.parameter)
                     }
 
-                else -> error("Unexpected annotated symbol with 'all' use-site target at $location: $javaClass")
+                else -> throw InternalKSPException(
+                    "Unexpected annotated symbol with 'all' use-site target",
+                    location,
+                    javaClass
+                )
             }
         }
 
@@ -603,12 +704,16 @@ class PsiResolutionStrategy(
      */
     private fun PsiTypeParameter.resolveTypeParameterOfMethod(method: PsiMethod): KSTypeParameter {
         val callableSym = analyze { method.callableSymbol }
-            ?: error("Unexpected null callable symbol at ${method.toLocation()}: ${method.javaClass}")
+            ?: throw InternalKSPException(
+                "Unexpected null callable symbol",
+                method.toLocation(),
+                method.javaClass
+            )
         val functionDecl = callableSym.toKSFunctionDeclaration()
-            ?: error(
-                "Failed to convert callable symbol to KSFunctionDeclaration at " +
-                    "${method.toLocation()}: " +
-                    "${callableSym.javaClass}"
+            ?: throw InternalKSPException(
+                "Failed to convert callable symbol to KSFunctionDeclaration",
+                method.toLocation(),
+                callableSym.javaClass
             )
         return functionDecl.typeParameters[parameterIndex]
     }
@@ -618,7 +723,11 @@ class PsiResolutionStrategy(
      */
     private fun PsiTypeParameter.resolveTypeParameterOfClass(clazz: PsiClass): List<KSTypeParameter> {
         val classSym = analyze { clazz.namedClassSymbol }
-            ?: error("Unexpected named class symbol at ${clazz.toLocation()}: ${clazz.javaClass}")
+            ?: throw InternalKSPException(
+                "Unexpected named class symbol",
+                clazz.toLocation(),
+                clazz.javaClass
+            )
         val typeParamSym = classSym.toKSClassDeclaration().typeParameters[parameterIndex]
         // Type parameters for classes return two symbols with Analysis API,
         // one as a Psi-based KaFirTypeParameter and one as a "regular" KaFirTypeParameter,
@@ -635,7 +744,11 @@ class PsiResolutionStrategy(
      */
     private val PsiAnnotation.shortName: String
         get() = this.nameReferenceElement?.referenceName
-            ?: error("Unexpected nullable annotation short name at ${toLocation()}: $javaClass")
+            ?: throw InternalKSPException(
+                "Unexpected nullable annotation short name",
+                toLocation(),
+                javaClass
+            )
 
     /**
      * Returns the callable symbol, i.e., the method symbol for the Java parameter `this`.
@@ -644,10 +757,18 @@ class PsiResolutionStrategy(
     private val PsiParameter.callableSymbol: KaCallableSymbol
         get() {
             val decl = this.parent.parent as? PsiMember
-                ?: error("Unexpected PsiParameter at ${toLocation()}: $javaClass")
+                ?: throw InternalKSPException(
+                    "Unexpected PsiParameter",
+                    toLocation(),
+                    javaClass
+                )
             return analyze {
                 decl.callableSymbol
-                    ?: error("Unexpected null callable symbol at ${decl.toLocation()}: ${decl.javaClass}")
+                    ?: throw InternalKSPException(
+                        "Unexpected null callable symbol",
+                        decl.toLocation(),
+                        decl.javaClass
+                    )
             }
         }
 
@@ -661,7 +782,11 @@ class PsiResolutionStrategy(
                     return parent.getTypeParameterIndex(this)
 
                 else ->
-                    error("Unexpected parent of PsiTypeParameter at ${parent.toLocation()}: ${parent.javaClass}")
+                    throw InternalKSPException(
+                        "Unexpected parent of PsiTypeParameter",
+                        parent.toLocation(),
+                        parent.javaClass
+                    )
             }
         }
 
