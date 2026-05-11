@@ -28,6 +28,12 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
+    @TestMetadata("contextParameters.kt")
+    @Test
+    override fun testContextParameters() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
+
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {
