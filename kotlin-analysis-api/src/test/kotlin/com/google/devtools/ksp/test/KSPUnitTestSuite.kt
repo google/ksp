@@ -233,6 +233,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/crossModuleTypeAlias.kt")
     }
 
+    @Bug(
+        "https://github.com/google/ksp/issues/2472",
+        BugState.OPEN,
+        "KEEP 367: Context parameters are stable in Kotlin 2.4.0"
+    )
+    abstract fun testContextParameters()
+
     @TestMetadata("declarationInconsistency.kt")
     @Test
     fun testDeclarationInconsistency() {
