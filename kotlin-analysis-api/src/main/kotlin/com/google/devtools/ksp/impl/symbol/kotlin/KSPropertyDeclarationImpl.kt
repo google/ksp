@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
@@ -52,6 +53,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktPropertySymbol) {
     override val ktDeclarationSymbol get() = ktPropertySymbol
+
     companion object : KSObjectCache<KaPropertySymbol, KSPropertyDeclarationImpl>() {
         fun getCached(ktPropertySymbol: KaPropertySymbol) =
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
@@ -60,6 +62,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override val originalAnnotations: Sequence<KSAnnotation>
         get() = annotations
 
+    @OptIn(KaExperimentalApi::class)
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktPropertySymbol.annotations.asSequence()
             .filter { !it.isUseSiteTargetAnnotation() }
@@ -69,6 +72,12 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 ktPropertySymbol.backingFieldSymbol?.annotations?.map {
                     KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl, definitionOrigin)
                 } ?: emptyList()
+            ).plus(
+                ktPropertySymbol.contextParameters.flatMap { ctxParam ->
+                    ctxParam.annotations.map {
+                        KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl, definitionOrigin)
+                    }
+                }
             )
     }
 
@@ -233,6 +242,6 @@ internal fun KSAnnotation.isValidOnProperty(): Boolean =
     annotationType.resolve().declaration.annotations.none { metaAnnotation ->
         metaAnnotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.annotation.Target" &&
             (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.none {
-            (it as? KSClassDeclaration)?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.PROPERTY"
-        } ?: false
+                (it as? KSClassDeclaration)?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.PROPERTY"
+            } ?: false
     }
