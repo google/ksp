@@ -313,6 +313,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/errorTypes.kt")
     }
 
+    @Bug(
+        "https://github.com/google/ksp/issues/2873",
+        BugState.OPEN,
+        "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
+    )
+    abstract fun testExplicitBackingFields()
+
     @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2913", BugState.FIXED)
