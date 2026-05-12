@@ -23,9 +23,11 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedI
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySetterSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtDeclaration
@@ -38,11 +40,19 @@ abstract class KSPropertyAccessorImpl(
     override val receiver: KSPropertyDeclaration
 ) : KSPropertyAccessor, Deferrable {
 
+    @OptIn(KaExperimentalApi::class)
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
         ktPropertyAccessorSymbol.annotations.asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
+            .plus(
+                ktPropertyAccessorSymbol.contextParameters.flatMap { ctxParam ->
+                    ctxParam.annotations.map {
+                        KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin)
+                    }
+                }
+            )
     }
 
     internal val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
@@ -62,14 +72,14 @@ abstract class KSPropertyAccessorImpl(
                 (ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()
             }
             ).let {
-            if (origin == Origin.SYNTHETIC &&
-                (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
-            ) {
-                it + Modifier.ABSTRACT
-            } else {
-                it
+                if (origin == Origin.SYNTHETIC &&
+                    (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
+                ) {
+                    it + Modifier.ABSTRACT
+                } else {
+                    it
+                }
             }
-        }
     }
 
     override val origin: Origin by lazy {
