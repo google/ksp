@@ -287,6 +287,76 @@ class AnnoOnProperty {
     }
 
     @Test
+    fun testNativeConfigurationCacheReuse() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        project.appendProperty("kotlin.native.enableKlibsCrossCompilation=false")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        // First run: calculates and stores configuration cache
+        val result1 = gradleRunner.withArguments(
+            "--configuration-cache",
+            "--configuration-cache-problems=fail",
+            ":workload-linuxX64:assemble"
+        ).build()
+        Assert.assertTrue(result1.output.contains("Configuration cache entry stored."))
+
+        // Second run: should reuse the configuration cache
+        val result2 = gradleRunner.withArguments(
+            "--configuration-cache",
+            "--configuration-cache-problems=fail",
+            ":workload-linuxX64:assemble"
+        ).build()
+        Assert.assertTrue(result2.output.contains("Reusing configuration cache."))
+    }
+
+    @Test
+    fun testSubprojectPropertyOverride() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Mac", ignoreCase = true))
+        project.appendProperty("kotlin.native.enableKlibsCrossCompilation=false")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val buildScript = File(project.root, "workload-linuxX64/build.gradle.kts")
+
+        // 1. Add iosArm64 target to build script
+        buildScript.writeText(
+            buildScript.readText().replace(
+                "linuxX64() {",
+                "linuxX64() {\n        binaries {\n            executable()\n        }\n    }\n    iosArm64() {"
+            )
+        )
+        val annotationsBuildScript = File(project.root, "annotations/build.gradle.kts")
+        annotationsBuildScript.writeText(
+            annotationsBuildScript.readText().replace(
+                "linuxX64() {",
+                "linuxX64() {\n    }\n    iosArm64() {"
+            )
+        )
+
+        // 2. Add kspIosArm64 dependency
+        buildScript.appendText("\ndependencies {\n    add(\"kspIosArm64\", project(\":test-processor\"))\n}\n")
+
+        // 3. Run without KSP override. The iosArm64 task should be skipped.
+        val result1 = gradleRunner.withArguments(
+            ":workload-linuxX64:kspKotlinIosArm64"
+        ).build()
+        Assert.assertEquals(TaskOutcome.SKIPPED, result1.task(":workload-linuxX64:kspKotlinIosArm64")?.outcome)
+
+        // 4. Enable cross-compilation via subproject property override
+        buildScript.appendText(
+            """
+            ext["kotlin.native.enableKlibsCrossCompilation"] = "true"
+            """.trimIndent()
+        )
+
+        // 5. Run with override. The iosArm64 task should execute successfully.
+        val result2 = gradleRunner.withArguments(
+            ":workload-linuxX64:kspKotlinIosArm64"
+        ).build()
+        Assert.assertEquals(TaskOutcome.SUCCESS, result2.task(":workload-linuxX64:kspKotlinIosArm64")?.outcome)
+    }
+
+    @Test
     fun testLinuxX64() {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
