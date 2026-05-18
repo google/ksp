@@ -77,7 +77,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.konan.target.HostManager
-import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
@@ -420,14 +419,12 @@ abstract class KspAATask @Inject constructor(
                         cfg.konanTargetName.value(konanTargetName)
                         cfg.konanHome.value((kotlinCompileProvider.get() as KotlinNativeCompile).konanHome)
 
-                        val isKlibCrossCompilationEnabled = getKlibCrossCompilationSupport(
-                            project,
-                            kotlinCompilation
-                        )
+                        val enableKlibsCrossCompilation = getKlibCrossCompilationSupport(project, kotlinCompilation)
+
                         kspAATask.onlyIf {
-                            isKlibCrossCompilationEnabled.get() || HostManager().enabled.any {
+                            HostManager().enabled.any {
                                 it.name == konanTargetName
-                            }
+                            } || enableKlibsCrossCompilation.getOrElse(false)
                         }
                     }
 
@@ -446,25 +443,23 @@ abstract class KspAATask @Inject constructor(
 
         /**
          * Returns a Provider<Boolean> indicating whether klib cross-compilation is enabled.
-         * For Kotlin 2.3.20-Beta2+, uses KotlinNativeCompilation.crossCompilationSupported.
-         * For earlier versions, falls back to checking the gradle property kotlin.native.enableKlibsCrossCompilation.
+         * Prioritizes subproject-level overrides (e.g., subproject `ext` or `gradle.properties`),
+         * and falls back to the global Gradle property `kotlin.native.enableKlibsCrossCompilation`
+         * (defaulting to false if not configured).
          */
         private fun getKlibCrossCompilationSupport(
             project: Project,
             kotlinCompilation: KotlinNativeCompilation
         ): Provider<Boolean> {
-            val kotlinVersion = project.getKotlinPluginVersion()
-            val isSupportCrossCompilationPropertyAvailable =
-                KotlinToolingVersion(kotlinVersion) >= KotlinToolingVersion("2.3.20-Beta2")
+            val projectValue = project.findProperty("kotlin.native.enableKlibsCrossCompilation")?.toString()
 
-            return if (isSupportCrossCompilationPropertyAvailable) {
-                kotlinCompilation.crossCompilationSupported
-            } else {
-                // Fallback for Kotlin versions before 2.3.20-Beta2
-                project.providers.gradleProperty(
-                    "kotlin.native.enableKlibsCrossCompilation"
-                ).orElse("false").map { it.toBoolean() }
-            }
+            return project.objects.property(Boolean::class.java)
+                .convention(
+                    project.providers.gradleProperty("kotlin.native.enableKlibsCrossCompilation")
+                        .orElse("false")
+                        .map { it.toBoolean() }
+                )
+                .value(projectValue?.toBoolean())
         }
     }
 }
