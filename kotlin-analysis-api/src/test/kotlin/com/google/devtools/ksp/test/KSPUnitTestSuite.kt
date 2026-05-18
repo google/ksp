@@ -718,6 +718,14 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/sealedClass.kt")
     }
 
+    @TestMetadata("javaWildcardsSelfReferencing.kt")
+    @Test
+    @Bug("https://github.com/google/ksp/issues/1729", BugState.FIXED)
+    @Bug("https://github.com/google/ksp/issues/1705", BugState.FIXED)
+    fun testJavaWildcardsSelfReferencing() {
+        runTest("$AA_PATH/javaWildcardsSelfReferencing.kt")
+    }
+
     @TestMetadata("shadowingAnnotations.kt")
     @Test
     fun testShadowingAnnotations() {
