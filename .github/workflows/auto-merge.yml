@@ -6,6 +6,9 @@ on:
   push:
     branches: [ main ]
 
+env:
+  RELEASE_BRANCH: "2.3.9-release"
+
 jobs:
   test:
     strategy:
@@ -44,7 +47,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: 2.3.9-release
+          ref: ${{ env.RELEASE_BRANCH }}
 
       - name: merge commits from main to release branch
         run: |
@@ -131,7 +134,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: 2.3.8-release
+          ref: ${{ env.RELEASE_BRANCH }}
 
       - name: merge commits from main to release branch
         run: |
