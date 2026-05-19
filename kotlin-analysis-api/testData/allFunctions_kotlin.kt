@@ -17,6 +17,7 @@
 
 // WITH_RUNTIME
 // TEST PROCESSOR: AllFunctionsProcessor
+// EXPECTED:
 // class: Data
 // a
 // <init>(kotlin.String): Data
@@ -47,7 +48,6 @@
 // foo(kotlin.String ...): kotlin.Unit
 // hashCode(): kotlin.Int
 // toString(): kotlin.String
-// EXPECTED:
 // END
 // FILE: a.kt
 data class Data(val a: String) {
@@ -69,4 +69,3 @@ abstract class SuperAbstract {
 
     }
 }
-

@@ -64,7 +64,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("allFunctions_kotlin.kt")
     @Test
     fun testAllFunctions_kotlin() {
-        runTest("$AA_PATH/allFunctions_java_inherits_kt.kt")
+        runTest("$AA_PATH/allFunctions_kotlin.kt")
     }
 
     @TestMetadata("allFunctions_kt_inherits_java.kt")
