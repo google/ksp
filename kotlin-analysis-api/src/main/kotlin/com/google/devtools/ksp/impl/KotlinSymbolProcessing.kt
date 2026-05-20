@@ -467,10 +467,21 @@ class KotlinSymbolProcessing(
                 logger.error(message, symbol)
             }
 
+            override fun error(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+                hasError = true
+                logger.error(message, symbol, fix)
+            }
+
             override fun warn(message: String, symbol: KSNode?) {
                 if (kspConfig.allWarningsAsErrors)
                     hasError = true
                 logger.warn(message, symbol)
+            }
+
+            override fun warn(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+                if (kspConfig.allWarningsAsErrors)
+                    hasError = true
+                logger.warn(message, symbol, fix)
             }
         }
 

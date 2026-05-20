@@ -16,6 +16,7 @@ plugins {
 
 dependencies {
     compileOnly(project(":api"))
+    testImplementation(project(":api"))
     testImplementation("junit:junit:$junitVersion")
 
     ksp(project(":cmdline-parser-gen"))

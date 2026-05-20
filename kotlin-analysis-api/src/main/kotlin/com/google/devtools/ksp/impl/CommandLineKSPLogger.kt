@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.KSPSuggestedFix
 import com.google.devtools.ksp.symbol.KSNode
 
 class CommandLineKSPLogger : KSPLogger {
@@ -37,6 +38,16 @@ class CommandLineKSPLogger : KSPLogger {
 
     override fun error(message: String, symbol: KSNode?) {
         messager.println(message)
+    }
+
+    override fun warn(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+        val fixDesc = if (fix.description != null) " (${fix.description})" else ""
+        messager.println("Warning: $message -> Suggested Fix$fixDesc: [${fix.replacementText}]")
+    }
+
+    override fun error(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+        val fixDesc = if (fix.description != null) " (${fix.description})" else ""
+        messager.println("Error: $message -> Suggested Fix$fixDesc: [${fix.replacementText}]")
     }
 
     override fun exception(e: Throwable) {
