@@ -161,9 +161,11 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
     override val isSuspendFunctionType: Boolean
         get() = type is KaFunctionType && type.isSuspend
 
-    override fun hashCode(): Int {
-        return type.fullyExpand().hashCode()
+    private val cachedHashCode: Int by lazy {
+        type.fullyExpand().hashCode()
     }
+    
+    override fun hashCode(): Int = cachedHashCode
 
     override fun equals(other: Any?): Boolean {
         if (other !is KSTypeImpl) {
