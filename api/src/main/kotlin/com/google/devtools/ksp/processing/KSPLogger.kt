@@ -25,5 +25,22 @@ interface KSPLogger {
     fun warn(message: String, symbol: KSNode? = null)
     fun error(message: String, symbol: KSNode? = null)
 
+    fun warn(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+        warn(message, symbol)
+    }
+
+    fun error(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+        error(message, symbol)
+    }
+
     fun exception(e: Throwable)
 }
+
+/**
+ * Represents a suggested code fix provided by a processor.
+ * Tools like IntelliJ/Android Studio can use this to provide Quick Fixes.
+ */
+data class KSPSuggestedFix(
+    val replacementText: String,
+    val description: String? = null
+)

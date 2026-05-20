@@ -141,10 +141,23 @@ package com.google.devtools.ksp.processing {
 
   public interface KSPLogger {
     method public void error(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public default void error(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol, @NonNull com.google.devtools.ksp.processing.KSPSuggestedFix fix);
     method public void exception(@NonNull Throwable e);
     method public void info(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
     method public void logging(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
     method public void warn(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol);
+    method public default void warn(@NonNull String message, @Nullable com.google.devtools.ksp.symbol.KSNode symbol, @NonNull com.google.devtools.ksp.processing.KSPSuggestedFix fix);
+  }
+
+  public final class KSPSuggestedFix {
+    ctor public KSPSuggestedFix(@NonNull String replacementText, @Nullable String description);
+    method @NonNull public String component1();
+    method @Nullable public String component2();
+    method @NonNull public com.google.devtools.ksp.processing.KSPSuggestedFix copy(@NonNull String replacementText, @Nullable String description);
+    method @InaccessibleFromKotlin @Nullable public String getDescription();
+    method @InaccessibleFromKotlin @NonNull public String getReplacementText();
+    property @Nullable public String description;
+    property @NonNull public String replacementText;
   }
 
   public interface NativePlatformInfo extends com.google.devtools.ksp.processing.PlatformInfo {

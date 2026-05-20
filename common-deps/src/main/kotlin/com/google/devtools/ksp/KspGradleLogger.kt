@@ -29,6 +29,12 @@ class KspGradleLogger(val loglevel: Int) : KSPLogger {
             is NonExistLocation, null -> message
         }
 
+    private fun decorateFix(message: String, symbol: KSNode?, fix: KSPSuggestedFix): String {
+        val baseMessage = decorateMessage(message, symbol)
+        val fixDesc = if (fix.description != null) " (${fix.description})" else ""
+        return "$baseMessage -> Suggested Fix$fixDesc: [${fix.replacementText}]"
+    }
+
     override fun logging(message: String, symbol: KSNode?) {
         if (loglevel <= LOGGING_LEVEL_LOGGING)
             messager.println("v: [ksp] ${decorateMessage(message, symbol)}")
@@ -47,6 +53,16 @@ class KspGradleLogger(val loglevel: Int) : KSPLogger {
     override fun error(message: String, symbol: KSNode?) {
         if (loglevel <= LOGGING_LEVEL_ERROR)
             messager.println("e: [ksp] ${decorateMessage(message, symbol)}")
+    }
+
+    override fun warn(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+        if (loglevel <= LOGGING_LEVEL_WARN)
+            messager.println("w: [ksp] ${decorateFix(message, symbol, fix)}")
+    }
+
+    override fun error(message: String, symbol: KSNode?, fix: KSPSuggestedFix) {
+        if (loglevel <= LOGGING_LEVEL_ERROR)
+            messager.println("e: [ksp] ${decorateFix(message, symbol, fix)}")
     }
 
     override fun exception(e: Throwable) {

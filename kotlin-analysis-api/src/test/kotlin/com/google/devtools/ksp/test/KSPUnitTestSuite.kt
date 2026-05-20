@@ -865,6 +865,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/exitCode.kt")
     }
 
+    @TestMetadata("suggestedFix.kt")
+    @Test
+    fun testSuggestedFix() {
+        runTest("$AA_PATH/suggestedFix.kt")
+    }
+
     @TestMetadata("packageProviderForGenerated.kt")
     @Test
     fun testPackageProviderForGenerated() {
