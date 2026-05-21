@@ -34,6 +34,12 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
 
+    @TestMetadata("explicitBackFields.kt")
+    @Test
+    override fun testExplicitBackingFields() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
+    }
+
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {
