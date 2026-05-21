@@ -48,7 +48,7 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
     // config name is <KotlinCompileTaskName>.replace("compile", "ksp") + "ProcessorClasspath"
     // they should extend all non-empty ksp configurations
     @Test
-    fun testConfigurationsForSinglePlatformApp() {
+    fun testConfigurationsForSinglePlatformAppAllowAll() {
         testRule.setupAppAsJvmApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
@@ -70,12 +70,12 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
             """.trimIndent()
         )
         testRule.runner()
-            .withArguments(":app:testConfigurations", "--info")
+            .withArguments(":app:testConfigurations", "--info", "-Pksp.allow.all.target.configuration=true")
             .build()
     }
 
     @Test
-    fun testConfigurationsForSinglePlatformAppDisallowAll() {
+    fun testConfigurationsForSinglePlatformApp() {
         testRule.setupAppAsJvmApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
@@ -97,12 +97,94 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
             """.trimIndent()
         )
         testRule.runner()
-            .withArguments(":app:testConfigurations", "-Pksp.allow.all.target.configuration=false")
+            .withArguments(":app:testConfigurations")
             .build()
     }
 
     @Test
     fun testConfigurationsForAndroidApp() {
+        testRule.setupAppAsAndroidApp()
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+        testRule.appModule.buildFileAdditions.add(
+            """
+                android {
+                    flavorDimensions += listOf("tier", "region")
+
+                    productFlavors {
+                        create("free") {
+                            dimension = "tier"
+                        }
+                        create("premium") {
+                            dimension = "tier"
+                        }
+                        create("us") {
+                            dimension = "region"
+                        }
+                        create("eu") {
+                            dimension = "region"
+                        }
+                    }
+                }
+                $kspConfigs.all {
+                    // Make sure ksp configs are not empty.
+                    project.dependencies.add(name, "androidx.room:room-compiler:2.4.2")
+                }
+                tasks.register("testConfigurations") {
+                    // Resolve all tasks to trigger classpath config creation
+                    dependsOn(tasks["tasks"])
+                    doLast {
+                        val freeUsDebugConfig = configurations["kspFreeUsDebugKotlinProcessorClasspath"]
+                        val testFreeUsDebugConfig = configurations["kspFreeUsDebugUnitTestKotlinProcessorClasspath"]
+                        val androidTestFreeUsDebugConfig =
+                            configurations["kspFreeUsDebugAndroidTestKotlinProcessorClasspath"]
+                        val freeUsDebugParentConfigs =
+                            setOf(
+                                "kspDebug",
+                                "kspFree",
+                                "kspUs",
+                                "kspFreeUs",
+                                "kspFreeUsDebug"
+                            )
+                        val testFreeUsDebugParentConfigs =
+                            setOf(
+                                "kspTest",
+                                "kspTestDebug",
+                                "kspTestFree",
+                                "kspTestUs",
+                                "kspTestFreeUs",
+                                "kspTestFreeUsDebug"
+                            )
+                        val androidTestFreeUsDebugParentConfigs =
+                            setOf(
+                                "kspAndroidTest",
+                                "kspAndroidTestDebug",
+                                "kspAndroidTestFree",
+                                "kspAndroidTestUs",
+                                "kspAndroidTestFreeUs",
+                                "kspAndroidTestFreeUsDebug"
+                            )
+                        require(freeUsDebugConfig.extendsFrom.map { it.name }.toSet() == freeUsDebugParentConfigs) {
+                            "freeUsDebugConfig mismatch. Expected: ${'$'}{freeUsDebugParentConfigs}, Actual: ${'$'}{freeUsDebugConfig.extendsFrom.map { it.name }.toSet()}"
+                        }
+                        require(
+                            testFreeUsDebugConfig.extendsFrom.map { it.name }.toSet() == testFreeUsDebugParentConfigs
+                        ) {
+                            "testFreeUsDebugConfig mismatch. Expected: ${'$'}{testFreeUsDebugParentConfigs}, Actual: ${'$'}{testFreeUsDebugConfig.extendsFrom.map { it.name }.toSet()}"
+                        }
+                        require(
+                            androidTestFreeUsDebugConfig.extendsFrom.map { it.name }.toSet() == androidTestFreeUsDebugParentConfigs
+                        ) {
+                            "androidTestFreeUsDebugConfig mismatch. Expected: ${'$'}{androidTestFreeUsDebugParentConfigs}, Actual: ${'$'}{androidTestFreeUsDebugConfig.extendsFrom.map { it.name }.toSet()}"
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        testRule.runner().withArguments(":app:testConfigurations").build()
+    }
+
+    @Test
+    fun testConfigurationsForAndroidAppAllowAll() {
         testRule.setupAppAsAndroidApp()
         testRule.appModule.addSource("Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
@@ -177,7 +259,9 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                 }
             """.trimIndent()
         )
-        testRule.runner().withArguments(":app:testConfigurations").build()
+        testRule.runner()
+            .withArguments(":app:testConfigurations", "-Pksp.allow.all.target.configuration=true")
+            .build()
     }
 
     @Test

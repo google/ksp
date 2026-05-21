@@ -528,8 +528,7 @@ class AnnoOnProperty {
         gradleRunner.withArguments(
             "--configuration-cache-problems=warn",
             "clean",
-            ":workload:build",
-            "-Pksp.allow.all.target.configuration=false"
+            ":workload:build"
         ).buildAndFail().apply {
             Assert.assertTrue(
                 messages.all {
@@ -544,6 +543,7 @@ class AnnoOnProperty {
             "--configuration-cache-problems=warn",
             "clean",
             ":workload:build",
+            "-Pksp.allow.all.target.configuration=true"
         ).build().apply {
             Assert.assertTrue(
                 messages.all {

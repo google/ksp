@@ -24,7 +24,7 @@ class KspConfigurations(private val project: Project) {
         project.providers.gradleProperty("ksp.allow.all.target.configuration")
             .orNull
             ?.toBoolean()
-            ?: true
+            ?: false
 
     // The "ksp" configuration, applied to every compilation.
     private val configurationForAll = project.configurations.create(PREFIX).apply {
