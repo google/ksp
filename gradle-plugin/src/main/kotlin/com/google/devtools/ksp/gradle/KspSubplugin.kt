@@ -256,6 +256,13 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
                 resourcesOutputDir = resourceOutputDir,
                 androidComponent = component,
             )
+            if (!kspConfigurations.allowAllTargetConfiguration &&
+                project.pluginManager.hasPlugin("kotlin-multiplatform")
+            ) {
+                project.configurations.findByName("ksp")?.let { kspConfig ->
+                    processorClasspath.setExtendsFrom(processorClasspath.extendsFrom.filter { it != kspConfig })
+                }
+            }
         }
 
         // The variant API in KMP runs after KotlinCompilerPluginSupportPlugin.applyToCompilation()

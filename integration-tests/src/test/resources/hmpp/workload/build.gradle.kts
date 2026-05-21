@@ -49,6 +49,16 @@ kotlin {
     }
 }
 
-dependencies {
-    add("ksp", project(":test-processor"))
+configurations.configureEach {
+    val targetConfigurations = setOf(
+        "kspCommonMainMetadata",
+        "kspJvmJsMetadata",
+        "kspJvmLinuxX64Metadata",
+        "kspJvm",
+        "kspJs",
+        "kspLinuxX64"
+    )
+    if (name in targetConfigurations) {
+        project.dependencies.add(this.name, project.dependencies.project(":test-processor"))
+    }
 }

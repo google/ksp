@@ -95,7 +95,9 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
             """.trimIndent()
         )
         val kspConfigs =
-            """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""
+            """configurations.matching { 
+                |it.name.startsWith("ksp") && it.name != "ksp" && !it.name.endsWith("ProcessorClasspath") 
+                |}""".trimMargin()
         testRule.appModule.buildFileAdditions.add(
             """
                 $kspConfigs.all {
