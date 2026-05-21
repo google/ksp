@@ -24,7 +24,7 @@ class KspConfigurations(private val project: Project) {
         project.providers.gradleProperty("ksp.allow.all.target.configuration")
             .orNull
             ?.toBoolean()
-            ?: true
+            ?: false
 
     // The "ksp" configuration, applied to every compilation.
     private val configurationForAll = project.configurations.create(PREFIX).apply {
@@ -185,6 +185,7 @@ class KspConfigurations(private val project: Project) {
     }
 
     private fun isMppProject() = project.pluginManager.hasPlugin("kotlin-multiplatform")
+
     /**
      * Returns the user-facing configurations involved in the given compilation.
      * We use [KotlinCompilation.kotlinSourceSets], not [KotlinCompilation.allKotlinSourceSets] for a few reasons:
