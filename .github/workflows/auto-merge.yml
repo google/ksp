@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  RELEASE_BRANCH: "2.3.9-release"
+  RELEASE_BRANCH: "2.3.10-release"
 
 jobs:
   test:
