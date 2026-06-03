@@ -316,6 +316,8 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunction          not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Defined  not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunction$Imported not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunctionAnnotation not found
+   org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmFunctionAnnotation$JsCalled not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmGlobal            not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType          not found
    org.jetbrains.kotlin.backend.wasm.ir2wasm.DeclarationGenerator -> org.jetbrains.kotlin.wasm.ir.WasmHeapType$Simple   not found
