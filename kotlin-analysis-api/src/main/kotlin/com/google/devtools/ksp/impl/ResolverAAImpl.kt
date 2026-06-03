@@ -114,6 +114,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
@@ -474,6 +475,7 @@ class ResolverAAImpl(
         }
     }
 
+    @OptIn(KaImplementationDetail::class)
     override fun getJavaWildcard(reference: KSTypeReference): KSTypeReference {
         val (ref, indexes) = reference.findOuterMostRef()
         val type = ref.resolve()
@@ -481,6 +483,7 @@ class ResolverAAImpl(
             return reference
         val position = findRefPosition(ref)
         val ktType = (type as KSTypeImpl).type.fullyExpand()
+        // TODO: Upstream this:
         // cast to FIR internal needed due to missing support in AA for type mapping mode
         // and corresponding type mapping APIs.
         val coneType = (ktType as KaFirType).coneType

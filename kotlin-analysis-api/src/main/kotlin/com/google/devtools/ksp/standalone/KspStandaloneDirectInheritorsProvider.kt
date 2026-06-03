@@ -109,6 +109,7 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         )
     }
 
+    @OptIn(KaImplementationDetail::class)
     private fun KtClassOrObject.toFirSymbol(classId: ClassId, ktModule: KaModule): FirClassLikeSymbol<*>? {
         val session = LLFirSessionCache.getInstance(project).getSession(ktModule, preferBinary = true)
         return session.symbolProvider.getClassLikeSymbolByClassId(classId)
