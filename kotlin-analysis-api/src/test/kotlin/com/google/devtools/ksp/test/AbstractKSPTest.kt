@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.test.ExecutionListenerBasedDisposableProvider
+import org.jetbrains.kotlin.test.TestInfrastructureInternals
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.testConfiguration
 import org.jetbrains.kotlin.test.compileJavaFiles
@@ -130,12 +131,14 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         testProcessor: AbstractTestProcessor,
     ): List<String>
 
+    @OptIn(TestInfrastructureInternals::class)
     private val configure: TestConfigurationBuilder.() -> Unit = {
         globalDefaults {
             this@globalDefaults.frontend = frontend
             targetPlatform = JvmPlatforms.defaultJvmPlatform
             dependencyKind = DependencyKind.Source
         }
+        useCustomCompilerConfigurationProvider(::CompilerConfigurationProviderImpl)
         useConfigurators(
             ::CommonEnvironmentConfigurator,
             ::JvmEnvironmentConfigurator,
