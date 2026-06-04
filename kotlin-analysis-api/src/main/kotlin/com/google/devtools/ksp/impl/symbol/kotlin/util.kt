@@ -74,6 +74,7 @@ import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithV
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
+import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
@@ -446,11 +447,11 @@ internal fun KaAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotat
 internal fun KtAnnotated.annotations(
     kaAnnotated: KaAnnotated,
     parent: KSNode? = null,
-    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded()
+    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded().toList()
 ): Sequence<KSAnnotation> {
     if (candidates.isEmpty())
         return emptySequence()
-    return annotationEntries.filter { !it.isUseSiteTargetAnnotation() }.asSequence().map { annotationEntry ->
+    return annotationEntries.asSequence().map { annotationEntry ->
         KSAnnotationImpl.getCached(annotationEntry, parent) {
             candidates.single { it.psi == annotationEntry }
         }
@@ -473,6 +474,7 @@ internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KS
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaPropertySymbol -> toKSPropertyDeclaration()
+    is KaBackingFieldSymbol -> toKSBackingField()
     is KaNamedClassSymbol -> toKSClassDeclaration()
     is KaFunctionSymbol -> toKSFunctionDeclaration()
     is KaTypeAliasSymbol -> toKSTypeAlias()
@@ -491,6 +493,9 @@ internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
 
 internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
     KSPropertyDeclarationImpl.getCached(this)
+
+internal fun KaBackingFieldSymbol.toKSBackingField(): KSBackingFieldImpl =
+    KSBackingFieldImpl.getCached(this)
 
 internal fun KaNamedClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
     KSClassDeclarationImpl.getCached(this)
