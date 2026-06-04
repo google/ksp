@@ -9,8 +9,8 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     maven(testRepo)
-    mavenCentral()
     maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+    mavenCentral()
 }
 
 dependencies {
