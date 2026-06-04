@@ -38,6 +38,7 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         property.extensionReceiver?.accept(data)
         property.getter?.accept(data)
         property.setter?.accept(data)
+        property.backingField?.accept(data)
         return super.visitPropertyDeclaration(property, data)
     }
 
@@ -94,6 +95,11 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     override fun visitPropertySetter(setter: KSPropertySetter, data: D): R {
         setter.parameter.accept(data)
         return super.visitPropertySetter(setter, data)
+    }
+
+    override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        backingField.type.accept(data)
+        return super.visitBackingField(backingField, data)
     }
 
     override fun visitReferenceElement(element: KSReferenceElement, data: D): R {

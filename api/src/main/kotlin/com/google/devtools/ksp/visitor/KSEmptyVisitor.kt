@@ -84,6 +84,10 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(setter, data)
     }
 
+    override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        return defaultHandler(backingField, data)
+    }
+
     override fun visitClassifierReference(reference: KSClassifierReference, data: D): R {
         return defaultHandler(reference, data)
     }

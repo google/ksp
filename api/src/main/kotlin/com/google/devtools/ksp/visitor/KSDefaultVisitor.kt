@@ -70,6 +70,11 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitPropertySetter(setter, data)
     }
 
+    override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        this.visitAnnotated(backingField, data)
+        return super.visitBackingField(backingField, data)
+    }
+
     override fun visitTypeAlias(typeAlias: KSTypeAlias, data: D): R {
         this.visitDeclaration(typeAlias, data)
         return super.visitTypeAlias(typeAlias, data)
