@@ -8,7 +8,7 @@ allprojects {
     repositories {
         google()
         maven(testRepo)
-        mavenCentral()
         maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+        mavenCentral()
     }
 }

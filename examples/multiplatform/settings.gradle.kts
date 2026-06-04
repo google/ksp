@@ -6,8 +6,8 @@ pluginManagement {
         kotlin("multiplatform") version kotlinVersion apply false
     }
     repositories {
-        mavenCentral()
         gradlePluginPortal()
+        mavenCentral()
     }
 }
 
