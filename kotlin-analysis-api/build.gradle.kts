@@ -1,10 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.RelativizingInternalPathProvider
 import com.google.devtools.ksp.RelativizingPathProvider
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.commons.ClassRemapper
-import org.objectweb.asm.commons.Remapper
+import org.jetbrains.org.objectweb.asm.ClassReader
+import org.jetbrains.org.objectweb.asm.ClassWriter
+import org.jetbrains.org.objectweb.asm.commons.ClassRemapper
+import org.jetbrains.org.objectweb.asm.commons.Remapper
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.jar.JarFile
@@ -13,16 +13,6 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 description = "Kotlin Symbol Processing implementation using Kotlin Analysis API"
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.ow2.asm:asm:9.9.1")
-        classpath("org.ow2.asm:asm-commons:9.9.1")
-    }
-}
 
 val signingKey: String? by project
 val signingPassword: String? by project
