@@ -18,12 +18,13 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: HelloProcessor
 // EXPECTED:
-// 8
+// 9
 // AClass
 // Bar.BBB
 // Bar.list
 // C
 // C.f
+// C.f.field
 // C.javaFun
 // test.Foo
 // test.ITF

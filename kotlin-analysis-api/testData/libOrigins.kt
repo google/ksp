@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// TODO: Figure out the purpose of this test and if origins are handled correctly for fields
 
 // TEST PROCESSOR: LibOriginsProcessor
 // EXPECTED:
@@ -42,6 +43,7 @@
 // Exception: [File: JavaSrc.java, JavaAnno1, value, String]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, value, value.getter(), String]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, value, value.getter()]: SYNTHETIC
+// Exception: [File: JavaSrc.java, JavaAnno1, field]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, value]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, synthetic constructor for JavaAnno1, JavaAnno1]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, synthetic constructor for JavaAnno1]: SYNTHETIC
