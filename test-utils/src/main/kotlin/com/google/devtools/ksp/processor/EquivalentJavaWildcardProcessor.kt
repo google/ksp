@@ -50,11 +50,16 @@ open class EquivalentJavaWildcardProcessor : AbstractTestProcessor() {
             return resolve().toString()
         }
 
+        private fun KSTypeReference.parentPretty(): String = when (val p = parent) {
+            is KSBackingField -> p.parent.toString() + ".field"
+            else -> p.toString()
+        }
+
         @OptIn(KspExperimental::class)
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             val wildcard = resolver.getJavaWildcard(typeReference)
             results.add(
-                data + typeReference.parent.toString() +
+                data + typeReference.parentPretty() +
                     " : " + typeReference.pretty() +
                     " -> " + wildcard.pretty()
             )

@@ -33,6 +33,9 @@
 // parent of B: File: B.java
 // parent of T: (T..T?)
 // parent of (T..T?): t
+// parent of T: (T..T?)
+// parent of (T..T?): field
+// parent of field: B
 // parent of t: B
 // parent of T: (T..T?)
 // parent of (T..T?): t
@@ -80,6 +83,12 @@
 // parent of List<INVARIANT Int>: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: topProp.getter()
 // parent of topProp.getter(): topProp
+// parent of Int: Int
+// parent of Int: INVARIANT Int
+// parent of INVARIANT Int: List<INVARIANT Int>
+// parent of List<INVARIANT Int>: List<Int>?
+// parent of List<Int>?: field
+// parent of field: topProp
 // parent of Anno: Anno
 // parent of Anno: @Anno
 // parent of @Anno: topProp
@@ -99,6 +108,9 @@
 // parent of String: param
 // parent of String: param.getter()
 // parent of param.getter(): param
+// parent of String: String
+// parent of String: field
+// parent of field: param
 // parent of param: Anno
 // parent of String: String
 // parent of String: param
@@ -136,6 +148,9 @@
 // parent of Int: Int
 // parent of Int: a.getter()
 // parent of a.getter(): a
+// parent of Int: Int
+// parent of Int: field
+// parent of field: a
 // parent of a: topClass
 // parent of String: String
 // parent of String: b
@@ -145,6 +160,9 @@
 // parent of String: value
 // parent of value: b.setter()
 // parent of b.setter(): b
+// parent of String: String
+// parent of String: field
+// parent of field: b
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass
 // parent of synthetic constructor for topClass: topClass

@@ -19,15 +19,20 @@
 // TEST PROCESSOR: ReferenceElementProcessor
 // EXPECTED:
 // KSClassifierReferenceImpl: Qualifier of B is A
+// KSClassifierReferenceImpl: Qualifier of B is A
+// KSClassifierReferenceImpl: Qualifier of C<INVARIANT Int> is A<INVARIANT String>
 // KSClassifierReferenceImpl: Qualifier of C<INVARIANT Int> is A<INVARIANT String>
 // KSClassifierReferenceImpl: Qualifier of ExampleAnnotation<INVARIANT ExampleParameter> is null
 // KSClassifierReferenceImpl: Qualifier of ExampleParameter is null
 // KSClassifierReferenceImpl: Qualifier of Int is null
+// KSClassifierReferenceImpl: Qualifier of Int is null
+// KSClassifierReferenceImpl: Qualifier of String is null
 // KSClassifierReferenceImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Int is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Y is X
 // KSClassifierReferenceDescriptorImpl: Qualifier of Z<INVARIANT Int> is X<INVARIANT String>
+// KSDefNonNullReferenceImpl: Enclosed type of T
 // KSDefNonNullReferenceImpl: Enclosed type of T
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
@@ -36,7 +41,10 @@
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of H is J<INVARIANT (String..String?)>
+// KSClassifierReferenceJavaImpl: Qualifier of H is J<INVARIANT (String..String?)>
 // KSClassifierReferenceJavaImpl: Qualifier of I is J
+// KSClassifierReferenceJavaImpl: Qualifier of I is J
+// KSClassifierReferenceJavaImpl: Qualifier of String is null
 // KSClassifierReferenceJavaImpl: Qualifier of String is null
 // END
 

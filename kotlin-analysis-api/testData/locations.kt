@@ -17,30 +17,32 @@
 
 // TEST PROCESSOR: LocationsProcessor
 // EXPECTED:
-// A:K.kt:57
+// A:K.kt:59
 // File: K.kt:K.kt:1
-// K:J.java:81
-// K:K.kt:60
-// Q:J.java:89
-// Q:K.kt:69
-// T:J.java:81
-// T:J.java:81
-// T:K.kt:60
-// delegateProp:K2.kt:110
-// f1:J.java:85
-// f1:K.kt:67
-// fieldProp:K2.kt:105
-// p1:K.kt:62
-// p2:J.java:85
-// p2:K.kt:67
-// v1:K.kt:61
-// v1:K.kt:61
-// v2:J.java:82
-// v2:K.kt:64
-// v3.getter():K.kt:74
-// v3.setter():K.kt:75
-// v3:J.java:94
-// value:K2.kt:113
+// K:J.java:83
+// K:K.kt:62
+// Q:J.java:91
+// Q:K.kt:71
+// T:J.java:83
+// T:J.java:83
+// T:K.kt:62
+// delegateProp:K2.kt:112
+// f1:J.java:87
+// f1:K.kt:69
+// field:J.java:84
+// field:J.java:96
+// field:K2.kt:107
+// p1:K.kt:64
+// p2:J.java:87
+// p2:K.kt:69
+// v1:K.kt:63
+// v1:K.kt:63
+// v2:J.java:84
+// v2:K.kt:66
+// v3.getter():K.kt:76
+// v3.setter():K.kt:77
+// v3:J.java:96
+// value:K2.kt:115
 // x1.getter():NonExistLocation
 // END
 
@@ -102,7 +104,7 @@ class A(@get:Location val x1: Int)
 
 class L {
     @field:Location
-    val fieldProp: Int = 0
+    val fieldProp: Int field: Int = 42
 
     private val backing = 42
 

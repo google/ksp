@@ -2,6 +2,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSExpectActual
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -40,6 +41,8 @@ class KSPropertyDeclarationLocalVariableImpl private constructor(
     override val isMutable: Boolean = !ktLocalVariableSymbol.isVal
 
     override val hasBackingField: Boolean = false
+
+    override val backingField: KSBackingField? = null
 
     override fun isDelegated(): Boolean = false
 
