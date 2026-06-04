@@ -18,8 +18,8 @@ if (!extra.has("kspVersion")) {
 }
 
 repositories {
-    mavenCentral()
     maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+    mavenCentral()
 }
 
 plugins {
@@ -51,10 +51,10 @@ subprojects {
     version = rootProject.extra.get("kspVersion") as String
     configureKtlint()
     repositories {
-        mavenCentral()
         google()
         maven("https://redirector.kotlinlang.org/maven/bootstrap/")
         maven("https://www.jetbrains.com/intellij-repository/releases")
+        mavenCentral()
     }
     pluginManager.withPlugin("maven-publish") {
         val publishExtension = extensions.getByType<PublishingExtension>()

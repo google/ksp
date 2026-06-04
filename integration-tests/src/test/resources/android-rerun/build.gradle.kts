@@ -3,9 +3,9 @@ buildscript {
 
     repositories {
         maven(testRepo)
-        mavenCentral()
-        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
         google()
+        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+        mavenCentral()
     }
 }
 
@@ -19,8 +19,8 @@ allprojects {
     val testRepo: String by project
     repositories {
         maven(testRepo)
-        mavenCentral()
-        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
         google()
+        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+        mavenCentral()
     }
 }
