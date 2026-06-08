@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin.synthetic
 
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.AbstractKSDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSExpectActualImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
@@ -52,6 +53,16 @@ class KSSyntheticJavaBackingFieldImpl private constructor(
     companion object : KSObjectCache<KaSyntheticJavaPropertySymbol, KSSyntheticJavaBackingFieldImpl>() {
         fun getCached(symbol: KaSyntheticJavaPropertySymbol) =
             cache.getOrPut(symbol) { KSSyntheticJavaBackingFieldImpl(symbol) }
+
+        @JvmStatic
+        private fun getFieldNameFrom(parentName: String): String {
+            val suffix = ".field"
+            val length = parentName.length + suffix.length
+            return buildString(length) {
+                append(parentName)
+                append(suffix)
+            }
+        }
     }
 
     override val property: KSPropertyDeclaration by lazy {
@@ -61,9 +72,14 @@ class KSSyntheticJavaBackingFieldImpl private constructor(
     override val type: KSTypeReference by lazy {
         KSPropertyDeclarationImpl.getCached(kaSyntheticJavaPropertySymbol).type
     }
+    override val simpleName: KSName by lazy {
+        KSNameImpl.getCached("field")
+    }
 
     override val qualifiedName: KSName? by lazy {
-        KSPropertyDeclarationImpl.getCached(kaSyntheticJavaPropertySymbol).qualifiedName
+        property.qualifiedName?.asString()?.let {
+            KSNameImpl.getCached(getFieldNameFrom(it))
+        }
     }
 
     override fun defer(): Restorable =

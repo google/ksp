@@ -36,34 +36,52 @@
 // p1.getter() : A<in X, out X> -> A<X, X>
 // - CONTRAVARIANT X : X -> X
 // - COVARIANT X : X -> X
+// p1.field : A<in X, out X> -> A<in X, out X> TODO
+// - CONTRAVARIANT X : X -> X
+// - COVARIANT X : X -> X
 // p2 : A<Any, Y> -> A<Any, Y>
 // - INVARIANT Any : Any -> Any
 // - INVARIANT Y : Y -> Y
 // p2.getter() : A<Any, Y> -> A<Any, Y>
 // - INVARIANT Any : Any -> Any
 // - INVARIANT Y : Y -> Y
+// p2.field : A<Any, Y> -> A<Any, Y>
+// - INVARIANT Any : Any -> Any
+// - INVARIANT Y : Y -> Y
 // p3 : A<*, *> -> A<Any?, Any?>
 // p3.getter() : A<*, *> -> A<Any?, Any?>
+// p3.field : A<*, *> -> A<out Any?, out Any?> TODO
 // p4 : B<X> -> B<X>
 // - INVARIANT X : X -> X
 // p4.getter() : B<X> -> B<X>
+// - INVARIANT X : X -> X
+// p4.field : B<X> -> B<X>
 // - INVARIANT X : X -> X
 // p5 : B<in X> -> B<in X>
 // - CONTRAVARIANT X : X -> X
 // p5.getter() : B<in X> -> B<in X>
 // - CONTRAVARIANT X : X -> X
+// p5.field : B<in X> -> B<in X> TODO
+// - CONTRAVARIANT X : X -> X
 // p6 : B<out X> -> B<out X>
 // - COVARIANT X : X -> X
 // p6.getter() : B<out X> -> B<out X>
 // - COVARIANT X : X -> X
+// p6.field : B<out X> -> B<out X> TODO
+// - COVARIANT X : X -> X
 // p7 : B<*> -> B<out Any?>
 // p7.getter() : B<*> -> B<out Any?>
+// p7.field : B<*> -> B<out Any?>
 // p8 : B<A<X, out Y>> -> B<A<X, Y>>
 // - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // p8.getter() : B<A<X, out Y>> -> B<A<X, Y>>
 // - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
+// - - INVARIANT X : X -> X
+// - - COVARIANT Y : Y -> Y
+// p8.field : B<A<X, out Y>> -> B<A<X, Y>>
+// - INVARIANT A<X, out Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
 // v1 : A<X, X> -> A<in X, out X>

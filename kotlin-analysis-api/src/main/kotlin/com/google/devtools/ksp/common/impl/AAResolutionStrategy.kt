@@ -18,7 +18,6 @@
 package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
-import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.fullyExpand

@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
+import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl.Companion.getCached
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.KSBackingField
@@ -39,6 +40,16 @@ class KSBackingFieldJavaImpl private constructor(
             cache.getOrPut(symbolAndProperty) {
                 KSBackingFieldJavaImpl(symbolAndProperty.first, symbolAndProperty.second)
             }
+
+        @JvmStatic
+        private fun getFieldNameFrom(parentName: String): String {
+            val suffix = ".field"
+            val length = parentName.length + suffix.length
+            return buildString(length) {
+                append(parentName)
+                append(suffix)
+            }
+        }
     }
 
     override val ktDeclarationSymbol: KaDeclarationSymbol
@@ -47,7 +58,16 @@ class KSBackingFieldJavaImpl private constructor(
     override val type: KSTypeReference by lazy {
         KSTypeReferenceResolvedImpl.getCached(ktJavaFieldSymbol.returnType, this)
     }
-    override val qualifiedName: KSName? get() = property.qualifiedName
+
+    override val simpleName: KSName by lazy {
+        KSNameImpl.getCached("field")
+    }
+
+    override val qualifiedName: KSName? by lazy {
+        property.qualifiedName?.asString()?.let {
+            KSNameImpl.getCached(getFieldNameFrom(it))
+        }
+    }
 
     // Manual delegation for KSExpectActual to avoid eager evaluation in the class header
     private val expectActualImpl by lazy { KSExpectActualImpl(ktJavaFieldSymbol) }
