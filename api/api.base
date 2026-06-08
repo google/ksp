@@ -290,6 +290,13 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.AnnotationUseSiteTarget useSiteTarget;
   }
 
+  public interface KSBackingField extends com.google.devtools.ksp.symbol.KSDeclaration {
+    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSPropertyDeclaration getProperty();
+    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSPropertyDeclaration property;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+  }
+
   public interface KSCallableReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
     method public default <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, D data);
     method @InaccessibleFromKotlin @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> getFunctionParameters();
@@ -434,6 +441,7 @@ package com.google.devtools.ksp.symbol {
   public interface KSPropertyDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration {
     method @NonNull public com.google.devtools.ksp.symbol.KSType asMemberOf(@NonNull com.google.devtools.ksp.symbol.KSType containing);
     method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration findOverridee();
+    method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSBackingField getBackingField();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getExtensionReceiver();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSPropertyGetter getGetter();
     method @InaccessibleFromKotlin public boolean getHasBackingField();
@@ -441,6 +449,7 @@ package com.google.devtools.ksp.symbol {
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
     method public boolean isDelegated();
     method @InaccessibleFromKotlin public boolean isMutable();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSBackingField backingField;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference extensionReceiver;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSPropertyGetter getter;
     property public abstract boolean hasBackingField;
@@ -552,6 +561,7 @@ package com.google.devtools.ksp.symbol {
   public interface KSVisitor<D, R> {
     method public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, D data);
     method public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, D data);
+    method public R visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, D data);
     method public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, D data);
     method public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, D data);
     method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, D data);
@@ -581,6 +591,7 @@ package com.google.devtools.ksp.symbol {
     ctor public KSVisitorVoid();
     method public void visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @NonNull kotlin.Unit data);
     method public void visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @NonNull kotlin.Unit data);
+    method public void visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, @NonNull kotlin.Unit data);
     method public void visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, @NonNull kotlin.Unit data);
     method public void visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @NonNull kotlin.Unit data);
     method public void visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @NonNull kotlin.Unit data);
@@ -699,6 +710,7 @@ package com.google.devtools.ksp.visitor {
     method public abstract R defaultHandler(@NonNull com.google.devtools.ksp.symbol.KSNode node, D data);
     method public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, D data);
     method public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, D data);
+    method public R visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, D data);
     method public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, D data);
     method public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, D data);
     method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, D data);
@@ -733,6 +745,7 @@ package com.google.devtools.ksp.visitor {
     method @NonNull public Boolean defaultHandler(@NonNull com.google.devtools.ksp.symbol.KSNode node, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable com.google.devtools.ksp.symbol.KSNode data);
