@@ -58,10 +58,10 @@ annotation class FileAnno
 
 // FILE: TargetFile.kt
 
+@file:FileAnno
+
 import com.example.Anno
 import com.example.FileAnno
-
-@file:FileAnno
 
 @Anno
 class TargetClass(
