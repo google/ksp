@@ -60,6 +60,7 @@ import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.incremental.update
 import java.io.File
+import java.io.Writer
 
 class IncrementalContextAA(
     override val isIncremental: Boolean,
@@ -86,14 +87,37 @@ class IncrementalContextAA(
     private val icContext = IncrementalCompilationContext(PATH_CONVERTER, PATH_CONVERTER, true)
 
     private val symbolLookupCacheDir = File(cachesDir, "symbolLookups")
+
+    private val symbolTrackerLogFile: Writer? =
+        if (this.incrementalLog) {
+            mkLogFile("symbolTrackerTrace.log").bufferedWriter()
+                .also { logFiles.add(it) }
+        } else {
+            null
+        }
+
+    private val classTrackerLogFile: Writer? =
+        if (this.incrementalLog) {
+            mkLogFile("enumClassTrackerTrace.log").bufferedWriter()
+                .also { logFiles.add(it) }
+        } else {
+            null
+        }
+
     override val symbolLookupTracker =
-        LookupTrackerWrapperImpl((lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING)
+        LookupTrackerWrapperImpl(
+            (lookupTracker as? DualLookupTracker)?.symbolTracker ?: LookupTracker.DO_NOTHING,
+            symbolTrackerLogFile
+        )
     override val symbolLookupCache = LookupStorageWrapperImpl(LookupStorage(symbolLookupCacheDir, icContext))
 
     // TODO: rewrite LookupStorage to share file-to-id, etc.
     private val classLookupCacheDir = File(cachesDir, "classLookups")
     override val classLookupTracker =
-        LookupTrackerWrapperImpl((lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING)
+        LookupTrackerWrapperImpl(
+            (lookupTracker as? DualLookupTracker)?.classTracker ?: LookupTracker.DO_NOTHING,
+            classTrackerLogFile
+        )
     override val classLookupCache = LookupStorageWrapperImpl(LookupStorage(classLookupCacheDir, icContext))
 
     // Debugging and testing only.
@@ -101,7 +125,11 @@ class IncrementalContextAA(
         val map = mutableMapOf<String, List<String>>()
         symbolLookupTracker.lookups.entrySet().forEach { e ->
             val key = "${e.key.scope}.${e.key.name}"
-            map[key] = e.value.map { PATH_CONVERTER.toFile(it).path }
+            map[key] = e.value.map {
+                // Safely try to relativize, since it may fail on Windows
+                // where it and baseDir have different roots.
+                File(it).relativeToOrNull(baseDir)?.path ?: it
+            }
         }
         return map
     }
@@ -115,23 +143,28 @@ class IncrementalContextAA(
                 val fqn = type.classId.asFqNameString()
                 recordLookup(file, fqn)
             }
+
             is KaFlexibleType -> {
                 recordWithArgs(type.lowerBound, file)
                 recordWithArgs(type.upperBound, file)
             }
+
             is KaIntersectionType -> {
                 type.conjuncts.forEach {
                     recordWithArgs(it, file)
                 }
             }
+
             is KaCapturedType -> {
                 type.projection.type?.let {
                     recordWithArgs(it, file)
                 }
             }
+
             is KaDefinitelyNotNullType -> {
                 recordWithArgs(type.original, file)
             }
+
             is KaErrorType, is KaDynamicType, is KaTypeParameterType -> {}
         }
     }
@@ -238,6 +271,27 @@ class IncrementalContextAA(
             record(ktType)
         }
     }
+
+    override fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+        super.logBeforeCacheFlush(outputs, sourceToOutputs)
+        logLookupGraph()
+        logFiles.forEach { it.close() }
+    }
+
+    private fun logLookupGraph() {
+        if (!incrementalLog) {
+            return
+        }
+
+        mkLogFile("kspLookupGraph.log").bufferedWriter().use { logFile ->
+            val lookupRecords = dumpLookupRecords()
+            lookupRecords.forEach { (fqn, paths) ->
+                paths.forEach {
+                    logFile.write("$it -> $fqn\n")
+                }
+            }
+        }
+    }
 }
 
 internal fun recordLookup(ktType: KaType, context: KSNode?) =
@@ -265,7 +319,7 @@ internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
     }
 }
 
-class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker) : LookupTrackerWrapper {
+class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker, val trackerLogFile: Writer?) : LookupTrackerWrapper {
     override val lookups: MultiMap<LookupSymbolWrapper, String>
         get() = MultiMap<LookupSymbolWrapper, String>().also { wrapper ->
             (lookupTracker as LookupTrackerImpl).lookups.entrySet().forEach { e ->
@@ -274,6 +328,7 @@ class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker) : LookupTracker
         }
 
     override fun record(filePath: String, scopeFqName: String, name: String) {
+        trackerLogFile?.write("$scopeFqName.$name $filePath\n")
         lookupTracker.record(filePath, Position.NO_POSITION, scopeFqName, ScopeKind.PACKAGE, name)
     }
 }
