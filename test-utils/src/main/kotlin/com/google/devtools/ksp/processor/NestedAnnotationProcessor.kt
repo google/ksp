@@ -36,7 +36,7 @@ class NestedAnnotationProcessor : AbstractTestProcessor() {
             result.add("@param: $annotation: ${annotation.annotationType.resolve()}")
         }
         val field = myClass.getDeclaredProperties().single { it.simpleName.asString() == "field" }
-        field.annotations.forEach { annotation ->
+        field.backingField?.annotations?.forEach { annotation ->
             result.add("@field $annotation: ${annotation.annotationType.resolve()}")
         }
         val property = myClass.getDeclaredProperties().single { it.simpleName.asString() == "property" }
