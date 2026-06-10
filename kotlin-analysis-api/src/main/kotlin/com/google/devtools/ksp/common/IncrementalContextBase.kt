@@ -28,6 +28,7 @@ import com.intellij.psi.PsiImportStatement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiPackage
 import com.intellij.util.containers.MultiMap
+import java.io.Closeable
 import java.io.File
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
@@ -86,7 +87,7 @@ abstract class IncrementalContextBase(
     private val rebuild = !cachesUpToDateFile.exists()
 
     private val logsDir = File(cachesDir, "logs").apply { mkdirs() }
-    private val buildTime = Date().time
+    protected val buildTime = Date().time
 
     private val modified = knownModified.map { it.relativeTo(baseDir) }.toSet()
     private val removed = knownRemoved.map { it.relativeTo(baseDir) }.toSet()
@@ -103,15 +104,19 @@ abstract class IncrementalContextBase(
 
     private val onDemandImportsCache = ConcurrentHashMap<PsiJavaFile, List<String>>()
 
+    protected val logFiles: MutableList<Closeable> = mutableListOf()
+
     private fun String.toRelativeFile(): File {
         val file = File(this)
         val absFile = if (file.isAbsolute) file else File(baseDir, this)
         return absFile.absoluteFile.relativeTo(baseDir.absoluteFile)
     }
+
     private fun File.toRelativeFile(): File {
         val absFile = if (this.isAbsolute) this else File(baseDir, this.path)
         return absFile.absoluteFile.relativeTo(baseDir.absoluteFile)
     }
+
     private val KSFile.relativeFile
         get() = filePath.toRelativeFile()
 
@@ -152,8 +157,7 @@ abstract class IncrementalContextBase(
         if (!incrementalLog)
             return
 
-        val logFile = File(logsDir, "kspSourceToOutputs.log")
-        logFile.appendText("=== Build $buildTime ===\n")
+        val logFile = mkLogFile("kspSourceToOutputs.log")
         logFile.appendText("Accumulated source to outputs map\n")
         sourceToOutputsMap.keys.forEach { source ->
             logFile.appendText("  $source:\n")
@@ -191,8 +195,7 @@ abstract class IncrementalContextBase(
         if (!incrementalLog)
             return
 
-        val logFile = File(logsDir, "kspDirtySet.log")
-        logFile.appendText("=== Build $buildTime ===\n")
+        val logFile = mkLogFile("kspDirtySet.log")
         logFile.appendText("All Files\n")
         allFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
         logFile.appendText("Modified\n")
@@ -325,7 +328,7 @@ abstract class IncrementalContextBase(
             sourceToOutputsMap[src] = outs.toList()
         }
 
-        logSourceToOutputs(outputs, sourceToOutputs)
+        logBeforeCacheFlush(outputs, sourceToOutputs)
 
         sourceToOutputsMap.flush()
     }
@@ -423,6 +426,7 @@ abstract class IncrementalContextBase(
         symbolLookupCache.close()
         classLookupCache.close()
         sourceToOutputsMap.flush()
+        logFiles.forEach { it.close() }
     }
 
     // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
@@ -540,6 +544,21 @@ abstract class IncrementalContextBase(
             ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
         updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
     }
+
+    protected open fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+        logSourceToOutputs(outputs, sourceToOutputs)
+    }
+
+    protected fun mkFileInLogDir(fileName: String): File =
+        File(logsDir, fileName)
+            .also {
+                if (it.delete()) {
+                    it.createNewFile()
+                }
+            }
+
+    protected fun mkLogFile(fileName: String): File = mkFileInLogDir(fileName)
+        .also { it.appendText("=== Build $buildTime ===\n") }
 }
 
 internal class DirtinessPropagator(
