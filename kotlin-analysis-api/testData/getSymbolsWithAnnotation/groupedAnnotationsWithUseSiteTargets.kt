@@ -53,13 +53,14 @@
 
 // FILE: Main.kt
 
+@file:[Anno1 Anno2]
+
 annotation class Anno1
 
 annotation class Anno2
 
 annotation class Anno3
 
-@file:[Anno1 Anno2]
 @[Anno1 Anno2 Anno3]
 class MyClass(
     @param:[Anno1 Anno3] val paramWithAnno1AndAnno3: Int,
