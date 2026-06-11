@@ -89,6 +89,12 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
     }
 
+    override val location by lazy {
+        // N.B.: Use psi?.toLocation() instead of psi.toLocation() even though toLocation handles a nullable receiver.
+        //       This is done to override its nullable receiver case and fall back to the property location.
+        kaBackingFieldSymbol.psi?.toLocation() ?: property.location
+    }
+
     override fun defer(): Restorable =
         kaBackingFieldSymbol.defer(::getCached)
 
