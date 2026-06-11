@@ -24,6 +24,7 @@ import com.google.devtools.ksp.impl.FileCache
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
@@ -33,6 +34,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.psi
 import com.google.devtools.ksp.impl.symbol.kotlin.setter
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSAnnotated
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSAnnotationUseSiteTarget
+import com.google.devtools.ksp.impl.symbol.kotlin.toKSBackingField
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSClassDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFile
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFunctionDeclaration
@@ -41,6 +43,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -403,8 +406,9 @@ class PsiResolutionStrategy(
             is PsiClass ->
                 listOf(element.resolve())
 
-            is PsiField ->
-                listOf(element.resolve())
+            is PsiField -> element.resolveToProperty().let {
+                listOf(it, element.resolveToField(it))
+            }
 
             is PsiMethod ->
                 listOf(element.resolve())
@@ -479,8 +483,8 @@ class PsiResolutionStrategy(
     /**
      * Resolves the [KSPropertyDeclaration] corresponding to this [PsiField].
      */
-    private fun PsiField.resolve(): KSPropertyDeclaration {
-        val sym = analyze { this@resolve.callableSymbol }
+    private fun PsiField.resolveToProperty(): KSPropertyDeclarationJavaImpl {
+        val sym = analyze { this@resolveToProperty.callableSymbol }
             ?: throw InternalKSPException(
                 "Unexpected null callable symbol",
                 toLocation(),
@@ -489,6 +493,24 @@ class PsiResolutionStrategy(
         return sym.toKSPropertyDeclaration()
             ?: throw InternalKSPException(
                 "Unexpected null KSPropertyDeclaration",
+                toLocation(),
+                javaClass
+            )
+    }
+
+    /**
+     * Resolves the [KSBackingField] corresponding to this [PsiField].
+     */
+    private fun PsiField.resolveToField(property: KSPropertyDeclarationJavaImpl? = null): KSBackingField {
+        val sym = analyze { this@resolveToField.callableSymbol }
+            ?: throw InternalKSPException(
+                "Unexpected null callable symbol",
+                toLocation(),
+                javaClass
+            )
+        return sym.toKSBackingField(property)
+            ?: throw InternalKSPException(
+                "Unexpected null KSBackingField",
                 toLocation(),
                 javaClass
             )

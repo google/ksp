@@ -64,8 +64,8 @@ class KSBackingFieldJavaImpl private constructor(
     }
 
     override val qualifiedName: KSName? by lazy {
-        property.qualifiedName?.asString()?.let {
-            KSNameImpl.getCached(getFieldNameFrom(it))
+        ktJavaFieldSymbol.callableId?.asSingleFqName()?.asString()?.let { propName ->
+            KSNameImpl.getCached(getFieldNameFrom(propName))
         }
     }
 
