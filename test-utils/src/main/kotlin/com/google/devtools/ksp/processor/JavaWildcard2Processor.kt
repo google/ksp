@@ -50,6 +50,11 @@ open class JavaWildcard2Processor : AbstractTestProcessor() {
             return resolve().toString()
         }
 
+        private fun KSTypeReference.parentPretty(): String = when (val result = parent) {
+            is KSBackingField -> result.property.toString() + "." + result.toString()
+            else -> result.toString()
+        }
+
         override fun visitTypeArgument(typeArgument: KSTypeArgument, data: String) = Unit
 
         override fun visitAnnotation(annotation: KSAnnotation, data: String) = Unit
@@ -58,7 +63,7 @@ open class JavaWildcard2Processor : AbstractTestProcessor() {
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             val wildcard = resolver.getJavaWildcard(typeReference)
             results.add(
-                data + typeReference.parent.toString() + " : " + wildcard.pretty()
+                data + typeReference.parentPretty() + " : " + wildcard.pretty()
             )
             super.visitTypeReference(typeReference, data + "- ")
         }
