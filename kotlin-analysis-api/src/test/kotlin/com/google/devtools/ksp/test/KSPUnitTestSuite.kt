@@ -77,10 +77,10 @@ abstract class KSPUnitTestSuite(
     @Negative("KEEP-402 specifies that the :all meta-target cannot be applied to annotation groups.")
     abstract fun testAllUseSiteTargetAppliedToAnnotationList()
 
-    @TestMetadata("annotationInDependencies.kt")
+    @TestMetadata("annotationsInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
-        runTest("$AA_PATH/annotationInDependencies.kt")
+        runTest("$AA_PATH/annotationsInDependencies.kt")
     }
 
     @TestMetadata("annotationOnConstructorParameter.kt")
