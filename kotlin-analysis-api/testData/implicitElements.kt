@@ -32,8 +32,10 @@
 // comp2.set(): SYNTHETIC
 // <init>
 // synthetic constructor for ImplictConstructorJava
-// Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
-// lib.Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// Test, p: [MyKotlinAnnotation: null]
+// Test, field: [MyJavaAnnotation: null]
+// lib.Test, p: [MyKotlinAnnotation: null]
+// lib.Test, field: [MyJavaAnnotation: FIELD]
 // END
 // MODULE: lib
 // FILE: lib/MyJavaAnnotation.java
