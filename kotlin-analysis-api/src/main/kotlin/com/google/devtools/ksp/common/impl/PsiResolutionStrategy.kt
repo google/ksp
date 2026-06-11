@@ -595,8 +595,16 @@ class PsiResolutionStrategy(
 
             AnnotationUseSiteTarget.FIELD -> when (this) {
                 is KSValueParameter -> listOf(
-                    this.getGeneratedProperty() ?: throw InternalKSPException(
-                        "Unexpected missing property for parameter",
+                    this.getGeneratedProperty()?.backingField ?: throw InternalKSPException(
+                        "Unexpected missing backing field for parameter",
+                        location,
+                        javaClass
+                    )
+                )
+
+                is KSPropertyDeclaration -> listOf(
+                    this.backingField ?: throw InternalKSPException(
+                        "Unexpected missing backing field for property",
                         location,
                         javaClass
                     )
@@ -704,13 +712,13 @@ class PsiResolutionStrategy(
                 }
 
                 is KSPropertyDeclaration ->
-                    // TODO: Add proper support for backing fields, the ALL use site target also targets the field
                     // TODO: Add support for JvmRecord annotation according to KEEP 402
                     buildList {
                         add(this@findTargetedSymbol)
                         addIfNotNull(this@findTargetedSymbol.getter)
                         addIfNotNull(this@findTargetedSymbol.setter)
                         addIfNotNull(this@findTargetedSymbol.setter?.parameter)
+                        addIfNotNull(this@findTargetedSymbol.backingField)
                     }
 
                 else -> throw InternalKSPException(
