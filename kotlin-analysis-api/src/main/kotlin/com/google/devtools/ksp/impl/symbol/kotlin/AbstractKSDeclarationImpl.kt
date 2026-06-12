@@ -36,6 +36,7 @@ import com.intellij.psi.PsiJvmModifiersOwner
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.util.parentOfType
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
@@ -72,6 +73,7 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
         if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
             when (val ktDeclarationSymbol = this.ktDeclarationSymbol) {
                 is KaPropertySymbol -> ktDeclarationSymbol.toModifiers()
+                is KaBackingFieldSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaClassSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaFunctionSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
