@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.GenerationUtils
 import org.jetbrains.kotlin.codegen.forTestCompile.TestCompilePaths
-import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.test.ExecutionListenerBasedDisposableProvider
@@ -155,7 +154,6 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 
         defaultDirectives {
             +JvmEnvironmentConfigurationDirectives.FULL_JDK
-            JvmEnvironmentConfigurationDirectives.JVM_TARGET with JvmTarget.DEFAULT
             +ConfigurationDirectives.WITH_STDLIB
             +LanguageSettingsDirectives.ALLOW_KOTLIN_PACKAGE
         }

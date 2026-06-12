@@ -12,6 +12,7 @@
 // WithBody.computed: computed
 // WithBody.mutable: mutable, mutable
 // END
+// JVM_TARGET: 17
 // MODULE: main
 // FILE: records.kt
 interface Named {

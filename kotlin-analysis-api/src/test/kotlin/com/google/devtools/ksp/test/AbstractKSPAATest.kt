@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
@@ -129,7 +130,7 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
             sourceRoots = listOf(mainModule.kotlinSrc)
             javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
             jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
-            jvmTarget = compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)!!.description
+            jvmTarget = (compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET) ?: JvmTarget.DEFAULT).description
             languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
             apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
             libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +

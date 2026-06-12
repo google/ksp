@@ -495,6 +495,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/jvmName.kt")
     }
 
+    @TestMetadata("jvmNameRecord.kt")
+    @Test
+    fun testJvmNameRecord() {
+        runTest("../kotlin-analysis-api/testData/jvmNameRecord.kt")
+    }
+
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
