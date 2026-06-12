@@ -875,7 +875,8 @@ internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubsti
 }
 
 internal fun KaSymbol.psiIfSource(): PsiElement? {
-    return if (origin == KaSymbolOrigin.SOURCE || origin == KaSymbolOrigin.JAVA_SOURCE && toContainingFile() != null) {
+    val ksSource = mapAAOrigin(this)
+    return if (ksSource == Origin.KOTLIN || ksSource == Origin.JAVA && toContainingFile() != null) {
         psi
     } else {
         null
