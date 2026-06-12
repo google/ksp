@@ -142,6 +142,7 @@ import org.jetbrains.kotlin.name.ClassIdBasedLocality
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
+import org.jetbrains.kotlin.name.NameUtils
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtParameter
@@ -1184,7 +1185,7 @@ internal val KaDeclarationSymbol.internalSuffix: String
             else -> {}
         }
 
-        fun String.toSuffix(): String = "\$$this".replace('.', '_').replace('-', '_')
+        fun String.toSuffix(): String = "\$${NameUtils.sanitizeAsJavaIdentifier(this)}"
         when (val module = containingModule) {
             is KaSourceModule -> module.name.toSuffix()
             is KaLibraryModule -> {
