@@ -65,6 +65,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
+import org.jetbrains.kotlin.analysis.api.components.containingFile
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
@@ -173,12 +174,16 @@ internal fun mapAAOrigin(ktSymbol: KaSymbol): Origin {
             ktSymbol.psi.toLocation(),
             ktSymbol.javaClass,
         )
-    return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
+    return if (symbolOrigin == Origin.JAVA && isFromBinaryFile(ktSymbol)) {
         Origin.JAVA_LIB
+    } else if (ktSymbol is KaBackingFieldSymbol) {
+        mapAAOrigin(ktSymbol.owningProperty)
     } else {
         symbolOrigin
     }
 }
+
+private fun isFromBinaryFile(ktSymbol: KaSymbol): Boolean = ktSymbol.psi?.containingFile?.fileType?.isBinary == true
 
 internal fun KaAnnotation.render(): String {
     return buildString {

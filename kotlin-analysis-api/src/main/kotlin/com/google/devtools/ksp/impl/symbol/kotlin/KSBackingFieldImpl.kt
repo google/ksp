@@ -57,14 +57,12 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
     }
 
     override val type: KSTypeReference by lazy {
-        (
-            kaBackingFieldSymbol.psiIfSource() as? KtBackingField
-            )
+        (kaBackingFieldSymbol.psiIfSource() as? KtBackingField)
             ?.typeReference?.let {
-                KSTypeReferenceImpl.getCached(it, this)
+                KSTypeReferenceImpl.getCached(it, this@KSBackingFieldImpl)
             } ?: KSTypeReferenceResolvedImpl.getCached(
             kaBackingFieldSymbol.returnType.abbreviationOrSelf,
-            this
+            this@KSBackingFieldImpl
         )
     }
 
