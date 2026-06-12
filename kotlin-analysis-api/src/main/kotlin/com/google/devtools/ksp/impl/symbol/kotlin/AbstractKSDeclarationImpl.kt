@@ -90,7 +90,7 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
                 else -> throw InternalKSPException(
                     "Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}",
                     this.location,
-                    psi?.javaClass ?: this.javaClass
+                    psi.javaClass
                 )
             }
         }
