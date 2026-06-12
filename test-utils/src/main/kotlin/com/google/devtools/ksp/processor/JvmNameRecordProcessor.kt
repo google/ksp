@@ -1,9 +1,9 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 class JvmNameRecordProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
@@ -13,16 +13,19 @@ class JvmNameRecordProcessor : AbstractTestProcessor() {
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        listOf("TestRecordClass", "TestLibRecordClass").forEach { clsName ->
-            resolver.getClassDeclarationByName(clsName)?.let { cls ->
-                results.add(
-                    cls.getAllProperties().map {
-                        "(${it.getter?.let { resolver.getJvmName(it) }}, " +
-                            "${it.setter?.let { resolver.getJvmName(it) }})"
-                    }.toList().joinToString()
-                )
+        resolver.getSymbolsWithAnnotation("kotlin.jvm.JvmRecord")
+            .filterIsInstance<KSClassDeclaration>()
+            .flatMap { cls ->
+                cls.getAllProperties().map { property ->
+                    val accessorNames = listOfNotNull(
+                        property.getter?.let { resolver.getJvmName(it) },
+                        property.setter?.let { resolver.getJvmName(it) },
+                    )
+                    "${cls.simpleName.asString()}.${property.simpleName.asString()}: ${accessorNames.joinToString()}"
+                }
             }
-        }
+            .sorted()
+            .let { results.addAll(it) }
         return emptyList()
     }
 }

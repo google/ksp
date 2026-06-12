@@ -140,6 +140,7 @@ import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.ClassIdBasedLocality
 import org.jetbrains.kotlin.name.FqNameUnsafe
+import org.jetbrains.kotlin.name.JvmStandardClassIds
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.name.JvmStandardClassIds.JVM_WILDCARD_ANNOTATION_FQ_NAME
 import org.jetbrains.kotlin.psi.KtAnnotated
@@ -1161,6 +1162,12 @@ internal fun KaCallableSymbol.explictJvmName(): String? {
     return annotations.singleOrNull() {
         it.classId == jvmNameClassId
     }?.arguments?.single()?.expression?.toValue() as? String
+}
+
+internal fun KaClassSymbol.isJvmRecord(): Boolean {
+    return annotations.any {
+        it.classId == JvmStandardClassIds.Annotations.JvmRecord
+    }
 }
 
 @OptIn(SymbolInternals::class)

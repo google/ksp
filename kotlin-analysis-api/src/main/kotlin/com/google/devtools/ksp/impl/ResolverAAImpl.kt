@@ -65,6 +65,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.findParentOfType
 import com.google.devtools.ksp.impl.symbol.kotlin.fullyExpand
 import com.google.devtools.ksp.impl.symbol.kotlin.inlineSuffix
 import com.google.devtools.ksp.impl.symbol.kotlin.internalSuffix
+import com.google.devtools.ksp.impl.symbol.kotlin.isJvmRecord
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSName
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
@@ -577,22 +578,22 @@ class ResolverAAImpl(
             return it
         }
 
-        val name = accessor.receiver.simpleName.asString()
+        val propertyName = accessor.receiver.simpleName.asString()
         val containingClass = accessor.receiver.closestClassDeclaration()
+
+        val isAnnotationClass = containingClass?.classKind == ClassKind.ANNOTATION_CLASS
+        val isJvmRecord = containingClass is KSClassDeclarationImpl &&
+            containingClass.ktClassOrObjectSymbol.isJvmRecord()
 
         // Annotation classes and @JvmRecord data classes both use bare property names
         // as accessor names (no get/set prefix).
-        if (containingClass?.classKind == ClassKind.ANNOTATION_CLASS ||
-            containingClass != null && containingClass.annotations.any {
-                it.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.jvm.JvmRecord"
-            }
-        ) {
-            return name
+        if (isAnnotationClass || isJvmRecord) {
+            return propertyName
         }
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
         val prefixedName = when (accessor) {
-            is KSPropertyGetter -> JvmAbi.getterName(name)
-            is KSPropertySetter -> JvmAbi.setterName(name)
+            is KSPropertyGetter -> JvmAbi.getterName(propertyName)
+            is KSPropertySetter -> JvmAbi.setterName(propertyName)
             else -> ""
         }
 
