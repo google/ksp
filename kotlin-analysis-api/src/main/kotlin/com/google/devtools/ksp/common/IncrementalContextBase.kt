@@ -86,7 +86,7 @@ abstract class IncrementalContextBase(
     private val rebuild = !cachesUpToDateFile.exists()
 
     private val logsDir = File(cachesDir, "logs").apply { mkdirs() }
-    private val buildTime = Date().time
+    protected val buildTime = Date().time
 
     private val modified = knownModified.map { it.relativeTo(baseDir) }.toSet()
     private val removed = knownRemoved.map { it.relativeTo(baseDir) }.toSet()
@@ -144,8 +144,7 @@ abstract class IncrementalContextBase(
         if (!incrementalLog)
             return
 
-        val logFile = File(logsDir, "kspSourceToOutputs.log")
-        logFile.appendText("=== Build $buildTime ===\n")
+        val logFile = mkLogFile("kspSourceToOutputs.log")
         logFile.appendText("Accumulated source to outputs map\n")
         sourceToOutputsMap.keys.forEach { source ->
             logFile.appendText("  $source:\n")
@@ -183,8 +182,7 @@ abstract class IncrementalContextBase(
         if (!incrementalLog)
             return
 
-        val logFile = File(logsDir, "kspDirtySet.log")
-        logFile.appendText("=== Build $buildTime ===\n")
+        val logFile = mkLogFile("kspDirtySet.log")
         logFile.appendText("All Files\n")
         allFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
         logFile.appendText("Modified\n")
@@ -317,7 +315,7 @@ abstract class IncrementalContextBase(
             sourceToOutputsMap[src] = outs.toList()
         }
 
-        logSourceToOutputs(outputs, sourceToOutputs)
+        logBeforeCacheFlush(outputs, sourceToOutputs)
 
         sourceToOutputsMap.flush()
     }
@@ -531,6 +529,24 @@ abstract class IncrementalContextBase(
             ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
         updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
     }
+
+    protected open fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+        logSourceToOutputs(outputs, sourceToOutputs)
+    }
+
+    protected fun mkFileInLogDir(fileName: String): File =
+        File(logsDir, fileName)
+            .also {
+                if (it.exists()) {
+                    it.delete()
+                    it.createNewFile()
+                } else {
+                    it.createNewFile()
+                }
+            }
+
+    protected fun mkLogFile(fileName: String): File = mkFileInLogDir(fileName)
+        .also { it.appendText("=== Build $buildTime ===\n") }
 }
 
 internal class DirtinessPropagator(
