@@ -328,7 +328,7 @@ abstract class KSPUnitTestSuite(
     @Bug(
         "https://github.com/google/ksp/issues/2873",
         BugState.FIXED,
-        "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
+        "KEEP 430: Explicit backing fields stable in Kotlin 2.4.0"
     )
     fun testExplicitBackingFields() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
@@ -348,11 +348,11 @@ abstract class KSPUnitTestSuite(
     @Test
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 430: Backing fields can be a subtype of the property."
     )
     fun testExplicitBackingFieldsSubtyping() {
-        runFailingTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
+        runTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
     }
 
     @TestMetadata("functionTypeAlias.kt")
@@ -630,13 +630,13 @@ abstract class KSPUnitTestSuite(
 
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "Java fields are considered properties that always have fields (accessors do not count)."
     )
     @TestMetadata("javaBackingFields.kt")
     @Test
     fun testJavaBackingFields() {
-        runFailingTest("$AA_PATH/javaBackingFields.kt")
+        runTest("$AA_PATH/javaBackingFields.kt")
     }
 
     @TestMetadata("noOverride.kt")

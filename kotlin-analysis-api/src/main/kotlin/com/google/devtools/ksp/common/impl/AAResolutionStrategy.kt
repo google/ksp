@@ -85,7 +85,9 @@ class AAResolutionStrategy(
      * Tries to resolve missing use-site targets.
      * This is necessary as a fix because KSP does not yet perfectly handle annotation use-site targets.
      */
-    private fun AnnotationUseSiteTarget?.tryResolveMissingUseSiteTarget(annotated: KSAnnotated): Collection<KSAnnotated> =
+    private fun AnnotationUseSiteTarget?.tryResolveMissingUseSiteTarget(
+        annotated: KSAnnotated
+    ): Collection<KSAnnotated> =
         buildList {
             // TODO: Add proper support for receivers
             when (this@tryResolveMissingUseSiteTarget) {
@@ -110,7 +112,6 @@ class AAResolutionStrategy(
                 }
 
                 else -> add(annotated)
-
             }
         }
 }
