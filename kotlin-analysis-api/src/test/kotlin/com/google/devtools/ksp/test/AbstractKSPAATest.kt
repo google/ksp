@@ -61,7 +61,8 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         sourcesPath: String,
         javaSourcePath: String,
         outDir: File,
-        moduleName: String
+        moduleName: String,
+        jvmTarget: JvmTarget?
     ) {
         val classpath = mutableListOf<String>()
         classpath.addAll(dependencies.map { it.canonicalPath })
@@ -79,6 +80,9 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
             "-module-name", moduleName,
             "-classpath", classpath.joinToString(File.pathSeparator)
         )
+        if (jvmTarget != null) {
+            args += listOf("-jvm-target", jvmTarget.description)
+        }
         runJvmCompiler(args)
     }
 
@@ -87,14 +91,20 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
         val compiler = compilerClass.getDeclaredConstructor().newInstance()
         val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
-        execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
+        val exitCode = execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
+        check(exitCode.toString() == "OK") {
+            "Kotlin compilation failed with exit code $exitCode:\n$outStream"
+        }
     }
 
     override fun compileModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
-        compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name)
+        val jvmTarget = testServices.compilerConfigurationProvider
+            .getCompilerConfiguration(module, CompilationStage.FIRST)
+            .get(JVMConfigurationKeys.JVM_TARGET)
+        compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name, jvmTarget)
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
             .joinToString(File.pathSeparator) { it.absolutePath }
         val options = listOf(

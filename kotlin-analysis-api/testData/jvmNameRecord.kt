@@ -5,15 +5,21 @@
 // Couple.second: second
 // GenericRecord.g: g
 // GenericRecord.h: h
+// LibRecord.w: w
 // NamedRecord.id: id
 // NamedRecord.name: name
 // Single.x: x
 // WithBody.a: a
 // WithBody.computed: computed
 // WithBody.mutable: mutable, mutable
+// WithJvmName.n: customName
 // END
 // JVM_TARGET: 17
-// MODULE: main
+// MODULE: lib
+// FILE: LibRecord.kt
+@JvmRecord
+data class LibRecord(val w: Int)
+// MODULE: main(lib)
 // FILE: records.kt
 interface Named {
     val name: String
@@ -47,6 +53,10 @@ data class WithBody(val a: Int) {
         get() = a
         set(value) {}
 }
+
+// An explicit @JvmName takes precedence over the record accessor naming.
+@JvmRecord
+data class WithJvmName(@get:JvmName("customName") val n: Int)
 // FILE: aliased.kt
 import kotlin.jvm.JvmRecord as JR
 

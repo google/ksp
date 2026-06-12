@@ -1,6 +1,7 @@
 package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -13,8 +14,12 @@ class JvmNameRecordProcessor : AbstractTestProcessor() {
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getSymbolsWithAnnotation("kotlin.jvm.JvmRecord")
+        // getSymbolsWithAnnotation only returns symbols in the current compilation,
+        // so the record class from the library module is looked up explicitly.
+        val sourceRecords = resolver.getSymbolsWithAnnotation("kotlin.jvm.JvmRecord")
             .filterIsInstance<KSClassDeclaration>()
+        val libRecords = listOfNotNull(resolver.getClassDeclarationByName("LibRecord"))
+        (sourceRecords + libRecords)
             .flatMap { cls ->
                 cls.getAllProperties().map { property ->
                     val accessorNames = listOfNotNull(

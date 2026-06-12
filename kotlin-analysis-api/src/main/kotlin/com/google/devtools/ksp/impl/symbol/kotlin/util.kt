@@ -1164,9 +1164,16 @@ internal fun KaCallableSymbol.explictJvmName(): String? {
     }?.arguments?.single()?.expression?.toValue() as? String
 }
 
+private val javaLangRecordClassId = ClassId.fromString("java/lang/Record")
+
 internal fun KaClassSymbol.isJvmRecord(): Boolean {
-    return annotations.any {
-        it.classId == JvmStandardClassIds.Annotations.JvmRecord
+    if (annotations.any { it.classId == JvmStandardClassIds.Annotations.JvmRecord }) {
+        return true
+    }
+    // The @JvmRecord annotation is not retained in class files, so compiled record
+    // classes are recognized by their java.lang.Record supertype instead.
+    return origin == KaSymbolOrigin.LIBRARY && analyze {
+        superTypes.any { (it as? KaClassType)?.classId == javaLangRecordClassId }
     }
 }
 
