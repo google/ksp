@@ -35,7 +35,7 @@
 // Test, p: [MyKotlinAnnotation: null]
 // Test, field: [MyJavaAnnotation: null]
 // lib.Test, p: [MyKotlinAnnotation: null]
-// lib.Test, field: [MyJavaAnnotation: FIELD]
+// lib.Test, field: [MyJavaAnnotation: null]
 // END
 // MODULE: lib
 // FILE: lib/MyJavaAnnotation.java
