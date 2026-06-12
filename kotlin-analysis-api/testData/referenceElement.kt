@@ -26,12 +26,8 @@
 // KSClassifierReferenceImpl: Qualifier of ExampleParameter is null
 // KSClassifierReferenceImpl: Qualifier of Int is null
 // KSClassifierReferenceImpl: Qualifier of Int is null
-// KSClassifierReferenceImpl: Qualifier of Int is null
 // KSClassifierReferenceImpl: Qualifier of String is null
 // KSClassifierReferenceImpl: Qualifier of String is null
-// KSClassifierReferenceImpl: Qualifier of String is null
-// KSClassifierReferenceImpl: Qualifier of Y is X
-// KSClassifierReferenceImpl: Qualifier of Z<INVARIANT Int> is X<INVARIANT String>
 // KSClassifierReferenceDescriptorImpl: Qualifier of Int is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Y is X
