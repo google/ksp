@@ -70,6 +70,11 @@ class JavaModifierProcessor : AbstractTestProcessor() {
 
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
             results.add(property.toSignature())
+            property.backingField?.accept(this, data)
+        }
+
+        override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+            results.add(backingField.toSignature())
         }
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {

@@ -32,7 +32,6 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FIELD as KaFieldTarget
 import org.jetbrains.kotlin.psi.KtBackingField
 import kotlin.sequences.map
 

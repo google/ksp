@@ -86,6 +86,7 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
             when (val psi = ktDeclarationSymbol.psi) {
                 is KtModifierListOwner -> psi.toKSModifiers()
                 is PsiModifierListOwner -> psi.toKSModifiers()
+                null -> emptySet() // Kotlin property without backing field
                 else -> throw InternalKSPException(
                     "Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}",
                     this.location,
