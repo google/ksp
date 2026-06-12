@@ -9,6 +9,6 @@ kotlin {
 }
 
 repositories {
-    mavenCentral()
     maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+    mavenCentral()
 }

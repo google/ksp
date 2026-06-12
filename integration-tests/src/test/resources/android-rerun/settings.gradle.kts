@@ -10,10 +10,10 @@ pluginManagement {
     }
     repositories {
         maven(testRepo)
-        gradlePluginPortal()
         google()
-        mavenCentral()
+        gradlePluginPortal()
         maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+        mavenCentral()
     }
 }
 
