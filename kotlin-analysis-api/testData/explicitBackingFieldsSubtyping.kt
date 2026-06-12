@@ -15,18 +15,21 @@
  * limitations under the License.
  */
 
-// WITH_RUNTIME
-// TEST PROCESSOR: JavaWildcard2Processor
+// TEST PROCESSOR: ExplicitBackingFieldsSubtypingProcessor
 // EXPECTED:
-// ref : SelfRef<out Any?>
-// ref.getter() : SelfRef<out Any?>
-// ref.field : SelfRef<out Any?>
-// SelfRef : Any
-// A : SelfRef<A>
-// synthetic constructor for SelfRef : SelfRef<out Any?>
-// A : SelfRef<A>
+// MyClass.prop1: List<String>
+// MyClass.prop1.field: MutableList<String>
+// MyClass.prop2: List<String>
+// MyClass.prop2.field: List<String>
 // END
 
-class SelfRef<A : SelfRef<A>>
+// FILE: Main.kt
 
-val ref: SelfRef<*> = TODO()
+class MyClass {
+
+    val prop1: List<String>
+        field = MutableList<String>
+
+    val prop2: List<String>
+        field: List<String>
+}

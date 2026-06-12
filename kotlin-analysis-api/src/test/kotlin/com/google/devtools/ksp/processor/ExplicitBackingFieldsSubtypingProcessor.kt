@@ -17,22 +17,27 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 
-class GetSymbolsWithAnnotationProcessor(val annotationNames: List<String>) : AbstractTestProcessor() {
+class ExplicitBackingFieldsSubtypingProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
-        return results.toList().sorted()
+        return results.toList()
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        annotationNames.forEach { annotationName ->
-            resolver.getSymbolsWithAnnotation(annotationName).forEach {
-                results.add("$annotationName: ${it.fqn}")
+        resolver.getClassDeclarationByName("MyClass")!!.let { clazz ->
+            clazz.getAllProperties().forEach { property ->
+                val pType = property.type.resolve()
+                val field = property.backingField!!
+                val fType = field.type.resolve()
+                results.add("${property.fqn}: $pType")
+                results.add("${field.fqn}: $fType")
             }
         }
         return emptyList()

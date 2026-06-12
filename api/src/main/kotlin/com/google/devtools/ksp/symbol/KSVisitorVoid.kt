@@ -65,6 +65,9 @@ open class KSVisitorVoid : KSVisitor<Unit, Unit> {
     override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {
     }
 
+    override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+    }
+
     override fun visitClassifierReference(reference: KSClassifierReference, data: Unit) {
     }
 

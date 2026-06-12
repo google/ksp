@@ -34,12 +34,6 @@ class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = 
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
 
-    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
-    @Test
-    override fun testExplicitBackingFields() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
-    }
-
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {

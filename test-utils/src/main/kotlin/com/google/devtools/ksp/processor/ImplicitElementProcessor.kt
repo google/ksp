@@ -40,7 +40,7 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         val ClsClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!
         result.add(
             "${
-            ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"
+                ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"
             }; origin: ${ClsClass.primaryConstructor?.origin}"
         )
         result.add(ClsClass.getConstructors().map { it.toString() }.joinToString(","))
@@ -53,7 +53,7 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         readOnly.getter?.let {
             result.add(
                 "readOnly.get(): ${it.origin} annotations from property: ${
-                it.annotations.map { it.shortName.asString() }.joinToString(",")
+                    it.annotations.map { it.shortName.asString() }.joinToString(",")
                 }"
             )
         }
@@ -66,9 +66,9 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         readWrite.setter?.let {
             result.add(
                 "readWrite.set(): ${it.origin} annotations from property: ${
-                it.annotations.map {
-                    it.shortName.asString()
-                }.joinToString(",")
+                    it.annotations.map {
+                        it.shortName.asString()
+                    }.joinToString(",")
                 }"
             )
         }
@@ -92,10 +92,21 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
             resolver.getClassDeclarationByName(clsName)!!.let { cls ->
                 cls.getDeclaredProperties().single().let { annotated ->
                     result.add(
-                        "$clsName, $annotated: ${annotated.annotations.toList().map {
-                            "${it.shortName.asString()}: ${ it.useSiteTarget }"
-                        }}"
+                        "$clsName, $annotated: ${
+                            annotated.annotations.toList().map {
+                                "${it.shortName.asString()}: ${it.useSiteTarget}"
+                            }
+                        }"
                     )
+                    annotated.backingField?.let { field ->
+                        result.add(
+                            "$clsName, $field: ${
+                                field.annotations.toList().map {
+                                    "${it.shortName.asString()}: ${it.useSiteTarget}"
+                                }
+                            }"
+                        )
+                    }
                 }
             }
         }

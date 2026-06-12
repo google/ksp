@@ -65,6 +65,7 @@ import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
+import org.jetbrains.kotlin.analysis.api.components.containingFile
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
@@ -74,6 +75,7 @@ import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithV
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
+import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
@@ -172,12 +174,16 @@ internal fun mapAAOrigin(ktSymbol: KaSymbol): Origin {
             ktSymbol.psi.toLocation(),
             ktSymbol.javaClass,
         )
-    return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
+    return if (symbolOrigin == Origin.JAVA && isFromBinaryFile(ktSymbol)) {
         Origin.JAVA_LIB
+    } else if (ktSymbol is KaBackingFieldSymbol) {
+        mapAAOrigin(ktSymbol.owningProperty)
     } else {
         symbolOrigin
     }
 }
+
+private fun isFromBinaryFile(ktSymbol: KaSymbol): Boolean = ktSymbol.psi?.containingFile?.fileType?.isBinary == true
 
 internal fun KaAnnotation.render(): String {
     return buildString {
@@ -446,11 +452,11 @@ internal fun KaAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotat
 internal fun KtAnnotated.annotations(
     kaAnnotated: KaAnnotated,
     parent: KSNode? = null,
-    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded()
+    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded().toList()
 ): Sequence<KSAnnotation> {
     if (candidates.isEmpty())
         return emptySequence()
-    return annotationEntries.filter { !it.isUseSiteTargetAnnotation() }.asSequence().map { annotationEntry ->
+    return annotationEntries.asSequence().map { annotationEntry ->
         KSAnnotationImpl.getCached(annotationEntry, parent) {
             candidates.single { it.psi == annotationEntry }
         }
@@ -473,6 +479,7 @@ internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KS
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaPropertySymbol -> toKSPropertyDeclaration()
+    is KaBackingFieldSymbol -> toKSBackingField()
     is KaNamedClassSymbol -> toKSClassDeclaration()
     is KaFunctionSymbol -> toKSFunctionDeclaration()
     is KaTypeAliasSymbol -> toKSTypeAlias()
@@ -492,6 +499,9 @@ internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
 internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
     KSPropertyDeclarationImpl.getCached(this)
 
+internal fun KaBackingFieldSymbol.toKSBackingField(): KSBackingFieldImpl =
+    KSBackingFieldImpl.getCached(this)
+
 internal fun KaNamedClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
     KSClassDeclarationImpl.getCached(this)
 
@@ -503,16 +513,33 @@ internal fun KaCallableSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationIm
     else -> null
 }
 
-internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration? = when (this) {
+internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclarationJavaImpl? = when (this) {
     is KaJavaFieldSymbol -> this.toKSPropertyDeclaration()
     else -> null
 }
 
+internal fun KaCallableSymbol.toKSBackingField(
+    property: KSPropertyDeclarationJavaImpl? = null
+): KSBackingFieldJavaImpl? =
+    when (this) {
+        is KaJavaFieldSymbol -> this.toKSBackingField(property)
+        else -> null
+    }
+
 internal fun KaTypeAliasSymbol.toKSTypeAlias(): KSTypeAliasImpl =
     KSTypeAliasImpl.getCached(this)
 
-internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration =
+internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclarationJavaImpl =
     KSPropertyDeclarationJavaImpl.getCached(this)
+
+internal fun KaJavaFieldSymbol.toKSBackingField(
+    property: KSPropertyDeclarationJavaImpl? = null
+): KSBackingFieldJavaImpl =
+    if (property == null) {
+        KSBackingFieldJavaImpl.getCached(this to this.toKSPropertyDeclaration())
+    } else {
+        KSBackingFieldJavaImpl.getCached(this to property)
+    }
 
 internal fun KaFileSymbol.toKSFile(): KSFileImpl =
     KSFileImpl.getCached(this)

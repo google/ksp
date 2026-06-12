@@ -15,18 +15,21 @@
  * limitations under the License.
  */
 
-// WITH_RUNTIME
-// TEST PROCESSOR: JavaWildcard2Processor
-// EXPECTED:
-// ref : SelfRef<out Any?>
-// ref.getter() : SelfRef<out Any?>
-// ref.field : SelfRef<out Any?>
-// SelfRef : Any
-// A : SelfRef<A>
-// synthetic constructor for SelfRef : SelfRef<out Any?>
-// A : SelfRef<A>
-// END
+package com.google.devtools.ksp.symbol
 
-class SelfRef<A : SelfRef<A>>
+/**
+ * A backing field for a [KSPropertyDeclaration].
+ */
+interface KSBackingField : KSDeclaration {
 
-val ref: SelfRef<*> = TODO()
+    /**
+     * The property that this backing field belongs to.
+     */
+    val property: KSPropertyDeclaration
+
+    /**
+     * The type of the backing field.
+     * This is guaranteed to be a subtype of the type of [property].
+     */
+    val type: KSTypeReference
+}

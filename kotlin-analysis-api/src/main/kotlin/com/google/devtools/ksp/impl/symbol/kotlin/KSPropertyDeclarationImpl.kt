@@ -19,6 +19,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
@@ -28,23 +29,23 @@ import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.KSSyntheticJavaBackingFieldImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.KaConstantInitializerValue
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.KaSyntheticJavaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD as KaDelegateTarget
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 
 class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbol: KaPropertySymbol) :
@@ -52,6 +53,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktPropertySymbol) {
     override val ktDeclarationSymbol get() = ktPropertySymbol
+
     companion object : KSObjectCache<KaPropertySymbol, KSPropertyDeclarationImpl>() {
         fun getCached(ktPropertySymbol: KaPropertySymbol) =
             cache.getOrPut(ktPropertySymbol) { KSPropertyDeclarationImpl(ktPropertySymbol) }
@@ -62,14 +64,14 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktPropertySymbol.annotations.asSequence()
-            .filter { !it.isUseSiteTargetAnnotation() }
-            .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
             .plus(
-                // TODO: optimize for psi
-                ktPropertySymbol.backingFieldSymbol?.annotations?.map {
-                    KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl, definitionOrigin)
-                } ?: emptyList()
+                // Handle delegate use-site target
+                ktPropertySymbol.backingFieldSymbol?.annotations
+                    ?.filter { it.useSiteTarget == KaDelegateTarget }
+                    ?.asSequence()
+                    ?: emptySequence()
             )
+            .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
     }
 
     override val getter: KSPropertyGetter? by lazy {
@@ -150,6 +152,31 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         }
     }
 
+    override val backingField: KSBackingField? by lazy {
+        if (hasBackingField) {
+            when (ktPropertySymbol) {
+                is KaKotlinPropertySymbol ->
+                    ktPropertySymbol.backingFieldSymbol
+                        ?.let { KSBackingFieldImpl(it) }
+                        ?: throw InternalKSPException(
+                            buildString {
+                                append("Unexpected null backing field symbol for property ")
+                                append(qualifiedName?.asString() ?: simpleName.asString())
+                            },
+                            location,
+                            ktPropertySymbol.javaClass
+                        )
+
+                is KaSyntheticJavaPropertySymbol -> {
+                    // Kotlin calling into a synthetic Java method.
+                    KSSyntheticJavaBackingFieldImpl.getCached(ktPropertySymbol)
+                }
+            }
+        } else {
+            null
+        }
+    }
+
     override fun isDelegated(): Boolean {
         return ktPropertySymbol.isDelegatedProperty
     }
@@ -177,28 +204,9 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         return visitor.visitPropertyDeclaration(this, data)
     }
 
-    override fun defer(): Restorable? {
+    override fun defer(): Restorable {
         return ktPropertySymbol.defer(::getCached)
     }
-}
-
-internal fun KaAnnotation.isUseSiteTargetAnnotation(): Boolean {
-    return this.useSiteTarget?.let {
-        it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
-            it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
-            it == AnnotationUseSiteTarget.SETTER_PARAMETER ||
-            it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
-    } ?: false
-}
-
-internal fun KtAnnotationEntry.isUseSiteTargetAnnotation(): Boolean {
-    return this.useSiteTarget?.getAnnotationUseSiteTarget()?.let {
-        it == AnnotationUseSiteTarget.PROPERTY_GETTER ||
-            it == AnnotationUseSiteTarget.PROPERTY_SETTER ||
-            it == AnnotationUseSiteTarget.SETTER_PARAMETER ||
-            it == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER ||
-            it == AnnotationUseSiteTarget.FIELD
-    } ?: false
 }
 
 internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
@@ -228,11 +236,3 @@ internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     }
     return result
 }
-
-internal fun KSAnnotation.isValidOnProperty(): Boolean =
-    annotationType.resolve().declaration.annotations.none { metaAnnotation ->
-        metaAnnotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.annotation.Target" &&
-            (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.none {
-            (it as? KSClassDeclaration)?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.PROPERTY"
-        } ?: false
-    }
