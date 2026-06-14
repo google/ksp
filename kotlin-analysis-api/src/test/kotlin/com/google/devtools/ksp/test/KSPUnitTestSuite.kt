@@ -543,6 +543,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsWithAnnotation/metaAnnotations.kt")
     }
 
+    @TestMetadata("missingSymbols.kt")
+    @Test
+    fun testMissingSymbols() {
+        runTest("$AA_PATH/missingSymbols.kt")
+    }
+
     @TestMetadata("multipleModules.kt")
     @Test
     fun testMultipleModules() {
