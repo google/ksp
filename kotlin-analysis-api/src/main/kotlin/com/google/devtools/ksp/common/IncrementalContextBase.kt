@@ -103,7 +103,15 @@ abstract class IncrementalContextBase(
 
     private val onDemandImportsCache = ConcurrentHashMap<PsiJavaFile, List<String>>()
 
-    private fun String.toRelativeFile() = File(this).relativeTo(baseDir)
+    private fun String.toRelativeFile(): File {
+        val file = File(this)
+        val absFile = if (file.isAbsolute) file else File(baseDir, this)
+        return absFile.absoluteFile.relativeTo(baseDir.absoluteFile)
+    }
+    private fun File.toRelativeFile(): File {
+        val absFile = if (this.isAbsolute) this else File(baseDir, this.path)
+        return absFile.absoluteFile.relativeTo(baseDir.absoluteFile)
+    }
     private val KSFile.relativeFile
         get() = filePath.toRelativeFile()
 
@@ -232,7 +240,7 @@ abstract class IncrementalContextBase(
         }
 
         val dirtyFilesByNewSyms = newSyms.flatMap {
-            symbolLookupCache[it].map(::File)
+            symbolLookupCache[it].map { it.toRelativeFile() }
         }
 
         val dirtyFilesBySealed = sealedMap.keys
@@ -241,8 +249,8 @@ abstract class IncrementalContextBase(
         val dirtyFilesByCP = changedClasses.flatMap { fqn ->
             val name = fqn.substringAfterLast('.')
             val scope = fqn.substringBeforeLast('.', "<anonymous>")
-            classLookupCache[LookupSymbolWrapper(name, scope)].map { File(it) } +
-                symbolLookupCache[LookupSymbolWrapper(name, scope)].map { File(it) }
+            classLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() } +
+                symbolLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() }
         }.toSet()
 
         // output files that exist in CURR~2 but not in CURR~1
@@ -441,7 +449,8 @@ abstract class IncrementalContextBase(
         // Assuming that the processors are deterministic, we are throwing away outputs from clean inputs, and
         // recovering them from the backup as a workaround for processors.
 
-        val unassociated = outputs - sourceToOutputs.values.flatten()
+        val relativeOutputs = outputs.map { it.toRelativeFile() }.toSet()
+        val unassociated = relativeOutputs - sourceToOutputs.values.flatten()
         val dirties = HashSet(unassociated)
         fun markDirty(file: File) {
             dirties.add(file)
@@ -468,7 +477,7 @@ abstract class IncrementalContextBase(
         val dirtySourceToOutputs = sourceToOutputs.filter { (src, _) ->
             isDirty(src)
         }
-        val dirtyOutputs = outputs.filter(::isDirty).toSet()
+        val dirtyOutputs = relativeOutputs.filter(::isDirty).toSet()
 
         updateCaches(dirtySources, dirtyOutputs, dirtySourceToOutputs)
 
