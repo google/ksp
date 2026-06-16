@@ -21,11 +21,27 @@ import org.gradle.api.services.BuildServiceParameters
 import java.net.URLClassLoader
 import java.util.concurrent.ConcurrentHashMap
 
+object IsolatedClassLoaderCache {
+    val cache = ConcurrentHashMap<String, URLClassLoader>()
+
+    fun clear() {
+        cache.values.forEach { classLoader ->
+            try {
+                classLoader.close()
+            } catch (e: Exception) {
+                // Ignore exceptions during cleanup, but we could log them if a logger was available.
+            }
+        }
+        cache.clear()
+    }
+}
+
 abstract class IsolatedClassLoaderCacheBuildService : BuildService<BuildServiceParameters.None>, AutoCloseable {
     companion object {
         const val KEY = "IsolatedClassLoaderCacheBuildService"
     }
-    val isolatedClassLoaderCache = ConcurrentHashMap<String, URLClassLoader>()
 
-    override fun close() = isolatedClassLoaderCache.clear()
+    override fun close() {
+        IsolatedClassLoaderCache.clear()
+    }
 }

@@ -167,7 +167,6 @@ abstract class KspAATask @Inject constructor(
             it.modifiedSources = modifiedSources
             it.removedSources = removedSources
             it.changedClasses = changedClasses
-            it.isolatedClassLoaderCacheBuildService.set(isolatedClassLoaderCacheBuildService)
         }
     }
 
@@ -620,7 +619,6 @@ interface KspAAWorkParameter : WorkParameters {
     var modifiedSources: List<File>
     var removedSources: List<File>
     var changedClasses: List<String>
-    val isolatedClassLoaderCacheBuildService: Property<IsolatedClassLoaderCacheBuildService>
 }
 
 val doNotGC = mutableSetOf<Any>()
@@ -629,7 +627,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val gradleCfg = parameters.config.get()
         val kspClasspath = parameters.kspClasspath
-        val isolatedClassLoaderCache = parameters.isolatedClassLoaderCacheBuildService.get().isolatedClassLoaderCache
+        val isolatedClassLoaderCache = IsolatedClassLoaderCache.cache
         val key = kspClasspath.files.map { it.toURI().toURL() }.joinToString { it.path }
         val isolatedClassLoader = isolatedClassLoaderCache.computeIfAbsent(key) {
             URLClassLoader(
