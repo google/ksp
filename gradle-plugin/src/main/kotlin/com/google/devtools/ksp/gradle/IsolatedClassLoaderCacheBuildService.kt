@@ -19,6 +19,7 @@ package com.google.devtools.ksp.gradle
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.net.URLClassLoader
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 object IsolatedClassLoaderCache {
@@ -38,7 +39,7 @@ object IsolatedClassLoaderCache {
 
 abstract class IsolatedClassLoaderCacheBuildService : BuildService<BuildServiceParameters.None>, AutoCloseable {
     companion object {
-        const val KEY = "IsolatedClassLoaderCacheBuildService"
+        val KEY = "IsolatedClassLoaderCacheBuildService_" + UUID.randomUUID().toString()
     }
 
     override fun close() {

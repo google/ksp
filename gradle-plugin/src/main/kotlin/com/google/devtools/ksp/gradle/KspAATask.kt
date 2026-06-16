@@ -102,7 +102,7 @@ abstract class KspAATask @Inject constructor(
     @get:Nested
     abstract val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
 
-    @get:ServiceReference(IsolatedClassLoaderCacheBuildService.KEY)
+    @get:ServiceReference
     abstract val isolatedClassLoaderCacheBuildService: Property<IsolatedClassLoaderCacheBuildService>
 
     @TaskAction
