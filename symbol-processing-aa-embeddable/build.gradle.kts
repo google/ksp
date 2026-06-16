@@ -28,6 +28,7 @@ val packedJars by configurations.creating
 
 dependencies {
     packedJars(project(":kotlin-analysis-api", "shadow")) { isTransitive = false }
+    packedJars("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion") { isTransitive = false }
 }
 
 tasks.withType(Jar::class.java).configureEach {
@@ -52,6 +53,8 @@ val prefixesToRelocate = listOf(
     "javaslang.",
     "kotlinx.collections.immutable.",
     "kotlinx.serialization.",
+    "kotlinx.coroutines.",
+    "_COROUTINE.",
     "org.apache.log4j.",
     "org.checkerframework.",
     "org.intellij.",
@@ -291,11 +294,6 @@ publishing {
 
                     asNode().appendNode("dependencies").apply {
                         addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
-                        addDependency(
-                            "org.jetbrains.kotlinx",
-                            "kotlinx-coroutines-core-jvm",
-                            aaCoroutinesVersion
-                        )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
