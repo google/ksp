@@ -58,7 +58,7 @@ abstract class KSPConfig(
         var removedSources: List<File> = emptyList()
         var changedClasses: List<String> = emptyList()
 
-        lateinit var languageVersion: String
+        var languageVersion: String = "2.0"
         lateinit var apiVersion: String
 
         var allWarningsAsErrors: Boolean = false

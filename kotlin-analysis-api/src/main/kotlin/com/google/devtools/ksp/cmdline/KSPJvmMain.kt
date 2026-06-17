@@ -47,6 +47,10 @@ internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSP
 
     val logger = KspGradleLogger(loggingLevel)
 
+    if (args.any { it.startsWith("-language-version") }) {
+        logger.warn("Flag '-language-version' is deprecated.")
+    }
+
     val (config, classpath) = parse(args)
     val processorClassloader = URLClassLoader(classpath.map { File(it).toURI().toURL() }.toTypedArray())
 

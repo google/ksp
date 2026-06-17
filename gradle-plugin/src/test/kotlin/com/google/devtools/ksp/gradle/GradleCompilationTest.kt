@@ -425,4 +425,33 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
             .withArguments("tasks", "-Pandroid.experimental.enableTestFixturesKotlinSupport=true")
             .build()
     }
+
+    @Test
+    fun testDeprecatedXJvmDefaultWarning() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.buildFileAdditions.add(
+            """
+            tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                compilerOptions.freeCompilerArgs.add("-Xjvm-default=all")
+            }
+            """.trimIndent()
+        )
+        testRule.appModule.dependencies.add(
+            module(configuration = "ksp", testRule.processorModule)
+        )
+        testRule.appModule.addSource(
+            "Foo.kt",
+            """
+            class Foo
+            """.trimIndent()
+        )
+        class DummyProcessor : SymbolProcessor {
+            override fun process(resolver: Resolver): List<KSAnnotated> = emptyList()
+        }
+        class Provider : TestSymbolProcessorProvider({ DummyProcessor() })
+        testRule.addProvider(Provider::class)
+
+        val result = testRule.runner().withArguments(":app:kspKotlin").build()
+        assertThat(result.output).contains("Flag '-Xjvm-default' is deprecated")
+    }
 }

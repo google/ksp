@@ -103,6 +103,13 @@ abstract class KspAATask @Inject constructor(
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
+        if (kspConfig.usedDeprecatedXJvmDefault.getOrElse(false)) {
+            logger.warn(
+                "Flag '-Xjvm-default' is deprecated. Please configure " +
+                    "'compilerOptions.jvmDefault' in Gradle DSL or use '-jvm-default' instead."
+            )
+        }
+
         // FIXME: Create a class loader with clean classpath instead of shadowing existing ones. It'll require either:
         //  1. passing arguments by data structures in stdlib, or
         //  2. hoisting and publishing KspGradleConfig into another package.
@@ -351,6 +358,7 @@ abstract class KspAATask @Inject constructor(
                             .map { it.toBoolean() }
                             .orElse(false)
                     )
+                    cfg.usedDeprecatedXJvmDefault.convention(false)
 
                     // Ref: https://github.com/JetBrains/kotlin/blob/6535f86dfe36effeba976802ebd56a5a56071f45/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/mpp/kotlinCompilations.kt#L92
                     val moduleName = when (val compilationName = kotlinCompilation.name) {
@@ -375,6 +383,14 @@ abstract class KspAATask @Inject constructor(
                                 }
                                 .map { it.lastOrNull()?.substringAfter("=") ?: "undefined" }
                         }
+
+                        cfg.usedDeprecatedXJvmDefault.set(
+                            compileTask.flatMap { task ->
+                                task.compilerOptions.freeCompilerArgs.map { args ->
+                                    args.any { it.startsWith("-Xjvm-default=") }
+                                }
+                            }
+                        )
 
                         val compilerArgument = compileTask.flatMap { task ->
                             (task.compilerOptions as KotlinJvmCompilerOptions).jvmDefault.map { it.compilerArgument }
@@ -571,6 +587,10 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Input
     abstract val experimentalPsiResolution: Property<Boolean>
+
+    @get:Input
+    @get:Optional
+    abstract val usedDeprecatedXJvmDefault: Property<Boolean>
 
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Incremental

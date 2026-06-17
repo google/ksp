@@ -74,10 +74,12 @@ class KSPCmdLineOptionsIT(experimentalPsiResolution: Boolean) {
         )
     }
 
-    fun testKsp2(mainClassName: String, platformArgs: List<String>) {
+    fun testKsp2(mainClassName: String, platformArgs: List<String>, includeLanguageVersion: Boolean = true) {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
 
-        val sharedArgs = getKsp2SharedArgs()
+        val sharedArgs = getKsp2SharedArgs().let {
+            if (includeLanguageVersion) it else it.filterNot { arg -> arg.startsWith("-language-version") }
+        }
         val kspMain = getKsp2Main(mainClassName)
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -114,6 +116,41 @@ class KSPCmdLineOptionsIT(experimentalPsiResolution: Boolean) {
                 "-jvm-target", "11",
             )
         )
+    }
+
+    @Test
+    fun testKSPJvmMainWithoutLanguageVersion() {
+        val outDir = "${project.root.path}/build/out"
+        testKsp2(
+            "com.google.devtools.ksp.cmdline.KSPJvmMain",
+            listOf(
+                "-java-output-dir", outDir,
+                "-jvm-target", "11",
+            ),
+            includeLanguageVersion = false
+        )
+    }
+
+    @Test
+    fun testKSPLanguageVersionDeprecationWarning() {
+        val outDir = "${project.root.path}/build/out"
+        val originalOut = System.out
+        val baos = java.io.ByteArrayOutputStream()
+        System.setOut(java.io.PrintStream(baos))
+        try {
+            testKsp2(
+                "com.google.devtools.ksp.cmdline.KSPJvmMain",
+                listOf(
+                    "-java-output-dir", outDir,
+                    "-jvm-target", "11",
+                ),
+                includeLanguageVersion = true
+            )
+            val output = baos.toString()
+            Assert.assertTrue("Flag '-language-version' is deprecated" in output)
+        } finally {
+            System.setOut(originalOut)
+        }
     }
 
     @Test
