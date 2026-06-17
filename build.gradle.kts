@@ -1,5 +1,4 @@
-import com.google.devtools.ksp.configureKtlint
-import com.google.devtools.ksp.configureKtlintApplyToIdea
+import com.google.devtools.ksp.configureKtfmt
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -45,11 +44,10 @@ nexusPublishing {
 
 version = rootProject.extra.get("kspVersion") as String
 
-configureKtlintApplyToIdea()
 subprojects {
     group = "com.google.devtools.ksp"
     version = rootProject.extra.get("kspVersion") as String
-    configureKtlint()
+    configureKtfmt()
     repositories {
         google()
         maven("https://redirector.kotlinlang.org/maven/bootstrap/")
