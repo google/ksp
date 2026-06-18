@@ -1,6 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.RelativizingInternalPathProvider
 import com.google.devtools.ksp.RelativizingPathProvider
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
+import org.gradle.api.provider.Provider
 import org.jetbrains.org.objectweb.asm.ClassReader
 import org.jetbrains.org.objectweb.asm.ClassWriter
 import org.jetbrains.org.objectweb.asm.commons.ClassRemapper
@@ -17,28 +19,15 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 val signingKey: String? by project
 val signingPassword: String? by project
 
-val kotlinBaseVersion: String by project
-val kotlinxSerializationVersion: String by project
-val junitVersion: String by project
-val junit5Version: String by project
-val junitPlatformVersion: String by project
 val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
-val aaKotlinBaseVersion: String by project
-val aaIntellijVersion: String by project
-val aaGuavaVersion: String by project
-val aaAsmVersion: String by project
-val aaFastutilVersion: String by project
-val aaStax2Version: String by project
-val aaAaltoXmlVersion: String by project
-val aaStreamexVersion: String by project
-val aaCoroutinesVersion: String by project
+val aaKotlinBaseVersion = libs.versions.aa.kotlin.base.get()
 
 plugins {
-    kotlin("jvm")
-    id("org.jetbrains.dokka")
-    id("com.gradleup.shadow")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.shadow)
     `maven-publish`
     signing
 }
@@ -124,108 +113,104 @@ val transformedIntellijDeps = tasks.register<TransformIntellijDeps>("transformed
 
 dependencies {
     listOf(
-        "com.jetbrains.intellij.platform:util-rt",
-        "com.jetbrains.intellij.platform:util-class-loader",
-        "com.jetbrains.intellij.platform:util-text-matching",
-        "com.jetbrains.intellij.platform:util",
-        "com.jetbrains.intellij.platform:util-base",
-        "com.jetbrains.intellij.platform:util-coroutines",
-        "com.jetbrains.intellij.platform:util-xml-dom",
-        "com.jetbrains.intellij.platform:core",
-        "com.jetbrains.intellij.platform:core-impl",
-        "com.jetbrains.intellij.platform:extensions",
-        "com.jetbrains.intellij.platform:diagnostic",
-        "com.jetbrains.intellij.platform:diagnostic-telemetry",
-        "com.jetbrains.intellij.java:java-frontback-psi",
-        "com.jetbrains.intellij.java:java-frontback-psi-impl",
-        "com.jetbrains.intellij.java:java-psi",
-        "com.jetbrains.intellij.java:java-psi-impl",
+        libs.intellij.platform.util.rt,
+        libs.intellij.platform.util.classloader,
+        libs.intellij.platform.util.text.matching,
+        libs.intellij.platform.util.core,
+        libs.intellij.platform.util.base,
+        libs.intellij.platform.util.coroutines,
+        libs.intellij.platform.util.xml.dom,
+        libs.intellij.platform.core.main,
+        libs.intellij.platform.core.impl,
+        libs.intellij.platform.extensions,
+        libs.intellij.platform.diagnostic.main,
+        libs.intellij.platform.diagnostic.telemetry,
+        libs.intellij.java.frontback.psi.main,
+        libs.intellij.java.frontback.psi.impl,
+        libs.intellij.java.psi.main,
+        libs.intellij.java.psi.impl,
     ).forEach {
-        intellijOriginal("$it:$aaIntellijVersion")
-        depSourceJars("$it:$aaIntellijVersion:sources") { isTransitive = false }
+        intellijOriginal(it)
+        depSourceJars(variantOf(it) { classifier("sources") }) { isTransitive = false }
     }
     implementation(files(transformedIntellijDeps.map { it.outputDir.asFileTree }))
 
     listOf(
-        "org.jetbrains.kotlin:analysis-api-k2-for-ide",
-        "org.jetbrains.kotlin:analysis-api-for-ide",
-        "org.jetbrains.kotlin:low-level-api-fir-for-ide",
-        "org.jetbrains.kotlin:analysis-api-platform-interface-for-ide",
-        "org.jetbrains.kotlin:symbol-light-classes-for-ide",
-        "org.jetbrains.kotlin:analysis-api-standalone-for-ide",
-        "org.jetbrains.kotlin:analysis-api-impl-base-for-ide",
-        "org.jetbrains.kotlin:kotlin-compiler-common-for-ide",
-        "org.jetbrains.kotlin:kotlin-compiler-fir-for-ide",
-        "org.jetbrains.kotlin:kotlin-compiler-fe10-for-ide",
-        "org.jetbrains.kotlin:kotlin-compiler-ir-for-ide",
+        libs.aa.analysis.api.k2.ide,
+        libs.aa.analysis.api.ide,
+        libs.aa.low.level.api.fir.ide,
+        libs.aa.analysis.api.platform.iface.ide,
+        libs.aa.symbol.light.classes.ide,
+        libs.aa.analysis.api.standalone.ide,
+        libs.aa.analysis.api.impl.base.ide,
+        libs.aa.kotlin.compiler.common.ide,
+        libs.aa.kotlin.compiler.fir.ide,
+        libs.aa.kotlin.compiler.fe10.ide,
+        libs.aa.kotlin.compiler.ir.ide,
     ).forEach {
-        implementation("$it:$aaKotlinBaseVersion") { isTransitive = false }
-        depSourceJars("$it:$aaKotlinBaseVersion:sources") { isTransitive = false }
+        implementation(it) { isTransitive = false }
+        depSourceJars(variantOf(it) { classifier("sources") }) { isTransitive = false }
     }
 
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
+    implementation(libs.kotlinx.collections.immutable.jvm)
+    implementation(libs.kotlinx.serialization.json)
+    compileOnly(libs.aa.kotlin.stdlib)
 
-    implementation("com.google.guava:guava:$aaGuavaVersion")
-    implementation("one.util:streamex:$aaStreamexVersion")
-    implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
-    implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
-    implementation("com.fasterxml:aalto-xml:$aaAaltoXmlVersion") { isTransitive = false }
-    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
-    implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps:trove4j:1.0.20200330") { isTransitive = false }
-    originalLog4j("org.jetbrains.intellij.deps:log4j:1.2.17.2") { isTransitive = false }
+    implementation(libs.guava)
+    implementation(libs.streamex)
+    implementation(libs.intellij.deps.asm.all)
+    implementation(libs.stax2.api) { isTransitive = false }
+    implementation(libs.aalto.xml) { isTransitive = false }
+    implementation(libs.caffeine)
+    implementation(libs.intellij.deps.jna.core) { isTransitive = false }
+    implementation(libs.intellij.deps.jna.platform) { isTransitive = false }
+    implementation(libs.intellij.deps.trove4j) { isTransitive = false }
+    originalLog4j(libs.intellij.deps.log4j) { isTransitive = false }
     implementation(files(filteredLog4j))
-    implementation("org.jetbrains.intellij.deps:jdom:2.0.6") { isTransitive = false }
-    implementation("io.javaslang:javaslang:2.0.6")
-    implementation("javax.inject:javax.inject:1")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
-    implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
-    implementation(
-        "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
-    ) {
-        isTransitive = false
-    }
-    implementation("org.jetbrains:annotations:24.1.0")
+    implementation(libs.intellij.deps.jdom) { isTransitive = false }
+    implementation(libs.javaslang)
+    implementation(libs.javax.inject)
+    implementation(libs.kotlin.reflect.legacy)
+    implementation(libs.lz4.java) { isTransitive = false }
+    compileOnly(libs.aa.kotlinx.coroutines.core.jvm)
+    compileOnly(libs.aa.kotlinx.coroutines.core.common)
+    implementation(libs.intellij.deps.fastutil) { isTransitive = false }
+    implementation(libs.jetbrains.annotations)
 
-    implementation("io.opentelemetry:opentelemetry-api:1.34.1") { isTransitive = false }
+    implementation(libs.opentelemetry.api) { isTransitive = false }
 
     compileOnly(project(":common-deps"))
 
     implementation(project(":api"))
     implementation(project(":common-util"))
 
-    testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
+    testImplementation(libs.aa.kotlin.stdlib)
+    testImplementation(libs.junit4)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.jupiter.params)
+    testRuntimeOnly(libs.junit.platform.suite)
+    testImplementation(libs.aa.kotlin.compiler.main)
+    testImplementation(libs.aa.kotlin.compiler.internal.test.framework)
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
-    testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    testImplementation(libs.aa.analysis.api.test.framework)
+    testImplementation(libs.aa.kotlinx.coroutines.core.jvm)
+    testImplementation(libs.aa.kotlinx.coroutines.core.common)
 
     // See AbstractKSPTest's init block if you change any of the `libsForTesting` or `libsForTestingCommon` dependencies.
-    libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
-    libsForTesting(kotlin("test", aaKotlinBaseVersion))
-    libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
-    libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
+    libsForTesting(libs.aa.kotlin.stdlib)
+    libsForTesting(libs.aa.kotlin.test)
+    libsForTesting(libs.aa.kotlin.script.runtime)
+    libsForTestingCommon(libs.aa.kotlin.stdlib.common)
 
-    depJarsForCheck("org.jetbrains.kotlin:kotlin-stdlib:$kotlinBaseVersion")
-    depJarsForCheck("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    depJarsForCheck("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    depJarsForCheck(libs.kotlin.stdlib)
+    depJarsForCheck(libs.aa.kotlinx.coroutines.core.jvm)
+    depJarsForCheck(libs.aa.kotlinx.coroutines.core.common)
     depJarsForCheck(project(":api"))
     depJarsForCheck(project(":common-deps"))
 
-    compilerJar("org.jetbrains.kotlin:kotlin-compiler-common-for-ide:$aaKotlinBaseVersion")
+    compilerJar(libs.aa.kotlin.compiler.common.ide)
 }
 
 sourceSets.main {
@@ -360,6 +345,19 @@ publishing {
                 description.set("KSP implementation on Kotlin Analysis API")
                 withXml {
                     fun groovy.util.Node.addDependency(
+                        dependency: Provider<MinimalExternalModuleDependency>,
+                        scope: String = "runtime"
+                    ) {
+                        val moduleDependency = dependency.get()
+                        appendNode("dependency").apply {
+                            appendNode("groupId", moduleDependency.module.group)
+                            appendNode("artifactId", moduleDependency.module.name)
+                            appendNode("version", moduleDependency.versionConstraint.requiredVersion)
+                            appendNode("scope", scope)
+                        }
+                    }
+
+                    fun groovy.util.Node.addDependency(
                         groupId: String,
                         artifactId: String,
                         version: String,
@@ -374,12 +372,8 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
-                        addDependency(
-                            "org.jetbrains.kotlinx",
-                            "kotlinx-coroutines-core-jvm",
-                            aaCoroutinesVersion
-                        )
+                        addDependency(libs.kotlin.stdlib)
+                        addDependency(libs.aa.kotlinx.coroutines.core.jvm)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version, "compile")
                         addDependency(
                             "com.google.devtools.ksp",

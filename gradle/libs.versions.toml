@@ -1,0 +1,118 @@
+[versions]
+kotlin-base = "2.3.20"
+build-kotlin = "2.3.20"
+ksp = "2.3.5"
+kotlinx-serialization = "1.6.3"
+agp-base = "9.3.0-alpha01"
+junit4 = "4.13.1"
+junit5 = "5.8.2"
+junit-platform = "1.8.2"
+google-truth = "1.4.5"
+aa-kotlin-base = "2.4.20-dev-4664"
+aa-intellij = "251.27812.49"
+aa-guava = "33.2.0-jre"
+aa-asm = "9.0"
+aa-fastutil = "8.5.14-jb1"
+aa-stax2 = "4.2.1"
+aa-aalto-xml = "1.3.0"
+aa-streamex = "0.7.2"
+aa-coroutines = "1.10.2"
+kotlinx-collections-immutable = "0.3.4"
+caffeine = "2.9.3"
+intellij-jna = "5.9.0.26"
+intellij-trove4j = "1.0.20200330"
+intellij-log4j = "1.2.17.2"
+intellij-jdom = "2.0.6"
+javaslang = "2.0.6"
+javax-inject = "1"
+kotlin-reflect-legacy = "1.6.10"
+lz4-java = "1.7.1"
+jetbrains-annotations = "24.1.0"
+opentelemetry-api = "1.34.1"
+androidx-lint-gradle = "1.0.0-alpha05"
+gradle-nexus-publish = "2.0.0"
+shadow = "8.3.9"
+dokka = "1.9.20"
+android-lint-plugin = "8.13.0"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-base" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin-base" }
+kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin-base" }
+kotlin-gradle-plugin-main = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-base" }
+kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-base" }
+android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp-base" }
+androidx-lint-gradle = { module = "androidx.lint:lint-gradle", version.ref = "androidx-lint-gradle" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
+junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
+google-truth = { module = "com.google.truth:truth", version.ref = "google-truth" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
+aa-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "aa-kotlin-base" }
+aa-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "aa-kotlin-base" }
+aa-kotlin-script-runtime = { module = "org.jetbrains.kotlin:kotlin-script-runtime", version.ref = "aa-kotlin-base" }
+aa-kotlin-stdlib-common = { module = "org.jetbrains.kotlin:kotlin-stdlib-common", version.ref = "aa-kotlin-base" }
+aa-kotlin-compiler-main = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "aa-kotlin-base" }
+aa-kotlin-compiler-internal-test-framework = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "aa-kotlin-base" }
+aa-analysis-api-test-framework = { module = "org.jetbrains.kotlin:analysis-api-test-framework", version.ref = "aa-kotlin-base" }
+aa-analysis-api-k2-ide = { module = "org.jetbrains.kotlin:analysis-api-k2-for-ide", version.ref = "aa-kotlin-base" }
+aa-analysis-api-ide = { module = "org.jetbrains.kotlin:analysis-api-for-ide", version.ref = "aa-kotlin-base" }
+aa-low-level-api-fir-ide = { module = "org.jetbrains.kotlin:low-level-api-fir-for-ide", version.ref = "aa-kotlin-base" }
+aa-analysis-api-platform-iface-ide = { module = "org.jetbrains.kotlin:analysis-api-platform-interface-for-ide", version.ref = "aa-kotlin-base" }
+aa-symbol-light-classes-ide = { module = "org.jetbrains.kotlin:symbol-light-classes-for-ide", version.ref = "aa-kotlin-base" }
+aa-analysis-api-standalone-ide = { module = "org.jetbrains.kotlin:analysis-api-standalone-for-ide", version.ref = "aa-kotlin-base" }
+aa-analysis-api-impl-base-ide = { module = "org.jetbrains.kotlin:analysis-api-impl-base-for-ide", version.ref = "aa-kotlin-base" }
+aa-kotlin-compiler-common-ide = { module = "org.jetbrains.kotlin:kotlin-compiler-common-for-ide", version.ref = "aa-kotlin-base" }
+aa-kotlin-compiler-fir-ide = { module = "org.jetbrains.kotlin:kotlin-compiler-fir-for-ide", version.ref = "aa-kotlin-base" }
+aa-kotlin-compiler-fe10-ide = { module = "org.jetbrains.kotlin:kotlin-compiler-fe10-for-ide", version.ref = "aa-kotlin-base" }
+aa-kotlin-compiler-ir-ide = { module = "org.jetbrains.kotlin:kotlin-compiler-ir-for-ide", version.ref = "aa-kotlin-base" }
+aa-kotlinx-coroutines-core-jvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "aa-coroutines" }
+aa-kotlinx-coroutines-core-common = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "aa-coroutines" }
+
+intellij-platform-util-rt = { module = "com.jetbrains.intellij.platform:util-rt", version.ref = "aa-intellij" }
+intellij-platform-util-classloader = { module = "com.jetbrains.intellij.platform:util-class-loader", version.ref = "aa-intellij" }
+intellij-platform-util-text-matching = { module = "com.jetbrains.intellij.platform:util-text-matching", version.ref = "aa-intellij" }
+intellij-platform-util-core = { module = "com.jetbrains.intellij.platform:util", version.ref = "aa-intellij" }
+intellij-platform-util-base = { module = "com.jetbrains.intellij.platform:util-base", version.ref = "aa-intellij" }
+intellij-platform-util-coroutines = { module = "com.jetbrains.intellij.platform:util-coroutines", version.ref = "aa-intellij" }
+intellij-platform-util-xml-dom = { module = "com.jetbrains.intellij.platform:util-xml-dom", version.ref = "aa-intellij" }
+intellij-platform-core-main = { module = "com.jetbrains.intellij.platform:core", version.ref = "aa-intellij" }
+intellij-platform-core-impl = { module = "com.jetbrains.intellij.platform:core-impl", version.ref = "aa-intellij" }
+intellij-platform-extensions = { module = "com.jetbrains.intellij.platform:extensions", version.ref = "aa-intellij" }
+intellij-platform-diagnostic-main = { module = "com.jetbrains.intellij.platform:diagnostic", version.ref = "aa-intellij" }
+intellij-platform-diagnostic-telemetry = { module = "com.jetbrains.intellij.platform:diagnostic-telemetry", version.ref = "aa-intellij" }
+intellij-java-frontback-psi-main = { module = "com.jetbrains.intellij.java:java-frontback-psi", version.ref = "aa-intellij" }
+intellij-java-frontback-psi-impl = { module = "com.jetbrains.intellij.java:java-frontback-psi-impl", version.ref = "aa-intellij" }
+intellij-java-psi-main = { module = "com.jetbrains.intellij.java:java-psi", version.ref = "aa-intellij" }
+intellij-java-psi-impl = { module = "com.jetbrains.intellij.java:java-psi-impl", version.ref = "aa-intellij" }
+intellij-deps-asm-all = { module = "org.jetbrains.intellij.deps:asm-all", version.ref = "aa-asm" }
+intellij-deps-jna-core = { module = "org.jetbrains.intellij.deps.jna:jna", version.ref = "intellij-jna" }
+intellij-deps-jna-platform = { module = "org.jetbrains.intellij.deps.jna:jna-platform", version.ref = "intellij-jna" }
+intellij-deps-trove4j = { module = "org.jetbrains.intellij.deps:trove4j", version.ref = "intellij-trove4j" }
+intellij-deps-log4j = { module = "org.jetbrains.intellij.deps:log4j", version.ref = "intellij-log4j" }
+intellij-deps-jdom = { module = "org.jetbrains.intellij.deps:jdom", version.ref = "intellij-jdom" }
+intellij-deps-fastutil = { module = "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil", version.ref = "aa-fastutil" }
+
+kotlinx-collections-immutable-jvm = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm", version.ref = "kotlinx-collections-immutable" }
+guava = { module = "com.google.guava:guava", version.ref = "aa-guava" }
+streamex = { module = "one.util:streamex", version.ref = "aa-streamex" }
+stax2-api = { module = "org.codehaus.woodstox:stax2-api", version.ref = "aa-stax2" }
+aalto-xml = { module = "com.fasterxml:aalto-xml", version.ref = "aa-aalto-xml" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+javaslang = { module = "io.javaslang:javaslang", version.ref = "javaslang" }
+javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
+kotlin-reflect-legacy = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin-reflect-legacy" }
+lz4-java = { module = "org.lz4:lz4-java", version.ref = "lz4-java" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+opentelemetry-api = { module = "io.opentelemetry:opentelemetry-api", version.ref = "opentelemetry-api" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "build-kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+gradle-nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "gradle-nexus-publish" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+android-lint = { id = "com.android.lint", version.ref = "android-lint-plugin" }

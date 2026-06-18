@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
 }
 
 version = rootProject.extra.get("kspVersion") as String
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     implementation(project(":api"))
-    implementation(kotlin("reflect"))
+    implementation(libs.kotlin.reflect)
 }
 
 kotlin {

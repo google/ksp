@@ -4,7 +4,7 @@ val signingKey: String? by project
 val signingPassword: String? by project
 
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
     `maven-publish`
     signing
 }

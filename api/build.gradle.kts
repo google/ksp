@@ -14,10 +14,10 @@ tasks.withType<KotlinCompile> {
 }
 
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
     `maven-publish`
     signing
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.dokka)
 }
 
 val sourceJar = tasks.register<Jar>("sourcesJar") {

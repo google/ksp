@@ -3,6 +3,8 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
 import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
 import org.apache.tools.zip.ZipEntry
 import org.apache.tools.zip.ZipOutputStream
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
+import org.gradle.api.provider.Provider
 import org.gradle.jvm.tasks.Jar
 import java.io.InputStreamReader
 import java.util.zip.ZipFile
@@ -12,14 +14,9 @@ evaluationDependsOn(":kotlin-analysis-api")
 val signingKey: String? by project
 val signingPassword: String? by project
 
-val kotlinBaseVersion: String by project
-
-val aaKotlinBaseVersion: String by project
-val aaCoroutinesVersion: String by project
-
 plugins {
-    kotlin("jvm")
-    id("com.gradleup.shadow")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.shadow)
     `maven-publish`
     signing
 }
@@ -28,7 +25,7 @@ val packedJars by configurations.creating
 
 dependencies {
     packedJars(project(":kotlin-analysis-api", "shadow")) { isTransitive = false }
-    packedJars("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion") { isTransitive = false }
+    packedJars(libs.aa.kotlinx.coroutines.core.jvm) { isTransitive = false }
 }
 
 tasks.withType(Jar::class.java).configureEach {
@@ -279,6 +276,19 @@ publishing {
                 description.set("KSP implementation on Kotlin Analysis API")
                 withXml {
                     fun groovy.util.Node.addDependency(
+                        dependency: Provider<MinimalExternalModuleDependency>,
+                        scope: String = "runtime"
+                    ) {
+                        val moduleDependency = dependency.get()
+                        appendNode("dependency").apply {
+                            appendNode("groupId", moduleDependency.module.group)
+                            appendNode("artifactId", moduleDependency.module.name)
+                            appendNode("version", moduleDependency.versionConstraint.requiredVersion)
+                            appendNode("scope", scope)
+                        }
+                    }
+
+                    fun groovy.util.Node.addDependency(
                         groupId: String,
                         artifactId: String,
                         version: String,
@@ -293,7 +303,7 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency(libs.kotlin.stdlib)
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
@@ -327,7 +337,7 @@ abstract class WriteVersionSrcTask : DefaultTask() {
 val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>(
     "generateKSPVersions"
 ) {
-    kotlinVersion = aaKotlinBaseVersion
+    kotlinVersion = libs.versions.aa.kotlin.base.get()
     outputResDir = layout.buildDirectory.dir("generated/ksp-versions/META-INF")
 }
 

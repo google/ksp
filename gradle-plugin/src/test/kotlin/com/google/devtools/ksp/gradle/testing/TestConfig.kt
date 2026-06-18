@@ -25,10 +25,6 @@ import java.util.*
  */
 data class TestConfig(
     /**
-     * The root directory of the main KSP project
-     */
-    val kspProjectDir: File,
-    /**
      * The classpath that can be used to load processors.
      * The testing infra allows loading processors from the test classpath of the gradle-plugin.
      * This classpath is the output of the test compilation in the main KSP project.
@@ -41,23 +37,16 @@ data class TestConfig(
     /**
      * The version of KSP.
      */
-    val kspVersion: String
+    val kspVersion: String,
+    /**
+     * The version of Kotlin used by the integration test projects.
+     */
+    val kotlinBaseVersion: String,
+    /**
+     * The version of the Android Gradle Plugin used by the integration test projects.
+     */
+    val androidBaseVersion: String
 ) {
-    private val kspProjectProperties by lazy {
-        Properties().also { props ->
-            kspProjectDir.resolve("gradle.properties").inputStream().use {
-                props.load(it)
-            }
-        }
-    }
-    val kotlinBaseVersion by lazy {
-        kspProjectProperties["kotlinBaseVersion"] as String
-    }
-
-    val androidBaseVersion by lazy {
-        kspProjectProperties["agpBaseVersion"] as String
-    }
-
     val mavenRepoPath = mavenRepoDir.path.replace(File.separatorChar, '/')
 
     companion object {
@@ -70,10 +59,11 @@ data class TestConfig(
                 props.load(it)
             }
             return TestConfig(
-                kspProjectDir = File(props.get("kspProjectRootDir") as String),
                 processorClasspath = props.get("processorClasspath") as String,
                 mavenRepoDir = File(props.get("mavenRepoDir") as String),
-                kspVersion = props.get("kspVersion") as String
+                kspVersion = props.get("kspVersion") as String,
+                kotlinBaseVersion = props.get("kotlinBaseVersion") as String,
+                androidBaseVersion = props.get("agpBaseVersion") as String
             )
         }
     }

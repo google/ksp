@@ -2,21 +2,20 @@ import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 description = "Kotlin Symbol Processor"
 
-val junitVersion: String by project
 val signingKey: String? by project
 val signingPassword: String? by project
 
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
     `maven-publish`
     signing
-    id("org.jetbrains.dokka")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.ksp)
 }
 
 dependencies {
     compileOnly(project(":api"))
-    testImplementation("junit:junit:$junitVersion")
+    testImplementation(libs.junit4)
 
     ksp(project(":cmdline-parser-gen"))
 }
