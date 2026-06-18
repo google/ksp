@@ -189,6 +189,17 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/backingFields.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    @Test
+    @Bug(
+        "https://github.com/google/ksp/issues/2873",
+        BugState.FIXED,
+        "Minimal reproduction of error observed in integration test AndroidDataBindingIT"
+    )
+    fun testBackingFieldsLateinit() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    }
+
     @TestMetadata("builtInTypes.kt")
     @Test
     fun testBuiltInTypes() {
