@@ -483,18 +483,21 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:NormalizeLineEndings
     abstract val sourceRoots: ConfigurableFileCollection
 
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:NormalizeLineEndings
     abstract val commonSourceRoots: ConfigurableFileCollection
 
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:NormalizeLineEndings
     abstract val javaSourceRoots: ConfigurableFileCollection
 
     // Marked as Internal for compilation avoidance.
