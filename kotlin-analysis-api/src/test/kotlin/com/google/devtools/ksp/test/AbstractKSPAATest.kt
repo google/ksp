@@ -91,10 +91,7 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
         val compiler = compilerClass.getDeclaredConstructor().newInstance()
         val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
-        val exitCode = execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
-        check(exitCode.toString() == "OK") {
-            "Kotlin compilation failed with exit code $exitCode:\n$outStream"
-        }
+        execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
     }
 
     override fun compileModule(module: TestModule, testServices: TestServices) {

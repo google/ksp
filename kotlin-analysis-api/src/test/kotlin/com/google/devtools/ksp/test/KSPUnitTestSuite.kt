@@ -497,8 +497,9 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("jvmNameRecord.kt")
     @Test
+    @Bug("https://github.com/google/ksp/issues/2812", BugState.FIXED)
     fun testJvmNameRecord() {
-        runTest("../kotlin-analysis-api/testData/jvmNameRecord.kt")
+        runTest("$AA_PATH/jvmNameRecord.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")

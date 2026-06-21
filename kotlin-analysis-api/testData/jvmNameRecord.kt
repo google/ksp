@@ -1,3 +1,19 @@
+/*
+ * Copyright 2026 Google LLC
+ * Copyright 2010-2026 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 // TEST PROCESSOR: JvmNameRecordProcessor
 // EXPECTED:
 // Aliased.z: z
@@ -9,10 +25,13 @@
 // NamedRecord.id: id
 // NamedRecord.name: name
 // Single.x: x
+// TypeAliased.t: t
 // WithBody.a: a
 // WithBody.computed: computed
-// WithBody.mutable: mutable, mutable
+// WithBody.mutable: mutable, mutable(value)
 // WithJvmName.n: customName
+// WithRecordProp.inner: inner
+// WithRecordProp.n: n
 // END
 // JVM_TARGET: 17
 // MODULE: lib
@@ -57,8 +76,19 @@ data class WithBody(val a: Int) {
 // An explicit @JvmName takes precedence over the record accessor naming.
 @JvmRecord
 data class WithJvmName(@get:JvmName("customName") val n: Int)
+
+// A property whose type is also a @JvmRecord — the property type does not affect accessor naming.
+@JvmRecord
+data class WithRecordProp(val inner: Single, val n: Int)
 // FILE: aliased.kt
 import kotlin.jvm.JvmRecord as JR
 
 @JR
 data class Aliased(val z: Int)
+// FILE: typealiased.kt
+import kotlin.jvm.JvmRecord
+
+typealias JvmRec = JvmRecord
+
+@JvmRec
+data class TypeAliased(val t: Int)
