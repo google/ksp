@@ -171,4 +171,105 @@ class AndroidBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
             assert("w: [ksp] [workload] Mangled name for internalFun: internalFun\$workload" in outputs)
         }
     }
+
+    @Test
+    fun testRClassResolutionWithBuiltInKotlin() {
+        val resDir = File(project.root, "workload/src/main/res/values")
+        resDir.mkdirs()
+        File(resDir, "strings.xml").writeText(
+            """
+            <resources>
+                <string name="sample_label">Sample Label</string>
+            </resources>
+            """.trimIndent()
+        )
+
+        val javaDir = File(project.root, "workload/src/main/java/com/example")
+        javaDir.mkdirs()
+        File(javaDir, "RUsage.kt").writeText(
+            """
+            package com.example
+            import com.example.annotation.Builder
+            import com.example.myapplication.R
+
+            @Builder
+            class RUsage {
+                val label = R.string.sample_label
+            }
+            """.trimIndent()
+        )
+
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "clean", "build", "--configuration-cache", "--info", "--stacktrace"
+        ).build().let { result ->
+            val classesJar = File(
+                project.root,
+                "workload/build/intermediates/compile_app_classes_jar/debug/bundleDebugClassesToCompileJar/classes.jar"
+            )
+            JarFile(classesJar).use { jarFile ->
+                jarFile.assertContainsNonNullEntry("com/example/RUsageBuilder.class")
+            }
+        }
+    }
+
+    @Test
+    fun testRClassResolutionWithBuiltInKotlinAndKapt() {
+        val settingsGradle = File(project.root, "settings.gradle.kts")
+        val settingsContent = settingsGradle.readText()
+        val updatedSettingsContent = settingsContent.replace(
+            "id(\"com.android.application\") version agpVersion apply false",
+            "id(\"com.android.application\") version agpVersion apply false\n        " +
+                "id(\"com.android.legacy-kapt\") version agpVersion apply false"
+        )
+        settingsGradle.writeText(updatedSettingsContent)
+
+        val buildGradle = File(project.root, "workload/build.gradle.kts")
+        val content = buildGradle.readText()
+        val updatedContent = content.replace(
+            "id(\"com.android.application\")",
+            "id(\"com.android.application\")\n    id(\"com.android.legacy-kapt\")"
+        )
+        buildGradle.writeText(updatedContent)
+
+        val resDir = File(project.root, "workload/src/main/res/values")
+        resDir.mkdirs()
+        File(resDir, "strings.xml").writeText(
+            """
+            <resources>
+                <string name="sample_label">Sample Label</string>
+            </resources>
+            """.trimIndent()
+        )
+
+        val javaDir = File(project.root, "workload/src/main/java/com/example")
+        javaDir.mkdirs()
+        File(javaDir, "RUsage.kt").writeText(
+            """
+            package com.example
+            import com.example.annotation.Builder
+            import com.example.myapplication.R
+
+            @Builder
+            class RUsage {
+                val label = R.string.sample_label
+            }
+            """.trimIndent()
+        )
+
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "clean", "build", "--configuration-cache", "--info", "--stacktrace"
+        ).build().let { result ->
+            val classesJar = File(
+                project.root,
+                "workload/build/intermediates/compile_app_classes_jar/debug/bundleDebugClassesToCompileJar/classes.jar"
+            )
+            JarFile(classesJar).use { jarFile ->
+                jarFile.assertContainsNonNullEntry("com/example/RUsageBuilder.class")
+            }
+        }
+    }
 }

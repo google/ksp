@@ -14,6 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("InternalAgpApiUsage")
+
 package com.google.devtools.ksp.gradle
 
 import com.android.build.api.artifact.ScopedArtifact
@@ -25,6 +27,7 @@ import com.android.build.api.variant.impl.FlatSourceDirectoriesForJavaImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.google.devtools.ksp.gradle.utils.canUseAddGeneratedSourceDirectoriesApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
@@ -89,6 +92,18 @@ object AndroidPluginIntegration {
                 kspTaskProvider.configure { task ->
                     task.kspConfig.javaSourceRoots.from(javaSources)
                     task.kspConfig.javaSourceRoots.from(kotlinSources)
+                }
+
+                val isKaptApplied = project.plugins.hasPlugin("com.android.legacy-kapt")
+                if (isKaptApplied) {
+                    (androidComponent as? ComponentCreationConfig)
+                        ?.androidResourcesCreationConfig
+                        ?.compiledRClassArtifact
+                        ?.let { compiledRClassArtifact ->
+                            kspTaskProvider.configure { task ->
+                                task.kspConfig.libraries.from(project.files(compiledRClassArtifact))
+                            }
+                        }
                 }
             } else {
                 throw RuntimeException(

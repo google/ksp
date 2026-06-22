@@ -243,22 +243,29 @@ abstract class KspAATask @Inject constructor(
 
                     if (kotlinCompilation is KotlinJvmAndroidCompilation) {
                         if (project.isAgpBuiltInKotlinUsed()) {
-                            // when legacy-kapt plugin is applied, we can't use KotlinCompile.libraries directly
-                            // because it contains the kapt output classes dir leading to circular dependency
-                            val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
-                            cfg.libraries.from(androidComponents.sdkComponents.bootClasspath)
-                            cfg.libraries.from(
-                                project.provider {
-                                    val configuration = project.configurations.getByName(
-                                        kotlinCompilation.compileDependencyConfigurationName
-                                    )
-                                    configuration.incoming.artifactView { config ->
-                                        config.attributes.attribute(
-                                            Attribute.of("artifactType", String::class.java), "android-classes-jar"
+                            val androidComponents =
+                                project.extensions.getByType(AndroidComponentsExtension::class.java)
+                            val isKaptApplied = project.plugins.hasPlugin("com.android.legacy-kapt")
+
+                            if (isKaptApplied) {
+                                // Fallback to workaround to avoid circular dependency with KAPT.
+                                cfg.libraries.from(androidComponents.sdkComponents.bootClasspath)
+                                cfg.libraries.from(
+                                    project.provider {
+                                        val configuration = project.configurations.getByName(
+                                            kotlinCompilation.compileDependencyConfigurationName
                                         )
-                                    }.files
-                                }
-                            )
+                                        configuration.incoming.artifactView { config ->
+                                            config.attributes.attribute(
+                                                Attribute.of("artifactType", String::class.java), "android-classes-jar"
+                                            )
+                                        }.files
+                                    }
+                                )
+                            } else {
+                                cfg.libraries.from(kotlinCompileProvider.get().libraries)
+                                cfg.libraries.from(androidComponents.sdkComponents.bootClasspath)
+                            }
                         } else {
                             val kaptGeneratedClassesDir = getKaptGeneratedClassesDir(project, sourceSetName)
                             val kspOutputDir = KspGradleSubplugin.getKspOutputDir(project, sourceSetName, target)
