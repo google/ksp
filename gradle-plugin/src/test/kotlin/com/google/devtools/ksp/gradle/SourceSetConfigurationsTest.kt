@@ -411,4 +411,30 @@ class SourceSetConfigurationsTest(isExperimentalPsiResolution: Boolean) {
             testRule.runner().withArguments(":app:test", "--stacktrace").build()
         }
     }
+
+    @Test
+    fun testNoSourceSkippedWithNonSourceFiles() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.dependencies.add(
+            module("ksp", testRule.processorModule)
+        )
+        class Processor(val codeGenerator: CodeGenerator) : SymbolProcessor {
+            override fun process(resolver: Resolver): List<KSAnnotated> = emptyList()
+        }
+        class Provider : TestSymbolProcessorProvider({ env -> Processor(env.codeGenerator) })
+        testRule.addProvider(Provider::class)
+
+        // Create source directory but only add a non-source file
+        val srcDir = testRule.appModule.moduleRoot.resolve("src/main/kotlin")
+        srcDir.mkdirs()
+        srcDir.resolve("README.md").writeText("This is not a source file")
+
+        val result = testRule.runner()
+            .withArguments(":app:kspKotlin")
+            .build()
+
+        val kspTask = result.task(":app:kspKotlin")
+        require(kspTask != null)
+        assertThat(kspTask.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
+    }
 }
