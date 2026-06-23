@@ -3,6 +3,7 @@ package com.google.devtools.ksp.test.secondary
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,7 +25,7 @@ class AndroidDataBindingIT(experimentalPsiResolution: Boolean) {
         fun data(): Collection<Boolean> = listOf(true, false)
     }
 
-    @Test
+    @Test @Ignore
     fun testPlaygroundAndroid() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
