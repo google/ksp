@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.google.devtools.ksp.gradle.utils.canUseAddGeneratedSourceDirectoriesApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
+import com.google.devtools.ksp.gradle.utils.isLegacyKaptPluginApplied
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
@@ -94,8 +95,7 @@ object AndroidPluginIntegration {
                     task.kspConfig.javaSourceRoots.from(kotlinSources)
                 }
 
-                val isKaptApplied = project.plugins.hasPlugin("com.android.legacy-kapt")
-                if (isKaptApplied) {
+                if (project.isLegacyKaptPluginApplied()) {
                     (androidComponent as? ComponentCreationConfig)
                         ?.androidResourcesCreationConfig
                         ?.compiledRClassArtifact

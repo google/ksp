@@ -19,6 +19,8 @@ fun Project.isKotlinBaseApiPluginApplied() = plugins.withType(KotlinBaseApiPlugi
 
 fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
 
+fun Project.isLegacyKaptPluginApplied() = pluginManager.hasPlugin("com.android.legacy-kapt")
+
 fun Project.canUseGeneratedKotlinApi(): Boolean {
     val kotlinVersion = KotlinToolingVersion(getKotlinPluginVersion())
     return kotlinVersion >= KotlinToolingVersion("2.3.0-Beta2")

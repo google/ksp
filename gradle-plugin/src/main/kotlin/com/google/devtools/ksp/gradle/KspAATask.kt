@@ -22,6 +22,7 @@ import com.google.devtools.ksp.gradle.utils.allKotlinSourceSetsObservable
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
+import com.google.devtools.ksp.gradle.utils.isLegacyKaptPluginApplied
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
@@ -245,9 +246,8 @@ abstract class KspAATask @Inject constructor(
                         if (project.isAgpBuiltInKotlinUsed()) {
                             val androidComponents =
                                 project.extensions.getByType(AndroidComponentsExtension::class.java)
-                            val isKaptApplied = project.plugins.hasPlugin("com.android.legacy-kapt")
 
-                            if (isKaptApplied) {
+                            if (project.isLegacyKaptPluginApplied()) {
                                 // Fallback to workaround to avoid circular dependency with KAPT.
                                 cfg.libraries.from(androidComponents.sdkComponents.bootClasspath)
                                 cfg.libraries.from(
