@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
@@ -60,7 +61,8 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         sourcesPath: String,
         javaSourcePath: String,
         outDir: File,
-        moduleName: String
+        moduleName: String,
+        jvmTarget: JvmTarget?
     ) {
         val classpath = mutableListOf<String>()
         classpath.addAll(dependencies.map { it.canonicalPath })
@@ -78,6 +80,9 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
             "-module-name", moduleName,
             "-classpath", classpath.joinToString(File.pathSeparator)
         )
+        if (jvmTarget != null) {
+            args += listOf("-jvm-target", jvmTarget.description)
+        }
         runJvmCompiler(args)
     }
 
@@ -93,7 +98,10 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
-        compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name)
+        val jvmTarget = testServices.compilerConfigurationProvider
+            .getCompilerConfiguration(module, CompilationStage.FIRST)
+            .get(JVMConfigurationKeys.JVM_TARGET)
+        compileKotlin(dependencies, module.kotlinSrc.path, module.javaDir.path, module.outDir, module.name, jvmTarget)
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
             .joinToString(File.pathSeparator) { it.absolutePath }
         val options = listOf(
@@ -129,7 +137,7 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
             sourceRoots = listOf(mainModule.kotlinSrc)
             javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
             jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
-            jvmTarget = compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)!!.description
+            jvmTarget = (compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET) ?: JvmTarget.DEFAULT).description
             languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
             apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
             libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
