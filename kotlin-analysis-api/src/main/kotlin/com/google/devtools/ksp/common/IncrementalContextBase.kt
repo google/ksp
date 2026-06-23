@@ -157,31 +157,32 @@ abstract class IncrementalContextBase(
         if (!incrementalLog)
             return
 
-        val logFile = mkLogFile("kspSourceToOutputs.log")
-        logFile.appendText("Accumulated source to outputs map\n")
-        sourceToOutputsMap.keys.forEach { source ->
-            logFile.appendText("  $source:\n")
-            sourceToOutputsMap[source]!!.forEach { output ->
-                logFile.appendText("    $output\n")
+        mkLogFile("kspSourceToOutputs.log").bufferedWriter().use { logFile ->
+            logFile.write("Accumulated source to outputs map\n")
+            sourceToOutputsMap.keys.forEach { source ->
+                logFile.write("  $source:\n")
+                sourceToOutputsMap[source]!!.forEach { output ->
+                    logFile.write("    $output\n")
+                }
             }
-        }
-        logFile.appendText("\n")
+            logFile.write("\n")
 
-        logFile.appendText("Reprocessed sources and their outputs\n")
-        sourceToOutputs.forEach { (source, outputs) ->
-            logFile.appendText("  $source:\n")
+            logFile.write("Reprocessed sources and their outputs\n")
+            sourceToOutputs.forEach { (source, outputs) ->
+                logFile.write("  $source:\n")
+                outputs.forEach {
+                    logFile.write("    $it\n")
+                }
+            }
+            logFile.write("\n")
+
+            // Can be larger than the union of the above, because some outputs may have no source.
+            logFile.write("All reprocessed outputs\n")
             outputs.forEach {
-                logFile.appendText("    $it\n")
+                logFile.write("  $it\n")
             }
+            logFile.write("\n")
         }
-        logFile.appendText("\n")
-
-        // Can be larger than the union of the above, because some outputs may have no source.
-        logFile.appendText("All reprocessed outputs\n")
-        outputs.forEach {
-            logFile.appendText("  $it\n")
-        }
-        logFile.appendText("\n")
     }
 
     private fun logDirtyFiles(
@@ -195,29 +196,30 @@ abstract class IncrementalContextBase(
         if (!incrementalLog)
             return
 
-        val logFile = mkLogFile("kspDirtySet.log")
-        logFile.appendText("All Files\n")
-        allFiles.forEach { logFile.appendText("  ${it.relativeFile}\n") }
-        logFile.appendText("Modified\n")
-        modified.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Removed\n")
-        removed.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Disappeared Outputs\n")
-        removedOutputs.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Affected By CP\n")
-        dirtyFilesByCP.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Affected By new syms\n")
-        dirtyFilesByNewSyms.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Affected By sealed\n")
-        dirtyFilesBySealed.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("CP changes\n")
-        changedClasses.forEach { logFile.appendText("  $it\n") }
-        logFile.appendText("Dirty:\n")
-        files.forEach {
-            logFile.appendText("  ${it.relativeFile}\n")
+        mkLogFile("kspDirtySet.log").bufferedWriter().use { logFile ->
+            logFile.write("All Files\n")
+            allFiles.forEach { logFile.write("  ${it.relativeFile}\n") }
+            logFile.write("Modified\n")
+            modified.forEach { logFile.write("  $it\n") }
+            logFile.write("Removed\n")
+            removed.forEach { logFile.write("  $it\n") }
+            logFile.write("Disappeared Outputs\n")
+            removedOutputs.forEach { logFile.write("  $it\n") }
+            logFile.write("Affected By CP\n")
+            dirtyFilesByCP.forEach { logFile.write("  $it\n") }
+            logFile.write("Affected By new syms\n")
+            dirtyFilesByNewSyms.forEach { logFile.write("  $it\n") }
+            logFile.write("Affected By sealed\n")
+            dirtyFilesBySealed.forEach { logFile.write("  $it\n") }
+            logFile.write("CP changes\n")
+            changedClasses.forEach { logFile.write("  $it\n") }
+            logFile.write("Dirty:\n")
+            files.forEach {
+                logFile.write("  ${it.relativeFile}\n")
+            }
+            val percentage = "%.2f".format(files.size.toDouble() / allFiles.size.toDouble() * 100)
+            logFile.write("\nDirty / All: $percentage%\n\n")
         }
-        val percentage = "%.2f".format(files.size.toDouble() / allFiles.size.toDouble() * 100)
-        logFile.appendText("\nDirty / All: $percentage%\n\n")
     }
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
