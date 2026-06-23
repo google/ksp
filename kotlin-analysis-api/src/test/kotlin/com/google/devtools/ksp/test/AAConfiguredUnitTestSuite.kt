@@ -22,6 +22,12 @@ import org.junit.jupiter.api.Test
 
 class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = false) {
 
+    @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
+    @Test
+    override fun testAliasedAnnotations() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
+    }
+
     @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
