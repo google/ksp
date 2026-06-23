@@ -81,14 +81,14 @@ object AndroidPluginIntegration {
         project: Project,
         kotlinCompilation: KotlinJvmAndroidCompilation,
         kspTaskProvider: TaskProvider<KspAATask>,
-        androidComponent: Component?
+        androidComponent: Component?,
     ) {
         if (androidComponent != null && project.isAgpBuiltInKotlinUsed()) {
             if (project.canUseInternalKspApis()) {
                 val javaSources =
                     (androidComponent.sources.java as? FlatSourceDirectoriesForJavaImpl)?.allButKspAndKaptGenerators()
 
-                val kotlinSources = androidComponent.sources.kotlin?.static
+                val kotlinSources = androidComponent.sources.kotlin?.all
 
                 kspTaskProvider.configure { task ->
                     task.kspConfig.javaSourceRoots.from(javaSources)
@@ -242,7 +242,12 @@ object AndroidPluginIntegration {
         // Order is important here as we update task with AGP generated sources and
         // then update AGP with source that KSP will generate.
         // Mixing this up will cause circular dependency in Gradle
-        tryUpdateKspWithAndroidSourceSets(project, kotlinCompilation, kspTaskProvider, androidComponent)
+        tryUpdateKspWithAndroidSourceSets(
+            project,
+            kotlinCompilation,
+            kspTaskProvider,
+            androidComponent,
+        )
 
         registerGeneratedSources(
             project,
