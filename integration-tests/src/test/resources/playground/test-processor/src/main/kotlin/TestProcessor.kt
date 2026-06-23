@@ -58,6 +58,9 @@ class TestProcessor : SymbolProcessor {
                 logger.warn("[$moduleName] Mangled name for internalFun: $internalName")
             }
         }
+        resolver.getClassDeclarationByName("com.example.GeneratedKotlinClass")?.let {
+            emit("Found GeneratedKotlinClass: ${it.qualifiedName?.asString()}", "")
+        }
         invoked = true
         return emptyList()
     }

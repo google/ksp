@@ -289,4 +289,59 @@ class AndroidBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
             }
         }
     }
+
+    @Test
+    fun `test Kotlin generated sources are picked up by KSP with built-in Kotlin`() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root).forwardOutput()
+
+        File(project.root, "workload/build.gradle.kts").appendText(
+            """
+                android {
+                    androidComponents.onVariants { variant ->
+                        val name = variant.name
+                
+                        val task = project.tasks.register("generate${'$'}{name.replaceFirstChar(Char::uppercase)}KotlinSource", KotlinSourceGenerationTask::class) {
+                            getOutputDirectory().set(project.layout.buildDirectory.dir("generated/custom_kotlin/${'$'}{name}"))
+                        }
+                
+                        variant.sources.kotlin?.addGeneratedSourceDirectory(task, KotlinSourceGenerationTask::getOutputDirectory)
+                    }
+                }
+
+                abstract class KotlinSourceGenerationTask : DefaultTask() {
+                    @OutputDirectory
+                    abstract fun getOutputDirectory(): DirectoryProperty
+                    @TaskAction
+                    fun generateCode() {
+                        val outDir = getOutputDirectory().get().asFile
+                        val outFile = File(outDir, "com/example/GeneratedKotlinClass.kt")
+                        outFile.parentFile.mkdirs()
+                        outFile.writeText(""${'"'}
+                            package com.example
+                            class GeneratedKotlinClass {
+                                fun foo(): String = "Generated"
+                            }
+                        ""${'"'}.trimIndent())
+                    }
+                }
+            """.trimIndent()
+        )
+
+        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-beta05")
+
+        gradleRunner.withArguments(":workload:assembleDebug", "--stacktrace").build().let { result ->
+            Assert.assertEquals(
+                TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome
+            )
+
+            val logFile = File(
+                project.root, "workload/build/generated/ksp/debug/resources/TestProcessor.log"
+            )
+            Assert.assertTrue(
+                "Log file expected to exist but it does not exist: ${logFile.path}", logFile.exists()
+            )
+            val logContent = logFile.readText()
+            Assert.assertTrue(logContent.contains("Found GeneratedKotlinClass: com.example.GeneratedKotlinClass"))
+        }
+    }
 }
