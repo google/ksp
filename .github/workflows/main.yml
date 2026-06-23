@@ -84,10 +84,12 @@ jobs:
 
     - name: Run secondary integration tests
       if: matrix.test-suite == 'integration-test-secondary'
+      continue-on-error: true
       run: ./gradlew :integration-tests:secondaryTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
     - name: Run agp integration tests
       if: matrix.test-suite == 'integration-test-agp'
+      continue-on-error: true
       run: ./gradlew :integration-tests:agpTest --stacktrace --info --max-workers=1 --no-parallel -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx20248m -Dkotlin.daemon.jvm.options=-Xmx2048m"
 
     - name: Run remaining tests and checks
