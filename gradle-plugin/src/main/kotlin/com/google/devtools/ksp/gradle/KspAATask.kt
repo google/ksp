@@ -212,9 +212,13 @@ abstract class KspAATask @Inject constructor(
                             sourceSet.kotlin.srcDirs.filter {
                                 !kotlinOut.asFile.isParentOf(it) && !javaOut.asFile.isParentOf(it) &&
                                     it !in kspExtension.excludedSources
-                            }.map {
+                            }.map { srcDir ->
                                 // @SkipWhenEmpty doesn't work well with File.
-                                project.objects.fileTree().from(it)
+                                // Filter to only include Kotlin/Java sources so that Gradle can correctly
+                                // skip the task as NO-SOURCE if the directories contain only non-source files.
+                                project.objects.fileTree().from(srcDir).matching {
+                                    it.include("**/*.kt", "**/*.kts", "**/*.java")
+                                }
                             }
                         }
                         cfg.sourceRoots.from(filtered)
