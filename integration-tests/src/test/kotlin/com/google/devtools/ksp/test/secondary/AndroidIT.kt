@@ -32,6 +32,7 @@ class AndroidIT(experimentalPsiResolution: Boolean) {
 
     @Test
     fun testPlaygroundAndroid() {
+        assert(false)
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments(
