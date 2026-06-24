@@ -17,27 +17,21 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * The common base of property getter and setter.
- * Note that annotation use-site targets such as @get: @set: is not copied to accessor's annotations attribute.
- * Use KSAnnotated.findAnnotationFromUseSiteTarget() to ensure annotations from parent is obtained.
+ * The common base of property getter and setter. Note that annotation use-site targets such
+ * as @get: @set: is not copied to accessor's annotations attribute. Use
+ * KSAnnotated.findAnnotationFromUseSiteTarget() to ensure annotations from parent is obtained.
  */
 interface KSPropertyAccessor : KSDeclarationContainer, KSAnnotated, KSModifierListOwner {
-    /**
-     * The owner of the property accessor.
-     */
+    /** The owner of the property accessor. */
     val receiver: KSPropertyDeclaration
 }
 
-/**
- * A property setter
- */
+/** A property setter */
 interface KSPropertySetter : KSPropertyAccessor {
     val parameter: KSValueParameter
 }
 
-/**
- * A property getter
- */
+/** A property getter */
 interface KSPropertyGetter : KSPropertyAccessor {
     val returnType: KSTypeReference?
 }

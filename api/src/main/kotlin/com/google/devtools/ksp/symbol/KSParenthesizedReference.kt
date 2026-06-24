@@ -16,12 +16,8 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A reference within a parenthesis
- */
+/** A reference within a parenthesis */
 interface KSParenthesizedReference : KSReferenceElement {
-    /**
-     * The reference in this parenthesis
-     */
+    /** The reference in this parenthesis */
     val element: KSReferenceElement
 }
