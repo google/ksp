@@ -16,7 +16,5 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Models `dynamic` type for Kotlin/JS.
- */
+/** Models `dynamic` type for Kotlin/JS. */
 interface KSDynamicReference : KSReferenceElement

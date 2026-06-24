@@ -16,18 +16,14 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * An application / reference to a user declared type such as class, interface and object.
- */
+/** An application / reference to a user declared type such as class, interface and object. */
 interface KSClassifierReference : KSReferenceElement {
-    /**
-     * The outer class of an inner class.
-     */
+    /** The outer class of an inner class. */
     val qualifier: KSClassifierReference?
 
     /**
-     * The text which appears in the reference. For example, it is "Int" in `val temperature: Int` or
-     * "kotlin.Any" in `val canBeAnything: kotlin.Any`
+     * The text which appears in the reference. For example, it is "Int" in `val temperature: Int`
+     * or "kotlin.Any" in `val canBeAnything: kotlin.Any`
      */
     fun referencedName(): String
 

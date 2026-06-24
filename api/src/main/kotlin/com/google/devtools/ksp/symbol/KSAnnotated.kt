@@ -16,13 +16,9 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A symbol that can be annotated with annotations.
- */
+/** A symbol that can be annotated with annotations. */
 interface KSAnnotated : KSNode {
 
-    /**
-     * All annotations on this symbol.
-     */
+    /** All annotations on this symbol. */
     val annotations: Sequence<KSAnnotation>
 }
