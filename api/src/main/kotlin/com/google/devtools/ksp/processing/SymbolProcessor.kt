@@ -20,30 +20,28 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 /**
  * [SymbolProcessor] is the interface used by plugins to integrate into Kotlin Symbol Processing.
- * SymbolProcessor supports multiple rounds of execution, a processor may return a list of deferred symbols at the end
- * of every round, which will be passed to processors again in the next round, together with the newly generated symbols.
- * On exceptions, KSP will try to distinguish between exceptions from KSP and exceptions from processors.
- * Exceptions from processors will immediately terminate processing and be logged as an error in KSPLogger.
- * Exceptions from KSP should be reported to KSP developers for further investigation.
- * At the end of the round where exceptions or errors happened, all processors will invoke onError() function to do
- * their own error handling.
+ * SymbolProcessor supports multiple rounds of execution, a processor may return a list of deferred
+ * symbols at the end of every round, which will be passed to processors again in the next round,
+ * together with the newly generated symbols. On exceptions, KSP will try to distinguish between
+ * exceptions from KSP and exceptions from processors. Exceptions from processors will immediately
+ * terminate processing and be logged as an error in KSPLogger. Exceptions from KSP should be
+ * reported to KSP developers for further investigation. At the end of the round where exceptions or
+ * errors happened, all processors will invoke onError() function to do their own error handling.
  */
 interface SymbolProcessor {
     /**
      * Called by Kotlin Symbol Processing to run the processing task.
      *
      * @param resolver provides [SymbolProcessor] with access to compiler details such as Symbols.
-     * @return A list of deferred symbols that the processor can't process. Only symbols that can't be processed at this round should be returned. Symbols in compiled code (libraries) are always valid and are ignored if returned in the deferral list.
+     * @return A list of deferred symbols that the processor can't process. Only symbols that can't
+     *   be processed at this round should be returned. Symbols in compiled code (libraries) are
+     *   always valid and are ignored if returned in the deferral list.
      */
     fun process(resolver: Resolver): List<KSAnnotated>
 
-    /**
-     * Called by Kotlin Symbol Processing to finalize the processing of a compilation.
-     */
+    /** Called by Kotlin Symbol Processing to finalize the processing of a compilation. */
     fun finish() {}
 
-    /**
-     * Called by Kotlin Symbol Processing to handle errors after a round of processing.
-     */
+    /** Called by Kotlin Symbol Processing to handle errors after a round of processing. */
     fun onError() {}
 }

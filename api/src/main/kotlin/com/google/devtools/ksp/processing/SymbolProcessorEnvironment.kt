@@ -18,34 +18,22 @@
 package com.google.devtools.ksp.processing
 
 class SymbolProcessorEnvironment(
-    /**
-     * passed from command line, Gradle, etc.
-     */
+    /** passed from command line, Gradle, etc. */
     val options: Map<String, String>,
 
-    /**
-     * language version of compilation environment.
-     */
+    /** language version of compilation environment. */
     val kotlinVersion: KotlinVersion,
 
-    /**
-     * creates managed files.
-     */
+    /** creates managed files. */
     val codeGenerator: CodeGenerator,
 
-    /**
-     * for logging to build output.
-     */
+    /** for logging to build output. */
     val logger: KSPLogger,
 
-    /**
-     * Kotlin API version of compilation environment.
-     */
+    /** Kotlin API version of compilation environment. */
     val apiVersion: KotlinVersion,
 
-    /**
-     * Kotlin compiler version of compilation environment.
-     */
+    /** Kotlin compiler version of compilation environment. */
     val compilerVersion: KotlinVersion,
 
     /**
@@ -55,9 +43,7 @@ class SymbolProcessorEnvironment(
      */
     val platforms: List<PlatformInfo>,
 
-    /**
-     * KSP version
-     */
+    /** KSP version */
     val kspVersion: KotlinVersion,
 ) {
     // For compatibility with KSP 1.0.2 and earlier
@@ -65,7 +51,7 @@ class SymbolProcessorEnvironment(
         options: Map<String, String>,
         kotlinVersion: KotlinVersion,
         codeGenerator: CodeGenerator,
-        logger: KSPLogger
+        logger: KSPLogger,
     ) : this(
         options,
         kotlinVersion,
@@ -74,7 +60,7 @@ class SymbolProcessorEnvironment(
         kotlinVersion,
         kotlinVersion,
         emptyList(),
-        KotlinVersion(1, 0)
+        KotlinVersion(1, 0),
     )
 
     constructor(
@@ -93,6 +79,6 @@ class SymbolProcessorEnvironment(
         apiVersion,
         compilerVersion,
         platforms,
-        KotlinVersion(1, 0)
+        KotlinVersion(1, 0),
     )
 }
