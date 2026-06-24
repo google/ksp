@@ -17,8 +17,8 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * Kind of a class declaration.
- * Interface, class, enum class and object are all considered a class declaration.
+ * Kind of a class declaration. Interface, class, enum class and object are all considered a class
+ * declaration.
  */
 enum class ClassKind(val type: String) {
     INTERFACE("interface"),
@@ -26,5 +26,5 @@ enum class ClassKind(val type: String) {
     ENUM_CLASS("enum_class"),
     ENUM_ENTRY("enum_entry"),
     OBJECT("object"),
-    ANNOTATION_CLASS("annotation_class")
+    ANNOTATION_CLASS("annotation_class"),
 }
