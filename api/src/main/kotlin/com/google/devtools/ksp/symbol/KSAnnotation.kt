@@ -16,34 +16,31 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Instance of a constructor-call-like annotation.
- */
+/** Instance of a constructor-call-like annotation. */
 interface KSAnnotation : KSNode {
-    /**
-     * Reference to the type of the annotation class declaration.
-     */
+    /** Reference to the type of the annotation class declaration. */
     val annotationType: KSTypeReference
 
     /**
-     * The arguments applied to the constructor call to construct this annotation.
-     * Must be compile time constants.
+     * The arguments applied to the constructor call to construct this annotation. Must be compile
+     * time constants.
+     *
      * @see [KSValueArgument] for operations on its values.
      */
     val arguments: List<KSValueArgument>
 
-    /**
-     * The default values of the annotation members
-     */
+    /** The default values of the annotation members */
     val defaultArguments: List<KSValueArgument>
 
     /**
-     * Short name for this annotation, equivalent to the simple name of the declaration of the annotation class.
+     * Short name for this annotation, equivalent to the simple name of the declaration of the
+     * annotation class.
      */
     val shortName: KSName
 
     /**
-     * Use site target of the annotation. Could be null if no annotation use site target is specified.
+     * Use site target of the annotation. Could be null if no annotation use site target is
+     * specified.
      */
     val useSiteTarget: AnnotationUseSiteTarget?
 }

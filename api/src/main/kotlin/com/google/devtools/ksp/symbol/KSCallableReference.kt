@@ -16,23 +16,15 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A reference to a callable entity, such as a function or a property.
- */
+/** A reference to a callable entity, such as a function or a property. */
 interface KSCallableReference : KSReferenceElement {
-    /**
-     * A reference to the type of its receiver.
-     */
+    /** A reference to the type of its receiver. */
     val receiverType: KSTypeReference?
 
-    /**
-     * Parameters to this callable.
-     */
+    /** Parameters to this callable. */
     val functionParameters: List<KSValueParameter>
 
-    /**
-     * A reference to its return type.
-     */
+    /** A reference to its return type. */
     val returnType: KSTypeReference
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

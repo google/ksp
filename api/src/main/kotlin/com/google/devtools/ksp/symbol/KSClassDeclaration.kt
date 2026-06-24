@@ -16,18 +16,15 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Models class-like declarations, including class, interface and object.
- */
+/** Models class-like declarations, including class, interface and object. */
 interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
 
-    /**
-     * The Kind of the class declaration.
-     */
+    /** The Kind of the class declaration. */
     val classKind: ClassKind
 
     /**
-     * Primary constructor of a class, secondary constructors can be obtained by filtering [declarations].
+     * Primary constructor of a class, secondary constructors can be obtained by filtering
+     * [declarations].
      */
     val primaryConstructor: KSFunctionDeclaration?
 
@@ -38,39 +35,48 @@ interface KSClassDeclaration : KSDeclaration, KSDeclarationContainer {
 
     /**
      * Determine whether this class declaration is a companion object.
-     * @see [https://kotlinlang.org/docs/tutorials/kotlin-for-py/objects-and-companion-objects.html#companion-objects]
+     *
+     * @see
+     *   [https://kotlinlang.org/docs/tutorials/kotlin-for-py/objects-and-companion-objects.html#companion-objects]
      */
     val isCompanionObject: Boolean
 
     /**
-     * @return a sequence of sealed subclasses of this class, if any.
-     * Calling [getSealedSubclasses] requires type resolution which is expensive and should be avoided if possible.
+     * @return a sequence of sealed subclasses of this class, if any. Calling [getSealedSubclasses]
+     *   requires type resolution which is expensive and should be avoided if possible.
      */
     fun getSealedSubclasses(): Sequence<KSClassDeclaration>
 
     /**
      * Get all member functions of a class declaration, including declared and inherited.
-     * @return Sequence of function declarations from the class members.
-     * Calling [getAllFunctions] requires type resolution which is expensive and should be avoided if possible.
+     *
+     * @return Sequence of function declarations from the class members. Calling [getAllFunctions]
+     *   requires type resolution which is expensive and should be avoided if possible.
      */
     fun getAllFunctions(): Sequence<KSFunctionDeclaration>
 
     /**
      * Get all member properties of a class declaration, including declared and inherited.
-     * @return Sequence of properties declarations from the class members.
-     * Calling [getAllProperties] requires type resolution which is expensive and should be avoided if possible.
+     *
+     * @return Sequence of properties declarations from the class members. Calling
+     *   [getAllProperties] requires type resolution which is expensive and should be avoided if
+     *   possible.
      */
     fun getAllProperties(): Sequence<KSPropertyDeclaration>
 
     /**
      * Create a type by applying a list of type arguments to this class' type parameters.
+     *
      * @param typeArguments List of Type arguments to be applied.
-     * @return A type constructed from this class declaration with type parameters substituted with the type arguments.
+     * @return A type constructed from this class declaration with type parameters substituted with
+     *   the type arguments.
      */
     fun asType(typeArguments: List<KSTypeArgument>): KSType
 
     /**
-     * If this is a generic class, return the type where the type argument is applied with star projection at use-site.
+     * If this is a generic class, return the type where the type argument is applied with star
+     * projection at use-site.
+     *
      * @return A type with all type parameters applied with star projection.
      */
     fun asStarProjectedType(): KSType

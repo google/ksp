@@ -2,8 +2,8 @@ package com.google.devtools.ksp.symbol
 
 interface KSDefNonNullReference : KSReferenceElement {
     /**
-     * Enclosed reference element of the Definitely non null type.
-     * For a reference of `T & Any`, this returns `T`.
+     * Enclosed reference element of the Definitely non null type. For a reference of `T & Any`,
+     * this returns `T`.
      */
     val enclosedType: KSClassifierReference
 
