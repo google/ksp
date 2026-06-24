@@ -16,12 +16,9 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Nullability of types
- * PLATFORM types can be nullable or not nullable, depending on context.
- */
+/** Nullability of types PLATFORM types can be nullable or not nullable, depending on context. */
 enum class Nullability {
     NULLABLE,
     NOT_NULL,
-    PLATFORM
+    PLATFORM,
 }

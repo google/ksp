@@ -17,12 +17,12 @@
 package com.google.devtools.ksp.symbol
 
 /**
- * Represents both declaration-site and use-site variance.
- * STAR is only used and valid in use-site variance, while others can be used in both.
+ * Represents both declaration-site and use-site variance. STAR is only used and valid in use-site
+ * variance, while others can be used in both.
  */
 enum class Variance(val label: String) {
     STAR("*"),
     INVARIANT(""),
     COVARIANT("out"),
-    CONTRAVARIANT("in");
+    CONTRAVARIANT("in"),
 }

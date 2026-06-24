@@ -16,9 +16,7 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Visibility of the element
- */
+/** Visibility of the element */
 enum class Visibility {
     PUBLIC,
     PRIVATE,
