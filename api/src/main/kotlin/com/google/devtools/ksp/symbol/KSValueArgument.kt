@@ -29,9 +29,7 @@ interface KSValueArgument : KSAnnotated {
      */
     val name: KSName?
 
-    /**
-     * True if it is a spread argument (i.e., has a "*" in front of the argument).
-     */
+    /** True if it is a spread argument (i.e., has a "*" in front of the argument). */
     val isSpread: Boolean
 
     /**
@@ -49,8 +47,8 @@ interface KSValueArgument : KSAnnotated {
      * * [Double];
      * * [String];
      * * [KSType] for annotation arguments of type [kotlin.reflect.KClass];
-     * * [KSClassDeclaration] for annotation arguments of type [Enum] (in this case[KSClassDeclaration.classKind]
-     *   equals to [ClassKind.ENUM_CLASS]);
+     * * [KSClassDeclaration] for annotation arguments of type [Enum] (in this
+     *   case[KSClassDeclaration.classKind] equals to [ClassKind.ENUM_CLASS]);
      * * [KSAnnotation] for embedded annotation arguments;
      * * [Array] of a possible type listed above.
      */

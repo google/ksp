@@ -16,9 +16,7 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A type parameter
- */
+/** A type parameter */
 interface KSTypeParameter : KSDeclaration {
     /**
      * Name of the type parameter
@@ -27,18 +25,12 @@ interface KSTypeParameter : KSDeclaration {
      */
     val name: KSName
 
-    /**
-     * Declaration-site variance
-     */
+    /** Declaration-site variance */
     val variance: Variance
 
-    /**
-     * True if it is reified, i.e., has the reified modifier.
-     */
+    /** True if it is reified, i.e., has the reified modifier. */
     val isReified: Boolean
 
-    /**
-     * Upper bounds of the type parameter.
-     */
+    /** Upper bounds of the type parameter. */
     val bounds: Sequence<KSTypeReference>
 }

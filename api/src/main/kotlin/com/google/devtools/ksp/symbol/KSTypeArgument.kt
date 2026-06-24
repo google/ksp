@@ -16,17 +16,11 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A type argument
- */
+/** A type argument */
 interface KSTypeArgument : KSAnnotated {
-    /**
-     * The use-site variance, or namely type projection
-     */
+    /** The use-site variance, or namely type projection */
     val variance: Variance
 
-    /**
-     * The reference to the type
-     */
+    /** The reference to the type */
     val type: KSTypeReference?
 }
