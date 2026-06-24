@@ -29,25 +29,27 @@ import com.google.devtools.ksp.symbol.NonExistLocation
 internal class InternalKSPException(
     message: String,
     val location: Location,
-    val originatingClass: Class<*>
-) : Exception(
-    buildString {
-        appendLine(">>> Internal KSP Error")
-        appendLine("   | *** THIS IS A BUG IN KSP ***")
-        appendLine("   |")
-        message.lines().forEach { messageLine ->
-            appendLine("   | $messageLine")
+    val originatingClass: Class<*>,
+) :
+    Exception(
+        buildString {
+            appendLine(">>> Internal KSP Error")
+            appendLine("   | *** THIS IS A BUG IN KSP ***")
+            appendLine("   |")
+            message.lines().forEach { messageLine ->
+                appendLine("   | $messageLine")
+            }
+            appendLine("   |")
+            appendLine("   | Location           : ${location.render()}")
+            appendLine("   | Class at occurrence: $originatingClass")
+            appendLine("   |")
+            appendLine("   | You can report it at https://github.com/google/ksp/issues/new")
+            appendLine("   |")
         }
-        appendLine("   |")
-        appendLine("   | Location           : ${location.render()}")
-        appendLine("   | Class at occurrence: $originatingClass")
-        appendLine("   |")
-        appendLine("   | You can report it at https://github.com/google/ksp/issues/new")
-        appendLine("   |")
-    }
-) {
+    ) {
     override fun toString(): String {
-        // N.B.: Override the toString method to prevent the big error message being printed in the stack trace.
+        // N.B.: Override the toString method to prevent the big error message being printed in the
+        // stack trace.
         return buildString {
             append(javaClass.name)
             append(": ")

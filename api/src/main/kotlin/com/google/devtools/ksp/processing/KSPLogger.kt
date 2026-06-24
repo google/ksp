@@ -21,8 +21,11 @@ import com.google.devtools.ksp.symbol.KSNode
 interface KSPLogger {
 
     fun logging(message: String, symbol: KSNode? = null)
+
     fun info(message: String, symbol: KSNode? = null)
+
     fun warn(message: String, symbol: KSNode? = null)
+
     fun error(message: String, symbol: KSNode? = null)
 
     fun exception(e: Throwable)
