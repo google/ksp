@@ -16,9 +16,11 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Kind of a function declaration.
- */
+/** Kind of a function declaration. */
 enum class FunctionKind {
-    TOP_LEVEL, MEMBER, STATIC, ANONYMOUS, LAMBDA;
+    TOP_LEVEL,
+    MEMBER,
+    STATIC,
+    ANONYMOUS,
+    LAMBDA,
 }

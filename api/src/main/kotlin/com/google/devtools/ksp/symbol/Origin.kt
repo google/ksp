@@ -21,5 +21,5 @@ enum class Origin {
     KOTLIN_LIB,
     JAVA,
     JAVA_LIB,
-    SYNTHETIC
+    SYNTHETIC,
 }
