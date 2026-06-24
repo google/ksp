@@ -16,20 +16,17 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A [KSTypeReference] combines a [KSReferenceElement] with annotations and modifiers.
- */
+/** A [KSTypeReference] combines a [KSReferenceElement] with annotations and modifiers. */
 interface KSTypeReference : KSAnnotated, KSModifierListOwner {
 
-    /**
-     * Underlying element of this type reference, without annotations and modifiers.
-     */
+    /** Underlying element of this type reference, without annotations and modifiers. */
     val element: KSReferenceElement?
 
     /**
      * Resolves to the original declaration site.
-     * @return A type resolved from this type reference.
-     * Calling [resolve] is expensive and should be avoided if possible.
+     *
+     * @return A type resolved from this type reference. Calling [resolve] is expensive and should
+     *   be avoided if possible.
      */
     fun resolve(): KSType
 }

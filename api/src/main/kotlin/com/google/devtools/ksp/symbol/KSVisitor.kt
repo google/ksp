@@ -16,9 +16,7 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A visitor for program elements
- */
+/** A visitor for program elements */
 interface KSVisitor<D, R> {
     fun visitNode(node: KSNode, data: D): R
 
