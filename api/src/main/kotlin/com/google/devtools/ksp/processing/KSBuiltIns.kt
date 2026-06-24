@@ -19,9 +19,7 @@ package com.google.devtools.ksp.processing
 import com.google.devtools.ksp.symbol.KSType
 
 interface KSBuiltIns {
-    /**
-     * Common Standard Library types. Use [Resolver.getClassDeclarationByName] for other types.
-     */
+    /** Common Standard Library types. Use [Resolver.getClassDeclarationByName] for other types. */
     val anyType: KSType
     val nothingType: KSType
     val unitType: KSType

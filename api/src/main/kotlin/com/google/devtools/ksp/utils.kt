@@ -48,7 +48,6 @@ import kotlin.reflect.KClass
  *
  * @param T The class to resolve a [KSClassDeclaration] for.
  * @return Resolved [KSClassDeclaration] if found, `null` otherwise.
- *
  * @see [Resolver.getClassDeclarationByName]
  */
 inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration? {
@@ -70,28 +69,34 @@ fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? =
  * Find functions in the compilation classpath for the given name.
  *
  * @param name fully qualified name of the function to be loaded; using '.' as separator.
- * @param includeTopLevel a boolean value indicate if top level functions should be searched. Default false. Note if top level functions are included, this operation can be expensive.
+ * @param includeTopLevel a boolean value indicate if top level functions should be searched.
+ *   Default false. Note if top level functions are included, this operation can be expensive.
  * @return a Sequence of KSFunctionDeclaration.
  */
 fun Resolver.getFunctionDeclarationsByName(
     name: String,
-    includeTopLevel: Boolean = false
-): Sequence<KSFunctionDeclaration> = getFunctionDeclarationsByName(getKSNameFromString(name), includeTopLevel)
+    includeTopLevel: Boolean = false,
+): Sequence<KSFunctionDeclaration> =
+    getFunctionDeclarationsByName(getKSNameFromString(name), includeTopLevel)
 
 /**
  * Find a property in the compilation classpath for the given name.
  *
  * @param name fully qualified name of the property to be loaded; using '.' as separator.
- * @param includeTopLevel a boolean value indicate if top level properties should be searched. Default false. Note if top level properties are included, this operation can be expensive.
+ * @param includeTopLevel a boolean value indicate if top level properties should be searched.
+ *   Default false. Note if top level properties are included, this operation can be expensive.
  * @return a KSPropertyDeclaration, or null if not found.
  */
-fun Resolver.getPropertyDeclarationByName(name: String, includeTopLevel: Boolean = false): KSPropertyDeclaration? =
-    getPropertyDeclarationByName(getKSNameFromString(name), includeTopLevel)
+fun Resolver.getPropertyDeclarationByName(
+    name: String,
+    includeTopLevel: Boolean = false,
+): KSPropertyDeclaration? = getPropertyDeclarationByName(getKSNameFromString(name), includeTopLevel)
 
 /**
  * Find the containing file of a KSNode.
- * @return KSFile if the given KSNode has a containing file.
- * example of symbols without a containing file: symbols from class files, synthetic symbols created by user.
+ *
+ * @return KSFile if the given KSNode has a containing file. example of symbols without a containing
+ *   file: symbols from class files, synthetic symbols created by user.
  */
 val KSNode.containingFile: KSFile?
     get() {
@@ -115,8 +120,8 @@ fun KSClassDeclaration.getDeclaredFunctions(): Sequence<KSFunctionDeclaration> {
 /**
  * Get properties directly declared inside the class declaration.
  *
- * What are included: member properties, extension properties declared inside it, etc.
- * What are NOT included: inherited properties, extension properties declared outside it.
+ * What are included: member properties, extension properties declared inside it, etc. What are NOT
+ * included: inherited properties, extension properties declared outside it.
  */
 fun KSClassDeclaration.getDeclaredProperties(): Sequence<KSPropertyDeclaration> {
     return this.declarations.filterIsInstance<KSPropertyDeclaration>()
@@ -128,24 +133,23 @@ fun KSClassDeclaration.getConstructors(): Sequence<KSFunctionDeclaration> {
     }
 }
 
-/**
- * Check whether this is a local declaration, or namely, declared in a function.
- */
+/** Check whether this is a local declaration, or namely, declared in a function. */
 fun KSDeclaration.isLocal(): Boolean {
     return this.parentDeclaration != null && this.parentDeclaration !is KSClassDeclaration
 }
 
 /**
- * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope are valid, i.e. resolvable.
- * @param predicate A lambda for filtering interested symbols for performance purpose. Default checks all.
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
+ * are valid, i.e. resolvable.
+ *
+ * @param predicate A lambda for filtering interested symbols for performance purpose. Default
+ *   checks all.
  */
 fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }): Boolean {
     return this.accept(KSValidateVisitor(predicate), null)
 }
 
-/**
- * Find the KSClassDeclaration that the alias points to, recursively.
- */
+/** Find the KSClassDeclaration that the alias points to, recursively. */
 fun KSTypeAlias.findActualType(): KSClassDeclaration {
     val resolvedType = this.type.resolve().declaration
     return if (resolvedType is KSTypeAlias) {
@@ -155,9 +159,7 @@ fun KSTypeAlias.findActualType(): KSClassDeclaration {
     }
 }
 
-/**
- * Determine [Visibility] of a [KSDeclaration].
- */
+/** Determine [Visibility] of a [KSDeclaration]. */
 fun KSDeclaration.getVisibility(): Visibility {
     return when {
         this.modifiers.contains(Modifier.PUBLIC) -> Visibility.PUBLIC
@@ -171,23 +173,25 @@ fun KSDeclaration.getVisibility(): Visibility {
 
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
-        this.modifiers.contains(Modifier.PROTECTED) ||
-            this.modifiers.contains(Modifier.OVERRIDE) -> Visibility.PROTECTED
+        this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) ->
+            Visibility.PROTECTED
 
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
-        // for synthetic origin from Java source, synthetic members follow visibility from parent to avoid
+        // for synthetic origin from Java source, synthetic members follow visibility from parent to
+        // avoid
         // package private synthetic members being mishandled as public.
         this.origin == Origin.SYNTHETIC && this.parentDeclaration?.origin == Origin.JAVA ->
             this.parentDeclaration!!.getVisibility()
 
-        else -> if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB)
-            Visibility.PUBLIC else Visibility.JAVA_PACKAGE
+        else ->
+            if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB) Visibility.PUBLIC
+            else Visibility.JAVA_PACKAGE
     }
 }
 
 /**
- * get all super types for a class declaration
- * Calling [getAllSuperTypes] requires type resolution therefore is expensive and should be avoided if possible.
+ * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution
+ * therefore is expensive and should be avoided if possible.
  */
 fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
 
@@ -197,11 +201,12 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                 is KSClassDeclaration -> sequenceOf(resolvedDeclaration)
                 is KSTypeAlias -> sequenceOf(resolvedDeclaration.findActualType())
                 is KSTypeParameter -> resolvedDeclaration.getTypesUpperBound()
-                else -> throw InternalKSPException(
-                    "Unhandled type parameter bound",
-                    resolvedDeclaration.location,
-                    resolvedDeclaration.javaClass,
-                )
+                else ->
+                    throw InternalKSPException(
+                        "Unhandled type parameter bound",
+                        resolvedDeclaration.location,
+                        resolvedDeclaration.javaClass,
+                    )
             }
         }
 
@@ -214,12 +219,14 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                     when (it) {
                         is KSClassDeclaration -> it.getAllSuperTypes()
                         is KSTypeAlias -> it.findActualType().getAllSuperTypes()
-                        is KSTypeParameter -> it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
-                        else -> throw InternalKSPException(
-                            "Unhandled super type kind",
-                            it.location,
-                            it.javaClass,
-                        )
+                        is KSTypeParameter ->
+                            it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
+                        else ->
+                            throw InternalKSPException(
+                                "Unhandled super type kind",
+                                it.location,
+                                it.javaClass,
+                            )
                     }
                 }
         )
@@ -240,19 +247,18 @@ fun KSPropertyDeclaration.isAbstract(): Boolean {
         (setter?.modifiers?.contains(Modifier.ABSTRACT) ?: true)
 }
 
-fun KSDeclaration.isOpen() = !this.isLocal() && !this.modifiers.contains(Modifier.FINAL) &&
-    (
-        (this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
+fun KSDeclaration.isOpen() =
+    !this.isLocal() &&
+        !this.modifiers.contains(Modifier.FINAL) &&
+        ((this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
             this.modifiers.contains(Modifier.OVERRIDE) ||
             this.modifiers.contains(Modifier.ABSTRACT) ||
             this.modifiers.contains(Modifier.OPEN) ||
             this.modifiers.contains(Modifier.SEALED) ||
-            (
-                this !is KSClassDeclaration &&
-                    (this.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
-                ) ||
-            (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA)
-        )
+            (this !is KSClassDeclaration &&
+                (this.parentDeclaration as? KSClassDeclaration)?.classKind ==
+                    ClassKind.INTERFACE) ||
+            (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA))
 
 fun KSDeclaration.isPublic() = this.getVisibility() == Visibility.PUBLIC
 
@@ -292,11 +298,10 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
     fun KSDeclaration.isVisibleInPrivate(other: KSDeclaration) =
         (other.isLocal() && other.parentDeclarationsForLocal().contains(this.parentDeclaration)) ||
             this.parentDeclaration == other.parentDeclaration ||
-            this.parentDeclaration == other || (
-            this.parentDeclaration == null &&
+            this.parentDeclaration == other ||
+            (this.parentDeclaration == null &&
                 other.parentDeclaration == null &&
-                this.containingFile == other.containingFile
-            )
+                this.containingFile == other.containingFile)
 
     return when {
         // locals are limited to lexical scope
@@ -308,26 +313,27 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
         this.isInternal() && other.containingFile != null && this.containingFile != null -> true
         this.isJavaPackagePrivate() -> this.isSamePackage(other)
         this.isProtected() -> {
-            this.isVisibleInPrivate(other) || this.isSamePackage(other) || other.closestClassDeclaration()?.let {
-                this.closestClassDeclaration()!!.asStarProjectedType().isAssignableFrom(it.asStarProjectedType())
-            } ?: false
+            this.isVisibleInPrivate(other) ||
+                this.isSamePackage(other) ||
+                other.closestClassDeclaration()?.let {
+                    this.closestClassDeclaration()!!
+                        .asStarProjectedType()
+                        .isAssignableFrom(it.asStarProjectedType())
+                } ?: false
         }
 
         else -> false
     }
 }
 
-/**
- * Returns `true` if this is a constructor function.
- */
+/** Returns `true` if this is a constructor function. */
 fun KSFunctionDeclaration.isConstructor() = this.simpleName.asString() == "<init>"
 
 const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"
 
 val KSType.outerType: KSType?
     get() {
-        if (Modifier.INNER !in declaration.modifiers)
-            return null
+        if (Modifier.INNER !in declaration.modifiers) return null
         val outerDecl = declaration.parentDeclaration as? KSClassDeclaration ?: return null
         return outerDecl.asType(arguments.subList(declaration.typeParameters.size, arguments.size))
     }
@@ -357,10 +363,13 @@ fun Resolver.getJavaClassByName(name: String): KSClassDeclaration? =
 
 @KspExperimental
 fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> {
-    return this.annotations.filter {
-        it.shortName.getShortName() == annotationKClass.simpleName && it.annotationType.resolve().declaration
-            .qualifiedName?.asString() == annotationKClass.qualifiedName
-    }.map { it.toAnnotation(annotationKClass.java) }
+    return this.annotations
+        .filter {
+            it.shortName.getShortName() == annotationKClass.simpleName &&
+                it.annotationType.resolve().declaration.qualifiedName?.asString() ==
+                    annotationKClass.qualifiedName
+        }
+        .map { it.toAnnotation(annotationKClass.java) }
 }
 
 @KspExperimental
@@ -373,7 +382,7 @@ private fun <T : Annotation> KSAnnotation.toAnnotation(annotationClass: Class<T>
     return Proxy.newProxyInstance(
         annotationClass.classLoader,
         arrayOf(annotationClass),
-        createInvocationHandler(annotationClass)
+        createInvocationHandler(annotationClass),
     ) as T
 }
 
@@ -384,12 +393,17 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
     return InvocationHandler { proxy, method, _ ->
         if (method.name == "toString" && arguments.none { it.name?.asString() == "toString" }) {
             clazz.canonicalName +
-                arguments.map { argument: KSValueArgument ->
-                    // handles default values for enums otherwise returns null
-                    val methodName = argument.name?.asString()
-                    val value = proxy.javaClass.methods.find { m -> m.name == methodName }?.invoke(proxy)
-                    "$methodName=$value"
-                }.toList()
+                arguments
+                    .map { argument: KSValueArgument ->
+                        // handles default values for enums otherwise returns null
+                        val methodName = argument.name?.asString()
+                        val value =
+                            proxy.javaClass.methods
+                                .find { m -> m.name == methodName }
+                                ?.invoke(proxy)
+                        "$methodName=$value"
+                    }
+                    .toList()
         } else {
             val argument = arguments.first { it.name?.asString() == method.name }
             when (val result = argument.value ?: method.defaultValue) {
@@ -408,7 +422,9 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                                 val value = { result.asArray(method, clazz) }
                                 cache.getOrPut(Pair(method.returnType, value), value)
                             } else {
-                                throw IllegalStateException("unhandled value type, $ExceptionMessage")
+                                throw IllegalStateException(
+                                    "unhandled value type, $ExceptionMessage"
+                                )
                             }
                         }
 
@@ -426,13 +442,15 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                             cache.getOrPut(Pair(method.returnType, result)) {
                                 when (result) {
                                     is KSType -> result.asClass(clazz)
-                                    // Handles com.intellij.psi.impl.source.PsiImmediateClassType using reflection
+                                    // Handles com.intellij.psi.impl.source.PsiImmediateClassType
+                                    // using reflection
                                     // since api doesn't contain a reference to this
-                                    else -> Class.forName(
-                                        result.javaClass.methods
-                                            .first { it.name == "getCanonicalText" }
-                                            .invoke(result, false) as String
-                                    )
+                                    else ->
+                                        Class.forName(
+                                            result.javaClass.methods
+                                                .first { it.name == "getCanonicalText" }
+                                                .invoke(result, false) as String
+                                        )
                                 }
                             }
                         }
@@ -472,12 +490,11 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
 
 @KspExperimental
 @Suppress("UNCHECKED_CAST")
-private fun KSAnnotation.asAnnotation(
-    annotationInterface: Class<*>,
-): Any {
+private fun KSAnnotation.asAnnotation(annotationInterface: Class<*>): Any {
     return Proxy.newProxyInstance(
-        annotationInterface.classLoader, arrayOf(annotationInterface),
-        this.createInvocationHandler(annotationInterface)
+        annotationInterface.classLoader,
+        arrayOf(annotationInterface),
+        this.createInvocationHandler(annotationInterface),
     ) as Proxy
 }
 
@@ -498,7 +515,9 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
         else -> { // arrays of enums or annotations
             when {
                 method.returnType.componentType.isEnum -> {
-                    this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
+                    this.toArray(method) { result ->
+                        result.asEnum(method.returnType.componentType)
+                    }
                 }
 
                 method.returnType.componentType.isAnnotation -> {
@@ -507,17 +526,21 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
                     }
                 }
 
-                else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
+                else ->
+                    throw IllegalStateException(
+                        "Unable to process type ${method.returnType.componentType.name}"
+                    )
             }
         }
     }
 
 @Suppress("UNCHECKED_CAST")
 private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<Any?> {
-    val array: Array<Any?> = java.lang.reflect.Array.newInstance(
-        method.returnType.componentType,
-        this.size
-    ) as Array<Any?>
+    val array: Array<Any?> =
+        java.lang.reflect.Array.newInstance(
+            method.returnType.componentType,
+            this.size,
+        ) as Array<Any?>
     for (r in 0 until this.size) {
         array[r] = this[r]?.let { valueProvider.invoke(it) }
     }
@@ -526,7 +549,8 @@ private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> Any.asEnum(returnType: Class<T>): T =
-    returnType.getDeclaredMethod("valueOf", String::class.java)
+    returnType
+        .getDeclaredMethod("valueOf", String::class.java)
         .invoke(
             null,
             when (this) {
@@ -541,7 +565,7 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
                 else -> {
                     this.toString()
                 }
-            }
+            },
         ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
@@ -560,34 +584,37 @@ class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) : RuntimeE
 
 // for Class[]/Array<KClass<*>> member.
 @KspExperimental
-class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) : RuntimeException(cause)
+class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) :
+    RuntimeException(cause)
 
 @KspExperimental
-private fun KSType.asClass(proxyClass: Class<*>) = try {
-    Class.forName(this.declaration.toJavaClassName(), true, proxyClass.classLoader)
-} catch (e: Exception) {
-    throw KSTypeNotPresentException(this, e)
-}
+private fun KSType.asClass(proxyClass: Class<*>) =
+    try {
+        Class.forName(this.declaration.toJavaClassName(), true, proxyClass.classLoader)
+    } catch (e: Exception) {
+        throw KSTypeNotPresentException(this, e)
+    }
 
 @KspExperimental
-private fun List<KSType>.asClasses(proxyClass: Class<*>) = try {
-    this.map { type -> type.asClass(proxyClass) }
-} catch (e: Exception) {
-    throw KSTypesNotPresentException(this, e)
-}
+private fun List<KSType>.asClasses(proxyClass: Class<*>) =
+    try {
+        this.map { type -> type.asClass(proxyClass) }
+    } catch (e: Exception) {
+        throw KSTypesNotPresentException(this, e)
+    }
 
 fun KSValueArgument.isDefault() = origin == Origin.SYNTHETIC
 
 @KspExperimental
-private fun Any.asArray(method: Method, proxyClass: Class<*>) = listOf(this).asArray(method, proxyClass)
+private fun Any.asArray(method: Method, proxyClass: Class<*>) =
+    listOf(this).asArray(method, proxyClass)
 
 private fun KSDeclaration.toJavaClassName(): String {
     val nameDelimiter = '.'
     val packageNameString = packageName.asString()
     val qualifiedNameString = qualifiedName!!.asString()
-    val simpleNames = qualifiedNameString
-        .removePrefix("${packageNameString}$nameDelimiter")
-        .split(nameDelimiter)
+    val simpleNames =
+        qualifiedNameString.removePrefix("${packageNameString}$nameDelimiter").split(nameDelimiter)
 
     return if (simpleNames.size > 1) {
         buildString {

@@ -20,14 +20,16 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-val sourceJar = tasks.register<Jar>("sourcesJar") {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.map { it.allSource })
-}
-val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-}
+val sourceJar =
+    tasks.register<Jar>("sourcesJar") {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.map { it.allSource })
+    }
+val dokkaJavadocJar =
+    tasks.register<Jar>("dokkaJavadocJar") {
+        archiveClassifier.set("javadoc")
+        from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    }
 
 publishing {
     publications {

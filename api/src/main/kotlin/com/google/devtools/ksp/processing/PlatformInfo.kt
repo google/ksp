@@ -17,9 +17,7 @@
 
 package com.google.devtools.ksp.processing
 
-/**
- * Platform specific information
- */
+/** Platform specific information */
 interface PlatformInfo {
     val platformName: String
 }
@@ -28,30 +26,20 @@ interface PlatformInfo {
  * Platform information for JVM
  */
 interface JvmPlatformInfo : PlatformInfo {
-    /**
-     * JVM target version. Correspond to `-jvm-target` to Kotlin compiler
-     */
+    /** JVM target version. Correspond to `-jvm-target` to Kotlin compiler */
     val jvmTarget: String
 
-    /**
-     * JVM default mode. Correspond to `-jvm-default' to Kotlin compiler
-     */
+    /** JVM default mode. Correspond to `-jvm-default' to Kotlin compiler */
     val jvmDefaultMode: String
 }
 
-/**
- * Platform information for JS
- */
+/** Platform information for JS */
 interface JsPlatformInfo : PlatformInfo
 
-/**
- * Platform information for native platforms
- */
+/** Platform information for native platforms */
 interface NativePlatformInfo : PlatformInfo {
     val targetName: String
 }
 
-/**
- * Unknown platform to KSP
- */
+/** Unknown platform to KSP */
 interface UnknownPlatformInfo : PlatformInfo
