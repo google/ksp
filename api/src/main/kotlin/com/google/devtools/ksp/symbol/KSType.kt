@@ -19,29 +19,22 @@ package com.google.devtools.ksp.symbol
 /**
  * Represents a type in Kotlin's type system.
  *
- * Generally, a type is comprised of a declaration (e.g., class), corresponding type arguments, and other details like nullability.
- * KSType is useful when doing type checking, finding the declaration, and so on. Some of the information,
- * such as type annotations and type arguments, are often available in the corresponding type reference without resolution.
+ * Generally, a type is comprised of a declaration (e.g., class), corresponding type arguments, and
+ * other details like nullability. KSType is useful when doing type checking, finding the
+ * declaration, and so on. Some of the information, such as type annotations and type arguments, are
+ * often available in the corresponding type reference without resolution.
  */
 interface KSType {
-    /**
-     * The declaration that generates this type.
-     */
+    /** The declaration that generates this type. */
     val declaration: KSDeclaration
 
-    /**
-     * A type can be nullable, not nullable, or context-specific in the case of platform types.
-     */
+    /** A type can be nullable, not nullable, or context-specific in the case of platform types. */
     val nullability: Nullability
 
-    /**
-     * Type arguments to the type.
-     */
+    /** Type arguments to the type. */
     val arguments: List<KSTypeArgument>
 
-    /**
-     * Type annotations to the type.
-     */
+    /** Type annotations to the type. */
     val annotations: Sequence<KSAnnotation>
 
     /**
@@ -52,13 +45,12 @@ interface KSType {
     fun isAssignableFrom(that: KSType): Boolean
 
     /**
-     * True if the type is a collection and can be both mutable and immutable, depending on the context.
+     * True if the type is a collection and can be both mutable and immutable, depending on the
+     * context.
      */
     fun isMutabilityFlexible(): Boolean
 
-    /**
-     * True if the type can be both invariant and covariant, depending on the context.
-     */
+    /** True if the type can be both invariant and covariant, depending on the context. */
     fun isCovarianceFlexible(): Boolean
 
     /**
@@ -69,38 +61,27 @@ interface KSType {
      */
     fun replace(arguments: List<KSTypeArgument>): KSType
 
-    /**
-     * Returns the star projection of the type.
-     */
+    /** Returns the star projection of the type. */
     fun starProjection(): KSType
 
-    /**
-     * Make the type nullable
-     */
+    /** Make the type nullable */
     fun makeNullable(): KSType
 
-    /**
-     * Make the type not nullable
-     */
+    /** Make the type not nullable */
     fun makeNotNullable(): KSType
 
     /**
-     * True if the type is explicitly marked as nullable type, i.e. has question mark in type declaration.
+     * True if the type is explicitly marked as nullable type, i.e. has question mark in type
+     * declaration.
      */
     val isMarkedNullable: Boolean
 
-    /**
-     * True if the type is an error type, which means the type can't be resolved by compiler.
-     */
+    /** True if the type is an error type, which means the type can't be resolved by compiler. */
     val isError: Boolean
 
-    /**
-     * True if the type is a function type. Note that a suspend function will return false here.
-     */
+    /** True if the type is a function type. Note that a suspend function will return false here. */
     val isFunctionType: Boolean
 
-    /**
-     * True if the type is a suspend function
-     */
+    /** True if the type is a suspend function */
     val isSuspendFunctionType: Boolean
 }

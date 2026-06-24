@@ -22,8 +22,6 @@ package com.google.devtools.ksp.symbol
  * KSReferenceElement can specify, for example, a class, interface, or function, etc.
  */
 interface KSReferenceElement : KSNode {
-    /**
-     * Type arguments in the type reference.
-     */
+    /** Type arguments in the type reference. */
     val typeArguments: List<KSTypeArgument>
 }

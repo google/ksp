@@ -16,17 +16,11 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A type alias
- */
+/** A type alias */
 interface KSTypeAlias : KSDeclaration {
-    /**
-     * The name of the type alias
-     */
+    /** The name of the type alias */
     val name: KSName
 
-    /**
-     * The reference to the aliased type.
-     */
+    /** The reference to the aliased type. */
     val type: KSTypeReference
 }

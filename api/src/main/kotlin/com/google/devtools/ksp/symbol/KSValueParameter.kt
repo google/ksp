@@ -16,47 +16,29 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A value parameter
- */
+/** A value parameter */
 interface KSValueParameter : KSAnnotated {
-    /**
-     * Name of the parameter
-     */
+    /** Name of the parameter */
     val name: KSName?
 
-    /**
-     *  The reference to the type of the parameter.
-     */
+    /** The reference to the type of the parameter. */
     val type: KSTypeReference
 
-    /**
-     * True if it is a vararg.
-     */
+    /** True if it is a vararg. */
     val isVararg: Boolean
 
-    /**
-     * True if it has the `noinline` modifier
-     */
+    /** True if it has the `noinline` modifier */
     val isNoInline: Boolean
 
-    /**
-     * True if it has the `crossinline` modifier
-     */
+    /** True if it has the `crossinline` modifier */
     val isCrossInline: Boolean
 
-    /**
-     * True if it is a value
-     */
+    /** True if it is a value */
     val isVal: Boolean
 
-    /**
-     * True if it is a variable
-     */
+    /** True if it is a variable */
     val isVar: Boolean
 
-    /**
-     * True if it has a default value
-     */
+    /** True if it has a default value */
     val hasDefault: Boolean
 }
