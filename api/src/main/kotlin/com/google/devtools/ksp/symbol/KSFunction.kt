@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 package com.google.devtools.ksp.symbol
+
 import com.google.devtools.ksp.processing.Resolver
+
 /**
  * Holds the information for a [KSFunctionDeclaration] where type arguments are resolved as member
  * of a specific [KSType].
@@ -24,8 +26,8 @@ import com.google.devtools.ksp.processing.Resolver
  */
 interface KSFunction {
     /**
-     * The return type of the function. Note that this might be `null` if an error happened when
-     * the type is resolved.
+     * The return type of the function. Note that this might be `null` if an error happened when the
+     * type is resolved.
      *
      * @see KSFunctionDeclaration.returnType
      */
@@ -53,8 +55,6 @@ interface KSFunction {
      */
     val extensionReceiverType: KSType?
 
-    /**
-     * True if the compiler couldn't resolve the function.
-     */
+    /** True if the compiler couldn't resolve the function. */
     val isError: Boolean
 }

@@ -16,53 +16,46 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A property declaration, can also be used to denote a variable declaration.
- */
+/** A property declaration, can also be used to denote a variable declaration. */
 interface KSPropertyDeclaration : KSDeclaration {
 
     /**
-     * Getter of the property.
-     * Note that when KSPropertyDeclaration is used to model a variable, getter is always null, as a variable can't have a getter.
+     * Getter of the property. Note that when KSPropertyDeclaration is used to model a variable,
+     * getter is always null, as a variable can't have a getter.
      */
     val getter: KSPropertyGetter?
 
     /**
-     * Setter of the property.
-     * Note that when KSPropertyDeclaration is used to model a variable, setter is always null, as a variable can't have a setter.
-     * If a property is immutable, setter is always null as well, as an immutable property can't have a setter.
+     * Setter of the property. Note that when KSPropertyDeclaration is used to model a variable,
+     * setter is always null, as a variable can't have a setter. If a property is immutable, setter
+     * is always null as well, as an immutable property can't have a setter.
      */
     val setter: KSPropertySetter?
 
     /**
-     * Extension receiver if this declaration is an [extension property][https://kotlinlang.org/docs/reference/extensions.html#extension-properties].
+     * Extension receiver if this declaration is an
+     * [extension property][https://kotlinlang.org/docs/reference/extensions.html#extension-properties].
      * Dispatch receiver is [parentDeclaration], if any.
      */
     val extensionReceiver: KSTypeReference?
 
-    /**
-     * The type of this declaration.
-     */
+    /** The type of this declaration. */
     val type: KSTypeReference
 
-    /**
-     * True if this property is mutable.
-     */
+    /** True if this property is mutable. */
     val isMutable: Boolean
 
     /**
      * True if this property has a backing field.
      *
-     * Note that, this is specific to the current property and does not check for properties that are overridden by this
-     * property.
+     * Note that, this is specific to the current property and does not check for properties that
+     * are overridden by this property.
      *
      * https://kotlinlang.org/docs/properties.html#backing-fields
      */
     val hasBackingField: Boolean
 
-    /**
-     * Indicates whether this is a delegated property.
-     */
+    /** Indicates whether this is a delegated property. */
     fun isDelegated(): Boolean
 
     /**
@@ -82,15 +75,16 @@ interface KSPropertyDeclaration : KSDeclaration {
      *   override val y:Int
      * }
      * ```
-     * Calling `findOverridee` on `C.x` will return `B.x`.
-     * Calling `findOverridee` on `C.y` will return `A.y`.
+     *
+     * Calling `findOverridee` on `C.x` will return `B.x`. Calling `findOverridee` on `C.y` will
+     * return `A.y`.
      *
      * When there are multiple super classes / interfaces with the property, the closest declaration
      * to the current containing declaration is selected. If they are in the same level, the
      * property of the first specified interface (in source) will be returned.
      *
      * @return [KSPropertyDeclaration] for the overridden property, if overriding, otherwise null.
-     * Calling [findOverridee] is expensive and should be avoided if possible.
+     *   Calling [findOverridee] is expensive and should be avoided if possible.
      */
     fun findOverridee(): KSPropertyDeclaration?
 
@@ -103,16 +97,17 @@ interface KSPropertyDeclaration : KSDeclaration {
      * val foo: Base<Int>
      * val bar: Base<String>
      * ```
-     * When `x` is viewed as member of `foo`, this method will return the [KSType] for `Int`
-     * whereas when `x` is viewed as member of `bar`, this method will return the [KSType]
-     * representing `String`.
      *
-     * If the substitution fails (e.g. if [containing] is an error type, a [KSType] with [KSType.isError] `true` is
-     * returned.
+     * When `x` is viewed as member of `foo`, this method will return the [KSType] for `Int` whereas
+     * when `x` is viewed as member of `bar`, this method will return the [KSType] representing
+     * `String`.
+     *
+     * If the substitution fails (e.g. if [containing] is an error type, a [KSType] with
+     * [KSType.isError] `true` is returned.
      *
      * @param containing The type that contains [property]
-     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not contain
-     * [property] or if the [property] is not declared in a class, object or interface.
+     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not
+     *   contain [property] or if the [property] is not declared in a class, object or interface.
      */
     fun asMemberOf(containing: KSType): KSType
 }

@@ -16,12 +16,11 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Base class of every visitable program elements.
- */
+/** Base class of every visitable program elements. */
 interface KSNode {
     val origin: Origin
     val location: Location
     val parent: KSNode?
+
     fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R
 }

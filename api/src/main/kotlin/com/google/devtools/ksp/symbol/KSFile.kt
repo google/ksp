@@ -16,22 +16,14 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * A Kotlin source file
- */
+/** A Kotlin source file */
 interface KSFile : KSDeclarationContainer, KSAnnotated {
-    /**
-     * The [KSName] representation of this file's package.
-     */
+    /** The [KSName] representation of this file's package. */
     val packageName: KSName
 
-    /**
-     * File name of this source file.
-     */
+    /** File name of this source file. */
     val fileName: String
 
-    /**
-     * Absolute path of this source file.
-     */
+    /** Absolute path of this source file. */
     val filePath: String
 }
