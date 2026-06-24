@@ -16,22 +16,14 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- * Kotlin Symbol Processing's representation of names. Can be simple or qualified names.
- */
+/** Kotlin Symbol Processing's representation of names. Can be simple or qualified names. */
 interface KSName {
-    /**
-     * String representation of the name.
-     */
+    /** String representation of the name. */
     fun asString(): String
 
-    /**
-     * Qualifier of the name.
-     */
+    /** Qualifier of the name. */
     fun getQualifier(): String
 
-    /**
-     * If a qualified name, it is the last part. Otherwise it is the same as [asString]
-     */
+    /** If a qualified name, it is the last part. Otherwise it is the same as [asString] */
     fun getShortName(): String
 }

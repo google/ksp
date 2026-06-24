@@ -17,6 +17,7 @@
 package com.google.devtools.ksp.symbol
 
 import com.google.devtools.ksp.processing.Resolver
+
 /**
  * A function definition
  *
@@ -28,31 +29,23 @@ import com.google.devtools.ksp.processing.Resolver
  * @see KSFunctionType
  */
 interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
-    /**
-     * Kind of this function.
-     */
+    /** Kind of this function. */
     val functionKind: FunctionKind
 
-    /**
-     * Whether this function is abstract.
-     */
+    /** Whether this function is abstract. */
     val isAbstract: Boolean
 
     /**
      * Extension receiver of this function
+     *
      * @see [https://kotlinlang.org/docs/reference/extensions.html#extension-functions]
      */
     val extensionReceiver: KSTypeReference?
 
-    /**
-     * Return type of this function.
-     * Can be null if an error occurred during resolution.
-     */
+    /** Return type of this function. Can be null if an error occurred during resolution. */
     val returnType: KSTypeReference?
 
-    /**
-     * [value parameters][KSValueParameter] of this function.
-     */
+    /** [value parameters][KSValueParameter] of this function. */
     val parameters: List<KSValueParameter>
 
     /**
@@ -72,15 +65,16 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
      *   override open fun y() {}
      * }
      * ```
-     * Calling `findOverridee` on `C.x` will return `B.x`.
-     * Calling `findOverridee` on `C.y` will return `A.y`.
+     *
+     * Calling `findOverridee` on `C.x` will return `B.x`. Calling `findOverridee` on `C.y` will
+     * return `A.y`.
      *
      * When there are multiple super interfaces implementing the function, the closest declaration
      * to the current containing declaration is selected. If they are in the same level, the
      * function of the first specified interface (in source) will be returned.
      *
-     * @return [KSDeclaration] for the original declaration, if overriding, otherwise null.
-     * Calling [findOverridee] is expensive and should be avoided if possible.
+     * @return [KSDeclaration] for the original declaration, if overriding, otherwise null. Calling
+     *   [findOverridee] is expensive and should be avoided if possible.
      */
     fun findOverridee(): KSDeclaration?
 
@@ -95,20 +89,21 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
      * val foo: Base<Int>
      * val bar: Base<String>
      * ```
-     * When `f()` is viewed as member of `foo`, this method will return a [KSFunction] where
-     * the [KSFunction.returnType] is `Int` and the parameter `t` is of type `Int?`.
-     * When `f()` is viewed as member of `bar`, this method will return a [KSFunction]
-     * where the [KSFunction.returnType] is `String` and the parameter `t` is of type `String?`.
+     *
+     * When `f()` is viewed as member of `foo`, this method will return a [KSFunction] where the
+     * [KSFunction.returnType] is `Int` and the parameter `t` is of type `Int?`. When `f()` is
+     * viewed as member of `bar`, this method will return a [KSFunction] where the
+     * [KSFunction.returnType] is `String` and the parameter `t` is of type `String?`.
      *
      * If the function has type parameters, they'll not be resolved and can be read from
      * [KSFunction.typeParameters].
      *
-     * If the substitution fails (e.g. if [containing] is an error type, a [KSFunction] with [KSFunction.isError] `true`
-     * is returned.
+     * If the substitution fails (e.g. if [containing] is an error type, a [KSFunction] with
+     * [KSFunction.isError] `true` is returned.
      *
      * @param containing The type that contains [function].
-     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not contain [function]
-     * or if the [function] is not declared in a class, object or interface.
+     * @throws IllegalArgumentException Throws [IllegalArgumentException] when [containing] does not
+     *   contain [function] or if the [function] is not declared in a class, object or interface.
      */
     fun asMemberOf(containing: KSType): KSFunction
 }

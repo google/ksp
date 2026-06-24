@@ -17,19 +17,17 @@
 package com.google.devtools.ksp.symbol
 
 /**
- *  Classes, functions, properties and typealiases can be declared as `expect` in common modules and `actual` in platform modules.
+ * Classes, functions, properties and typealiases can be declared as `expect` in common modules and
+ * `actual` in platform modules.
  *
- *  See https://kotlinlang.org/docs/reference/platform-specific-declarations.html for more information.
+ * See https://kotlinlang.org/docs/reference/platform-specific-declarations.html for more
+ * information.
  */
 interface KSExpectActual {
-    /**
-     * True if this is an `actual` implementation.
-     */
+    /** True if this is an `actual` implementation. */
     val isActual: Boolean
 
-    /**
-     * True if this is an `expect` declaration.
-     */
+    /** True if this is an `expect` declaration. */
     val isExpect: Boolean
 
     /**
