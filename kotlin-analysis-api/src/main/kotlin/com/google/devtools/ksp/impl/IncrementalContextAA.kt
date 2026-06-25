@@ -17,10 +17,14 @@
 
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.IncrementalContextLoggingOptions
 import com.google.devtools.ksp.common.IncrementalContextBase
 import com.google.devtools.ksp.common.LookupStorageWrapper
 import com.google.devtools.ksp.common.LookupSymbolWrapper
 import com.google.devtools.ksp.common.LookupTrackerWrapper
+import com.google.devtools.ksp.common.NoSourceFile
+import com.google.devtools.ksp.common.isSyntheticFileName
+import com.google.devtools.ksp.common.stripSyntheticFileNameModifiers
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
@@ -66,7 +70,7 @@ class IncrementalContextAA(
     override val isIncremental: Boolean,
     lookupTracker: LookupTracker,
     anyChangesWildcard: File,
-    incrementalLog: Boolean,
+    loggingOptions: IncrementalContextLoggingOptions,
     baseDir: File,
     cachesDir: File,
     kspOutputDir: File,
@@ -75,7 +79,7 @@ class IncrementalContextAA(
     changedClasses: List<String>,
 ) : IncrementalContextBase(
     anyChangesWildcard,
-    incrementalLog,
+    loggingOptions,
     baseDir,
     cachesDir,
     kspOutputDir,
@@ -89,7 +93,7 @@ class IncrementalContextAA(
     private val symbolLookupCacheDir = File(cachesDir, "symbolLookups")
 
     private val symbolTrackerLogFile: Writer? =
-        if (this.incrementalLog) {
+        if (loggingOptions.incrementalLoggingEnabled) {
             mkLogFile("symbolTrackerTrace.log").bufferedWriter()
                 .also { logFiles.add(it) }
         } else {
@@ -97,7 +101,7 @@ class IncrementalContextAA(
         }
 
     private val classTrackerLogFile: Writer? =
-        if (this.incrementalLog) {
+        if (loggingOptions.incrementalLoggingEnabled) {
             mkLogFile("enumClassTrackerTrace.log").bufferedWriter()
                 .also { logFiles.add(it) }
         } else {
@@ -274,17 +278,95 @@ class IncrementalContextAA(
 
     override fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         super.logBeforeCacheFlush(outputs, sourceToOutputs)
-        logLookupGraph()
+        val lookupRecords = if (loggingOptions.incrementalLoggingEnabled) dumpLookupRecords() else emptyMap()
+        logLookupGraph(lookupRecords)
+        logDependencyGraphFrom(loggingOptions.dependencyGraphOriginName, lookupRecords)
         logFiles.forEach { it.close() }
     }
 
-    private fun logLookupGraph() {
-        if (!incrementalLog) {
+    /**
+     * Computes the dependency graph from [origin] using a normal BFS and logs it as a Graphviz `.dot` file.
+     */
+    private fun logDependencyGraphFrom(origin: String?, lookupRecords: Map<String, List<String>>) {
+        if (!loggingOptions.incrementalLoggingEnabled) {
+            return
+        }
+
+        if (origin == null) {
+            return
+        }
+
+        if (origin.isBlank()) {
+            return
+        }
+
+        val allDefinedSyms = mutableMapOf<File, MutableSet<LookupSymbolWrapper>>()
+        symbolsMap.forEach { (file, syms) ->
+            allDefinedSyms.getOrPut(file, ::mutableSetOf).addAll(syms)
+        }
+        updatedSymbols.keySet().forEach { file ->
+            allDefinedSyms.getOrPut(file, ::mutableSetOf).addAll(updatedSymbols[file])
+        }
+
+        // Prepare edges
+        val edges = mutableMapOf<String, MutableSet<String>>()
+        lookupRecords.forEach { (fqn, paths) ->
+            paths.forEach { path ->
+                if (NoSourceFile.isSyntheticFile(path)) {
+                    val fqnSource = stripSyntheticFileNameModifiers(path)
+                    edges.getOrPut(fqnSource, ::mutableSetOf).add(fqn)
+                } else {
+                    val file = File(path)
+                    val syms = allDefinedSyms[file]
+                    if (!syms.isNullOrEmpty()) {
+                        syms.forEach { sym ->
+                            val fqnSource = "${sym.scope}.${sym.name}"
+                            edges.getOrPut(fqnSource, ::mutableSetOf).add(fqn)
+                        }
+                    } else {
+                        // Default back to the path so we can visualize errors
+                        edges.getOrPut(path, ::mutableSetOf).add(fqn)
+                    }
+                }
+            }
+        }
+
+        // BFS
+        val visited = mutableSetOf<String>()
+        val queue = ArrayDeque<String>()
+        val bfsEdges = mutableSetOf<Pair<String, String>>()
+        if (edges.contains(origin)) {
+            visited.add(origin)
+            queue.add(origin)
+        }
+        while (queue.isNotEmpty()) {
+            val curr = queue.removeFirst()
+            edges[curr]?.forEach { next ->
+                bfsEdges.add(curr to next)
+                if (visited.add(next)) {
+                    queue.add(next)
+                }
+            }
+        }
+
+        // Log graph
+        mkFileInLogDir("kspLookupGraphOrigin.dot").bufferedWriter().use { logFile ->
+            logFile.write("digraph {\n")
+            // Always add origin vertex
+            logFile.write("  \"$origin\";\n")
+            bfsEdges.sortedWith(compareBy({ it.first }, { it.second })).forEach { (u, v) ->
+                logFile.write("  \"$u\" -> \"$v\";\n")
+            }
+            logFile.write("}\n")
+        }
+    }
+
+    private fun logLookupGraph(lookupRecords: Map<String, List<String>>) {
+        if (!loggingOptions.incrementalLoggingEnabled) {
             return
         }
 
         mkLogFile("kspLookupGraph.log").bufferedWriter().use { logFile ->
-            val lookupRecords = dumpLookupRecords()
             lookupRecords.forEach { (fqn, paths) ->
                 paths.forEach {
                     logFile.write("$it -> $fqn\n")

@@ -514,7 +514,7 @@ class KotlinSymbolProcessing(
                 kspConfig.incremental,
                 dualLookupTracker,
                 File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
-                kspConfig.incrementalLog,
+                kspConfig.incrementalContextLoggingOptions,
                 kspConfig.projectBaseDir,
                 kspConfig.cachesDir,
                 kspConfig.outputBaseDir,
