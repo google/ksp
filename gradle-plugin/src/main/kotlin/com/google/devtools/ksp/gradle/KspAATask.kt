@@ -156,6 +156,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.processorClasspath,
                     )
                 }
+
                 else -> {
                     if (
                         !inputChanges.isIncremental ||
@@ -373,6 +374,10 @@ abstract class KspAATask @Inject constructor(
                             .gradleProperty("ksp.incremental.log")
                             .map { it.toBoolean() }
                             .orElse(false)
+                    )
+                    cfg.incrementalGraphOrigin.value(
+                        project.providers
+                            .gradleProperty("ksp.incremental.log.graph.origin")
                     )
 
                     cfg.experimentalPsiResolution.value(
@@ -677,6 +682,10 @@ abstract class KspGradleConfig @Inject constructor() {
     abstract val incrementalLog: Property<Boolean>
 
     @get:Input
+    @get:Optional
+    abstract val incrementalGraphOrigin: Property<String>
+
+    @get:Input
     abstract val experimentalPsiResolution: Property<Boolean>
 
     @get:PathSensitive(PathSensitivity.NONE)
@@ -789,6 +798,7 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
 
             incremental = gradleCfg.incremental.get()
             incrementalLog = gradleCfg.incrementalLog.get()
+            incrementalLogGraphOrigin = gradleCfg.incrementalGraphOrigin.orNull
             experimentalPsiResolution = gradleCfg.experimentalPsiResolution.get()
 
             modifiedSources = parameters.modifiedSources
