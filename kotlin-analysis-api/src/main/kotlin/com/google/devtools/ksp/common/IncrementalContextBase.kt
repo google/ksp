@@ -281,15 +281,17 @@ abstract class IncrementalContextBase(
 
         updateFromRemovedOutputs()
 
+        val dirtyKSFiles = ksFiles.filter { it.relativeFile in dirtyFiles }
+
         logDirtyFiles(
-            ksFiles.filter { it.relativeFile in dirtyFiles },
+            dirtyKSFiles,
             ksFiles,
             removedOutputs,
             dirtyFilesByCP,
             dirtyFilesByNewSyms,
             dirtyFilesBySealed
         )
-        return@closeFilesOnException ksFiles.filter { it.relativeFile in dirtyFiles }
+        return@closeFilesOnException dirtyKSFiles
     }
 
     // Loop detection isn't needed because of overwritten checks in CodeGeneratorImpl
