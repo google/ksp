@@ -152,6 +152,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/annotationWithArrayValue.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3008", BugState.OPEN)
+    abstract fun testAnnotationArrayValueType()
+
     @TestMetadata("annotationWithDefault.kt")
     @Test
     fun testAnnotationWithDefault() {
