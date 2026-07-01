@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.common
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSDeclarationContainer
@@ -253,8 +254,7 @@ abstract class IncrementalContextBase(
 
         // Calculate dirty files by dirty classes in CP.
         val dirtyFilesByCP = changedClasses.flatMap { fqn ->
-            val name = fqn.substringAfterLast('.')
-            val scope = fqn.substringBeforeLast('.', "<anonymous>")
+            val (scope, name) = separateQualifierAndName(fqn)
             classLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() } +
                 symbolLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() }
         }.toSet()
@@ -521,8 +521,7 @@ abstract class IncrementalContextBase(
             return
 
         val path = psiFile.virtualFile.path
-        val name = fqn.substringAfterLast('.')
-        val scope = fqn.substringBeforeLast('.', "<anonymous>")
+        val (scope, name) = separateQualifierAndName(fqn)
 
         // Java types are classes. Therefore lookups only happen in packages.
         fun record(scope: String, name: String) =
@@ -615,8 +614,14 @@ internal class DirtinessPropagator(
         visitedFiles.add(file)
 
         // Propagate by dependencies
-        symbolsMap[file]?.forEach {
-            visit(it)
+        if (NoSourceFile.isSyntheticFile(file.name)) {
+            val fqn = stripSyntheticFileNameModifiers(file.name)
+            val (scope, name) = separateQualifierAndName(fqn)
+            visit(LookupSymbolWrapper(name, scope))
+        } else {
+            symbolsMap[file]?.forEach {
+                visit(it)
+            }
         }
 
         // Propagate by input-output relations
@@ -634,5 +639,18 @@ internal class DirtinessPropagator(
     fun propagate(initialSet: Collection<File>): Set<File> {
         initialSet.forEach { visit(it) }
         return visitedFiles
+    }
+
+    private val noSourceFilePrefix = "<NoSourceFile for "
+    private val noSourceFileSuffix = " is a virtual file; DO NOT USE.>"
+
+    /**
+     * Returns `true` if the file represents is a class literal reference in an annotation argument.
+     */
+    private fun isClassLiteralReferenceInAnnotationArgument(file: File): Boolean {
+        return file != anyChangesWildcard &&
+            file != removedOutputsKey &&
+            file.path.startsWith(noSourceFilePrefix) &&
+            file.path.endsWith(noSourceFileSuffix)
     }
 }

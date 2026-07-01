@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import org.jetbrains.kotlin.incremental.LookupTrackerImpl
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position
@@ -32,8 +33,7 @@ class DualLookupTracker : LookupTracker {
     override fun record(filePath: String, position: Position, scopeFqName: String, scopeKind: ScopeKind, name: String) {
         symbolTracker.record(filePath, position, scopeFqName, scopeKind, name)
         if (scopeKind == ScopeKind.CLASSIFIER) {
-            val className = scopeFqName.substringAfterLast('.')
-            val outerScope = scopeFqName.substringBeforeLast('.', "<anonymous>")
+            val (outerScope, className) = separateQualifierAndName(scopeFqName)
             // DO NOT USE: ScopeKind is meaningless
             classTracker.record(filePath, position, outerScope, scopeKind, className)
         }

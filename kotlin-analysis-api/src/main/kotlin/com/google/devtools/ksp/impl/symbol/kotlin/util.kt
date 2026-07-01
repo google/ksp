@@ -24,6 +24,7 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
@@ -746,7 +747,10 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     } ?: KSErrorType
 
     is KaAnnotationValue.ClassLiteralValue -> {
-        KSTypeImpl.getCached(this@toValue.type)
+        parent?.let { ctx ->
+            recordClassReferenceLookup(type, ctx)
+        }
+        KSTypeImpl.getCached(type)
     }
 
     is KaAnnotationValue.ConstantValue -> this.value.value
@@ -1336,3 +1340,14 @@ private fun isKotlinAlteredType(fqName: String): Boolean {
 // Annotations on deeply synthesized members like getter of Java annotation arguments can be defined in src.
 internal val KSNode.definitionOrigin: Origin
     get() = containingFile?.origin ?: origin
+
+/**
+ * Returns the qualifier and name of [fqn].
+ *
+ * E.g., if `fqn = a.b.c.f`, then it returns `a.b.c, f`.
+ */
+internal fun separateQualifierAndName(fqn: String): Pair<String, String> {
+    val scope = fqn.substringBeforeLast('.', "<anonymous>")
+    val name = fqn.substringAfterLast('.')
+    return scope to name
+}

@@ -4,6 +4,7 @@ import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
@@ -11,6 +12,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.toKaType
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.ClassKind
@@ -39,6 +41,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
@@ -82,10 +85,10 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 val value = it.value
                 val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
                     value.initializers.map {
-                        calcValue(it)
+                        calcValue(it, this@KSAnnotationJavaImpl)
                     }
                 } else {
-                    calcValue(it.value)
+                    calcValue(it.value, this@KSAnnotationJavaImpl)
                 }
                 KSValueArgumentLiteImpl(
                     name?.let { KSNameImpl.getCached(it) },
@@ -120,10 +123,10 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                                 annoMethod.defaultValue?.let { value ->
                                     val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
                                         value.initializers.map {
-                                            calcValue(it)
+                                            calcValue(it, this@KSAnnotationJavaImpl)
                                         }
                                     } else {
-                                        calcValue(value)
+                                        calcValue(value, this@KSAnnotationJavaImpl)
                                     }
                                     KSValueArgumentLiteImpl(
                                         KSNameImpl.getCached(annoMethod.name),
@@ -137,6 +140,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                     } else {
                         symbol.valueParameters.mapNotNull { valueParameterSymbol ->
                             val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            if (constantValue is KaAnnotationValue.ClassLiteralValue) {
+                                recordClassReferenceLookup(constantValue.type, this@KSAnnotationJavaImpl)
+                            }
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
                                     valueParameterSymbol.name,
@@ -175,8 +181,13 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 }
 
-fun calcValue(value: PsiAnnotationMemberValue?): Any? {
+fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode? = null): Any? {
     if (value is PsiAnnotation) {
+        parent?.let { ctx ->
+            value.qualifiedName?.let { fqn ->
+                recordClassReferenceLookup(fqn, ctx)
+            }
+        }
         return KSAnnotationJavaImpl.getCached(value, null)
     }
     val result = when (value) {
@@ -207,6 +218,13 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
                 else -> {
                     ResolverAAImpl.instance
                         .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
+                        ?.also { type ->
+                            parent?.let { ctx ->
+                                type.toKaType()?.let { tpe ->
+                                    recordClassReferenceLookup(tpe, ctx)
+                                }
+                            }
+                        }
                         ?: KSErrorType(component.canonicalText)
                 }
             }
@@ -219,6 +237,13 @@ fun calcValue(value: PsiAnnotationMemberValue?): Any? {
         is PsiType -> {
             ResolverAAImpl.instance
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
+                ?.also { type ->
+                    parent?.let { ctx ->
+                        type.toKaType()?.let { tpe ->
+                            recordClassReferenceLookup(tpe, ctx)
+                        }
+                    }
+                }
                 ?: KSErrorType(result.canonicalText)
         }
 
