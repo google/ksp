@@ -3,6 +3,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.*
@@ -25,6 +26,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
@@ -88,10 +90,10 @@ class KSAnnotationResolvedImpl private constructor(
                             annoMethod.defaultValue?.let { value ->
                                 val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
                                     value.initializers.map {
-                                        calcValue(it)
+                                        calcValue(it, this@KSAnnotationResolvedImpl)
                                     }
                                 } else {
-                                    calcValue(value)
+                                    calcValue(value, this@KSAnnotationResolvedImpl)
                                 }
                                 KSValueArgumentLiteImpl(
                                     KSNameImpl.getCached(annoMethod.name),
@@ -106,6 +108,9 @@ class KSAnnotationResolvedImpl private constructor(
                     symbol.memberScope.constructors.singleOrNull()?.let {
                         it.valueParameters.mapNotNull { valueParameterSymbol ->
                             val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            if (constantValue is KaAnnotationValue.ClassLiteralValue) {
+                                recordClassReferenceLookup(constantValue.type, this@KSAnnotationResolvedImpl)
+                            }
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
                                     valueParameterSymbol.name,
