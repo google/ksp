@@ -18,12 +18,12 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.IncrementalContextBase
 import com.google.devtools.ksp.common.LookupStorageWrapper
 import com.google.devtools.ksp.common.LookupSymbolWrapper
 import com.google.devtools.ksp.common.LookupTrackerWrapper
 import com.google.devtools.ksp.common.NoSourceFile
-import com.google.devtools.ksp.common.isSyntheticFileName
 import com.google.devtools.ksp.common.stripSyntheticFileNameModifiers
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
@@ -31,6 +31,8 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
+import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -54,6 +56,7 @@ import org.jetbrains.kotlin.analysis.api.types.KaFlexibleType
 import org.jetbrains.kotlin.analysis.api.types.KaIntersectionType
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.KaTypeParameterType
+import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.incremental.IncrementalCompilationContext
 import org.jetbrains.kotlin.incremental.LookupStorage
 import org.jetbrains.kotlin.incremental.LookupSymbol
@@ -180,6 +183,75 @@ class IncrementalContextAA(
         val file = (context?.containingFile as? KSFileJavaImpl)?.psi ?: return
 
         recordWithArgs(type, file)
+    }
+
+    /**
+     * Records a reference to `MyClass::class`.
+     * 
+     * @param type the referenced type, e.g., `MyClass`
+     * @param context the parent of [type], i.e., where the reference occurs.
+     */
+    fun recordClassReferenceLookup(type: KaType, context: KSNode) {
+        if (!isIncremental) {
+            return
+        }
+
+        val fqn = type.symbol?.classId?.asFqNameString()
+            ?: type.getFqn()
+            ?: return
+
+        recordClassReferenceLookup(fqn, context)
+    }
+
+    /**
+     * Records a reference to `MyClass::class`.
+     * 
+     * @param fqn the fully qualified name of the referenced type, e.g., the fully qualified name of `MyClass`.
+     * @param context the parent of [fqn], i.e., where the reference occurs.
+     */
+    fun recordClassReferenceLookup(fqn: String, context: KSNode) {
+        if (!isIncremental) {
+            return
+        }
+
+        val (scope, name) = separateQualifierAndName(fqn)
+
+        symbolLookupTracker.record(filePathFor(context), scope, name)
+    }
+
+    /**
+     * Returns a string representing a file path for [context].
+     *
+     * If the filepath is already available, it is returned. Otherwise, a synthetic filepath is generated.
+     */
+    private fun filePathFor(context: KSNode): String {
+        // Try directly getting the filepath
+        val maybeAvailableFilePath = context.containingFile?.filePath
+        if (maybeAvailableFilePath != null) {
+            return maybeAvailableFilePath
+        }
+
+        // Construct synthetic filepath
+        val closestParentDeclaration = context.findFirstParentDeclaration() ?: throw InternalKSPException(
+            "Unexpected missing parent declaration for KSNode '$context'",
+            context.location,
+            context.javaClass
+        )
+
+        val parentDeclarationName = closestParentDeclaration.qualifiedName?.asString()
+            ?: (
+                closestParentDeclaration.packageName.asString()
+                    + "."
+                    + closestParentDeclaration.simpleName.asString()
+                )
+
+        return NoSourceFile(baseDir, parentDeclarationName).filePath
+    }
+
+    /** Returns the nearest parent declaration if it exists */
+    private fun KSNode.findFirstParentDeclaration(): KSDeclaration? = when (this) {
+        is KSDeclaration -> this
+        else -> parent?.findFirstParentDeclaration()
     }
 
     @OptIn(KaExperimentalApi::class)
@@ -378,6 +450,24 @@ class IncrementalContextAA(
 
 internal fun recordLookup(ktType: KaType, context: KSNode?) =
     ResolverAAImpl.instance.incrementalContext.recordLookup(ktType, context)
+
+/**
+ * Records a reference to `MyClass::class`.
+ * 
+ * @param ktType the referenced type, e.g., `MyClass`
+ * @param context the parent of [ktType], i.e., where the reference occurs.
+ */
+internal fun recordClassReferenceLookup(ktType: KaType, context: KSNode) =
+    ResolverAAImpl.instance.incrementalContext.recordClassReferenceLookup(ktType, context)
+
+/**
+ * Records a reference to `MyClass::class`.
+ * 
+ * @param fqn the fully qualified name of the referenced type, e.g., the fully qualified name of `MyClass`.
+ * @param context the parent of [fqn], i.e., where the reference occurs.
+ */
+internal fun recordClassReferenceLookup(fqn: String, context: KSNode) =
+    ResolverAAImpl.instance.incrementalContext.recordClassReferenceLookup(fqn, context)
 
 internal fun recordLookupWithSupertypes(ktType: KaType, extra: (KaType, PsiJavaFile) -> Unit = { _, _ -> }) =
     ResolverAAImpl.instance.incrementalContext.recordLookupWithSupertypes(ktType, mutableSetOf(), extra)

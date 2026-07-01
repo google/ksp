@@ -84,7 +84,7 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         gradleRunner.withArguments(ASSEMBLE).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
             val actual = result.output.lines().filter { it.startsWith(PROCESSOR_LABEL) }
-            Assert.assertNotEquals(
+            Assert.assertEquals(
                 "\n${expected.joinToString("\n")}\n[SEPARATOR]\n${actual.joinToString("\n")}",
                 expected,
                 actual
