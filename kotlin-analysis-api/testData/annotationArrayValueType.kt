@@ -16,10 +16,14 @@
  */
 // TEST PROCESSOR: AnnotationArrayValueTypeProcessor
 // EXPECTED:
-// JavaAnnotated args is Array<*>: true
-// JavaAnnotated args size: 2
-// KotlinAnnotated args is Array<*>: true
-// KotlinAnnotated args size: 2
+// JavaAnnotated JavaAnnotation args is Array<*>: true
+// JavaAnnotated JavaAnnotation args size: 2
+// JavaAnnotated KotlinAnnotation args is Array<*>: true
+// JavaAnnotated KotlinAnnotation args size: 2
+// KotlinAnnotated JavaAnnotation args is Array<*>: true
+// KotlinAnnotated JavaAnnotation args size: 2
+// KotlinAnnotated KotlinAnnotation args is Array<*>: true
+// KotlinAnnotated KotlinAnnotation args size: 2
 // END
 // FILE: JavaAnnotation.java
 public @interface JavaAnnotation {
@@ -33,8 +37,14 @@ public @interface NestedAnnotation {
 
 // FILE: JavaAnnotated.java
 @JavaAnnotation(args = {@NestedAnnotation(value = "one"), @NestedAnnotation(value = "two")})
+@KotlinAnnotation(args = {@KotlinNestedAnnotation(value = "one"), @KotlinNestedAnnotation(value = "two")})
 class JavaAnnotated {}
 
 // FILE: KotlinAnnotated.kt
+annotation class KotlinAnnotation(val args: Array<KotlinNestedAnnotation>)
+
+annotation class KotlinNestedAnnotation(val value: String)
+
 @JavaAnnotation(args = [NestedAnnotation(value = "one"), NestedAnnotation(value = "two")])
+@KotlinAnnotation(args = [KotlinNestedAnnotation(value = "one"), KotlinNestedAnnotation(value = "two")])
 class KotlinAnnotated
