@@ -25,17 +25,23 @@ class AnnotationArrayValueTypeProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val annotated = resolver.getClassDeclarationByName("JavaAnnotated")!!
-        val annotation = annotated.annotations.single { it.shortName.asString() == "JavaAnnotation" }
-        val argument = annotation.arguments.single()
-        val value = argument.value
-        results.add("${argument.name?.asString()} is Array<*>: ${value is Array<*>}")
-        results.add("${argument.name?.asString()} size: ${value.sizeOrNull()}")
+        logAnnotationArrayValue(resolver, "JavaAnnotated")
+        logAnnotationArrayValue(resolver, "KotlinAnnotated")
         return emptyList()
     }
 
     override fun toResult(): List<String> {
         return results
+    }
+
+    private fun logAnnotationArrayValue(resolver: Resolver, className: String) {
+        val annotated = resolver.getClassDeclarationByName(className)!!
+        val annotation = annotated.annotations.single { it.shortName.asString() == "JavaAnnotation" }
+        val argument = annotation.arguments.single()
+        val value = argument.value
+        val argumentName = argument.name?.asString()
+        results.add("$className $argumentName is Array<*>: ${value is Array<*>}")
+        results.add("$className $argumentName size: ${value.sizeOrNull()}")
     }
 
     private fun Any?.sizeOrNull(): Int? {
