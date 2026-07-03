@@ -36,8 +36,10 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -102,6 +104,13 @@ abstract class KspAATask @Inject constructor(
 
     @get:Nested
     abstract val commandLineArgumentProviders: ListProperty<CommandLineArgumentProvider>
+
+    // Metadata JSONs from dependencies indicating cross-compilation support.
+    // Declared as input so Gradle runs the exporting tasks before this task executes.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    abstract val crossCompilationMetadata: ConfigurableFileCollection
 
     @get:ServiceReference
     abstract val isolatedClassLoaderCacheBuildService: Property<IsolatedClassLoaderCacheBuildService>
@@ -445,13 +454,7 @@ abstract class KspAATask @Inject constructor(
                             it.name == konanTargetName
                         }
                         if (!isHostSupported) {
-                            val isKlibCrossCompilationEnabled = getKlibCrossCompilationSupport(
-                                project,
-                                kotlinCompilation
-                            )
-                            kspAATask.onlyIf {
-                                isKlibCrossCompilationEnabled.get()
-                            }
+                            configureCrossCompilationSkipCondition(project, kotlinCompilation, kspAATask)
                         }
                     }
 
@@ -468,27 +471,110 @@ abstract class KspAATask @Inject constructor(
             return kspTaskProvider
         }
 
+        private const val ENABLE_KLIBS_CROSSCOMPILATION_PROPERTY = "kotlin.native.enableKlibsCrossCompilation"
+        private const val CROSS_COMPILATION_SHARED_DATA_KEY = "crossCompilationMetadata"
+        private val KOTLIN_PROJECT_SHARED_DATA_ATTRIBUTE =
+            Attribute.of("org.jetbrains.kotlin.project-shared-data", String::class.java)
+
         /**
-         * Returns a Provider<Boolean> indicating whether klib cross-compilation is enabled.
-         * For Kotlin 2.3.20-Beta2+, uses KotlinNativeCompilation.crossCompilationSupported.
-         * For earlier versions, falls back to checking the gradle property kotlin.native.enableKlibsCrossCompilation.
+         * Configures [kspAATask] to skip when cross-compilation is not possible on the current host,
+         * mirroring how KGP skips compile tasks (see KGP's KotlinCreateNativeCompileTasksSideEffect).
+         *
+         * To remain compatible with the Configuration Cache, we split KGP's check:
+         *  1. Target-level check (evaluated during configuration): Checks host compatibility,
+         *     cross-compilation properties, and cinterops.
+         *  2. Dependency-level check (evaluated during execution): Reads shared metadata JSONs
+         *     from project dependencies (declared as task inputs to ensure correct task ordering).
+         *
+         * TODO(https://youtrack.jetbrains.com/issue/KT-87411): Replace with the public KGP API once available.
          */
-        private fun getKlibCrossCompilationSupport(
+        private fun configureCrossCompilationSkipCondition(
             project: Project,
-            kotlinCompilation: KotlinNativeCompilation
-        ): Provider<Boolean> {
+            kotlinCompilation: KotlinNativeCompilation,
+            kspAATask: KspAATask,
+        ) {
             val kotlinVersion = project.getKotlinPluginVersion()
-            val isSupportCrossCompilationPropertyAvailable =
+            val isCrossCompilationMetadataAvailable =
                 KotlinToolingVersion(kotlinVersion) >= KotlinToolingVersion("2.3.20-Beta2")
 
-            return if (isSupportCrossCompilationPropertyAvailable) {
-                kotlinCompilation.crossCompilationSupported
-            } else {
-                // Fallback for Kotlin versions before 2.3.20-Beta2
-                project.providers.gradleProperty(
-                    "kotlin.native.enableKlibsCrossCompilation"
-                ).orElse("false").map { it.toBoolean() }
+            val isKlibCrossCompilationEnabled = getKlibCrossCompilationEnabledProvider(project)
+
+            if (!isCrossCompilationMetadataAvailable) {
+                kspAATask.onlyIf { isKlibCrossCompilationEnabled.get() }
+                return
             }
+
+            val target = kotlinCompilation.target
+            val hasCinterops = project.objects.property(Boolean::class.java).convention(false)
+            target.compilations.configureEach { compilation ->
+                compilation.cinterops.configureEach {
+                    hasCinterops.set(true)
+                }
+            }
+
+            val isTargetCrossCompilationPossible = isKlibCrossCompilationEnabled.zip(hasCinterops) { klibCrossCompilationEnabled, targetHasCinterops ->
+                HostManager.hostOrNull != null &&
+                    klibCrossCompilationEnabled &&
+                    !targetHasCinterops
+            }
+            kspAATask.onlyIf("Cross compilation should be supported on host") {
+                isTargetCrossCompilationPossible.get()
+            }
+
+            val metadataFiles = getCrossCompilationMetadataFiles(project, kotlinCompilation)
+            kspAATask.crossCompilationMetadata.from(metadataFiles)
+            kspAATask.onlyIf("Cross compilation should be possible with project dependencies") { task ->
+                (task as KspAATask).crossCompilationMetadata.files.all(::isCrossCompilationSupportedBy)
+            }
+        }
+
+        private fun getKlibCrossCompilationEnabledProvider(project: Project): Provider<Boolean> {
+            val gradlePropertiesSetting = project.providers.gradleProperty(ENABLE_KLIBS_CROSSCOMPILATION_PROPERTY)
+                .map { it.toBoolean() }
+                .orElse(true)
+
+            val subprojectPropertiesSetting = project.providers
+                .fileContents(project.layout.projectDirectory.file("gradle.properties"))
+                .asText
+                .map { text ->
+                    val props = Properties().apply { load(java.io.StringReader(text)) }
+                    props.getProperty(ENABLE_KLIBS_CROSSCOMPILATION_PROPERTY)?.toBoolean()
+                }
+
+            return subprojectPropertiesSetting.orElse(gradlePropertiesSetting)
+        }
+
+        private fun getCrossCompilationMetadataFiles(
+            project: Project,
+            kotlinCompilation: KotlinNativeCompilation
+        ): FileCollection {
+            val configurationProvider = project.configurations.named(kotlinCompilation.compileDependencyConfigurationName)
+            val sharedDataUsage = project.objects.named(Usage::class.java, "kotlin-project-shared-data")
+            val filesProvider = configurationProvider.map { configuration ->
+                configuration.incoming.artifactView { view ->
+                    view.isLenient = true
+                    view.attributes.attribute(Usage.USAGE_ATTRIBUTE, sharedDataUsage)
+                    view.attributes.attribute(KOTLIN_PROJECT_SHARED_DATA_ATTRIBUTE, CROSS_COMPILATION_SHARED_DATA_KEY)
+                    view.attributes.attribute(
+                        Attribute.of("artifactType", String::class.java),
+                        "kotlin-project-shared-data-$CROSS_COMPILATION_SHARED_DATA_KEY"
+                    )
+                }.files
+            }
+            return project.files(filesProvider)
+        }
+
+        /**
+         * Parses the cross-compilation metadata JSON exported by KGP.
+         * Missing or malformed files default to supported (matching KGP's parser).
+         */
+        private fun isCrossCompilationSupportedBy(metadataFile: File): Boolean {
+            val content = runCatching { metadataFile.readText() }.getOrNull() ?: return true
+            return runCatching {
+                val parser = groovy.json.JsonSlurper()
+                val map = parser.parseText(content) as Map<*, *>
+                map["crossCompilationSupported"] as? Boolean
+            }.getOrNull() ?: true
         }
     }
 }
