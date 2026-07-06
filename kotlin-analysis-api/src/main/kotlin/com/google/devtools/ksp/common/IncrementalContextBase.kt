@@ -501,7 +501,16 @@ abstract class IncrementalContextBase(
         assert(cachesUpToDateFile.exists())
     }
 
-    // Insert Java file -> names lookup records.
+    /**
+     * Insert Java file -> names lookup records.
+     * In other words, it inserts the names of symbols that may invalidate the [psiFile].
+     * There are several cases where that may happen:
+     * - If `fqn` has been looked up in the file, then `fqn` may invalidate the file
+     * (`fqn` may come from the same file or out of file).
+     * - If `sym` is a named import, then `sym` may invalidate the file.
+     * - If `sym` is an on-demand import, then `sym` may invalidate the file.
+     * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the file.
+     */
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
         if (!isIncremental)
             return
