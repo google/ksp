@@ -288,7 +288,7 @@ class AnnoOnProperty {
 
     @Test
     fun testNativeConfigurationCacheReuse() {
-        Assume.assumeTrue(System.getProperty("os.name").startsWith("Linux", ignoreCase = true))
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         // Add a klib-only iosArm64 target to workload-linuxX64 and to its project dependency
