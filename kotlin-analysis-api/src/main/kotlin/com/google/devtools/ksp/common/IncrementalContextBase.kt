@@ -244,8 +244,8 @@ abstract class IncrementalContextBase(
             }
         }
 
-        val dirtyFilesByNewSyms = newSyms.flatMap {
-            symbolLookupCache[it].map { it.toRelativeFile() }
+        val dirtyFilesByNewSyms = newSyms.flatMap { newSym ->
+            symbolLookupCache[newSym].map { it.toRelativeFile() }
         }
 
         val dirtyFilesBySealed = sealedMap.keys
