@@ -43,10 +43,6 @@ import java.io.PrintStream
 import java.net.URLClassLoader
 
 abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : AbstractKSPTest(FrontendKinds.FIR) {
-    private companion object {
-        const val MODULE = "// MODULE:"
-        const val COMPILER_MODULE_NAME = "// COMPILER MODULE NAME:"
-    }
 
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")
@@ -61,24 +57,37 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         }
     }
 
-    private fun TestModule.compilerModuleName(): String {
+    /**
+     * Returns the name of the compiler module for the given test module.
+     *
+     * The Kotlin compiler test infrastructure does not sanitize the module name from
+     * the `// MODULE:` directive.
+     * Hence, for tests that check for module name sanitization/mangling, we must declare
+     * a sanitized module name in the `// MODULE:` directive and then declare an un-sanitized
+     * name in the `// COMPILER MODULE NAME:` directive and check that it looks like
+     * the manually mangled name.
+     *
+     * This extension function retrieves the compiler module name from the `// COMPILER MODULE NAME:`
+     * if it exists and returns the original module name otherwise.
+     *
+     * NB.: The `// COMPILER MODULE NAME:` directive must be declared after the `// MODULE:` directive but
+     * before the next `// MODULE:` directive.
+     */
+    private fun TestModule.findCompilerModuleName(): String {
         val originalFile = files.firstOrNull()?.originalFile ?: return name
         var currentModule: String? = null
-        var compilerModuleName: String? = null
-        originalFile.forEachLine { line ->
+        for (line in originalFile.readLines()) {
             when {
                 line.startsWith(MODULE) -> {
                     currentModule = line.substringAfter(MODULE).substringBefore("(").trim()
                 }
 
                 currentModule == name && line.startsWith(COMPILER_MODULE_NAME) -> {
-                    if (compilerModuleName == null) {
-                        compilerModuleName = line.substringAfter(COMPILER_MODULE_NAME).trim()
-                    }
+                    return line.substringAfter(COMPILER_MODULE_NAME).trim()
                 }
             }
         }
-        return compilerModuleName ?: name
+        return name
     }
 
     private fun compileKotlin(
@@ -131,7 +140,7 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
             module.kotlinSrc.path,
             module.javaDir.path,
             module.outDir,
-            module.compilerModuleName(),
+            module.findCompilerModuleName(),
             jvmTarget
         )
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
@@ -165,7 +174,7 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         val testRoot = mainModule.testRoot
 
         val kspConfig = KSPJvmConfig.Builder().apply {
-            moduleName = mainModule.compilerModuleName()
+            moduleName = mainModule.findCompilerModuleName()
             sourceRoots = listOf(mainModule.kotlinSrc)
             javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
             jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
