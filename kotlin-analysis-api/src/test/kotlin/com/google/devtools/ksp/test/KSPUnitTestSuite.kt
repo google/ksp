@@ -546,6 +546,11 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("mangledNames.kt")
     @Test
+    @Bug(
+        "https://github.com/google/ksp/issues/2964",
+        BugState.FIXED,
+        "Module names have been aligned across platforms in Kotlin 2.4.0. See KT-69701."
+    )
     fun testMangledNames() {
         runTest("$AA_PATH/mangledNames.kt")
     }

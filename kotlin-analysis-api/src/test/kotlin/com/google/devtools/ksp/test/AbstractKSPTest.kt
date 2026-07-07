@@ -82,6 +82,8 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         const val PROCESSOR_INPUT = "// PROCESSOR INPUT:"
         const val EXPECTED_RESULTS = "// EXPECTED:"
         const val EXPECTED_RESULTS_END = "// END"
+        const val MODULE = "// MODULE:"
+        const val COMPILER_MODULE_NAME = "// COMPILER MODULE NAME:"
     }
 
     init {
