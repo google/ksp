@@ -24,12 +24,7 @@ val libsForTestingCommon: Configuration by configurations.creating
 
 val aaKotlinBaseVersion: String by project
 val aaIntellijVersion: String by project
-val aaGuavaVersion: String by project
-val aaAsmVersion: String by project
 val aaFastutilVersion: String by project
-val aaStax2Version: String by project
-val aaAaltoXmlVersion: String by project
-val aaStreamexVersion: String by project
 val aaCoroutinesVersion: String by project
 
 plugins {
@@ -168,11 +163,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
-    implementation("com.google.guava:guava:$aaGuavaVersion")
-    implementation("one.util:streamex:$aaStreamexVersion")
-    implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
-    implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
-    implementation("com.fasterxml:aalto-xml:$aaAaltoXmlVersion") { isTransitive = false }
+    implementation(libs.aa.guava)
+    implementation(libs.aa.streamex)
+    implementation(libs.aa.asm)
+    implementation(libs.aa.stax2) { isTransitive = false }
+    implementation(libs.aa.aalto.xml) { isTransitive = false }
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
     implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
     implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
