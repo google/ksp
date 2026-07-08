@@ -3,6 +3,8 @@ kotlin-base = "2.3.20"
 kotlinx-serialization = "1.6.3"
 agp-base = "9.3.0-alpha01"
 junit = "4.13.1"
+junit5 = "5.8.2"
+junit-platform = "1.8.2"
 google-truth = "1.4.5"
 aa-kotlin-base = "2.4.20-dev-6138"
 aa-coroutines = "1.10.2"
@@ -16,4 +18,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-coroutines-core-jvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "aa-coroutines" }
 agp = { module = "com.android.tools.build:gradle", version.ref = "agp-base" }
 junit4 = { module = "junit:junit", version.ref = "junit" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
+junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
 google-truth = { module = "com.google.truth:truth", version.ref = "google-truth" }
