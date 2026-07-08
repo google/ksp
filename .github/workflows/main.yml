@@ -59,7 +59,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}-${{ hashFiles('**/libs.versions.toml') }}
         # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
         restore-keys: |
           ${{ runner.os }}-gradle-

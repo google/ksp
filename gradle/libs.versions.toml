@@ -1,0 +1,45 @@
+[versions]
+kotlin-base = "2.3.20"
+kotlinx-serialization = "1.6.3"
+agp-base = "9.3.0-alpha01"
+junit = "4.13.1"
+junit5 = "5.8.2"
+junit-platform = "1.8.2"
+google-truth = "1.4.5"
+aa-kotlin-base = "2.4.20-dev-6138"
+aa-intellij = "251.27812.49"
+aa-guava = "33.2.0-jre"
+aa-asm = "9.0"
+aa-fastutil = "8.5.14-jb1"
+aa-stax2 = "4.2.1"
+aa-aalto-xml = "1.3.0"
+aa-streamex = "0.7.2"
+aa-coroutines = "1.10.2"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-base" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-base" }
+kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin-base" }
+kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-base" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "aa-coroutines" }
+kotlinx-coroutines-core-jvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "aa-coroutines" }
+agp = { module = "com.android.tools.build:gradle", version.ref = "agp-base" }
+junit4 = { module = "junit:junit", version.ref = "junit" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
+junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version.ref = "junit-platform" }
+google-truth = { module = "com.google.truth:truth", version.ref = "google-truth" }
+aa-guava = { module = "com.google.guava:guava", version.ref = "aa-guava" }
+aa-asm = { module = "org.jetbrains.intellij.deps:asm-all", version.ref = "aa-asm" }
+aa-fastutil = { module = "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil", version.ref = "aa-fastutil" }
+aa-stax2 = { module = "org.codehaus.woodstox:stax2-api", version.ref = "aa-stax2" }
+aa-aalto-xml = { module = "com.fasterxml:aalto-xml", version.ref = "aa-aalto-xml" }
+aa-streamex = { module = "one.util:streamex", version.ref = "aa-streamex" }
+
+[plugins]
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
+shadow = { id = "com.gradleup.shadow", version = "8.3.9" }
+dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
+android-lint = { id = "com.android.lint", version = "8.13.0" }

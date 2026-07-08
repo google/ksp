@@ -17,23 +17,11 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 val signingKey: String? by project
 val signingPassword: String? by project
 
-val kotlinBaseVersion: String by project
-val kotlinxSerializationVersion: String by project
-val junitVersion: String by project
-val junit5Version: String by project
-val junitPlatformVersion: String by project
 val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
-val aaKotlinBaseVersion: String by project
-val aaIntellijVersion: String by project
-val aaGuavaVersion: String by project
-val aaAsmVersion: String by project
-val aaFastutilVersion: String by project
-val aaStax2Version: String by project
-val aaAaltoXmlVersion: String by project
-val aaStreamexVersion: String by project
-val aaCoroutinesVersion: String by project
+val aaKotlinBaseVersion = libs.versions.aa.kotlin.base.get()
+val aaIntellijVersion = libs.versions.aa.intellij.get()
 
 plugins {
     kotlin("jvm")
@@ -164,14 +152,14 @@ dependencies {
     }
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
-    implementation("com.google.guava:guava:$aaGuavaVersion")
-    implementation("one.util:streamex:$aaStreamexVersion")
-    implementation("org.jetbrains.intellij.deps:asm-all:$aaAsmVersion")
-    implementation("org.codehaus.woodstox:stax2-api:$aaStax2Version") { isTransitive = false }
-    implementation("com.fasterxml:aalto-xml:$aaAaltoXmlVersion") { isTransitive = false }
+    implementation(libs.aa.guava)
+    implementation(libs.aa.streamex)
+    implementation(libs.aa.asm)
+    implementation(libs.aa.stax2) { isTransitive = false }
+    implementation(libs.aa.aalto.xml) { isTransitive = false }
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
     implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
     implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
@@ -183,11 +171,9 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
-    implementation(
-        "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
-    ) {
+    compileOnly(libs.kotlinx.coroutines.core.jvm)
+    compileOnly(libs.kotlinx.coroutines.core.asProvider())
+    implementation(libs.aa.fastutil) {
         isTransitive = false
     }
     implementation("org.jetbrains:annotations:24.1.0")
@@ -200,18 +186,18 @@ dependencies {
     implementation(project(":common-util"))
 
     testImplementation(kotlin("stdlib", aaKotlinBaseVersion))
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-params:$junit5Version")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite:$junitPlatformVersion")
+    testImplementation(libs.junit4)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.jupiter.params)
+    testRuntimeOnly(libs.junit.platform.suite)
     testImplementation("org.jetbrains.kotlin:kotlin-compiler:$aaKotlinBaseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-internal-test-framework:$aaKotlinBaseVersion")
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
     testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    testImplementation(libs.kotlinx.coroutines.core.jvm)
+    testImplementation(libs.kotlinx.coroutines.core.asProvider())
 
     // See AbstractKSPTest's init block if you change any of the `libsForTesting` or `libsForTestingCommon` dependencies.
     libsForTesting(kotlin("stdlib", aaKotlinBaseVersion))
@@ -219,9 +205,9 @@ dependencies {
     libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
     libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 
-    depJarsForCheck("org.jetbrains.kotlin:kotlin-stdlib:$kotlinBaseVersion")
-    depJarsForCheck("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    depJarsForCheck("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    depJarsForCheck(libs.kotlin.stdlib)
+    depJarsForCheck(libs.kotlinx.coroutines.core.jvm)
+    depJarsForCheck(libs.kotlinx.coroutines.core.asProvider())
     depJarsForCheck(project(":api"))
     depJarsForCheck(project(":common-deps"))
 
@@ -374,11 +360,15 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency(
+                            "org.jetbrains.kotlin",
+                            "kotlin-stdlib",
+                            libs.versions.kotlin.base.get()
+                        )
                         addDependency(
                             "org.jetbrains.kotlinx",
                             "kotlinx-coroutines-core-jvm",
-                            aaCoroutinesVersion
+                            libs.versions.aa.coroutines.get()
                         )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version, "compile")
                         addDependency(
