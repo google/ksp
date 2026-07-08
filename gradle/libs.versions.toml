@@ -37,3 +37,9 @@ aa-stax2 = { module = "org.codehaus.woodstox:stax2-api", version.ref = "aa-stax2
 aa-aalto-xml = { module = "com.fasterxml:aalto-xml", version.ref = "aa-aalto-xml" }
 aa-streamex = { module = "one.util:streamex", version.ref = "aa-streamex" }
 aa-fastutil = { module = "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil", version.ref = "aa-fastutil" }
+
+[plugins]
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
+shadow = { id = "com.gradleup.shadow", version = "8.3.9" }
+dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
+android-lint = { id = "com.android.lint", version = "8.13.0" }
