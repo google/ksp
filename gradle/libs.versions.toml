@@ -3,10 +3,16 @@ kotlin-base = "2.3.20"
 kotlinx-serialization = "1.6.3"
 agp-base = "9.3.0-alpha01"
 junit = "4.13.1"
+google-truth = "1.4.5"
 aa-coroutines = "1.10.2"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-base" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-base" }
+kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin-base" }
+kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-base" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core-jvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "aa-coroutines" }
+agp = { module = "com.android.tools.build:gradle", version.ref = "agp-base" }
 junit4 = { module = "junit:junit", version.ref = "junit" }
+google-truth = { module = "com.google.truth:truth", version.ref = "google-truth" }
