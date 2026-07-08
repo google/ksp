@@ -2,31 +2,25 @@ import com.google.devtools.ksp.RelativizingInternalPathProvider
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import kotlin.math.max
 
-val junitVersion: String by project
-val kotlinBaseVersion: String by project
-val kotlinxSerializationVersion: String by project
-val agpBaseVersion: String by project
-val aaCoroutinesVersion: String by project
-
 plugins {
     kotlin("jvm")
 }
 
 dependencies {
-    testImplementation("junit:junit:$junitVersion")
+    testImplementation(libs.junit4)
     testImplementation(gradleTestKit())
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
+    testImplementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.kotlinx.coroutines.core.jvm)
 }
 
 fun Test.configureCommonSettings() {
     val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
     maxParallelForks = if (isWindows) 1 else max(1, Runtime.getRuntime().availableProcessors() / 2)
-    systemProperty("kotlinVersion", kotlinBaseVersion)
+    systemProperty("kotlinVersion", libs.versions.kotlin.base.get())
     systemProperty("kspVersion", version)
-    systemProperty("agpVersion", agpBaseVersion)
+    systemProperty("agpVersion", libs.versions.agp.base.get())
     jvmArgumentProviders.add(
         RelativizingInternalPathProvider(
             "testRepo",
