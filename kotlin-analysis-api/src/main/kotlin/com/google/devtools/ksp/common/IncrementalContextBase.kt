@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.common
 
+import com.google.devtools.ksp.IncrementalContextLoggingOptions
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSDeclarationContainer
@@ -61,7 +62,7 @@ object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>()
 @Suppress("MemberVisibilityCanBePrivate", "CanBeParameter")
 abstract class IncrementalContextBase(
     protected val anyChangesWildcard: File,
-    protected val incrementalLog: Boolean,
+    protected val loggingOptions: IncrementalContextLoggingOptions,
     protected val baseDir: File,
     protected val cachesDir: File,
     protected val kspOutputDir: File,
@@ -70,7 +71,7 @@ abstract class IncrementalContextBase(
     protected val changedClasses: List<String>,
 ) {
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
-    private val updatedSymbols = MultiMap.createSet<File, LookupSymbolWrapper>()
+    protected val updatedSymbols = MultiMap.createSet<File, LookupSymbolWrapper>()
 
     // Sealed classes / interfaces on which `getSealedSubclasses` is invoked.
     // This is used to update sealedMap in the end.
@@ -154,7 +155,7 @@ abstract class IncrementalContextBase(
     }
 
     private fun logSourceToOutputs(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
-        if (!incrementalLog)
+        if (!loggingOptions.incrementalLoggingEnabled)
             return
 
         mkLogFile("kspSourceToOutputs.log").bufferedWriter().use { logFile ->
@@ -193,8 +194,9 @@ abstract class IncrementalContextBase(
         dirtyFilesByNewSyms: Collection<File> = emptyList(),
         dirtyFilesBySealed: Collection<File> = emptyList(),
     ) {
-        if (!incrementalLog)
+        if (!loggingOptions.incrementalLoggingEnabled) {
             return
+        }
 
         mkLogFile("kspDirtySet.log").bufferedWriter().use { logFile ->
             logFile.write("All Files\n")
@@ -247,7 +249,6 @@ abstract class IncrementalContextBase(
         val dirtyFilesByNewSyms = newSyms.flatMap { newSym ->
             symbolLookupCache[newSym].map { it.toRelativeFile() }
         }
-
         val dirtyFilesBySealed = sealedMap.keys
 
         // Calculate dirty files by dirty classes in CP.
@@ -368,7 +369,11 @@ abstract class IncrementalContextBase(
         }
     }
 
-    private fun updateCaches(dirtyFiles: Collection<File>, outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+    private fun updateCaches(
+        dirtyFiles: Collection<File>,
+        outputs: Set<File>,
+        sourceToOutputs: Map<File, Set<File>>
+    ) {
         // dirtyFiles may contain new files, which are unknown to sourceToOutputsMap.
         val oldOutputs = dirtyFiles.flatMap { sourceToOutputsMap[it] ?: emptyList() }.distinct()
         val removedOutputs = oldOutputs.filterNot { it in outputs }
