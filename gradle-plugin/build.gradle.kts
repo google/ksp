@@ -3,11 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 description = "Kotlin Symbol Processor"
 
-val kotlinBaseVersion: String by project
-val junitVersion: String by project
-val googleTruthVersion: String by project
-val agpBaseVersion: String by project
-val aaCoroutinesVersion: String? by project
 val signingKey: String? by project
 val signingPassword: String? by project
 
@@ -21,21 +16,21 @@ plugins {
 }
 
 dependencies {
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinBaseVersion")
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinBaseVersion")
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinBaseVersion")
+    compileOnly(libs.kotlin.gradle.plugin.api)
+    compileOnly(libs.kotlin.gradle.plugin.asProvider())
+    compileOnly(libs.kotlin.compiler.embeddable)
     // replace AGP dependency w/ gradle-api when we have source registering API available.
-    compileOnly("com.android.tools.build:gradle:$agpBaseVersion")
+    compileOnly(libs.agp)
     compileOnly(gradleApi())
     compileOnly(project(":kotlin-analysis-api"))
     // Ensure stdlib version is not inconsistent due to kotlin plugin version.
-    compileOnly(kotlin("stdlib", version = kotlinBaseVersion))
+    compileOnly(libs.kotlin.stdlib)
     implementation(project(":api"))
     implementation(project(":common-deps"))
     testImplementation(gradleApi())
     testImplementation(project(":api"))
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("com.google.truth:truth:$googleTruthVersion")
+    testImplementation(libs.junit4)
+    testImplementation(libs.google.truth)
     testImplementation(gradleTestKit())
 
     lintChecks("androidx.lint:lint-gradle:1.0.0-alpha05")
@@ -167,7 +162,7 @@ abstract class WriteVersionSrcTask : DefaultTask() {
 
 val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
     kspVersion = version.toString()
-    coroutinesVersion = aaCoroutinesVersion
+    coroutinesVersion = libs.versions.aa.coroutines.get()
     outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
 }
 
