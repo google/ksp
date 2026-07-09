@@ -176,12 +176,25 @@ fun KSNode.validate(
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */
-fun KSTypeAlias.findActualType(): KSClassDeclaration {
-    val resolvedType = this.type.resolve().declaration
-    return if (resolvedType is KSTypeAlias) {
-        resolvedType.findActualType()
-    } else {
-        resolvedType as KSClassDeclaration
+fun KSTypeAlias.findActualType(): KSClassDeclaration = expandTypeAlias(mutableSetOf())
+
+private fun KSTypeAlias.expandTypeAlias(visited: MutableSet<KSDeclaration>): KSClassDeclaration {
+    if (!visited.add(this)) {
+        throw InternalKSPException(
+            "Circular type alias declaration: '${qualifiedName?.asString()}'",
+            this.location,
+            this.javaClass
+        )
+    }
+
+    return when (val resolved = type.resolve().declaration) {
+        is KSTypeAlias -> resolved.expandTypeAlias(visited)
+        is KSClassDeclaration -> resolved
+        else -> throw InternalKSPException(
+            "Type alias expanded to unknown declaration: '$resolved'",
+            resolved.location,
+            resolved.javaClass
+        )
     }
 }
 
