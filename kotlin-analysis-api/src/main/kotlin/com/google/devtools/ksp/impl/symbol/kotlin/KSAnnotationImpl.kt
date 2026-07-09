@@ -90,10 +90,10 @@ class KSAnnotationImpl private constructor(
                             annoMethod.defaultValue?.let { value ->
                                 val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
                                     value.initializers.map {
-                                        calcValue(it)
+                                        calcValue(it, this@KSAnnotationImpl)
                                     }
                                 } else {
-                                    calcValue(value)
+                                    calcValue(value, this@KSAnnotationImpl)
                                 }
                                 KSValueArgumentLiteImpl(
                                     KSNameImpl.getCached(annoMethod.name),
