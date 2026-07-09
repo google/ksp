@@ -181,12 +181,10 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 }
 
-fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode? = null): Any? {
+fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
     if (value is PsiAnnotation) {
-        parent?.let { ctx ->
-            value.qualifiedName?.let { fqn ->
-                recordClassReferenceLookup(fqn, ctx)
-            }
+        value.qualifiedName?.let { fqn ->
+            recordClassReferenceLookup(fqn, parent)
         }
         return KSAnnotationJavaImpl.getCached(value, null)
     }
@@ -219,10 +217,8 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode? = null): Any? {
                     ResolverAAImpl.instance
                         .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
                         ?.also { type ->
-                            parent?.let { ctx ->
-                                type.toKaType()?.let { tpe ->
-                                    recordClassReferenceLookup(tpe, ctx)
-                                }
+                            type.toKaType()?.let { tpe ->
+                                recordClassReferenceLookup(tpe, parent)
                             }
                         }
                         ?: KSErrorType(component.canonicalText)
@@ -238,10 +234,8 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode? = null): Any? {
             ResolverAAImpl.instance
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
                 ?.also { type ->
-                    parent?.let { ctx ->
-                        type.toKaType()?.let { tpe ->
-                            recordClassReferenceLookup(tpe, ctx)
-                        }
+                    type.toKaType()?.let { tpe ->
+                        recordClassReferenceLookup(tpe, parent)
                     }
                 }
                 ?: KSErrorType(result.canonicalText)
