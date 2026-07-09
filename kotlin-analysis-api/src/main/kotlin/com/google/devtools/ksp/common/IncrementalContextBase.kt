@@ -640,17 +640,4 @@ internal class DirtinessPropagator(
         initialSet.forEach { visit(it) }
         return visitedFiles
     }
-
-    private val noSourceFilePrefix = "<NoSourceFile for "
-    private val noSourceFileSuffix = " is a virtual file; DO NOT USE.>"
-
-    /**
-     * Returns `true` if the file represents is a class literal reference in an annotation argument.
-     */
-    private fun isClassLiteralReferenceInAnnotationArgument(file: File): Boolean {
-        return file != anyChangesWildcard &&
-            file != removedOutputsKey &&
-            file.path.startsWith(noSourceFilePrefix) &&
-            file.path.endsWith(noSourceFileSuffix)
-    }
 }
