@@ -216,9 +216,9 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
                 else -> {
                     ResolverAAImpl.instance
                         .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
-                        ?.also { type ->
-                            type.toKaType()?.let { tpe ->
-                                recordClassReferenceLookup(tpe, parent)
+                        ?.also { ksType ->
+                            ksType.toKaType()?.let { kaType ->
+                                recordClassReferenceLookup(kaType, parent)
                             }
                         }
                         ?: KSErrorType(component.canonicalText)
@@ -233,9 +233,9 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
         is PsiType -> {
             ResolverAAImpl.instance
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
-                ?.also { type ->
-                    type.toKaType()?.let { tpe ->
-                        recordClassReferenceLookup(tpe, parent)
+                ?.also { ksType ->
+                    ksType.toKaType()?.let { kaType ->
+                        recordClassReferenceLookup(kaType, parent)
                     }
                 }
                 ?: KSErrorType(result.canonicalText)
