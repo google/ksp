@@ -895,4 +895,16 @@ abstract class KSPUnitTestSuite(
     fun testPackageProviderForGenerated() {
         runTest("$AA_PATH/packageProviderForGenerated.kt")
     }
+
+    @TestMetadata("typeAnnotationClassReference.kt")
+    @Test
+    @Bug("https://github.com/google/ksp/issues/3030", BugState.OPEN)
+    @Bug(
+        "https://github.com/google/ksp/issues/3036",
+        BugState.FIXED,
+        "The toString method of KSValueArgument has a circular call chain leading to a stack overflow."
+    )
+    fun testTypeAnnotationClassReference() {
+        runThrowingTest("$AA_PATH/typeAnnotationClassReference.kt")
+    }
 }
