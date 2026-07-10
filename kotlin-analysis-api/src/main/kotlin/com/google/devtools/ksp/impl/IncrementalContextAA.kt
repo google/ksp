@@ -36,7 +36,9 @@ import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 import com.intellij.util.containers.MultiMap
@@ -233,7 +235,15 @@ class IncrementalContextAA(
 
         // Construct synthetic filepath
         val closestParentDeclaration = context.findFirstParentDeclaration() ?: throw InternalKSPException(
-            "Unexpected missing parent declaration for KSNode '$context'",
+            // N.B.: Check that context is a KSValueArgument, since its toString method depends on its `value`
+            //       property, which depends on this function, thus causing a stack overflow.
+            when (context) {
+                is KSName -> context.asString()
+                is KSValueArgument -> context.name?.asString()
+                else -> context
+            }.let { ctx ->
+                "Unexpected missing parent declaration for KSNode '$ctx'"
+            },
             context.location,
             context.javaClass
         )
