@@ -6,10 +6,12 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
-import com.google.devtools.ksp.impl.symbol.kotlin.*
+import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
@@ -29,7 +31,16 @@ import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.ALL
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FIELD
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FILE
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_GETTER
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_SETTER
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.RECEIVER
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER
 import org.jetbrains.kotlin.psi.KtFile
 
 class KSAnnotationResolvedImpl private constructor(
@@ -109,7 +120,9 @@ class KSAnnotationResolvedImpl private constructor(
                         it.valueParameters.mapNotNull { valueParameterSymbol ->
                             val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
                             if (constantValue is KaAnnotationValue.ClassLiteralValue) {
-                                recordClassReferenceLookup(constantValue.type, this@KSAnnotationResolvedImpl)
+                                this@KSAnnotationResolvedImpl.findParentDeclaration()?.let { decl ->
+                                    recordClassReferenceLookup(constantValue.type, decl)
+                                }
                             }
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
