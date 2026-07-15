@@ -732,6 +732,19 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
     return result
 }
 
+/**
+ * Find the closest enclosing [KSDeclaration] of a [KSNode], or self if this node is already a [KSDeclaration].
+ *
+ * @return The enclosing [KSDeclaration], or `null` if no enclosing declaration exists.
+ */
+internal fun KSNode.findParentDeclaration(): KSDeclaration? {
+    var current: KSNode? = this
+    while (current != null && current !is KSDeclaration) {
+        current = current.parent
+    }
+    return current
+}
+
 internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? = when (this) {
     is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
     is KaAnnotationValue.NestedAnnotationValue -> KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
@@ -747,8 +760,8 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     } ?: KSErrorType
 
     is KaAnnotationValue.ClassLiteralValue -> {
-        parent?.let { ctx ->
-            recordClassReferenceLookup(type, ctx)
+        parent?.findParentDeclaration()?.let { decl ->
+            recordClassReferenceLookup(type, decl)
         }
         KSTypeImpl.getCached(type)
     }

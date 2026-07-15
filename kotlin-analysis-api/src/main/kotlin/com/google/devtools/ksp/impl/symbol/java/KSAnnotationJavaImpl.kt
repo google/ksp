@@ -10,6 +10,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toKaType
@@ -141,7 +142,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                         symbol.valueParameters.mapNotNull { valueParameterSymbol ->
                             val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
                             if (constantValue is KaAnnotationValue.ClassLiteralValue) {
-                                recordClassReferenceLookup(constantValue.type, this@KSAnnotationJavaImpl)
+                                this@KSAnnotationJavaImpl.findParentDeclaration()?.let { decl ->
+                                    recordClassReferenceLookup(constantValue.type, decl)
+                                }
                             }
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
@@ -181,10 +184,12 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 }
 
-fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
+fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
     if (value is PsiAnnotation) {
         value.qualifiedName?.let { fqn ->
-            recordClassReferenceLookup(fqn, parent)
+            parent?.findParentDeclaration()?.let { decl ->
+                recordClassReferenceLookup(fqn, decl)
+            }
         }
         return KSAnnotationJavaImpl.getCached(value, null)
     }
@@ -218,7 +223,9 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
                         .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
                         ?.also { ksType ->
                             ksType.toKaType()?.let { kaType ->
-                                recordClassReferenceLookup(kaType, parent)
+                                parent?.findParentDeclaration()?.let { decl ->
+                                    recordClassReferenceLookup(kaType, decl)
+                                }
                             }
                         }
                         ?: KSErrorType(component.canonicalText)
@@ -235,7 +242,9 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
                 ?.also { ksType ->
                     ksType.toKaType()?.let { kaType ->
-                        recordClassReferenceLookup(kaType, parent)
+                        parent?.findParentDeclaration()?.let { decl ->
+                            recordClassReferenceLookup(kaType, decl)
+                        }
                     }
                 }
                 ?: KSErrorType(result.canonicalText)
