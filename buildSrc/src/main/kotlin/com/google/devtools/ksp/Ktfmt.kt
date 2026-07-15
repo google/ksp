@@ -34,11 +34,9 @@ fun Project.configureKtfmt() {
         task.group = "Verification"
     }
 
-    if (false) { // TODO: Remove this guard when all files have been formatted.
-        afterEvaluate {
-            project.tasks.named("check").configure { checkTask ->
-                checkTask.dependsOn(ktfmtCheck)
-            }
+    afterEvaluate {
+        project.tasks.named("check").configure { checkTask ->
+            checkTask.dependsOn(ktfmtCheck)
         }
     }
 
