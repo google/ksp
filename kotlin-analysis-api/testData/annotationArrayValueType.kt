@@ -16,13 +16,13 @@
  */
 // TEST PROCESSOR: AnnotationArrayValueTypeProcessor
 // EXPECTED:
-// JavaAnnotated JavaAnnotation args is Array<*>: true
+// JavaAnnotated JavaAnnotation args is Array<*> or Collection<*>: true
 // JavaAnnotated JavaAnnotation args size: 2
-// JavaAnnotated KotlinAnnotation args is Array<*>: true
+// JavaAnnotated KotlinAnnotation args is Array<*> or Collection<*>: true
 // JavaAnnotated KotlinAnnotation args size: 2
-// KotlinAnnotated JavaAnnotation args is Array<*>: true
+// KotlinAnnotated JavaAnnotation args is Array<*> or Collection<*>: true
 // KotlinAnnotated JavaAnnotation args size: 2
-// KotlinAnnotated KotlinAnnotation args is Array<*>: true
+// KotlinAnnotated KotlinAnnotation args is Array<*> or Collection<*>: true
 // KotlinAnnotated KotlinAnnotation args size: 2
 // END
 // FILE: JavaAnnotation.java

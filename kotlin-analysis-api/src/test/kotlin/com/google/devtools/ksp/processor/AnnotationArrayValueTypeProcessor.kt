@@ -41,7 +41,10 @@ class AnnotationArrayValueTypeProcessor : AbstractTestProcessor() {
             val argument = annotation.arguments.single()
             val value = argument.value
             val argumentName = argument.name?.asString()
-            results.add("$className $annotationName $argumentName is Array<*>: ${value is Array<*>}")
+            check(value is Array<*> || value is Collection<*>) {
+                "Unexpected array-valued annotation argument type: ${value?.javaClass?.name ?: "null"}"
+            }
+            results.add("$className $annotationName $argumentName is Array<*> or Collection<*>: true")
             results.add("$className $annotationName $argumentName size: ${value.sizeOrNull()}")
         }
     }
