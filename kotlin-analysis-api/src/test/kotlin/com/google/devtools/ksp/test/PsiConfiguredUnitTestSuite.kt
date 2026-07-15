@@ -28,12 +28,6 @@ class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = 
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
     }
 
-    @TestMetadata("annotationArrayValueType.kt")
-    @Test
-    override fun testAnnotationArrayValueType() {
-        runFailingTest("$AA_PATH/annotationArrayValueType.kt")
-    }
-
     @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
