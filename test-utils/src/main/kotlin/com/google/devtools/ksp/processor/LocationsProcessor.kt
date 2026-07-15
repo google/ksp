@@ -10,11 +10,13 @@ import java.io.File
 
 class LocationsProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result.sorted()
     }
 
     var round = 0
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (round++ == 0) {
             resolver.getSymbolsWithAnnotation("Location").forEach {

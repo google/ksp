@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
@@ -25,23 +26,21 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Boolean) {
 
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "incremental-annotation-argument-class-references",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "incremental-annotation-argument-class-references",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
 
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
 
         private const val TARGET: String = "downstream"
         private const val KSP_KOTLIN: String = ":$TARGET:kspKotlin"
@@ -87,7 +86,7 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
             Assert.assertEquals(
                 "\n${expected.joinToString("\n")}\n[SEPARATOR]\n${actual.joinToString("\n")}",
                 expected,
-                actual
+                actual,
             )
         }
     }

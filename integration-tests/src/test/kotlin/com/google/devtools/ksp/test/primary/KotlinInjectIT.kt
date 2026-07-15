@@ -1,26 +1,25 @@
 package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class KotlinInjectIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "kotlin-inject",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "kotlin-inject",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -34,13 +33,16 @@ class KotlinInjectIT(experimentalPsiResolution: Boolean) {
 
             // kotlin-inject will complain that Component classes can't be private
             if (shouldFail) {
-                file
-                    .apply {
-                        writeText(
-                            file.readText()
-                                .replace("abstract class AppComponent", "private abstract class AppComponent")
-                        )
-                    }
+                file.apply {
+                    writeText(
+                        file
+                            .readText()
+                            .replace(
+                                "abstract class AppComponent",
+                                "private abstract class AppComponent",
+                            )
+                    )
+                }
             }
         }
 

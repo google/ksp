@@ -10,11 +10,13 @@ import com.google.devtools.ksp.validate
 
 class MultipleroundProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result
     }
 
     var round = 0
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         fun gen(cls: String, ext: String) {
             env.codeGenerator.createNewFile(Dependencies(false), "com.example", cls, ext).use {
@@ -36,7 +38,9 @@ class MultipleroundProcessor : AbstractTestProcessor() {
             resolver.getClassDeclarationByName(resolver.getKSNameFromString(cls))?.let { c ->
                 result.add(
                     "${c.simpleName.asString()} : " +
-                        c.superTypes.map { it.resolve().declaration.simpleName.asString() }.joinToString()
+                        c.superTypes
+                            .map { it.resolve().declaration.simpleName.asString() }
+                            .joinToString()
                 )
             }
         }

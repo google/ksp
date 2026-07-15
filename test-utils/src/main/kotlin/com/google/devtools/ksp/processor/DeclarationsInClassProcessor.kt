@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
 class DeclarationsInClassProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result.sorted()
     }
@@ -42,11 +43,13 @@ class DeclarationsInClassProcessor : AbstractTestProcessor() {
                 }
                 is KSFunctionDeclaration -> {
                     val name = declaration.simpleName.asString()
-                    val parentName = when (val parentDeclaration = declaration.parentDeclaration) {
-                        is KSClassDeclaration -> parentDeclaration.simpleName.asString()
-                        is KSPropertyDeclaration -> parentDeclaration.parentDeclaration?.simpleName?.asString()
-                        else -> error("Unexpected declaration: ${parentDeclaration?.javaClass}")
-                    }
+                    val parentName =
+                        when (val parentDeclaration = declaration.parentDeclaration) {
+                            is KSClassDeclaration -> parentDeclaration.simpleName.asString()
+                            is KSPropertyDeclaration ->
+                                parentDeclaration.parentDeclaration?.simpleName?.asString()
+                            else -> error("Unexpected declaration: ${parentDeclaration?.javaClass}")
+                        }
                     if (declaration.isConstructor()) {
                         result.add("CONSTRUCTOR: $parentName.$name ($origin)")
                     } else {
@@ -68,19 +71,35 @@ class DeclarationsInClassProcessor : AbstractTestProcessor() {
         }
         processDeclaration(resolver.getClassDeclarationByName("lib.CustomList")!!)
         processDeclaration(resolver.getClassDeclarationByName("lib.CustomMap")!!)
-        processDeclaration(resolver.getClassDeclarationByName("lib.InterfaceWithObjectMethodOverrides")!!)
-        processDeclaration(resolver.getClassDeclarationByName("lib.InterfaceWithNonObjectMethodOverrides")!!)
-        processDeclaration(resolver.getClassDeclarationByName("lib.AbstractClassWithObjectMethodOverrides")!!)
-        processDeclaration(resolver.getClassDeclarationByName("lib.ConcreteClassWithObjectMethodOverrides")!!)
+        processDeclaration(
+            resolver.getClassDeclarationByName("lib.InterfaceWithObjectMethodOverrides")!!
+        )
+        processDeclaration(
+            resolver.getClassDeclarationByName("lib.InterfaceWithNonObjectMethodOverrides")!!
+        )
+        processDeclaration(
+            resolver.getClassDeclarationByName("lib.AbstractClassWithObjectMethodOverrides")!!
+        )
+        processDeclaration(
+            resolver.getClassDeclarationByName("lib.ConcreteClassWithObjectMethodOverrides")!!
+        )
         processDeclaration(resolver.getClassDeclarationByName("lib.BaseWithProperties")!!)
         processDeclaration(resolver.getClassDeclarationByName("lib.OverridesBaseWithProperties")!!)
         processDeclaration(resolver.getClassDeclarationByName("lib.BaseWithIsProperties")!!)
-        processDeclaration(resolver.getClassDeclarationByName("lib.OverridesBaseWithIsProperties")!!)
-        processDeclaration(resolver.getClassDeclarationByName("lib.BaseWithCapitalizedProperties")!!)
-        // TODO(https://github.com/google/ksp/issues/2925): Enable this once we've sorted out the differences between
-        //  the AA and PSI implementations. Currently, the main issue is that for the case where a property is
-        //  capitalized and a Java method overrides the getter, the AA implementation includes both the original Java
-        //  method and the synthetic accessor method; whereas the PSI implementation only includes the original method.
+        processDeclaration(
+            resolver.getClassDeclarationByName("lib.OverridesBaseWithIsProperties")!!
+        )
+        processDeclaration(
+            resolver.getClassDeclarationByName("lib.BaseWithCapitalizedProperties")!!
+        )
+        // TODO(https://github.com/google/ksp/issues/2925): Enable this once we've sorted out the
+        // differences between
+        //  the AA and PSI implementations. Currently, the main issue is that for the case where a
+        // property is
+        //  capitalized and a Java method overrides the getter, the AA implementation includes both
+        // the original Java
+        //  method and the synthetic accessor method; whereas the PSI implementation only includes
+        // the original method.
         // processDeclaration(resolver.getClassDeclarationByName("lib.OverridesBaseWithCapitalizedProperties")!!)
         processDeclaration(resolver.getClassDeclarationByName("lib.StaticVsMemberDeclarations")!!)
         return emptyList()

@@ -34,7 +34,10 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
                 object : KSTopDownVisitor<Unit, Unit>() {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+                    override fun visitClassDeclaration(
+                        classDeclaration: KSClassDeclaration,
+                        data: Unit,
+                    ) {
                         super.visitClassDeclaration(classDeclaration, Unit)
                         classes.add(classDeclaration)
                     }
@@ -44,21 +47,27 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
                         references.add(typeReference)
                     }
                 },
-                Unit
+                Unit,
             )
         }
 
         val composed = mutableSetOf<KSType>()
-        val types = references.filter { it.resolve().arguments.toList().size == 1 }.map { it.resolve() }
-        // TODO: there is a mismatched behavior between 2 implementations, AA implementation has an upperbound of
+        val types =
+            references.filter { it.resolve().arguments.toList().size == 1 }.map { it.resolve() }
+        // TODO: there is a mismatched behavior between 2 implementations, AA implementation has an
+        // upperbound of
         // Any? for unbounded type parameter.
-        val refs0Arg = references.filter { it.resolve().arguments.toList().size == 0 && !it.resolve().isMarkedNullable }
+        val refs0Arg = references.filter {
+            it.resolve().arguments.toList().size == 0 && !it.resolve().isMarkedNullable
+        }
 
         for (c in classes) {
             for (ref in refs0Arg) {
                 composed.add(c.asType(listOf(resolver.getTypeArgument(ref, Variance.INVARIANT))))
                 composed.add(c.asType(listOf(resolver.getTypeArgument(ref, Variance.COVARIANT))))
-                composed.add(c.asType(listOf(resolver.getTypeArgument(ref, Variance.CONTRAVARIANT))))
+                composed.add(
+                    c.asType(listOf(resolver.getTypeArgument(ref, Variance.CONTRAVARIANT)))
+                )
                 composed.add(c.asType(listOf(resolver.getTypeArgument(ref, Variance.STAR))))
             }
         }
@@ -67,7 +76,9 @@ open class TypeComposureProcessor : AbstractTestProcessor() {
             for (ref in refs0Arg) {
                 composed.add(t.replace(listOf(resolver.getTypeArgument(ref, Variance.INVARIANT))))
                 composed.add(t.replace(listOf(resolver.getTypeArgument(ref, Variance.COVARIANT))))
-                composed.add(t.replace(listOf(resolver.getTypeArgument(ref, Variance.CONTRAVARIANT))))
+                composed.add(
+                    t.replace(listOf(resolver.getTypeArgument(ref, Variance.CONTRAVARIANT)))
+                )
                 composed.add(t.starProjection())
             }
         }

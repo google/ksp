@@ -9,6 +9,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class PackageProviderForGeneratedProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result
     }
@@ -21,11 +22,18 @@ class PackageProviderForGeneratedProcessor : AbstractTestProcessor() {
             createJavaFile("foo.bar", "MyGeneratedJavaClass")
         }
         result.add("Processing round $round")
-        val getByName = resolver.getClassDeclarationByName(
-            resolver.getKSNameFromString("foo.bar.MyGeneratedJavaClass")
-        )?.qualifiedName?.asString()
+        val getByName =
+            resolver
+                .getClassDeclarationByName(
+                    resolver.getKSNameFromString("foo.bar.MyGeneratedJavaClass")
+                )
+                ?.qualifiedName
+                ?.asString()
         result.add("resolver.getClassDeclarationByName: $getByName")
-        val getByPackage = resolver.getDeclarationsFromPackage("foo.bar").toList().map { it.qualifiedName?.asString() }
+        val getByPackage =
+            resolver.getDeclarationsFromPackage("foo.bar").toList().map {
+                it.qualifiedName?.asString()
+            }
         result.add("resolver.getDeclarationsFromPackage: $getByPackage")
         round++
         return emptyList()

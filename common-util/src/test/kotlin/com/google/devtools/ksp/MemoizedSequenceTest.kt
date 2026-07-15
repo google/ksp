@@ -7,9 +7,7 @@ import org.junit.Test
 class MemoizedSequenceTest {
     @Test
     fun testConcurrentRead() {
-        val memoized = MemoizedSequence(
-            sequenceOf(1, 2, 3, 4, 5, 6)
-        )
+        val memoized = MemoizedSequence(sequenceOf(1, 2, 3, 4, 5, 6))
         val s1 = memoized.iterator()
         val s2 = memoized.iterator()
         val s1read = mutableListOf<Int>()

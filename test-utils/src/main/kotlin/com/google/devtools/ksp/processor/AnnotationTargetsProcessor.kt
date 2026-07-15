@@ -26,10 +26,16 @@ class AnnotationTargetsProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val myClassName = resolver.getKSNameFromString("com.example.MyClass")
         val myClass: KSClassDeclaration = resolver.getClassDeclarationByName(myClassName)!!
-        val propForLib = myClass.getAllProperties().single { it.simpleName.asString() == "propForLib" }
-        val propForSrc = myClass.getAllProperties().single { it.simpleName.asString() == "propForSrc" }
-        results.add("$propForLib: ${propForLib.annotations.map { it.shortName.asString() }.toList()}")
-        results.add("$propForSrc: ${propForSrc.annotations.map { it.shortName.asString() }.toList()}")
+        val propForLib =
+            myClass.getAllProperties().single { it.simpleName.asString() == "propForLib" }
+        val propForSrc =
+            myClass.getAllProperties().single { it.simpleName.asString() == "propForSrc" }
+        results.add(
+            "$propForLib: ${propForLib.annotations.map { it.shortName.asString() }.toList()}"
+        )
+        results.add(
+            "$propForSrc: ${propForSrc.annotations.map { it.shortName.asString() }.toList()}"
+        )
         return emptyList()
     }
 

@@ -27,21 +27,18 @@ package com.google.devtools.ksp.gradle.testing
  * To create an instance, use the helper methods in the companion.
  */
 @ConsistentCopyVisibility
-data class PluginDeclaration private constructor(
+data class PluginDeclaration
+private constructor(
     val text: String,
-    val version: String
+    val version: String,
 ) {
     fun toCode() = text
 
     companion object {
-        /**
-         * Creates a plugin declaration with the given id and version.
-         */
+        /** Creates a plugin declaration with the given id and version. */
         fun id(id: String, version: String) = PluginDeclaration("id(\"$id\")", version)
 
-        /**
-         * Creates a kotlin plugin declaration with the given id and version.
-         */
+        /** Creates a kotlin plugin declaration with the given id and version. */
         fun kotlin(id: String, version: String) = PluginDeclaration("kotlin(\"$id\")", version)
     }
 }

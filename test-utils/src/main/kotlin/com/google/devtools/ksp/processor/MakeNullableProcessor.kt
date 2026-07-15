@@ -32,9 +32,12 @@ open class MakeNullableProcessor : AbstractTestProcessor() {
             it.accept(typeCollector, types)
         }
 
-        val sortedTypes = types.flatMap { setOf(it, it.makeNullable(), it.makeNotNullable()) }.sortedBy {
-            it.toString()
-        }
+        val sortedTypes =
+            types
+                .flatMap { setOf(it, it.makeNullable(), it.makeNotNullable()) }
+                .sortedBy {
+                    it.toString()
+                }
 
         for (i in sortedTypes) {
             for (j in sortedTypes) {

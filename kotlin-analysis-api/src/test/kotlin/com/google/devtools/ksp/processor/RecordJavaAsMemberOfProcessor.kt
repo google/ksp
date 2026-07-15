@@ -35,33 +35,39 @@ class RecordJavaAsMemberOfProcessor : AbstractTestProcessor() {
         var type: KSType? = null
         resolver.getAllFiles().forEach {
             if (it.fileName == "C.kt") {
-                type = (
-                    it.declarations.single {
-                        it is KSPropertyDeclaration && it.simpleName.asString() == "a"
-                    } as KSPropertyDeclaration
-                    ).type.resolve()
+                type =
+                    (it.declarations.single {
+                            it is KSPropertyDeclaration && it.simpleName.asString() == "a"
+                        } as KSPropertyDeclaration)
+                        .type
+                        .resolve()
             } else if (it.fileName == "B.java") {
-                function = (
-                    it.declarations.single {
-                        it is KSClassDeclaration && it.simpleName.asString() == "B"
-                    } as KSClassDeclaration
-                    ).declarations.single {
-                    it is KSFunctionDeclaration && it.simpleName.asString() == "f"
-                } as KSFunctionDeclaration
+                function =
+                    (it.declarations.single {
+                            it is KSClassDeclaration && it.simpleName.asString() == "B"
+                        } as KSClassDeclaration)
+                        .declarations
+                        .single {
+                            it is KSFunctionDeclaration && it.simpleName.asString() == "f"
+                        } as KSFunctionDeclaration
             }
         }
 
         function!!.asMemberOf(type!!)
 
-        val m = when (resolver) {
-            is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
-            else -> throw IllegalStateException("Unknown Resolver: $resolver")
-        }
-        m.forEach { symbol, files ->
-            files.filter { it.endsWith(".java") }.sorted().forEach {
-                val fn = it.substringAfterLast("java-sources/")
-                results.add("$symbol: $fn")
+        val m =
+            when (resolver) {
+                is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
+                else -> throw IllegalStateException("Unknown Resolver: $resolver")
             }
+        m.forEach { symbol, files ->
+            files
+                .filter { it.endsWith(".java") }
+                .sorted()
+                .forEach {
+                    val fn = it.substringAfterLast("java-sources/")
+                    results.add("$symbol: $fn")
+                }
         }
         return emptyList()
     }

@@ -1,30 +1,38 @@
 package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
+import java.util.jar.JarFile
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
-import java.util.jar.JarFile
 
 class ProjectIsolationIT {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground",
-        experimentalPsiResolution = true
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "playground",
+            experimentalPsiResolution = true,
+        )
 
     @Test
     fun testProjectIsolationResources() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        val result = gradleRunner.withArguments(
-            "clean", "build", "-Dorg.gradle.unsafe.isolated-projects=true",
-            "--configuration-cache", "--info", "--stacktrace"
-        ).build()
+        val result =
+            gradleRunner
+                .withArguments(
+                    "clean",
+                    "build",
+                    "-Dorg.gradle.unsafe.isolated-projects=true",
+                    "--configuration-cache",
+                    "--info",
+                    "--stacktrace",
+                )
+                .build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:build")?.outcome)
 

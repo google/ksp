@@ -26,16 +26,17 @@ open class FunctionKindProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         fun KSFunctionDeclaration.pretty(): String {
-            val name = if (parentDeclaration != null) {
-                val className = parentDeclaration?.simpleName?.asString() ?: ""
-                if (className.isNotEmpty()) {
-                    "$className.${simpleName.asString()}"
+            val name =
+                if (parentDeclaration != null) {
+                    val className = parentDeclaration?.simpleName?.asString() ?: ""
+                    if (className.isNotEmpty()) {
+                        "$className.${simpleName.asString()}"
+                    } else {
+                        simpleName.asString()
+                    }
                 } else {
-                    simpleName.asString()
+                    qualifiedName?.asString() ?: simpleName.asString()
                 }
-            } else {
-                qualifiedName?.asString() ?: simpleName.asString()
-            }
 
             return "$name: $functionKind"
         }
@@ -46,14 +47,17 @@ open class FunctionKindProcessor : AbstractTestProcessor() {
                 object : KSTopDownVisitor<Unit, Unit>() {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
+                    override fun visitFunctionDeclaration(
+                        function: KSFunctionDeclaration,
+                        data: Unit,
+                    ) {
                         if (!IGNORED_METHOD_NAMES.contains(function.simpleName.toString())) {
                             results.add(function.pretty())
                         }
                         super.visitFunctionDeclaration(function, data)
                     }
                 },
-                Unit
+                Unit,
             )
         }
 

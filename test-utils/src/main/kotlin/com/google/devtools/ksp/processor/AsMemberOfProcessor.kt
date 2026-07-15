@@ -11,6 +11,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     // keep a list of all signatures we generate and ensure equals work as expected
     private val functionsBySignature = mutableMapOf<String, MutableSet<KSFunction>>()
+
     override fun toResult(): List<String> {
         return results
     }
@@ -19,16 +20,26 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
 
         listOf("main.Test", "lib.Test", "main.TestKt", "lib.TestKt").forEach { clsName ->
             resolver.getClassDeclarationByName(clsName)!!.let { cls ->
-                val listType = cls.getAllFunctions().single { it.simpleName.asString() == "f" }.returnType!!.resolve()
+                val listType =
+                    cls.getAllFunctions()
+                        .single { it.simpleName.asString() == "f" }
+                        .returnType!!
+                        .resolve()
                 val listDecl = listType.declaration as KSClassDeclaration
-                val iterator = listDecl.getAllFunctions().single { it.simpleName.asString() == "iterator" }
+                val iterator =
+                    listDecl.getAllFunctions().single { it.simpleName.asString() == "iterator" }
                 results.add("$clsName: ${iterator.asMemberOf(listType).returnType}")
-                val listIterator = resolver.getClassDeclarationByName("kotlin.collections.List")!!
-                    .getDeclaredFunctions().single { it.simpleName.asString() == "iterator" }
+                val listIterator =
+                    resolver
+                        .getClassDeclarationByName("kotlin.collections.List")!!
+                        .getDeclaredFunctions()
+                        .single { it.simpleName.asString() == "iterator" }
                 results.add("$clsName: ${listIterator.asMemberOf(listType).returnType}")
                 val mutableListIterator =
-                    resolver.getClassDeclarationByName("kotlin.collections.MutableCollection")!!
-                        .getDeclaredFunctions().single { it.simpleName.asString() == "iterator" }
+                    resolver
+                        .getClassDeclarationByName("kotlin.collections.MutableCollection")!!
+                        .getDeclaredFunctions()
+                        .single { it.simpleName.asString() == "iterator" }
                 results.add("$clsName: ${mutableListIterator.asMemberOf(listType).returnType}")
             }
         }
@@ -44,20 +55,24 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         // check cases where given type is not a subtype
         val notAChild = resolver.getClassDeclarationByName("NotAChild")!!
         addToResults(resolver, base, notAChild.asStarProjectedType())
-        val listOfStrings = resolver.getDeclaration<KSPropertyDeclaration>("listOfStrings").type.resolve()
-        val setOfStrings = resolver.getDeclaration<KSPropertyDeclaration>("setOfStrings").type.resolve()
+        val listOfStrings =
+            resolver.getDeclaration<KSPropertyDeclaration>("listOfStrings").type.resolve()
+        val setOfStrings =
+            resolver.getDeclaration<KSPropertyDeclaration>("setOfStrings").type.resolve()
         val listClass = resolver.getClassDeclarationByName("kotlin.collections.List")!!
         val setClass = resolver.getClassDeclarationByName("kotlin.collections.Set")!!
-        val listGet = listClass.getAllFunctions().first {
-            it.simpleName.asString() == "get"
-        }
+        val listGet =
+            listClass.getAllFunctions().first {
+                it.simpleName.asString() == "get"
+            }
         results.add("List#get")
         results.add("listOfStrings: " + resolver.asMemberOfSignature(listGet, listOfStrings))
         results.add("setOfStrings: " + resolver.asMemberOfSignature(listGet, setOfStrings))
 
-        val setContains = setClass.getAllFunctions().first {
-            it.simpleName.asString() == "contains"
-        }
+        val setContains =
+            setClass.getAllFunctions().first {
+                it.simpleName.asString() == "contains"
+            }
         results.add("Set#contains")
         results.add("listOfStrings: " + resolver.asMemberOfSignature(setContains, listOfStrings))
         results.add("setOfStrings: " + resolver.asMemberOfSignature(setContains, setOfStrings))
@@ -67,17 +82,22 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         addToResults(resolver, javaBase, javaChild1.asStarProjectedType())
 
         val fileLevelFunction = resolver.getDeclaration<KSFunctionDeclaration>("fileLevelFunction")
-        results.add("fileLevelFunction: " + resolver.asMemberOfSignature(fileLevelFunction, listOfStrings))
+        results.add(
+            "fileLevelFunction: " + resolver.asMemberOfSignature(fileLevelFunction, listOfStrings)
+        )
 
         // TODO we should eventually support this, probably as different asReceiverOf kind of API
-        val fileLevelExtensionFunction = resolver.getDeclaration<KSFunctionDeclaration>("fileLevelExtensionFunction")
+        val fileLevelExtensionFunction =
+            resolver.getDeclaration<KSFunctionDeclaration>("fileLevelExtensionFunction")
         results.add(
             "fileLevelExtensionFunction: " +
                 resolver.asMemberOfSignature(fileLevelExtensionFunction, listOfStrings)
         )
 
         val fileLevelProperty = resolver.getDeclaration<KSPropertyDeclaration>("fileLevelProperty")
-        results.add("fileLevelProperty: " + resolver.asMemberOfSignature(fileLevelProperty, listOfStrings))
+        results.add(
+            "fileLevelProperty: " + resolver.asMemberOfSignature(fileLevelProperty, listOfStrings)
+        )
 
         val errorType = resolver.getDeclaration<KSPropertyDeclaration>("errorType").type.resolve()
         results.add("errorType: " + resolver.asMemberOfSignature(listGet, errorType))
@@ -90,11 +110,15 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         }
 
         // validate equals implementation
-        // all functions with the same signature should be equal to each-other unless there is an error / incomplete
+        // all functions with the same signature should be equal to each-other unless there is an
+        // error / incomplete
         // type in them
-        val notEqualToItself = functionsBySignature.filter { (_, functions) ->
-            functions.size != 1
-        }.keys
+        val notEqualToItself =
+            functionsBySignature
+                .filter { (_, functions) ->
+                    functions.size != 1
+                }
+                .keys
         results.add("expected comparison failures")
         results.addAll(notEqualToItself)
         // make sure we don't have any false positive equals
@@ -114,20 +138,26 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         results.add(setY.asMemberOf(javaImpl.asStarProjectedType()).toSignature())
 
         resolver.getClassDeclarationByName("Baz")!!.let { cls ->
-            cls.getDeclaredFunctions().single { it.simpleName.asString() == "method1" }.let { f ->
-                val usage = resolver.getClassDeclarationByName("Usage")!!.asType(emptyList())
-                results.add(f.asMemberOf(usage).returnType!!.toSignature())
-            }
+            cls.getDeclaredFunctions()
+                .single { it.simpleName.asString() == "method1" }
+                .let { f ->
+                    val usage = resolver.getClassDeclarationByName("Usage")!!.asType(emptyList())
+                    results.add(f.asMemberOf(usage).returnType!!.toSignature())
+                }
         }
         return emptyList()
     }
 
     private inline fun <reified T : KSDeclaration> Resolver.getDeclaration(name: String): T {
-        return getNewFiles().first {
-            it.fileName == "Input.kt"
-        }.declarations.filterIsInstance<T>().first {
-            it.simpleName.asString() == name
-        }
+        return getNewFiles()
+            .first {
+                it.fileName == "Input.kt"
+            }
+            .declarations
+            .filterIsInstance<T>()
+            .first {
+                it.simpleName.asString() == name
+            }
     }
 
     private fun addToResults(resolver: Resolver, baseClass: KSClassDeclaration, child: KSType) {
@@ -136,19 +166,21 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
         val baseFunction = baseClass.getDeclaredFunctions().filterNot { it.isConstructor() }
         results.addAll(
             baseProperties.map { property ->
-                val typeSignature = resolver.asMemberOfSignature(
-                    property = property,
-                    containing = child
-                )
+                val typeSignature =
+                    resolver.asMemberOfSignature(
+                        property = property,
+                        containing = child,
+                    )
                 "${property.simpleName.asString()}: $typeSignature"
             }
         )
         results.addAll(
             baseFunction.map { function ->
-                val functionSignature = resolver.asMemberOfSignature(
-                    function = function,
-                    containing = child
-                )
+                val functionSignature =
+                    resolver.asMemberOfSignature(
+                        function = function,
+                        containing = child,
+                    )
                 "${function.simpleName.asString()}: $functionSignature"
             }
         )
@@ -156,7 +188,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
 
     private fun Resolver.asMemberOfSignature(
         function: KSFunctionDeclaration,
-        containing: KSType
+        containing: KSType,
     ): String {
         val result = kotlin.runCatching {
             function.asMemberOf(containing).also {
@@ -169,9 +201,11 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
             val ksFunction = result.getOrThrow()
             val signature = ksFunction.toSignature()
             // record it to validate equality against other signatures
-            functionsBySignature.getOrPut(signature) {
-                mutableSetOf()
-            }.add(ksFunction)
+            functionsBySignature
+                .getOrPut(signature) {
+                    mutableSetOf()
+                }
+                .add(ksFunction)
             signature
         } else {
             result.exceptionOrNull()!!.toSignature()
@@ -180,7 +214,7 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
 
     private fun Resolver.asMemberOfSignature(
         property: KSPropertyDeclaration,
-        containing: KSType
+        containing: KSType,
     ): String {
         val result = kotlin.runCatching {
             property.asMemberOf(containing).also {
@@ -197,63 +231,72 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
     }
 
     private fun Throwable.toSignature() = "${this::class.qualifiedName}: $message"
+
     private fun KSType.toSignature(): String {
-        val name = this.declaration.qualifiedName?.asString()
-            ?: this.declaration.simpleName.asString()
+        val name =
+            this.declaration.qualifiedName?.asString() ?: this.declaration.simpleName.asString()
         val qName = name + nullability.toSignature()
         if (arguments.toList().isEmpty()) {
             return qName
         }
-        val args = arguments.joinToString(", ") {
-            it.type?.resolve()?.toSignature() ?: "no-type"
-        }
+        val args =
+            arguments.joinToString(", ") {
+                it.type?.resolve()?.toSignature() ?: "no-type"
+            }
         return "$qName<$args>"
     }
 
     private fun KSTypeParameter.toSignature(): String {
-        val boundsSignature = if (bounds.toList().isEmpty()) {
-            ""
-        } else {
-            bounds.joinToString(
-                separator = ", ",
-                prefix = ": "
-            ) {
-                it.resolve().toSignature()
+        val boundsSignature =
+            if (bounds.toList().isEmpty()) {
+                ""
+            } else {
+                bounds.joinToString(
+                    separator = ", ",
+                    prefix = ": ",
+                ) {
+                    it.resolve().toSignature()
+                }
             }
-        }
-        val varianceSignature = if (variance.label.isBlank()) {
-            ""
-        } else {
-            "${variance.label} "
-        }
+        val varianceSignature =
+            if (variance.label.isBlank()) {
+                ""
+            } else {
+                "${variance.label} "
+            }
         val name = this.name.asString()
         return "$varianceSignature$name$boundsSignature"
     }
 
     private fun KSFunction.toSignature(): String {
         val returnType = this.returnType?.toSignature() ?: "no-return-type"
-        val params = parameterTypes.joinToString(", ") {
-            it?.toSignature() ?: "no-type-param"
-        }
-        val paramTypeArgs = this.typeParameters.joinToString(", ") {
-            it.toSignature()
-        }
-        val paramTypesSignature = if (paramTypeArgs.isBlank()) {
-            ""
-        } else {
-            "<$paramTypeArgs>"
-        }
-        val receiverSignature = if (extensionReceiverType != null) {
-            extensionReceiverType!!.toSignature() + "."
-        } else {
-            ""
-        }
+        val params =
+            parameterTypes.joinToString(", ") {
+                it?.toSignature() ?: "no-type-param"
+            }
+        val paramTypeArgs =
+            this.typeParameters.joinToString(", ") {
+                it.toSignature()
+            }
+        val paramTypesSignature =
+            if (paramTypeArgs.isBlank()) {
+                ""
+            } else {
+                "<$paramTypeArgs>"
+            }
+        val receiverSignature =
+            if (extensionReceiverType != null) {
+                extensionReceiverType!!.toSignature() + "."
+            } else {
+                ""
+            }
         return "$receiverSignature$paramTypesSignature($params) -> $returnType"
     }
 
-    private fun Nullability.toSignature() = when (this) {
-        Nullability.NULLABLE -> "?"
-        Nullability.NOT_NULL -> "!!"
-        Nullability.PLATFORM -> ""
-    }
+    private fun Nullability.toSignature() =
+        when (this) {
+            Nullability.NULLABLE -> "?"
+            Nullability.NOT_NULL -> "!!"
+            Nullability.PLATFORM -> ""
+        }
 }

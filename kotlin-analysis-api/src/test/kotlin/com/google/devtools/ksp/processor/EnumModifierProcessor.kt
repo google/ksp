@@ -31,10 +31,11 @@ class EnumModifierProcessor(val declarationNames: List<String>) : AbstractTestPr
             resolver.getClassDeclarationByName(declName)?.let { decl ->
                 decl.modifiers.forEach { mod ->
                     buildString {
-                        append(declName)
-                        append(": ")
-                        append(mod.name)
-                    }.let { result.add(it) }
+                            append(declName)
+                            append(": ")
+                            append(mod.name)
+                        }
+                        .let { result.add(it) }
                 }
             }
         }

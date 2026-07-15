@@ -56,11 +56,15 @@ class OverrideeProcessor : AbstractTestProcessor() {
     }
 
     private fun logClass(subject: KSClassDeclaration) {
-        subject.declarations.filterIsInstance<KSPropertyDeclaration>().sortedBy { it.simpleName.asString() }
+        subject.declarations
+            .filterIsInstance<KSPropertyDeclaration>()
+            .sortedBy { it.simpleName.asString() }
             .forEach {
                 checkOverridee(it)
             }
-        subject.declarations.filterIsInstance<KSFunctionDeclaration>().sortedBy { it.simpleName.asString() }
+        subject.declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .sortedBy { it.simpleName.asString() }
             .filterNot { it.simpleName.asString() in IGNORED_METHOD_NAMES }
             .forEach {
                 checkOverridee(it)
@@ -68,10 +72,12 @@ class OverrideeProcessor : AbstractTestProcessor() {
     }
 
     private fun checkOverridee(declaration: KSDeclaration) {
-        val signature = if (declaration is KSPropertyDeclaration) declaration.toSignature() else
-            (declaration as KSFunctionDeclaration).toSignature()
-        val overrideeSignature = if (declaration is KSPropertyDeclaration) declaration.findOverridee()?.toSignature()
-        else (declaration as KSFunctionDeclaration).findOverridee()?.toSignature()
+        val signature =
+            if (declaration is KSPropertyDeclaration) declaration.toSignature()
+            else (declaration as KSFunctionDeclaration).toSignature()
+        val overrideeSignature =
+            if (declaration is KSPropertyDeclaration) declaration.findOverridee()?.toSignature()
+            else (declaration as KSFunctionDeclaration).findOverridee()?.toSignature()
         results.add("$signature -> $overrideeSignature")
     }
 

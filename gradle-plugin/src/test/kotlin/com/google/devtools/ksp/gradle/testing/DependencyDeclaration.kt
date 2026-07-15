@@ -19,32 +19,27 @@
 package com.google.devtools.ksp.gradle.testing
 
 /**
- * Value class to declare dependencies between test projects.
- * See builder methods in the companion to create an instance of this.
+ * Value class to declare dependencies between test projects. See builder methods in the companion
+ * to create an instance of this.
  */
 @ConsistentCopyVisibility
-data class DependencyDeclaration private constructor(
+data class DependencyDeclaration
+private constructor(
     val configuration: String,
-    val dependency: String
+    val dependency: String,
 ) {
     fun toCode() = "$configuration($dependency)"
 
     companion object {
-        /**
-         * Creates a module dependency for the given configuration.
-         */
+        /** Creates a module dependency for the given configuration. */
         fun module(configuration: String, module: TestModule) =
             DependencyDeclaration(configuration, "project(\":${module.name}\")")
 
-        /**
-         * Create an artifact dependency for the given configuration.
-         */
+        /** Create an artifact dependency for the given configuration. */
         fun artifact(configuration: String, coordinates: String) =
             DependencyDeclaration(configuration, "\"$coordinates\"")
 
-        /**
-         * Creates a files dependency for the given configuration.
-         */
+        /** Creates a files dependency for the given configuration. */
         fun files(configuration: String, path: String) =
             DependencyDeclaration(configuration, "files(\"$path\")")
     }

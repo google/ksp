@@ -19,6 +19,7 @@ package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.BuildResultFixture
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
@@ -26,52 +27,72 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class AndroidIncrementalIT(experimentalPsiResolution: Boolean) {
 
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground-android-multi",
-        "playground",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "playground-android-multi",
+            "playground",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     private fun testWithExtraFlags() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        gradleRunner.withArguments(
-            "clean", ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
-        ).build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:compileDebugKotlin")?.outcome)
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":application:compileDebugKotlin")?.outcome)
-        }
+        gradleRunner
+            .withArguments(
+                "clean",
+                ":application:compileDebugKotlin",
+                "--configuration-cache-problems=warn",
+                "--debug",
+                "--stacktrace",
+            )
+            .build()
+            .let { result ->
+                Assert.assertEquals(
+                    TaskOutcome.SUCCESS,
+                    result.task(":workload:compileDebugKotlin")?.outcome,
+                )
+                Assert.assertEquals(
+                    TaskOutcome.SUCCESS,
+                    result.task(":application:compileDebugKotlin")?.outcome,
+                )
+            }
 
         project.root.resolve("workload/src/main/java/com/example/A.kt").also {
             it.appendText(
                 """
 
                 class Unused
-                """.trimIndent()
+                """
+                    .trimIndent()
             )
         }
 
-        gradleRunner.withArguments(
-            ":application:compileDebugKotlin", "--configuration-cache-problems=warn", "--debug", "--stacktrace"
-        ).build().let { result ->
-            Assert.assertEquals(
-                setOf("workload/src/main/java/com/example/A.kt".replace('/', File.separatorChar)),
-                BuildResultFixture(result).compiledKotlinSources,
+        gradleRunner
+            .withArguments(
+                ":application:compileDebugKotlin",
+                "--configuration-cache-problems=warn",
+                "--debug",
+                "--stacktrace",
             )
-        }
+            .build()
+            .let { result ->
+                Assert.assertEquals(
+                    setOf(
+                        "workload/src/main/java/com/example/A.kt".replace('/', File.separatorChar)
+                    ),
+                    BuildResultFixture(result).compiledKotlinSources,
+                )
+            }
     }
 
     @Test

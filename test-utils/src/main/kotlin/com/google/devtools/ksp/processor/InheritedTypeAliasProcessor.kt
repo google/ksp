@@ -31,29 +31,45 @@ class InheritedTypeAliasProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val sub = resolver.getClassDeclarationByName("Sub")!!
         val sup = resolver.getClassDeclarationByName("Super")!!
-        sub.getAllFunctions().single { it.simpleName.asString() == "foo" }.let { func ->
-            func.parameters.forEach {
-                it.type.element?.typeArguments?.joinToString(prefix = "sub: ${it.name?.asString()} :") {
-                    it.toString()
-                }?.let { results.add(it) }
+        sub.getAllFunctions()
+            .single { it.simpleName.asString() == "foo" }
+            .let { func ->
+                func.parameters.forEach {
+                    it.type.element
+                        ?.typeArguments
+                        ?.joinToString(prefix = "sub: ${it.name?.asString()} :") {
+                            it.toString()
+                        }
+                        ?.let { results.add(it) }
+                }
             }
-        }
         sub.getAllProperties().forEach { prop ->
-            prop.type.element?.typeArguments?.joinToString(prefix = "sub: ${prop.simpleName.asString()} :") {
-                it.toString()
-            }?.let { results.add(it) }
-        }
-        sup.getAllFunctions().single { it.simpleName.asString() == "foo" }.let { func ->
-            func.parameters.forEach {
-                it.type.element?.typeArguments?.joinToString(prefix = "super: ${it.name?.asString()} :") {
+            prop.type.element
+                ?.typeArguments
+                ?.joinToString(prefix = "sub: ${prop.simpleName.asString()} :") {
                     it.toString()
-                }?.let { results.add(it) }
-            }
+                }
+                ?.let { results.add(it) }
         }
+        sup.getAllFunctions()
+            .single { it.simpleName.asString() == "foo" }
+            .let { func ->
+                func.parameters.forEach {
+                    it.type.element
+                        ?.typeArguments
+                        ?.joinToString(prefix = "super: ${it.name?.asString()} :") {
+                            it.toString()
+                        }
+                        ?.let { results.add(it) }
+                }
+            }
         sup.getAllProperties().forEach { prop ->
-            prop.type.element?.typeArguments?.joinToString(prefix = "super: ${prop.simpleName.asString()} :") {
-                it.toString()
-            }?.let { results.add(it) }
+            prop.type.element
+                ?.typeArguments
+                ?.joinToString(prefix = "super: ${prop.simpleName.asString()} :") {
+                    it.toString()
+                }
+                ?.let { results.add(it) }
         }
         return emptyList()
     }

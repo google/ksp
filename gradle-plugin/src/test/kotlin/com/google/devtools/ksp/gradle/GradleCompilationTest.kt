@@ -44,26 +44,21 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 
-    @Rule
-    @JvmField
-    val tmpDir = TemporaryFolder()
+    @Rule @JvmField val tmpDir = TemporaryFolder()
 
-    @Rule
-    @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
+    @Rule @JvmField val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     @Test
     fun errorMessageFailsCompilation() {
         testRule.setupAppAsJvmApp()
-        testRule.appModule.dependencies.add(
-            module(configuration = "ksp", testRule.processorModule)
-        )
+        testRule.appModule.dependencies.add(module(configuration = "ksp", testRule.processorModule))
         testRule.appModule.addSource(
             "Foo.kt",
             """
             class Foo {
             }
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         class ErrorReporting(private val logger: KSPLogger) : SymbolProcessor {
             override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -75,9 +70,7 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
         class Provider : TestSymbolProcessorProvider({ env -> ErrorReporting(env.logger) })
 
         testRule.addProvider(Provider::class)
-        val failure = testRule.runner()
-            .withArguments("app:assemble")
-            .buildAndFail()
+        val failure = testRule.runner().withArguments("app:assemble").buildAndFail()
         assertThat(failure.output).contains("my processor failure")
     }
 
@@ -85,34 +78,41 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
     fun applicationCanAccessGeneratedCode_multiplatform_withConfigCache() {
         testRule.setupAppAsMultiplatformApp(
             """
-                kotlin {
-                    jvm { }
-                    js(IR) { browser() }
-                    linuxX64 {}
-                    macosArm64 {}
-                    androidTarget()
-                }
-            """.trimIndent()
+            kotlin {
+                jvm { }
+                js(IR) { browser() }
+                linuxX64 {}
+                macosArm64 {}
+                androidTarget()
+            }
+            """
+                .trimIndent()
         )
         val kspConfigs =
-            """configurations.matching { 
-                |it.name.startsWith("ksp") && it.name != "ksp" && !it.name.endsWith("ProcessorClasspath") 
-                |}""".trimMargin()
+            """
+            |configurations.matching { 
+            |it.name.startsWith("ksp") && it.name != "ksp" && !it.name.endsWith("ProcessorClasspath") 
+            |}
+            """
+                .trimMargin()
         testRule.appModule.buildFileAdditions.add(
             """
                 $kspConfigs.all {
                     // Make sure ksp configs are not empty.
                     project.dependencies.add(name, project(":${testRule.processorModule.name}"))
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
 
         class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
             var count = 0
+
             override fun process(resolver: Resolver): List<KSAnnotated> {
                 /**
-                 * The source file accessing the generated code is added later to be able to test the configuration
-                 * cache and the workaround for https://youtrack.jetbrains.com/issue/KT-61657.
+                 * The source file accessing the generated code is added later to be able to test
+                 * the configuration cache and the workaround for
+                 * https://youtrack.jetbrains.com/issue/KT-61657.
                  */
                 val needToGenerate = resolver.getAllFiles().any { it.fileName == "Foo.kt" }
                 if (count == 0 && needToGenerate) {
@@ -131,44 +131,42 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
 
         testRule.addProvider(Provider::class)
 
-        val compileArgs = listOf(
-            "app:compileKotlinLinuxX64", "--configuration-cache", "--configuration-cache-problems=fail"
-        )
+        val compileArgs =
+            listOf(
+                "app:compileKotlinLinuxX64",
+                "--configuration-cache",
+                "--configuration-cache-problems=fail",
+            )
         val runner = testRule.runner()
         // compile, no sources, nothing will run
-        runner
-            .withArguments(compileArgs)
-            .forwardOutput()
-            .build()
+        runner.withArguments(compileArgs).forwardOutput().build()
         // add a file that needs access to the generated file
         testRule.appModule.addMultiplatformSource(
-            "linuxX64Main", "Foo.kt",
+            "linuxX64Main",
+            "Foo.kt",
             """
             class Foo {
                 val x = ToBeGenerated()
             }
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         // now compile again
-        runner
-            .withArguments(compileArgs)
-            .forwardOutput()
-            .build()
+        runner.withArguments(compileArgs).forwardOutput().build()
     }
 
     @Test
     fun applicationCanAccessGeneratedCode() {
         testRule.setupAppAsJvmApp()
-        testRule.appModule.dependencies.add(
-            module(configuration = "ksp", testRule.processorModule)
-        )
+        testRule.appModule.dependencies.add(module(configuration = "ksp", testRule.processorModule))
         testRule.appModule.addSource(
             "Foo.kt",
             """
             class Foo {
                 val x = ToBeGenerated()
             }
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         testRule.appModule.addSource(
             "JavaSrc.java",
@@ -176,10 +174,12 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
             class JavaSrc {
                 ToBeGenerated x;
             }
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
             var count = 0
+
             override fun process(resolver: Resolver): List<KSAnnotated> {
                 if (count == 0) {
                     codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
@@ -197,10 +197,7 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
 
         testRule.addProvider(Provider::class)
 
-        testRule.runner()
-            .withArguments("app:assemble")
-            .forwardOutput()
-            .build()
+        testRule.runner().withArguments("app:assemble").forwardOutput().build()
     }
 
     @Test
@@ -222,7 +219,8 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
                 @ColumnInfo(name = "first_name") val firstName: String?,
                 @ColumnInfo(name = "last_name") val lastName: String?
             )
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         testRule.appModule.addSource(
             "UserDao.kt",
@@ -235,7 +233,8 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
                 @Query("SELECT * FROM User")
                 fun getAll(): List<User>
             }
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         testRule.appModule.addSource(
             "Database.kt",
@@ -247,40 +246,42 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
             abstract class Database : RoomDatabase() {
                 abstract fun userDao(): UserDao
             }
-            """.trimIndent()
+            """
+                .trimIndent(),
         )
         testRule.appModule.dependencies.addAll(
             listOf(
                 artifact(configuration = "ksp", "androidx.room:room-compiler:2.6.1"),
-                artifact(configuration = "implementation", "androidx.room:room-runtime:2.6.1")
+                artifact(configuration = "implementation", "androidx.room:room-runtime:2.6.1"),
             )
         )
         testRule.appModule.buildFileAdditions.add(
             """
-                ksp {
-                    arg(Provider(project.layout.projectDirectory.dir("schemas").asFile))
+            ksp {
+                arg(Provider(project.layout.projectDirectory.dir("schemas").asFile))
+            }
+            class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
+
+                @OutputDirectory
+                val outputDir = roomOutputDir
+
+                override fun asArguments(): Iterable<String> {
+                    return listOf(
+                        "room.schemaLocation=${'$'}{outputDir.path}",
+                        "room.generateKotlin=true"
+                    )
                 }
-                class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
-
-                    @OutputDirectory
-                    val outputDir = roomOutputDir
-
-                    override fun asArguments(): Iterable<String> {
-                        return listOf(
-                            "room.schemaLocation=${'$'}{outputDir.path}",
-                            "room.generateKotlin=true"
-                        )
+            }
+            tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                doFirst {
+                    kspConfig.processorOptions.get().forEach { (key, value) ->
+                        println("apoption=${'$'}key=${'$'}value")
                     }
                 }
-                tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
-                    doFirst {
-                        kspConfig.processorOptions.get().forEach { (key, value) ->
-                            println("apoption=${'$'}key=${'$'}value")
-                        }
-                    }
-                }
+            }
 
-            """.trimIndent()
+            """
+                .trimIndent()
         )
         val result = testRule.runner().withArguments(":app:assembleDebug").build()
         val pattern1 = Regex.escape("apoption=room.schemaLocation=")
@@ -288,7 +289,8 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
         assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
         assertThat(result.output).contains("apoption=room.generateKotlin=true")
         val schemasFolder = testRule.appModule.moduleRoot.resolve("schemas")
-        assertThat(result.task(":app:kspDebugKotlin")!!.outcome).isEquivalentAccordingToCompareTo(TaskOutcome.SUCCESS)
+        assertThat(result.task(":app:kspDebugKotlin")!!.outcome)
+            .isEquivalentAccordingToCompareTo(TaskOutcome.SUCCESS)
         assertThat(schemasFolder.exists()).isTrue()
         assertThat(schemasFolder.resolve("Database/1.json").exists()).isTrue()
     }
@@ -309,16 +311,16 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
                     )
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
         testRule.appModule.dependencies.addAll(
-            listOf(
-                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2")
-            )
+            listOf(artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"))
         )
 
         val result = testRule.runner().withArguments(":app:assemble").buildAndFail()
-        assertThat(result.output).contains("Processor arguments not in the format \\S+=\\S+: invalid")
+        assertThat(result.output)
+            .contains("Processor arguments not in the format \\S+=\\S+: invalid")
     }
 
     @Test
@@ -326,41 +328,41 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         testRule.setupAppAsAndroidApp()
         testRule.appModule.dependencies.addAll(
-            listOf(
-                artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2")
-            )
+            listOf(artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"))
         )
         testRule.appModule.buildFileAdditions.add(
             """
-                 class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
+            class Provider(roomOutputDir: File) : CommandLineArgumentProvider {
 
-                     @OutputDirectory
-                     val outputDir = roomOutputDir
+                @OutputDirectory
+                val outputDir = roomOutputDir
 
-                     override fun asArguments(): Iterable<String> {
-                         return listOf(
-                             "room.schemaLocation=${'$'}{outputDir.path}"
-                         )
-                     }
-                 }
-                 afterEvaluate {
-                   tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
-                     val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
-                     commandLineArgumentProviders.add(Provider(destination.asFile))
+                override fun asArguments(): Iterable<String> {
+                    return listOf(
+                        "room.schemaLocation=${'$'}{outputDir.path}"
+                    )
+                }
+            }
+            afterEvaluate {
+              tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                val destination = project.layout.projectDirectory.dir("schemas-${'$'}{this.name}")
+                commandLineArgumentProviders.add(Provider(destination.asFile))
 
-                     kspConfig.processorOptions.get().forEach { (key, value) ->
-                         println("apoption=${'$'}key=${'$'}value")
-                     }
-                     commandLineArgumentProviders.get().forEach { commandLine ->
-                       println("commandLine=${'$'}{commandLine.asArguments()}")
-                     }
-                   }
-                 }
-            """.trimIndent()
+                kspConfig.processorOptions.get().forEach { (key, value) ->
+                    println("apoption=${'$'}key=${'$'}value")
+                }
+                commandLineArgumentProviders.get().forEach { commandLine ->
+                  println("commandLine=${'$'}{commandLine.asArguments()}")
+                }
+              }
+            }
+            """
+                .trimIndent()
         )
         val result = testRule.runner().withArguments(":app:assembleDebug").build()
         val pattern1 = Regex.escape("apoption=room.schemaLocation=")
-        val pattern2 = Regex.escape(testRule.appModule.moduleRoot.resolve("schemas-kspDebugKotlin").path)
+        val pattern2 =
+            Regex.escape(testRule.appModule.moduleRoot.resolve("schemas-kspDebugKotlin").path)
         val pattern3 = Regex.escape("commandLine=[")
         assertThat(result.output).containsMatch("$pattern1\\S*$pattern2")
         assertThat(result.output).containsMatch("$pattern3\\S*$pattern2")
@@ -372,19 +374,18 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
         testRule.appModule.addSource("Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
             """
-                 afterEvaluate {
-                   tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
-                     kspConfig.libraries.files.forEach {
-                       println("HAS LIBRARY: ${'$'}{it.path}")
-                     }
-                   }
-                 }
-            """.trimIndent()
+            afterEvaluate {
+              tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+                kspConfig.libraries.files.forEach {
+                  println("HAS LIBRARY: ${'$'}{it.path}")
+                }
+              }
+            }
+            """
+                .trimIndent()
         )
 
-        testRule.appModule.dependencies.add(
-            module(configuration = "ksp", testRule.processorModule)
-        )
+        testRule.appModule.dependencies.add(module(configuration = "ksp", testRule.processorModule))
 
         class DummyProcessor : SymbolProcessor {
             override fun process(resolver: Resolver): List<KSAnnotated> = emptyList()
@@ -399,29 +400,26 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
         assertThat(result.output).doesNotContain("app/build/generated/ksp/main/classes")
     }
 
-    /**
-     * Regression test for b/362279380
-     */
+    /** Regression test for b/362279380 */
     @Test
     fun androidGradlePluginBuiltInKotlin() {
         testRule.setupAppAsAndroidApp(enableAgpBuiltInKotlinSupport = true)
         testRule.appModule.dependencies.addAll(
             listOf(
                 artifact(configuration = "ksp", "androidx.room:room-compiler:2.4.2"),
-                artifact(configuration = "kspTest", "androidx.room:room-compiler:2.4.2")
+                artifact(configuration = "kspTest", "androidx.room:room-compiler:2.4.2"),
             )
         )
         testRule.runner().withArguments(":app:assembleDebug", "--stacktrace").build()
     }
 
-    /**
-     * Regression test for https://github.com/google/ksp/issues/2174
-     */
+    /** Regression test for https://github.com/google/ksp/issues/2174 */
     @Test
     fun androidGradlePluginBuiltInKotlinWithKspAppliedFirst() {
         testRule.setupAppAsAndroidApp(applyKspPluginFirst = true)
         // Enable AGP's built-in Kotlin support for test fixtures
-        testRule.runner()
+        testRule
+            .runner()
             .withArguments("tasks", "-Pandroid.experimental.enableTestFixturesKotlinSupport=true")
             .build()
     }

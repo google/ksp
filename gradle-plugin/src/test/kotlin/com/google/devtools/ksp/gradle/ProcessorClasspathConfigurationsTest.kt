@@ -33,13 +33,9 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
         fun params() = listOf(arrayOf(true), arrayOf(false))
     }
 
-    @Rule
-    @JvmField
-    val tmpDir = TemporaryFolder()
+    @Rule @JvmField val tmpDir = TemporaryFolder()
 
-    @Rule
-    @JvmField
-    val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
+    @Rule @JvmField val testRule = KspIntegrationTestRule(tmpDir, isExperimentalPsiResolution)
 
     private val kspConfigs by lazy {
         """configurations.matching { it.name.startsWith("ksp") && !it.name.endsWith("ProcessorClasspath") }"""
@@ -67,10 +63,16 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                         require(test.extendsFrom.map { it.name } == listOf("kspTest", "ksp"))
                     }
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        testRule.runner()
-            .withArguments(":app:testConfigurations", "--info", "-Pksp.allow.all.target.configuration=true")
+        testRule
+            .runner()
+            .withArguments(
+                ":app:testConfigurations",
+                "--info",
+                "-Pksp.allow.all.target.configuration=true",
+            )
             .build()
     }
 
@@ -94,11 +96,10 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                         require(test.extendsFrom.map { it.name } == listOf("kspTest"))
                     }
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        testRule.runner()
-            .withArguments(":app:testConfigurations")
-            .build()
+        testRule.runner().withArguments(":app:testConfigurations").build()
     }
 
     @Test
@@ -175,9 +176,11 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                         )
                     }
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        testRule.runner()
+        testRule
+            .runner()
             .withArguments(":app:testConfigurations", "-Pksp.allow.all.target.configuration=true")
             .build()
     }
@@ -259,22 +262,22 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                         }
                     }
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        testRule.runner()
-            .withArguments(":app:testConfigurations")
-            .build()
+        testRule.runner().withArguments(":app:testConfigurations").build()
     }
 
     @Test
     fun testConfigurationsForMultiPlatformApp() {
         testRule.setupAppAsMultiplatformApp(
             """
-                kotlin {
-                    jvm { }
-                    js(IR) { browser() }
-                }
-            """.trimIndent()
+            kotlin {
+                jvm { }
+                js(IR) { browser() }
+            }
+            """
+                .trimIndent()
         )
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
@@ -297,24 +300,24 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                         require(jsTest.extendsFrom.map { it.name } == listOf("kspJsTest"))
                     }
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        testRule.runner()
-            .withArguments(":app:testConfigurations")
-            .build()
+        testRule.runner().withArguments(":app:testConfigurations").build()
     }
 
     @Test
     fun testConfigurationsAreNotResolvedAtConfigurationTime() {
         testRule.setupAppAsMultiplatformApp(
             """
-                kotlin {
-                    jvm { }
-                    js(IR) { browser() }
-                    linuxX64 {}
-                    androidTarget()
-                }
-            """.trimIndent()
+            kotlin {
+                jvm { }
+                js(IR) { browser() }
+                linuxX64 {}
+                androidTarget()
+            }
+            """
+                .trimIndent()
         )
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
@@ -323,22 +326,20 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                     // add a dependency that doesn't exist hence build would fail if it is resolved
                     project.dependencies.add(name, "this.should.ve.not.been.resolved:exist:1.1.1")
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
         // trigger task creation. KSP should not resolve classpaths
         // at this step
-        val buildResult = testRule.runner()
-            .withArguments(":app:tasks", "--all")
-            .build()
-        val taskNames = listOf(
-            "kspKotlinJs",
-            "kspKotlinJvm",
-            "kspKotlinLinuxX64",
-        )
+        val buildResult = testRule.runner().withArguments(":app:tasks", "--all").build()
+        val taskNames =
+            listOf(
+                "kspKotlinJs",
+                "kspKotlinJvm",
+                "kspKotlinLinuxX64",
+            )
         taskNames.forEach {
-            assertThat(
-                buildResult.output
-            ).contains(it)
+            assertThat(buildResult.output).contains(it)
         }
     }
 
@@ -346,13 +347,14 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
     fun testArgumentsAreNotResolvedAtConfigurationTime() {
         testRule.setupAppAsMultiplatformApp(
             """
-                kotlin {
-                    jvm { }
-                    js(IR) { browser() }
-                    linuxX64 {}
-                    androidTarget()
-                }
-            """.trimIndent()
+            kotlin {
+                jvm { }
+                js(IR) { browser() }
+                linuxX64 {}
+                androidTarget()
+            }
+            """
+                .trimIndent()
         )
         testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
         testRule.appModule.buildFileAdditions.add(
@@ -365,22 +367,20 @@ class ProcessorClasspathConfigurationsTest(isExperimentalPsiResolution: Boolean)
                     // pass an argument provider that would fail if resolved.
                     arg { error("Should not resolve arguments yet") }
                 }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
         // trigger task creation. KSP should not resolve arguments
         // at this step
-        val buildResult = testRule.runner()
-            .withArguments(":app:tasks", "--all")
-            .build()
-        val taskNames = listOf(
-            "kspKotlinJs",
-            "kspKotlinJvm",
-            "kspKotlinLinuxX64",
-        )
+        val buildResult = testRule.runner().withArguments(":app:tasks", "--all").build()
+        val taskNames =
+            listOf(
+                "kspKotlinJs",
+                "kspKotlinJvm",
+                "kspKotlinLinuxX64",
+            )
         taskNames.forEach {
-            assertThat(
-                buildResult.output
-            ).contains(it)
+            assertThat(buildResult.output).contains(it)
         }
     }
 }

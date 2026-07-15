@@ -25,33 +25,41 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 class JvmNameRecordProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return results
     }
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val sourceRecords = resolver.getSymbolsWithAnnotation("kotlin.jvm.JvmRecord")
-            .filterIsInstance<KSClassDeclaration>()
-            .toSet()
+        val sourceRecords =
+            resolver
+                .getSymbolsWithAnnotation("kotlin.jvm.JvmRecord")
+                .filterIsInstance<KSClassDeclaration>()
+                .toSet()
         // LibRecord: library classes are not returned by getSymbolsWithAnnotation.
         // TypeAliased: PSI does not resolve typealias annotations in getSymbolsWithAnnotation,
-        //   so it is looked up directly. Deduplication handles the AA case where it appears in both.
-        val extraRecords = listOfNotNull(
-            resolver.getClassDeclarationByName("LibRecord"),
-            resolver.getClassDeclarationByName("TypeAliased"),
-        ).filter { it !in sourceRecords }
+        //   so it is looked up directly. Deduplication handles the AA case where it appears in
+        // both.
+        val extraRecords =
+            listOfNotNull(
+                    resolver.getClassDeclarationByName("LibRecord"),
+                    resolver.getClassDeclarationByName("TypeAliased"),
+                )
+                .filter { it !in sourceRecords }
         (sourceRecords + extraRecords)
             .flatMap { cls ->
                 cls.getAllProperties().map { property ->
-                    val accessorNames = listOfNotNull(
-                        property.getter?.let { resolver.getJvmName(it) },
-                        property.setter?.let { setter ->
-                            val setterName = resolver.getJvmName(setter)
-                            val parameterName = setter.parameter.name?.asString()
-                            if (parameterName != null) "$setterName($parameterName)" else setterName
-                        },
-                    )
+                    val accessorNames =
+                        listOfNotNull(
+                            property.getter?.let { resolver.getJvmName(it) },
+                            property.setter?.let { setter ->
+                                val setterName = resolver.getJvmName(setter)
+                                val parameterName = setter.parameter.name?.asString()
+                                if (parameterName != null) "$setterName($parameterName)"
+                                else setterName
+                            },
+                        )
                     "${cls.simpleName.asString()}.${property.simpleName.asString()}: ${accessorNames.joinToString()}"
                 }
             }

@@ -29,9 +29,8 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Execution(ExecutionMode.SAME_THREAD)
-abstract class KSPUnitTestSuite(
-    experimentalPsiResolution: Boolean
-) : AbstractKSPAATest(experimentalPsiResolution) {
+abstract class KSPUnitTestSuite(experimentalPsiResolution: Boolean) :
+    AbstractKSPAATest(experimentalPsiResolution) {
 
     companion object {
         internal const val AA_PATH: String = "../kotlin-analysis-api/testData"
@@ -77,7 +76,9 @@ abstract class KSPUnitTestSuite(
     }
 
     @Bug("https://github.com/google/ksp/issues/2912", BugState.OPEN)
-    @Negative("KEEP-402 specifies that the :all meta-target cannot be applied to annotation groups.")
+    @Negative(
+        "KEEP-402 specifies that the :all meta-target cannot be applied to annotation groups."
+    )
     abstract fun testAllUseSiteTargetAppliedToAnnotationList()
 
     @TestMetadata("annotationsInDependencies.kt")
@@ -246,7 +247,7 @@ abstract class KSPUnitTestSuite(
     @Bug(
         "https://github.com/google/ksp/issues/2472",
         BugState.OPEN,
-        "KEEP 367: Context parameters are stable in Kotlin 2.4.0"
+        "KEEP 367: Context parameters are stable in Kotlin 2.4.0",
     )
     abstract fun testContextParameters()
 
@@ -326,14 +327,16 @@ abstract class KSPUnitTestSuite(
     @Bug(
         "https://github.com/google/ksp/issues/2873",
         BugState.OPEN,
-        "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
+        "KEEP 430: Explicit backing fields added in Kotlin 2.4.0",
     )
     abstract fun testExplicitBackingFields()
 
     @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2913", BugState.FIXED)
-    @Negative("Constructor params not declared with val do not have generated properties or backing fields.")
+    @Negative(
+        "Constructor params not declared with val do not have generated properties or backing fields."
+    )
     fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
         runTest(
             "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
@@ -553,7 +556,7 @@ abstract class KSPUnitTestSuite(
     @Bug(
         "https://github.com/google/ksp/issues/2964",
         BugState.FIXED,
-        "Module names have been aligned across platforms in Kotlin 2.4.0. See KT-69701."
+        "Module names have been aligned across platforms in Kotlin 2.4.0. See KT-69701.",
     )
     fun testMangledNames() {
         runTest("$AA_PATH/mangledNames.kt")

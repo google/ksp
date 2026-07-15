@@ -32,28 +32,32 @@ open class BuiltInTypesProcessor : AbstractTestProcessor() {
             it.accept(typeCollector, types)
         }
 
-        val builtInTypes = listOf(
-            resolver.builtIns.annotationType,
-            resolver.builtIns.anyType,
-            resolver.builtIns.arrayType,
-            resolver.builtIns.booleanType,
-            resolver.builtIns.byteType,
-            resolver.builtIns.charType,
-            resolver.builtIns.doubleType,
-            resolver.builtIns.floatType,
-            resolver.builtIns.intType,
-            resolver.builtIns.iterableType,
-            resolver.builtIns.longType,
-            resolver.builtIns.nothingType,
-            resolver.builtIns.numberType,
-            resolver.builtIns.shortType,
-            resolver.builtIns.stringType,
-            resolver.builtIns.unitType
-        ).sortedBy { it.toString() }
+        val builtInTypes =
+            listOf(
+                    resolver.builtIns.annotationType,
+                    resolver.builtIns.anyType,
+                    resolver.builtIns.arrayType,
+                    resolver.builtIns.booleanType,
+                    resolver.builtIns.byteType,
+                    resolver.builtIns.charType,
+                    resolver.builtIns.doubleType,
+                    resolver.builtIns.floatType,
+                    resolver.builtIns.intType,
+                    resolver.builtIns.iterableType,
+                    resolver.builtIns.longType,
+                    resolver.builtIns.nothingType,
+                    resolver.builtIns.numberType,
+                    resolver.builtIns.shortType,
+                    resolver.builtIns.stringType,
+                    resolver.builtIns.unitType,
+                )
+                .sortedBy { it.toString() }
 
         val collectedTypes = types.sortedBy { it.toString() }
 
-        results.addAll(builtInTypes.zip(collectedTypes).map { (b, c) -> "$b: " + if (b == c) "OK" else "FAIL" })
+        results.addAll(
+            builtInTypes.zip(collectedTypes).map { (b, c) -> "$b: " + if (b == c) "OK" else "FAIL" }
+        )
         return emptyList()
     }
 

@@ -32,9 +32,13 @@ class SealedClassProcessor : AbstractTestProcessor() {
         result.add("from lib")
         resolver.getClassDeclarationByName("lib.Expr")!!.let {
             result.add(
-                it.getSealedSubclasses().map { sub ->
-                    "${sub.simpleName.asString()}: ${sub.origin}"
-                }.toList().sorted().toString()
+                it.getSealedSubclasses()
+                    .map { sub ->
+                        "${sub.simpleName.asString()}: ${sub.origin}"
+                    }
+                    .toList()
+                    .sorted()
+                    .toString()
             )
         }
 
@@ -42,9 +46,13 @@ class SealedClassProcessor : AbstractTestProcessor() {
         resolver.getNewFiles().forEach { f ->
             f.declarations.forEach {
                 if (it is KSClassDeclaration) {
-                    val subs = it.getSealedSubclasses().map { sub ->
-                        "${sub.simpleName.asString()}: ${sub.origin}"
-                    }.toList().sorted()
+                    val subs =
+                        it.getSealedSubclasses()
+                            .map { sub ->
+                                "${sub.simpleName.asString()}: ${sub.origin}"
+                            }
+                            .toList()
+                            .sorted()
                     result.add("${it.simpleName.asString()} : $subs")
                 }
             }

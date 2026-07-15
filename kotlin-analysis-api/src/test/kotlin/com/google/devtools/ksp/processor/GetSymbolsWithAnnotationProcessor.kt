@@ -5,7 +5,8 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 
-class GetSymbolsWithAnnotationProcessor(val annotationNames: List<String>) : AbstractTestProcessor() {
+class GetSymbolsWithAnnotationProcessor(val annotationNames: List<String>) :
+    AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {

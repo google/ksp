@@ -11,7 +11,7 @@ annotation class KotlinAnnotationWithInnerDefaults(
 ) {
     annotation class InnerAnnotation(
         val innerAnnotationDefault: Int,
-        val moreInnerAnnotation: MoreInnerAnnotation = MoreInnerAnnotation("OK")
+        val moreInnerAnnotation: MoreInnerAnnotation = MoreInnerAnnotation("OK"),
     ) {
         annotation class MoreInnerAnnotation(val moreInnerAnnotationDefault: String)
     }
@@ -27,8 +27,9 @@ class GetAnnotationByTypeProcessor : AbstractTestProcessor() {
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val decl = resolver.getAllFiles().single().declarations
-            .single { it.simpleName.asString() == "A" } as KSClassDeclaration
+        val decl =
+            resolver.getAllFiles().single().declarations.single { it.simpleName.asString() == "A" }
+                as KSClassDeclaration
         val anno = decl.getAnnotationsByType(annotationKClass).first()
         results.add(anno.innerAnnotationVal.toString())
         return emptyList()

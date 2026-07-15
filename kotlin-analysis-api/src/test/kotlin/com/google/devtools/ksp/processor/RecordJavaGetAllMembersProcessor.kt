@@ -33,23 +33,28 @@ class RecordJavaGetAllMembersProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().forEach {
             if (it.fileName == "A.kt") {
-                val c = it.declarations.single {
-                    it is KSClassDeclaration && it.simpleName.asString() == "A"
-                } as KSClassDeclaration
+                val c =
+                    it.declarations.single {
+                        it is KSClassDeclaration && it.simpleName.asString() == "A"
+                    } as KSClassDeclaration
                 c.getAllFunctions()
                 c.getAllProperties()
             }
         }
 
-        val m = when (resolver) {
-            is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
-            else -> throw IllegalStateException("Unknown Resolver: $resolver")
-        }
-        m.forEach { symbol, files ->
-            files.filter { it.endsWith(".java") }.sorted().forEach {
-                val fn = it.substringAfterLast("java-sources/")
-                results.add("$symbol: $fn")
+        val m =
+            when (resolver) {
+                is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
+                else -> throw IllegalStateException("Unknown Resolver: $resolver")
             }
+        m.forEach { symbol, files ->
+            files
+                .filter { it.endsWith(".java") }
+                .sorted()
+                .forEach {
+                    val fn = it.substringAfterLast("java-sources/")
+                    results.add("$symbol: $fn")
+                }
         }
         return emptyList()
     }

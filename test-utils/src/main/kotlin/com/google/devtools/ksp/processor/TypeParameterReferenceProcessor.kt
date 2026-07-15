@@ -34,26 +34,36 @@ open class TypeParameterReferenceProcessor : AbstractTestProcessor() {
             it.accept(collector, references)
         }
 
-        val sortedReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN }
-            .sortedBy { (it.element as KSClassifierReference).referencedName() }
+        val sortedReferences =
+            references
+                .filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN }
+                .sortedBy { (it.element as KSClassifierReference).referencedName() }
 
         for (i in sortedReferences) {
             val r = i.resolve()
             results.add("${r.declaration.qualifiedName?.asString()}: ${r.isMarkedNullable}")
         }
         val libFoo = resolver.getClassDeclarationByName("LibFoo")!!
-        libFoo.declarations.filterIsInstance<KSPropertyDeclaration>().forEach { results.add(it.type.toString()) }
-        val javaLib = resolver.getClassDeclarationByName("JavaLib")!!
-        javaLib.declarations.filterIsInstance<KSFunctionDeclaration>().forEach { results.add(it.returnType.toString()) }
-        val srj = resolver.getClassDeclarationByName("SelfReferencingJava")!!
-        srj.asStarProjectedType().declaration.typeParameters.single().bounds
-            .forEach { results.add(it.resolve().toString()) }
-        val boundedTypeParameter = resolver.getClassDeclarationByName("BoundedTypeParameter")!!
-        boundedTypeParameter.getDeclaredFunctions().filter { it.origin == Origin.JAVA }.forEach {
-            (it.returnType!!.resolve().declaration as KSTypeParameter).bounds.forEach {
-                results.add(it.resolve().toString())
-            }
+        libFoo.declarations.filterIsInstance<KSPropertyDeclaration>().forEach {
+            results.add(it.type.toString())
         }
+        val javaLib = resolver.getClassDeclarationByName("JavaLib")!!
+        javaLib.declarations.filterIsInstance<KSFunctionDeclaration>().forEach {
+            results.add(it.returnType.toString())
+        }
+        val srj = resolver.getClassDeclarationByName("SelfReferencingJava")!!
+        srj.asStarProjectedType().declaration.typeParameters.single().bounds.forEach {
+            results.add(it.resolve().toString())
+        }
+        val boundedTypeParameter = resolver.getClassDeclarationByName("BoundedTypeParameter")!!
+        boundedTypeParameter
+            .getDeclaredFunctions()
+            .filter { it.origin == Origin.JAVA }
+            .forEach {
+                (it.returnType!!.resolve().declaration as KSTypeParameter).bounds.forEach {
+                    results.add(it.resolve().toString())
+                }
+            }
         return emptyList()
     }
 

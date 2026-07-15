@@ -56,17 +56,23 @@ class LibOriginsProcessor : AbstractTestProcessor() {
         val visitor = MyCollector()
 
         // FIXME: workaround for https://github.com/google/ksp/issues/418
-        resolver.getDeclarationsFromPackage("foo.bar").sortedBy { it.simpleName.asString() }.forEach {
-            if (it.containingFile == null || it.containingFile.toString().endsWith(".class")) {
+        resolver
+            .getDeclarationsFromPackage("foo.bar")
+            .sortedBy { it.simpleName.asString() }
+            .forEach {
+                if (it.containingFile == null || it.containingFile.toString().endsWith(".class")) {
+                    result.add("Validating $it")
+                    it.accept(visitor, it.origin)
+                }
+            }
+
+        resolver
+            .getNewFiles()
+            .sortedBy { it.fileName }
+            .forEach {
                 result.add("Validating $it")
                 it.accept(visitor, it.origin)
             }
-        }
-
-        resolver.getNewFiles().sortedBy { it.fileName }.forEach {
-            result.add("Validating $it")
-            it.accept(visitor, it.origin)
-        }
 
         return emptyList()
     }

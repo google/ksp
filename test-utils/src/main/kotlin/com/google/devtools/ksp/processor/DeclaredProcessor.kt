@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class DeclaredProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result
     }

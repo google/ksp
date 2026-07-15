@@ -6,6 +6,7 @@ import com.google.devtools.ksp.visitor.KSEmptyVisitor
 
 class LocalDeclarationProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result
     }
@@ -27,12 +28,18 @@ class LocalDeclarationVisitor : KSEmptyVisitor<MutableList<String>, Unit>() {
         file.declarations.forEach { it.accept(this, data) }
     }
 
-    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableList<String>) {
+    override fun visitClassDeclaration(
+        classDeclaration: KSClassDeclaration,
+        data: MutableList<String>,
+    ) {
         super.visitClassDeclaration(classDeclaration, data)
         classDeclaration.declarations.forEach { it.accept(this, data) }
     }
 
-    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: MutableList<String>) {
+    override fun visitFunctionDeclaration(
+        function: KSFunctionDeclaration,
+        data: MutableList<String>,
+    ) {
         super.visitFunctionDeclaration(function, data)
         function.declarations.forEach { it.accept(this, data) }
     }
@@ -45,7 +52,10 @@ class LocalDeclarationVisitor : KSEmptyVisitor<MutableList<String>, Unit>() {
         setter.declarations.forEach { it.accept(this, data) }
     }
 
-    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: MutableList<String>) {
+    override fun visitPropertyDeclaration(
+        property: KSPropertyDeclaration,
+        data: MutableList<String>,
+    ) {
         super.visitPropertyDeclaration(property, data)
         property.getter?.accept(this, data)
         property.setter?.accept(this, data)

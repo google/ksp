@@ -40,7 +40,8 @@ class JavaModifierProcessor : AbstractTestProcessor() {
             }
         }
 
-        resolver.getSymbolsWithAnnotation("Test")
+        resolver
+            .getSymbolsWithAnnotation("Test")
             .map {
                 it as KSClassDeclaration
             }
@@ -48,7 +49,8 @@ class JavaModifierProcessor : AbstractTestProcessor() {
                 it.superTypes.single().resolve().declaration.accept(ModifierVisitor(resolver), Unit)
             }
 
-        resolver.getClassDeclarationByName("HasTypeAliasFuns")!!.getDeclaredFunctions().forEach { f ->
+        resolver.getClassDeclarationByName("HasTypeAliasFuns")!!.getDeclaredFunctions().forEach { f
+            ->
             val decl = f.returnType!!.resolve().declaration
             val declName = decl.simpleName.asString()
             val visibility = decl.getVisibility().toString()
@@ -60,8 +62,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
     }
 
     inner class ModifierVisitor(val resolver: Resolver) : KSTopDownVisitor<Unit, Unit>() {
-        override fun defaultHandler(node: KSNode, data: Unit) {
-        }
+        override fun defaultHandler(node: KSNode, data: Unit) {}
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             results.add(classDeclaration.toSignature())
@@ -81,10 +82,17 @@ class JavaModifierProcessor : AbstractTestProcessor() {
 
         @OptIn(KspExperimental::class)
         private fun KSDeclaration.toSignature(): String {
-            val id = qualifiedName?.asString()
-                ?: "${parentDeclaration?.qualifiedName?.asString()}.${simpleName.asString()}"
+            val id =
+                qualifiedName?.asString()
+                    ?: "${parentDeclaration?.qualifiedName?.asString()}.${simpleName.asString()}"
             val modifiersSignature = modifiers.map { it.toString() }.sorted().joinToString(" ")
-            val extras = resolver.effectiveJavaModifiers(this).map { it.toString() }.sorted().joinToString(" ").trim()
+            val extras =
+                resolver
+                    .effectiveJavaModifiers(this)
+                    .map { it.toString() }
+                    .sorted()
+                    .joinToString(" ")
+                    .trim()
             return "$id: $modifiersSignature".trim() + " : " + extras
         }
     }

@@ -37,15 +37,19 @@ class RecordJavaProcessor : AbstractTestProcessor() {
                 it.validate()
             }
         }
-        val m = when (resolver) {
-            is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
-            else -> throw IllegalStateException("Unknown Resolver: $resolver")
-        }
-        m.forEach { symbol, files ->
-            files.filter { it.endsWith(".java") }.sorted().forEach {
-                val fn = it.substringAfterLast("java-sources/")
-                results.add("$symbol: $fn")
+        val m =
+            when (resolver) {
+                is ResolverAAImpl -> resolver.incrementalContext.dumpLookupRecords().toSortedMap()
+                else -> throw IllegalStateException("Unknown Resolver: $resolver")
             }
+        m.forEach { symbol, files ->
+            files
+                .filter { it.endsWith(".java") }
+                .sorted()
+                .forEach {
+                    val fn = it.substringAfterLast("java-sources/")
+                    results.add("$symbol: $fn")
+                }
         }
         return emptyList()
     }

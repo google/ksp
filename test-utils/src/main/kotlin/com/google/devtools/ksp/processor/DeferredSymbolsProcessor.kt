@@ -8,11 +8,13 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class DeferredSymbolsProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result.sorted()
     }
 
     var round = 0
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val deferred = mutableListOf<KSAnnotated>()
 

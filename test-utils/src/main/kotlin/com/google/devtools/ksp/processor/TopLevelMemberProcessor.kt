@@ -31,37 +31,45 @@ open class TopLevelMemberProcessor : AbstractTestProcessor() {
     lateinit var results: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        results = listOf("lib", "main").flatMap { pkg ->
-            resolver.getDeclarationsFromPackage(pkg)
-                .flatMap { declaration ->
-                    val declarations = mutableListOf<KSDeclaration>()
-                    declaration.accept(AllMembersVisitor(), declarations)
-                    declarations
-                }.map {
-                    "$pkg : ${it.simpleName.asString()} -> ${resolver.getSyntheticJvmClass(it)}"
-                }.sorted()
-        }
+        results =
+            listOf("lib", "main").flatMap { pkg ->
+                resolver
+                    .getDeclarationsFromPackage(pkg)
+                    .flatMap { declaration ->
+                        val declarations = mutableListOf<KSDeclaration>()
+                        declaration.accept(AllMembersVisitor(), declarations)
+                        declarations
+                    }
+                    .map {
+                        "$pkg : ${it.simpleName.asString()} -> ${resolver.getSyntheticJvmClass(it)}"
+                    }
+                    .sorted()
+            }
         return emptyList()
     }
 
-    private fun Resolver.getSyntheticJvmClass(
-        declaration: KSDeclaration
-    ) = when (declaration) {
-        is KSPropertyDeclaration -> this.getOwnerJvmClassName(declaration)
-        is KSFunctionDeclaration -> this.getOwnerJvmClassName(declaration)
-        else -> error("unexpected declaration $declaration")
-    }
-
-    private class AllMembersVisitor : KSTopDownVisitor<MutableList<KSDeclaration>, Unit>() {
-        override fun defaultHandler(node: KSNode, data: MutableList<KSDeclaration>) {
+    private fun Resolver.getSyntheticJvmClass(declaration: KSDeclaration) =
+        when (declaration) {
+            is KSPropertyDeclaration -> this.getOwnerJvmClassName(declaration)
+            is KSFunctionDeclaration -> this.getOwnerJvmClassName(declaration)
+            else -> error("unexpected declaration $declaration")
         }
 
-        override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: MutableList<KSDeclaration>) {
+    private class AllMembersVisitor : KSTopDownVisitor<MutableList<KSDeclaration>, Unit>() {
+        override fun defaultHandler(node: KSNode, data: MutableList<KSDeclaration>) {}
+
+        override fun visitPropertyDeclaration(
+            property: KSPropertyDeclaration,
+            data: MutableList<KSDeclaration>,
+        ) {
             data.add(property)
             super.visitPropertyDeclaration(property, data)
         }
 
-        override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: MutableList<KSDeclaration>) {
+        override fun visitFunctionDeclaration(
+            function: KSFunctionDeclaration,
+            data: MutableList<KSDeclaration>,
+        ) {
             data.add(function)
             super.visitFunctionDeclaration(function, data)
         }

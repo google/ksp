@@ -7,6 +7,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class JvmNameProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return results
     }
@@ -16,10 +17,13 @@ class JvmNameProcessor : AbstractTestProcessor() {
         listOf("TestDataClass", "TestLibDataClass").forEach { clsName ->
             resolver.getClassDeclarationByName(clsName)?.let { cls ->
                 results.add(
-                    cls.getAllProperties().map {
-                        "(${it.getter?.let { resolver.getJvmName(it) }}, " +
-                            "${it.setter?.let { resolver.getJvmName(it) }})"
-                    }.toList().joinToString()
+                    cls.getAllProperties()
+                        .map {
+                            "(${it.getter?.let { resolver.getJvmName(it) }}, " +
+                                "${it.setter?.let { resolver.getJvmName(it) }})"
+                        }
+                        .toList()
+                        .joinToString()
                 )
             }
         }

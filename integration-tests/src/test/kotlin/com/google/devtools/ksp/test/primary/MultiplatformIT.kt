@@ -2,6 +2,8 @@ package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
+import java.io.File
+import java.util.jar.*
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
@@ -10,22 +12,19 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
-import java.util.jar.*
 
 @RunWith(Parameterized::class)
 class MultiplatformIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground-mpp",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "playground-mpp",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -35,7 +34,9 @@ class MultiplatformIT(experimentalPsiResolution: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild =
-            gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
+            gradleRunner
+                .withArguments("--configuration-cache-problems=warn", "clean", "build")
+                .build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
@@ -60,15 +61,18 @@ class MultiplatformIT(experimentalPsiResolution: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         val resultCleanBuild =
-            gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
+            gradleRunner
+                .withArguments("--configuration-cache-problems=warn", "clean", "build")
+                .build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
 
-        val classesJar = File(
-            project.root,
-            "workload/build/intermediates/compile_library_classes_jar/androidMain/" +
-                "bundleAndroidMainClassesToCompileJar/classes.jar"
-        )
+        val classesJar =
+            File(
+                project.root,
+                "workload/build/intermediates/compile_library_classes_jar/androidMain/" +
+                    "bundleAndroidMainClassesToCompileJar/classes.jar",
+            )
         Assert.assertTrue(classesJar.exists())
 
         JarFile(classesJar).use { jarFile ->

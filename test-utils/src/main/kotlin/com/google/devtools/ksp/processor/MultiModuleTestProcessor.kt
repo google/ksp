@@ -23,6 +23,7 @@ import com.google.devtools.ksp.symbol.*
 
 class MultiModuleTestProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return results
     }
@@ -30,17 +31,21 @@ class MultiModuleTestProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
-        val classCollector = object : BaseVisitor() {
-            override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-                if (classes.add(classDeclaration)) {
-                    super.visitClassDeclaration(classDeclaration, data)
+        val classCollector =
+            object : BaseVisitor() {
+                override fun visitClassDeclaration(
+                    classDeclaration: KSClassDeclaration,
+                    data: Unit,
+                ) {
+                    if (classes.add(classDeclaration)) {
+                        super.visitClassDeclaration(classDeclaration, data)
+                    }
+                }
+
+                override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+                    (property.type.resolve().declaration as? KSClassDeclaration)?.accept(this, Unit)
                 }
             }
-
-            override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
-                (property.type.resolve().declaration as? KSClassDeclaration)?.accept(this, Unit)
-            }
-        }
         target?.accept(classCollector, Unit)
         results.addAll(classes.map { it.toSignature() }.sorted())
         return emptyList()

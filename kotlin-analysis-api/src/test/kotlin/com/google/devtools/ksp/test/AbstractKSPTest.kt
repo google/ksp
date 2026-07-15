@@ -23,6 +23,9 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.TestDataFile
+import java.awt.EventQueue
+import java.io.File
+import java.util.concurrent.ConcurrentLinkedQueue
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformDirectives
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformProviderForAnalysisApiTests
 import org.jetbrains.kotlin.cli.common.disposeRootInWriteAction
@@ -56,13 +59,11 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInfo
-import java.awt.EventQueue
-import java.io.File
-import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class DisposableTest {
     private var _disposable: Disposable? = null
-    protected val disposable: Disposable get() = _disposable!!
+    protected val disposable: Disposable
+        get() = _disposable!!
 
     @BeforeEach
     fun initDisposable(testInfo: TestInfo) {
@@ -90,24 +91,43 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         // Set system properties for runtime jars needed for Kotlin.
         // See https://github.com/JetBrains/kotlin/commit/ad4cd812a64fa7c8241424abaf3998aa3b7f6b60
         // Keep in sync with Gradle build configurations `libsForTesting` and `libsForTestingCommon`
-        System.setProperty(TestCompilePaths.KOTLIN_FULL_STDLIB_PATH, "dist/kotlinc/lib/kotlin-stdlib.jar")
-        System.setProperty(TestCompilePaths.KOTLIN_COMMON_STDLIB_PATH, "dist/common/lib/kotlin-stdlib.jar")
-        System.setProperty(TestCompilePaths.KOTLIN_TEST_JAR_PATH, "dist/kotlinc/lib/kotlin-test.jar")
-        System.setProperty(TestCompilePaths.KOTLIN_SCRIPT_RUNTIME_PATH, "dist/kotlinc/lib/kotlin-script-runtime.jar")
+        System.setProperty(
+            TestCompilePaths.KOTLIN_FULL_STDLIB_PATH,
+            "dist/kotlinc/lib/kotlin-stdlib.jar",
+        )
+        System.setProperty(
+            TestCompilePaths.KOTLIN_COMMON_STDLIB_PATH,
+            "dist/common/lib/kotlin-stdlib.jar",
+        )
+        System.setProperty(
+            TestCompilePaths.KOTLIN_TEST_JAR_PATH,
+            "dist/kotlinc/lib/kotlin-test.jar",
+        )
+        System.setProperty(
+            TestCompilePaths.KOTLIN_SCRIPT_RUNTIME_PATH,
+            "dist/kotlinc/lib/kotlin-script-runtime.jar",
+        )
         System.setProperty(
             TestCompilePaths.KOTLIN_MOCKJDK_ANNOTATIONS_PATH,
-            "third-party/mockJDKs/mockJDK/jre/lib/annotations.jar"
+            "third-party/mockJDKs/mockJDK/jre/lib/annotations.jar",
         )
     }
 
-    val kspTestRoot = KtTestUtil.tmpDir("com/google/devtools/ksp/test/testgoogle/devtools/ksp/test/test")
+    val kspTestRoot =
+        KtTestUtil.tmpDir("com/google/devtools/ksp/test/testgoogle/devtools/ksp/test/test")
+
     fun rootDirForModule(name: String) = File(kspTestRoot, name)
+
     fun outDirForModule(name: String) = File(rootDirForModule(name), "out")
+
     fun javaDirForModule(name: String) = File(rootDirForModule(name), "javaSrc")
+
     val TestModule.testRoot: File
         get() = rootDirForModule(name)
+
     val TestModule.outDir: File
         get() = outDirForModule(name)
+
     val TestModule.javaDir: File
         get() = javaDirForModule(name)
 
@@ -116,11 +136,12 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 
     @BeforeEach
     fun initTestInfo(testInfo: TestInfo) {
-        this.testInfo = KotlinTestInfo(
-            className = testInfo.testClass.orElseGet(null)?.name ?: "_undefined_",
-            methodName = testInfo.testMethod.orElseGet(null)?.name ?: "_testUndefined_",
-            tags = testInfo.tags
-        )
+        this.testInfo =
+            KotlinTestInfo(
+                className = testInfo.testClass.orElseGet(null)?.name ?: "_undefined_",
+                methodName = testInfo.testMethod.orElseGet(null)?.name ?: "_testUndefined_",
+                tags = testInfo.tags,
+            )
     }
 
     open fun configureTest(builder: TestConfigurationBuilder) = Unit
@@ -146,8 +167,12 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         )
         assertions = JUnit5Assertions
         useAdditionalService<TemporaryDirectoryManager>(::TemporaryDirectoryManagerImpl)
-        useAdditionalService<ApplicationDisposableProvider> { ExecutionListenerBasedDisposableProvider() }
-        useAdditionalService<KotlinStandardLibrariesPathProvider> { StandardLibrariesPathProviderForKotlinProject }
+        useAdditionalService<ApplicationDisposableProvider> {
+            ExecutionListenerBasedDisposableProvider()
+        }
+        useAdditionalService<KotlinStandardLibrariesPathProvider> {
+            StandardLibrariesPathProviderForKotlinProject
+        }
         useAdditionalService<TargetPlatformProvider>(::TargetPlatformProviderForAnalysisApiTests)
 
         useDirectives(*AbstractKotlinCompilerTest.defaultDirectiveContainers.toTypedArray())
@@ -167,9 +192,11 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     }
 
     fun TestModule.loadKtFiles(project: Project): List<KtFile> {
-        return files.filter { it.isKtFile }.map {
-            KtTestUtil.createFile(it.name, it.originalContent, project)
-        }
+        return files
+            .filter { it.isKtFile }
+            .map {
+                KtTestUtil.createFile(it.name, it.originalContent, project)
+            }
     }
 
     fun TestModule.writeJavaFiles(): List<File> {
@@ -184,16 +211,18 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 
     // No, this is far from complete. It only works for our test cases.
     //
-    // No, neither CompiledLibraryProvider nor LibraryEnvironmentConfigurator can be used. They rely on
+    // No, neither CompiledLibraryProvider nor LibraryEnvironmentConfigurator can be used. They rely
+    // on
     // dist/kotlinc/lib/*
     //
     // No, sourceFileProvider doesn't group files by module unfortunately. Let's do it by ourselves.
     open fun compileModule(module: TestModule, testServices: TestServices) {
         val javaFiles = module.writeJavaFiles()
-        val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
-            module,
-            CompilationStage.FIRST
-        )
+        val compilerConfiguration =
+            testServices.compilerConfigurationProvider.getCompilerConfiguration(
+                module,
+                CompilationStage.FIRST,
+            )
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
         compilerConfiguration.addJvmClasspathRoots(dependencies)
         compilerConfiguration.addJavaSourceRoot(module.javaDir)
@@ -203,46 +232,50 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         val project = configurationProvider.getProject(module)
         val ktFiles = module.loadKtFiles(project)
         GenerationUtils.compileFiles(
-            ktFiles,
-            compilerConfiguration,
-            ClassBuilderFactories.TEST,
-            configurationProvider.getPackagePartProviderFactory(module)
-        ).factory.apply {
-            writeAllTo(module.outDir)
-        }
+                ktFiles,
+                compilerConfiguration,
+                ClassBuilderFactories.TEST,
+                configurationProvider.getPackagePartProviderFactory(module),
+            )
+            .factory
+            .apply {
+                writeAllTo(module.outDir)
+            }
 
-        if (module.javaFiles.isEmpty())
-            return
+        if (module.javaFiles.isEmpty()) return
 
-        val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
-            .joinToString(File.pathSeparator) { it.absolutePath }
-        val options = listOf(
-            "-classpath", classpath,
-            "-d", module.outDir.path
-        )
+        val classpath =
+            (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir).joinToString(
+                File.pathSeparator
+            ) {
+                it.absolutePath
+            }
+        val options =
+            listOf(
+                "-classpath",
+                classpath,
+                "-d",
+                module.outDir.path,
+            )
         compileJavaFiles(javaFiles, options)
     }
 
-    /**
-     * Runs a positive test, asserting the actual output matches the expected output.
-     */
+    /** Runs a positive test, asserting the actual output matches the expected output. */
     fun runTest(@TestDataFile path: String) {
         val (expected, actual) = loadTest(path)
         Assertions.assertEquals(expected, collectAllExceptions { actual() })
     }
 
-    /**
-     * Runs a negative test, asserting the actual output does not match the expected output.
-     */
+    /** Runs a negative test, asserting the actual output does not match the expected output. */
     fun runFailingTest(@TestDataFile path: String) {
         val (expected, actual) = loadTest(path)
         Assertions.assertNotEquals(expected, collectAllExceptions { actual() })
     }
 
     /**
-     * Runs a negative test, asserting that the implementation throws an [InternalKSPException].
-     * The test fails if that particular exception is not thrown, e.g., by not throwing at all
-     * or by throwing a different exception.
+     * Runs a negative test, asserting that the implementation throws an [InternalKSPException]. The
+     * test fails if that particular exception is not thrown, e.g., by not throwing at all or by
+     * throwing a different exception.
      */
     fun runThrowingTest(@TestDataFile path: String) {
         val (_, run) = loadTest(path)
@@ -257,18 +290,19 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     /**
      * Loads the located at test at [path].
      *
-     * @return a [Pair] containing the expected results in the first entry
-     * and in the second entry a lambda that runs the test and returns the actual results.
-     * The expected results can be directly compared with the results of the lambda in the second entry.
+     * @return a [Pair] containing the expected results in the first entry and in the second entry a
+     *   lambda that runs the test and returns the actual results. The expected results can be
+     *   directly compared with the results of the lambda in the second entry.
      */
     private fun loadTest(@TestDataFile path: String): Pair<String, () -> String> {
         val testConfiguration = testConfiguration(path, configure)
         Disposer.register(disposable, testConfiguration.rootDisposable)
         val testServices = testConfiguration.testServices
-        val moduleStructure = testConfiguration.moduleStructureExtractor.splitTestDataByModules(
-            path,
-            testConfiguration.directives,
-        )
+        val moduleStructure =
+            testConfiguration.moduleStructureExtractor.splitTestDataByModules(
+                path,
+                testConfiguration.directives,
+            )
         testServices.registerArtifactsProvider(ArtifactsProvider())
         testServices.register(TestModuleStructure::class, moduleStructure)
 
@@ -278,33 +312,34 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         for (lib in libModules) {
             compileModule(lib, testServices)
         }
-        val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
-            mainModule,
-            CompilationStage.FIRST
-        )
+        val compilerConfigurationMain =
+            testServices.compilerConfigurationProvider.getCompilerConfiguration(
+                mainModule,
+                CompilationStage.FIRST,
+            )
         compilerConfigurationMain.addJvmClasspathRoots(libModules.map { it.outDir })
 
         val fileContents = mainModule.files.first().originalFile.readLines()
 
-        val testProcessorName = fileContents
-            .single { it.startsWith(TEST_PROCESSOR) }
-            .substringAfter(TEST_PROCESSOR)
-            .trim()
+        val testProcessorName =
+            fileContents
+                .single { it.startsWith(TEST_PROCESSOR) }
+                .substringAfter(TEST_PROCESSOR)
+                .trim()
 
-        val testAnnotationNames = fileContents
-            .find { it.startsWith(PROCESSOR_INPUT) }
-            ?.substringAfter(PROCESSOR_INPUT)
-            ?.split(',')
-            ?.map { it.trim() }
+        val testAnnotationNames =
+            fileContents
+                .find { it.startsWith(PROCESSOR_INPUT) }
+                ?.substringAfter(PROCESSOR_INPUT)
+                ?.split(',')
+                ?.map { it.trim() }
 
         val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
 
         val testProcessor: AbstractTestProcessor =
             if (testAnnotationNames == null) {
                 // Instantiate processor class without constructor params
-                processorClass
-                    .getDeclaredConstructor()
-                    .newInstance() as AbstractTestProcessor
+                processorClass.getDeclaredConstructor().newInstance() as AbstractTestProcessor
             } else {
                 // Instantiate parameterized processor class
                 processorClass
@@ -312,22 +347,24 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
                     .newInstance(testAnnotationNames) as AbstractTestProcessor
             }
 
-        val expected = fileContents
-            .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
-            .drop(1)
-            .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
-            .joinToString("\n") {
-                // Remove '// ' prefix
-                it.substring(3).trim()
-            }
+        val expected =
+            fileContents
+                .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
+                .drop(1)
+                .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
+                .joinToString("\n") {
+                    // Remove '// ' prefix
+                    it.substring(3).trim()
+                }
 
         val actual = {
             runTest(
-                testServices,
-                mainModule,
-                libModules,
-                testProcessor
-            ).joinToString("\n")
+                    testServices,
+                    mainModule,
+                    libModules,
+                    testProcessor,
+                )
+                .joinToString("\n")
         }
 
         return Pair(expected, actual)
@@ -335,13 +372,12 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 }
 
 /**
- * Collects exception from all threads when running `block`.
- * Throws an [Exception] if any exception occurred.
+ * Collects exception from all threads when running `block`. Throws an [Exception] if any exception
+ * occurred.
  *
- * Note that function is not a perfect solution as it only catches exceptions
- * that happen during `block`.
- * Some threads may produce exceptions AFTER this function successfully returns,
- * but the purpose of this function is to help catch exceptions sometimes.
+ * Note that function is not a perfect solution as it only catches exceptions that happen during
+ * `block`. Some threads may produce exceptions AFTER this function successfully returns, but the
+ * purpose of this function is to help catch exceptions sometimes.
  */
 internal fun <A> collectAllExceptions(block: () -> A): A {
     val exceptions = ConcurrentLinkedQueue<Throwable>()
@@ -359,7 +395,7 @@ internal fun <A> collectAllExceptions(block: () -> A): A {
     // This helps catch exceptions from AWT/Swing components that might
     // occur asynchronously after the main block has completed.
     try {
-        EventQueue.invokeAndWait { }
+        EventQueue.invokeAndWait {}
     } catch (e: Exception) {
         // If flushing the queue itself causes an error, catch it.
         exceptions.add(e)

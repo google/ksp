@@ -28,12 +28,13 @@ import kotlin.reflect.KClass
 
 class AnnotatedUtilProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    private val annotationKClasses = listOf(
-        ParametersTestAnnotation::class,
-        ParameterArraysTestAnnotation::class,
-        ParametersTestWithNegativeDefaultsAnnotation::class,
-        OuterAnnotation::class
-    )
+    private val annotationKClasses =
+        listOf(
+            ParametersTestAnnotation::class,
+            ParameterArraysTestAnnotation::class,
+            ParametersTestWithNegativeDefaultsAnnotation::class,
+            OuterAnnotation::class,
+        )
     private val visitors = listOf(IsAnnotationPresentVisitor(), GetAnnotationsByTypeVisitor())
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -58,20 +59,20 @@ class AnnotatedUtilProcessor : AbstractTestProcessor() {
             }
         }
 
-        override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {
-        }
+        override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {}
     }
 
     inner class GetAnnotationsByTypeVisitor : KSTopDownVisitor<MutableCollection<String>, Unit>() {
         @OptIn(KspExperimental::class)
         override fun visitAnnotated(annotated: KSAnnotated, data: MutableCollection<String>) {
             annotationKClasses.forEach { clazz ->
-                annotated.getAnnotationsByType(clazz).forEach { data.add("ByType: ${it.asString()}") }
+                annotated.getAnnotationsByType(clazz).forEach {
+                    data.add("ByType: ${it.asString()}")
+                }
             }
         }
 
-        override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {
-        }
+        override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {}
     }
 }
 
@@ -129,16 +130,16 @@ annotation class ParametersTestWithNegativeDefaultsAnnotation(
 )
 
 enum class TestEnum {
-    NONE, VALUE1, VALUE2
+    NONE,
+    VALUE1,
+    VALUE2,
 }
 
 annotation class Test
 
 annotation class InnerAnnotation(val value: String = "default")
 
-annotation class OuterAnnotation(
-    val innerAnnotation: InnerAnnotation = InnerAnnotation(),
-)
+annotation class OuterAnnotation(val innerAnnotation: InnerAnnotation = InnerAnnotation())
 
 fun Annotation.asString(): String {
     return when (this) {

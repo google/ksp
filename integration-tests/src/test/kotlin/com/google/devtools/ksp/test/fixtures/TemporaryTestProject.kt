@@ -1,7 +1,7 @@
 package com.google.devtools.ksp.test.fixtures
 
-import org.junit.rules.TemporaryFolder
 import java.io.File
+import org.junit.rules.TemporaryFolder
 
 class TemporaryTestProject(
     projectName: String,
@@ -23,9 +23,8 @@ class TemporaryTestProject(
         val kotlinVersion = System.getProperty("kotlinVersion")
         val kspVersion = System.getProperty("kspVersion")
         val agpVersion = System.getProperty("agpVersion")
-        val testRepo = System.getProperty("testRepo")
-            .replace(File.separator, "/")
-            .replace(":", "\\:")
+        val testRepo =
+            System.getProperty("testRepo").replace(File.separator, "/").replace(":", "\\:")
         appendProperty("kotlinVersion=$kotlinVersion")
         appendProperty("kspVersion=$kspVersion")
         appendProperty("agpVersion=$agpVersion")
@@ -47,15 +46,15 @@ class TemporaryTestProject(
         appendProperty("kotlin.daemon.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=1024m")
 
         // To debug compiler and compiler plugin:
-        // 1. s/kotlin-compiler/kotlin-compiler-embeddable in integration-tests/build.gradle.kts, and
+        // 1. s/kotlin-compiler/kotlin-compiler-embeddable in integration-tests/build.gradle.kts,
+        // and
         // 2. uncomment below
         // appendProperty("kotlin.compiler.execution.strategy=in-process")
     }
 
     fun restore(file: String) {
         fun copySafe(src: File, dst: File) {
-            if (src.exists())
-                src.copyTo(dst, true)
+            if (src.exists()) src.copyTo(dst, true)
         }
         baseProjectSrc?.let {
             copySafe(File(baseProjectSrc, file), File(root, file))

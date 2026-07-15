@@ -34,11 +34,13 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
         }
 
         fun KSType.aliases(): List<KSType> =
-            listOf(this) + ((this.declaration as? KSTypeAlias)?.type?.resolve()?.aliases() ?: emptyList())
+            listOf(this) +
+                ((this.declaration as? KSTypeAlias)?.type?.resolve()?.aliases() ?: emptyList())
 
         val interesting = setOf("Anno", "Bnno")
         val iRefs = refs.filterNot {
-            it.origin != Origin.KOTLIN || it.annotations.all { it.shortName.asString() !in interesting }
+            it.origin != Origin.KOTLIN ||
+                it.annotations.all { it.shortName.asString() !in interesting }
         }
         val types = iRefs.map { it.resolve() }.flatMap { it.aliases() }
 
@@ -58,7 +60,10 @@ open class TypeAliasComparisonProcessor : AbstractTestProcessor() {
 open class TypeRefCollector : KSTopDownVisitor<MutableCollection<KSTypeReference>, Unit>() {
     override fun defaultHandler(node: KSNode, data: MutableCollection<KSTypeReference>) = Unit
 
-    override fun visitTypeReference(typeReference: KSTypeReference, data: MutableCollection<KSTypeReference>) {
+    override fun visitTypeReference(
+        typeReference: KSTypeReference,
+        data: MutableCollection<KSTypeReference>,
+    ) {
         super.visitTypeReference(typeReference, data)
         data.add(typeReference)
     }

@@ -15,24 +15,25 @@ import org.junit.runners.Parameterized
 class NullabilityAnnotationsIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "nullability-annotations",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "nullability-annotations",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
-    private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
-        buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
+    private fun GradleRunner.buildAndCheck(
+        vararg args: String,
+        extraCheck: (BuildResult) -> Unit = {},
+    ) = buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
 
     private fun GradleRunner.buildAndCheckOutcome(
         vararg args: String,
         outcome: TaskOutcome,
-        extraCheck: (BuildResult) -> Unit = {}
+        extraCheck: (BuildResult) -> Unit = {},
     ) {
         val result = this.withArguments(*args).build()
 
@@ -47,15 +48,29 @@ class NullabilityAnnotationsIT(experimentalPsiResolution: Boolean) {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s0: (String..String?)\n"))
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s0: (String..String?)\n")
+            )
             Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s1: String?\n"))
             Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s2: String\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s3: [@Nullable] String?\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s4: [@NotNull] String\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s5: [@Nullable] String?\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s6: [@NonNull] String\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s7: (String..String?)\n"))
-            Assert.assertTrue(result.output.contains("w: [ksp] [Nullability check] s8: (String..String?)\n"))
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s3: [@Nullable] String?\n")
+            )
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s4: [@NotNull] String\n")
+            )
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s5: [@Nullable] String?\n")
+            )
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s6: [@NonNull] String\n")
+            )
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s7: (String..String?)\n")
+            )
+            Assert.assertTrue(
+                result.output.contains("w: [ksp] [Nullability check] s8: (String..String?)\n")
+            )
         }
     }
 }

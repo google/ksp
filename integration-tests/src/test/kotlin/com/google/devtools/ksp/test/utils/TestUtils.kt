@@ -2,10 +2,7 @@ package com.google.devtools.ksp.test.utils
 
 import java.io.File
 
-/**
- * Pretty print the directory tree and its file names.
- *
- */
+/** Pretty print the directory tree and its file names. */
 fun printDirectoryTree(folder: File): String {
     require(folder.isDirectory) { "folder is not a Directory" }
     val indent = 0
@@ -17,7 +14,7 @@ fun printDirectoryTree(folder: File): String {
 private fun printDirectoryTree(
     folder: File,
     indent: Int,
-    sb: StringBuilder
+    sb: StringBuilder,
 ) {
     require(folder.isDirectory) { "folder is not a Directory" }
     sb.append(getIndentString(indent))

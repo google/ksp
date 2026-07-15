@@ -20,9 +20,11 @@ class AnnotationOnReceiverProcessor : AbstractTestProcessor() {
                     method.extensionReceiver.let { receiver ->
                         if (receiver != null) {
                             results.add(
-                                receiver.annotations.map {
-                                    it.annotationType.toString() + it.arguments.toString()
-                                }.joinToString()
+                                receiver.annotations
+                                    .map {
+                                        it.annotationType.toString() + it.arguments.toString()
+                                    }
+                                    .joinToString()
                             )
                         }
                     }
@@ -31,9 +33,11 @@ class AnnotationOnReceiverProcessor : AbstractTestProcessor() {
                     prop.extensionReceiver.let { receiver ->
                         if (receiver != null) {
                             results.add(
-                                receiver.annotations.map {
-                                    it.annotationType.toString() + it.arguments.toString()
-                                }.joinToString()
+                                receiver.annotations
+                                    .map {
+                                        it.annotationType.toString() + it.arguments.toString()
+                                    }
+                                    .joinToString()
                             )
                         }
                     }

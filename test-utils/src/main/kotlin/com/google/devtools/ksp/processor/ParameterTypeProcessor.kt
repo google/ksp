@@ -17,14 +17,15 @@ class ParameterTypeProcessor : AbstractTestProcessor() {
         resolver.getNewFiles().forEach {
             it.accept(
                 object : KSTopDownVisitor<Unit, Unit>() {
-                    override fun defaultHandler(node: KSNode, data: Unit) {
-                    }
+                    override fun defaultHandler(node: KSNode, data: Unit) {}
 
                     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-                        result.add("${valueParameter.name?.asString()}: ${valueParameter.type.resolve()}")
+                        result.add(
+                            "${valueParameter.name?.asString()}: ${valueParameter.type.resolve()}"
+                        )
                     }
                 },
-                Unit
+                Unit,
             )
         }
         return emptyList()

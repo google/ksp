@@ -31,7 +31,8 @@ class NestedAnnotationProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val myClass = resolver.getClassDeclarationByName("MyClass")!!
-        val param = myClass.primaryConstructor!!.parameters.single { it.name?.asString() == "param" }
+        val param =
+            myClass.primaryConstructor!!.parameters.single { it.name?.asString() == "param" }
         param.annotations.forEach { annotation ->
             result.add("@param: $annotation: ${annotation.annotationType.resolve()}")
         }
@@ -39,7 +40,8 @@ class NestedAnnotationProcessor : AbstractTestProcessor() {
         field.annotations.forEach { annotation ->
             result.add("@field $annotation: ${annotation.annotationType.resolve()}")
         }
-        val property = myClass.getDeclaredProperties().single { it.simpleName.asString() == "property" }
+        val property =
+            myClass.getDeclaredProperties().single { it.simpleName.asString() == "property" }
         property.annotations.forEach { annotation ->
             result.add("@property: $annotation: ${annotation.annotationType.resolve()}")
         }

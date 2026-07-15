@@ -25,10 +25,12 @@ class BuildResultFixture(private val result: BuildResult) {
 
     /** Get all compiled Kotlin sources in the current build. */
     val compiledKotlinSources by lazy {
-        compileKotlinSrcs.findAll(result.output)
+        compileKotlinSrcs
+            .findAll(result.output)
             .asIterable()
             .flatMap {
                 it.groups[1]!!.value.split(", ")
-            }.toSet()
+            }
+            .toSet()
     }
 }

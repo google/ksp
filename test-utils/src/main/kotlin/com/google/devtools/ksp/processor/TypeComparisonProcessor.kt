@@ -43,9 +43,12 @@ open class TypeComparisonProcessor : AbstractTestProcessor() {
             }
         }
 
-        val sortedTypes = types.filterNot { it.declaration.simpleName.asString() in ignoredNames }.sortedBy {
-            it.toString()
-        }
+        val sortedTypes =
+            types
+                .filterNot { it.declaration.simpleName.asString() in ignoredNames }
+                .sortedBy {
+                    it.toString()
+                }
 
         for (i in sortedTypes) {
             for (j in sortedTypes) {
@@ -61,17 +64,18 @@ open class TypeComparisonProcessor : AbstractTestProcessor() {
 }
 
 class TypeCollectorNoAccessor : TypeCollector() {
-    override fun visitPropertyGetter(getter: KSPropertyGetter, data: MutableCollection<KSType>) {
-    }
+    override fun visitPropertyGetter(getter: KSPropertyGetter, data: MutableCollection<KSType>) {}
 
-    override fun visitPropertySetter(setter: KSPropertySetter, data: MutableCollection<KSType>) {
-    }
+    override fun visitPropertySetter(setter: KSPropertySetter, data: MutableCollection<KSType>) {}
 }
 
 open class TypeCollector : KSTopDownVisitor<MutableCollection<KSType>, Unit>() {
     override fun defaultHandler(node: KSNode, data: MutableCollection<KSType>) = Unit
 
-    override fun visitTypeReference(typeReference: KSTypeReference, data: MutableCollection<KSType>) {
+    override fun visitTypeReference(
+        typeReference: KSTypeReference,
+        data: MutableCollection<KSType>,
+    ) {
         super.visitTypeReference(typeReference, data)
         typeReference.resolve().let { data.add(it) }
     }

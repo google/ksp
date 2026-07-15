@@ -17,17 +17,11 @@
 
 package com.google.devtools.ksp.test.annotations
 
-/**
- * Represents the resolution status of a bug tracked by the [Bug] annotation.
- */
+/** Represents the resolution status of a bug tracked by the [Bug] annotation. */
 enum class BugState {
-    /**
-     * The bug is open and has not yet been resolved.
-     */
+    /** The bug is open and has not yet been resolved. */
     OPEN,
 
-    /**
-     * The bug has been resolved and the test serves as a regression test.
-     */
-    FIXED
+    /** The bug has been resolved and the test serves as a regression test. */
+    FIXED,
 }

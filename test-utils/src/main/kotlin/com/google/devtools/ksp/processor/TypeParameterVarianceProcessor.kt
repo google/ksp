@@ -7,6 +7,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 
 class TypeParameterVarianceProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return results
     }

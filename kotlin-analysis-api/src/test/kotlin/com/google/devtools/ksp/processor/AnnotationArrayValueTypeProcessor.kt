@@ -37,14 +37,17 @@ class AnnotationArrayValueTypeProcessor : AbstractTestProcessor() {
     private fun logAnnotationArrayValues(resolver: Resolver, className: String) {
         val annotated = resolver.getClassDeclarationByName(className)!!
         listOf("JavaAnnotation", "KotlinAnnotation").forEach { annotationName ->
-            val annotation = annotated.annotations.single { it.shortName.asString() == annotationName }
+            val annotation =
+                annotated.annotations.single { it.shortName.asString() == annotationName }
             val argument = annotation.arguments.single()
             val value = argument.value
             val argumentName = argument.name?.asString()
             check(value is Array<*> || value is Collection<*>) {
                 "Unexpected array-valued annotation argument type: ${value?.javaClass?.name ?: "null"}"
             }
-            results.add("$className $annotationName $argumentName is Array<*> or Collection<*>: true")
+            results.add(
+                "$className $annotationName $argumentName is Array<*> or Collection<*>: true"
+            )
             results.add("$className $annotationName $argumentName size: ${value.sizeOrNull()}")
         }
     }

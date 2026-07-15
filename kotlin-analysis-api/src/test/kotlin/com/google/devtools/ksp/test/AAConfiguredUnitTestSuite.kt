@@ -31,7 +31,9 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
     @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
+        runFailingTest(
+            "$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt"
+        )
     }
 
     @TestMetadata("contextParameters.kt")

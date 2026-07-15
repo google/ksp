@@ -8,6 +8,7 @@ import com.google.devtools.ksp.symbol.KSVisitorVoid
 
 class PackageAnnotationProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result
     }
@@ -24,7 +25,7 @@ class PackageAnnotationProcessor : AbstractTestProcessor() {
                         )
                     }
                 },
-                Unit
+                Unit,
             )
         }
         result.sort()
