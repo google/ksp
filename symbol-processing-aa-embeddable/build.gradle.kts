@@ -12,10 +12,8 @@ evaluationDependsOn(":kotlin-analysis-api")
 val signingKey: String? by project
 val signingPassword: String? by project
 
-val kotlinBaseVersion: String by project
 
-val aaKotlinBaseVersion: String by project
-val aaCoroutinesVersion: String by project
+val aaKotlinBaseVersion = libs.versions.aa.kotlin.base.get()
 
 plugins {
     kotlin("jvm")
@@ -28,7 +26,7 @@ val packedJars by configurations.creating
 
 dependencies {
     packedJars(project(":kotlin-analysis-api", "shadow")) { isTransitive = false }
-    packedJars("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion") { isTransitive = false }
+    packedJars(libs.kotlinx.coroutines.core.jvm) { isTransitive = false }
 }
 
 tasks.withType(Jar::class.java).configureEach {
@@ -293,7 +291,7 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", libs.versions.kotlin.base.get())
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
                     }
