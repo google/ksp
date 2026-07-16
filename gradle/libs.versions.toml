@@ -4,6 +4,7 @@ kotlinx-serialization = "1.6.3"
 agp-base = "9.3.0-alpha01"
 junit = "4.13.1"
 google-truth = "1.4.5"
+aa-kotlin-base = "2.4.20-dev-6138"
 aa-coroutines = "1.10.2"
 
 [libraries]
