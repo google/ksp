@@ -16,8 +16,8 @@ plugins {
 }
 
 dependencies {
-    compileOnly(libs.kotlin.gradle.plugin.api)
-    compileOnly(libs.kotlin.gradle.plugin.asProvider())
+    compileOnly(libs.kotlin.gradlePluginApi)
+    compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.kotlin.compiler.embeddable)
     // replace AGP dependency w/ gradle-api when we have source registering API available.
     compileOnly(libs.agp)
