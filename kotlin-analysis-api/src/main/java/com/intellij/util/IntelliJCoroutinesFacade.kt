@@ -1,11 +1,12 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the
+// Apache 2.0 license.
 package com.intellij.util
 
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.ApiStatus
-import kotlin.coroutines.CoroutineContext
-import kotlin.time.Duration
 
 @ApiStatus.Internal
 object IntelliJCoroutinesFacade {
@@ -22,7 +23,7 @@ object IntelliJCoroutinesFacade {
     @Throws(InterruptedException::class)
     fun <T> runBlockingWithParallelismCompensation(
         context: CoroutineContext,
-        block: suspend CoroutineScope.() -> T
+        block: suspend CoroutineScope.() -> T,
     ): T {
         @Suppress("RAW_RUN_BLOCKING")
         return runBlocking(context, block)

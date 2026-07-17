@@ -28,6 +28,7 @@ class MemoizedSequence<T>(sequence: Sequence<T>) : Sequence<T> {
 
     private inner class CachedIterator() : Iterator<T> {
         var idx = 0
+
         override fun hasNext(): Boolean {
             return idx < cache.size || iter.hasNext()
         }

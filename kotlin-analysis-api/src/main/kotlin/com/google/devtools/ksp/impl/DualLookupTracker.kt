@@ -30,7 +30,13 @@ class DualLookupTracker : LookupTracker {
     override val requiresPosition: Boolean
         get() = symbolTracker.requiresPosition || classTracker.requiresPosition
 
-    override fun record(filePath: String, position: Position, scopeFqName: String, scopeKind: ScopeKind, name: String) {
+    override fun record(
+        filePath: String,
+        position: Position,
+        scopeFqName: String,
+        scopeKind: ScopeKind,
+        name: String,
+    ) {
         symbolTracker.record(filePath, position, scopeFqName, scopeKind, name)
         if (scopeKind == ScopeKind.CLASSIFIER) {
             val (outerScope, className) = separateQualifierAndName(scopeFqName)
@@ -41,6 +47,7 @@ class DualLookupTracker : LookupTracker {
 
     override fun clear() {
         // Do not clear symbolTracker and classTracker.
-        // LookupTracker.clear() is called in repeatAnalysisIfNeeded, but we need records across all rounds.
+        // LookupTracker.clear() is called in repeatAnalysisIfNeeded, but we need records across all
+        // rounds.
     }
 }

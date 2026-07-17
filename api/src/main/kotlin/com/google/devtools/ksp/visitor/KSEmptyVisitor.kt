@@ -18,9 +18,7 @@ package com.google.devtools.ksp.visitor
 
 import com.google.devtools.ksp.symbol.*
 
-/**
- * A visitor that methods fall back to [defaultHandler] if not overridden.
- */
+/** A visitor that methods fall back to [defaultHandler] if not overridden. */
 abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
     abstract fun defaultHandler(node: KSNode, data: D): R
 
@@ -44,7 +42,10 @@ abstract class KSEmptyVisitor<D, R> : KSVisitor<D, R> {
         return defaultHandler(declaration, data)
     }
 
-    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: D): R {
+    override fun visitDeclarationContainer(
+        declarationContainer: KSDeclarationContainer,
+        data: D,
+    ): R {
         return defaultHandler(declarationContainer, data)
     }
 

@@ -22,13 +22,18 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
 
-class KSValueArgumentImpl private constructor(
+class KSValueArgumentImpl
+private constructor(
     private val namedAnnotationValue: KaNamedAnnotationValue,
     override val parent: KSNode?,
-    override val origin: Origin
+    override val origin: Origin,
 ) : AbstractKSValueArgumentImpl(), Deferrable {
     companion object : KSObjectCache<KaNamedAnnotationValue, KSValueArgumentImpl>() {
-        fun getCached(namedAnnotationValue: KaNamedAnnotationValue, parent: KSNode?, origin: Origin) =
+        fun getCached(
+            namedAnnotationValue: KaNamedAnnotationValue,
+            parent: KSNode?,
+            origin: Origin,
+        ) =
             cache.getOrPut(namedAnnotationValue) {
                 KSValueArgumentImpl(namedAnnotationValue, parent, origin)
             }
@@ -62,8 +67,7 @@ abstract class AbstractKSValueArgumentImpl : KSValueArgument {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is KSValueArgument)
-            return false
+        if (other !is KSValueArgument) return false
 
         return other.name == this.name && other.value == this.value
     }

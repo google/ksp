@@ -40,18 +40,19 @@ import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtTypeParameter
 
-class KSTypeReferenceResolvedImpl private constructor(
+class KSTypeReferenceResolvedImpl
+private constructor(
     private val ktType: KaType,
     override val parent: KSNode?,
     private val index: Int,
-    private val additionalAnnotations: List<KaAnnotation>
+    private val additionalAnnotations: List<KaAnnotation>,
 ) : KSTypeReference, Deferrable {
     companion object : KSObjectCache<IdKeyTriple<KaType, KSNode?, Int>, KSTypeReference>() {
         fun getCached(
             type: KaType,
             parent: KSNode? = null,
             index: Int = -1,
-            additionalAnnotations: List<KaAnnotation> = emptyList()
+            additionalAnnotations: List<KaAnnotation> = emptyList(),
         ): KSTypeReference =
             cache.getOrPut(IdKeyTriple(type, parent, index)) {
                 KSTypeReferenceResolvedImpl(type, parent, index, additionalAnnotations)
@@ -74,7 +75,9 @@ class KSTypeReferenceResolvedImpl private constructor(
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktType.annotations(this) +
-            additionalAnnotations.asSequence().map { KSAnnotationResolvedImpl.getCached(it, this, origin) }
+            additionalAnnotations.asSequence().map {
+                KSAnnotationResolvedImpl.getCached(it, this, origin)
+            }
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC
@@ -87,15 +90,19 @@ class KSTypeReferenceResolvedImpl private constructor(
                 is KSClassDeclarationImpl -> {
                     when (val psi = parent.ktClassOrObjectSymbol.psi) {
                         is KtClassOrObject -> psi.superTypeListEntries[index].toLocation()
-                        is PsiClass -> (psi as? PsiClassReferenceType)?.reference?.toLocation() ?: NonExistLocation
+                        is PsiClass ->
+                            (psi as? PsiClassReferenceType)?.reference?.toLocation()
+                                ?: NonExistLocation
                         else -> NonExistLocation
                     }
                 }
                 is KSTypeParameterImpl -> {
                     when (val psi = parent.ktTypeParameterSymbol.psi) {
                         is KtTypeParameter -> parent.location
-                        is PsiTypeParameter -> (psi.extendsListTypes[index] as? PsiClassReferenceType)
-                            ?.reference?.toLocation() ?: NonExistLocation
+                        is PsiTypeParameter ->
+                            (psi.extendsListTypes[index] as? PsiClassReferenceType)
+                                ?.reference
+                                ?.toLocation() ?: NonExistLocation
                         else -> NonExistLocation
                     }
                 }
@@ -109,11 +116,12 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override val modifiers: Set<Modifier>
-        get() = if (ktType is KaFunctionType && ktType.isSuspend) {
-            setOf(Modifier.SUSPEND)
-        } else {
-            emptySet()
-        }
+        get() =
+            if (ktType is KaFunctionType && ktType.isSuspend) {
+                setOf(Modifier.SUSPEND)
+            } else {
+                emptySet()
+            }
 
     override fun toString(): String {
         return ktType.abbreviationOrSelf.render()

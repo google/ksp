@@ -39,7 +39,8 @@ import org.jetbrains.kotlin.psi.KtFile
 
 class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : KSFile, Deferrable {
     companion object : KSObjectCache<KaFileSymbol, KSFileImpl>() {
-        fun getCached(ktFileSymbol: KaFileSymbol) = cache.getOrPut(ktFileSymbol) { KSFileImpl(ktFileSymbol) }
+        fun getCached(ktFileSymbol: KaFileSymbol) =
+            cache.getOrPut(ktFileSymbol) { KSFileImpl(ktFileSymbol) }
     }
 
     private val psi: PsiFile
@@ -48,11 +49,12 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
     override val packageName: KSName by lazy {
         when (psi) {
             is KtFile -> KSNameImpl.getCached((psi as KtFile).packageFqName.asString())
-            else -> throw InternalKSPException(
-                "Unhandled psi file type",
-                psi.toLocation(),
-                psi.javaClass
-            )
+            else ->
+                throw InternalKSPException(
+                    "Unhandled psi file type",
+                    psi.toLocation(),
+                    psi.javaClass,
+                )
         }
     }
 
@@ -72,11 +74,12 @@ class KSFileImpl private constructor(internal val ktFileSymbol: KaFileSymbol) : 
                     is KaNamedFunctionSymbol -> KSFunctionDeclarationImpl.getCached(it)
                     is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(it)
                     is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(it)
-                    else -> throw InternalKSPException(
-                        "Unhandled case in 'declarations'",
-                        it.psi.toLocation(),
-                        it.javaClass,
-                    )
+                    else ->
+                        throw InternalKSPException(
+                            "Unhandled case in 'declarations'",
+                            it.psi.toLocation(),
+                            it.javaClass,
+                        )
                 }
             }
         }

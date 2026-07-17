@@ -23,8 +23,8 @@ import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilder
 
 /**
- * [ToolingModelBuilder] for [Ksp] models.
- * This model builder is registered for Kotlin All Open sub-plugin.
+ * [ToolingModelBuilder] for [Ksp] models. This model builder is registered for Kotlin All Open
+ * sub-plugin.
  */
 class KspModelBuilder : ToolingModelBuilder {
 

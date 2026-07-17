@@ -39,8 +39,9 @@ class KSExpectActualImpl(private val declarationSymbol: KaDeclarationSymbol) : K
             emptySequence()
         } else {
             analyze {
-                declarationSymbol.getExpectsForActual().mapNotNull { it.toKSDeclaration() }
-            }.asSequence()
+                    declarationSymbol.getExpectsForActual().mapNotNull { it.toKSDeclaration() }
+                }
+                .asSequence()
         }
     }
 }

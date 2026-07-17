@@ -57,6 +57,7 @@ import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
 import com.intellij.util.containers.addIfNotNull
+import kotlin.collections.mapValues
 import org.jetbrains.kotlin.analysis.api.resolution.KaAnnotationCall
 import org.jetbrains.kotlin.analysis.api.resolution.successfulCallOrNull
 import org.jetbrains.kotlin.analysis.api.resolution.symbol
@@ -74,65 +75,57 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
-import kotlin.collections.mapValues
 
 /**
- * An [AnnotationResolutionStrategy] that uses a combination of Psi and Kotlin's Analysis API to resolve
- * annotated symbols.
+ * An [AnnotationResolutionStrategy] that uses a combination of Psi and Kotlin's Analysis API to
+ * resolve annotated symbols.
  *
  * This strategy is experimental, but should be faster than the default [AAResolutionStrategy].
  */
 class PsiResolutionStrategy(
     override val newKSFiles: List<KSFile>,
-    override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
+    override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>,
 ) : AnnotationResolutionStrategy {
 
-    /**
-     * Returns all symbols annotated with [annotationName].
-     */
-    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> =
-        if (inDepth)
-            aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true)
-        else
-            getAnnotatedSymbols(annotationName)
+    /** Returns all symbols annotated with [annotationName]. */
+    override fun getSymbolsWithAnnotation(
+        annotationName: String,
+        inDepth: Boolean,
+    ): Sequence<KSAnnotated> =
+        if (inDepth) aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true)
+        else getAnnotatedSymbols(annotationName)
 
     /**
-     * Calls to [getSymbolsWithAnnotation] with `inDepth = true` are
-     * delegated to the [AAResolutionStrategy].
-     * It is stored in a lazy val to ensure it is only initialized if
-     * needed and to cache its results.
+     * Calls to [getSymbolsWithAnnotation] with `inDepth = true` are delegated to the
+     * [AAResolutionStrategy]. It is stored in a lazy val to ensure it is only initialized if needed
+     * and to cache its results.
      */
     private val aaResolutionStrategy: AAResolutionStrategy by lazy {
         AAResolutionStrategy(newKSFiles, deferredSymbols)
     }
 
-    /**
-     * Returns the symbols annotated with the fully qualified name [annotationName].
-     */
+    /** Returns the symbols annotated with the fully qualified name [annotationName]. */
     private fun getAnnotatedSymbols(annotationName: String): Sequence<KSAnnotated> =
         getAnnotatedJavaSymbols(annotationName) +
             getAnnotatedKotlinSymbols(annotationName) +
             getRestoredSymbols(annotationName)
 
-    /**
-     * Returns the Kotlin symbols annotated with the fully qualified name [annotationName].
-     */
+    /** Returns the Kotlin symbols annotated with the fully qualified name [annotationName]. */
     private fun getAnnotatedKotlinSymbols(annotationName: String): Sequence<KSAnnotated> {
-        val newKotlinSymbols = annotatedKotlinElementsByFullyQualifiedName[annotationName]?.value ?: emptyList()
+        val newKotlinSymbols =
+            annotatedKotlinElementsByFullyQualifiedName[annotationName]?.value ?: emptyList()
         return newKotlinSymbols.asSequence()
     }
 
-    /**
-     * Returns the Java symbols annotated with the fully qualified name [annotationName].
-     */
+    /** Returns the Java symbols annotated with the fully qualified name [annotationName]. */
     private fun getAnnotatedJavaSymbols(annotationName: String): Sequence<KSAnnotated> =
-        annotatedJavaElementsByFullyQualifiedName.getOrPut(annotationName) {
-            resolveJavaAnnotationByShortName(annotationName)
-        }.asSequence()
+        annotatedJavaElementsByFullyQualifiedName
+            .getOrPut(annotationName) {
+                resolveJavaAnnotationByShortName(annotationName)
+            }
+            .asSequence()
 
-    /**
-     * Returns the [deferredSymbols] that are annotated with [annotationName].
-     */
+    /** Returns the [deferredSymbols] that are annotated with [annotationName]. */
     private fun getRestoredSymbols(annotationName: String): Sequence<KSAnnotated> =
         deferredSymbolsGroupedByAnnotations[annotationName]?.asSequence() ?: emptySequence()
 
@@ -142,35 +135,39 @@ class PsiResolutionStrategy(
      * See [annotatedKotlinElementsByFullyQualifiedName] for an example of the grouping.
      */
     private val deferredSymbolsGroupedByAnnotations: Map<String, Collection<KSAnnotated>> by lazy {
-        deferredSymbols.values.flatten().mapNotNull { it.restore() }.distinct()
+        deferredSymbols.values
+            .flatten()
+            .mapNotNull { it.restore() }
+            .distinct()
             .flatGroupBy { sym -> sym.annotations.mapNotNull { it.getFqn() }.toSet() }
     }
 
     /**
-     * Returns the Java symbols annotated with the fully qualified name [annotationName].
-     * The function only considers the subset of annotations in the program that share the same
-     * short name / unqualified name.
+     * Returns the Java symbols annotated with the fully qualified name [annotationName]. The
+     * function only considers the subset of annotations in the program that share the same short
+     * name / unqualified name.
      */
     private fun resolveJavaAnnotationByShortName(annotationName: String): Collection<KSAnnotated> {
         val annotationShortName = annotationName.substringAfterLast('.')
-        return annotatedJavaElementsByShortName[annotationShortName]?.filter { element ->
-            val annotationsForElement = fullyQualifiedJavaAnnotationNamesByElements[element] ?: emptyMap()
-            annotationsForElement[annotationShortName]?.value?.contains(annotationName) ?: false
-        }?.flatMap {
-            it.resolveToKSAnnotated()
-        } ?: emptyList()
+        return annotatedJavaElementsByShortName[annotationShortName]
+            ?.filter { element ->
+                val annotationsForElement =
+                    fullyQualifiedJavaAnnotationNamesByElements[element] ?: emptyMap()
+                annotationsForElement[annotationShortName]?.value?.contains(annotationName) ?: false
+            }
+            ?.flatMap {
+                it.resolveToKSAnnotated()
+            } ?: emptyList()
     }
 
-    /**
-     * All annotated [PsiElement]s in [newKSFiles] from both Kotlin and Java sources.
-     */
+    /** All annotated [PsiElement]s in [newKSFiles] from both Kotlin and Java sources. */
     private val annotatedPsiElements: Collection<PsiElement> by lazy {
         newKSFiles.flatMap { collectAnnotatedPsiElementsIn(it) }
     }
 
     /**
-     * Returns all [PsiElement]s that are annotated in [file] except for declarations
-     * in function bodies or property accessors.
+     * Returns all [PsiElement]s that are annotated in [file] except for declarations in function
+     * bodies or property accessors.
      */
     private fun collectAnnotatedPsiElementsIn(file: KSFile): Collection<PsiElement> {
         val visitor = CollectAnnotatedSymbolsPsiVisitor()
@@ -178,16 +175,12 @@ class PsiResolutionStrategy(
         return visitor.result
     }
 
-    /**
-     * All annotated Java elements.
-     */
+    /** All annotated Java elements. */
     private val annotatedJavaElements: List<PsiModifierListOwner> by lazy {
         annotatedPsiElements.filterIsInstance<PsiModifierListOwner>()
     }
 
-    /**
-     * Groups [annotatedJavaElements] by the short names of their annotations.
-     */
+    /** Groups [annotatedJavaElements] by the short names of their annotations. */
     private val annotatedJavaElementsByShortName: Map<String, Collection<PsiElement>> by lazy {
         annotatedJavaElements.flatGroupBy { element ->
             // N.B.: deduplicate by converting to a set, since
@@ -199,39 +192,42 @@ class PsiResolutionStrategy(
     /**
      * A map from Java elements to their annotations' fully qualified names, indexed by short name.
      */
-    private val fullyQualifiedJavaAnnotationNamesByElements: Map<PsiElement, Map<String, Lazy<Set<String>>>> by lazy {
+    private val fullyQualifiedJavaAnnotationNamesByElements:
+        Map<PsiElement, Map<String, Lazy<Set<String>>>> by lazy {
         annotatedJavaElements.associate { element ->
-            // N.B.: Performance: Lazily compute the set of qualified names to avoid resolution until requested
+            // N.B.: Performance: Lazily compute the set of qualified names to avoid resolution
+            // until requested
             //  for a specific annotation.
-            element to buildMap<String, Lazy<MutableSet<String>>> {
-                element.annotations.forEach { anno ->
-                    val lazyFullyQualifiedNames = this[anno.shortName]
-                    if (lazyFullyQualifiedNames == null) {
-                        this[anno.shortName] = lazy {
-                            mutableSetOf(
-                                anno.qualifiedName
-                                    ?: throw InternalKSPException(
-                                        "Unexpected unqualified name",
-                                        anno.toLocation(),
-                                        anno.javaClass
-                                    )
-                            )
-                        }
-                    } else {
-                        this[anno.shortName] = lazy {
-                            lazyFullyQualifiedNames.value.add(
-                                anno.qualifiedName
-                                    ?: throw InternalKSPException(
-                                        "Unexpected unqualified name",
-                                        anno.toLocation(),
-                                        anno.javaClass
-                                    )
-                            )
-                            lazyFullyQualifiedNames.value
+            element to
+                buildMap<String, Lazy<MutableSet<String>>> {
+                    element.annotations.forEach { anno ->
+                        val lazyFullyQualifiedNames = this[anno.shortName]
+                        if (lazyFullyQualifiedNames == null) {
+                            this[anno.shortName] = lazy {
+                                mutableSetOf(
+                                    anno.qualifiedName
+                                        ?: throw InternalKSPException(
+                                            "Unexpected unqualified name",
+                                            anno.toLocation(),
+                                            anno.javaClass,
+                                        )
+                                )
+                            }
+                        } else {
+                            this[anno.shortName] = lazy {
+                                lazyFullyQualifiedNames.value.add(
+                                    anno.qualifiedName
+                                        ?: throw InternalKSPException(
+                                            "Unexpected unqualified name",
+                                            anno.toLocation(),
+                                            anno.javaClass,
+                                        )
+                                )
+                                lazyFullyQualifiedNames.value
+                            }
                         }
                     }
                 }
-            }
         }
     }
 
@@ -240,12 +236,11 @@ class PsiResolutionStrategy(
      *
      * @see [annotatedKotlinElementsByFullyQualifiedName] for further explanation.
      */
-    private val annotatedJavaElementsByFullyQualifiedName: MutableMap<String, Collection<KSAnnotated>> =
+    private val annotatedJavaElementsByFullyQualifiedName:
+        MutableMap<String, Collection<KSAnnotated>> =
         mutableMapOf()
 
-    /**
-     * All annotated Kotlin elements.
-     */
+    /** All annotated Kotlin elements. */
     private val annotatedKotlinElements: List<KtAnnotated> by lazy {
         annotatedPsiElements.filterIsInstance<KtAnnotated>()
     }
@@ -259,6 +254,7 @@ class PsiResolutionStrategy(
      * @Annotation1 @Annotation2 fun fun2
      * @Annotation2 @Annotation3 fun fun3
      * ```
+     *
      * Then the result is
      *
      * ```
@@ -267,47 +263,59 @@ class PsiResolutionStrategy(
      * "Annotation3" -> [fun3]
      * ```
      */
-    private val annotatedKotlinElementsByFullyQualifiedName: Map<String, Lazy<List<KSAnnotated>>> by lazy {
+    private val annotatedKotlinElementsByFullyQualifiedName:
+        Map<String, Lazy<List<KSAnnotated>>> by lazy {
         buildMap {
-            val fileCaches = mutableMapOf<KtFile, FileCache>()
-            annotatedKotlinElements.forEach { annotated ->
-                val file = annotated.containingKtFile
-                annotated.annotationEntries.forEach { annotationEntry ->
-                    // TODO: Cache (file, annotation.shortName) -> classId. Shadowing is a problem
-                    //  so we should only cache for known unique declarations in the file.
-                    //  See test shadowingAnnotations.kt
-                    val fileCache = fileCaches.getOrPut(file) { FileCache(file) }
-                    val classId = resolveAnnotationEntryClassId(annotationEntry, fileCache)
-                    // N.B.: Skip nullable qualified names without error. This is what the AA-based implementation does.
-                    //   For now, this is the intended behavior. If it is changed in the future, then it is an API change.
-                    val fqn = classId?.asFqNameString() ?: return@forEach
-                    getOrPut(fqn, ::mutableListOf)
-                        .add(annotated to annotationEntry)
+                val fileCaches = mutableMapOf<KtFile, FileCache>()
+                annotatedKotlinElements.forEach { annotated ->
+                    val file = annotated.containingKtFile
+                    annotated.annotationEntries.forEach { annotationEntry ->
+                        // TODO: Cache (file, annotation.shortName) -> classId. Shadowing is a
+                        // problem
+                        //  so we should only cache for known unique declarations in the file.
+                        //  See test shadowingAnnotations.kt
+                        val fileCache = fileCaches.getOrPut(file) { FileCache(file) }
+                        val classId = resolveAnnotationEntryClassId(annotationEntry, fileCache)
+                        // N.B.: Skip nullable qualified names without error. This is what the
+                        // AA-based implementation does.
+                        //   For now, this is the intended behavior. If it is changed in the future,
+                        // then it is an API change.
+                        val fqn = classId?.asFqNameString() ?: return@forEach
+                        getOrPut(fqn, ::mutableListOf).add(annotated to annotationEntry)
+                    }
                 }
             }
-        }.mapValues { entry ->
-            lazy {
-                entry.value.flatMap { (annotated, annotationEntry) ->
-                    annotated.resolveToKSAnnotated(annotationEntry)
-                }.distinct()
+            .mapValues { entry ->
+                lazy {
+                    entry.value
+                        .flatMap { (annotated, annotationEntry) ->
+                            annotated.resolveToKSAnnotated(annotationEntry)
+                        }
+                        .distinct()
+                }
             }
-        }
     }
 
     /**
      * Resolves the [ClassId] for a given [KtAnnotationEntry].
      *
-     * It first attempts a [fastResolveClassId] and falls back to [slowResolveClassId] if that fails.
+     * It first attempts a [fastResolveClassId] and falls back to [slowResolveClassId] if that
+     * fails.
      */
-    private fun resolveAnnotationEntryClassId(annotationEntry: KtAnnotationEntry, fileCache: FileCache): ClassId? =
-        fastResolveClassId(annotationEntry, fileCache)
-            ?: slowResolveClassId(annotationEntry)
+    private fun resolveAnnotationEntryClassId(
+        annotationEntry: KtAnnotationEntry,
+        fileCache: FileCache,
+    ): ClassId? =
+        fastResolveClassId(annotationEntry, fileCache) ?: slowResolveClassId(annotationEntry)
 
     /**
-     * Attempts to resolve the [ClassId] of an [annotationEntry] without full type resolution,
-     * by trying to guess the [ClassId] and asking the Analysis API if it is a type alias.
+     * Attempts to resolve the [ClassId] of an [annotationEntry] without full type resolution, by
+     * trying to guess the [ClassId] and asking the Analysis API if it is a type alias.
      */
-    private fun fastResolveClassId(annotationEntry: KtAnnotationEntry, fileCache: FileCache): ClassId? {
+    private fun fastResolveClassId(
+        annotationEntry: KtAnnotationEntry,
+        fileCache: FileCache,
+    ): ClassId? {
         val shortName = annotationEntry.shortName?.asString() ?: return null
         val unresolvedTypeName = annotationEntry.typeReference?.text ?: return null
 
@@ -322,17 +330,20 @@ class PsiResolutionStrategy(
 
         // Check for explicit name import.
         // If it exists, we have found the name, otherwise fall back to checking other candidates.
-        val candidateClassIds = fileCache.explicitImports[shortName]?.let { explicitFqn ->
-            // Direct name import found. Do not consider other imports.
-            listOf((ClassId.topLevel(explicitFqn)))
-        } ?: buildList {
-            // No direct name import found. Consider package imports, star imports, and default imports.
-            add(mkClassId(fileCache.packageName, shortName))
-            fileCache.starImports.forEach { add(mkClassId(it, shortName)) }
-            FileCache.DEFAULT_IMPORTS.forEach {
-                add(mkClassId(FqName(it), shortName))
+        val candidateClassIds =
+            fileCache.explicitImports[shortName]?.let { explicitFqn ->
+                // Direct name import found. Do not consider other imports.
+                listOf((ClassId.topLevel(explicitFqn)))
             }
-        }
+                ?: buildList {
+                    // No direct name import found. Consider package imports, star imports, and
+                    // default imports.
+                    add(mkClassId(fileCache.packageName, shortName))
+                    fileCache.starImports.forEach { add(mkClassId(it, shortName)) }
+                    FileCache.DEFAULT_IMPORTS.forEach {
+                        add(mkClassId(FqName(it), shortName))
+                    }
+                }
 
         return analyze {
             candidateClassIds.firstNotNullOfOrNull { classId ->
@@ -353,9 +364,7 @@ class PsiResolutionStrategy(
         }
     }
 
-    /**
-     * Creates a [ClassId] from a package name and a top-level class name.
-     */
+    /** Creates a [ClassId] from a package name and a top-level class name. */
     private fun mkClassId(packageFqName: FqName, topLevelName: String): ClassId =
         ClassId(packageFqName, Name.identifier(topLevelName))
 
@@ -364,16 +373,19 @@ class PsiResolutionStrategy(
      *
      * This is used as a fallback when [fastResolveClassId] cannot determine the class ID.
      */
-    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? = annotationEntry.classId
+    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? =
+        annotationEntry.classId
 
     /**
      * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotation].
      *
-     * The [annotation] is only required for Kotlin sources since annotations may have use site targets.
-     * Java sources never require an [annotation] to be present since annotations directly target the element
-     * being annotated.
+     * The [annotation] is only required for Kotlin sources since annotations may have use site
+     * targets. Java sources never require an [annotation] to be present since annotations directly
+     * target the element being annotated.
      */
-    private fun PsiElement.resolveToKSAnnotated(annotation: KtAnnotationEntry? = null): Collection<KSAnnotated> =
+    private fun PsiElement.resolveToKSAnnotated(
+        annotation: KtAnnotationEntry? = null
+    ): Collection<KSAnnotated> =
         when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
             is KtDeclaration -> {
@@ -381,44 +393,38 @@ class PsiResolutionStrategy(
                     throw InternalKSPException(
                         "Unexpected null annotation",
                         toLocation(),
-                        javaClass
+                        javaClass,
                     )
                 }
                 element.resolve(annotation)
             }
 
-            is KtFile ->
-                listOf(element.resolve())
+            is KtFile -> listOf(element.resolve())
 
-            is KtTypeReference ->
-                emptyList() // Do nothing
+            is KtTypeReference -> emptyList() // Do nothing
 
             // Java sources
-            is PsiParameter ->
-                listOf(element.resolve())
+            is PsiParameter -> listOf(element.resolve())
 
-            is PsiTypeParameter ->
-                element.resolve()
+            is PsiTypeParameter -> element.resolve()
 
-            is PsiClass ->
-                listOf(element.resolve())
+            is PsiClass -> listOf(element.resolve())
 
-            is PsiField ->
-                listOf(element.resolve())
+            is PsiField -> listOf(element.resolve())
 
-            is PsiMethod ->
-                listOf(element.resolve())
+            is PsiMethod -> listOf(element.resolve())
 
             else ->
                 throw InternalKSPException(
                     "Unreachable branch",
                     element.toLocation(),
-                    element.javaClass
+                    element.javaClass,
                 )
         }
 
     /**
-     * Resolves this [KtDeclaration] to the set of [KSAnnotated] symbols targeted by [annotationEntry].
+     * Resolves this [KtDeclaration] to the set of [KSAnnotated] symbols targeted by
+     * [annotationEntry].
      */
     private fun KtDeclaration.resolve(annotationEntry: KtAnnotationEntry): Collection<KSAnnotated> {
         // TODO: This should perform case distinction instead of getTargetedSymbol
@@ -426,162 +432,167 @@ class PsiResolutionStrategy(
         return ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget)
     }
 
-    /**
-     * Resolves the [KSFileImpl] corresponding to this [KtFile].
-     */
-    private fun KtFile.resolve(): KSFileImpl =
-        analyze { symbol }.toKSFile()
+    /** Resolves the [KSFileImpl] corresponding to this [KtFile]. */
+    private fun KtFile.resolve(): KSFileImpl = analyze { symbol }.toKSFile()
 
-    /**
-     * Resolves the [KSValueParameter] corresponding to this [PsiParameter].
-     */
+    /** Resolves the [KSValueParameter] corresponding to this [PsiParameter]. */
     private fun PsiParameter.resolve(): KSValueParameter {
-        val functionDecl = callableSymbol.toKSFunctionDeclaration()
-            ?: throw InternalKSPException(
-                "Failed to convert callable symbol to KSFunctionDeclaration",
-                toLocation(),
-                callableSymbol.javaClass
-            )
+        val functionDecl =
+            callableSymbol.toKSFunctionDeclaration()
+                ?: throw InternalKSPException(
+                    "Failed to convert callable symbol to KSFunctionDeclaration",
+                    toLocation(),
+                    callableSymbol.javaClass,
+                )
         return functionDecl.parameters[parameterIndex()]
     }
 
-    /**
-     * Resolves the [KSTypeParameter]s corresponding to this [PsiTypeParameter].
-     */
-    private fun PsiTypeParameter.resolve(): Collection<KSTypeParameter> = when (val decl = parent.parent) {
-        is PsiMethod ->
-            listOf(resolveTypeParameterOfMethod(decl))
+    /** Resolves the [KSTypeParameter]s corresponding to this [PsiTypeParameter]. */
+    private fun PsiTypeParameter.resolve(): Collection<KSTypeParameter> =
+        when (val decl = parent.parent) {
+            is PsiMethod -> listOf(resolveTypeParameterOfMethod(decl))
 
-        is PsiClass ->
-            resolveTypeParameterOfClass(decl)
+            is PsiClass -> resolveTypeParameterOfClass(decl)
 
-        else ->
-            throw InternalKSPException(
-                "Unexpected Java declaration",
-                decl.toLocation(),
-                decl.javaClass
-            )
-    }
+            else ->
+                throw InternalKSPException(
+                    "Unexpected Java declaration",
+                    decl.toLocation(),
+                    decl.javaClass,
+                )
+        }
 
-    /**
-     * Resolves the [KSClassDeclarationImpl] corresponding to this [PsiClass].
-     */
+    /** Resolves the [KSClassDeclarationImpl] corresponding to this [PsiClass]. */
     private fun PsiClass.resolve(): KSClassDeclarationImpl {
-        val sym = analyze { namedClassSymbol }
-            ?: throw InternalKSPException(
-                "Unexpected null named class symbol",
-                toLocation(),
-                javaClass
-            )
+        val sym =
+            analyze { namedClassSymbol }
+                ?: throw InternalKSPException(
+                    "Unexpected null named class symbol",
+                    toLocation(),
+                    javaClass,
+                )
         return sym.toKSClassDeclaration()
     }
 
-    /**
-     * Resolves the [KSPropertyDeclaration] corresponding to this [PsiField].
-     */
+    /** Resolves the [KSPropertyDeclaration] corresponding to this [PsiField]. */
     private fun PsiField.resolve(): KSPropertyDeclaration {
-        val sym = analyze { this@resolve.callableSymbol }
-            ?: throw InternalKSPException(
-                "Unexpected null callable symbol",
-                toLocation(),
-                javaClass
-            )
+        val sym =
+            analyze { this@resolve.callableSymbol }
+                ?: throw InternalKSPException(
+                    "Unexpected null callable symbol",
+                    toLocation(),
+                    javaClass,
+                )
         return sym.toKSPropertyDeclaration()
             ?: throw InternalKSPException(
                 "Unexpected null KSPropertyDeclaration",
                 toLocation(),
-                javaClass
+                javaClass,
             )
     }
 
-    /**
-     * Resolves the [KSFunctionDeclarationImpl] corresponding to this [PsiMethod].
-     */
+    /** Resolves the [KSFunctionDeclarationImpl] corresponding to this [PsiMethod]. */
     private fun PsiMethod.resolve(): KSFunctionDeclarationImpl {
-        val sym = analyze { this@resolve.callableSymbol }
-            ?: throw InternalKSPException(
-                "Unexpected null callable symbol",
-                toLocation(),
-                javaClass
-            )
+        val sym =
+            analyze { this@resolve.callableSymbol }
+                ?: throw InternalKSPException(
+                    "Unexpected null callable symbol",
+                    toLocation(),
+                    javaClass,
+                )
         return sym.toKSFunctionDeclaration()
             ?: throw InternalKSPException(
                 "Unexpected null KSFunctionDeclaration",
                 toLocation(),
-                javaClass
+                javaClass,
             )
     }
 
     /**
      * Returns the targeted symbols by a given annotated symbol at its use site target.
      *
-     * E.g., `class A(@MyAnno val p: Int)` returns `p, p`, once for the parameter and once for the property.
+     * E.g., `class A(@MyAnno val p: Int)` returns `p, p`, once for the parameter and once for the
+     * property.
      */
-    private fun KSAnnotated.findTargetedSymbol(useSiteTarget: AnnotationUseSiteTarget?): Collection<KSAnnotated> =
+    private fun KSAnnotated.findTargetedSymbol(
+        useSiteTarget: AnnotationUseSiteTarget?
+    ): Collection<KSAnnotated> =
         when (useSiteTarget) {
-            null -> when (this) {
-                is KSValueParameter -> listOfNotNull(this, this.getGeneratedProperty())
+            null ->
+                when (this) {
+                    is KSValueParameter -> listOfNotNull(this, this.getGeneratedProperty())
 
-                is KSFunctionDeclarationImpl -> when {
-                    this.isGetter -> listOf(
-                        this.parentDeclaration?.getter()
-                            ?: throw InternalKSPException(
-                                "Unexpected missing getter",
-                                location,
-                                javaClass
-                            )
-                    )
+                    is KSFunctionDeclarationImpl ->
+                        when {
+                            this.isGetter ->
+                                listOf(
+                                    this.parentDeclaration?.getter()
+                                        ?: throw InternalKSPException(
+                                            "Unexpected missing getter",
+                                            location,
+                                            javaClass,
+                                        )
+                                )
 
-                    this.isSetter -> listOf(
-                        this.parentDeclaration?.setter()
-                            ?: throw InternalKSPException(
-                                "Unexpected missing setter",
-                                location,
-                                javaClass
-                            )
-                    )
+                            this.isSetter ->
+                                listOf(
+                                    this.parentDeclaration?.setter()
+                                        ?: throw InternalKSPException(
+                                            "Unexpected missing setter",
+                                            location,
+                                            javaClass,
+                                        )
+                                )
+
+                            else -> listOf(this)
+                        }
 
                     else -> listOf(this)
                 }
 
-                else -> listOf(this)
-            }
-
-            AnnotationUseSiteTarget.FILE -> when (this) {
-                is KSFile -> listOf(this)
-                else -> listOf(
-                    this.containingFile
-                        ?: throw InternalKSPException(
-                            "Unexpected missing file",
-                            location,
-                            javaClass
+            AnnotationUseSiteTarget.FILE ->
+                when (this) {
+                    is KSFile -> listOf(this)
+                    else ->
+                        listOf(
+                            this.containingFile
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing file",
+                                    location,
+                                    javaClass,
+                                )
                         )
-                )
-            }
+                }
 
-            AnnotationUseSiteTarget.PROPERTY -> when (this) {
-                is KSValueParameter -> listOf(
-                    this.getGeneratedProperty() ?: throw InternalKSPException(
-                        "Unexpected missing property for parameter",
-                        location,
-                        javaClass
-                    )
-                )
+            AnnotationUseSiteTarget.PROPERTY ->
+                when (this) {
+                    is KSValueParameter ->
+                        listOf(
+                            this.getGeneratedProperty()
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing property for parameter",
+                                    location,
+                                    javaClass,
+                                )
+                        )
 
-                else -> listOf(this)
-            }
+                    else -> listOf(this)
+                }
 
-            AnnotationUseSiteTarget.FIELD -> when (this) {
-                is KSValueParameter -> listOf(
-                    this.getGeneratedProperty() ?: throw InternalKSPException(
-                        "Unexpected missing property for parameter",
-                        location,
-                        javaClass
-                    )
-                )
+            AnnotationUseSiteTarget.FIELD ->
+                when (this) {
+                    is KSValueParameter ->
+                        listOf(
+                            this.getGeneratedProperty()
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing property for parameter",
+                                    location,
+                                    javaClass,
+                                )
+                        )
 
-                else -> listOf(this)
-            }
+                    else -> listOf(this)
+                }
 
             AnnotationUseSiteTarget.GET ->
                 listOf(
@@ -589,7 +600,7 @@ class PsiResolutionStrategy(
                         ?: throw InternalKSPException(
                             "Unexpected missing getter",
                             location,
-                            javaClass
+                            javaClass,
                         )
                 )
 
@@ -599,204 +610,218 @@ class PsiResolutionStrategy(
                         ?: throw InternalKSPException(
                             "Unexpected missing setter",
                             location,
-                            javaClass
+                            javaClass,
                         )
                 )
 
-            AnnotationUseSiteTarget.RECEIVER -> when (this) {
-                is KSFunctionDeclarationImpl -> listOf(
-                    extensionReceiver
-                        ?: throw InternalKSPException(
-                            "Unexpected missing extension receiver",
+            AnnotationUseSiteTarget.RECEIVER ->
+                when (this) {
+                    is KSFunctionDeclarationImpl ->
+                        listOf(
+                            extensionReceiver
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing extension receiver",
+                                    location,
+                                    javaClass,
+                                )
+                        )
+
+                    is KSPropertyDeclaration ->
+                        listOf(
+                            extensionReceiver
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing extension receiver",
+                                    location,
+                                    javaClass,
+                                )
+                        )
+
+                    else ->
+                        throw InternalKSPException(
+                            "Unexpected declaration",
                             location,
-                            javaClass
+                            javaClass,
                         )
-                )
-
-                is KSPropertyDeclaration -> listOf(
-                    extensionReceiver
-                        ?: throw InternalKSPException(
-                            "Unexpected missing extension receiver",
-                            location,
-                            javaClass
-                        )
-                )
-
-                else -> throw InternalKSPException(
-                    "Unexpected declaration",
-                    location,
-                    javaClass
-                )
-            }
-
-            AnnotationUseSiteTarget.PARAM -> when (this) {
-                is KSValueParameter -> listOf(this)
-                else -> throw InternalKSPException(
-                    "Unexpected annotated symbol with param use-site target",
-                    location,
-                    javaClass
-                )
-            }
-
-            AnnotationUseSiteTarget.SETPARAM -> when (this) {
-                is KSValueParameter -> {
-                    listOf(
-                        (this.parent as? KSFunctionDeclaration)?.parameters?.singleOrNull()
-                            ?: throw InternalKSPException(
-                                "Unexpected missing setter parameter",
-                                location,
-                                javaClass
-                            )
-                    )
                 }
 
-                is KSPropertyDeclaration -> listOf(
-                    setter?.parameter
-                        ?: throw InternalKSPException(
-                            "Unexpected missing setter parameter",
+            AnnotationUseSiteTarget.PARAM ->
+                when (this) {
+                    is KSValueParameter -> listOf(this)
+                    else ->
+                        throw InternalKSPException(
+                            "Unexpected annotated symbol with param use-site target",
                             location,
-                            javaClass
+                            javaClass,
                         )
-                )
+                }
 
-                else -> throw InternalKSPException(
-                    "Unexpected annotated symbol with 'setparam' use-site target",
-                    location,
-                    javaClass
-                )
-            }
+            AnnotationUseSiteTarget.SETPARAM ->
+                when (this) {
+                    is KSValueParameter -> {
+                        listOf(
+                            (this.parent as? KSFunctionDeclaration)?.parameters?.singleOrNull()
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing setter parameter",
+                                    location,
+                                    javaClass,
+                                )
+                        )
+                    }
+
+                    is KSPropertyDeclaration ->
+                        listOf(
+                            setter?.parameter
+                                ?: throw InternalKSPException(
+                                    "Unexpected missing setter parameter",
+                                    location,
+                                    javaClass,
+                                )
+                        )
+
+                    else ->
+                        throw InternalKSPException(
+                            "Unexpected annotated symbol with 'setparam' use-site target",
+                            location,
+                            javaClass,
+                        )
+                }
 
             AnnotationUseSiteTarget.DELEGATE ->
                 // TODO: Better impl for this
                 listOf(this)
 
-            AnnotationUseSiteTarget.ALL -> when (this) {
-                is KSValueParameter -> {
-                    buildList {
-                        add(this@findTargetedSymbol)
-                        this@findTargetedSymbol.getGeneratedProperty()?.findTargetedSymbol(useSiteTarget)
-                            ?.let { symbols ->
-                                symbols.forEach { addIfNotNull(it) }
-                            }
+            AnnotationUseSiteTarget.ALL ->
+                when (this) {
+                    is KSValueParameter -> {
+                        buildList {
+                            add(this@findTargetedSymbol)
+                            this@findTargetedSymbol.getGeneratedProperty()
+                                ?.findTargetedSymbol(useSiteTarget)
+                                ?.let { symbols ->
+                                    symbols.forEach { addIfNotNull(it) }
+                                }
+                        }
                     }
+
+                    is KSPropertyDeclaration ->
+                        // TODO: Add proper support for backing fields, the ALL use site target also
+                        // targets the field
+                        // TODO: Add support for JvmRecord annotation according to KEEP 402
+                        buildList {
+                            add(this@findTargetedSymbol)
+                            addIfNotNull(this@findTargetedSymbol.getter)
+                            addIfNotNull(this@findTargetedSymbol.setter)
+                            addIfNotNull(this@findTargetedSymbol.setter?.parameter)
+                        }
+
+                    else ->
+                        throw InternalKSPException(
+                            "Unexpected annotated symbol with 'all' use-site target",
+                            location,
+                            javaClass,
+                        )
                 }
-
-                is KSPropertyDeclaration ->
-                    // TODO: Add proper support for backing fields, the ALL use site target also targets the field
-                    // TODO: Add support for JvmRecord annotation according to KEEP 402
-                    buildList {
-                        add(this@findTargetedSymbol)
-                        addIfNotNull(this@findTargetedSymbol.getter)
-                        addIfNotNull(this@findTargetedSymbol.setter)
-                        addIfNotNull(this@findTargetedSymbol.setter?.parameter)
-                    }
-
-                else -> throw InternalKSPException(
-                    "Unexpected annotated symbol with 'all' use-site target",
-                    location,
-                    javaClass
-                )
-            }
         }
 
-    /**
-     * Resolves this [PsiTypeParameter] to its [KSTypeParameter] representation within [method].
-     */
+    /** Resolves this [PsiTypeParameter] to its [KSTypeParameter] representation within [method]. */
     private fun PsiTypeParameter.resolveTypeParameterOfMethod(method: PsiMethod): KSTypeParameter {
-        val callableSym = analyze { method.callableSymbol }
-            ?: throw InternalKSPException(
-                "Unexpected null callable symbol",
-                method.toLocation(),
-                method.javaClass
-            )
-        val functionDecl = callableSym.toKSFunctionDeclaration()
-            ?: throw InternalKSPException(
-                "Failed to convert callable symbol to KSFunctionDeclaration",
-                method.toLocation(),
-                callableSym.javaClass
-            )
+        val callableSym =
+            analyze { method.callableSymbol }
+                ?: throw InternalKSPException(
+                    "Unexpected null callable symbol",
+                    method.toLocation(),
+                    method.javaClass,
+                )
+        val functionDecl =
+            callableSym.toKSFunctionDeclaration()
+                ?: throw InternalKSPException(
+                    "Failed to convert callable symbol to KSFunctionDeclaration",
+                    method.toLocation(),
+                    callableSym.javaClass,
+                )
         return functionDecl.typeParameters[parameterIndex]
     }
 
-    /**
-     * Resolves this [PsiTypeParameter] to its [KSTypeParameter] representations within [clazz].
-     */
-    private fun PsiTypeParameter.resolveTypeParameterOfClass(clazz: PsiClass): List<KSTypeParameter> {
-        val classSym = analyze { clazz.namedClassSymbol }
-            ?: throw InternalKSPException(
-                "Unexpected named class symbol",
-                clazz.toLocation(),
-                clazz.javaClass
-            )
+    /** Resolves this [PsiTypeParameter] to its [KSTypeParameter] representations within [clazz]. */
+    private fun PsiTypeParameter.resolveTypeParameterOfClass(
+        clazz: PsiClass
+    ): List<KSTypeParameter> {
+        val classSym =
+            analyze { clazz.namedClassSymbol }
+                ?: throw InternalKSPException(
+                    "Unexpected named class symbol",
+                    clazz.toLocation(),
+                    clazz.javaClass,
+                )
         val typeParamSym = classSym.toKSClassDeclaration().typeParameters[parameterIndex]
         // Type parameters for classes return two symbols with Analysis API,
         // one as a Psi-based KaFirTypeParameter and one as a "regular" KaFirTypeParameter,
         // so we return a clone here to maintain KSP API parity.
-        val clone = object : KSTypeParameter by typeParamSym {
-            override fun toString(): String = typeParamSym.toString()
-        }
+        val clone =
+            object : KSTypeParameter by typeParamSym {
+                override fun toString(): String = typeParamSym.toString()
+            }
         return listOf(typeParamSym, clone)
     }
 
     /**
-     * Returns the short name used at the annotation site.
-     * Throws an exception if the name is `null`.
+     * Returns the short name used at the annotation site. Throws an exception if the name is
+     * `null`.
      */
     private val PsiAnnotation.shortName: String
-        get() = this.nameReferenceElement?.referenceName
-            ?: throw InternalKSPException(
-                "Unexpected nullable annotation short name",
-                toLocation(),
-                javaClass
-            )
+        get() =
+            this.nameReferenceElement?.referenceName
+                ?: throw InternalKSPException(
+                    "Unexpected nullable annotation short name",
+                    toLocation(),
+                    javaClass,
+                )
 
     /**
-     * Returns the callable symbol, i.e., the method symbol for the Java parameter `this`.
-     * Assumes that `this` is a parameter to a method.
+     * Returns the callable symbol, i.e., the method symbol for the Java parameter `this`. Assumes
+     * that `this` is a parameter to a method.
      */
     private val PsiParameter.callableSymbol: KaCallableSymbol
         get() {
-            val decl = this.parent.parent as? PsiMember
-                ?: throw InternalKSPException(
-                    "Unexpected PsiParameter",
-                    toLocation(),
-                    javaClass
-                )
+            val decl =
+                this.parent.parent as? PsiMember
+                    ?: throw InternalKSPException(
+                        "Unexpected PsiParameter",
+                        toLocation(),
+                        javaClass,
+                    )
             return analyze {
                 decl.callableSymbol
                     ?: throw InternalKSPException(
                         "Unexpected null callable symbol",
                         decl.toLocation(),
-                        decl.javaClass
+                        decl.javaClass,
                     )
             }
         }
 
-    /**
-     * Returns the index of `this` in the list of type parameters.
-     */
+    /** Returns the index of `this` in the list of type parameters. */
     private val PsiTypeParameter.parameterIndex: Int
         get() {
             when (val parent = this.parent) {
-                is PsiTypeParameterList ->
-                    return parent.getTypeParameterIndex(this)
+                is PsiTypeParameterList -> return parent.getTypeParameterIndex(this)
 
                 else ->
                     throw InternalKSPException(
                         "Unexpected parent of PsiTypeParameter",
                         parent.toLocation(),
-                        parent.javaClass
+                        parent.javaClass,
                     )
             }
         }
 
     /**
-     * The fully expanded [ClassId] of the annotation entry.
-     * This member is expensive to compute.
+     * The fully expanded [ClassId] of the annotation entry. This member is expensive to compute.
      */
     private val KtAnnotationEntry.classId: ClassId?
         get() = analyze {
-            // N.B. do not use typeReference.type to get the ClassId because that can fail in certain edge cases, e.g.
+            // N.B. do not use typeReference.type to get the ClassId because that can fail in
+            // certain edge cases, e.g.
             //  https://github.com/google/ksp/issues/2913
             this@classId.resolveToCall()
                 ?.successfulCallOrNull<KaAnnotationCall>()
@@ -804,9 +829,7 @@ class PsiResolutionStrategy(
                 ?.containingClassId
         }
 
-    /**
-     * The use-site target specified for this annotation entry.
-     */
+    /** The use-site target specified for this annotation entry. */
     private val KtAnnotationEntry.ksUseSiteTarget: AnnotationUseSiteTarget?
         get() = useSiteTarget?.getAnnotationUseSiteTarget()?.toKSAnnotationUseSiteTarget()
 }

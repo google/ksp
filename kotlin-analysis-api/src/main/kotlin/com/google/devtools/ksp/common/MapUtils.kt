@@ -18,15 +18,13 @@
 package com.google.devtools.ksp.common
 
 /**
- * Applies [transform] to each key-value pair, where the value is a collection,
- * and merges the resulting collections of values.
+ * Applies [transform] to each key-value pair, where the value is a collection, and merges the
+ * resulting collections of values.
  *
  * It will exclude any key-value pair where `transform(key)` is `null`.
  *
- * In other words, if `k1 -> [a, b, c], k2 -> [c, d, e]` and
- * `transform(k1) = transform(k2) = k3`, then the result is
- * `k3 -> [a, b, c, d, e]`.
- * Note the list is deduplicated.
+ * In other words, if `k1 -> [a, b, c], k2 -> [c, d, e]` and `transform(k1) = transform(k2) = k3`,
+ * then the result is `k3 -> [a, b, c, d, e]`. Note the list is deduplicated.
  */
 internal fun <K, V, R> Map<K, Lazy<Collection<V>>>.mergeMapNotNullKeys(
     transform: (K) -> R?

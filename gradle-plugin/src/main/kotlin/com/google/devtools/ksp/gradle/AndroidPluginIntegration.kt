@@ -32,6 +32,7 @@ import com.google.devtools.ksp.gradle.utils.canUseAddGeneratedSourceDirectoriesA
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.isLegacyKaptPluginApplied
+import java.util.concurrent.Callable
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
@@ -40,14 +41,13 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.internal.KaptTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
-import java.util.concurrent.Callable
 
 /**
- * This helper class handles communication with the android plugin.
- * It is isolated in a separate class to avoid adding dependency on the android plugin.
- * Instead, we add a compileOnly dependency to the Android Plugin, which means we can still function
- * without the Android plugin. The downside is that we need to ensure never to access Android
- * plugin APIs directly without checking its existence (we have tests covering that case).
+ * This helper class handles communication with the android plugin. It is isolated in a separate
+ * class to avoid adding dependency on the android plugin. Instead, we add a compileOnly dependency
+ * to the Android Plugin, which means we can still function without the Android plugin. The downside
+ * is that we need to ensure never to access Android plugin APIs directly without checking its
+ * existence (we have tests covering that case).
  */
 object AndroidPluginIntegration {
 
@@ -59,11 +59,12 @@ object AndroidPluginIntegration {
     }
 
     private fun decorateAndroidExtension(project: Project, onSourceSet: (String) -> Unit) {
-        val sourceSets = when (val androidExt = project.extensions.getByName("android")) {
-            is BaseExtension -> androidExt.sourceSets
-            is CommonExtension -> androidExt.sourceSets
-            else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
-        }
+        val sourceSets =
+            when (val androidExt = project.extensions.getByName("android")) {
+                is BaseExtension -> androidExt.sourceSets
+                is CommonExtension -> androidExt.sourceSets
+                else -> throw RuntimeException("Unsupported Android Gradle plugin version.")
+            }
         sourceSets.configureEach {
             onSourceSet(it.name)
         }
@@ -73,9 +74,7 @@ object AndroidPluginIntegration {
         return kotlinCompilation.androidVariant?.sourceSets?.map { it.name } ?: emptyList()
     }
 
-    /**
-     * Support KspTaskJvm and KspAATask tasks
-     */
+    /** Support KspTaskJvm and KspAATask tasks */
     @Suppress("DEPRECATION")
     private fun tryUpdateKspWithAndroidSourceSets(
         project: Project,
@@ -86,7 +85,8 @@ object AndroidPluginIntegration {
         if (androidComponent != null && project.isAgpBuiltInKotlinUsed()) {
             if (project.canUseInternalKspApis()) {
                 val javaSources =
-                    (androidComponent.sources.java as? FlatSourceDirectoriesForJavaImpl)?.allButKspAndKaptGenerators()
+                    (androidComponent.sources.java as? FlatSourceDirectoriesForJavaImpl)
+                        ?.allButKspAndKaptGenerators()
 
                 val kotlinSources = androidComponent.sources.kotlin?.all
 
@@ -158,61 +158,66 @@ object AndroidPluginIntegration {
         resourcesOutputDir: Provider<Directory>,
         androidComponent: Component?,
     ) {
-        if (androidComponent != null &&
-            project.canUseAddGeneratedSourceDirectoriesApi() &&
-            project.isAgpBuiltInKotlinUsed()
+        if (
+            androidComponent != null &&
+                project.canUseAddGeneratedSourceDirectoriesApi() &&
+                project.isAgpBuiltInKotlinUsed()
         ) {
             if (project.canUseInternalKspApis()) {
-                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
-                    taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.javaOutputDir },
-                    DirectoryEntry.Kind.KSP
-                )
+                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)
+                    ?.addGeneratedSourceDirectory(
+                        taskProvider = kspTaskProvider,
+                        wiredWith = { task -> task.kspConfig.javaOutputDir },
+                        DirectoryEntry.Kind.KSP,
+                    )
 
-                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
-                    taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.kotlinOutputDir },
-                    DirectoryEntry.Kind.KSP
-                )
+                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)
+                    ?.addGeneratedSourceDirectory(
+                        taskProvider = kspTaskProvider,
+                        wiredWith = { task -> task.kspConfig.kotlinOutputDir },
+                        DirectoryEntry.Kind.KSP,
+                    )
             } else {
                 androidComponent.sources.java?.addGeneratedSourceDirectory(
                     taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.javaOutputDir }
+                    wiredWith = { task -> task.kspConfig.javaOutputDir },
                 )
 
                 androidComponent.sources.java?.addGeneratedSourceDirectory(
                     taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.kotlinOutputDir }
+                    wiredWith = { task -> task.kspConfig.kotlinOutputDir },
                 )
             }
 
             androidComponent.sources.resources?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> task.kspConfig.resourceOutputDir }
+                wiredWith = { task -> task.kspConfig.resourceOutputDir },
             )
 
-            // this is a bit of a hack because merge*GeneratedProguardFiles in AGP looks in the CLASSES artifacts
+            // this is a bit of a hack because merge*GeneratedProguardFiles in AGP looks in the
+            // CLASSES artifacts
             // for the KSP generated proguard files
             // todo: remove this once the issues is amended in AGP
             androidComponent.artifacts
                 .forScope(ScopedArtifacts.Scope.PROJECT)
                 .use(kspTaskProvider)
-                .toAppend(
-                    ScopedArtifact.CLASSES
-                ) { task -> project.objects.directoryProperty().also { it.set(resourcesOutputDir) } }
+                .toAppend(ScopedArtifact.CLASSES) { task ->
+                    project.objects.directoryProperty().also { it.set(resourcesOutputDir) }
+                }
 
             androidComponent.artifacts
                 .forScope(ScopedArtifacts.Scope.PROJECT)
                 .use(kspTaskProvider)
-                .toAppend(
-                    ScopedArtifact.CLASSES
-                ) { task -> project.objects.directoryProperty().also { it.set(classOutputDir) } }
+                .toAppend(ScopedArtifact.CLASSES) { task ->
+                    project.objects.directoryProperty().also { it.set(classOutputDir) }
+                }
         } else {
             val kspJavaOutput = project.fileTree(javaOutputDir).builtBy(kspTaskProvider)
             val kspKotlinOutput = project.fileTree(kotlinOutputDir).builtBy(kspTaskProvider)
             val kspClassOutput = project.fileTree(classOutputDir).builtBy(kspTaskProvider)
             // PostJavacGeneratedBytecode will be used by bundleLibRuntimeToJar*
-            // We need add ksp task dependency for this output to avoid bundleLib task run before KSP
+            // We need add ksp task dependency for this output to avoid bundleLib task run before
+            // KSP
             val resourcesOutput = project.files(resourcesOutputDir).builtBy(kspTaskProvider)
 
             kspJavaOutput.include("**/*.java")
@@ -268,12 +273,12 @@ object AndroidPluginIntegration {
         if (androidComponent != null) {
             androidComponent.sources.java?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> task.kspConfig.javaOutputDir }
+                wiredWith = { task -> task.kspConfig.javaOutputDir },
             )
 
             androidComponent.sources.kotlin?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,
-                wiredWith = { task -> task.kspConfig.kotlinOutputDir }
+                wiredWith = { task -> task.kspConfig.kotlinOutputDir },
             )
         }
     }

@@ -29,26 +29,20 @@ abstract class KSPConfig(
     val commonSourceRoots: List<File>,
     val libraries: List<File>,
     val friends: List<File>,
-
     val processorOptions: Map<String, String>,
-
     val projectBaseDir: File,
     val outputBaseDir: File,
     val cachesDir: File,
-
     val classOutputDir: File,
     val kotlinOutputDir: File,
     val resourceOutputDir: File,
-
     val incremental: Boolean,
     val incrementalContextLoggingOptions: IncrementalContextLoggingOptions,
     val modifiedSources: List<File>,
     val removedSources: List<File>,
     val changedClasses: List<String>,
-
     val languageVersion: String,
     val apiVersion: String,
-
     val allWarningsAsErrors: Boolean,
     val mapAnnotationArgumentsInJava: Boolean,
     val experimentalPsiResolution: Boolean,
@@ -74,9 +68,7 @@ abstract class KSPConfig(
         var incrementalLog: Boolean = false
         var incrementalLogGraphOrigin: String? = null
             set(value) {
-                field = value
-                    ?.trim()
-                    ?.filterNot(::isInvalidGraphChar)
+                field = value?.trim()?.filterNot(::isInvalidGraphChar)
             }
 
         var modifiedSources: List<File> = emptyList()
@@ -99,11 +91,9 @@ abstract class KSPConfig(
             fun isWhiteSpace(char: Char): Boolean =
                 char == ' ' || char == '\n' || char == '\t' || char == '\r'
 
-            @JvmStatic
-            fun isEscape(char: Char): Boolean = char == '\\'
+            @JvmStatic fun isEscape(char: Char): Boolean = char == '\\'
 
-            @JvmStatic
-            fun isQuote(char: Char): Boolean = char == '\'' || char == '"'
+            @JvmStatic fun isQuote(char: Char): Boolean = char == '\'' || char == '"'
         }
     }
 }
@@ -119,59 +109,48 @@ class KSPJvmConfig(
     commonSourceRoots: List<File>,
     libraries: List<File>,
     friends: List<File>,
-
     processorOptions: Map<String, String>,
-
     projectBaseDir: File,
     outputBaseDir: File,
     cachesDir: File,
-
     classOutputDir: File,
     kotlinOutputDir: File,
     resourceOutputDir: File,
-
     incremental: Boolean,
     incrementalContextLoggingOptions: IncrementalContextLoggingOptions,
     modifiedSources: List<File>,
     removedSources: List<File>,
     changedClasses: List<String>,
-
     languageVersion: String,
     apiVersion: String,
-
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
     experimentalPsiResolution: Boolean,
-) : KSPConfig(
-    moduleName,
-    sourceRoots,
-    commonSourceRoots,
-    libraries,
-    friends,
-
-    processorOptions,
-
-    projectBaseDir,
-    outputBaseDir,
-    cachesDir,
-
-    classOutputDir,
-    kotlinOutputDir,
-    resourceOutputDir,
-
-    incremental,
-    incrementalContextLoggingOptions,
-    modifiedSources,
-    removedSources,
-    changedClasses,
-
-    languageVersion,
-    apiVersion,
-
-    allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
-    experimentalPsiResolution,
-) {
+) :
+    KSPConfig(
+        moduleName,
+        sourceRoots,
+        commonSourceRoots,
+        libraries,
+        friends,
+        processorOptions,
+        projectBaseDir,
+        outputBaseDir,
+        cachesDir,
+        classOutputDir,
+        kotlinOutputDir,
+        resourceOutputDir,
+        incremental,
+        incrementalContextLoggingOptions,
+        modifiedSources,
+        removedSources,
+        changedClasses,
+        languageVersion,
+        apiVersion,
+        allWarningsAsErrors,
+        mapAnnotationArgumentsInJava,
+        experimentalPsiResolution,
+    ) {
     @KSPArgParserGen(name = "kspJvmArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         var javaSourceRoots: List<File> = emptyList()
@@ -187,22 +166,18 @@ class KSPJvmConfig(
                 jdkHome,
                 jvmTarget,
                 jvmDefaultMode,
-
                 moduleName,
                 sourceRoots,
                 commonSourceRoots,
                 libraries,
                 friends,
-
                 processorOptions,
-
                 projectBaseDir,
                 outputBaseDir,
                 cachesDir,
                 classOutputDir,
                 kotlinOutputDir,
                 resourceOutputDir,
-
                 incremental,
                 IncrementalContextLoggingOptions(
                     incrementalLog,
@@ -211,13 +186,11 @@ class KSPJvmConfig(
                 modifiedSources,
                 removedSources,
                 changedClasses,
-
                 languageVersion,
                 apiVersion,
-
                 allWarningsAsErrors,
                 mapAnnotationArgumentsInJava,
-                experimentalPsiResolution
+                experimentalPsiResolution,
             )
         }
     }
@@ -230,59 +203,48 @@ class KSPNativeConfig(
     commonSourceRoots: List<File>,
     libraries: List<File>,
     friends: List<File>,
-
     processorOptions: Map<String, String>,
-
     projectBaseDir: File,
     outputBaseDir: File,
     cachesDir: File,
-
     classOutputDir: File,
     kotlinOutputDir: File,
     resourceOutputDir: File,
-
     incremental: Boolean,
     incrementalContextLoggingOptions: IncrementalContextLoggingOptions,
     modifiedSources: List<File>,
     removedSources: List<File>,
     changedClasses: List<String>,
-
     languageVersion: String,
     apiVersion: String,
-
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
     experimentalPsiResolution: Boolean,
-) : KSPConfig(
-    moduleName,
-    sourceRoots,
-    commonSourceRoots,
-    libraries,
-    friends,
-
-    processorOptions,
-
-    projectBaseDir,
-    outputBaseDir,
-    cachesDir,
-
-    classOutputDir,
-    kotlinOutputDir,
-    resourceOutputDir,
-
-    incremental,
-    incrementalContextLoggingOptions,
-    modifiedSources,
-    removedSources,
-    changedClasses,
-
-    languageVersion,
-    apiVersion,
-
-    allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
-    experimentalPsiResolution,
-) {
+) :
+    KSPConfig(
+        moduleName,
+        sourceRoots,
+        commonSourceRoots,
+        libraries,
+        friends,
+        processorOptions,
+        projectBaseDir,
+        outputBaseDir,
+        cachesDir,
+        classOutputDir,
+        kotlinOutputDir,
+        resourceOutputDir,
+        incremental,
+        incrementalContextLoggingOptions,
+        modifiedSources,
+        removedSources,
+        changedClasses,
+        languageVersion,
+        apiVersion,
+        allWarningsAsErrors,
+        mapAnnotationArgumentsInJava,
+        experimentalPsiResolution,
+    ) {
     @KSPArgParserGen(name = "kspNativeArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         lateinit var target: String
@@ -295,16 +257,13 @@ class KSPNativeConfig(
                 commonSourceRoots,
                 libraries,
                 friends,
-
                 processorOptions,
-
                 projectBaseDir,
                 outputBaseDir,
                 cachesDir,
                 classOutputDir,
                 kotlinOutputDir,
                 resourceOutputDir,
-
                 incremental,
                 IncrementalContextLoggingOptions(
                     incrementalLog,
@@ -313,13 +272,11 @@ class KSPNativeConfig(
                 modifiedSources,
                 removedSources,
                 changedClasses,
-
                 languageVersion,
                 apiVersion,
-
                 allWarningsAsErrors,
                 mapAnnotationArgumentsInJava,
-                experimentalPsiResolution
+                experimentalPsiResolution,
             )
         }
     }
@@ -332,59 +289,48 @@ class KSPJsConfig(
     commonSourceRoots: List<File>,
     libraries: List<File>,
     friends: List<File>,
-
     processorOptions: Map<String, String>,
-
     projectBaseDir: File,
     outputBaseDir: File,
     cachesDir: File,
-
     classOutputDir: File,
     kotlinOutputDir: File,
     resourceOutputDir: File,
-
     incremental: Boolean,
     incrementalContextLoggingOptions: IncrementalContextLoggingOptions,
     modifiedSources: List<File>,
     removedSources: List<File>,
     changedClasses: List<String>,
-
     languageVersion: String,
     apiVersion: String,
-
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
     experimentalPsiResolution: Boolean,
-) : KSPConfig(
-    moduleName,
-    sourceRoots,
-    commonSourceRoots,
-    libraries,
-    friends,
-
-    processorOptions,
-
-    projectBaseDir,
-    outputBaseDir,
-    cachesDir,
-
-    classOutputDir,
-    kotlinOutputDir,
-    resourceOutputDir,
-
-    incremental,
-    incrementalContextLoggingOptions,
-    modifiedSources,
-    removedSources,
-    changedClasses,
-
-    languageVersion,
-    apiVersion,
-
-    allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
-    experimentalPsiResolution,
-) {
+) :
+    KSPConfig(
+        moduleName,
+        sourceRoots,
+        commonSourceRoots,
+        libraries,
+        friends,
+        processorOptions,
+        projectBaseDir,
+        outputBaseDir,
+        cachesDir,
+        classOutputDir,
+        kotlinOutputDir,
+        resourceOutputDir,
+        incremental,
+        incrementalContextLoggingOptions,
+        modifiedSources,
+        removedSources,
+        changedClasses,
+        languageVersion,
+        apiVersion,
+        allWarningsAsErrors,
+        mapAnnotationArgumentsInJava,
+        experimentalPsiResolution,
+    ) {
     @KSPArgParserGen(name = "kspJsArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         lateinit var backend: String
@@ -397,16 +343,13 @@ class KSPJsConfig(
                 commonSourceRoots,
                 libraries,
                 friends,
-
                 processorOptions,
-
                 projectBaseDir,
                 outputBaseDir,
                 cachesDir,
                 classOutputDir,
                 kotlinOutputDir,
                 resourceOutputDir,
-
                 incremental,
                 IncrementalContextLoggingOptions(
                     incrementalLog,
@@ -415,13 +358,11 @@ class KSPJsConfig(
                 modifiedSources,
                 removedSources,
                 changedClasses,
-
                 languageVersion,
                 apiVersion,
-
                 allWarningsAsErrors,
                 mapAnnotationArgumentsInJava,
-                experimentalPsiResolution
+                experimentalPsiResolution,
             )
         }
     }
@@ -429,7 +370,7 @@ class KSPJsConfig(
 
 data class Target(
     val platform: String,
-    val args: Map<String, String>
+    val args: Map<String, String>,
 )
 
 class KSPCommonConfig(
@@ -439,59 +380,48 @@ class KSPCommonConfig(
     commonSourceRoots: List<File>,
     libraries: List<File>,
     friends: List<File>,
-
     processorOptions: Map<String, String>,
-
     projectBaseDir: File,
     outputBaseDir: File,
     cachesDir: File,
-
     classOutputDir: File,
     kotlinOutputDir: File,
     resourceOutputDir: File,
-
     incremental: Boolean,
     incrementalContextLoggingOptions: IncrementalContextLoggingOptions,
     modifiedSources: List<File>,
     removedSources: List<File>,
     changedClasses: List<String>,
-
     languageVersion: String,
     apiVersion: String,
-
     allWarningsAsErrors: Boolean,
     mapAnnotationArgumentsInJava: Boolean,
     experimentalPsiResolution: Boolean,
-) : KSPConfig(
-    moduleName,
-    sourceRoots,
-    commonSourceRoots,
-    libraries,
-    friends,
-
-    processorOptions,
-
-    projectBaseDir,
-    outputBaseDir,
-    cachesDir,
-
-    classOutputDir,
-    kotlinOutputDir,
-    resourceOutputDir,
-
-    incremental,
-    incrementalContextLoggingOptions,
-    modifiedSources,
-    removedSources,
-    changedClasses,
-
-    languageVersion,
-    apiVersion,
-
-    allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
-    experimentalPsiResolution,
-) {
+) :
+    KSPConfig(
+        moduleName,
+        sourceRoots,
+        commonSourceRoots,
+        libraries,
+        friends,
+        processorOptions,
+        projectBaseDir,
+        outputBaseDir,
+        cachesDir,
+        classOutputDir,
+        kotlinOutputDir,
+        resourceOutputDir,
+        incremental,
+        incrementalContextLoggingOptions,
+        modifiedSources,
+        removedSources,
+        changedClasses,
+        languageVersion,
+        apiVersion,
+        allWarningsAsErrors,
+        mapAnnotationArgumentsInJava,
+        experimentalPsiResolution,
+    ) {
     @KSPArgParserGen(name = "kspCommonArgParser")
     class Builder : KSPConfig.Builder(), Serializable {
         lateinit var targets: List<Target>
@@ -504,16 +434,13 @@ class KSPCommonConfig(
                 commonSourceRoots,
                 libraries,
                 friends,
-
                 processorOptions,
-
                 projectBaseDir,
                 outputBaseDir,
                 cachesDir,
                 classOutputDir,
                 kotlinOutputDir,
                 resourceOutputDir,
-
                 incremental,
                 IncrementalContextLoggingOptions(
                     incrementalLog,
@@ -522,13 +449,11 @@ class KSPCommonConfig(
                 modifiedSources,
                 removedSources,
                 changedClasses,
-
                 languageVersion,
                 apiVersion,
-
                 allWarningsAsErrors,
                 mapAnnotationArgumentsInJava,
-                experimentalPsiResolution
+                experimentalPsiResolution,
             )
         }
     }
@@ -561,10 +486,12 @@ fun <T> parseList(arg: String, transform: (String) -> T): List<T> {
 fun <T> parseMap(arg: String, transform: (String) -> T): Map<String, T> {
     if (arg.length > 0 && arg[0] == '-')
         throw IllegalArgumentException("expecting a Map but got $arg")
-    return arg.split(File.pathSeparatorChar).map {
-        val (k, v) = it.split('=')
-        k to transform(v)
-    }.toMap()
+    return arg.split(File.pathSeparatorChar)
+        .map {
+            val (k, v) = it.split('=')
+            k to transform(v)
+        }
+        .toMap()
 }
 
 fun parseTarget(arg: String): Target {

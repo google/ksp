@@ -190,8 +190,10 @@ class ResolverAAImpl(
     }
 
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
-    lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
-    val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
+    lateinit var functionAsMemberOfCache:
+        MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
+    val javaFileManager =
+        project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
     private val classBinaryCache = ClsKotlinBinaryClassCache()
     private val packageInfoFiles by lazyMemoizedSequence {
         allKSFiles.filter { it.fileName == "package-info.java" }.asSequence()
@@ -248,19 +250,22 @@ class ResolverAAImpl(
         when (declaration.origin) {
             Origin.JAVA -> {
                 addVisibilityModifiers()
-                if (declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE)
+                if (
+                    declaration is KSClassDeclaration &&
+                        declaration.classKind == ClassKind.INTERFACE
+                )
                     modifiers.add(Modifier.ABSTRACT)
             }
 
             Origin.KOTLIN -> {
                 addVisibilityModifiers()
-                if (!declaration.isOpen())
-                    modifiers.add(Modifier.FINAL)
+                if (!declaration.isOpen()) modifiers.add(Modifier.FINAL)
                 (declaration as? KSClassDeclarationImpl)?.let {
                     analyze {
                         if (
-                            it.ktClassOrObjectSymbol.staticMemberScope
-                                .declarations.contains(declaration.ktDeclarationSymbol)
+                            it.ktClassOrObjectSymbol.staticMemberScope.declarations.contains(
+                                declaration.ktDeclarationSymbol
+                            )
                         )
                             modifiers.add(Modifier.JAVA_STATIC)
                     }
@@ -280,25 +285,23 @@ class ResolverAAImpl(
                     modifiers.add(Modifier.JAVA_VOLATILE)
                 when (declaration) {
                     is KSClassDeclaration -> {
-                        if (declaration.isCompanionObject)
-                            modifiers.add(Modifier.JAVA_STATIC)
+                        if (declaration.isCompanionObject) modifiers.add(Modifier.JAVA_STATIC)
                         if (declaration.classKind == ClassKind.INTERFACE)
                             modifiers.add(Modifier.ABSTRACT)
                     }
 
                     is KSPropertyDeclaration -> {
-                        if (declaration.isAbstract())
-                            modifiers.add(Modifier.ABSTRACT)
+                        if (declaration.isAbstract()) modifiers.add(Modifier.ABSTRACT)
                     }
 
                     is KSFunctionDeclaration -> {
-                        if (declaration.isAbstract)
-                            modifiers.add(Modifier.ABSTRACT)
+                        if (declaration.isAbstract) modifiers.add(Modifier.ABSTRACT)
                     }
                 }
             }
 
-            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+            Origin.KOTLIN_LIB,
+            Origin.JAVA_LIB -> {
                 if (declaration.hasAnnotation(JVM_STATIC_ANNOTATION_FQN)) {
                     modifiers.add(Modifier.JAVA_STATIC)
                 }
@@ -326,39 +329,49 @@ class ResolverAAImpl(
     }
 
     internal val KSPropertyDeclaration.jvmAccessFlag: Int
-        get() = when (origin) {
-            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
-                val fileManager = instance.javaFileManager
-                val parentClass = this.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                BinaryClassInfoCache.getCached(classId, fileManager)
-                    ?.fieldAccFlags?.get(this.simpleName.asString()) ?: 0
-            }
+        get() =
+            when (origin) {
+                Origin.KOTLIN_LIB,
+                Origin.JAVA_LIB -> {
+                    val fileManager = instance.javaFileManager
+                    val parentClass = this.findParentOfType<KSClassDeclaration>()
+                    val classId =
+                        (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
+                    BinaryClassInfoCache.getCached(classId, fileManager)
+                        ?.fieldAccFlags
+                        ?.get(this.simpleName.asString()) ?: 0
+                }
 
-            else -> throw InternalKSPException(
-                "Unexpected origin: '$origin', expected 'KOTLIN_LIB' or 'JAVA_LIB'",
-                this.location,
-                this.javaClass
-            )
-        }
+                else ->
+                    throw InternalKSPException(
+                        "Unexpected origin: '$origin', expected 'KOTLIN_LIB' or 'JAVA_LIB'",
+                        this.location,
+                        this.javaClass,
+                    )
+            }
 
     internal val KSFunctionDeclaration.jvmAccessFlag: Int
-        get() = when (origin) {
-            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
-                val jvmDesc = mapToJvmSignatureInternal(this)
-                val fileManager = instance.javaFileManager
-                val parentClass = this.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
-                BinaryClassInfoCache.getCached(classId, fileManager)
-                    ?.methodAccFlags?.get(this.simpleName.asString() + jvmDesc) ?: 0
-            }
+        get() =
+            when (origin) {
+                Origin.KOTLIN_LIB,
+                Origin.JAVA_LIB -> {
+                    val jvmDesc = mapToJvmSignatureInternal(this)
+                    val fileManager = instance.javaFileManager
+                    val parentClass = this.findParentOfType<KSClassDeclaration>()
+                    val classId =
+                        (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
+                    BinaryClassInfoCache.getCached(classId, fileManager)
+                        ?.methodAccFlags
+                        ?.get(this.simpleName.asString() + jvmDesc) ?: 0
+                }
 
-            else -> throw InternalKSPException(
-                "Unexpected origin: '$origin', expected 'KOTLIN_LIB' or 'JAVA_LIB'",
-                this.location,
-                this.javaClass,
-            )
-        }
+                else ->
+                    throw InternalKSPException(
+                        "Unexpected origin: '$origin', expected 'KOTLIN_LIB' or 'JAVA_LIB'",
+                        this.location,
+                        this.javaClass,
+                    )
+            }
 
     override fun getAllFiles(): Sequence<KSFile> {
         return allKSFiles.asSequence()
@@ -373,28 +386,37 @@ class ResolverAAImpl(
             val simpleName = name.getShortName()
             val classId = ClassId(FqName(parent), Name.identifier(simpleName))
             analyze {
-                classId.toKtClassSymbol()
-            }?.let { return it }
-            return (findClass(KSNameImpl.getCached(name.getQualifier())) as? KaNamedClassSymbol)?.let {
-                analyze {
-                    (
-                        it.staticMemberScope.classifiers { it.asString() == simpleName }.singleOrNull()
-                            ?: it.memberScope.classifiers { it.asString() == simpleName }.singleOrNull()
-                        ) as? KaNamedClassSymbol
-                        ?: it.staticMemberScope.callables { it.asString() == simpleName }.singleOrNull()
-                            as? KaEnumEntrySymbol
+                    classId.toKtClassSymbol()
                 }
-            }
+                ?.let {
+                    return it
+                }
+            return (findClass(KSNameImpl.getCached(name.getQualifier())) as? KaNamedClassSymbol)
+                ?.let {
+                    analyze {
+                        (it.staticMemberScope
+                            .classifiers { it.asString() == simpleName }
+                            .singleOrNull()
+                            ?: it.memberScope
+                                .classifiers { it.asString() == simpleName }
+                                .singleOrNull())
+                            as? KaNamedClassSymbol
+                            ?: it.staticMemberScope
+                                .callables { it.asString() == simpleName }
+                                .singleOrNull() as? KaEnumEntrySymbol
+                    }
+                }
         }
         return findClass(name)?.let {
             when (it) {
                 is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(it)
                 is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(it)
-                else -> throw InternalKSPException(
-                    "Unexpected class declaration symbol: '$it'",
-                    it.psi.toLocation(),
-                    it.javaClass,
-                )
+                else ->
+                    throw InternalKSPException(
+                        "Unexpected class declaration symbol: '$it'",
+                        it.psi.toLocation(),
+                        it.javaClass,
+                    )
             }
         }
     }
@@ -403,7 +425,8 @@ class ResolverAAImpl(
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
         return analyze {
-            findPackage(FqName(packageName))?.packageScope?.declarations?.distinct()?.mapNotNull { symbol ->
+            findPackage(FqName(packageName))?.packageScope?.declarations?.distinct()?.mapNotNull {
+                symbol ->
                 when (symbol) {
                     is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
                     is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
@@ -416,7 +439,9 @@ class ResolverAAImpl(
         }
     }
 
-    override fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration> {
+    override fun getDeclarationsInSourceOrder(
+        container: KSDeclarationContainer
+    ): Sequence<KSDeclaration> {
         if (container.origin != Origin.KOTLIN_LIB) {
             return container.declarations
         }
@@ -429,8 +454,10 @@ class ResolverAAImpl(
         require(container is AbstractKSDeclarationImpl)
         val fileManager = instance.javaFileManager
         var parentClass: KSNode = container
-        while (parentClass.parent != null &&
-            (parentClass !is KSClassDeclarationImpl || parentClass.ktClassOrObjectSymbol.classId == null)
+        while (
+            parentClass.parent != null &&
+                (parentClass !is KSClassDeclarationImpl ||
+                    parentClass.ktClassOrObjectSymbol.classId == null)
         ) {
             parentClass = parentClass.parent!!
         }
@@ -439,7 +466,8 @@ class ResolverAAImpl(
             return container.declarations
         }
 
-        // Members of Foo's companion object are compiled into Foo and Foo$Companion. Total ordering is not recoverable
+        // Members of Foo's companion object are compiled into Foo and Foo$Companion. Total ordering
+        // is not recoverable
         // from class files. Let's give up and rely on AA for now.
         if (parentClass.isCompanionObject) {
             return container.declarations
@@ -447,23 +475,28 @@ class ResolverAAImpl(
 
         val classId = parentClass.ktClassOrObjectSymbol.classId ?: return container.declarations
         val virtualFile = classId.getVirtualFile(fileManager) ?: return container.declarations
-        val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
+        val kotlinClass =
+            classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
         @Suppress("UNCHECKED_CAST")
-        return (container.declarations as? Sequence<AbstractKSDeclarationImpl>)
-            ?.sortedWith(declarationOrdering.comparator) ?: container.declarations
+        return (container.declarations as? Sequence<AbstractKSDeclarationImpl>)?.sortedWith(
+            declarationOrdering.comparator
+        ) ?: container.declarations
     }
 
     override fun getFunctionDeclarationsByName(
         name: KSName,
-        includeTopLevel: Boolean
+        includeTopLevel: Boolean,
     ): Sequence<KSFunctionDeclaration> {
         val qualifier = name.getQualifier()
         val functionName = name.getShortName()
-        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()
-            ?.filter { it.simpleName.asString() == functionName } ?: emptySequence()
-        return if (!includeTopLevel) nonTopLevelResult else {
+        val nonTopLevelResult =
+            this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()?.filter {
+                it.simpleName.asString() == functionName
+            } ?: emptySequence()
+        return if (!includeTopLevel) nonTopLevelResult
+        else {
             nonTopLevelResult.plus(
                 analyze {
                     findTopLevelCallables(FqName(qualifier), Name.identifier(functionName))
@@ -480,8 +513,7 @@ class ResolverAAImpl(
     override fun getJavaWildcard(reference: KSTypeReference): KSTypeReference {
         val (ref, indexes) = reference.findOuterMostRef()
         val type = ref.resolve()
-        if (type.isError)
-            return reference
+        if (type.isError) return reference
         val position = findRefPosition(ref)
         val ktType = (type as KSTypeImpl).type.fullyExpand()
         // TODO: Upstream this:
@@ -489,12 +521,15 @@ class ResolverAAImpl(
         // and corresponding type mapping APIs.
         val coneType = (ktType as KaFirType).coneType
         val mode = analyze {
-            val typeContext = analyze { useSiteModule.getResolutionFacade(project).useSiteFirSession.typeContext }
+            val typeContext = analyze {
+                useSiteModule.getResolutionFacade(project).useSiteFirSession.typeContext
+            }
             when (position) {
-                RefPosition.RETURN_TYPE -> typeContext.getOptimalModeForReturnType(
-                    coneType,
-                    reference.isReturnTypeOfAnnotationMethod()
-                )
+                RefPosition.RETURN_TYPE ->
+                    typeContext.getOptimalModeForReturnType(
+                        coneType,
+                        reference.isReturnTypeOfAnnotationMethod(),
+                    )
 
                 RefPosition.SUPER_TYPE -> TypeMappingMode.SUPER_TYPE
                 RefPosition.PARAMETER_TYPE -> typeContext.getOptimalModeForValueParameter(coneType)
@@ -513,22 +548,28 @@ class ResolverAAImpl(
 
     override fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType> {
         return when (accessor.origin) {
-            Origin.KOTLIN, Origin.SYNTHETIC -> {
+            Origin.KOTLIN,
+            Origin.SYNTHETIC -> {
                 extractThrowsAnnotation(accessor)
             }
 
-            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+            Origin.KOTLIN_LIB,
+            Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = accessor.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-                    ?: return emptySequence()
-                val virtualFileContent = classId.getFileContent(fileManager) ?: return emptySequence()
+                val classId =
+                    (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                        ?: return emptySequence()
+                val virtualFileContent =
+                    classId.getFileContent(fileManager) ?: return emptySequence()
                 val jvmDesc = this.mapToJvmSignatureInternal(accessor)
                 extractThrowsFromClassFile(
                     virtualFileContent,
                     jvmDesc,
                     (if (accessor is KSPropertyGetter) "get" else "set") +
-                        accessor.receiver.simpleName.asString().replaceFirstChar(Char::uppercaseChar)
+                        accessor.receiver.simpleName
+                            .asString()
+                            .replaceFirstChar(Char::uppercaseChar),
                 )
             }
 
@@ -540,8 +581,9 @@ class ResolverAAImpl(
     override fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType> {
         return when (function.origin) {
             Origin.JAVA -> {
-                val psi = ((function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as? PsiMethod)
-                    ?: return emptySequence()
+                val psi =
+                    ((function as KSFunctionDeclarationImpl).ktFunctionSymbol.psi as? PsiMethod)
+                        ?: return emptySequence()
                 psi.throwsList.referencedTypes.asSequence().mapNotNull {
                     analyze {
                         it.asKaType(psi)?.let { KSTypeImpl.getCached(it) }
@@ -553,14 +595,21 @@ class ResolverAAImpl(
                 extractThrowsAnnotation(function)
             }
 
-            Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
+            Origin.KOTLIN_LIB,
+            Origin.JAVA_LIB -> {
                 val fileManager = javaFileManager
                 val parentClass = function.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-                    ?: return emptySequence()
-                val virtualFileContent = classId.getFileContent(fileManager) ?: return emptySequence()
+                val classId =
+                    (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                        ?: return emptySequence()
+                val virtualFileContent =
+                    classId.getFileContent(fileManager) ?: return emptySequence()
                 val jvmDesc = this.mapToJvmSignature(function)
-                extractThrowsFromClassFile(virtualFileContent, jvmDesc, function.simpleName.asString())
+                extractThrowsFromClassFile(
+                    virtualFileContent,
+                    jvmDesc,
+                    function.simpleName.asString(),
+                )
             }
 
             else -> emptySequence()
@@ -569,10 +618,11 @@ class ResolverAAImpl(
 
     // TODO: handle library symbols
     override fun getJvmName(accessor: KSPropertyAccessor): String {
-        val symbol: KaPropertyAccessorSymbol? = when (accessor) {
-            is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol
-            else -> null
-        }
+        val symbol: KaPropertyAccessorSymbol? =
+            when (accessor) {
+                is KSPropertyAccessorImpl -> accessor.ktPropertyAccessorSymbol
+                else -> null
+            }
 
         symbol?.explictJvmName()?.let {
             return it
@@ -582,8 +632,9 @@ class ResolverAAImpl(
         val containingClass = accessor.receiver.closestClassDeclaration()
 
         val isAnnotationClass = containingClass?.classKind == ClassKind.ANNOTATION_CLASS
-        val isJvmRecord = containingClass is KSClassDeclarationImpl &&
-            containingClass.ktClassOrObjectSymbol.isJvmRecord()
+        val isJvmRecord =
+            containingClass is KSClassDeclarationImpl &&
+                containingClass.ktClassOrObjectSymbol.isJvmRecord()
 
         // Annotation classes and @JvmRecord data classes both use bare property names
         // as accessor names (no get/set prefix).
@@ -591,11 +642,12 @@ class ResolverAAImpl(
             return propertyName
         }
         // https://kotlinlang.org/docs/java-to-kotlin-interop.html#properties
-        val prefixedName = when (accessor) {
-            is KSPropertyGetter -> JvmAbi.getterName(propertyName)
-            is KSPropertySetter -> JvmAbi.setterName(propertyName)
-            else -> ""
-        }
+        val prefixedName =
+            when (accessor) {
+                is KSPropertyGetter -> JvmAbi.getterName(propertyName)
+                is KSPropertySetter -> JvmAbi.setterName(propertyName)
+                else -> ""
+            }
 
         val inlineSuffix = symbol?.inlineSuffix ?: ""
         val mangledName = symbol?.internalSuffix ?: ""
@@ -610,10 +662,11 @@ class ResolverAAImpl(
             return declaration.simpleName.asString()
         }
 
-        val symbol: KaFunctionSymbol? = when (declaration) {
-            is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol
-            else -> null
-        }
+        val symbol: KaFunctionSymbol? =
+            when (declaration) {
+                is KSFunctionDeclarationImpl -> declaration.ktFunctionSymbol
+                else -> null
+            }
 
         symbol?.explictJvmName()?.let {
             return it
@@ -637,19 +690,29 @@ class ResolverAAImpl(
         @Suppress("UNCHECKED_CAST")
         return declaration.closestClassDeclaration()?.let {
             // Find classId for JvmClassName for member callables.
-            (it as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classId
-                ?.asString()?.replace(".", "$")?.replace("/", ".")
-        } ?: declaration.containingFile?.let {
-            // Find containing file facade class name from file symbol
-            (it as? KSFileImpl)?.let {
-                ((it.ktFileSymbol.psi as? KtFile)?.findFacadeClass() as? KtLightClassForFacade)
-                    ?.facadeClassFqName?.asString()
+            (it as? KSClassDeclarationImpl)
+                ?.ktClassOrObjectSymbol
+                ?.classId
+                ?.asString()
+                ?.replace(".", "$")
+                ?.replace("/", ".")
+        }
+            ?: declaration.containingFile?.let {
+                // Find containing file facade class name from file symbol
+                (it as? KSFileImpl)?.let {
+                    ((it.ktFileSymbol.psi as? KtFile)?.findFacadeClass() as? KtLightClassForFacade)
+                        ?.facadeClassFqName
+                        ?.asString()
+                }
+                // Down cast to fir symbol for library symbols as light facade class for libraries
+                // not available in AA.
             }
-            // Down cast to fir symbol for library symbols as light facade class for libraries not available in AA.
-        } ?: (
-            ((declaration as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol as? KaFirSymbol<FirCallableSymbol<*>>)
-                ?.firSymbol?.containerSource as? JvmPackagePartSource
-            )?.classId?.asFqNameString()
+            ?: (((declaration as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol
+                        as? KaFirSymbol<FirCallableSymbol<*>>)
+                    ?.firSymbol
+                    ?.containerSource as? JvmPackagePartSource)
+                ?.classId
+                ?.asFqNameString()
     }
 
     override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
@@ -660,39 +723,50 @@ class ResolverAAImpl(
         return getOwnerJvmClassNameHelper(declaration)
     }
 
-    override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
+    override fun getPropertyDeclarationByName(
+        name: KSName,
+        includeTopLevel: Boolean,
+    ): KSPropertyDeclaration? {
         val qualifier = name.getQualifier()
         val propertyName = name.getShortName()
-        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()
-            ?.singleOrNull { it.simpleName.asString() == propertyName }
+        val nonTopLevelResult =
+            this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()?.singleOrNull {
+                it.simpleName.asString() == propertyName
+            }
         return if (!includeTopLevel) {
             nonTopLevelResult
         } else {
-            val topLevelResult = (
-                analyze {
-                    findTopLevelCallables(FqName(qualifier), Name.identifier(propertyName)).singleOrNull {
-                        it is KaPropertySymbol
-                    }?.toKSDeclaration() as? KSPropertyDeclaration
-                }
-                )
+            val topLevelResult =
+                (analyze {
+                    findTopLevelCallables(FqName(qualifier), Name.identifier(propertyName))
+                        .singleOrNull {
+                            it is KaPropertySymbol
+                        }
+                        ?.toKSDeclaration() as? KSPropertyDeclaration
+                })
             if (topLevelResult != null && nonTopLevelResult != null) {
                 throw InternalKSPException(
                     buildString {
                         appendLine("Found multiple properties with same qualified name.")
-                        appendLine("Top-level: '$topLevelResult' at ${topLevelResult.location.render()}")
+                        appendLine(
+                            "Top-level: '$topLevelResult' at ${topLevelResult.location.render()}"
+                        )
                         appendLine(
                             "Non-top-level: '$nonTopLevelResult' at ${nonTopLevelResult.location.render()}"
                         )
                     },
                     topLevelResult.location,
-                    topLevelResult.javaClass
+                    topLevelResult.javaClass,
                 )
             }
             nonTopLevelResult ?: topLevelResult
         }
     }
 
-    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
+    override fun getSymbolsWithAnnotation(
+        annotationName: String,
+        inDepth: Boolean,
+    ): Sequence<KSAnnotated> {
         val expandedIfAlias = analyze {
             val classId = ClassId.fromString(annotationName)
             findTypeAlias(classId)?.expandedType?.symbol?.classId?.asFqNameString()
@@ -710,30 +784,40 @@ class ResolverAAImpl(
         return type is KSTypeImpl && (type.type as KaFirType).coneType.isRaw()
     }
 
-    internal fun KSFile.getPackageAnnotations() = (this as? KSFileJavaImpl)?.psi?.packageStatement?.annotationList
-        ?.annotations?.map { KSAnnotationJavaImpl.getCached(it, this) } ?: emptyList<KSAnnotation>()
+    internal fun KSFile.getPackageAnnotations() =
+        (this as? KSFileJavaImpl)?.psi?.packageStatement?.annotationList?.annotations?.map {
+            KSAnnotationJavaImpl.getCached(it, this)
+        } ?: emptyList<KSAnnotation>()
 
     @KspExperimental
     override fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation> {
-        return packageInfoFiles.singleOrNull { it.packageName.asString() == packageName }
-            ?.getPackageAnnotations()?.asSequence() ?: emptySequence()
+        return packageInfoFiles
+            .singleOrNull { it.packageName.asString() == packageName }
+            ?.getPackageAnnotations()
+            ?.asSequence() ?: emptySequence()
     }
 
     @KspExperimental
     override fun getPackagesWithAnnotation(annotationName: String): Sequence<String> {
-        return packageInfoFiles.filter {
-            it.getPackageAnnotations().any {
-                (it.annotationType.element as? KSClassifierReference)?.referencedName()
-                    ?.substringAfterLast(".") == annotationName.substringAfterLast(".") &&
-                    it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+        return packageInfoFiles
+            .filter {
+                it.getPackageAnnotations().any {
+                    (it.annotationType.element as? KSClassifierReference)
+                        ?.referencedName()
+                        ?.substringAfterLast(".") == annotationName.substringAfterLast(".") &&
+                        it.annotationType.resolve().declaration.qualifiedName?.asString() ==
+                            annotationName
+                }
             }
-        }.map { it.packageName.asString() }
+            .map { it.packageName.asString() }
     }
 
     @OptIn(KaExperimentalApi::class)
     @KspExperimental
     override fun getModuleName(): KSName {
-        return KSNameImpl.getCached((ktModule.stableModuleName ?: ktModule.name).removeSurrounding("<", ">"))
+        return KSNameImpl.getCached(
+            (ktModule.stableModuleName ?: ktModule.name).removeSurrounding("<", ">")
+        )
     }
 
     @KspExperimental
@@ -756,28 +840,30 @@ class ResolverAAImpl(
     }
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
-        val overriderSymbol = when (overrider) {
-            is KSFunctionDeclarationImpl -> if (overrider.ktFunctionSymbol is KaPropertyAccessorSymbol) {
-                (overrider.parent as KSPropertyDeclarationImpl).ktPropertySymbol
-            } else {
-                overrider.ktFunctionSymbol
-            }
+        val overriderSymbol =
+            when (overrider) {
+                is KSFunctionDeclarationImpl ->
+                    if (overrider.ktFunctionSymbol is KaPropertyAccessorSymbol) {
+                        (overrider.parent as KSPropertyDeclarationImpl).ktPropertySymbol
+                    } else {
+                        overrider.ktFunctionSymbol
+                    }
 
-            is KSPropertyDeclarationImpl -> overrider.ktPropertySymbol
-            else -> return false
-        }
-        val overrideeSymbol = when (overridee) {
-            is KSFunctionDeclarationImpl -> overridee.ktFunctionSymbol
-            is KSPropertyDeclarationImpl -> overridee.ktPropertySymbol
-            else -> return false
-        }
+                is KSPropertyDeclarationImpl -> overrider.ktPropertySymbol
+                else -> return false
+            }
+        val overrideeSymbol =
+            when (overridee) {
+                is KSFunctionDeclarationImpl -> overridee.ktFunctionSymbol
+                is KSPropertyDeclarationImpl -> overridee.ktPropertySymbol
+                else -> return false
+            }
         overrider.closestClassDeclaration()?.asStarProjectedType()?.let {
             recordLookupWithSupertypes((it as KSTypeImpl).type)
         }
         recordLookupForPropertyOrMethod(overrider)
         recordLookupForPropertyOrMethod(overridee)
-        if (!overridee.isVisibleFrom(overrider))
-            return false
+        if (!overridee.isVisibleFrom(overrider)) return false
         return analyze {
             overriderSymbol.allOverriddenSymbols.contains(overrideeSymbol) ||
                 overriderSymbol.intersectionOverriddenSymbols.contains(overrideeSymbol)
@@ -787,31 +873,42 @@ class ResolverAAImpl(
     override fun overrides(
         overrider: KSDeclaration,
         overridee: KSDeclaration,
-        containingClass: KSClassDeclaration
+        containingClass: KSClassDeclaration,
     ): Boolean {
         recordLookupForPropertyOrMethod(overrider)
         recordLookupForPropertyOrMethod(overridee)
         return when (overrider) {
-            is KSPropertyDeclaration -> containingClass.getAllProperties().singleOrNull {
-                recordLookupForPropertyOrMethod(it)
-                it.simpleName.asString() == overrider.simpleName.asString()
-            }?.let { overrides(it, overridee) } ?: false
+            is KSPropertyDeclaration ->
+                containingClass
+                    .getAllProperties()
+                    .singleOrNull {
+                        recordLookupForPropertyOrMethod(it)
+                        it.simpleName.asString() == overrider.simpleName.asString()
+                    }
+                    ?.let { overrides(it, overridee) } ?: false
 
             is KSFunctionDeclaration -> {
-                val candidates = containingClass.getAllFunctions().filter {
-                    it.simpleName.asString() == overridee.simpleName.asString()
-                }
-                if (overrider.simpleName.asString().startsWith("get") ||
-                    overrider.simpleName.asString().startsWith("set")
+                val candidates =
+                    containingClass.getAllFunctions().filter {
+                        it.simpleName.asString() == overridee.simpleName.asString()
+                    }
+                if (
+                    overrider.simpleName.asString().startsWith("get") ||
+                        overrider.simpleName.asString().startsWith("set")
                 ) {
-                    candidates.plus(
-                        containingClass.getAllProperties().filter {
-                            val overriderName = overrider.simpleName.asString().substring(3)
-                                .replaceFirstChar { it.lowercase() }
-                            it.simpleName.asString() == overriderName ||
-                                it.simpleName.asString().replaceFirstChar { it.lowercase() } == overriderName
-                        }
-                    ).any { overrides(it, overridee) }
+                    candidates
+                        .plus(
+                            containingClass.getAllProperties().filter {
+                                val overriderName =
+                                    overrider.simpleName.asString().substring(3).replaceFirstChar {
+                                        it.lowercase()
+                                    }
+                                it.simpleName.asString() == overriderName ||
+                                    it.simpleName.asString().replaceFirstChar { it.lowercase() } ==
+                                        overriderName
+                            }
+                        )
+                        .any { overrides(it, overridee) }
                 } else {
                     candidates.any {
                         recordLookupForPropertyOrMethod(it)
@@ -849,9 +946,10 @@ class ResolverAAImpl(
         }
 
         return when (ksAnnotated) {
-            is KSClassDeclaration -> analyze {
-                (ksAnnotated.asStarProjectedType() as KSTypeImpl).toSignature()
-            }
+            is KSClassDeclaration ->
+                analyze {
+                    (ksAnnotated.asStarProjectedType() as KSTypeImpl).toSignature()
+                }
 
             is KSFunctionDeclarationImpl -> {
                 analyze {
@@ -893,10 +991,11 @@ class ResolverAAImpl(
 
     @OptIn(KaExperimentalApi::class)
     internal fun computeAsMemberOf(property: KSPropertyDeclaration, containing: KSType): KSType {
-        val declaredIn = property.closestClassDeclaration()
-            ?: throw IllegalArgumentException(
-                "Cannot call asMemberOf with a property that is not declared in a class or an interface"
-            )
+        val declaredIn =
+            property.closestClassDeclaration()
+                ?: throw IllegalArgumentException(
+                    "Cannot call asMemberOf with a property that is not declared in a class or an interface"
+                )
         val key = property to containing
         return propertyAsMemberOfCache.getOrPut(key) {
             val resolved = property.type.resolve()
@@ -915,25 +1014,27 @@ class ResolverAAImpl(
                 }
                 analyze {
                     buildSubstitutor {
-                        fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
-                    }.let {
-                        // recursively substitute to ensure transitive substitution works.
-                        // should fix in upstream as well.
-                        var result = resolved.type
-                        var cnt = 0
-                        while (it.substitute(result) != result) {
-                            if (cnt > 100) {
-                                throw InternalKSPException(
-                                    message = "Potential infinite loop in type substitution for computeAsMemberOf",
-                                    property.location,
-                                    property.javaClass
-                                )
-                            }
-                            result = it.substitute(result)
-                            cnt += 1
+                            fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
                         }
-                        KSTypeImpl.getCached(result)
-                    }
+                        .let {
+                            // recursively substitute to ensure transitive substitution works.
+                            // should fix in upstream as well.
+                            var result = resolved.type
+                            var cnt = 0
+                            while (it.substitute(result) != result) {
+                                if (cnt > 100) {
+                                    throw InternalKSPException(
+                                        message =
+                                            "Potential infinite loop in type substitution for computeAsMemberOf",
+                                        property.location,
+                                        property.javaClass,
+                                    )
+                                }
+                                result = it.substitute(result)
+                                cnt += 1
+                            }
+                            KSTypeImpl.getCached(result)
+                        }
                 }
             } else {
                 return if (resolved.isError) resolved else KSErrorType(resolved.toString())
@@ -942,11 +1043,15 @@ class ResolverAAImpl(
     }
 
     @OptIn(KaExperimentalApi::class)
-    internal fun computeAsMemberOf(function: KSFunctionDeclaration, containing: KSType): KSFunction {
-        val propertyDeclaredIn = function.closestClassDeclaration()
-            ?: throw IllegalArgumentException(
-                "Cannot call asMemberOf with a function that is not declared in a class or an interface"
-            )
+    internal fun computeAsMemberOf(
+        function: KSFunctionDeclaration,
+        containing: KSType,
+    ): KSFunction {
+        val propertyDeclaredIn =
+            function.closestClassDeclaration()
+                ?: throw IllegalArgumentException(
+                    "Cannot call asMemberOf with a function that is not declared in a class or an interface"
+                )
         val key = function to containing
         return functionAsMemberOfCache.getOrPut(key) {
             if (containing is KSTypeImpl) {
@@ -965,33 +1070,40 @@ class ResolverAAImpl(
                 }
                 analyze {
                     buildSubstitutor {
-                        fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
-                    }.let {
-                        // recursively substitute to ensure transitive substitution works.
-                        // should fix in upstream as well.
-                        // for functions we need to test both returnType and value parameters converges.
-                        var funcToSub = (function as KSFunctionDeclarationImpl).ktFunctionSymbol.substitute(it)
-                        var next = funcToSub.substitute(it)
-                        var cnt = 0
-                        while (
-                            funcToSub.returnType != next.returnType ||
-                            funcToSub.valueParameters.zip(next.valueParameters)
-                                .any { it.first.returnType != it.second.returnType } ||
-                            funcToSub.receiverType != next.receiverType
-                        ) {
-                            if (cnt > 100) {
-                                throw InternalKSPException(
-                                    message = "Potential infinite loop in type substitution for computeAsMemberOf",
-                                    function.location,
-                                    function.javaClass
-                                )
-                            }
-                            funcToSub = next
-                            next = funcToSub.substitute(it)
-                            cnt += 1
+                            fillInDeepSubstitutor(containing.type, this@buildSubstitutor)
                         }
-                        KSFunctionImpl(funcToSub, it)
-                    }
+                        .let {
+                            // recursively substitute to ensure transitive substitution works.
+                            // should fix in upstream as well.
+                            // for functions we need to test both returnType and value parameters
+                            // converges.
+                            var funcToSub =
+                                (function as KSFunctionDeclarationImpl)
+                                    .ktFunctionSymbol
+                                    .substitute(it)
+                            var next = funcToSub.substitute(it)
+                            var cnt = 0
+                            while (
+                                funcToSub.returnType != next.returnType ||
+                                    funcToSub.valueParameters.zip(next.valueParameters).any {
+                                        it.first.returnType != it.second.returnType
+                                    } ||
+                                    funcToSub.receiverType != next.receiverType
+                            ) {
+                                if (cnt > 100) {
+                                    throw InternalKSPException(
+                                        message =
+                                            "Potential infinite loop in type substitution for computeAsMemberOf",
+                                        function.location,
+                                        function.javaClass,
+                                    )
+                                }
+                                funcToSub = next
+                                next = funcToSub.substitute(it)
+                                cnt += 1
+                            }
+                            KSFunctionImpl(funcToSub, it)
+                        }
                 }
             } else KSFunctionErrorImpl(function)
         }

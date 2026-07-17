@@ -18,9 +18,7 @@ package com.google.devtools.ksp.visitor
 
 import com.google.devtools.ksp.symbol.*
 
-/**
- * A visitor that delegates to super types for methods that are not overridden.
- */
+/** A visitor that delegates to super types for methods that are not overridden. */
 abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     override fun visitDynamicReference(reference: KSDynamicReference, data: D): R {
         this.visitReferenceElement(reference, data)
@@ -133,7 +131,10 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
         return super.visitAnnotation(annotation, data)
     }
 
-    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: D): R {
+    override fun visitDeclarationContainer(
+        declarationContainer: KSDeclarationContainer,
+        data: D,
+    ): R {
         this.visitNode(declarationContainer, data)
         return super.visitDeclarationContainer(declarationContainer, data)
     }
