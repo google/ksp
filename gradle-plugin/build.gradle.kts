@@ -58,14 +58,16 @@ gradlePlugin {
     }
 }
 
-val sourcesJar = tasks.register<Jar>("sourcesJar") {
-    archiveClassifier.set("sources")
-    from(project.sourceSets.main.map { it.allSource })
-}
-val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-}
+val sourcesJar =
+    tasks.register<Jar>("sourcesJar") {
+        archiveClassifier.set("sources")
+        from(project.sourceSets.main.map { it.allSource })
+    }
+val dokkaJavadocJar =
+    tasks.register<Jar>("dokkaJavadocJar") {
+        archiveClassifier.set("javadoc")
+        from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    }
 
 publishing {
     publications {
@@ -94,14 +96,19 @@ signing {
  * projects.
  */
 val testPropsOutDir = layout.buildDirectory.dir("test-config")
-val writeTestPropsTask = tasks.register<WriteProperties>("prepareTestConfiguration") {
-    description = "Generates a properties file with the current environment for gradle integration tests"
-    destinationFile = testPropsOutDir.map { it.file("testprops.properties") }
-    property("kspVersion", version)
-    property("mavenRepoDir", rootProject.layout.buildDirectory.dir("repos/test").get().asFile.absolutePath)
-    property("kspProjectRootDir", rootDir.absolutePath)
-    property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
-}
+val writeTestPropsTask =
+    tasks.register<WriteProperties>("prepareTestConfiguration") {
+        description =
+            "Generates a properties file with the current environment for gradle integration tests"
+        destinationFile = testPropsOutDir.map { it.file("testprops.properties") }
+        property("kspVersion", version)
+        property(
+            "mavenRepoDir",
+            rootProject.layout.buildDirectory.dir("repos/test").get().asFile.absolutePath,
+        )
+        property("kspProjectRootDir", rootDir.absolutePath)
+        property("processorClasspath", project.tasks["compileTestKotlin"].outputs.files.asPath)
+    }
 
 normalization {
     runtimeClasspath {
@@ -140,31 +147,34 @@ tasks.named<Test>("test").configure {
 }
 
 abstract class WriteVersionSrcTask : DefaultTask() {
-    @get:Input
-    abstract val kspVersion: Property<String>
-    @get:Input
-    abstract val coroutinesVersion: Property<String>
+    @get:Input abstract val kspVersion: Property<String>
+    @get:Input abstract val coroutinesVersion: Property<String>
 
-    @get:OutputDirectory
-    abstract val outputSrcDir: DirectoryProperty
+    @get:OutputDirectory abstract val outputSrcDir: DirectoryProperty
 
     @TaskAction
     fun generate() {
-        outputSrcDir.file("KSPVersions.kt").get().asFile.writeText(
-            """
+        outputSrcDir
+            .file("KSPVersions.kt")
+            .get()
+            .asFile
+            .writeText(
+                """
             package com.google.devtools.ksp.gradle
             val KSP_VERSION = "${kspVersion.get()}"
             val KSP_COROUTINES_VERSION = "${coroutinesVersion.get()}"
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
     }
 }
 
-val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
-    kspVersion = version.toString()
-    coroutinesVersion = libs.versions.aa.coroutines.get()
-    outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
-}
+val writeVersionSrcTask =
+    tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
+        kspVersion = version.toString()
+        coroutinesVersion = libs.versions.aa.coroutines.get()
+        outputSrcDir = layout.buildDirectory.dir("generated/ksp-versions")
+    }
 
 kotlin {
     sourceSets {
