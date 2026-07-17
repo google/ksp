@@ -24,33 +24,34 @@ import com.google.devtools.ksp.symbol.NonExistLocation
 /**
  * Internal exception that signals a bug in KSP.
  *
- * Copy of InternalKSPException in API package which is also marked
- * internal to avoid users depending on the type.
- * Importantly, this class is in a different package than in the API module
+ * Copy of InternalKSPException in API package which is also marked internal to avoid users
+ * depending on the type. Importantly, this class is in a different package than in the API module
  * to avoid classpath collisions/shadowing.
  */
 internal class InternalKSPException(
     message: String,
     val location: Location,
-    val originatingClass: Class<*>
-) : Exception(
-    buildString {
-        appendLine(">>> Internal KSP Error")
-        appendLine("   | *** THIS IS A BUG IN KSP ***")
-        appendLine("   |")
-        message.lines().forEach { messageLine ->
-            appendLine("   | $messageLine")
+    val originatingClass: Class<*>,
+) :
+    Exception(
+        buildString {
+            appendLine(">>> Internal KSP Error")
+            appendLine("   | *** THIS IS A BUG IN KSP ***")
+            appendLine("   |")
+            message.lines().forEach { messageLine ->
+                appendLine("   | $messageLine")
+            }
+            appendLine("   |")
+            appendLine("   | Location           : ${location.render()}")
+            appendLine("   | Class at occurrence: $originatingClass")
+            appendLine("   |")
+            appendLine("   | You can report it at https://github.com/google/ksp/issues/new")
+            appendLine("   |")
         }
-        appendLine("   |")
-        appendLine("   | Location           : ${location.render()}")
-        appendLine("   | Class at occurrence: $originatingClass")
-        appendLine("   |")
-        appendLine("   | You can report it at https://github.com/google/ksp/issues/new")
-        appendLine("   |")
-    }
-) {
+    ) {
     override fun toString(): String {
-        // N.B.: Override the toString method to prevent the big error message being printed in the stack trace.
+        // N.B.: Override the toString method to prevent the big error message being printed in the
+        // stack trace.
         return buildString {
             append(javaClass.name)
             append(": ")

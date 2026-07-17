@@ -23,18 +23,23 @@ import com.google.devtools.ksp.symbol.Location
 import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaNamedClassSymbol
 
-class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntrySymbol: KaEnumEntrySymbol) :
+class KSClassDeclarationEnumEntryImpl
+private constructor(private val ktEnumEntrySymbol: KaEnumEntrySymbol) :
     KSClassDeclaration,
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktEnumEntrySymbol) {
-    override val ktDeclarationSymbol get() = ktEnumEntrySymbol
+    override val ktDeclarationSymbol
+        get() = ktEnumEntrySymbol
+
     companion object : KSObjectCache<KaEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
         fun getCached(ktEnumEntrySymbol: KaEnumEntrySymbol) =
             cache.getOrPut(ktEnumEntrySymbol) { KSClassDeclarationEnumEntryImpl(ktEnumEntrySymbol) }
     }
 
     override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached("${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}")
+        KSNameImpl.getCached(
+            "${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}"
+        )
     }
 
     override val classKind: ClassKind = ClassKind.ENUM_ENTRY
@@ -56,8 +61,9 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
             }
             recordLookupForGetAllFunctions(ktEnumEntrySymbol.returnType.directSupertypes.toList())
         }
-        return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSFunctionDeclaration>()
-            ?: emptySequence()
+        return ktEnumEntrySymbol.enumEntryInitializer
+            ?.declarations()
+            ?.filterIsInstance<KSFunctionDeclaration>() ?: emptySequence()
     }
 
     override fun getAllProperties(): Sequence<KSPropertyDeclaration> {
@@ -67,8 +73,9 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
             }
             recordLookupForGetAllProperties(ktEnumEntrySymbol.returnType.directSupertypes.toList())
         }
-        return ktEnumEntrySymbol.enumEntryInitializer?.declarations()?.filterIsInstance<KSPropertyDeclaration>()
-            ?: emptySequence()
+        return ktEnumEntrySymbol.enumEntryInitializer
+            ?.declarations()
+            ?.filterIsInstance<KSPropertyDeclaration>() ?: emptySequence()
     }
 
     override fun asType(typeArguments: List<KSTypeArgument>): KSType {
@@ -87,10 +94,9 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val parentDeclaration: KSDeclaration? by lazy {
         analyze {
-            (
-                ktEnumEntrySymbol.containingSymbol
-                    as? KaNamedClassSymbol
-                )?.let { KSClassDeclarationImpl.getCached(it) }
+            (ktEnumEntrySymbol.containingSymbol as? KaNamedClassSymbol)?.let {
+                KSClassDeclarationImpl.getCached(it)
+            }
         }
     }
 
@@ -104,8 +110,9 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
 
     override val parent: KSNode by lazy {
         analyze {
-            (ktEnumEntrySymbol.containingSymbol as KaNamedClassSymbol)
-                .let { KSClassDeclarationImpl.getCached(it) }
+            (ktEnumEntrySymbol.containingSymbol as KaNamedClassSymbol).let {
+                KSClassDeclarationImpl.getCached(it)
+            }
         }
     }
 

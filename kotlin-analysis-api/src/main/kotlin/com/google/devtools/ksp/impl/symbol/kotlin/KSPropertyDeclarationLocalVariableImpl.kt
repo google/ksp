@@ -14,15 +14,20 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaLocalVariableSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.psi.KtProperty
 
-class KSPropertyDeclarationLocalVariableImpl private constructor(
-    private val ktLocalVariableSymbol: KaLocalVariableSymbol
-) : KSPropertyDeclaration,
+class KSPropertyDeclarationLocalVariableImpl
+private constructor(private val ktLocalVariableSymbol: KaLocalVariableSymbol) :
+    KSPropertyDeclaration,
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktLocalVariableSymbol) {
-    override val ktDeclarationSymbol get() = ktLocalVariableSymbol
-    companion object : KSObjectCache<KaLocalVariableSymbol, KSPropertyDeclarationLocalVariableImpl>() {
+    override val ktDeclarationSymbol
+        get() = ktLocalVariableSymbol
+
+    companion object :
+        KSObjectCache<KaLocalVariableSymbol, KSPropertyDeclarationLocalVariableImpl>() {
         fun getCached(ktLocalVariableSymbol: KaLocalVariableSymbol) =
-            cache.getOrPut(ktLocalVariableSymbol) { KSPropertyDeclarationLocalVariableImpl(ktLocalVariableSymbol) }
+            cache.getOrPut(ktLocalVariableSymbol) {
+                KSPropertyDeclarationLocalVariableImpl(ktLocalVariableSymbol)
+            }
     }
 
     override val getter: KSPropertyGetter? = null
@@ -32,9 +37,13 @@ class KSPropertyDeclarationLocalVariableImpl private constructor(
     override val extensionReceiver: KSTypeReference? = null
 
     override val type: KSTypeReference by lazy {
-        (ktLocalVariableSymbol.psiIfSource() as? KtProperty)?.typeReference
-            ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(ktLocalVariableSymbol.returnType.abbreviationOrSelf, this)
+        (ktLocalVariableSymbol.psiIfSource() as? KtProperty)?.typeReference?.let {
+            KSTypeReferenceImpl.getCached(it, this)
+        }
+            ?: KSTypeReferenceResolvedImpl.getCached(
+                ktLocalVariableSymbol.returnType.abbreviationOrSelf,
+                this,
+            )
     }
 
     override val isMutable: Boolean = !ktLocalVariableSymbol.isVal

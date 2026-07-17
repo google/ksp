@@ -28,12 +28,14 @@ class KSPLoader {
         fun loadAndRunKSP(
             kspConfigStream: ByteArray,
             processorProvider: List<SymbolProcessorProvider>,
-            logLevel: Int
+            logLevel: Int,
         ): Int {
-            val kspConfig = ObjectInputStream(ByteArrayInputStream(kspConfigStream)).use { objectInputStream ->
-                objectInputStream.readObject() as KSPConfig
-            }
-            val ksp = KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
+            val kspConfig =
+                ObjectInputStream(ByteArrayInputStream(kspConfigStream)).use { objectInputStream ->
+                    objectInputStream.readObject() as KSPConfig
+                }
+            val ksp =
+                KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
             return ksp.execute().ordinal
         }
     }

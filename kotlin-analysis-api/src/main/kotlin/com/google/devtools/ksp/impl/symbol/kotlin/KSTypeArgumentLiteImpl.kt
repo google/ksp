@@ -11,12 +11,14 @@ import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 
-class KSTypeArgumentLiteImpl private constructor(override val type: KSTypeReference, override val variance: Variance) :
+class KSTypeArgumentLiteImpl
+private constructor(override val type: KSTypeReference, override val variance: Variance) :
     KSTypeArgument, Deferrable {
     companion object : KSObjectCache<Pair<KSTypeReference, Variance>, KSTypeArgument>() {
-        fun getCached(type: KSTypeReference, variance: Variance) = cache.getOrPut(Pair(type, variance)) {
-            KSTypeArgumentLiteImpl(type, variance)
-        }
+        fun getCached(type: KSTypeReference, variance: Variance) =
+            cache.getOrPut(Pair(type, variance)) {
+                KSTypeArgumentLiteImpl(type, variance)
+            }
     }
 
     override val annotations: Sequence<KSAnnotation> = emptySequence()

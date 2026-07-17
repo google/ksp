@@ -8,13 +8,17 @@ import org.jetbrains.kotlin.analysis.api.types.KaClassType
 import org.jetbrains.kotlin.analysis.api.types.KaClassTypeQualifier
 import org.jetbrains.kotlin.analysis.api.types.KaTypeParameterType
 
-class KSClassifierReferenceResolvedImpl private constructor(
+class KSClassifierReferenceResolvedImpl
+private constructor(
     private val ktType: KaClassType,
     private val index: Int,
-    override val parent: KSTypeReference?
+    override val parent: KSTypeReference?,
 ) : KSClassifierReference {
     companion object :
-        KSObjectCache<IdKeyTriple<KaClassType, Int, KSTypeReference?>, KSClassifierReferenceResolvedImpl>() {
+        KSObjectCache<
+            IdKeyTriple<KaClassType, Int, KSTypeReference?>,
+            KSClassifierReferenceResolvedImpl,
+        >() {
         fun getCached(ktType: KaClassType, index: Int, parent: KSTypeReference?) =
             cache.getOrPut(IdKeyTriple(ktType, index, parent)) {
                 KSClassifierReferenceResolvedImpl(ktType, index, parent)
@@ -46,17 +50,25 @@ class KSClassifierReferenceResolvedImpl private constructor(
         get() = parent?.location ?: NonExistLocation
 
     override fun toString(): String {
-        return referencedName() + if (typeArguments.isNotEmpty()) "<${
+        return referencedName() +
+            if (typeArguments.isNotEmpty())
+                "<${
         typeArguments.joinToString(", ") { it.toString() }
-        }>" else ""
+        }>"
+            else ""
     }
 }
 
-class KSClassifierParameterImpl private constructor(
+class KSClassifierParameterImpl
+private constructor(
     private val ktType: KaTypeParameterType,
-    override val parent: KSTypeReference?
+    override val parent: KSTypeReference?,
 ) : KSClassifierReference {
-    companion object : KSObjectCache<IdKeyPair<KaTypeParameterType, KSTypeReference?>, KSClassifierParameterImpl>() {
+    companion object :
+        KSObjectCache<
+            IdKeyPair<KaTypeParameterType, KSTypeReference?>,
+            KSClassifierParameterImpl,
+        >() {
         fun getCached(ktType: KaTypeParameterType, parent: KSTypeReference?) =
             KSClassifierParameterImpl.cache.getOrPut(IdKeyPair(ktType, parent)) {
                 KSClassifierParameterImpl(ktType, parent)
@@ -71,8 +83,10 @@ class KSClassifierParameterImpl private constructor(
 
     override val typeArguments: List<KSTypeArgument>
         get() = emptyList()
+
     override val origin: Origin
         get() = parent?.origin ?: Origin.SYNTHETIC
+
     override val location: Location
         get() = parent?.location ?: NonExistLocation
 

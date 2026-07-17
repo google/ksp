@@ -123,6 +123,7 @@ import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap.mapKotlinToJava
 import org.jetbrains.kotlin.codegen.state.InfoForMangling
 import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
 import org.jetbrains.kotlin.codegen.state.md5base64
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as AnnotationUseSiteTargetAA
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.utils.moduleName
@@ -150,31 +151,34 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.types.typeUtil.getEffectiveVariance
 import org.jetbrains.kotlin.utils.KotlinExceptionWithAttachments
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as AnnotationUseSiteTargetAA
 
-internal val ktSymbolOriginToOrigin = mapOf(
-    KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
-    KaSymbolOrigin.JAVA_LIBRARY to Origin.JAVA_LIB,
-    KaSymbolOrigin.SOURCE to Origin.KOTLIN,
-    KaSymbolOrigin.SAM_CONSTRUCTOR to Origin.SYNTHETIC,
-    KaSymbolOrigin.SOURCE_MEMBER_GENERATED to Origin.SYNTHETIC,
-    KaSymbolOrigin.DELEGATED to Origin.SYNTHETIC,
-    KaSymbolOrigin.PROPERTY_BACKING_FIELD to Origin.KOTLIN,
-    KaSymbolOrigin.JAVA_SYNTHETIC_PROPERTY to Origin.SYNTHETIC,
-    KaSymbolOrigin.INTERSECTION_OVERRIDE to Origin.SYNTHETIC,
-    // TODO: distinguish between kotlin library and java library.
-    KaSymbolOrigin.LIBRARY to Origin.KOTLIN_LIB,
-    KaSymbolOrigin.SUBSTITUTION_OVERRIDE to Origin.JAVA_LIB
-)
+internal val ktSymbolOriginToOrigin =
+    mapOf(
+        KaSymbolOrigin.JAVA_SOURCE to Origin.JAVA,
+        KaSymbolOrigin.JAVA_LIBRARY to Origin.JAVA_LIB,
+        KaSymbolOrigin.SOURCE to Origin.KOTLIN,
+        KaSymbolOrigin.SAM_CONSTRUCTOR to Origin.SYNTHETIC,
+        KaSymbolOrigin.SOURCE_MEMBER_GENERATED to Origin.SYNTHETIC,
+        KaSymbolOrigin.DELEGATED to Origin.SYNTHETIC,
+        KaSymbolOrigin.PROPERTY_BACKING_FIELD to Origin.KOTLIN,
+        KaSymbolOrigin.JAVA_SYNTHETIC_PROPERTY to Origin.SYNTHETIC,
+        KaSymbolOrigin.INTERSECTION_OVERRIDE to Origin.SYNTHETIC,
+        // TODO: distinguish between kotlin library and java library.
+        KaSymbolOrigin.LIBRARY to Origin.KOTLIN_LIB,
+        KaSymbolOrigin.SUBSTITUTION_OVERRIDE to Origin.JAVA_LIB,
+    )
 
 internal fun mapAAOrigin(ktSymbol: KaSymbol): Origin {
-    val symbolOrigin = ktSymbolOriginToOrigin[ktSymbol.origin]
-        ?: throw InternalKSPException(
-            "Unhandled origin ${ktSymbol.origin.name}",
-            ktSymbol.psi.toLocation(),
-            ktSymbol.javaClass,
-        )
-    return if (symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true) {
+    val symbolOrigin =
+        ktSymbolOriginToOrigin[ktSymbol.origin]
+            ?: throw InternalKSPException(
+                "Unhandled origin ${ktSymbol.origin.name}",
+                ktSymbol.psi.toLocation(),
+                ktSymbol.javaClass,
+            )
+    return if (
+        symbolOrigin == Origin.JAVA && ktSymbol.psi?.containingFile?.fileType?.isBinary == true
+    ) {
         Origin.JAVA_LIB
     } else {
         symbolOrigin
@@ -208,11 +212,12 @@ internal fun KaAnnotationValue.render(): String {
             if (type.isError) type.toString() else "$type::class"
         }
 
-        is KaAnnotationValue.UnsupportedValue -> throw InternalKSPException(
-            "Unsupported annotation value: $this",
-            NonExistLocation,
-            this.javaClass
-        )
+        is KaAnnotationValue.UnsupportedValue ->
+            throw InternalKSPException(
+                "Unsupported annotation value: $this",
+                NonExistLocation,
+                this.javaClass,
+            )
     }
 }
 
@@ -226,46 +231,58 @@ internal fun KaType.render(inFunctionType: Boolean = false): String {
         }
         append(
             when (this@render) {
-                is KaClassType -> buildString {
-                    val symbol = this@render.classifierSymbol()
-                    if (symbol is KaTypeAliasSymbol) {
-                        if (!inFunctionType) {
-                            append("[typealias ${symbol.name.asString()}]")
+                is KaClassType ->
+                    buildString {
+                        val symbol = this@render.classifierSymbol()
+                        if (symbol is KaTypeAliasSymbol) {
+                            if (!inFunctionType) {
+                                append("[typealias ${symbol.name.asString()}]")
+                            } else {
+                                append(this@render.fullyExpand().render(inFunctionType = true))
+                            }
                         } else {
-                            append(this@render.fullyExpand().render(inFunctionType = true))
-                        }
-                    } else {
-                        append(this@render.symbol.name?.asString())
-                        if (typeArguments().isNotEmpty()) {
-                            typeArguments().joinToString(separator = ", ", prefix = "<", postfix = ">") {
-                                when (it) {
-                                    is KaStarTypeProjection -> "*"
-                                    is KaTypeArgumentWithVariance ->
-                                        "${it.variance}" +
-                                            (if (it.variance != Variance.INVARIANT) " " else "") +
-                                            it.type.render(this@render is KaFunctionType)
-                                }
-                            }.also { append(it) }
+                            append(this@render.symbol.name?.asString())
+                            if (typeArguments().isNotEmpty()) {
+                                typeArguments()
+                                    .joinToString(separator = ", ", prefix = "<", postfix = ">") {
+                                        when (it) {
+                                            is KaStarTypeProjection -> "*"
+                                            is KaTypeArgumentWithVariance ->
+                                                "${it.variance}" +
+                                                    (if (it.variance != Variance.INVARIANT) " "
+                                                    else "") +
+                                                    it.type.render(this@render is KaFunctionType)
+                                        }
+                                    }
+                                    .also { append(it) }
+                            }
                         }
                     }
-                }
 
-                is KaClassErrorType -> KSErrorType(qualifiers.joinToString(".") { it.name.asString() }).toString()
+                is KaClassErrorType ->
+                    KSErrorType(qualifiers.joinToString(".") { it.name.asString() }).toString()
                 is KaErrorType -> KSErrorType(presentableText).toString()
                 is KaCapturedType -> this@render.toString()
                 is KaDefinitelyNotNullType -> original.render(inFunctionType) + " & Any"
                 is KaDynamicType -> "<dynamic type>"
-                is KaFlexibleType -> "(${lowerBound.render(inFunctionType)}..${upperBound.render(inFunctionType)})"
+                is KaFlexibleType ->
+                    "(${lowerBound.render(inFunctionType)}..${upperBound.render(inFunctionType)})"
                 is KaIntersectionType ->
-                    this@render.conjuncts
-                        .joinToString(separator = " & ", prefix = "(", postfix = ")") { it.render(inFunctionType) }
+                    this@render.conjuncts.joinToString(
+                        separator = " & ",
+                        prefix = "(",
+                        postfix = ")",
+                    ) {
+                        it.render(inFunctionType)
+                    }
 
                 is KaTypeParameterType -> name.asString()
-                else -> throw InternalKSPException(
-                    "Unhandled type",
-                    NonExistLocation,
-                    this@render.javaClass
-                )
+                else ->
+                    throw InternalKSPException(
+                        "Unhandled type",
+                        NonExistLocation,
+                        this@render.javaClass,
+                    )
             }
         )
         if (analyze { isMarkedNullable }) {
@@ -278,30 +295,34 @@ internal fun KaType.toClassifierReference(parent: KSTypeReference?): KSReference
     return when (val ktType = this) {
         is KaFunctionType -> KSCallableReferenceImpl.getCached(ktType, parent)
         is KaDynamicType -> KSDynamicReferenceImpl.getCached(parent!!)
-        is KaUsualClassType -> KSClassifierReferenceResolvedImpl.getCached(ktType, ktType.qualifiers.size - 1, parent)
+        is KaUsualClassType ->
+            KSClassifierReferenceResolvedImpl.getCached(ktType, ktType.qualifiers.size - 1, parent)
         is KaFlexibleType -> ktType.lowerBound.toClassifierReference(parent)
         is KaErrorType -> null
         is KaTypeParameterType -> KSClassifierParameterImpl.getCached(ktType, parent)
         is KaDefinitelyNotNullType -> KSDefNonNullReferenceImpl.getCached(ktType, parent)
-        else -> throw InternalKSPException(
-            "Unexpected type element",
-            NonExistLocation,
-            ktType.javaClass,
-        )
+        else ->
+            throw InternalKSPException(
+                "Unexpected type element",
+                NonExistLocation,
+                ktType.javaClass,
+            )
     }
 }
 
 @OptIn(KaImplementationDetail::class, KaPlatformInterface::class)
 internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
-    val variance = when (this.variance) {
-        com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
-        com.google.devtools.ksp.symbol.Variance.COVARIANT -> Variance.OUT_VARIANCE
-        com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.IN_VARIANCE
-        else -> null
-    }
+    val variance =
+        when (this.variance) {
+            com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
+            com.google.devtools.ksp.symbol.Variance.COVARIANT -> Variance.OUT_VARIANCE
+            com.google.devtools.ksp.symbol.Variance.CONTRAVARIANT -> Variance.IN_VARIANCE
+            else -> null
+        }
     val argType = (this.type?.resolve() as? KSTypeImpl)?.type
     // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
-    val alwaysAccessibleLifetimeToken = KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
+    val alwaysAccessibleLifetimeToken =
+        KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
     return if (argType == null || variance == null) {
         KaBaseStarTypeProjection(alwaysAccessibleLifetimeToken)
     } else {
@@ -314,15 +335,17 @@ internal fun PsiElement?.toLocation(): Location {
         return NonExistLocation
     }
     val file = this.containingFile
-    val document = KSPCoreEnvironment.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
+    val document =
+        KSPCoreEnvironment.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
     return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
 }
 
 internal fun KaSymbol.toContainingFile(): KSFile? {
     return when (val psi = this.psi) {
-        is KtElement -> analyze {
-            KSFileImpl.getCached(psi.containingKtFile.symbol)
-        }
+        is KtElement ->
+            analyze {
+                KSFileImpl.getCached(psi.containingKtFile.symbol)
+            }
 
         is PsiElement -> KSFileJavaImpl.getCached(psi.containingFile as PsiJavaFile)
         else -> null
@@ -339,29 +362,33 @@ internal inline fun <R> analyze(crossinline action: KaSession.() -> R): R {
 internal fun KaDeclarationContainerSymbol.declarations(): Sequence<KSDeclaration> {
     return analyze {
         this@declarations.let {
-            it.declaredMemberScope.declarations + it.staticDeclaredMemberScope.declarations
-        }.distinct().map { symbol ->
-            when (symbol) {
-                is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
-                is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
-                is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
-                is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(symbol)
-                is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
-                is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
-                else -> throw InternalKSPException(
-                    "Unexpected declaration symbol",
-                    symbol.psi.toLocation(),
-                    symbol.javaClass
-                )
+                it.declaredMemberScope.declarations + it.staticDeclaredMemberScope.declarations
             }
-        }
+            .distinct()
+            .map { symbol ->
+                when (symbol) {
+                    is KaNamedClassSymbol -> KSClassDeclarationImpl.getCached(symbol)
+                    is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(symbol)
+                    is KaPropertySymbol -> KSPropertyDeclarationImpl.getCached(symbol)
+                    is KaEnumEntrySymbol -> KSClassDeclarationEnumEntryImpl.getCached(symbol)
+                    is KaJavaFieldSymbol -> KSPropertyDeclarationJavaImpl.getCached(symbol)
+                    is KaTypeAliasSymbol -> KSTypeAliasImpl.getCached(symbol)
+                    else ->
+                        throw InternalKSPException(
+                            "Unexpected declaration symbol",
+                            symbol.psi.toLocation(),
+                            symbol.javaClass,
+                        )
+                }
+            }
     }
 }
 
 @OptIn(KaExperimentalApi::class)
 internal fun KaDeclarationContainerSymbol.getAllProperties(): Sequence<KSPropertyDeclaration> {
     return analyze {
-        this@getAllProperties.memberScope.callables { true }
+        this@getAllProperties.memberScope
+            .callables { true }
             .filter {
                 it.isVisibleInClass(this@getAllProperties as KaClassSymbol) ||
                     it.containingSymbol == this@getAllProperties ||
@@ -380,14 +407,16 @@ internal fun KaDeclarationContainerSymbol.getAllProperties(): Sequence<KSPropert
 @OptIn(KaExperimentalApi::class)
 internal fun KaDeclarationContainerSymbol.getAllFunctions(): Sequence<KSFunctionDeclaration> {
     return analyze {
-        this@getAllFunctions.memberScope.let { it.callables { true } + it.constructors }
+        this@getAllFunctions.memberScope
+            .let { it.callables { true } + it.constructors }
             .filter {
                 it.isVisibleInClass(this@getAllFunctions as KaClassSymbol) ||
                     it.containingSymbol == this@getAllFunctions ||
                     it.containingSymbol?.psi == this@getAllFunctions.psi
             }
             .mapNotNull { callableSymbol ->
-                // TODO: replace with single safe cast if no more implementations of KSFunctionDeclaration is added.
+                // TODO: replace with single safe cast if no more implementations of
+                // KSFunctionDeclaration is added.
                 when (callableSymbol) {
                     is KaFunctionSymbol -> KSFunctionDeclarationImpl.getCached(callableSymbol)
                     else -> null
@@ -400,38 +429,47 @@ private val jvmRepeatableClassId = ClassId.fromString("java/lang/annotation/Repe
 private val repeatableClassId = ClassId.fromString("kotlin/annotation/Repeatable")
 
 private fun KaClassSymbol.isRepeatableAnnotation(container: KaAnnotation): Boolean {
-    return this.classKind == KaClassKind.ANNOTATION_CLASS && annotations.any {
-        when (it.classId) {
-            jvmRepeatableClassId -> {
-                it.arguments.singleOrNull()?.let { arg ->
-                    val expression = arg.expression as? KaAnnotationValue.ClassLiteralValue ?: return@let null
-                    arg.name.asString() == "value" && expression.classId == container.classId
-                } ?: false
-            }
+    return this.classKind == KaClassKind.ANNOTATION_CLASS &&
+        annotations.any {
+            when (it.classId) {
+                jvmRepeatableClassId -> {
+                    it.arguments.singleOrNull()?.let { arg ->
+                        val expression =
+                            arg.expression as? KaAnnotationValue.ClassLiteralValue
+                                ?: return@let null
+                        arg.name.asString() == "value" && expression.classId == container.classId
+                    } ?: false
+                }
 
-            repeatableClassId -> {
-                container.classId?.asFqNameString() == "${this.classId?.asFqNameString()}.Container"
-            }
+                repeatableClassId -> {
+                    container.classId?.asFqNameString() ==
+                        "${this.classId?.asFqNameString()}.Container"
+                }
 
-            else -> false
+                else -> false
+            }
         }
-    }
 }
 
 private fun KaAnnotated.annotationsWithRepeatableUnfolded(): List<KaAnnotation> {
     return if (
-        this is KaSymbol && (this.origin == KaSymbolOrigin.LIBRARY || this.origin == KaSymbolOrigin.JAVA_LIBRARY)
+        this is KaSymbol &&
+            (this.origin == KaSymbolOrigin.LIBRARY || this.origin == KaSymbolOrigin.JAVA_LIBRARY)
     ) {
         annotations.flatMap { container ->
             // Try to unwrap repeatable containers
             // https://github.com/Kotlin/KEEP/blob/master/proposals/repeatable-annotations.md
             val containedAnnotations: List<KaAnnotation>? =
-                (container.arguments.singleOrNull()?.expression as? KaAnnotationValue.ArrayValue)?.values?.map {
-                    (it as? KaAnnotationValue.NestedAnnotationValue)?.annotation ?: return@flatMap listOf(container)
-                }
+                (container.arguments.singleOrNull()?.expression as? KaAnnotationValue.ArrayValue)
+                    ?.values
+                    ?.map {
+                        (it as? KaAnnotationValue.NestedAnnotationValue)?.annotation
+                            ?: return@flatMap listOf(container)
+                    }
             val containedAnnotationClassId: ClassId =
                 containedAnnotations?.firstOrNull()?.classId ?: return@flatMap listOf(container)
-            val containedClass = containedAnnotationClassId.toKtClassSymbol() ?: return@flatMap listOf(container)
+            val containedClass =
+                containedAnnotationClassId.toKtClassSymbol() ?: return@flatMap listOf(container)
             if (containedClass.isRepeatableAnnotation(container)) {
                 containedAnnotations
             } else {
@@ -442,21 +480,25 @@ private fun KaAnnotated.annotationsWithRepeatableUnfolded(): List<KaAnnotation> 
 }
 
 internal fun KaAnnotated.annotations(parent: KSNode? = null): Sequence<KSAnnotation> {
-    return annotationsWithRepeatableUnfolded().asSequence().map { KSAnnotationResolvedImpl.getCached(it, parent) }
+    return annotationsWithRepeatableUnfolded().asSequence().map {
+        KSAnnotationResolvedImpl.getCached(it, parent)
+    }
 }
 
 internal fun KtAnnotated.annotations(
     kaAnnotated: KaAnnotated,
     parent: KSNode? = null,
-    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded()
+    candidates: List<KaAnnotation> = kaAnnotated.annotationsWithRepeatableUnfolded(),
 ): Sequence<KSAnnotation> {
-    if (candidates.isEmpty())
-        return emptySequence()
-    return annotationEntries.filter { !it.isUseSiteTargetAnnotation() }.asSequence().map { annotationEntry ->
-        KSAnnotationImpl.getCached(annotationEntry, parent) {
-            candidates.single { it.psi == annotationEntry }
+    if (candidates.isEmpty()) return emptySequence()
+    return annotationEntries
+        .filter { !it.isUseSiteTargetAnnotation() }
+        .asSequence()
+        .map { annotationEntry ->
+            KSAnnotationImpl.getCached(annotationEntry, parent) {
+                candidates.single { it.psi == annotationEntry }
+            }
         }
-    }
 }
 
 internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
@@ -473,23 +515,25 @@ internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
 internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KSDeclaration
 
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
-internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
-    is KaPropertySymbol -> toKSPropertyDeclaration()
-    is KaNamedClassSymbol -> toKSClassDeclaration()
-    is KaFunctionSymbol -> toKSFunctionDeclaration()
-    is KaTypeAliasSymbol -> toKSTypeAlias()
-    is KaJavaFieldSymbol -> this@toKSAnnotated.toKSPropertyDeclaration()
-    is KaFileSymbol -> toKSFile()
-    is KaEnumEntrySymbol -> toKSClassDeclarationEnumEntry()
-    is KaTypeParameterSymbol -> toKSTypeParameter()
-    is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
-    is KaValueParameterSymbol -> toKSValueParameter()
-    else -> throw InternalKSPException(
-        "Unexpected class for KtSymbol",
-        this.psi.toLocation(),
-        this.javaClass
-    )
-}
+internal fun KaSymbol.toKSAnnotated(): KSAnnotated =
+    when (this) {
+        is KaPropertySymbol -> toKSPropertyDeclaration()
+        is KaNamedClassSymbol -> toKSClassDeclaration()
+        is KaFunctionSymbol -> toKSFunctionDeclaration()
+        is KaTypeAliasSymbol -> toKSTypeAlias()
+        is KaJavaFieldSymbol -> this@toKSAnnotated.toKSPropertyDeclaration()
+        is KaFileSymbol -> toKSFile()
+        is KaEnumEntrySymbol -> toKSClassDeclarationEnumEntry()
+        is KaTypeParameterSymbol -> toKSTypeParameter()
+        is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
+        is KaValueParameterSymbol -> toKSValueParameter()
+        else ->
+            throw InternalKSPException(
+                "Unexpected class for KtSymbol",
+                this.psi.toLocation(),
+                this.javaClass,
+            )
+    }
 
 internal fun KaPropertySymbol.toKSPropertyDeclaration(): KSPropertyDeclarationImpl =
     KSPropertyDeclarationImpl.getCached(this)
@@ -500,24 +544,24 @@ internal fun KaNamedClassSymbol.toKSClassDeclaration(): KSClassDeclarationImpl =
 internal fun KaFunctionSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl =
     KSFunctionDeclarationImpl.getCached(this)
 
-internal fun KaCallableSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl? = when (this) {
-    is KaFunctionSymbol -> this.toKSFunctionDeclaration()
-    else -> null
-}
+internal fun KaCallableSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationImpl? =
+    when (this) {
+        is KaFunctionSymbol -> this.toKSFunctionDeclaration()
+        else -> null
+    }
 
-internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration? = when (this) {
-    is KaJavaFieldSymbol -> this.toKSPropertyDeclaration()
-    else -> null
-}
+internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration? =
+    when (this) {
+        is KaJavaFieldSymbol -> this.toKSPropertyDeclaration()
+        else -> null
+    }
 
-internal fun KaTypeAliasSymbol.toKSTypeAlias(): KSTypeAliasImpl =
-    KSTypeAliasImpl.getCached(this)
+internal fun KaTypeAliasSymbol.toKSTypeAlias(): KSTypeAliasImpl = KSTypeAliasImpl.getCached(this)
 
 internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration =
     KSPropertyDeclarationJavaImpl.getCached(this)
 
-internal fun KaFileSymbol.toKSFile(): KSFileImpl =
-    KSFileImpl.getCached(this)
+internal fun KaFileSymbol.toKSFile(): KSFileImpl = KSFileImpl.getCached(this)
 
 internal fun KaEnumEntrySymbol.toKSClassDeclarationEnumEntry(): KSClassDeclarationEnumEntryImpl =
     KSClassDeclarationEnumEntryImpl.getCached(this)
@@ -525,102 +569,110 @@ internal fun KaEnumEntrySymbol.toKSClassDeclarationEnumEntry(): KSClassDeclarati
 internal fun KaTypeParameterSymbol.toKSTypeParameter(): KSTypeParameterImpl =
     KSTypeParameterImpl.getCached(this)
 
-internal fun KaLocalVariableSymbol.toKSPropertyDeclarationLocalVariable(): KSPropertyDeclarationLocalVariableImpl =
-    KSPropertyDeclarationLocalVariableImpl.getCached(this)
+internal fun KaLocalVariableSymbol.toKSPropertyDeclarationLocalVariable():
+    KSPropertyDeclarationLocalVariableImpl = KSPropertyDeclarationLocalVariableImpl.getCached(this)
 
 internal fun KaValueParameterSymbol.toKSValueParameter(): KSValueParameterImpl =
     KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
 
-internal fun AnnotationUseSiteTargetAA.toKSAnnotationUseSiteTarget(): AnnotationUseSiteTarget = when (this) {
-    AnnotationUseSiteTargetAA.ALL -> AnnotationUseSiteTarget.ALL
-    AnnotationUseSiteTargetAA.FIELD -> AnnotationUseSiteTarget.FIELD
-    AnnotationUseSiteTargetAA.FILE -> AnnotationUseSiteTarget.FILE
-    AnnotationUseSiteTargetAA.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
-    AnnotationUseSiteTargetAA.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
-    AnnotationUseSiteTargetAA.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
-    AnnotationUseSiteTargetAA.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
-    AnnotationUseSiteTargetAA.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
-    AnnotationUseSiteTargetAA.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
-    AnnotationUseSiteTargetAA.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-}
+internal fun AnnotationUseSiteTargetAA.toKSAnnotationUseSiteTarget(): AnnotationUseSiteTarget =
+    when (this) {
+        AnnotationUseSiteTargetAA.ALL -> AnnotationUseSiteTarget.ALL
+        AnnotationUseSiteTargetAA.FIELD -> AnnotationUseSiteTarget.FIELD
+        AnnotationUseSiteTargetAA.FILE -> AnnotationUseSiteTarget.FILE
+        AnnotationUseSiteTargetAA.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+        AnnotationUseSiteTargetAA.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+        AnnotationUseSiteTargetAA.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+        AnnotationUseSiteTargetAA.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+        AnnotationUseSiteTargetAA.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+        AnnotationUseSiteTargetAA.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+        AnnotationUseSiteTargetAA.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+    }
 
 /**
- * Optionally returns the [KaType] for the [KSType].
- * In other words, it unpacks the underlying analysis API type from the KSP type.
+ * Optionally returns the [KaType] for the [KSType]. In other words, it unpacks the underlying
+ * analysis API type from the KSP type.
  */
-internal fun KSType.toKaType(): KaType? =
-    (this as? KSTypeImpl)?.type
+internal fun KSType.toKaType(): KaType? = (this as? KSTypeImpl)?.type
 
-internal fun KSPropertyAccessor.getter(): KSPropertyGetter? = when (this) {
-    is KSPropertyGetter -> this
-    is KSPropertySetter -> null
-    else -> null
-}
+internal fun KSPropertyAccessor.getter(): KSPropertyGetter? =
+    when (this) {
+        is KSPropertyGetter -> this
+        is KSPropertySetter -> null
+        else -> null
+    }
 
-internal fun KSPropertyAccessor.setter(): KSPropertySetter? = when (this) {
-    is KSPropertyGetter -> null
-    is KSPropertySetter -> this
-    else -> null
-}
+internal fun KSPropertyAccessor.setter(): KSPropertySetter? =
+    when (this) {
+        is KSPropertyGetter -> null
+        is KSPropertySetter -> this
+        else -> null
+    }
 
-internal fun KSAnnotated.getter(): KSPropertyGetter? = when (this) {
-    is KSDeclaration -> this.getter()
-    is KSFile -> null
-    is KSPropertyAccessor -> this.getter()
-    is KSTypeArgument -> null
-    is KSTypeReference -> null
-    is KSValueArgument -> null
-    is KSValueParameter -> this.getter()
-    else -> null
-}
+internal fun KSAnnotated.getter(): KSPropertyGetter? =
+    when (this) {
+        is KSDeclaration -> this.getter()
+        is KSFile -> null
+        is KSPropertyAccessor -> this.getter()
+        is KSTypeArgument -> null
+        is KSTypeReference -> null
+        is KSValueArgument -> null
+        is KSValueParameter -> this.getter()
+        else -> null
+    }
 
-internal fun KSAnnotated.setter(): KSPropertySetter? = when (this) {
-    is KSDeclaration -> this.setter()
-    is KSFile -> null
-    is KSPropertyAccessor -> this.setter()
-    is KSTypeArgument -> null
-    is KSTypeReference -> null
-    is KSValueArgument -> null
-    is KSValueParameter -> this.setter()
-    else -> null
-}
+internal fun KSAnnotated.setter(): KSPropertySetter? =
+    when (this) {
+        is KSDeclaration -> this.setter()
+        is KSFile -> null
+        is KSPropertyAccessor -> this.setter()
+        is KSTypeArgument -> null
+        is KSTypeReference -> null
+        is KSValueArgument -> null
+        is KSValueParameter -> this.setter()
+        else -> null
+    }
 
-internal fun KSValueParameter.getter(): KSPropertyGetter? =
-    getGeneratedProperty()?.getter
+internal fun KSValueParameter.getter(): KSPropertyGetter? = getGeneratedProperty()?.getter
 
-internal fun KSValueParameter.setter(): KSPropertySetter? =
-    getGeneratedProperty()?.setter
+internal fun KSValueParameter.setter(): KSPropertySetter? = getGeneratedProperty()?.setter
 
-internal fun KSDeclaration.getter(): KSPropertyGetter? = when (this) {
-    is KSPropertyDeclaration -> this.getter
-    else -> null
-}
+internal fun KSDeclaration.getter(): KSPropertyGetter? =
+    when (this) {
+        is KSPropertyDeclaration -> this.getter
+        else -> null
+    }
 
-internal fun KSDeclaration.setter(): KSPropertySetter? = when (this) {
-    is KSPropertyDeclaration -> this.setter
-    else -> null
-}
+internal fun KSDeclaration.setter(): KSPropertySetter? =
+    when (this) {
+        is KSPropertyDeclaration -> this.setter
+        else -> null
+    }
 
-/**
- * Returns the generated property if the value parameter is declared as `val` or `var`.
- */
-internal fun KSValueParameter.getGeneratedProperty(): KSPropertyDeclaration? = when (this) {
-    is KSValueParameterImpl -> if (isVal || isVar) generatedProperty else null
-    is KSValueParameterLiteImpl -> null
-    else -> throw InternalKSPException(
-        "Unexpected KSValueParameter type",
-        this.location,
-        this.javaClass
-    )
-}
+/** Returns the generated property if the value parameter is declared as `val` or `var`. */
+internal fun KSValueParameter.getGeneratedProperty(): KSPropertyDeclaration? =
+    when (this) {
+        is KSValueParameterImpl -> if (isVal || isVar) generatedProperty else null
+        is KSValueParameterLiteImpl -> null
+        else ->
+            throw InternalKSPException(
+                "Unexpected KSValueParameter type",
+                this.location,
+                this.javaClass,
+            )
+    }
 
 @OptIn(ClassIdBasedLocality::class)
 internal fun ClassId.toKtClassSymbol(): KaClassSymbol? {
     return analyze {
         if (this@toKtClassSymbol.isLocal) {
-            this@toKtClassSymbol.outerClassId?.toKtClassSymbol()?.declaredMemberScope?.classifiers {
-                it.asString() == this@toKtClassSymbol.shortClassName.asString()
-            }?.singleOrNull() as? KaClassSymbol
+            this@toKtClassSymbol.outerClassId
+                ?.toKtClassSymbol()
+                ?.declaredMemberScope
+                ?.classifiers {
+                    it.asString() == this@toKtClassSymbol.shortClassName.asString()
+                }
+                ?.singleOrNull() as? KaClassSymbol
         } else {
             // Try to find KaFirPsiJavaClassSymbol. See KT-74598 for details.
             val candidate = findClass(this@toKtClassSymbol)
@@ -628,8 +680,7 @@ internal fun ClassId.toKtClassSymbol(): KaClassSymbol? {
             // Checking of JAVA_SOURCE is needed because psi can come from libraries.
             if (candidate?.origin == KaSymbolOrigin.JAVA_SOURCE && psi is PsiClass)
                 psi.namedClassSymbol
-            else
-                candidate
+            else candidate
         }
     }
 }
@@ -646,7 +697,8 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             is KaTypeParameterType -> this.symbol
             // TODO: upstream is not exposing enough information for captured types.
             is KaCapturedType -> TODO("fix in upstream")
-            is KaClassErrorType, is KaErrorType -> null
+            is KaClassErrorType,
+            is KaErrorType -> null
             is KaFunctionType -> (this as? KaFirFunctionType)?.abbreviatedSymbol() ?: symbol
             is KaUsualClassType -> symbol
             is KaDefinitelyNotNullType -> original.classifierSymbol()
@@ -656,11 +708,12 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             is KaFlexibleType -> lowerBound.classifierSymbol()
             // TODO: KSP does not support intersection type.
             is KaIntersectionType -> null
-            else -> throw InternalKSPException(
-                "Unexpected type",
-                NonExistLocation,
-                this.javaClass
-            )
+            else ->
+                throw InternalKSPException(
+                    "Unexpected type",
+                    NonExistLocation,
+                    this.javaClass,
+                )
         }
     } catch (e: KotlinExceptionWithAttachments) {
         // The implementation for getting symbols from a type throws an exception
@@ -671,45 +724,43 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
 
 internal fun KaType.typeArguments(): List<KaTypeProjection> {
     return if (this is KaFlexibleType) {
-        this.lowerBound
-    } else {
-        this
-    }.let {
-        (it as? KaClassType)?.qualifiers?.reversed()?.flatMap(KaResolvedClassTypeQualifier::typeArguments)
-            ?: emptyList()
-    }
+            this.lowerBound
+        } else {
+            this
+        }
+        .let {
+            (it as? KaClassType)
+                ?.qualifiers
+                ?.reversed()
+                ?.flatMap(KaResolvedClassTypeQualifier::typeArguments) ?: emptyList()
+        }
 }
 
 /**
- * Optionally returns the fully qualified name for the [KSAnnotated].
- * This function may be expensive to compute since it must resolve the type of the annotation.
+ * Optionally returns the fully qualified name for the [KSAnnotated]. This function may be expensive
+ * to compute since it must resolve the type of the annotation.
  */
-internal fun KSAnnotation.getFqn(): String? =
-    annotationType.resolve().toKaType()?.getFqn()
+internal fun KSAnnotation.getFqn(): String? = annotationType.resolve().toKaType()?.getFqn()
 
-/**
- * Optionally returns the fully qualified name for a [KaType].
- */
-internal fun KaType.getFqn(): String? =
-    fullyExpand().symbol?.classId?.asFqNameString()
+/** Optionally returns the fully qualified name for a [KaType]. */
+internal fun KaType.getFqn(): String? = fullyExpand().symbol?.classId?.asFqNameString()
 
-/**
- * Returns the Psi element for [KSFile], if it exists.
- */
+/** Returns the Psi element for [KSFile], if it exists. */
 internal val KSFile.psi: PsiElement?
-    get() = when (this) {
-        is KSFileImpl -> ktFileSymbol.psi
-        is KSFileJavaImpl -> psi
-        else -> null
-    }
+    get() =
+        when (this) {
+            is KSFileImpl -> ktFileSymbol.psi
+            is KSFileJavaImpl -> psi
+            else -> null
+        }
 
 internal fun KaSymbolVisibility.toModifier(): Modifier {
     return when (this) {
         KaSymbolVisibility.PUBLIC -> Modifier.PUBLIC
         KaSymbolVisibility.PRIVATE -> Modifier.PRIVATE
         KaSymbolVisibility.INTERNAL -> Modifier.INTERNAL
-        KaSymbolVisibility.PROTECTED, KaSymbolVisibility.PACKAGE_PROTECTED ->
-            Modifier.PROTECTED
+        KaSymbolVisibility.PROTECTED,
+        KaSymbolVisibility.PACKAGE_PROTECTED -> Modifier.PROTECTED
 
         else -> Modifier.PUBLIC
     }
@@ -732,47 +783,57 @@ internal inline fun <reified T : KSNode> KSNode.findParentOfType(): KSNode? {
     return result
 }
 
-internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? = when (this) {
-    is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
-    is KaAnnotationValue.NestedAnnotationValue -> KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
-    // TODO: Enum entry should return a type, use declaration as a placeholder.
-    is KaAnnotationValue.EnumEntryValue -> this.callableId?.classId?.let { classId ->
-        analyze {
-            classId.toKtClassSymbol()?.let { classSymbol ->
-                classSymbol.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
-                    it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
+internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? =
+    when (this) {
+        is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
+        is KaAnnotationValue.NestedAnnotationValue ->
+            KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
+        // TODO: Enum entry should return a type, use declaration as a placeholder.
+        is KaAnnotationValue.EnumEntryValue ->
+            this.callableId?.classId?.let { classId ->
+                analyze {
+                    classId.toKtClassSymbol()?.let { classSymbol ->
+                        classSymbol
+                            .declarations()
+                            .filterIsInstance<KSClassDeclarationEnumEntryImpl>()
+                            .singleOrNull {
+                                it.simpleName.asString() ==
+                                    this@toValue.callableId?.callableName?.asString()
+                            }
+                    }
                 }
+            } ?: KSErrorType
+
+        is KaAnnotationValue.ClassLiteralValue -> {
+            parent?.let { ctx ->
+                recordClassReferenceLookup(type, ctx)
             }
+            KSTypeImpl.getCached(type)
         }
-    } ?: KSErrorType
 
-    is KaAnnotationValue.ClassLiteralValue -> {
-        parent?.let { ctx ->
-            recordClassReferenceLookup(type, ctx)
-        }
-        KSTypeImpl.getCached(type)
+        is KaAnnotationValue.ConstantValue -> this.value.value
+        is KaAnnotationValue.UnsupportedValue -> null
     }
-
-    is KaAnnotationValue.ConstantValue -> this.value.value
-    is KaAnnotationValue.UnsupportedValue -> null
-}
 
 @OptIn(SymbolInternals::class, KaImplementationDetail::class, KaExperimentalApi::class)
 internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
     return this.psi.let { psiElement ->
         when (psiElement) {
-            is KtParameter -> analyze {
-                psiElement.defaultValue?.evaluateAsAnnotationValue()
-            }
+            is KtParameter ->
+                analyze {
+                    psiElement.defaultValue?.evaluateAsAnnotationValue()
+                }
             // ClsMethodImpl means the psi is decompiled psi.
-            null, is ClsMemberImpl<*> -> {
+            null,
+            is ClsMemberImpl<*> -> {
                 // TODO: multiplatform
-                if (!ResolverAAImpl.instance.isJvm)
-                    return@let null
+                if (!ResolverAAImpl.instance.isJvm) return@let null
                 val fileManager = ResolverAAImpl.instance.javaFileManager
-                val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-                    ?: return@let null
+                val parentClass =
+                    this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
+                val classId =
+                    (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                        ?: return@let null
 
                 val defaultValue: JavaAnnotationArgument? = analyze {
                     val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
@@ -784,49 +845,61 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
                     val symbolBuilder = it.builder
                     val expectedTypeRef = it.firSymbol.fir.returnTypeRef
                     // when no default value is declared in the class file, ideally users should
-                    // apply a value for such property at use site, therefore value obtained here should not be
+                    // apply a value for such property at use site, therefore value obtained here
+                    // should not be
                     // returned. In case of a user failed to do so, we try our best to return values
                     // to ensure no annotation argument is missing from KSP side.
                     // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
-                    // will produce empty array for array type values and `null` for the rest of value types.
-                    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
-                        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+                    // will produce empty array for array type values and `null` for the rest of
+                    // value types.
+                    val expression =
+                        (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null)).toFirExpression(
+                            firSession,
+                            JavaTypeParameterStack.EMPTY,
+                            expectedTypeRef,
+                            null,
+                        )
                     FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
                 }
             }
 
-            else -> throw InternalKSPException(
-                "Unhandled default value type",
-                psiElement.toLocation(),
-                psiElement.javaClass,
-            )
+            else ->
+                throw InternalKSPException(
+                    "Unhandled default value type",
+                    psiElement.toLocation(),
+                    psiElement.javaClass,
+                )
         }
     }
 }
 
 @OptIn(KaExperimentalApi::class)
 internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubstitutorBuilder) {
-    val unwrappedType = when (context) {
-        is KaClassType -> context
-        is KaFlexibleType -> {
-            fillInDeepSubstitutor(context.upperBound, substitutorBuilder)
-            fillInDeepSubstitutor(context.lowerBound, substitutorBuilder)
-            return
-        }
+    val unwrappedType =
+        when (context) {
+            is KaClassType -> context
+            is KaFlexibleType -> {
+                fillInDeepSubstitutor(context.upperBound, substitutorBuilder)
+                fillInDeepSubstitutor(context.lowerBound, substitutorBuilder)
+                return
+            }
 
-        else -> return
-    }
+            else -> return
+        }
     val parameters = unwrappedType.symbol.typeParameters
     val arguments = unwrappedType.typeArguments
     if (parameters.size != arguments.size) {
         throw InternalKSPException(
             "Unexpected invalid substitution for $context",
             NonExistLocation,
-            context.javaClass
+            context.javaClass,
         )
     }
     parameters.zip(arguments).forEach { (param, projection) ->
-        val arg = projection.type ?: param.upperBounds.firstOrNull() ?: analyze { useSiteSession.builtinTypes.any }
+        val arg =
+            projection.type
+                ?: param.upperBounds.firstOrNull()
+                ?: analyze { useSiteSession.builtinTypes.any }
         substitutorBuilder.substitution(param, arg)
     }
     (context.symbol as? KaClassSymbol)?.superTypes?.forEach {
@@ -835,7 +908,10 @@ internal fun fillInDeepSubstitutor(context: KaType, substitutorBuilder: KaSubsti
 }
 
 internal fun KaSymbol.psiIfSource(): PsiElement? {
-    return if (origin == KaSymbolOrigin.SOURCE || origin == KaSymbolOrigin.JAVA_SOURCE && toContainingFile() != null) {
+    return if (
+        origin == KaSymbolOrigin.SOURCE ||
+            origin == KaSymbolOrigin.JAVA_SOURCE && toContainingFile() != null
+    ) {
         psi
     } else {
         null
@@ -855,8 +931,7 @@ fun <T : KaSymbol> T.defer(restore: (T) -> KSAnnotated?): Restorable {
     return Restorable {
         analyze {
             val restored = ptr.restoreSymbol() ?: return@analyze null
-            @Suppress("UNCHECKED_CAST")
-            restore(restored as T)
+            @Suppress("UNCHECKED_CAST") restore(restored as T)
         }
     }
 }
@@ -880,10 +955,11 @@ internal fun KaType.convertToKotlinType(): KaType {
     if (declaration.classId == null) {
         return this
     }
-    val base = if (declaration.classId != null && declaration.shouldMapToKotlinForAssignabilityCheck()) {
-        JavaToKotlinClassMap.mapJavaToKotlin(declaration.classId!!.asSingleFqName())?.toKtClassSymbol()
-            ?: declaration
-    } else declaration
+    val base =
+        if (declaration.classId != null && declaration.shouldMapToKotlinForAssignabilityCheck()) {
+            JavaToKotlinClassMap.mapJavaToKotlin(declaration.classId!!.asSingleFqName())
+                ?.toKtClassSymbol() ?: declaration
+        } else declaration
     return analyze {
         buildClassType(base.tryResolveToTypePhase()) {
             this@convertToKotlinType.typeArguments().forEach { typeProjection ->
@@ -914,10 +990,11 @@ internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
     require(newArgs.isEmpty() || newArgs.size == this.typeArguments().size)
     return analyze {
         when (val symbol = classifierSymbol().tryResolveToTypePhase()) {
-            is KaClassLikeSymbol -> useSiteSession.buildClassType(symbol) {
-                newArgs.forEach { arg -> argument(arg) }
-                isMarkedNullable = this@replace.isMarkedNullable
-            }
+            is KaClassLikeSymbol ->
+                useSiteSession.buildClassType(symbol) {
+                    newArgs.forEach { arg -> argument(arg) }
+                    isMarkedNullable = this@replace.isMarkedNullable
+                }
             // No need to copy nullability for type parameters
             // because it is overridden to be always nullable in compiler.
             is KaTypeParameterSymbol -> useSiteSession.buildTypeParameterType(symbol)
@@ -929,13 +1006,14 @@ internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
 internal fun getVarianceForWildcard(
     parameter: KaTypeParameterSymbol,
     projection: KaTypeProjection,
-    mode: TypeMappingMode
+    mode: TypeMappingMode,
 ): Variance {
-    val projectionKind = if (projection is KaTypeArgumentWithVariance) {
-        projection.variance
-    } else {
-        Variance.OUT_VARIANCE
-    }
+    val projectionKind =
+        if (projection is KaTypeArgumentWithVariance) {
+            projection.variance
+        } else {
+            Variance.OUT_VARIANCE
+        }
     val parameterVariance = parameter.variance
     if (parameterVariance == Variance.INVARIANT) {
         return projectionKind
@@ -946,10 +1024,15 @@ internal fun getVarianceForWildcard(
     if (projectionKind == Variance.INVARIANT || projectionKind == parameterVariance) {
         if (mode.skipDeclarationSiteWildcardsIfPossible && projection !is KaStarTypeProjection) {
             val type = projection.type ?: return parameterVariance
-            if (parameterVariance == Variance.OUT_VARIANCE && type.isMostPreciseCovariantArgument()) {
+            if (
+                parameterVariance == Variance.OUT_VARIANCE && type.isMostPreciseCovariantArgument()
+            ) {
                 return Variance.INVARIANT
             }
-            if (parameterVariance == Variance.IN_VARIANCE && type.isMostPreciseContravariantArgument()) {
+            if (
+                parameterVariance == Variance.IN_VARIANCE &&
+                    type.isMostPreciseContravariantArgument()
+            ) {
                 return Variance.INVARIANT
             }
         }
@@ -963,35 +1046,40 @@ internal fun KaType.isMostPreciseContravariantArgument(): Boolean = analyze { is
 internal fun KaType.isMostPreciseCovariantArgument() = !canHaveSubtypesIgnoreNullability()
 
 @OptIn(KaExperimentalApi::class)
-private fun KaType.canHaveSubtypesIgnoreNullability(): Boolean =
-    analyze {
-        val type = fullyExpandedType
-        val symbol = expandedSymbol ?: return@analyze true
-        if (symbol.classKind == KaClassKind.ENUM_CLASS || symbol.isExpect) {
-            return@analyze true
-        }
-        if (symbol.modality != KaSymbolModality.FINAL) {
-            return@analyze true
-        }
-
-        symbol.typeParameters.forEachIndexed { idx, param ->
-            val projection = type.typeArguments().get(idx)
-
-            if (projection !is KaTypeArgumentWithVariance) {
-                return@analyze true
-            }
-
-            val projectionType = projection.type
-            val effectiveVariance = getEffectiveVariance(param.variance, projection.variance)
-            if (effectiveVariance == Variance.OUT_VARIANCE && !projectionType.isMostPreciseCovariantArgument()) {
-                return@analyze true
-            }
-            if (effectiveVariance == Variance.IN_VARIANCE && !projectionType.isMostPreciseContravariantArgument()) {
-                return@analyze true
-            }
-        }
-        false
+private fun KaType.canHaveSubtypesIgnoreNullability(): Boolean = analyze {
+    val type = fullyExpandedType
+    val symbol = expandedSymbol ?: return@analyze true
+    if (symbol.classKind == KaClassKind.ENUM_CLASS || symbol.isExpect) {
+        return@analyze true
     }
+    if (symbol.modality != KaSymbolModality.FINAL) {
+        return@analyze true
+    }
+
+    symbol.typeParameters.forEachIndexed { idx, param ->
+        val projection = type.typeArguments().get(idx)
+
+        if (projection !is KaTypeArgumentWithVariance) {
+            return@analyze true
+        }
+
+        val projectionType = projection.type
+        val effectiveVariance = getEffectiveVariance(param.variance, projection.variance)
+        if (
+            effectiveVariance == Variance.OUT_VARIANCE &&
+                !projectionType.isMostPreciseCovariantArgument()
+        ) {
+            return@analyze true
+        }
+        if (
+            effectiveVariance == Variance.IN_VARIANCE &&
+                !projectionType.isMostPreciseContravariantArgument()
+        ) {
+            return@analyze true
+        }
+    }
+    false
+}
 
 @OptIn(KaExperimentalApi::class)
 internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
@@ -1005,14 +1093,19 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
                         val variance = getVarianceForWildcard(param, arg, argMode)
-                        val genericMode = argMode.toGenericArgumentMode(
-                            getEffectiveVariance(
-                                param.variance,
-                                (arg as? KaTypeArgumentWithVariance)?.variance ?: Variance.INVARIANT
+                        val genericMode =
+                            argMode.toGenericArgumentMode(
+                                getEffectiveVariance(
+                                    param.variance,
+                                    (arg as? KaTypeArgumentWithVariance)?.variance
+                                        ?: Variance.INVARIANT,
+                                )
                             )
-                        )
                         val argType =
-                            arg.type ?: useSiteSession.builtinTypes.any.withNullability(isMarkedNullable = true)
+                            arg.type
+                                ?: useSiteSession.builtinTypes.any.withNullability(
+                                    isMarkedNullable = true
+                                )
                         argument(argType.toWildcard(genericMode), variance)
                     }
                     isMarkedNullable = this@toWildcard.isMarkedNullable
@@ -1028,20 +1121,16 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
     }
 }
 
-internal fun TypeMappingMode.suppressJvmWildcards(
-    suppress: Boolean
-): TypeMappingMode {
+internal fun TypeMappingMode.suppressJvmWildcards(suppress: Boolean): TypeMappingMode {
     return TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
         skipDeclarationSiteWildcards = suppress,
         isForAnnotationParameter = isForAnnotationParameter,
         needInlineClassWrapping = needInlineClassWrapping,
-        mapTypeAliases = mapTypeAliases
+        mapTypeAliases = mapTypeAliases,
     )
 }
 
-internal fun TypeMappingMode.updateFromParents(
-    ref: KSTypeReference
-): TypeMappingMode {
+internal fun TypeMappingMode.updateFromParents(ref: KSTypeReference): TypeMappingMode {
     return ref.findJvmSuppressWildcards()?.let {
         this.suppressJvmWildcards(it)
     } ?: this
@@ -1051,44 +1140,63 @@ internal fun KSTypeReference.findJvmSuppressWildcards(): Boolean? {
     var candidate: KSNode? = this
     while (candidate != null) {
         if ((candidate is KSTypeReference || candidate is KSDeclaration)) {
-            (candidate as KSAnnotated).annotations.singleOrNull {
-                it.annotationType.resolve().declaration.qualifiedName?.asString()?.equals(
-                    JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME.asString()
-                ) == true
-            }?.let { a -> a.arguments.singleOrNull { it.name?.asString() == "suppress" } }?.let {
-                return it.value as? Boolean
-            }
+            (candidate as KSAnnotated)
+                .annotations
+                .singleOrNull {
+                    it.annotationType
+                        .resolve()
+                        .declaration
+                        .qualifiedName
+                        ?.asString()
+                        ?.equals(JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME.asString()) == true
+                }
+                ?.let { a -> a.arguments.singleOrNull { it.name?.asString() == "suppress" } }
+                ?.let {
+                    return it.value as? Boolean
+                }
         }
         candidate = candidate.parent
     }
     return null
 }
 
-internal fun TypeMappingMode.updateFromAnnotations(
-    type: KaType?
-): TypeMappingMode {
+internal fun TypeMappingMode.updateFromAnnotations(type: KaType?): TypeMappingMode {
     if (type == null) {
         return this
     }
-    type.annotations().firstOrNull {
-        it.annotationType.resolve().declaration.qualifiedName?.asString()
-            ?.equals(JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME.asString()) == true
-    }?.let { annotation ->
-        annotation.arguments.firstOrNull { it.name?.asString() == "suppress" }?.let {
-            return (it.value as? Boolean)?.let(::suppressJvmWildcards) ?: this
+    type
+        .annotations()
+        .firstOrNull {
+            it.annotationType
+                .resolve()
+                .declaration
+                .qualifiedName
+                ?.asString()
+                ?.equals(JVM_SUPPRESS_WILDCARDS_ANNOTATION_FQ_NAME.asString()) == true
         }
-    }
-    val hasJavaWildCardAnnotation = type.annotations().any {
-        it.annotationType.resolve().declaration.qualifiedName?.asString()
-            ?.equals(JVM_WILDCARD_ANNOTATION_FQ_NAME.asString()) == true
-    }
+        ?.let { annotation ->
+            annotation.arguments
+                .firstOrNull { it.name?.asString() == "suppress" }
+                ?.let {
+                    return (it.value as? Boolean)?.let(::suppressJvmWildcards) ?: this
+                }
+        }
+    val hasJavaWildCardAnnotation =
+        type.annotations().any {
+            it.annotationType
+                .resolve()
+                .declaration
+                .qualifiedName
+                ?.asString()
+                ?.equals(JVM_WILDCARD_ANNOTATION_FQ_NAME.asString()) == true
+        }
     return if (hasJavaWildCardAnnotation) {
         TypeMappingMode.createWithConstantDeclarationSiteWildcardsMode(
             skipDeclarationSiteWildcards = false,
             isForAnnotationParameter = isForAnnotationParameter,
             fallbackMode = this,
             needInlineClassWrapping = needInlineClassWrapping,
-            mapTypeAliases = mapTypeAliases
+            mapTypeAliases = mapTypeAliases,
         )
     } else {
         this
@@ -1121,51 +1229,65 @@ private fun KaType.asInfoForMangling(): InfoForMangling? {
 private fun mangleInlineSuffix(
     parameters: List<KaType>,
     returnType: KaType?,
-    shouldMangleReturnType: Boolean
+    shouldMangleReturnType: Boolean,
 ): String {
-    val signature = collectFunctionSignatureForManglingSuffix(
-        false,
-        parameters.any { it.requiresMangling() },
-        parameters.map { it.asInfoForMangling() },
-        if (shouldMangleReturnType) returnType?.asInfoForMangling() else null
-    ) ?: return ""
+    val signature =
+        collectFunctionSignatureForManglingSuffix(
+            false,
+            parameters.any { it.requiresMangling() },
+            parameters.map { it.asInfoForMangling() },
+            if (shouldMangleReturnType) returnType?.asInfoForMangling() else null,
+        ) ?: return ""
     return "-${md5base64(signature)}"
 }
 
 private val KaSymbol.isKotlin: Boolean
-    get() = when (origin) {
-        KaSymbolOrigin.SOURCE, KaSymbolOrigin.LIBRARY -> true
-        else -> false
-    }
+    get() =
+        when (origin) {
+            KaSymbolOrigin.SOURCE,
+            KaSymbolOrigin.LIBRARY -> true
+            else -> false
+        }
 
 internal val KaFunctionSymbol.inlineSuffix: String
-    get() = mangleInlineSuffix(
-        valueParameters.map { it.returnType },
-        returnType,
-        analyze {
-            returnType.requiresMangling() && isKotlin && containingDeclaration != null
-        }
-    )
+    get() =
+        mangleInlineSuffix(
+            valueParameters.map { it.returnType },
+            returnType,
+            analyze {
+                returnType.requiresMangling() && isKotlin && containingDeclaration != null
+            },
+        )
 
 internal val KaPropertyAccessorSymbol.inlineSuffix: String
-    get() = when (this) {
-        is KaPropertyGetterSymbol ->
-            mangleInlineSuffix(
-                emptyList(),
-                returnType,
-                analyze {
-                    returnType.requiresMangling() && isKotlin && containingDeclaration?.containingDeclaration != null
-                }
-            )
+    get() =
+        when (this) {
+            is KaPropertyGetterSymbol ->
+                mangleInlineSuffix(
+                    emptyList(),
+                    returnType,
+                    analyze {
+                        returnType.requiresMangling() &&
+                            isKotlin &&
+                            containingDeclaration?.containingDeclaration != null
+                    },
+                )
 
-        is KaPropertySetterSymbol -> mangleInlineSuffix(listOf(parameter.returnType), null, false)
-    }
+            is KaPropertySetterSymbol ->
+                mangleInlineSuffix(listOf(parameter.returnType), null, false)
+        }
 
 private val jvmNameClassId = ClassId.fromString("kotlin/jvm/JvmName")
+
 internal fun KaCallableSymbol.explictJvmName(): String? {
-    return annotations.singleOrNull() {
-        it.classId == jvmNameClassId
-    }?.arguments?.single()?.expression?.toValue() as? String
+    return annotations
+        .singleOrNull() {
+            it.classId == jvmNameClassId
+        }
+        ?.arguments
+        ?.single()
+        ?.expression
+        ?.toValue() as? String
 }
 
 private val javaLangRecordClassId = ClassId.fromString("java/lang/Record")
@@ -1176,27 +1298,25 @@ internal fun KaClassSymbol.isJvmRecord(): Boolean {
     }
     // The @JvmRecord annotation is not retained in class files, so compiled record
     // classes are recognized by their java.lang.Record supertype instead.
-    return origin == KaSymbolOrigin.LIBRARY && analyze {
-        superTypes.any { (it as? KaClassType)?.classId == javaLangRecordClassId }
-    }
+    return origin == KaSymbolOrigin.LIBRARY &&
+        analyze {
+            superTypes.any { (it as? KaClassType)?.classId == javaLangRecordClassId }
+        }
 }
 
 @OptIn(SymbolInternals::class)
 internal val KaDeclarationSymbol.internalSuffix: String
     get() = analyze {
-        if (visibility != KaSymbolVisibility.INTERNAL)
-            return@analyze ""
+        if (visibility != KaSymbolVisibility.INTERNAL) return@analyze ""
 
         // Skip top level functions and properties
         when (this@internalSuffix) {
             is KaPropertyAccessorSymbol -> {
-                if (containingDeclaration?.containingDeclaration == null)
-                    return@analyze ""
+                if (containingDeclaration?.containingDeclaration == null) return@analyze ""
             }
 
             is KaFunctionSymbol -> {
-                if (containingDeclaration == null)
-                    return@analyze ""
+                if (containingDeclaration == null) return@analyze ""
             }
 
             else -> {}
@@ -1222,16 +1342,16 @@ internal val KaDeclarationSymbol.internalSuffix: String
  * Checks if this symbol is an artifact of inheritance that the Kotlin Analysis API (FIR)
  * incorrectly leaked into the current class's declarations list.
  *
- * KSP's contract dictates that `KSClassDeclaration.declarations` should only return
- * explicitly declared members. This method identifies leaked or synthesized members
- * so they can be filtered out.
+ * KSP's contract dictates that `KSClassDeclaration.declarations` should only return explicitly
+ * declared members. This method identifies leaked or synthesized members so they can be filtered
+ * out.
  *
  * It specifically identifies the following Analysis API leaks:
  *
- * **1. Compiler-Generated Intersection Overrides**
- * An intersection override occurs when a class inherits from multiple supertypes that
- * declare the same member with the same signature. The compiler synthesizes a new member
- * in the subclass.
+ * **1. Compiler-Generated Intersection Overrides** An intersection override occurs when a class
+ * inherits from multiple supertypes that declare the same member with the same signature. The
+ * compiler synthesizes a new member in the subclass.
+ *
  * ```kotlin
  * interface A { fun execute() }
  * interface B { fun execute() }
@@ -1239,19 +1359,19 @@ internal val KaDeclarationSymbol.internalSuffix: String
  * interface C : A, B
  * ```
  *
- * **2. Compiler-Generated Substitution Overrides**
- * A substitution override is created when a generic type parameter from a supertype
- * is substituted with a concrete type in the subclass.
+ * **2. Compiler-Generated Substitution Overrides** A substitution override is created when a
+ * generic type parameter from a supertype is substituted with a concrete type in the subclass.
+ *
  * ```kotlin
  * interface Base<T> { fun process(item: T) }
  * // FIR synthesizes a substitution override `fun process(item: String)` inside Derived.
  * interface Derived : Base<String>
  * ```
  *
- * **3. Inherited Synthetic Java Properties**
- * The Analysis API exposes Java getter/setter methods that override a Kotlin property
- * as synthetic property symbols. Due to a quirk in the FIR provider, these can leak
- * into a subclass's declarations even if only inherited.
+ * **3. Inherited Synthetic Java Properties** The Analysis API exposes Java getter/setter methods
+ * that override a Kotlin property as synthetic property symbols. Due to a quirk in the FIR
+ * provider, these can leak into a subclass's declarations even if only inherited.
+ *
  * ```kotlin
  * interface FooProvider1 { val foo: Foo }
  * ```
@@ -1262,9 +1382,13 @@ internal val KaDeclarationSymbol.internalSuffix: String
  * ```
  */
 internal fun KSDeclaration.isLeakedInheritedMember(currentClass: KSClassDeclarationImpl): Boolean {
-    val declarationSymbol = (this as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol ?: return false
+    val declarationSymbol =
+        (this as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol ?: return false
     val origin = declarationSymbol.origin
-    if (origin == KaSymbolOrigin.INTERSECTION_OVERRIDE || origin == KaSymbolOrigin.SUBSTITUTION_OVERRIDE) {
+    if (
+        origin == KaSymbolOrigin.INTERSECTION_OVERRIDE ||
+            origin == KaSymbolOrigin.SUBSTITUTION_OVERRIDE
+    ) {
         return true
     }
 
@@ -1278,16 +1402,16 @@ internal fun KSDeclaration.isLeakedInheritedMember(currentClass: KSClassDeclarat
 }
 
 /**
- * Performs a Breadth-First Search (BFS) over the FIR supertype hierarchy to determine if this
- * class inherits from a Kotlin built-in type that structurally alters its Java members.
+ * Performs a Breadth-First Search (BFS) over the FIR supertype hierarchy to determine if this class
+ * inherits from a Kotlin built-in type that structurally alters its Java members.
  *
  * This FIR-based traversal is required because PSI-based hierarchy checks (e.g.,
  * `InheritanceUtil.isInheritor`) are unreliable for compiled library dependencies
  * (`Origin.JAVA_LIB`) in KSP's isolated environments due to incomplete ASTs.
  *
- * If this returns true, KSP must bypass the PSI fast path to avoid exposing Java methods
- * that FIR intentionally hides or renames (such as `remove(int)` or `entrySet()`), which
- * would otherwise cause symbol resolution crashes during validation.
+ * If this returns true, KSP must bypass the PSI fast path to avoid exposing Java methods that FIR
+ * intentionally hides or renames (such as `remove(int)` or `entrySet()`), which would otherwise
+ * cause symbol resolution crashes during validation.
  *
  * @return `true` if this class or any of its supertypes requires specialized compiler mapping.
  */
@@ -1317,10 +1441,10 @@ fun KaClassSymbol.isOrInheritsFromKotlinAlteredType(): Boolean {
  * Checks if the given fully qualified name belongs to a Kotlin built-in type that applies
  * specialized mapping to its Java members.
  *
- * The Kotlin Analysis API (FIR) intentionally hides Java collection mutator methods and
- * maps methods from specific types to properties or renamed identifiers (e.g., mapping
- * `length()` to a property for `CharSequence`, or `remove` to `removeAt`). KSP must
- * fall back to the Analysis API slow path for these types to maintain behavioral consistency.
+ * The Kotlin Analysis API (FIR) intentionally hides Java collection mutator methods and maps
+ * methods from specific types to properties or renamed identifiers (e.g., mapping `length()` to a
+ * property for `CharSequence`, or `remove` to `removeAt`). KSP must fall back to the Analysis API
+ * slow path for these types to maintain behavioral consistency.
  */
 private fun isKotlinAlteredType(fqName: String): Boolean {
     // Exclude benign mapped types that do not structurally alter Java members.
@@ -1337,7 +1461,8 @@ private fun isKotlinAlteredType(fqName: String): Boolean {
     return mapKotlinToJava(FqNameUnsafe(fqName)) != null
 }
 
-// Annotations on deeply synthesized members like getter of Java annotation arguments can be defined in src.
+// Annotations on deeply synthesized members like getter of Java annotation arguments can be defined
+// in src.
 internal val KSNode.definitionOrigin: Origin
     get() = containingFile?.origin ?: origin
 

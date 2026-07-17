@@ -34,8 +34,7 @@ import org.jetbrains.kotlin.psi.psiUtil.siblings
 
 private fun parseDocString(raw: String): String? {
     val t1 = raw.trim()
-    if (!t1.startsWith("/**") || !t1.endsWith("*/"))
-        return null
+    if (!t1.startsWith("/**") || !t1.endsWith("*/")) return null
     val lineSep = t1.findAnyOf(listOf("\r\n", "\n", "\r"))?.second ?: ""
     return t1.trim('/').trim('*').lines().joinToString(lineSep) {
         it.trimStart().trimStart('*')
@@ -43,9 +42,12 @@ private fun parseDocString(raw: String): String? {
 }
 
 fun PsiElement.getDocString(): String? =
-    this.firstChild.siblings().firstOrNull { it is PsiComment }?.let {
-        parseDocString(it.text)
-    }
+    this.firstChild
+        .siblings()
+        .firstOrNull { it is PsiComment }
+        ?.let {
+            parseDocString(it.text)
+        }
 
 fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
     val modifierList = this.modifierList
@@ -53,66 +55,64 @@ fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
 }
 
 fun KtModifierList?.toKSModifiers(): Set<Modifier> {
-    if (this == null)
-        return emptySet()
+    if (this == null) return emptySet()
     val modifiers = mutableSetOf<Modifier>()
-    modifiers.addAll(
-        modifierMap.entries
-            .filter { hasModifier(it.key) }
-            .map { it.value }
-    )
+    modifiers.addAll(modifierMap.entries.filter { hasModifier(it.key) }.map { it.value })
     return modifiers
 }
 
-val modifierMap = mapOf(
-    KtTokens.PUBLIC_KEYWORD to Modifier.PUBLIC,
-    KtTokens.PRIVATE_KEYWORD to Modifier.PRIVATE,
-    KtTokens.INTERNAL_KEYWORD to Modifier.INTERNAL,
-    KtTokens.PROTECTED_KEYWORD to Modifier.PROTECTED,
-    KtTokens.IN_KEYWORD to Modifier.IN,
-    KtTokens.OUT_KEYWORD to Modifier.OUT,
-    KtTokens.OVERRIDE_KEYWORD to Modifier.OVERRIDE,
-    KtTokens.LATEINIT_KEYWORD to Modifier.LATEINIT,
-    KtTokens.ENUM_KEYWORD to Modifier.ENUM,
-    KtTokens.SEALED_KEYWORD to Modifier.SEALED,
-    KtTokens.ANNOTATION_KEYWORD to Modifier.ANNOTATION,
-    KtTokens.DATA_KEYWORD to Modifier.DATA,
-    KtTokens.INNER_KEYWORD to Modifier.INNER,
-    KtTokens.FUN_KEYWORD to Modifier.FUN,
-    KtTokens.VALUE_KEYWORD to Modifier.VALUE,
-    KtTokens.SUSPEND_KEYWORD to Modifier.SUSPEND,
-    KtTokens.TAILREC_KEYWORD to Modifier.TAILREC,
-    KtTokens.OPERATOR_KEYWORD to Modifier.OPERATOR,
-    KtTokens.INFIX_KEYWORD to Modifier.INFIX,
-    KtTokens.INLINE_KEYWORD to Modifier.INLINE,
-    KtTokens.EXTERNAL_KEYWORD to Modifier.EXTERNAL,
-    KtTokens.ABSTRACT_KEYWORD to Modifier.ABSTRACT,
-    KtTokens.FINAL_KEYWORD to Modifier.FINAL,
-    KtTokens.OPEN_KEYWORD to Modifier.OPEN,
-    KtTokens.VARARG_KEYWORD to Modifier.VARARG,
-    KtTokens.NOINLINE_KEYWORD to Modifier.NOINLINE,
-    KtTokens.CROSSINLINE_KEYWORD to Modifier.CROSSINLINE,
-    KtTokens.REIFIED_KEYWORD to Modifier.REIFIED,
-    KtTokens.EXPECT_KEYWORD to Modifier.EXPECT,
-    KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL,
-    KtTokens.CONST_KEYWORD to Modifier.CONST
-)
+val modifierMap =
+    mapOf(
+        KtTokens.PUBLIC_KEYWORD to Modifier.PUBLIC,
+        KtTokens.PRIVATE_KEYWORD to Modifier.PRIVATE,
+        KtTokens.INTERNAL_KEYWORD to Modifier.INTERNAL,
+        KtTokens.PROTECTED_KEYWORD to Modifier.PROTECTED,
+        KtTokens.IN_KEYWORD to Modifier.IN,
+        KtTokens.OUT_KEYWORD to Modifier.OUT,
+        KtTokens.OVERRIDE_KEYWORD to Modifier.OVERRIDE,
+        KtTokens.LATEINIT_KEYWORD to Modifier.LATEINIT,
+        KtTokens.ENUM_KEYWORD to Modifier.ENUM,
+        KtTokens.SEALED_KEYWORD to Modifier.SEALED,
+        KtTokens.ANNOTATION_KEYWORD to Modifier.ANNOTATION,
+        KtTokens.DATA_KEYWORD to Modifier.DATA,
+        KtTokens.INNER_KEYWORD to Modifier.INNER,
+        KtTokens.FUN_KEYWORD to Modifier.FUN,
+        KtTokens.VALUE_KEYWORD to Modifier.VALUE,
+        KtTokens.SUSPEND_KEYWORD to Modifier.SUSPEND,
+        KtTokens.TAILREC_KEYWORD to Modifier.TAILREC,
+        KtTokens.OPERATOR_KEYWORD to Modifier.OPERATOR,
+        KtTokens.INFIX_KEYWORD to Modifier.INFIX,
+        KtTokens.INLINE_KEYWORD to Modifier.INLINE,
+        KtTokens.EXTERNAL_KEYWORD to Modifier.EXTERNAL,
+        KtTokens.ABSTRACT_KEYWORD to Modifier.ABSTRACT,
+        KtTokens.FINAL_KEYWORD to Modifier.FINAL,
+        KtTokens.OPEN_KEYWORD to Modifier.OPEN,
+        KtTokens.VARARG_KEYWORD to Modifier.VARARG,
+        KtTokens.NOINLINE_KEYWORD to Modifier.NOINLINE,
+        KtTokens.CROSSINLINE_KEYWORD to Modifier.CROSSINLINE,
+        KtTokens.REIFIED_KEYWORD to Modifier.REIFIED,
+        KtTokens.EXPECT_KEYWORD to Modifier.EXPECT,
+        KtTokens.ACTUAL_KEYWORD to Modifier.ACTUAL,
+        KtTokens.CONST_KEYWORD to Modifier.CONST,
+    )
 
 fun KtClassOrObject.getClassType(): ClassKind {
     return when (this) {
         is KtObjectDeclaration -> ClassKind.OBJECT
         is KtEnumEntry -> ClassKind.ENUM_ENTRY
-        is KtClass -> when {
-            this.isEnum() -> ClassKind.ENUM_CLASS
-            this.isInterface() -> ClassKind.INTERFACE
-            this.isAnnotation() -> ClassKind.ANNOTATION_CLASS
-            else -> ClassKind.CLASS
-        }
+        is KtClass ->
+            when {
+                this.isEnum() -> ClassKind.ENUM_CLASS
+                this.isInterface() -> ClassKind.INTERFACE
+                this.isAnnotation() -> ClassKind.ANNOTATION_CLASS
+                else -> ClassKind.CLASS
+            }
 
-        else -> throw InternalKSPException(
-            "Unexpected psi type",
-            this.toLocation(),
-            this.javaClass,
-        )
+        else ->
+            throw InternalKSPException(
+                "Unexpected psi type",
+                this.toLocation(),
+                this.javaClass,
+            )
     }
 }

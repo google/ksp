@@ -19,10 +19,8 @@ package com.google.devtools.ksp
 
 import java.io.Serializable
 
-/**
- * Contains flags and configurations for incremental context logging.
- */
+/** Contains flags and configurations for incremental context logging. */
 data class IncrementalContextLoggingOptions(
     val incrementalLoggingEnabled: Boolean,
-    val dependencyGraphOriginName: String?
+    val dependencyGraphOriginName: String?,
 ) : Serializable

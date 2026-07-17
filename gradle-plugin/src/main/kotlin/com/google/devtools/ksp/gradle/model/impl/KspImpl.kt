@@ -20,12 +20,8 @@ package com.google.devtools.ksp.gradle.model.impl
 import com.google.devtools.ksp.gradle.model.Ksp
 import java.io.Serializable
 
-/**
- * Implementation of the [Ksp] interface.
- */
-data class KspImpl(
-    override val name: String
-) : Ksp, Serializable {
+/** Implementation of the [Ksp] interface. */
+data class KspImpl(override val name: String) : Ksp, Serializable {
 
     override val modelVersion = serialVersionUID
 

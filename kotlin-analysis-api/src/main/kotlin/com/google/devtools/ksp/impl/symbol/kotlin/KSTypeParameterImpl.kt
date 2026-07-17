@@ -26,15 +26,19 @@ import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.types.KaType
 
-class KSTypeParameterImpl private constructor(
+class KSTypeParameterImpl
+private constructor(
     internal val ktTypeParameterSymbol: KaTypeParameterSymbol,
-    private val boundsSubstitued: List<KaType>?
+    private val boundsSubstitued: List<KaType>?,
 ) :
     KSTypeParameter,
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktTypeParameterSymbol) {
-    override val ktDeclarationSymbol get() = ktTypeParameterSymbol
-    companion object : KSObjectCache<Pair<KaTypeParameterSymbol, List<KaType>?>, KSTypeParameterImpl>() {
+    override val ktDeclarationSymbol
+        get() = ktTypeParameterSymbol
+
+    companion object :
+        KSObjectCache<Pair<KaTypeParameterSymbol, List<KaType>?>, KSTypeParameterImpl>() {
         fun getCached(ktTypeParameterSymbol: KaTypeParameterSymbol, bounds: List<KaType>? = null) =
             cache.getOrPut(Pair(ktTypeParameterSymbol, bounds)) {
                 KSTypeParameterImpl(ktTypeParameterSymbol, bounds)
@@ -56,15 +60,24 @@ class KSTypeParameterImpl private constructor(
     override val isReified: Boolean = ktTypeParameterSymbol.isReified
 
     override val bounds: Sequence<KSTypeReference> by lazy {
-        boundsSubstitued?.mapIndexed { index, type ->
-            KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
-        }?.asSequence() ?: ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
-            KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
-        }.ifEmpty {
-            sequenceOf(
-                KSTypeReferenceSyntheticImpl.getCached(ResolverAAImpl.instance.builtIns.anyType.makeNullable(), this)
-            )
-        }
+        boundsSubstitued
+            ?.mapIndexed { index, type ->
+                KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
+            }
+            ?.asSequence()
+            ?: ktTypeParameterSymbol.upperBounds
+                .asSequence()
+                .mapIndexed { index, type ->
+                    KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
+                }
+                .ifEmpty {
+                    sequenceOf(
+                        KSTypeReferenceSyntheticImpl.getCached(
+                            ResolverAAImpl.instance.builtIns.anyType.makeNullable(),
+                            this,
+                        )
+                    )
+                }
     }
 
     override val typeParameters: List<KSTypeParameter> = emptyList()

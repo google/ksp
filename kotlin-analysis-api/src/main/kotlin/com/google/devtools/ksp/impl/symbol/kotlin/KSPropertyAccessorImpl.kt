@@ -35,18 +35,21 @@ import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 abstract class KSPropertyAccessorImpl(
     internal val ktPropertyAccessorSymbol: KaPropertyAccessorSymbol,
-    override val receiver: KSPropertyDeclaration
+    override val receiver: KSPropertyDeclaration,
 ) : KSPropertyAccessor, Deferrable {
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
-        // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
-        ktPropertyAccessorSymbol.annotations.asSequence()
+        // (ktPropertyAccessorSymbol.psi as?
+        // KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
+        ktPropertyAccessorSymbol.annotations
+            .asSequence()
             .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
     }
 
     internal val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
-        // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
+        // (ktPropertyAccessorSymbol.psi as?
+        // KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
         ktPropertyAccessorSymbol.annotations(this)
     }
 
@@ -55,21 +58,27 @@ abstract class KSPropertyAccessorImpl(
     }
 
     override val modifiers: Set<Modifier> by lazy {
-        (
-            if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
+        (if (
+                origin == Origin.JAVA_LIB ||
+                    origin == Origin.KOTLIN_LIB ||
+                    origin == Origin.SYNTHETIC
+            ) {
                 (ktPropertyAccessorSymbol.toModifiers())
             } else {
-                (ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers() ?: emptySet()
+                (ktPropertyAccessorSymbol.psi as? KtModifierListOwner)?.toKSModifiers()
+                    ?: emptySet()
+            })
+            .let {
+                if (
+                    origin == Origin.SYNTHETIC &&
+                        (receiver.parentDeclaration as? KSClassDeclaration)?.classKind ==
+                            ClassKind.INTERFACE
+                ) {
+                    it + Modifier.ABSTRACT
+                } else {
+                    it
+                }
             }
-            ).let {
-            if (origin == Origin.SYNTHETIC &&
-                (receiver.parentDeclaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE
-            ) {
-                it + Modifier.ABSTRACT
-            } else {
-                it
-            }
-        }
     }
 
     override val origin: Origin by lazy {
@@ -85,24 +94,32 @@ abstract class KSPropertyAccessorImpl(
         get() = ktPropertyAccessorSymbol.getContainingKSSymbol()
 
     override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
-        val psi = ktPropertyAccessorSymbol.psi as? KtPropertyAccessor ?: return@lazyMemoizedSequence emptySequence()
+        val psi =
+            ktPropertyAccessorSymbol.psi as? KtPropertyAccessor
+                ?: return@lazyMemoizedSequence emptySequence()
         if (!psi.hasBlockBody()) {
             emptySequence()
         } else {
-            psi.bodyBlockExpression?.statements?.asSequence()?.filterIsInstance<KtDeclaration>()?.mapNotNull {
-                analyze {
-                    it.symbol.toKSDeclaration()
-                }
-            } ?: emptySequence()
+            psi.bodyBlockExpression
+                ?.statements
+                ?.asSequence()
+                ?.filterIsInstance<KtDeclaration>()
+                ?.mapNotNull {
+                    analyze {
+                        it.symbol.toKSDeclaration()
+                    }
+                } ?: emptySequence()
         }
     }
 }
 
-class KSPropertySetterImpl private constructor(
+class KSPropertySetterImpl
+private constructor(
     owner: KSPropertyDeclaration,
-    setter: KaPropertySetterSymbol
+    setter: KaPropertySetterSymbol,
 ) : KSPropertyAccessorImpl(setter, owner), KSPropertySetter {
-    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KaPropertySetterSymbol>, KSPropertySetterImpl>() {
+    companion object :
+        KSObjectCache<Pair<KSPropertyDeclaration, KaPropertySetterSymbol>, KSPropertySetterImpl>() {
         fun getCached(owner: KSPropertyDeclaration, setter: KaPropertySetterSymbol) =
             cache.getOrPut(Pair(owner, setter)) { KSPropertySetterImpl(owner, setter) }
     }
@@ -128,19 +145,25 @@ class KSPropertySetterImpl private constructor(
     }
 }
 
-class KSPropertyGetterImpl private constructor(
+class KSPropertyGetterImpl
+private constructor(
     owner: KSPropertyDeclaration,
-    getter: KaPropertyGetterSymbol
+    getter: KaPropertyGetterSymbol,
 ) : KSPropertyAccessorImpl(getter, owner), KSPropertyGetter {
-    companion object : KSObjectCache<Pair<KSPropertyDeclaration, KaPropertyGetterSymbol>, KSPropertyGetterImpl>() {
+    companion object :
+        KSObjectCache<Pair<KSPropertyDeclaration, KaPropertyGetterSymbol>, KSPropertyGetterImpl>() {
         fun getCached(owner: KSPropertyDeclaration, getter: KaPropertyGetterSymbol) =
             cache.getOrPut(Pair(owner, getter)) { KSPropertyGetterImpl(owner, getter) }
     }
 
     override val returnType: KSTypeReference? by lazy {
-        ((owner as? KSPropertyDeclarationImpl)?.ktPropertySymbol?.psiIfSource() as? KtProperty)?.typeReference
+        ((owner as? KSPropertyDeclarationImpl)?.ktPropertySymbol?.psiIfSource() as? KtProperty)
+            ?.typeReference
             ?.let { KSTypeReferenceImpl.getCached(it, this) }
-            ?: KSTypeReferenceResolvedImpl.getCached(getter.returnType.abbreviationOrSelf, this@KSPropertyGetterImpl)
+            ?: KSTypeReferenceResolvedImpl.getCached(
+                getter.returnType.abbreviationOrSelf,
+                this@KSPropertyGetterImpl,
+            )
     }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {

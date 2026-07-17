@@ -69,7 +69,8 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
         return "File: ${this.fileName}"
     }
 
-    // Although Resolver.getSymbolsWithAnnotation never returns a java file because the latter cannot have file
+    // Although Resolver.getSymbolsWithAnnotation never returns a java file because the latter
+    // cannot have file
     // annotations, this is used internally to restore files across rounds.
     override fun defer(): Restorable {
         return Restorable {

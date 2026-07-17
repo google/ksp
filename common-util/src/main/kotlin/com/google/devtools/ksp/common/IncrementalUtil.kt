@@ -58,9 +58,7 @@ abstract class KSVirtualFile(val baseDir: File, val name: String) : KSFile {
     }
 }
 
-/**
- * Used when an output potentially depends on new information.
- */
+/** Used when an output potentially depends on new information. */
 class AnyChanges(baseDir: File) : KSVirtualFile(baseDir, "AnyChanges") {
     override val syntheticFileNamePrefix: String = SYNTHETIC_FILE_NAME_PREFIX
 
@@ -77,9 +75,7 @@ class AnyChanges(baseDir: File) : KSVirtualFile(baseDir, "AnyChanges") {
     }
 }
 
-/**
- * Used for classes from classpath, i.e., classes without source files.
- */
+/** Used for classes from classpath, i.e., classes without source files. */
 class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, fqn) {
     override val syntheticFileNamePrefix: String = SYNTHETIC_FILE_NAME_PREFIX
 
@@ -91,10 +87,8 @@ class NoSourceFile(baseDir: File, val fqn: String) : KSVirtualFile(baseDir, fqn)
             val processedName = name.removeSuffix(SYNTHETIC_FILE_NAME_SUFFIX)
             return name == noSourceFile?.fileName ||
                 name == noSourceFile?.filePath ||
-                (
-                    name.startsWith(SYNTHETIC_FILE_NAME_PREFIX) &&
-                        name.endsWith(SYNTHETIC_FILE_NAME_SUFFIX)
-                    )
+                (name.startsWith(SYNTHETIC_FILE_NAME_PREFIX) &&
+                    name.endsWith(SYNTHETIC_FILE_NAME_SUFFIX))
         }
 
         const val SYNTHETIC_FILE_NAME_PREFIX: String = "<NoSourceFile for "
@@ -105,30 +99,30 @@ fun isSyntheticFileName(name: String, baseDir: File? = null): Boolean {
     return AnyChanges.isSyntheticFile(name, baseDir) || NoSourceFile.isSyntheticFile(name, baseDir)
 }
 
-/**
- * Returns `a.b.c.MyClass` if `name` is a synthetic [NoSourceFile] file for `a.b.c.MyClass`.
- */
+/** Returns `a.b.c.MyClass` if `name` is a synthetic [NoSourceFile] file for `a.b.c.MyClass`. */
 fun stripSyntheticFileNameModifiers(name: String, baseDir: File? = null): String {
     require(
         NoSourceFile.isSyntheticFile(name, baseDir),
-        { "Name '$name' must be recognized by NoSourceFile.isSyntheticFile" })
-    return name.removePrefix(NoSourceFile.SYNTHETIC_FILE_NAME_PREFIX)
+        { "Name '$name' must be recognized by NoSourceFile.isSyntheticFile" },
+    )
+    return name
+        .removePrefix(NoSourceFile.SYNTHETIC_FILE_NAME_PREFIX)
         .removeSuffix(KSVirtualFile.SYNTHETIC_FILE_NAME_SUFFIX)
 }
 
 // Copy recursively, including last-modified-time of file and its parent dirs.
 //
-// `java.nio.file.Files.copy(path1, path2, options...)` keeps last-modified-time (if supported) according to
+// `java.nio.file.Files.copy(path1, path2, options...)` keeps last-modified-time (if supported)
+// according to
 // https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html
 fun copyWithTimestamp(src: File, dst: File, overwrite: Boolean) {
-    if (!dst.parentFile.exists())
-        copyWithTimestamp(src.parentFile, dst.parentFile, false)
+    if (!dst.parentFile.exists()) copyWithTimestamp(src.parentFile, dst.parentFile, false)
     if (overwrite) {
         Files.copy(
             src.toPath(),
             dst.toPath(),
             StandardCopyOption.COPY_ATTRIBUTES,
-            StandardCopyOption.REPLACE_EXISTING
+            StandardCopyOption.REPLACE_EXISTING,
         )
     } else {
         Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES)

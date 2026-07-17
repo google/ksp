@@ -16,6 +16,7 @@
  */
 
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.standalone
 
 import com.intellij.core.CoreApplicationEnvironment
@@ -24,6 +25,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
+import java.nio.file.Path
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
@@ -33,15 +38,11 @@ import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
-import java.nio.file.Path
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 
 @KtModuleBuilderDsl
 class KspModuleBuilder(
     private val coreApplicationEnvironment: CoreApplicationEnvironment,
-    private val project: Project
+    private val project: Project,
 ) : KtModuleBuilder() {
     public lateinit var moduleName: String
     public var languageVersionSettings: LanguageVersionSettings =
@@ -81,9 +82,10 @@ class KspModuleBuilder(
         val localFileSystem = coreApplicationEnvironment.localFileSystem
         return buildSet {
             for (root in sourceRoots) {
-                val files = root.toFile().walk().filter {
-                    it.isDirectory || it.extension.lowercase() in analyzableExtensions
-                }
+                val files =
+                    root.toFile().walk().filter {
+                        it.isDirectory || it.extension.lowercase() in analyzableExtensions
+                    }
                 for (file in files) {
                     val virtualFile = localFileSystem.findFileByIoFile(file) ?: continue
                     add(virtualFile)
