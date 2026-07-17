@@ -19,7 +19,8 @@ kotlin {
     }
 }
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-}
+val dokkaJavadocJar by
+    tasks.register<Jar>("dokkaJavadocJar") {
+        archiveClassifier.set("javadoc")
+        from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    }

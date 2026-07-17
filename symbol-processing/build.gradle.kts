@@ -16,7 +16,8 @@ publishing {
             pom {
                 name.set("com.google.devtools.ksp:symbol-processing")
                 description.set("Symbol processing for Kotlin")
-                // This artifact no longer contains a jar. Without it, Gradle expects a jar and might fail resolution.
+                // This artifact no longer contains a jar. Without it, Gradle expects a jar and
+                // might fail resolution.
                 packaging = "pom"
             }
         }

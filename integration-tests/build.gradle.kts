@@ -1,6 +1,6 @@
 import com.google.devtools.ksp.RelativizingInternalPathProvider
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import kotlin.math.max
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm")
@@ -24,7 +24,7 @@ fun Test.configureCommonSettings() {
     jvmArgumentProviders.add(
         RelativizingInternalPathProvider(
             "testRepo",
-            rootProject.layout.buildDirectory.dir("repos/test").get().asFile
+            rootProject.layout.buildDirectory.dir("repos/test").get().asFile,
         )
     )
     dependsOn(":api:publishAllPublicationsToTestRepository")
@@ -35,40 +35,43 @@ fun Test.configureCommonSettings() {
 }
 
 // Create a new test task for the primary package
-val primaryTest by tasks.registering(Test::class) {
-    description = "Runs integration tests in the primary package"
-    group = "verification"
-    include("com/google/devtools/ksp/test/primary/*.class")
-    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
-    maxParallelForks = 1
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    configureCommonSettings()
-}
+val primaryTest by
+    tasks.registering(Test::class) {
+        description = "Runs integration tests in the primary package"
+        group = "verification"
+        include("com/google/devtools/ksp/test/primary/*.class")
+        // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+        maxParallelForks = 1
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+        configureCommonSettings()
+    }
 
 // Create a new test task for the secondary package
-val secondaryTest by tasks.registering(Test::class) {
-    description = "Runs integration tests in the secondary package"
-    group = "verification"
-    include("com/google/devtools/ksp/test/secondary/*.class")
-    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
-    maxParallelForks = 1
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    configureCommonSettings()
-}
+val secondaryTest by
+    tasks.registering(Test::class) {
+        description = "Runs integration tests in the secondary package"
+        group = "verification"
+        include("com/google/devtools/ksp/test/secondary/*.class")
+        // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+        maxParallelForks = 1
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+        configureCommonSettings()
+    }
 
 // Create a new test task for the secondary package
-val agpTest by tasks.registering(Test::class) {
-    description = "Runs integration tests in the agp package"
-    group = "verification"
-    include("com/google/devtools/ksp/test/agp/*.class")
-    // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
-    maxParallelForks = 1
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    configureCommonSettings()
-}
+val agpTest by
+    tasks.registering(Test::class) {
+        description = "Runs integration tests in the agp package"
+        group = "verification"
+        include("com/google/devtools/ksp/test/agp/*.class")
+        // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+        maxParallelForks = 1
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+        configureCommonSettings()
+    }
 
 tasks.test {
     exclude("**/*")

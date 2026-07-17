@@ -20,14 +20,16 @@ dependencies {
     ksp(project(":cmdline-parser-gen"))
 }
 
-val sourcesJar = tasks.register<Jar>("sourcesJar") {
-    archiveClassifier.set("sources")
-    from(project.sourceSets.main.map { it.allSource })
-}
-val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-}
+val sourcesJar =
+    tasks.register<Jar>("sourcesJar") {
+        archiveClassifier.set("sources")
+        from(project.sourceSets.main.map { it.allSource })
+    }
+val dokkaJavadocJar =
+    tasks.register<Jar>("dokkaJavadocJar") {
+        archiveClassifier.set("javadoc")
+        from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    }
 
 kotlin {
     compilerOptions {
