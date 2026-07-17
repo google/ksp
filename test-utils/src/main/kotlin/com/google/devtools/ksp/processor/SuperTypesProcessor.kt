@@ -26,7 +26,10 @@ open class SuperTypesProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         fun KSClassDeclaration.toResult(): String {
-            val supers = superTypes.map { it.resolve().declaration.qualifiedName!!.asString() }.joinToString(", ")
+            val supers =
+                superTypes
+                    .map { it.resolve().declaration.qualifiedName!!.asString() }
+                    .joinToString(", ")
             return "${qualifiedName!!.asString()}: $supers"
         }
 

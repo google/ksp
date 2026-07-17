@@ -19,11 +19,11 @@ package com.google.devtools.ksp
 
 import com.google.devtools.ksp.processing.kspJvmArgParser
 import com.google.devtools.ksp.processing.kspJvmArgParserHelp
+import java.io.File
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean) {
@@ -35,23 +35,30 @@ class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean)
     }
 
     val sep = File.pathSeparator
-    fun mkDefaultArgs() = mutableListOf<String>(
-        "-module-name=MyModule",
-        "-source-roots", "/path/to/A$sep/path/to/B",
-        "/path/to/processorA.jar",
-        "-kotlin-output-dir=/path/to/output/kotlin",
-        "-java-output-dir=/path/to/output/java",
-        "-class-output-dir=/path/to/output/class",
-        "-resource-output-dir=/path/to/output/resource",
-        "-language-version=2.0",
-        "-api-version=2.0",
-        "-jvm-target", "21",
-        "-project-base-dir", "/path/to/base",
-        "-output-base-dir", "/path/to/output",
-        "-caches-dir", "/path/to/caches",
-        "-experimental-psi-resolution=$isExperimentalPsiResolution",
-        "/path/to/processorB.jar${sep}rel/to/processorC.jar",
-    )
+
+    fun mkDefaultArgs() =
+        mutableListOf<String>(
+            "-module-name=MyModule",
+            "-source-roots",
+            "/path/to/A$sep/path/to/B",
+            "/path/to/processorA.jar",
+            "-kotlin-output-dir=/path/to/output/kotlin",
+            "-java-output-dir=/path/to/output/java",
+            "-class-output-dir=/path/to/output/class",
+            "-resource-output-dir=/path/to/output/resource",
+            "-language-version=2.0",
+            "-api-version=2.0",
+            "-jvm-target",
+            "21",
+            "-project-base-dir",
+            "/path/to/base",
+            "-output-base-dir",
+            "/path/to/output",
+            "-caches-dir",
+            "/path/to/caches",
+            "-experimental-psi-resolution=$isExperimentalPsiResolution",
+            "/path/to/processorB.jar${sep}rel/to/processorC.jar",
+        )
 
     @Test
     fun testJvm() {
@@ -59,19 +66,19 @@ class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean)
         val (config, classpath) = kspJvmArgParser(args)
         Assert.assertEquals(
             listOf("/path/to/A", "/path/to/B").map(::File),
-            config.sourceRoots
+            config.sourceRoots,
         )
         Assert.assertEquals(
             "MyModule",
-            config.moduleName
+            config.moduleName,
         )
         Assert.assertEquals(
             isExperimentalPsiResolution,
-            config.experimentalPsiResolution
+            config.experimentalPsiResolution,
         )
         Assert.assertEquals(
             listOf("/path/to/processorA.jar", "/path/to/processorB.jar", "rel/to/processorC.jar"),
-            classpath
+            classpath,
         )
     }
 
@@ -97,19 +104,18 @@ class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean)
     @Test
     fun testIncrementalLoggingGraphOriginValidName() {
         val args = mkDefaultArgs()
-        args.add(
-            mkDependencyGraphArg("a.b.c.MyClass")
-        )
+        args.add(mkDependencyGraphArg("a.b.c.MyClass"))
         val (config, _) = kspJvmArgParser(args.toTypedArray())
-        Assert.assertEquals("a.b.c.MyClass", config.incrementalContextLoggingOptions.dependencyGraphOriginName)
+        Assert.assertEquals(
+            "a.b.c.MyClass",
+            config.incrementalContextLoggingOptions.dependencyGraphOriginName,
+        )
     }
 
     @Test
     fun testIncrementalLoggingGraphOriginEmptyQuotes() {
         val args = mkDefaultArgs()
-        args.add(
-            mkDependencyGraphArg("\"\"")
-        )
+        args.add(mkDependencyGraphArg("\"\""))
         val (config, _) = kspJvmArgParser(args.toTypedArray())
         Assert.assertEquals("", config.incrementalContextLoggingOptions.dependencyGraphOriginName)
     }
@@ -117,20 +123,22 @@ class CommandLineArgParserTest(private val isExperimentalPsiResolution: Boolean)
     @Test
     fun testIncrementalLoggingGraphOriginValidNameWithQuotes() {
         val args = mkDefaultArgs()
-        args.add(
-            mkDependencyGraphArg("\"xyz.Something\"")
-        )
+        args.add(mkDependencyGraphArg("\"xyz.Something\""))
         val (config, _) = kspJvmArgParser(args.toTypedArray())
-        Assert.assertEquals("xyz.Something", config.incrementalContextLoggingOptions.dependencyGraphOriginName)
+        Assert.assertEquals(
+            "xyz.Something",
+            config.incrementalContextLoggingOptions.dependencyGraphOriginName,
+        )
     }
 
     @Test
     fun testIncrementalLoggingGraphOriginInvalidChars() {
         val args = mkDefaultArgs()
-        args.add(
-            mkDependencyGraphArg("\\\"xyz.Other")
-        )
+        args.add(mkDependencyGraphArg("\\\"xyz.Other"))
         val (config, _) = kspJvmArgParser(args.toTypedArray())
-        Assert.assertEquals("xyz.Other", config.incrementalContextLoggingOptions.dependencyGraphOriginName)
+        Assert.assertEquals(
+            "xyz.Other",
+            config.incrementalContextLoggingOptions.dependencyGraphOriginName,
+        )
     }
 }

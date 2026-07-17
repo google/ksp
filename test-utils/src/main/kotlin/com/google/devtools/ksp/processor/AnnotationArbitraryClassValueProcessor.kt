@@ -34,14 +34,17 @@ class AnnotationArbitraryClassValueProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation(
-            "com.google.devtools.ksp.processor.ClassValueAnnotation"
-        )
-        symbols.flatMap {
-            it.getAnnotationsByType(ClassValueAnnotation::class)
-        }.forEach {
-            logAnnotationValues(it)
-        }
+        val symbols =
+            resolver.getSymbolsWithAnnotation(
+                "com.google.devtools.ksp.processor.ClassValueAnnotation"
+            )
+        symbols
+            .flatMap {
+                it.getAnnotationsByType(ClassValueAnnotation::class)
+            }
+            .forEach {
+                logAnnotationValues(it)
+            }
         return emptyList()
     }
 
@@ -66,5 +69,5 @@ class AnnotationArbitraryClassValueProcessor : AbstractTestProcessor() {
 
 annotation class ClassValueAnnotation(
     val classValue: KClass<*>,
-    val classValues: Array<KClass<*>>
+    val classValues: Array<KClass<*>>,
 )

@@ -37,26 +37,37 @@ class JavaNonNullProcessor : AbstractTestProcessor() {
         resolver.getNewFiles().forEach {
             it.accept(
                 object : KSTopDownVisitor<Unit, Unit>() {
-                    override fun defaultHandler(node: KSNode, data: Unit) {
-                    }
+                    override fun defaultHandler(node: KSNode, data: Unit) {}
 
-                    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
+                    override fun visitFunctionDeclaration(
+                        function: KSFunctionDeclaration,
+                        data: Unit,
+                    ) {
                         if (function.isConstructor()) {
                             return
                         }
-                        results.add("${function.simpleName.asString()}: ${function.returnType?.resolve()?.nullability}")
+                        results.add(
+                            "${function.simpleName.asString()}: ${function.returnType?.resolve()?.nullability}"
+                        )
                         super.visitFunctionDeclaration(function, data)
                     }
 
-                    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
-                        results.add("${property.simpleName.asString()}: ${property.type.resolve().nullability}")
+                    override fun visitPropertyDeclaration(
+                        property: KSPropertyDeclaration,
+                        data: Unit,
+                    ) {
+                        results.add(
+                            "${property.simpleName.asString()}: ${property.type.resolve().nullability}"
+                        )
                     }
 
                     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {
-                        results.add("${valueParameter.name?.asString()}: ${valueParameter.type.resolve().nullability}")
+                        results.add(
+                            "${valueParameter.name?.asString()}: ${valueParameter.type.resolve().nullability}"
+                        )
                     }
                 },
-                Unit
+                Unit,
             )
         }
         return emptyList()

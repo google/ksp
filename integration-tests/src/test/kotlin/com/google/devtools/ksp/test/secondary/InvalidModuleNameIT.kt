@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Assume
@@ -25,21 +26,19 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class InvalidModuleNameIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "playground",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -56,7 +55,8 @@ class InvalidModuleNameIT(experimentalPsiResolution: Boolean) {
                     moduleName.set("my:invalid:name")
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -64,11 +64,15 @@ class InvalidModuleNameIT(experimentalPsiResolution: Boolean) {
 
         Assert.assertTrue(
             "Expected output to contain log with sanitized module name",
-            result.output.contains($$"[my:invalid:name] Mangled name for internalFun: internalFun$my_invalid_name")
+            result.output.contains(
+                $$"[my:invalid:name] Mangled name for internalFun: internalFun$my_invalid_name"
+            ),
         )
         Assert.assertFalse(
             "Expected output NOT to contain log with UNSANITIZED module name",
-            result.output.contains($$"[my:invalid:name] Mangled name for internalFun: internalFun$my:invalid:name")
+            result.output.contains(
+                $$"[my:invalid:name] Mangled name for internalFun: internalFun$my:invalid:name"
+            ),
         )
     }
 }

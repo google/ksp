@@ -21,6 +21,10 @@ import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.PrintStream
+import java.net.URLClassLoader
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
@@ -37,41 +41,39 @@ import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.isKtFile
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.jetbrains.kotlin.utils.PathUtil
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.PrintStream
-import java.net.URLClassLoader
 
-abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : AbstractKSPTest(FrontendKinds.FIR) {
+abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) :
+    AbstractKSPTest(FrontendKinds.FIR) {
 
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")
 
     fun TestModule.writeKtFiles() {
         kotlinSrc.mkdirs()
-        files.filter { it.isKtFile }.forEach { file ->
-            File(kotlinSrc, file.relativePath).let {
-                it.parentFile.mkdirs()
-                it.writeText(file.originalContent)
+        files
+            .filter { it.isKtFile }
+            .forEach { file ->
+                File(kotlinSrc, file.relativePath).let {
+                    it.parentFile.mkdirs()
+                    it.writeText(file.originalContent)
+                }
             }
-        }
     }
 
     /**
      * Returns the name of the compiler module for the given test module.
      *
-     * The Kotlin compiler test infrastructure does not sanitize the module name from
-     * the `// MODULE:` directive.
-     * Hence, for tests that check for module name sanitization/mangling, we must declare
-     * a sanitized module name in the `// MODULE:` directive and then declare an un-sanitized
-     * name in the `// COMPILER MODULE NAME:` directive and check that it looks like
+     * The Kotlin compiler test infrastructure does not sanitize the module name from the `//
+     * MODULE:` directive. Hence, for tests that check for module name sanitization/mangling, we
+     * must declare a sanitized module name in the `// MODULE:` directive and then declare an
+     * un-sanitized name in the `// COMPILER MODULE NAME:` directive and check that it looks like
      * the manually mangled name.
      *
-     * This extension function retrieves the compiler module name from the `// COMPILER MODULE NAME:`
-     * if it exists and returns the original module name otherwise.
+     * This extension function retrieves the compiler module name from the `// COMPILER MODULE
+     * NAME:` if it exists and returns the original module name otherwise.
      *
-     * NB.: The `// COMPILER MODULE NAME:` directive must be declared after the `// MODULE:` directive but
-     * before the next `// MODULE:` directive.
+     * NB.: The `// COMPILER MODULE NAME:` directive must be declared after the `// MODULE:`
+     * directive but before the next `// MODULE:` directive.
      */
     private fun TestModule.findCompilerModuleName(): String {
         val originalFile = files.firstOrNull()?.originalFile ?: return name
@@ -96,7 +98,7 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         javaSourcePath: String,
         outDir: File,
         moduleName: String,
-        jvmTarget: JvmTarget?
+        jvmTarget: JvmTarget?,
     ) {
         val classpath = mutableListOf<String>()
         classpath.addAll(dependencies.map { it.canonicalPath })
@@ -105,15 +107,19 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         }
         classpath += PathUtil.kotlinPathsForDistDirectoryForTests.stdlibPath.path
 
-        val args = mutableListOf(
-            sourcesPath,
-            javaSourcePath,
-            "-d", outDir.absolutePath,
-            "-no-stdlib",
-            "-Xannotation-target-all",
-            "-module-name", moduleName,
-            "-classpath", classpath.joinToString(File.pathSeparator)
-        )
+        val args =
+            mutableListOf(
+                sourcesPath,
+                javaSourcePath,
+                "-d",
+                outDir.absolutePath,
+                "-no-stdlib",
+                "-Xannotation-target-all",
+                "-module-name",
+                moduleName,
+                "-classpath",
+                classpath.joinToString(File.pathSeparator),
+            )
         if (jvmTarget != null) {
             args += listOf("-jvm-target", jvmTarget.description)
         }
@@ -122,9 +128,12 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
 
     private fun runJvmCompiler(args: List<String>) {
         val outStream = ByteArrayOutputStream()
-        val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
+        val compilerClass =
+            URLClassLoader(arrayOf(), javaClass.classLoader)
+                .loadClass(K2JVMCompiler::class.java.name)
         val compiler = compilerClass.getDeclaredConstructor().newInstance()
-        val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
+        val execMethod =
+            compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
         execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
     }
 
@@ -132,23 +141,31 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
-        val jvmTarget = testServices.compilerConfigurationProvider
-            .getCompilerConfiguration(module, CompilationStage.FIRST)
-            .get(JVMConfigurationKeys.JVM_TARGET)
+        val jvmTarget =
+            testServices.compilerConfigurationProvider
+                .getCompilerConfiguration(module, CompilationStage.FIRST)
+                .get(JVMConfigurationKeys.JVM_TARGET)
         compileKotlin(
             dependencies,
             module.kotlinSrc.path,
             module.javaDir.path,
             module.outDir,
             module.findCompilerModuleName(),
-            jvmTarget
+            jvmTarget,
         )
-        val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
-            .joinToString(File.pathSeparator) { it.absolutePath }
-        val options = listOf(
-            "-classpath", classpath,
-            "-d", module.outDir.path
-        )
+        val classpath =
+            (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir).joinToString(
+                File.pathSeparator
+            ) {
+                it.absolutePath
+            }
+        val options =
+            listOf(
+                "-classpath",
+                classpath,
+                "-d",
+                module.outDir.path,
+            )
         if (javaFiles.isNotEmpty()) {
             compileJavaFiles(javaFiles, options)
         }
@@ -160,10 +177,11 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
         libModules: List<TestModule>,
         testProcessor: AbstractTestProcessor,
     ): List<String> {
-        val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
-            mainModule,
-            CompilationStage.FIRST
-        )
+        val compilerConfiguration =
+            testServices.compilerConfigurationProvider.getCompilerConfiguration(
+                mainModule,
+                CompilationStage.FIRST,
+            )
         mainModule.kotlinSrc.mkdirs()
 
         // Some underlying service needs files backed by local fs.
@@ -173,28 +191,40 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
 
         val testRoot = mainModule.testRoot
 
-        val kspConfig = KSPJvmConfig.Builder().apply {
-            moduleName = mainModule.findCompilerModuleName()
-            sourceRoots = listOf(mainModule.kotlinSrc)
-            javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
-            jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
-            jvmTarget = (compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET) ?: JvmTarget.DEFAULT).description
-            languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
-            apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
-            libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
-                compilerConfiguration.jvmModularRoots
-            friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
-            projectBaseDir = testRoot
-            classOutputDir = File(testRoot, "kspTest/classes/main")
-            javaOutputDir = File(testRoot, "kspTest/src/main/java")
-            kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
-            resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
-            cachesDir = File(testRoot, "kspTest/kspCaches")
-            outputBaseDir = File(testRoot, "kspTest")
-            incremental = true
-            experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
-        }.build()
-        val exitCode = KotlinSymbolProcessing(kspConfig, listOf(testProcessor), CommandLineKSPLogger()).execute()
+        val kspConfig =
+            KSPJvmConfig.Builder()
+                .apply {
+                    moduleName = mainModule.findCompilerModuleName()
+                    sourceRoots = listOf(mainModule.kotlinSrc)
+                    javaSourceRoots =
+                        compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
+                    jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
+                    jvmTarget =
+                        (compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET)
+                                ?: JvmTarget.DEFAULT)
+                            .description
+                    languageVersion =
+                        compilerConfiguration.languageVersionSettings.languageVersion.versionString
+                    apiVersion =
+                        compilerConfiguration.languageVersionSettings.apiVersion.versionString
+                    libraries =
+                        mainModule.regularDependencies.map { it.dependencyModule.outDir } +
+                            compilerConfiguration.jvmModularRoots
+                    friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
+                    projectBaseDir = testRoot
+                    classOutputDir = File(testRoot, "kspTest/classes/main")
+                    javaOutputDir = File(testRoot, "kspTest/src/main/java")
+                    kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
+                    resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
+                    cachesDir = File(testRoot, "kspTest/kspCaches")
+                    outputBaseDir = File(testRoot, "kspTest")
+                    incremental = true
+                    experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
+                }
+                .build()
+        val exitCode =
+            KotlinSymbolProcessing(kspConfig, listOf(testProcessor), CommandLineKSPLogger())
+                .execute()
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
             return listOf("KSP FAILED WITH EXIT CODE: ${exitCode.name}") + testProcessor.toResult()
         }

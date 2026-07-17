@@ -1,27 +1,26 @@
 package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class IncrementalRemovalIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "incremental-removal",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "incremental-removal",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -33,9 +32,10 @@ class IncrementalRemovalIT(experimentalPsiResolution: Boolean) {
             Assert.assertTrue(result.output.contains("result: generated"))
         }
 
-        File(project.root, k1).writeText(
-            "package p1\n\nclass K1\n\nclass Foo : Bar { override fun s() = \"crafted\" }\n"
-        )
+        File(project.root, k1)
+            .writeText(
+                "package p1\n\nclass K1\n\nclass Foo : Bar { override fun s() = \"crafted\" }\n"
+            )
         gradleRunner.withArguments("run").build().let { result ->
             Assert.assertTrue(result.output.contains("result: crafted"))
         }

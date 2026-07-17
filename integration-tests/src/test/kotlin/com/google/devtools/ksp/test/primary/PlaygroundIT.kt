@@ -2,6 +2,8 @@ package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry
+import java.io.File
+import java.util.jar.*
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -11,31 +13,30 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
-import java.util.jar.*
 
 @RunWith(Parameterized::class)
 class PlaygroundIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "playground",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
-    private fun GradleRunner.buildAndCheck(vararg args: String, extraCheck: (BuildResult) -> Unit = {}) =
-        buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
+    private fun GradleRunner.buildAndCheck(
+        vararg args: String,
+        extraCheck: (BuildResult) -> Unit = {},
+    ) = buildAndCheckOutcome(*args, outcome = TaskOutcome.SUCCESS, extraCheck = extraCheck)
 
     private fun GradleRunner.buildAndCheckOutcome(
         vararg args: String,
         outcome: TaskOutcome,
-        extraCheck: (BuildResult) -> Unit = {}
+        extraCheck: (BuildResult) -> Unit = {},
     ) {
         val result = this.withArguments(*args).build()
 
@@ -73,24 +74,28 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
 
-        File(project.root, "test-processor/build.gradle.kts").appendText(
-            """
-            kotlin {
-                compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
-               }
-            }
-            """.trimIndent()
-        )
-        File(project.root, "workload/build.gradle.kts").appendText(
-            """
-            kotlin {
-                compilerOptions {
-                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
-               }
-            }
-            """.trimIndent()
-        )
+        File(project.root, "test-processor/build.gradle.kts")
+            .appendText(
+                """
+                kotlin {
+                    compilerOptions {
+                        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
+                   }
+                }
+                """
+                    .trimIndent()
+            )
+        File(project.root, "workload/build.gradle.kts")
+            .appendText(
+                """
+                kotlin {
+                    compilerOptions {
+                        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_9)
+                   }
+                }
+                """
+                    .trimIndent()
+            )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build")
         gradleRunner.buildAndCheck("clean", "build")
@@ -100,7 +105,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
     fun testConfigurationOfConfiguration() {
         // FIXME: `clean` fails to delete files on windows.
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
+        val gradleRunner =
+            GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments(":workload:dependencies", "--info").build().let { result ->
             Assert.assertTrue(
                 result.output.lines().none { it.startsWith("The configuration :workload:ksp") }
@@ -173,10 +179,11 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
     @Test
     fun testRewriteFile() {
         File(
-            project.root,
-            "test-processor/src/main/resources/META-INF/services/" +
-                "com.google.devtools.ksp.processing.SymbolProcessorProvider"
-        ).writeText("RewriteProcessorProvider")
+                project.root,
+                "test-processor/src/main/resources/META-INF/services/" +
+                    "com.google.devtools.ksp.processing.SymbolProcessorProvider",
+            )
+            .writeText("RewriteProcessorProvider")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").buildAndFail().let { result ->
             Assert.assertTrue(result.output.contains("kotlin.io.FileAlreadyExistsException"))
@@ -186,7 +193,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
     @Test
     fun testFirPreview() {
         val buildFile = File(project.root, "workload/build.gradle.kts")
-        // K2 enables HMPP even on JVM only project, and is not compatible with copy task for source.
+        // K2 enables HMPP even on JVM only project, and is not compatible with copy task for
+        // source.
         // Disable copy task check for K2 tests, it does not impact KSP itself.
         val buildFileContent = buildFile.readLines().dropLast(9)
         buildFile.writeText("")
@@ -202,7 +210,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
                     }
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val result = gradleRunner.withArguments("clean", "build").build()
@@ -225,7 +234,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
         val gradleProperties = File(project.root, "gradle.properties")
         gradleProperties.appendText("\nkotlin.useK2=true")
         val buildFile = File(project.root, "workload/build.gradle.kts")
-        // K2 enables HMPP even on JVM only project, and is not compatible with copy task for source.
+        // K2 enables HMPP even on JVM only project, and is not compatible with copy task for
+        // source.
         // Disable copy task check for K2 tests, it does not impact KSP itself.
         val buildFileContent = buildFile.readLines().dropLast(9)
         buildFile.writeText("")
@@ -241,7 +251,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
                     }
                 }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         val result = gradleRunner.withArguments("clean", "build").build()
@@ -271,7 +282,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
                 languageVersion.set(compilerOptions.apiVersion)
                }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -329,7 +341,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
             |        jvmDefault.set(org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode.NO_COMPATIBILITY)
             |    }
             |}
-            |""".trimMargin()
+            |"""
+                .trimMargin()
         )
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
@@ -345,10 +358,12 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
         val properties = File(project.root, "gradle.properties")
         properties.writeText(
-            properties.readText().replace(
-                "kotlin.jvm.target.validation.mode=warning",
-                "kotlin.jvm.target.validation.mode=error"
-            )
+            properties
+                .readText()
+                .replace(
+                    "kotlin.jvm.target.validation.mode=warning",
+                    "kotlin.jvm.target.validation.mode=error",
+                )
         )
         val buildFile = File(project.root, "workload/build.gradle.kts")
         buildFile.appendText(
@@ -358,9 +373,11 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
                     jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_20)
                }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
+        val gradleRunner =
+            GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments("clean", "build").buildAndFail().let { result ->
             Assert.assertTrue(
                 result.output.contains("Inconsistent JVM-target compatibility detected for tasks")
@@ -380,9 +397,11 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
                     progressiveMode.value(true)
                }
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         )
-        val gradleRunner = GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
+        val gradleRunner =
+            GradleRunner.create().withProjectDir(project.root).withGradleVersion("9.1.0")
         gradleRunner.withArguments("clean", "build").build().let {
             Assert.assertFalse(
                 it.output.contains(
@@ -407,20 +426,25 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         File(project.root, "workload/src/main/java/Empty.kt").appendText("\n\n")
-        gradleRunner.withArguments("clean", "assemble", "-Pksp.incremental.log=false").build().let { result ->
-            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
-        }
+        gradleRunner
+            .withArguments("clean", "assemble", "-Pksp.incremental.log=false")
+            .build()
+            .let { result ->
+                Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:assemble")?.outcome)
+            }
     }
 
     @Test
     fun testGeneratedBinaryClass() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
-        File(project.root, "workload/src/main/java/NeedGenerated.kt").appendText("val v = BinaryClass()\n")
+        File(project.root, "workload/src/main/java/NeedGenerated.kt")
+            .appendText("val v = BinaryClass()\n")
         File(
-            project.root,
-            "test-processor/src/main/resources/META-INF/services/" +
-                "com.google.devtools.ksp.processing.SymbolProcessorProvider"
-        ).appendText("BinaryGenProcessorProvider")
+                project.root,
+                "test-processor/src/main/resources/META-INF/services/" +
+                    "com.google.devtools.ksp.processing.SymbolProcessorProvider",
+            )
+            .appendText("BinaryGenProcessorProvider")
         gradleRunner.buildAndCheck("clean", "build") {
             val artifact = File(project.root, "workload/build/libs/workload-1.0-SNAPSHOT.jar")
             Assert.assertTrue(artifact.exists())
@@ -435,10 +459,11 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
     fun testNoProvider() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         File(
-            project.root,
-            "test-processor/src/main/resources/META-INF/services/" +
-                "com.google.devtools.ksp.processing.SymbolProcessorProvider"
-        ).delete()
+                project.root,
+                "test-processor/src/main/resources/META-INF/services/" +
+                    "com.google.devtools.ksp.processing.SymbolProcessorProvider",
+            )
+            .delete()
         gradleRunner.withArguments("build").buildAndFail().let { result ->
             Assert.assertTrue(result.output.contains("No providers found in processor classpath."))
         }

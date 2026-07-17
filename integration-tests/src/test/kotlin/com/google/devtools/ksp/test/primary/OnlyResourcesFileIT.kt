@@ -11,24 +11,25 @@ import org.junit.runners.Parameterized
 class OnlyResourcesFileIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "only-resources-file",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "only-resources-file",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
     fun test() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        gradleRunner.withArguments(
-            "--configuration-cache-problems=warn",
-            "jvmJar",
-        ).build()
+        gradleRunner
+            .withArguments(
+                "--configuration-cache-problems=warn",
+                "jvmJar",
+            )
+            .build()
     }
 }

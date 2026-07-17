@@ -1,36 +1,36 @@
 package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class GeneratedSourcesViaAndroidComponentsIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "playground-android-multi",
-        "playground",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "playground-android-multi",
+            "playground",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
     fun `test no circular dependency for other source generating tasks depending on ksp`() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "workload/build.gradle.kts").appendText(
-            """                
+        File(project.root, "workload/build.gradle.kts")
+            .appendText(
+                """
                 android {
                     buildFeatures {
                         aidl = true
@@ -38,15 +38,15 @@ class GeneratedSourcesViaAndroidComponentsIT(experimentalPsiResolution: Boolean)
 
                     androidComponents.onVariants { variant ->
                         val name = variant.name
-                
+
                         val task = project.tasks.register("generate${'$'}{name.replaceFirstChar(Char::uppercase)}Source", SourceGenerationTask::class) {
                             dependsOn(project.tasks.named("ksp${'$'}{name.replaceFirstChar(Char::uppercase)}Kotlin")) // ksp must run before generator task
                             getOutputDirectory().set(project.layout.buildDirectory.dir("generated/${'$'}{name}"))
                         }
-                
+
                         ksp.excludedSources.from(task) // This breaks the circular dependency
                         variant.sources.java?.addGeneratedSourceDirectory(task, SourceGenerationTask::getOutputDirectory)
-                
+
                         sourceSets {
                             getByName(name)
                                 .aidl
@@ -57,12 +57,12 @@ class GeneratedSourcesViaAndroidComponentsIT(experimentalPsiResolution: Boolean)
                                         .asFile
                                 )
                         }
-                
+
                         afterEvaluate {
                             tasks.named("compile${'$'}{name.replaceFirstChar(Char::uppercase)}Aidl") {
                                 dependsOn("ksp${'$'}{name.replaceFirstChar(Char::uppercase)}Kotlin")
                             }
-                
+
                             ksp.excludedSources.from(tasks.named("compile${'$'}{name.replaceFirstChar(Char::uppercase)}Aidl")) // This breaks the circular dependency
                         }
                     }
@@ -74,14 +74,18 @@ class GeneratedSourcesViaAndroidComponentsIT(experimentalPsiResolution: Boolean)
                     @TaskAction
                     fun generateCode() { }
                 }
-                
-            """.trimIndent()
-        )
 
-        gradleRunner.withArguments(":workload:assembleDebug", "--dry-run", "--stacktrace").build().let { result ->
-            Assert.assertTrue(result.output.contains(":workload:kspDebugKotlin"))
-            Assert.assertTrue(result.output.contains(":workload:compileDebugAidl"))
-            Assert.assertTrue(result.output.contains(":workload:generateDebugSource"))
-        }
+                """
+                    .trimIndent()
+            )
+
+        gradleRunner
+            .withArguments(":workload:assembleDebug", "--dry-run", "--stacktrace")
+            .build()
+            .let { result ->
+                Assert.assertTrue(result.output.contains(":workload:kspDebugKotlin"))
+                Assert.assertTrue(result.output.contains(":workload:compileDebugAidl"))
+                Assert.assertTrue(result.output.contains(":workload:generateDebugSource"))
+            }
     }
 }

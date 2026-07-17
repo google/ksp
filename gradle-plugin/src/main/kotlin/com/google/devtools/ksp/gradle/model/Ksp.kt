@@ -18,14 +18,13 @@
 package com.google.devtools.ksp.gradle.model
 
 /**
- * Entry point for Kotlin Ksp models.
- * Represents the description of annotations interpreted by 'kotlin-ksp-gradle' plugin.
+ * Entry point for Kotlin Ksp models. Represents the description of annotations interpreted by
+ * 'kotlin-ksp-gradle' plugin.
  */
 interface Ksp {
 
     /**
-     * Return a number representing the version of this API.
-     * Always increasing if changed.
+     * Return a number representing the version of this API. Always increasing if changed.
      *
      * @return the version of this model.
      */

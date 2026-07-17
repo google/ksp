@@ -30,10 +30,7 @@ import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtPackageDirective
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
-/**
- * Collects classifier names in the [KtFile] using
- * [CollectClassifierNameVisitor].
- */
+/** Collects classifier names in the [KtFile] using [CollectClassifierNameVisitor]. */
 fun KtFile.collectClassifierNames(): Set<String> {
     val visitor = CollectClassifierNameVisitor()
     accept(visitor)
@@ -41,7 +38,8 @@ fun KtFile.collectClassifierNames(): Set<String> {
 }
 
 /**
- * A [PsiRecursiveElementWalkingVisitor] that collects the names of classes, objects and type aliases.
+ * A [PsiRecursiveElementWalkingVisitor] that collects the names of classes, objects and type
+ * aliases.
  */
 private class CollectClassifierNameVisitor : PsiRecursiveElementWalkingVisitor() {
 
@@ -62,20 +60,21 @@ private class CollectClassifierNameVisitor : PsiRecursiveElementWalkingVisitor()
      * A [PsiElement] may be skippable to avoid deep traversal of the AST.
      *
      * Returns `true` if the [PsiElement] is one of the following:
-     *   - An expression that is not a declaration
-     *   - An import list
-     *   - A package directive
-     *   - A doc comment
-     *   - A comment
+     * - An expression that is not a declaration
+     * - An import list
+     * - A package directive
+     * - A doc comment
+     * - A comment
      */
-    private fun PsiElement.isSkippable(): Boolean = when (this) {
-        is KtExpression -> this !is KtDeclaration
-        is KtImportList,
-        is KtPackageDirective,
-        is KDoc,
-        is PsiComment,
-        is PsiWhiteSpace -> true
+    private fun PsiElement.isSkippable(): Boolean =
+        when (this) {
+            is KtExpression -> this !is KtDeclaration
+            is KtImportList,
+            is KtPackageDirective,
+            is KDoc,
+            is PsiComment,
+            is PsiWhiteSpace -> true
 
-        else -> false
-    }
+            else -> false
+        }
 }

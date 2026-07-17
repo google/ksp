@@ -41,14 +41,23 @@ open class PlatformDeclarationProcessor : AbstractTestProcessor() {
                 //  expand this test to include constructors
                 it is KSFunctionDeclaration && it.isConstructor()
             }
-            .sortedBy { "${it.containingFile?.fileName} : ${it.qualifiedName?.asString()}" }.forEach {
+            .sortedBy { "${it.containingFile?.fileName} : ${it.qualifiedName?.asString()}" }
+            .forEach {
                 val r = mutableListOf<Any?>()
                 r.add(it.containingFile?.fileName)
                 r.add(it.qualifiedName?.asString())
                 r.add(it.isActual)
                 r.add(it.isExpect)
-                r.add(it.findActuals().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
-                r.add(it.findExpects().joinToString(", ", "[", "]") { it.containingFile?.fileName.toString() })
+                r.add(
+                    it.findActuals().joinToString(", ", "[", "]") {
+                        it.containingFile?.fileName.toString()
+                    }
+                )
+                r.add(
+                    it.findExpects().joinToString(", ", "[", "]") {
+                        it.containingFile?.fileName.toString()
+                    }
+                )
                 results.add(r.map { it.toString() }.joinToString(" : "))
             }
         return emptyList()

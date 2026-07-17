@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class GetSymbolsFromAnnotationProcessor : AbstractTestProcessor() {
     val result = mutableListOf<List<String>>()
+
     override fun toResult(): List<String> = result.flatten()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -27,18 +28,26 @@ class GetSymbolsFromAnnotationProcessor : AbstractTestProcessor() {
         result.add("==== Cnno inDepth = true ====")
         resolver.getSymbolsWithAnnotation("Cnno", inDepth = true).prepare().let { result.add(it) }
         result.add("==== MyNestedAnnotation inDepth = false ====")
-        resolver.getSymbolsWithAnnotation("AnnotationContainer1.MyNestedAnnotation", inDepth = false)
+        resolver
+            .getSymbolsWithAnnotation("AnnotationContainer1.MyNestedAnnotation", inDepth = false)
             .prepare {
-                toString(it) + ", " + it.annotations.joinToString(", ") { anno ->
-                    anno.annotationType.resolve().declaration.qualifiedName?.asString() ?: "ERROR"
-                }
+                toString(it) +
+                    ", " +
+                    it.annotations.joinToString(", ") { anno ->
+                        anno.annotationType.resolve().declaration.qualifiedName?.asString()
+                            ?: "ERROR"
+                    }
             }
             .let { result.add(it) }
-        resolver.getSymbolsWithAnnotation("AnnotationContainer2.MyNestedAnnotation", inDepth = false)
+        resolver
+            .getSymbolsWithAnnotation("AnnotationContainer2.MyNestedAnnotation", inDepth = false)
             .prepare {
-                toString(it) + ", " + it.annotations.joinToString(", ") { anno ->
-                    anno.annotationType.resolve().declaration.qualifiedName?.asString() ?: "ERROR"
-                }
+                toString(it) +
+                    ", " +
+                    it.annotations.joinToString(", ") { anno ->
+                        anno.annotationType.resolve().declaration.qualifiedName?.asString()
+                            ?: "ERROR"
+                    }
             }
             .let { result.add(it) }
         return emptyList()
@@ -46,8 +55,7 @@ class GetSymbolsFromAnnotationProcessor : AbstractTestProcessor() {
 
     private fun Sequence<KSAnnotated>.prepare(
         transform: (KSAnnotated) -> String = { annotated -> toString(annotated) }
-    ): List<String> =
-        toList().map { transform(it) }.sorted()
+    ): List<String> = toList().map { transform(it) }.sorted()
 
     private fun <A> MutableList<List<A>>.add(el: A) = add(listOf(el))
 

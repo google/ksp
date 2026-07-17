@@ -42,7 +42,7 @@ open class JavaWildcard2Processor : AbstractTestProcessor() {
 
     private class RefVisitor(
         val results: MutableList<String>,
-        val resolver: Resolver
+        val resolver: Resolver,
     ) : KSTopDownVisitor<String, Unit>() {
         override fun defaultHandler(node: KSNode, data: String) = Unit
 
@@ -57,9 +57,7 @@ open class JavaWildcard2Processor : AbstractTestProcessor() {
         @OptIn(KspExperimental::class)
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             val wildcard = resolver.getJavaWildcard(typeReference)
-            results.add(
-                data + typeReference.parent.toString() + " : " + wildcard.pretty()
-            )
+            results.add(data + typeReference.parent.toString() + " : " + wildcard.pretty())
             super.visitTypeReference(typeReference, data + "- ")
         }
     }

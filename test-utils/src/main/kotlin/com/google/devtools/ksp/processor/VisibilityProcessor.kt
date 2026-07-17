@@ -37,12 +37,16 @@ class VisibilityProcessor : AbstractTestProcessor() {
         val symbolA = resolver.getSymbolsWithAnnotation("TestA").single() as KSClassDeclaration
         val symbolB = resolver.getSymbolsWithAnnotation("TestB").single() as KSClassDeclaration
         val symbolD = resolver.getSymbolsWithAnnotation("TestD").single() as KSClassDeclaration
-        val allFunctions = (symbolA.superTypes.single().resolve().declaration as KSClassDeclaration)
-            .declarations.filterIsInstance<KSFunctionDeclaration>()
-        allFunctions.map {
-            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
-                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
-        }.forEach { results.add(it) }
+        val allFunctions =
+            (symbolA.superTypes.single().resolve().declaration as KSClassDeclaration)
+                .declarations
+                .filterIsInstance<KSFunctionDeclaration>()
+        allFunctions
+            .map {
+                "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                    "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+            }
+            .forEach { results.add(it) }
         val javaClass = resolver.getClassDeclarationByName("JavaClass")!!
         val kotlinClass = resolver.getClassDeclarationByName("KotlinClass")!!
         val kotlinSubClass = resolver.getClassDeclarationByName("KotlinSubClass")!!
@@ -53,39 +57,69 @@ class VisibilityProcessor : AbstractTestProcessor() {
         val kotlinEnumWithVal = resolver.getClassDeclarationByName("KtEnumWithVal")!!
         val javaAnnotation = resolver.getClassDeclarationByName("JavaAnnotation")!!
         val intersectionClass = resolver.getClassDeclarationByName("IntersectionC")!!
-        javaClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
-            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
-                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
-        }.forEach { results.add(it) }
-        kotlinClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
-            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
-                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
-        }.forEach { results.add(it) }
-        kotlinSubClass.declarations.filterIsInstance<KSPropertyDeclaration>().map {
-            "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
-                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
-        }.forEach { results.add(it) }
-        javaLibEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
-            "${javaLibEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
-        kotlinLibEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
-            "${kotlinLibEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
-        javaEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
-            "${javaEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
-        kotlinEnum.declarations.filterIsInstance<KSFunctionDeclaration>().map {
-            "${kotlinEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
-        kotlinEnumWithVal.declarations.filterIsInstance<KSFunctionDeclaration>().map {
-            "${kotlinEnumWithVal.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
-        javaAnnotation.declarations.filterIsInstance<KSPropertyDeclaration>().map {
-            "${javaAnnotation.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
-        intersectionClass.getAllProperties().map {
-            "${intersectionClass.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
-        }.forEach { results.add(it) }
+        javaClass.declarations
+            .filterIsInstance<KSPropertyDeclaration>()
+            .map {
+                "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                    "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+            }
+            .forEach { results.add(it) }
+        kotlinClass.declarations
+            .filterIsInstance<KSPropertyDeclaration>()
+            .map {
+                "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                    "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+            }
+            .forEach { results.add(it) }
+        kotlinSubClass.declarations
+            .filterIsInstance<KSPropertyDeclaration>()
+            .map {
+                "${it.simpleName.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                    "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+            }
+            .forEach { results.add(it) }
+        javaLibEnum.declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .map {
+                "${javaLibEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
+        kotlinLibEnum.declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .map {
+                "${kotlinLibEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
+        javaEnum.declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .map {
+                "${javaEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
+        kotlinEnum.declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .map {
+                "${kotlinEnum.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
+        kotlinEnumWithVal.declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .map {
+                "${kotlinEnumWithVal.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
+        javaAnnotation.declarations
+            .filterIsInstance<KSPropertyDeclaration>()
+            .map {
+                "${javaAnnotation.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
+        intersectionClass
+            .getAllProperties()
+            .map {
+                "${intersectionClass.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+            }
+            .forEach { results.add(it) }
         return emptyList()
     }
 }

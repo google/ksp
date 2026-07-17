@@ -25,26 +25,22 @@ import com.google.devtools.ksp.processing.UnknownPlatformInfo
 class JvmPlatformInfoImpl(
     override val platformName: String,
     override val jvmTarget: String,
-    override val jvmDefaultMode: String
+    override val jvmDefaultMode: String,
 ) : JvmPlatformInfo {
     override fun toString() = "$platformName ($jvmTarget)"
 }
 
-class JsPlatformInfoImpl(
-    override val platformName: String
-) : JsPlatformInfo {
+class JsPlatformInfoImpl(override val platformName: String) : JsPlatformInfo {
     override fun toString() = platformName
 }
 
 class NativePlatformInfoImpl(
     override val platformName: String,
-    override val targetName: String
+    override val targetName: String,
 ) : NativePlatformInfo {
     override fun toString() = "$platformName ($targetName)"
 }
 
-class UnknownPlatformInfoImpl(
-    override val platformName: String
-) : UnknownPlatformInfo {
+class UnknownPlatformInfoImpl(override val platformName: String) : UnknownPlatformInfo {
     override fun toString() = platformName
 }

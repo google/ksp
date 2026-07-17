@@ -18,35 +18,33 @@ package com.google.devtools.ksp.gradle.testing
 
 import java.io.File
 
-/**
- * Simple wrapper that represents a test project.
- */
+/** Simple wrapper that represents a test project. */
 class TestProject(
     val rootDir: File,
     val testConfig: TestConfig,
-    val isExperimentalPsiResolution: Boolean = false
+    val isExperimentalPsiResolution: Boolean = false,
 ) {
-    val processorModule = TestModule(
-        rootDir.resolve("processor")
-    ).also {
-        it.plugins.add(PluginDeclaration.kotlin("jvm", testConfig.kotlinBaseVersion))
-        it.dependencies.add(
-            DependencyDeclaration.artifact(
-                "implementation",
-                "com.google.devtools.ksp:symbol-processing-api:${testConfig.kspVersion}"
-            )
-        )
-        // add gradle-plugin test classpath as a dependency to be able to load processors.
-        testConfig.processorClasspath.split(File.pathSeparatorChar).forEach { path ->
+    val processorModule =
+        TestModule(rootDir.resolve("processor")).also {
+            it.plugins.add(PluginDeclaration.kotlin("jvm", testConfig.kotlinBaseVersion))
             it.dependencies.add(
-                DependencyDeclaration.files("implementation", path.replace(File.separatorChar, '/'))
+                DependencyDeclaration.artifact(
+                    "implementation",
+                    "com.google.devtools.ksp:symbol-processing-api:${testConfig.kspVersion}",
+                )
             )
+            // add gradle-plugin test classpath as a dependency to be able to load processors.
+            testConfig.processorClasspath.split(File.pathSeparatorChar).forEach { path ->
+                it.dependencies.add(
+                    DependencyDeclaration.files(
+                        "implementation",
+                        path.replace(File.separatorChar, '/'),
+                    )
+                )
+            }
         }
-    }
 
-    val appModule = TestModule(
-        rootDir.resolve("app")
-    )
+    val appModule = TestModule(rootDir.resolve("app"))
 
     fun writeFiles() {
         writeBuildFile()
@@ -57,16 +55,19 @@ class TestProject(
     }
 
     private fun writeRootProperties() {
-        val contents = """
+        val contents =
+            """
             
             kotlin.jvm.target.validation.mode=warning
             ksp.experimental.psi.resolution=$isExperimentalPsiResolution
-        """.trimIndent()
+        """
+                .trimIndent()
         rootDir.resolve("gradle.properties").appendText(contents)
     }
 
     private fun writeSettingsFile() {
-        val contents = """
+        val contents =
+            """
                 include("processor")
                 include("app")
                 pluginManagement {
@@ -77,15 +78,18 @@ class TestProject(
                         maven("https://redirector.kotlinlang.org/maven/bootstrap/")
                     }
                 }
-        """.trimIndent()
+        """
+                .trimIndent()
         rootDir.resolve("settings.gradle.kts").writeText(contents)
     }
 
     fun writeAndroidGradlePropertiesFile() {
-        val contents = """
+        val contents =
+            """
             android.useAndroidX=true
             org.gradle.jvmargs=-Xmx2048M -XX:MaxMetaspaceSize=512m
-        """.trimIndent()
+            """
+                .trimIndent()
         rootDir.resolve("gradle.properties").appendText(contents)
     }
 
@@ -127,7 +131,8 @@ class TestProject(
                     }
                 }
             }
-                """.trimIndent()
+                """
+                    .trimIndent()
             )
         }
         rootDir.resolve("build.gradle.kts").writeText(rootBuildFile)

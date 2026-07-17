@@ -34,14 +34,17 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
 
     class AllFunctionsVisitor : KSVisitorVoid() {
         private val declarationsByClass = mutableMapOf<String, MutableList<String>>()
+
         fun toResult(): List<String> {
             return declarationsByClass.entries
                 .sortedBy {
                     it.key
-                }.flatMap {
+                }
+                .flatMap {
                     listOf(it.key) + it.value
                 }
         }
+
         fun KSFunctionDeclaration.toSignature(): String {
             return this.simpleName.asString() +
                 "(${this.parameters.map {
@@ -62,15 +65,21 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
             val declarations = mutableListOf<String>()
             // first add properties
             declarations.addAll(
-                classDeclaration.getAllProperties().map {
-                    it.toString()
-                }.sorted()
+                classDeclaration
+                    .getAllProperties()
+                    .map {
+                        it.toString()
+                    }
+                    .sorted()
             )
             // then add functions
             declarations.addAll(
-                classDeclaration.getAllFunctions().map {
-                    it.toSignature()
-                }.sorted()
+                classDeclaration
+                    .getAllFunctions()
+                    .map {
+                        it.toSignature()
+                    }
+                    .sorted()
             )
             declarationsByClass["class: ${classDeclaration.simpleName.asString()}"] = declarations
         }

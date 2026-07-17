@@ -38,7 +38,8 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbol = resolver.getClassDeclarationByName(resolver.getKSNameFromString("C"))
-        val symbolTypeParameter = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Base"))
+        val symbolTypeParameter =
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString("Base"))
         val another = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Another"))
         val javaEnum = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaEnum"))
         assert(symbol?.origin == Origin.JAVA)
@@ -50,8 +51,7 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
     }
 
     inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>() {
-        override fun defaultHandler(node: KSNode, data: Unit) {
-        }
+        override fun defaultHandler(node: KSNode, data: Unit) {}
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             classDeclaration.declarations.forEach { it.accept(this, Unit) }

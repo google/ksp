@@ -14,9 +14,14 @@ class ValueParameterProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         for (clsName in listOf("MyClassSrc", "MyClassLib")) {
             val clsDecl = resolver.getClassDeclarationByName(clsName)!!
-            clsDecl.primaryConstructor!!.parameters.sortedBy { it.name!!.asString() }.forEach {
-                results.add("$clsName.${it.name!!.asString()}: isVal: ${it.isVal}, isVar: ${it.isVar}")
-            }
+            clsDecl.primaryConstructor!!
+                .parameters
+                .sortedBy { it.name!!.asString() }
+                .forEach {
+                    results.add(
+                        "$clsName.${it.name!!.asString()}: isVal: ${it.isVal}, isVar: ${it.isVar}"
+                    )
+                }
         }
         return emptyList()
     }

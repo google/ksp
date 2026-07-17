@@ -1,27 +1,26 @@
 package com.google.devtools.ksp.test.primary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class IncrementalMultiChainIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "incremental-multi-chain",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "incremental-multi-chain",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -37,9 +36,7 @@ class IncrementalMultiChainIT(experimentalPsiResolution: Boolean) {
             Assert.assertTrue(result.output.contains("[K1Impl]"))
         }
 
-        k2.writeText(
-            "@NeedsImpl\ninterface K2\n"
-        )
+        k2.writeText("@NeedsImpl\ninterface K2\n")
         gradleRunner.withArguments("run").build().let { result ->
             Assert.assertTrue(result.output.contains("validating K1.kt"))
             Assert.assertTrue(result.output.contains("validating K2.kt"))
@@ -58,7 +55,8 @@ class IncrementalMultiChainIT(experimentalPsiResolution: Boolean) {
             Assert.assertTrue(result.output.contains("validating AllImpls.kt"))
             Assert.assertTrue(result.output.contains("[K1Impl]"))
             Assert.assertFalse(
-                File(project.root, "workload/build/generated/ksp/main/kotlin/K2ImplInfo.kt").exists()
+                File(project.root, "workload/build/generated/ksp/main/kotlin/K2ImplInfo.kt")
+                    .exists()
             )
         }
     }

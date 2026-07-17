@@ -40,18 +40,21 @@ open class ReferenceElementProcessor : AbstractTestProcessor() {
         fun refName(it: KSTypeReference) = (it.element as KSClassifierReference).referencedName()
 
         val sortedReferences =
-            references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN }.sortedBy(::refName)
-        for (i in sortedReferences)
-            results.add(
-                "KSClassifierReferenceImpl: Qualifier of ${i.element} is ${
+            references
+                .filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN }
+                .sortedBy(::refName)
+        for (i in sortedReferences) results.add(
+            "KSClassifierReferenceImpl: Qualifier of ${i.element} is ${
                 (i.element as KSClassifierReference).qualifier
                 }"
-            )
+        )
 
         // FIXME: References in getters and type arguments are not compared to equal.
         val descriptorReferences =
-            references.filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN_LIB }
-                .distinctBy(::refName).sortedBy(::refName)
+            references
+                .filter { it.element is KSClassifierReference && it.origin == Origin.KOTLIN_LIB }
+                .distinctBy(::refName)
+                .sortedBy(::refName)
         for (i in descriptorReferences) {
             results.add(
                 "KSClassifierReferenceDescriptorImpl: Qualifier of ${i.element} is ${
@@ -61,7 +64,8 @@ open class ReferenceElementProcessor : AbstractTestProcessor() {
         }
 
         val defNonNullReferences =
-            references.filter { it.element is KSDefNonNullReference && it.origin == Origin.KOTLIN }
+            references
+                .filter { it.element is KSDefNonNullReference && it.origin == Origin.KOTLIN }
                 .sortedBy { it.toString() }
 
         defNonNullReferences.forEach {
@@ -70,8 +74,10 @@ open class ReferenceElementProcessor : AbstractTestProcessor() {
             )
         }
 
-        val javaReferences = references.filter { it.element is KSClassifierReference && it.origin == Origin.JAVA }
-            .sortedBy(::refName)
+        val javaReferences =
+            references
+                .filter { it.element is KSClassifierReference && it.origin == Origin.JAVA }
+                .sortedBy(::refName)
         for (i in javaReferences) {
             results.add(
                 "KSClassifierReferenceJavaImpl: Qualifier of ${i.element} is ${
@@ -89,7 +95,10 @@ open class ReferenceElementProcessor : AbstractTestProcessor() {
 class ReferenceCollector : KSTopDownVisitor<MutableSet<KSTypeReference>, Unit>() {
     override fun defaultHandler(node: KSNode, data: MutableSet<KSTypeReference>) = Unit
 
-    override fun visitTypeReference(typeReference: KSTypeReference, data: MutableSet<KSTypeReference>) {
+    override fun visitTypeReference(
+        typeReference: KSTypeReference,
+        data: MutableSet<KSTypeReference>,
+    ) {
         super.visitTypeReference(typeReference, data)
         data.add(typeReference)
     }

@@ -48,8 +48,8 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.name.ClassId
 
-class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) :
-    KSAnnotation {
+class KSAnnotationJavaImpl
+private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
         fun getCached(psi: PsiAnnotation, parent: KSNode?) =
             KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi, parent) }
@@ -57,10 +57,8 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 
     private val type: KaType by lazy {
         fun PsiClass.fqn(): String? {
-            val parent = containingClass?.fqn()
-                ?: return qualifiedName?.replace('.', '/')
-            if (name == null)
-                return null
+            val parent = containingClass?.fqn() ?: return qualifiedName?.replace('.', '/')
+            if (name == null) return null
             return "$parent.$name"
         }
         analyze {
@@ -79,81 +77,110 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     override val arguments: List<KSValueArgument> by lazy {
         analyze {
             val annotationConstructor =
-                (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
-            val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
-                val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
-                val value = it.value
-                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                    value.initializers.map {
-                        calcValue(it, this@KSAnnotationJavaImpl)
-                    }
-                } else {
-                    calcValue(it.value, this@KSAnnotationJavaImpl)
+                (type.classifierSymbol() as? KaClassSymbol)
+                    ?.memberScope
+                    ?.constructors
+                    ?.singleOrNull()
+            val presentArgs =
+                psi.parameterList.attributes.mapIndexed { index, it ->
+                    val name =
+                        it.name
+                            ?: annotationConstructor
+                                ?.valueParameters
+                                ?.getOrNull(index)
+                                ?.name
+                                ?.asString()
+                    val value = it.value
+                    val calculatedValue: Any? =
+                        if (value is PsiArrayInitializerMemberValue) {
+                            value.initializers.map {
+                                calcValue(it, this@KSAnnotationJavaImpl)
+                            }
+                        } else {
+                            calcValue(it.value, this@KSAnnotationJavaImpl)
+                        }
+                    KSValueArgumentLiteImpl(
+                        name?.let { KSNameImpl.getCached(it) },
+                        calculatedValue,
+                        this@KSAnnotationJavaImpl,
+                        Origin.JAVA,
+                        it.toLocation(),
+                    )
                 }
-                KSValueArgumentLiteImpl(
-                    name?.let { KSNameImpl.getCached(it) },
-                    calculatedValue,
-                    this@KSAnnotationJavaImpl,
-                    Origin.JAVA,
-                    it.toLocation()
-                )
-            }
             val presentValueArgumentNames = presentArgs.map { it.name?.asString() ?: "" }
-            presentArgs + defaultArguments.filter { ksValueArgument ->
-                val name = ksValueArgument.name?.asString() ?: return@filter false
-                if (name in presentValueArgumentNames)
-                    return@filter false
-                annotationConstructor?.valueParameters?.any { it.name.asString() == name && it.hasDefaultValue } == true
-            }
+            presentArgs +
+                defaultArguments.filter { ksValueArgument ->
+                    val name = ksValueArgument.name?.asString() ?: return@filter false
+                    if (name in presentValueArgumentNames) return@filter false
+                    annotationConstructor?.valueParameters?.any {
+                        it.name.asString() == name && it.hasDefaultValue
+                    } == true
+                }
         }
     }
 
     @OptIn(KaImplementationDetail::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
         analyze {
-            (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
+            (type.classifierSymbol() as? KaClassSymbol)
+                ?.memberScope
+                ?.constructors
+                ?.singleOrNull()
                 ?.let { symbol ->
                     // ClsClassImpl means psi is decompiled psi.
                     if (
-                        symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
-                        symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
+                        symbol.origin == KaSymbolOrigin.JAVA_SOURCE &&
+                            symbol.psi != null &&
+                            symbol.psi !is ClsClassImpl &&
+                            symbol.psi is PsiClass
                     ) {
-                        (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
+                        (symbol.psi as PsiClass)
+                            .allMethods
+                            .filterIsInstance<PsiAnnotationMethod>()
                             .mapNotNull { annoMethod ->
                                 annoMethod.defaultValue?.let { value ->
-                                    val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                                        value.initializers.map {
-                                            calcValue(it, this@KSAnnotationJavaImpl)
+                                    val calculatedValue: Any? =
+                                        if (value is PsiArrayInitializerMemberValue) {
+                                            value.initializers.map {
+                                                calcValue(it, this@KSAnnotationJavaImpl)
+                                            }
+                                        } else {
+                                            calcValue(value, this@KSAnnotationJavaImpl)
                                         }
-                                    } else {
-                                        calcValue(value, this@KSAnnotationJavaImpl)
-                                    }
                                     KSValueArgumentLiteImpl(
                                         KSNameImpl.getCached(annoMethod.name),
                                         calculatedValue,
                                         this@KSAnnotationJavaImpl,
                                         Origin.SYNTHETIC,
-                                        value.toLocation()
+                                        value.toLocation(),
                                     )
                                 }
                             }
                     } else {
                         symbol.valueParameters.mapNotNull { valueParameterSymbol ->
-                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            val constantValue =
+                                valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
                             if (constantValue is KaAnnotationValue.ClassLiteralValue) {
-                                recordClassReferenceLookup(constantValue.type, this@KSAnnotationJavaImpl)
+                                recordClassReferenceLookup(
+                                    constantValue.type,
+                                    this@KSAnnotationJavaImpl,
+                                )
                             }
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
                                     valueParameterSymbol.name,
-                                    // null will be returned as the `constantValue` for non array annotation values.
-                                    // fallback to unsupported annotation value to indicate such use cases.
-                                    // when seeing unsupported annotation value we return `null` for the value.
-                                    // which might still be incorrect but there might not be a perfect way.
-                                    constantValue
+                                    // null will be returned as the `constantValue` for non array
+                                    // annotation values.
+                                    // fallback to unsupported annotation value to indicate such use
+                                    // cases.
+                                    // when seeing unsupported annotation value we return `null` for
+                                    // the value.
+                                    // which might still be incorrect but there might not be a
+                                    // perfect way.
+                                    constantValue,
                                 ),
                                 this@KSAnnotationJavaImpl,
-                                Origin.SYNTHETIC
+                                Origin.SYNTHETIC,
                             )
                         }
                     }
@@ -188,57 +215,68 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
         }
         return KSAnnotationJavaImpl.getCached(value, null)
     }
-    val result = when (value) {
-        is PsiReference -> value.resolve()?.let { resolved ->
-            JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value)
-                ?: resolved
-        }
+    val result =
+        when (value) {
+            is PsiReference ->
+                value.resolve()?.let { resolved ->
+                    JavaPsiFacade.getInstance(value.project)
+                        .constantEvaluationHelper
+                        .computeConstantExpression(value) ?: resolved
+                }
 
-        else -> value?.let {
-            JavaPsiFacade.getInstance(value.project).constantEvaluationHelper.computeConstantExpression(value)
+            else ->
+                value?.let {
+                    JavaPsiFacade.getInstance(value.project)
+                        .constantEvaluationHelper
+                        .computeConstantExpression(value)
+                }
         }
-    }
     return when (result) {
         is PsiPrimitiveType -> {
             result.boxedTypeName?.let {
-                ResolverAAImpl.instance
-                    .getClassDeclarationByName(it)?.asStarProjectedType()
+                ResolverAAImpl.instance.getClassDeclarationByName(it)?.asStarProjectedType()
             } ?: KSErrorType(result.boxedTypeName)
         }
 
         is PsiArrayType -> {
-            val componentType = when (val component = result.componentType) {
-                is PsiPrimitiveType -> component.boxedTypeName?.let { boxedTypeName ->
-                    ResolverAAImpl.instance
-                        .getClassDeclarationByName(boxedTypeName)?.asStarProjectedType()
-                } ?: KSErrorType(component.boxedTypeName)
+            val componentType =
+                when (val component = result.componentType) {
+                    is PsiPrimitiveType ->
+                        component.boxedTypeName?.let { boxedTypeName ->
+                            ResolverAAImpl.instance
+                                .getClassDeclarationByName(boxedTypeName)
+                                ?.asStarProjectedType()
+                        } ?: KSErrorType(component.boxedTypeName)
 
-                else -> {
-                    ResolverAAImpl.instance
-                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
-                        ?.also { ksType ->
-                            ksType.toKaType()?.let { kaType ->
-                                recordClassReferenceLookup(kaType, parent)
-                            }
-                        }
-                        ?: KSErrorType(component.canonicalText)
+                    else -> {
+                        ResolverAAImpl.instance
+                            .getClassDeclarationByName(component.canonicalText)
+                            ?.asStarProjectedType()
+                            ?.also { ksType ->
+                                ksType.toKaType()?.let { kaType ->
+                                    recordClassReferenceLookup(kaType, parent)
+                                }
+                            } ?: KSErrorType(component.canonicalText)
+                    }
                 }
-            }
-            val componentTypeRef = ResolverAAImpl.instance.createKSTypeReferenceFromKSType(componentType)
-            val typeArgs = listOf(ResolverAAImpl.instance.getTypeArgument(componentTypeRef, Variance.INVARIANT))
-            ResolverAAImpl.instance
-                .getClassDeclarationByName("kotlin.Array")!!.asType(typeArgs)
+            val componentTypeRef =
+                ResolverAAImpl.instance.createKSTypeReferenceFromKSType(componentType)
+            val typeArgs =
+                listOf(
+                    ResolverAAImpl.instance.getTypeArgument(componentTypeRef, Variance.INVARIANT)
+                )
+            ResolverAAImpl.instance.getClassDeclarationByName("kotlin.Array")!!.asType(typeArgs)
         }
 
         is PsiType -> {
             ResolverAAImpl.instance
-                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
+                .getClassDeclarationByName(result.canonicalText)
+                ?.asStarProjectedType()
                 ?.also { ksType ->
                     ksType.toKaType()?.let { kaType ->
                         recordClassReferenceLookup(kaType, parent)
                     }
-                }
-                ?: KSErrorType(result.canonicalText)
+                } ?: KSErrorType(result.canonicalText)
         }
 
         is PsiLiteralValue -> {
@@ -246,17 +284,22 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode): Any? {
         }
 
         is PsiField -> {
-            // manually handle enums as constant expression evaluator does not seem to be resolving them.
+            // manually handle enums as constant expression evaluator does not seem to be resolving
+            // them.
             val containingClass = result.containingClass
             @Suppress("UnstableApiUsage")
             if (containingClass?.classKind == JvmClassKind.ENUM) {
                 // this is an enum entry
-                containingClass.qualifiedName?.let {
-                    ResolverAAImpl.instance.getClassDeclarationByName(it)
-                }?.declarations?.find {
-                    it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
-                        it.simpleName.asString() == result.name
-                } as? KSClassDeclarationEnumEntryImpl
+                containingClass.qualifiedName
+                    ?.let {
+                        ResolverAAImpl.instance.getClassDeclarationByName(it)
+                    }
+                    ?.declarations
+                    ?.find {
+                        it is KSClassDeclaration &&
+                            it.classKind == ClassKind.ENUM_ENTRY &&
+                            it.simpleName.asString() == result.name
+                    } as? KSClassDeclarationEnumEntryImpl
             } else {
                 null
             }

@@ -16,11 +16,13 @@ class DefaultKClassValueProcessor : AbstractTestProcessor() {
         val example1 = resolver.getClassDeclarationByName("Example")!!.annotations.first()
         val example2 = resolver.getClassDeclarationByName("Example2")!!.annotations.first()
         val arg1 = (example1.arguments.single().value as KSTypeImpl).declaration.qualifiedName!!
-        val defaultArg1 = (example1.defaultArguments.single().value as KSTypeImpl).declaration.qualifiedName!!
+        val defaultArg1 =
+            (example1.defaultArguments.single().value as KSTypeImpl).declaration.qualifiedName!!
         results.add(defaultArg1.asString())
         results.add(arg1.asString())
         val arg2 = (example2.arguments.single().value as KSTypeImpl).declaration.qualifiedName!!
-        val defaultArg2 = (example2.defaultArguments.single().value as KSTypeImpl).declaration.qualifiedName!!
+        val defaultArg2 =
+            (example2.defaultArguments.single().value as KSTypeImpl).declaration.qualifiedName!!
         results.add(defaultArg2.asString())
         results.add(arg2.asString())
         return emptyList()

@@ -18,10 +18,11 @@
 package com.google.devtools.ksp.test.annotations
 
 /**
- * Indicates that a test case is a "negative test," validating how KSP handles invalid or problematic input.
+ * Indicates that a test case is a "negative test," validating how KSP handles invalid or
+ * problematic input.
  *
- * A negative test typically verifies that KSP correctly identifies errors, reports them appropriately,
- * or handles invalid code constructs without crashing.
+ * A negative test typically verifies that KSP correctly identifies errors, reports them
+ * appropriately, or handles invalid code constructs without crashing.
  *
  * @property description An optional brief explanation of the invalid scenario or expected failure.
  */

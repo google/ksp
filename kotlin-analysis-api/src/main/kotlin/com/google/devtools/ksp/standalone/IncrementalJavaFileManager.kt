@@ -35,13 +35,18 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         sourceFiles: Set<PsiJavaFile>,
     ) {
         val project = environment.project
-        val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
+        val javaFileManager =
+            project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
         val compilerConfiguration = CompilerConfiguration.create()
-        val javaModuleFinder = CliJavaModuleFinder(null, compilerConfiguration, javaFileManager, project, null)
+        val javaModuleFinder =
+            CliJavaModuleFinder(null, compilerConfiguration, javaFileManager, project, null)
         val javaModuleGraph = JavaModuleGraph(javaModuleFinder)
-        val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
+        val allSourceFileRoots = sourceFiles.map {
+            JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE)
+        }
         val jdkRoots = getDefaultJdkModuleRoots(javaModuleFinder, javaModuleGraph)
-        val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, environment.environment)
+        val libraryRoots =
+            StandaloneProjectFactory.getAllBinaryRoots(modules, environment.environment)
 
         val rootsWithSingleJavaFileRoots = buildList {
             addAll(libraryRoots)
@@ -49,28 +54,33 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
             addAll(jdkRoots)
         }
 
-        val (roots, newSingleJavaFileRoots) = rootsWithSingleJavaFileRoots.partition { (file) ->
-            file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
-        }
+        val (roots, newSingleJavaFileRoots) =
+            rootsWithSingleJavaFileRoots.partition { (file) ->
+                file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
+            }
 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
-        rootsIndex = JvmDependenciesDynamicCompoundIndex(true).apply {
-            addIndex(JvmDependenciesIndexImpl(roots))
-        }
+        rootsIndex =
+            JvmDependenciesDynamicCompoundIndex(true).apply {
+                addIndex(JvmDependenciesIndexImpl(roots))
+            }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
         roots.forEach { javaRoot ->
             if (javaRoot.file.isDirectory) {
                 if (javaRoot.type == JavaRoot.RootType.SOURCE) {
                     // NB: [JavaCoreProjectEnvironment#addSourcesToClasspath] calls:
-                    //   1) [CoreJavaFileManager#addToClasspath], which is used to look up Java roots;
+                    //   1) [CoreJavaFileManager#addToClasspath], which is used to look up Java
+                    // roots;
                     //   2) [CorePackageIndex#addToClasspath], which populates [PackageIndex]; and
-                    //   3) [FileIndexFacade#addLibraryRoot], which conflicts with this SOURCE root when generating a library scope.
+                    //   3) [FileIndexFacade#addLibraryRoot], which conflicts with this SOURCE root
+                    // when generating a library scope.
                     // Thus, here we manually call first two, which are used to:
                     //   1) create [PsiPackage] as a package resolution result; and
                     //   2) find directories by package name.
-                    // With both supports, annotations defined in package-info.java can be properly propagated.
+                    // With both supports, annotations defined in package-info.java can be properly
+                    // propagated.
                     javaFileManager.addToClasspath(javaRoot.file)
                     corePackageIndex.addToClasspath(javaRoot.file)
                 } else {
@@ -79,29 +89,39 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
             }
         }
 
-        packagePartProviders = listOf(
-            StandaloneProjectFactory.createPackagePartsProvider(
-                libraryRoots + jdkRoots,
-                LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST)
-            ).invoke(ProjectScope.getLibrariesScope(project))
-        )
+        packagePartProviders =
+            listOf(
+                StandaloneProjectFactory.createPackagePartsProvider(
+                        libraryRoots + jdkRoots,
+                        LanguageVersionSettingsImpl(
+                            LanguageVersion.LATEST_STABLE,
+                            ApiVersion.LATEST,
+                        ),
+                    )
+                    .invoke(ProjectScope.getLibrariesScope(project))
+            )
 
         javaFileManager.initialize(
             rootsIndex,
             packagePartProviders,
             SingleJavaFileRootsIndex(singleJavaFileRoots),
-            true, null
+            true,
+            null,
         )
     }
 
     fun add(sourceFiles: Set<PsiJavaFile>) {
         val project = environment.project
-        val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
-        val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
-
-        val (roots, newSingleJavaFileRoots) = allSourceFileRoots.partition { (file) ->
-            file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
+        val javaFileManager =
+            project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
+        val allSourceFileRoots = sourceFiles.map {
+            JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE)
         }
+
+        val (roots, newSingleJavaFileRoots) =
+            allSourceFileRoots.partition { (file) ->
+                file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
+            }
 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
@@ -114,13 +134,16 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
             if (javaRoot.file.isDirectory) {
                 if (javaRoot.type == JavaRoot.RootType.SOURCE) {
                     // NB: [JavaCoreProjectEnvironment#addSourcesToClasspath] calls:
-                    //   1) [CoreJavaFileManager#addToClasspath], which is used to look up Java roots;
+                    //   1) [CoreJavaFileManager#addToClasspath], which is used to look up Java
+                    // roots;
                     //   2) [CorePackageIndex#addToClasspath], which populates [PackageIndex]; and
-                    //   3) [FileIndexFacade#addLibraryRoot], which conflicts with this SOURCE root when generating a library scope.
+                    //   3) [FileIndexFacade#addLibraryRoot], which conflicts with this SOURCE root
+                    // when generating a library scope.
                     // Thus, here we manually call first two, which are used to:
                     //   1) create [PsiPackage] as a package resolution result; and
                     //   2) find directories by package name.
-                    // With both supports, annotations defined in package-info.java can be properly propagated.
+                    // With both supports, annotations defined in package-info.java can be properly
+                    // propagated.
                     javaFileManager.addToClasspath(javaRoot.file)
                     corePackageIndex.addToClasspath(javaRoot.file)
                 } else {
@@ -133,20 +156,25 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
             rootsIndex,
             packagePartProviders,
             SingleJavaFileRootsIndex(singleJavaFileRoots),
-            true, null
+            true,
+            null,
         )
     }
 }
 
 private fun getDefaultJdkModuleRoots(
     javaModuleFinder: CliJavaModuleFinder,
-    javaModuleGraph: JavaModuleGraph
+    javaModuleGraph: JavaModuleGraph,
 ): List<JavaRoot> {
-    // In contrast to `ClasspathRootsResolver.addModularRoots`, we do not need to handle automatic Java modules because JDK modules
+    // In contrast to `ClasspathRootsResolver.addModularRoots`, we do not need to handle automatic
+    // Java modules because JDK modules
     // aren't automatic.
-    return javaModuleGraph.getAllDependencies(javaModuleFinder.computeDefaultRootModules()).flatMap { moduleName ->
-        val module = javaModuleFinder.findModule(moduleName) ?: return@flatMap emptyList<JavaRoot>()
-        val result = module.getJavaModuleRoots()
-        result
-    }
+    return javaModuleGraph
+        .getAllDependencies(javaModuleFinder.computeDefaultRootModules())
+        .flatMap { moduleName ->
+            val module =
+                javaModuleFinder.findModule(moduleName) ?: return@flatMap emptyList<JavaRoot>()
+            val result = module.getJavaModuleRoots()
+            result
+        }
 }

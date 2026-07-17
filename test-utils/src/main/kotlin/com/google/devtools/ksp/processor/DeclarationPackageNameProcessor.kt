@@ -31,11 +31,13 @@ class DeclarationPackageNameProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val visitor = NameCollector()
         resolver.getNewFiles().forEach { it.accept(visitor, result) }
-        listOf("lib.H1", "K1", "J1").mapNotNull {
-            resolver.getClassDeclarationByName(resolver.getKSNameFromString(it))
-        }.forEach {
-            it.accept(visitor, result)
-        }
+        listOf("lib.H1", "K1", "J1")
+            .mapNotNull {
+                resolver.getClassDeclarationByName(resolver.getKSNameFromString(it))
+            }
+            .forEach {
+                it.accept(visitor, result)
+            }
         return emptyList()
     }
 }
@@ -44,28 +46,40 @@ class NameCollector : KSTopDownVisitor<MutableCollection<String>, Unit>() {
 
     override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {}
 
-    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: MutableCollection<String>) {
+    override fun visitClassDeclaration(
+        classDeclaration: KSClassDeclaration,
+        data: MutableCollection<String>,
+    ) {
         classDeclaration.packageName.asString().let {
-            data.add("${if (it == "") "<no name>" else it}:${classDeclaration.simpleName.asString()}")
+            data.add(
+                "${if (it == "") "<no name>" else it}:${classDeclaration.simpleName.asString()}"
+            )
         }
         super.visitClassDeclaration(classDeclaration, data)
     }
 
-    override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: MutableCollection<String>) {
+    override fun visitFunctionDeclaration(
+        function: KSFunctionDeclaration,
+        data: MutableCollection<String>,
+    ) {
         function.packageName.asString().let { packageName ->
             val packageNamePrefix = if (packageName == "") "<no name>" else packageName
             val parentDeclaration = function.parentDeclaration
-            val parentPrefix = if (parentDeclaration == null) {
-                ""
-            } else {
-                "${parentDeclaration.simpleName.asString()}."
-            }
+            val parentPrefix =
+                if (parentDeclaration == null) {
+                    ""
+                } else {
+                    "${parentDeclaration.simpleName.asString()}."
+                }
             data.add("$packageNamePrefix:$parentPrefix${function.simpleName.asString()}")
         }
         super.visitFunctionDeclaration(function, data)
     }
 
-    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: MutableCollection<String>) {
+    override fun visitPropertyDeclaration(
+        property: KSPropertyDeclaration,
+        data: MutableCollection<String>,
+    ) {
         property.packageName.asString().let {
             data.add("${if (it == "") "<no name>" else it}:${property.simpleName.asString()}")
         }

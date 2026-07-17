@@ -2,9 +2,8 @@ package com.google.devtools.ksp.visitor
 
 import com.google.devtools.ksp.symbol.*
 
-open class KSValidateVisitor(
-    private val predicate: (KSNode?, KSNode) -> Boolean
-) : KSDefaultVisitor<KSNode?, Boolean>() {
+open class KSValidateVisitor(private val predicate: (KSNode?, KSNode) -> Boolean) :
+    KSDefaultVisitor<KSNode?, Boolean>() {
     private fun validateType(type: KSType): Boolean {
         return !type.isError && !type.arguments.any { it.type?.accept(this, null) == false }
     }
@@ -23,21 +22,27 @@ open class KSValidateVisitor(
         return this.visitAnnotated(declaration, data)
     }
 
-    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: KSNode?): Boolean {
+    override fun visitDeclarationContainer(
+        declarationContainer: KSDeclarationContainer,
+        data: KSNode?,
+    ): Boolean {
         return declarationContainer.declarations.all {
-            !predicate(declarationContainer, it) || it.accept(
-                this,
-                declarationContainer
-            )
+            !predicate(declarationContainer, it) ||
+                it.accept(
+                    this,
+                    declarationContainer,
+                )
         }
     }
 
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: KSNode?): Boolean {
-        return !predicate(data, typeParameter) || typeParameter.bounds.all { it.accept(this, typeParameter) }
+        return !predicate(data, typeParameter) ||
+            typeParameter.bounds.all { it.accept(this, typeParameter) }
     }
 
     override fun visitAnnotated(annotated: KSAnnotated, data: KSNode?): Boolean {
-        return !predicate(data, annotated) || annotated.annotations.all { it.accept(this, annotated) }
+        return !predicate(data, annotated) ||
+            annotated.annotations.all { it.accept(this, annotated) }
     }
 
     override fun visitAnnotation(annotation: KSAnnotation, data: KSNode?): Boolean {
@@ -57,7 +62,10 @@ open class KSValidateVisitor(
         return validateType(typeReference.resolve())
     }
 
-    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: KSNode?): Boolean {
+    override fun visitClassDeclaration(
+        classDeclaration: KSClassDeclaration,
+        data: KSNode?,
+    ): Boolean {
         if (classDeclaration.asStarProjectedType().isError) {
             return false
         }
@@ -74,8 +82,10 @@ open class KSValidateVisitor(
     }
 
     override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: KSNode?): Boolean {
-        if (function.returnType != null &&
-            predicate(function, function.returnType!!) && !function.returnType!!.accept(this, data)
+        if (
+            function.returnType != null &&
+                predicate(function, function.returnType!!) &&
+                !function.returnType!!.accept(this, data)
         ) {
             return false
         }
@@ -99,12 +109,13 @@ open class KSValidateVisitor(
     }
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: KSNode?): Boolean {
-        fun visitValue(value: Any?): Boolean = when (value) {
-            is KSType -> this.validateType(value)
-            is KSAnnotation -> this.visitAnnotation(value, data)
-            is List<*> -> value.all { visitValue(it) }
-            else -> true
-        }
+        fun visitValue(value: Any?): Boolean =
+            when (value) {
+                is KSType -> this.validateType(value)
+                is KSAnnotation -> this.visitAnnotation(value, data)
+                is List<*> -> value.all { visitValue(it) }
+                else -> true
+            }
         return visitValue(valueArgument.value)
     }
 

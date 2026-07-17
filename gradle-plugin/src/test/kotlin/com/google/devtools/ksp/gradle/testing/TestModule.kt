@@ -30,7 +30,7 @@ import java.io.File
 class TestModule(
     val moduleRoot: File,
     plugins: List<PluginDeclaration> = emptyList(),
-    dependencies: List<DependencyDeclaration> = emptyList()
+    dependencies: List<DependencyDeclaration> = emptyList(),
 ) {
     val plugins = LinkedHashSet(plugins)
     val dependencies = LinkedHashSet(dependencies)
@@ -41,89 +41,92 @@ class TestModule(
         moduleRoot.mkdirs()
     }
 
-    /**
-     * Adds the given source file to the main source set.
-     */
+    /** Adds the given source file to the main source set. */
     fun addSource(name: String, contents: String) {
-        val srcDir = when {
-            name.endsWith(".kt") -> kotlinSourceDir
-            name.endsWith(".java") -> javaSourceDir
-            else -> error("must provide java or kotlin file")
-        }
+        val srcDir =
+            when {
+                name.endsWith(".kt") -> kotlinSourceDir
+                name.endsWith(".java") -> javaSourceDir
+                else -> error("must provide java or kotlin file")
+            }
         srcDir.resolve(name).writeText(contents)
     }
 
-    /**
-     * Adds the given source file to the test source set.
-     */
+    /** Adds the given source file to the test source set. */
     fun addTestSource(name: String, contents: String) {
-        val srcDir = when {
-            name.endsWith(".kt") -> kotlinTestSourceDir
-            name.endsWith(".java") -> javaTestSourceDir
-            else -> error("must provide java or kotlin file")
-        }
+        val srcDir =
+            when {
+                name.endsWith(".kt") -> kotlinTestSourceDir
+                name.endsWith(".java") -> javaTestSourceDir
+                else -> error("must provide java or kotlin file")
+            }
         srcDir.resolve(name).writeText(contents)
     }
 
-    /**
-     * Adds the given source file to the AndroidTest source set.
-     */
+    /** Adds the given source file to the AndroidTest source set. */
     fun addAndroidTestSource(name: String, contents: String) {
-        val srcDir = when {
-            name.endsWith(".kt") -> kotlinAndroidTestSourceDir
-            name.endsWith(".java") -> javaAndroidTestSourceDir
-            else -> error("must provide java or kotlin file")
-        }
+        val srcDir =
+            when {
+                name.endsWith(".kt") -> kotlinAndroidTestSourceDir
+                name.endsWith(".java") -> javaAndroidTestSourceDir
+                else -> error("must provide java or kotlin file")
+            }
         srcDir.resolve(name).writeText(contents)
     }
 
-    /**
-     * Adds the given source file to the given KotlinSourceSet in a multiplatform project.
-     */
+    /** Adds the given source file to the given KotlinSourceSet in a multiplatform project. */
     fun addMultiplatformSource(sourceSet: String, name: String, contents: String) {
         require(name.endsWith(".kt")) { "multiplatform source extension needs to be *.kt." }
         val srcDir = multiplatformKotlinSourceDir(sourceSet)
         srcDir.resolve(name).writeText(contents)
     }
 
-    private fun multiplatformKotlinSourceDir(sourceSet: String) = moduleRoot.resolve("src/$sourceSet/kotlin").also {
-        it.mkdirs()
-    }
+    private fun multiplatformKotlinSourceDir(sourceSet: String) =
+        moduleRoot.resolve("src/$sourceSet/kotlin").also {
+            it.mkdirs()
+        }
 
     private val kotlinSourceDir
-        get() = moduleRoot.resolve("src/main/kotlin").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/main/kotlin").also {
+                it.mkdirs()
+            }
 
     private val javaSourceDir
-        get() = moduleRoot.resolve("src/main/java").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/main/java").also {
+                it.mkdirs()
+            }
 
     private val kotlinTestSourceDir
-        get() = moduleRoot.resolve("src/test/kotlin").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/test/kotlin").also {
+                it.mkdirs()
+            }
 
     private val javaTestSourceDir
-        get() = moduleRoot.resolve("src/test/java").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/test/java").also {
+                it.mkdirs()
+            }
 
     private val kotlinAndroidTestSourceDir
-        get() = moduleRoot.resolve("src/androidTest/kotlin").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/androidTest/kotlin").also {
+                it.mkdirs()
+            }
 
     private val javaAndroidTestSourceDir
-        get() = moduleRoot.resolve("src/androidTest/java").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/androidTest/java").also {
+                it.mkdirs()
+            }
 
     private val servicesDir
-        get() = moduleRoot.resolve("src/main/resources/META-INF/services/").also {
-            it.mkdirs()
-        }
+        get() =
+            moduleRoot.resolve("src/main/resources/META-INF/services/").also {
+                it.mkdirs()
+            }
 
     val kspServicesFile
         get() = servicesDir.resolve("com.google.devtools.ksp.processing.SymbolProcessorProvider")
@@ -131,9 +134,7 @@ class TestModule(
     private val buildFile
         get() = moduleRoot.resolve("build.gradle.kts")
 
-    /**
-     * Writes the build file.
-     */
+    /** Writes the build file. */
     fun writeBuildFile() {
         val contents = buildString {
             appendLine("plugins {")

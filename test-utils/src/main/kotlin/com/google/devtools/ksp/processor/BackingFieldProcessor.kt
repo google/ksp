@@ -30,26 +30,29 @@ open class BackingFieldProcessor : AbstractTestProcessor() {
     lateinit var results: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        results = listOf("lib", "main").flatMap { pkg ->
-            resolver.getDeclarationsFromPackage(pkg)
-                .flatMap { declaration ->
-                    val properties = mutableListOf<KSPropertyDeclaration>()
-                    declaration.accept(AllMembersVisitor(), properties)
-                    properties
-                }.map {
-                    "${it.qualifiedName?.asString()}: ${it.hasBackingField}"
-                }.sorted()
-        }
+        results =
+            listOf("lib", "main").flatMap { pkg ->
+                resolver
+                    .getDeclarationsFromPackage(pkg)
+                    .flatMap { declaration ->
+                        val properties = mutableListOf<KSPropertyDeclaration>()
+                        declaration.accept(AllMembersVisitor(), properties)
+                        properties
+                    }
+                    .map {
+                        "${it.qualifiedName?.asString()}: ${it.hasBackingField}"
+                    }
+                    .sorted()
+            }
         return emptyList()
     }
 
     private class AllMembersVisitor : KSTopDownVisitor<MutableList<KSPropertyDeclaration>, Unit>() {
-        override fun defaultHandler(node: KSNode, data: MutableList<KSPropertyDeclaration>) {
-        }
+        override fun defaultHandler(node: KSNode, data: MutableList<KSPropertyDeclaration>) {}
 
         override fun visitPropertyDeclaration(
             property: KSPropertyDeclaration,
-            data: MutableList<KSPropertyDeclaration>
+            data: MutableList<KSPropertyDeclaration>,
         ) {
             data.add(property)
             super.visitPropertyDeclaration(property, data)

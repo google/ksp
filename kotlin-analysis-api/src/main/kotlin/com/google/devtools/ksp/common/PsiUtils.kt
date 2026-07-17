@@ -26,41 +26,41 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 
-val jvmModifierMap = mapOf(
-    JvmModifier.PUBLIC to Modifier.PUBLIC,
-    JvmModifier.PRIVATE to Modifier.PRIVATE,
-    JvmModifier.ABSTRACT to Modifier.ABSTRACT,
-    JvmModifier.FINAL to Modifier.FINAL,
-    JvmModifier.PROTECTED to Modifier.PROTECTED,
-    JvmModifier.STATIC to Modifier.JAVA_STATIC,
-    JvmModifier.STRICTFP to Modifier.JAVA_STRICT,
-    JvmModifier.NATIVE to Modifier.JAVA_NATIVE,
-    JvmModifier.SYNCHRONIZED to Modifier.JAVA_SYNCHRONIZED,
-    JvmModifier.TRANSIENT to Modifier.JAVA_TRANSIENT,
-    JvmModifier.VOLATILE to Modifier.JAVA_VOLATILE
-)
+val jvmModifierMap =
+    mapOf(
+        JvmModifier.PUBLIC to Modifier.PUBLIC,
+        JvmModifier.PRIVATE to Modifier.PRIVATE,
+        JvmModifier.ABSTRACT to Modifier.ABSTRACT,
+        JvmModifier.FINAL to Modifier.FINAL,
+        JvmModifier.PROTECTED to Modifier.PROTECTED,
+        JvmModifier.STATIC to Modifier.JAVA_STATIC,
+        JvmModifier.STRICTFP to Modifier.JAVA_STRICT,
+        JvmModifier.NATIVE to Modifier.JAVA_NATIVE,
+        JvmModifier.SYNCHRONIZED to Modifier.JAVA_SYNCHRONIZED,
+        JvmModifier.TRANSIENT to Modifier.JAVA_TRANSIENT,
+        JvmModifier.VOLATILE to Modifier.JAVA_VOLATILE,
+    )
 
-val javaModifiers = setOf(
-    Modifier.ABSTRACT,
-    Modifier.FINAL,
-    Modifier.JAVA_DEFAULT,
-    Modifier.JAVA_NATIVE,
-    Modifier.JAVA_STATIC,
-    Modifier.JAVA_STRICT,
-    Modifier.JAVA_SYNCHRONIZED,
-    Modifier.JAVA_TRANSIENT,
-    Modifier.JAVA_VOLATILE,
-    Modifier.PRIVATE,
-    Modifier.PROTECTED,
-    Modifier.PUBLIC,
-)
+val javaModifiers =
+    setOf(
+        Modifier.ABSTRACT,
+        Modifier.FINAL,
+        Modifier.JAVA_DEFAULT,
+        Modifier.JAVA_NATIVE,
+        Modifier.JAVA_STATIC,
+        Modifier.JAVA_STRICT,
+        Modifier.JAVA_SYNCHRONIZED,
+        Modifier.JAVA_TRANSIENT,
+        Modifier.JAVA_VOLATILE,
+        Modifier.PRIVATE,
+        Modifier.PROTECTED,
+        Modifier.PUBLIC,
+    )
 
 fun PsiModifierListOwner.toKSModifiers(): Set<Modifier> {
     val modifiers = mutableSetOf<Modifier>()
     modifiers.addAll(
-        jvmModifierMap.entries.filter { this.hasModifier(it.key) }
-            .map { it.value }
-            .toSet()
+        jvmModifierMap.entries.filter { this.hasModifier(it.key) }.map { it.value }.toSet()
     )
     if (this.modifierList?.hasExplicitModifier("default") == true) {
         modifiers.add(Modifier.JAVA_DEFAULT)
@@ -78,8 +78,7 @@ fun Project.findLocationString(file: PsiFile, offset: Int): String {
 
 private fun parseDocString(raw: String): String? {
     val t1 = raw.trim()
-    if (!t1.startsWith("/**") || !t1.endsWith("*/"))
-        return null
+    if (!t1.startsWith("/**") || !t1.endsWith("*/")) return null
     val lineSep = t1.findAnyOf(listOf("\r\n", "\n", "\r"))?.second ?: ""
     return t1.trim('/').trim('*').lines().joinToString(lineSep) {
         it.trimStart().trimStart('*')
@@ -96,17 +95,15 @@ inline fun <reified T> PsiElement.findParentOfType(): T? {
 
 fun <T> Sequence<T>.memoized() = MemoizedSequence(this)
 
-inline fun <T> lazyMemoizedSequence(crossinline initializer: () -> Sequence<T>): Lazy<Sequence<T>> = lazy {
-    val value = initializer()
-    if (value is MemoizedSequence<T>)
-        value
-    else
-        value.memoized()
-}
+inline fun <T> lazyMemoizedSequence(crossinline initializer: () -> Sequence<T>): Lazy<Sequence<T>> =
+    lazy {
+        val value = initializer()
+        if (value is MemoizedSequence<T>) value else value.memoized()
+    }
 
 /**
- * Returns `true` if this [PsiMethod] represents one of the public instance methods
- * from `java.lang.Object` (i.e., `equals`, `hashCode`, or `toString`).
+ * Returns `true` if this [PsiMethod] represents one of the public instance methods from
+ * `java.lang.Object` (i.e., `equals`, `hashCode`, or `toString`).
  */
 fun PsiMethod.isObjectOverride(): Boolean {
     if (parameterList.parametersCount == 0) {

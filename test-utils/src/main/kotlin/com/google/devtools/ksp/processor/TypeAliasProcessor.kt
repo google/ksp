@@ -28,23 +28,29 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val byFinalSignature = mutableMapOf<String, MutableList<KSType>>()
-        resolver.getNewFiles().flatMap { file ->
-            file.declarations.filterIsInstance<KSPropertyDeclaration>().map { prop ->
-                buildString {
-                    append(prop.simpleName.asString())
-                    append(" : ")
-                    val propType = prop.type.resolve()
-                    val signatures = propType.typeAliasSignatures()
-                    append(signatures.joinToString(" = "))
-                    byFinalSignature.getOrPut(signatures.last()) {
-                        mutableListOf()
-                    }.add(propType)
-                    append(" = (expanded) ${resolver.expandType(propType).toSignature()}")
+        resolver
+            .getNewFiles()
+            .flatMap { file ->
+                file.declarations.filterIsInstance<KSPropertyDeclaration>().map { prop ->
+                    buildString {
+                        append(prop.simpleName.asString())
+                        append(" : ")
+                        val propType = prop.type.resolve()
+                        val signatures = propType.typeAliasSignatures()
+                        append(signatures.joinToString(" = "))
+                        byFinalSignature
+                            .getOrPut(signatures.last()) {
+                                mutableListOf()
+                            }
+                            .add(propType)
+                        append(" = (expanded) ${resolver.expandType(propType).toSignature()}")
+                    }
                 }
             }
-        }.forEach(results::add)
+            .forEach(results::add)
         byFinalSignature.forEach { (signature, sameTypeAliases) ->
-            // exclude List<T> case from the test because they lose a type argument when resolving aliases, so they
+            // exclude List<T> case from the test because they lose a type argument when resolving
+            // aliases, so they
             // are not the same anymore as we traverse the declarations.
             if (signature != "List<T>") {
                 for (i in sameTypeAliases) {
@@ -112,31 +118,41 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
     private fun KSType.toSignature(): String = buildString {
         annotations.toList().let {
             if (it.isNotEmpty()) {
-                append(annotations.joinToString(separator = " ", postfix = " ") { "@${it.shortName.asString()}" })
+                append(
+                    annotations.joinToString(separator = " ", postfix = " ") {
+                        "@${it.shortName.asString()}"
+                    }
+                )
             }
         }
         append(declaration.simpleName.asString())
         if (arguments.isNotEmpty()) {
             append("<")
-            arguments.mapIndexed { i, arg ->
-                val s = arg.type?.resolve()?.toSignature() ?: "<error>"
-                if (i < arguments.size - 1)
-                    s + ", "
-                else
-                    s
-            }.forEach(this::append)
+            arguments
+                .mapIndexed { i, arg ->
+                    val s = arg.type?.resolve()?.toSignature() ?: "<error>"
+                    if (i < arguments.size - 1) s + ", " else s
+                }
+                .forEach(this::append)
             append(">")
         }
     }
 
-    private fun Resolver.expandType(type: KSType, substitutions: MutableMap<KSTypeParameter, KSType>): KSType {
+    private fun Resolver.expandType(
+        type: KSType,
+        substitutions: MutableMap<KSTypeParameter, KSType>,
+    ): KSType {
         val decl = type.declaration
         return when (decl) {
             is KSClassDeclaration -> {
-                val arguments = type.arguments.map {
-                    val argType = it.type?.resolve() ?: return@map it
-                    getTypeArgument(createKSTypeReferenceFromKSType(expandType(argType, substitutions)), it.variance)
-                }
+                val arguments =
+                    type.arguments.map {
+                        val argType = it.type?.resolve() ?: return@map it
+                        getTypeArgument(
+                            createKSTypeReferenceFromKSType(expandType(argType, substitutions)),
+                            it.variance,
+                        )
+                    }
                 decl.asType(arguments)
             }
 
@@ -144,8 +160,7 @@ open class TypeAliasProcessor : AbstractTestProcessor() {
                 val substituted = substitutions.get(decl) ?: return type
                 val fullySubstituted = expandType(substituted, substitutions)
                 // update/cache with refined substitution
-                if (substituted != fullySubstituted)
-                    substitutions[decl] = fullySubstituted
+                if (substituted != fullySubstituted) substitutions[decl] = fullySubstituted
                 fullySubstituted
             }
 

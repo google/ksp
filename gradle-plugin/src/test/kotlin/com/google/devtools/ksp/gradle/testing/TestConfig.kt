@@ -20,28 +20,22 @@ import java.io.File
 import java.util.*
 
 /**
- * Test configuration passed down from the main KSP build.
- * See the `prepareTestConfiguration` task in the build.gradle.kts file in the `gradle-plugin`.
+ * Test configuration passed down from the main KSP build. See the `prepareTestConfiguration` task
+ * in the build.gradle.kts file in the `gradle-plugin`.
  */
 data class TestConfig(
-    /**
-     * The root directory of the main KSP project
-     */
+    /** The root directory of the main KSP project */
     val kspProjectDir: File,
     /**
-     * The classpath that can be used to load processors.
-     * The testing infra allows loading processors from the test classpath of the gradle-plugin.
-     * This classpath is the output of the test compilation in the main KSP project.
+     * The classpath that can be used to load processors. The testing infra allows loading
+     * processors from the test classpath of the gradle-plugin. This classpath is the output of the
+     * test compilation in the main KSP project.
      */
     val processorClasspath: String,
-    /**
-     * The local maven repository that can be used while running tests
-     */
+    /** The local maven repository that can be used while running tests */
     val mavenRepoDir: File,
-    /**
-     * The version of KSP.
-     */
-    val kspVersion: String
+    /** The version of KSP. */
+    val kspVersion: String,
 ) {
     private val kspProjectProperties by lazy {
         Properties().also { props ->
@@ -61,9 +55,7 @@ data class TestConfig(
     val mavenRepoPath = mavenRepoDir.path.replace(File.separatorChar, '/')
 
     companion object {
-        /**
-         * Loads the test configuration from resources.
-         */
+        /** Loads the test configuration from resources. */
         fun read(): TestConfig {
             val props = Properties()
             TestConfig::class.java.classLoader.getResourceAsStream("testprops.properties").use {
@@ -73,7 +65,7 @@ data class TestConfig(
                 kspProjectDir = File(props.get("kspProjectRootDir") as String),
                 processorClasspath = props.get("processorClasspath") as String,
                 mavenRepoDir = File(props.get("mavenRepoDir") as String),
-                kspVersion = props.get("kspVersion") as String
+                kspVersion = props.get("kspVersion") as String,
             )
         }
     }

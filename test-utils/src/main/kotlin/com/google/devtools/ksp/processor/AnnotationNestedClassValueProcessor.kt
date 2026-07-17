@@ -32,14 +32,17 @@ class AnnotationNestedClassValueProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation(
-            "com.google.devtools.ksp.processor.NestedClassValueAnnotation"
-        )
-        symbols.flatMap {
-            it.getAnnotationsByType(NestedClassValueAnnotation::class)
-        }.forEach {
-            logAnnotationValues(it)
-        }
+        val symbols =
+            resolver.getSymbolsWithAnnotation(
+                "com.google.devtools.ksp.processor.NestedClassValueAnnotation"
+            )
+        symbols
+            .flatMap {
+                it.getAnnotationsByType(NestedClassValueAnnotation::class)
+            }
+            .forEach {
+                logAnnotationValues(it)
+            }
         return emptyList()
     }
 
@@ -51,5 +54,5 @@ class AnnotationNestedClassValueProcessor : AbstractTestProcessor() {
 
 annotation class NestedClassValueAnnotation(
     val classValue: KClass<*>,
-    val classValues: Array<KClass<*>>
+    val classValues: Array<KClass<*>>,
 )

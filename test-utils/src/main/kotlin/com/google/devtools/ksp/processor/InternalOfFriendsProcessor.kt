@@ -24,12 +24,17 @@ open class InternalOfFriendsProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getNewFiles().single().declarations.filterIsInstance<KSFunctionDeclaration>().forEach { f ->
-            val fn = f.simpleName.asString()
-            val r = f.returnType.toString()
-            val rt = f.returnType!!.resolve().toString()
-            results.add("$fn: $r: $rt")
-        }
+        resolver
+            .getNewFiles()
+            .single()
+            .declarations
+            .filterIsInstance<KSFunctionDeclaration>()
+            .forEach { f ->
+                val fn = f.simpleName.asString()
+                val r = f.returnType.toString()
+                val rt = f.returnType!!.resolve().toString()
+                results.add("$fn: $r: $rt")
+            }
         return emptyList()
     }
 

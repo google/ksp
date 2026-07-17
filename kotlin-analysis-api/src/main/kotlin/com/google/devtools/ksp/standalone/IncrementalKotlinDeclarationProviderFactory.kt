@@ -20,24 +20,28 @@ class IncrementalKotlinDeclarationProviderFactory(
     private val project: Project,
     private val environment: CoreApplicationEnvironment,
 ) : KotlinDeclarationProviderFactory {
-    private val staticFactories: MutableList<KotlinStandaloneDeclarationProviderFactory> = mutableListOf()
+    private val staticFactories: MutableList<KotlinStandaloneDeclarationProviderFactory> =
+        mutableListOf()
 
     override fun createDeclarationProvider(
         scope: GlobalSearchScope,
-        contextualModule: KaModule?
+        contextualModule: KaModule?,
     ): KotlinDeclarationProvider {
-        val providers = staticFactories.map { it.createDeclarationProvider(scope, contextualModule) }
+        val providers = staticFactories.map {
+            it.createDeclarationProvider(scope, contextualModule)
+        }
         return KotlinCompositeDeclarationProvider.create(providers)
     }
 
     fun update(files: Collection<KtFile>) {
         val skipBuiltIns = staticFactories.isNotEmpty()
-        val staticFactory = KotlinStandaloneDeclarationProviderFactory(
-            project,
-            environment,
-            files,
-            skipBuiltins = skipBuiltIns
-        )
+        val staticFactory =
+            KotlinStandaloneDeclarationProviderFactory(
+                project,
+                environment,
+                files,
+                skipBuiltins = skipBuiltIns,
+            )
         staticFactories.add(staticFactory)
     }
 

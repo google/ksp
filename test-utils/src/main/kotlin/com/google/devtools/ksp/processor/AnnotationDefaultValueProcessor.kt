@@ -32,7 +32,8 @@ class AnnotationDefaultValueProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val ktClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("A"))!!
         logAnnotations(ktClass)
-        val javaClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaAnnotated"))!!
+        val javaClass =
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaAnnotated"))!!
         logAnnotations(javaClass)
         return emptyList()
     }

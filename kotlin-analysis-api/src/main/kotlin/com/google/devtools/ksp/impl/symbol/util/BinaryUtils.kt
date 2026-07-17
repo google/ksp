@@ -30,6 +30,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.intellij.openapi.vfs.VirtualFile
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.IdentityHashMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
@@ -40,71 +43,68 @@ import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.util.IdentityHashMap
 
 data class BinaryClassInfo(
     val fieldAccFlags: Map<String, Int>,
-    val methodAccFlags: Map<String, Int>
+    val methodAccFlags: Map<String, Int>,
 )
 
 /**
- * Lookup cache for field names for deserialized classes.
- * To check if a field has backing field, we need to look for binary field names, hence they are cached here.
+ * Lookup cache for field names for deserialized classes. To check if a field has backing field, we
+ * need to look for binary field names, hence they are cached here.
  */
 object BinaryClassInfoCache : KSObjectCache<ClassId, BinaryClassInfo?>() {
-    fun getCached(classId: ClassId, fileManager: KotlinCliJavaFileManagerImpl) = cache.getOrPut(classId) {
-        val fieldAccFlags = mutableMapOf<String, Int>()
-        val methodAccFlags = mutableMapOf<String, Int>()
-        val virtualFileContent = classId.getFileContent(fileManager) ?: return@getOrPut null
-        ClassReader(virtualFileContent).accept(
-            object : ClassVisitor(Opcodes.API_VERSION) {
-                override fun visitField(
-                    access: Int,
-                    name: String?,
-                    descriptor: String?,
-                    signature: String?,
-                    value: Any?
-                ): FieldVisitor? {
-                    if (name != null) {
-                        fieldAccFlags[name] = access
-                    }
-                    return null
-                }
+    fun getCached(classId: ClassId, fileManager: KotlinCliJavaFileManagerImpl) =
+        cache.getOrPut(classId) {
+            val fieldAccFlags = mutableMapOf<String, Int>()
+            val methodAccFlags = mutableMapOf<String, Int>()
+            val virtualFileContent = classId.getFileContent(fileManager) ?: return@getOrPut null
+            ClassReader(virtualFileContent)
+                .accept(
+                    object : ClassVisitor(Opcodes.API_VERSION) {
+                        override fun visitField(
+                            access: Int,
+                            name: String?,
+                            descriptor: String?,
+                            signature: String?,
+                            value: Any?,
+                        ): FieldVisitor? {
+                            if (name != null) {
+                                fieldAccFlags[name] = access
+                            }
+                            return null
+                        }
 
-                override fun visitMethod(
-                    access: Int,
-                    name: String?,
-                    descriptor: String?,
-                    signature: String?,
-                    exceptions: Array<out String>?
-                ): MethodVisitor? {
-                    if (name != null) {
-                        methodAccFlags[name + descriptor] = access
-                    }
-                    return null
-                }
-            },
-            ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-        )
-        BinaryClassInfo(fieldAccFlags, methodAccFlags)
-    }
+                        override fun visitMethod(
+                            access: Int,
+                            name: String?,
+                            descriptor: String?,
+                            signature: String?,
+                            exceptions: Array<out String>?,
+                        ): MethodVisitor? {
+                            if (name != null) {
+                                methodAccFlags[name + descriptor] = access
+                            }
+                            return null
+                        }
+                    },
+                    ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES,
+                )
+            BinaryClassInfo(fieldAccFlags, methodAccFlags)
+        }
 }
 
-fun KSAnnotated.hasAnnotation(fqn: String): Boolean =
-    annotations.any {
-        fqn.endsWith(it.shortName.asString()) &&
-            it.annotationType.resolve().declaration.qualifiedName?.asString() == fqn
-    }
+fun KSAnnotated.hasAnnotation(fqn: String): Boolean = annotations.any {
+    fqn.endsWith(it.shortName.asString()) &&
+        it.annotationType.resolve().declaration.qualifiedName?.asString() == fqn
+}
 
 // Validate classfile formate. May throw.
 private fun validateClassfileFormat(content: ByteArray) {
     if (content.size < 4) {
         throw IllegalArgumentException("Invalid bytecode format")
     }
-    val magic = ByteBuffer.wrap(content, 0, 4)
-        .order(ByteOrder.BIG_ENDIAN).int
+    val magic = ByteBuffer.wrap(content, 0, 4).order(ByteOrder.BIG_ENDIAN).int
     if (magic != 0xCAFEBABE.toInt()) {
         throw IllegalArgumentException("Invalid bytecode format: $magic")
     }
@@ -113,40 +113,40 @@ private fun validateClassfileFormat(content: ByteArray) {
 fun Resolver.extractThrowsFromClassFile(
     virtualFileContent: ByteArray,
     jvmDesc: String?,
-    simpleName: String?
+    simpleName: String?,
 ): Sequence<KSType> {
     validateClassfileFormat(virtualFileContent)
 
     val exceptionNames = mutableListOf<String>()
-    ClassReader(virtualFileContent).accept(
-        object : ClassVisitor(Opcodes.API_VERSION) {
-            override fun visitMethod(
-                access: Int,
-                name: String?,
-                descriptor: String?,
-                signature: String?,
-                exceptions: Array<out String>?,
-            ): MethodVisitor {
-                if (name == simpleName && jvmDesc == descriptor) {
-                    exceptions?.toList()?.let { exceptionNames.addAll(it) }
+    ClassReader(virtualFileContent)
+        .accept(
+            object : ClassVisitor(Opcodes.API_VERSION) {
+                override fun visitMethod(
+                    access: Int,
+                    name: String?,
+                    descriptor: String?,
+                    signature: String?,
+                    exceptions: Array<out String>?,
+                ): MethodVisitor {
+                    if (name == simpleName && jvmDesc == descriptor) {
+                        exceptions?.toList()?.let { exceptionNames.addAll(it) }
+                    }
+                    return object : MethodVisitor(Opcodes.API_VERSION) {}
                 }
-                return object : MethodVisitor(Opcodes.API_VERSION) {
-                }
-            }
-        },
-        ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES
-    )
-    return exceptionNames.mapNotNull {
-        this.getClassDeclarationByName(
-            it.replace("/", ".").replace("$", ".")
-        )?.asStarProjectedType()
-    }.asSequence()
+            },
+            ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES,
+        )
+    return exceptionNames
+        .mapNotNull {
+            this.getClassDeclarationByName(it.replace("/", ".").replace("$", "."))
+                ?.asStarProjectedType()
+        }
+        .asSequence()
 }
 
 @KspExperimental
-internal class DeclarationOrdering(
-    binaryClass: KotlinJvmBinaryClass
-) : KotlinJvmBinaryClass.MemberVisitor {
+internal class DeclarationOrdering(binaryClass: KotlinJvmBinaryClass) :
+    KotlinJvmBinaryClass.MemberVisitor {
     // Map of fieldName -> Order
     private val fieldOrdering = mutableMapOf<String, Int>()
     // Map of method name to (jvm desc -> Order) map
@@ -165,9 +165,10 @@ internal class DeclarationOrdering(
         orderProvider.seal()
     }
 
-    val comparator = Comparator<AbstractKSDeclarationImpl> { first, second ->
-        getOrder(first).compareTo(getOrder(second))
-    }
+    val comparator =
+        Comparator<AbstractKSDeclarationImpl> { first, second ->
+            getOrder(first).compareTo(getOrder(second))
+        }
 
     private fun getOrder(decl: AbstractKSDeclarationImpl): Int {
         return declOrdering.getOrPut(decl) {
@@ -194,9 +195,7 @@ internal class DeclarationOrdering(
                     orderProvider.next(decl)
                 }
                 is KSFunctionDeclarationImpl -> {
-                    findMethodOrder(
-                        ResolverAAImpl.instance.getJvmName(decl)
-                    ) {
+                    findMethodOrder(ResolverAAImpl.instance.getJvmName(decl)) {
                         ResolverAAImpl.instance.mapToJvmSignature(decl).toString()
                     }
                 }
@@ -207,7 +206,7 @@ internal class DeclarationOrdering(
 
     private inline fun findMethodOrder(
         jvmName: String,
-        crossinline getJvmDesc: () -> String
+        crossinline getJvmDesc: () -> String,
     ): Int {
         val methods = methodOrdering[jvmName]
         // if there is 1 method w/ that name, just return.
@@ -234,7 +233,7 @@ internal class DeclarationOrdering(
     override fun visitField(
         name: Name,
         desc: String,
-        initializer: Any?
+        initializer: Any?,
     ): KotlinJvmBinaryClass.AnnotationVisitor? {
         fieldOrdering.getOrPut(name.asString()) {
             orderProvider.next(name)
@@ -244,17 +243,18 @@ internal class DeclarationOrdering(
 
     override fun visitMethod(
         name: Name,
-        desc: String
+        desc: String,
     ): KotlinJvmBinaryClass.MethodAnnotationVisitor? {
-        methodOrdering.getOrPut(name.asString()) {
-            mutableMapOf()
-        }[desc] = orderProvider.next(name)
+        methodOrdering
+            .getOrPut(name.asString()) {
+                mutableMapOf()
+            }[desc] = orderProvider.next(name)
         return null
     }
 
     /**
-     * Helper class to generate order values for items.
-     * Each time we see a new declaration, we give it an increasing order.
+     * Helper class to generate order values for items. Each time we see a new declaration, we give
+     * it an increasing order.
      *
      * This provider can also run in STRICT MODE to ensure that if we don't find an expected value
      * during sorting, we can crash instead of picking the next ID. For now, it is only used for
@@ -280,7 +280,7 @@ internal class DeclarationOrdering(
             check(!sealed || !STRICT_MODE) {
                 "couldn't find item $ref"
             }
-            return nextId ++
+            return nextId++
         }
 
         /**
@@ -288,9 +288,10 @@ internal class DeclarationOrdering(
          * for declarations where we don't care about the order (e.g. inner class declarations).
          */
         fun nextIgnoreSealed(): Int {
-            return nextId ++
+            return nextId++
         }
     }
+
     companion object {
         /**
          * Used in tests to prevent fallback behavior of creating a new ID when we cannot find the

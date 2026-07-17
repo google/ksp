@@ -8,7 +8,7 @@ class KSValueArgumentLiteImpl(
     override val value: Any?,
     override val parent: KSNode,
     override val origin: Origin,
-    override val location: Location
+    override val location: Location,
 ) : AbstractKSValueArgumentImpl() {
     override val isSpread: Boolean = false
 

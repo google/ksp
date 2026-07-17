@@ -21,9 +21,8 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
 abstract class TestSymbolProcessorProvider(
-    private val builder: (
-        environment: SymbolProcessorEnvironment
-    ) -> SymbolProcessor
+    private val builder: (environment: SymbolProcessorEnvironment) -> SymbolProcessor
 ) : SymbolProcessorProvider {
-    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor = builder(environment)
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
+        builder(environment)
 }

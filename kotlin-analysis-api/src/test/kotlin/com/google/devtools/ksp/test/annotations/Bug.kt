@@ -20,11 +20,12 @@ package com.google.devtools.ksp.test.annotations
 /**
  * Indicates that a test case was introduced to reproduce or verify a fix for a specific bug.
  *
- * This annotation helps track the origin of tests back to their corresponding issue reports
- * (e.g., GitHub issues, YouTrack tickets).
+ * This annotation helps track the origin of tests back to their corresponding issue reports (e.g.,
+ * GitHub issues, YouTrack tickets).
  *
  * @property id The unique identifier of the issue (e.g., a GitHub issue link or `KT-` identifier).
- * @property state The current resolution status of the bug (e.g., whether it is still open or fixed).
+ * @property state The current resolution status of the bug (e.g., whether it is still open or
+ *   fixed).
  * @property description An optional brief explanation of the bug or why the test was added.
  */
 @Retention(AnnotationRetention.BINARY)

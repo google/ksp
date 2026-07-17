@@ -12,7 +12,10 @@ import com.google.devtools.ksp.validate
 class ValidateProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
-    private fun validate(symbol: KSDeclaration, predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }) {
+    private fun validate(
+        symbol: KSDeclaration,
+        predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    ) {
         if (symbol.validate(predicate)) {
             results.add("${symbol.simpleName.asString()} valid")
         } else {

@@ -25,6 +25,7 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
 class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return results
     }
@@ -32,21 +33,25 @@ class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
-        val classCollector = object : BaseVisitor() {
-            override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-                if (classes.add(classDeclaration)) {
-                    super.visitClassDeclaration(classDeclaration, data)
+        val classCollector =
+            object : BaseVisitor() {
+                override fun visitClassDeclaration(
+                    classDeclaration: KSClassDeclaration,
+                    data: Unit,
+                ) {
+                    if (classes.add(classDeclaration)) {
+                        super.visitClassDeclaration(classDeclaration, data)
+                    }
+                }
+
+                override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+                    results.add(
+                        property.type.resolve().declaration.let {
+                            it.qualifiedName!!.asString() + "(${it.origin})"
+                        }
+                    )
                 }
             }
-
-            override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
-                results.add(
-                    property.type.resolve().declaration.let {
-                        it.qualifiedName!!.asString() + "(${it.origin})"
-                    }
-                )
-            }
-        }
         target?.accept(classCollector, Unit)
         return emptyList()
     }

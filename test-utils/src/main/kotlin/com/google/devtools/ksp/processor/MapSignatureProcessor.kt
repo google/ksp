@@ -35,7 +35,8 @@ class MapSignatureProcessor : AbstractTestProcessor() {
         listOf("Cls", "JavaIntefaceWithVoid", "JavaClass", "JavaAnno", "JavaEnum")
             .map { className ->
                 resolver.getClassDeclarationByName(className)!!
-            }.forEach { subject ->
+            }
+            .forEach { subject ->
                 result.add(resolver.mapToJvmSignature(subject)!!)
                 subject.declarations.forEach {
                     var returnTypeSignature: String? = null

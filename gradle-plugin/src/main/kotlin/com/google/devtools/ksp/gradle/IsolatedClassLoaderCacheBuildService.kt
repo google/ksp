@@ -16,11 +16,11 @@
 
 package com.google.devtools.ksp.gradle
 
-import org.gradle.api.services.BuildService
-import org.gradle.api.services.BuildServiceParameters
 import java.net.URLClassLoader
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 
 object IsolatedClassLoaderCache {
     val cache = ConcurrentHashMap<String, URLClassLoader>()
@@ -30,14 +30,16 @@ object IsolatedClassLoaderCache {
             try {
                 classLoader.close()
             } catch (e: Exception) {
-                // Ignore exceptions during cleanup, but we could log them if a logger was available.
+                // Ignore exceptions during cleanup, but we could log them if a logger was
+                // available.
             }
         }
         cache.clear()
     }
 }
 
-abstract class IsolatedClassLoaderCacheBuildService : BuildService<BuildServiceParameters.None>, AutoCloseable {
+abstract class IsolatedClassLoaderCacheBuildService :
+    BuildService<BuildServiceParameters.None>, AutoCloseable {
     companion object {
         val KEY = "IsolatedClassLoaderCacheBuildService_" + UUID.randomUUID().toString()
     }

@@ -33,14 +33,19 @@ open class NullableTypeProcessor : AbstractTestProcessor() {
                 object : KSTopDownVisitor<Unit, Unit>() {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
-                        val modifiers = property.type.modifiers.map { it.toString() }.toList().sorted()
-                        val annotations = property.type.annotations.map { it.toString() }.toList().sorted()
+                    override fun visitPropertyDeclaration(
+                        property: KSPropertyDeclaration,
+                        data: Unit,
+                    ) {
+                        val modifiers =
+                            property.type.modifiers.map { it.toString() }.toList().sorted()
+                        val annotations =
+                            property.type.annotations.map { it.toString() }.toList().sorted()
                         val propertyName = property.simpleName.asString()
                         results.add("$propertyName: $modifiers, $annotations")
                     }
                 },
-                Unit
+                Unit,
             )
         }
 

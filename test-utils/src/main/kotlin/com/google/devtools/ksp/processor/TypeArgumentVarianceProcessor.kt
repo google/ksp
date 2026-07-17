@@ -24,13 +24,15 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class TypeArgumentVarianceProcessor : AbstractTestProcessor() {
     val result = mutableListOf<String>()
+
     override fun toResult(): List<String> {
         return result
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val myClass = resolver.getClassDeclarationByName("MyClass")!!
-        val fieldDeclaration = myClass.getDeclaredProperties().single { it.simpleName.asString() == "field" }
+        val fieldDeclaration =
+            myClass.getDeclaredProperties().single { it.simpleName.asString() == "field" }
         result.add(fieldDeclaration.type.toString())
         result.add(fieldDeclaration.type.element?.typeArguments?.single().toString())
         result.add(fieldDeclaration.type.resolve().toString())

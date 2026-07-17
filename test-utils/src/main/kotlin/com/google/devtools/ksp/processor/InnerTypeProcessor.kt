@@ -44,9 +44,12 @@ open class InnerTypeProcessor : AbstractTestProcessor() {
             }
         }
 
-        val sortedTypes = types.filterNot { it.declaration.simpleName.asString() in ignoredNames }.sortedBy {
-            it.toString()
-        }
+        val sortedTypes =
+            types
+                .filterNot { it.declaration.simpleName.asString() in ignoredNames }
+                .sortedBy {
+                    it.toString()
+                }
 
         fun KSType.breakDown(): List<String> {
             var current: KSType? = this

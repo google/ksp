@@ -30,40 +30,44 @@ open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
     val typeCollector = TypeCollectorNoAccessor()
     val types = mutableSetOf<KSType>()
 
-    val javaClasses = listOf(
-        "java.lang.String",
-        "java.lang.Integer",
-        "java.util.List",
-        "java.util.Map.Entry",
-        "java.lang.Void",
-    )
+    val javaClasses =
+        listOf(
+            "java.lang.String",
+            "java.lang.Integer",
+            "java.util.List",
+            "java.util.Map.Entry",
+            "java.lang.Void",
+        )
 
-    val kotlinClasses = listOf(
-        "kotlin.Throwable",
-        "kotlin.Int",
-        "kotlin.Nothing",
-        "kotlin.IntArray",
-    )
+    val kotlinClasses =
+        listOf(
+            "kotlin.Throwable",
+            "kotlin.Int",
+            "kotlin.Nothing",
+            "kotlin.IntArray",
+        )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         javaClasses.forEach {
-            val k = resolver.mapJavaNameToKotlin(
-                resolver.getKSNameFromString(it)
-            )?.asString()
+            val k = resolver.mapJavaNameToKotlin(resolver.getKSNameFromString(it))?.asString()
             results.add("$it -> $k")
         }
 
         kotlinClasses.forEach {
-            val j = resolver.mapKotlinNameToJava(
-                resolver.getKSNameFromString(it)
-            )?.asString()
+            val j = resolver.mapKotlinNameToJava(resolver.getKSNameFromString(it))?.asString()
             results.add("$it -> $j")
         }
 
-        if (resolver.getClassDeclarationByName("java.lang.String") != resolver.getJavaClassByName("kotlin.String"))
+        if (
+            resolver.getClassDeclarationByName("java.lang.String") !=
+                resolver.getJavaClassByName("kotlin.String")
+        )
             results.add("Error: getJavaClassByName")
 
-        if (resolver.getClassDeclarationByName("kotlin.String") != resolver.getKotlinClassByName("java.lang.String"))
+        if (
+            resolver.getClassDeclarationByName("kotlin.String") !=
+                resolver.getKotlinClassByName("java.lang.String")
+        )
             results.add("Error: getKotlinClassByName")
 
         return emptyList()

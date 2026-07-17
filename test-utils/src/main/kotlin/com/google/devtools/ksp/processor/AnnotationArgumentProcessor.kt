@@ -42,11 +42,15 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
         }
 
         resolver.getClassDeclarationByName("DataClass")?.let { cls ->
-            cls.declarations.filterIsInstance<KSFunctionDeclaration>().single {
-                it.simpleName.asString() == "copy"
-            }.annotations.forEach {
-                it.arguments
-            }
+            cls.declarations
+                .filterIsInstance<KSFunctionDeclaration>()
+                .single {
+                    it.simpleName.asString() == "copy"
+                }
+                .annotations
+                .forEach {
+                    it.arguments
+                }
         }
 
         resolver.getSymbolsWithAnnotation("Bar", true).forEach {
@@ -61,13 +65,16 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
         val C = resolver.getClassDeclarationByName("C")
         C?.annotations?.first()?.arguments?.forEach { results.add(it.value.toString()) }
         val ThrowsClass = resolver.getClassDeclarationByName("ThrowsClass")
-        ThrowsClass?.declarations?.filter {
-            it.simpleName.asString() == "throwsException"
-        }?.forEach {
-            it.annotations.single().annotationType.resolve().declaration.let {
-                results.add(it.toString())
+        ThrowsClass
+            ?.declarations
+            ?.filter {
+                it.simpleName.asString() == "throwsException"
             }
-        }
+            ?.forEach {
+                it.annotations.single().annotationType.resolve().declaration.let {
+                    results.add(it.toString())
+                }
+            }
 
         resolver.getClassDeclarationByName("Sub")?.let { cls ->
             cls.superTypes.single().annotations.single().let { typeAnnotation ->
@@ -93,7 +100,9 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
 
         resolver.getClassDeclarationByName("TestJavaLib")?.let { cls ->
             cls.annotations.single().arguments.single().let { ksValueArg ->
-                results.add("TestJavaLib: " + (ksValueArg.value as KSAnnotation).shortName.asString())
+                results.add(
+                    "TestJavaLib: " + (ksValueArg.value as KSAnnotation).shortName.asString()
+                )
             }
         }
 

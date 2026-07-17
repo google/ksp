@@ -24,13 +24,19 @@ open class EqualsProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val declaration1 = resolver.getSymbolsWithAnnotation("MyAnnotation")
-            .single { (it as? KSClassDeclaration)?.simpleName?.asString() == "MyClass" }
-        val declaration2 = resolver.getClassDeclarationByName(resolver.getKSNameFromString("MyClass"))!!
+        val declaration1 =
+            resolver.getSymbolsWithAnnotation("MyAnnotation").single {
+                (it as? KSClassDeclaration)?.simpleName?.asString() == "MyClass"
+            }
+        val declaration2 =
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString("MyClass"))!!
         results.add("declaration1.equals(declaration2): ${declaration1.equals(declaration2)}")
-        val declaration3 = resolver.getSymbolsWithAnnotation("MyAnnotation")
-            .single { (it as? KSClassDeclaration)?.simpleName?.asString() == "MyJavaClass" }
-        val declaration4 = resolver.getClassDeclarationByName(resolver.getKSNameFromString("MyJavaClass"))!!
+        val declaration3 =
+            resolver.getSymbolsWithAnnotation("MyAnnotation").single {
+                (it as? KSClassDeclaration)?.simpleName?.asString() == "MyJavaClass"
+            }
+        val declaration4 =
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString("MyJavaClass"))!!
         declaration3.equals(declaration4)
         results.add("declaration3.equals(declaration4): ${declaration3.equals(declaration4)}")
         return emptyList()

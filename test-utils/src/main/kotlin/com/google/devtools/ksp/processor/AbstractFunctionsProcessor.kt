@@ -21,8 +21,7 @@ class AbstractFunctionsProcessor : AbstractTestProcessor() {
     private class Visitor : KSTopDownVisitor<Unit, Unit>() {
         val abstractFunctionNames = arrayListOf<String>()
 
-        override fun defaultHandler(node: KSNode, data: Unit) {
-        }
+        override fun defaultHandler(node: KSNode, data: Unit) {}
 
         override fun visitFunctionDeclaration(function: KSFunctionDeclaration, data: Unit) {
             if (function.isAbstract) {

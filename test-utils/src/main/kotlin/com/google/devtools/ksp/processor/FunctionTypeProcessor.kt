@@ -33,7 +33,10 @@ open class FunctionTypeProcessor : AbstractTestProcessor() {
                 object : KSTopDownVisitor<Unit, Unit>() {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+                    override fun visitPropertyDeclaration(
+                        property: KSPropertyDeclaration,
+                        data: Unit,
+                    ) {
                         val type = property.type.resolve()
                         val propertyName = property.simpleName.asString()
                         val typeName = type.declaration.simpleName.asString()
@@ -44,7 +47,7 @@ open class FunctionTypeProcessor : AbstractTestProcessor() {
                         )
                     }
                 },
-                Unit
+                Unit,
             )
         }
 

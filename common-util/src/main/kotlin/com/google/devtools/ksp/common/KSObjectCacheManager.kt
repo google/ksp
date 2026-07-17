@@ -19,15 +19,17 @@ package com.google.devtools.ksp.common
 
 class KSObjectCacheManager {
     companion object {
-        private val caches_prop = object : ThreadLocal<ArrayList<KSObjectCache<*, *>>>() {
-            override fun initialValue(): ArrayList<KSObjectCache<*, *>> {
-                return ArrayList()
+        private val caches_prop =
+            object : ThreadLocal<ArrayList<KSObjectCache<*, *>>>() {
+                override fun initialValue(): ArrayList<KSObjectCache<*, *>> {
+                    return ArrayList()
+                }
             }
-        }
         val caches
             get() = caches_prop.get()
 
         fun register(cache: KSObjectCache<*, *>) = caches.add(cache)
+
         fun clear() {
             caches.forEach { it.clear() }
             caches_prop.remove()

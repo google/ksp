@@ -3,11 +3,11 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.common.AnyChanges
 import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.Dependencies
+import java.io.File
+import java.nio.file.Files
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.io.File
-import java.nio.file.Files
 
 class CodeGeneratorImplTest {
 
@@ -25,16 +25,17 @@ class CodeGeneratorImplTest {
         kotlinDir.mkdir()
         val resourcesDir = File(baseDir, "resources")
         resourcesDir.mkdir()
-        codeGenerator = CodeGeneratorImpl(
-            classesDir,
-            { javaDir },
-            kotlinDir,
-            resourcesDir,
-            baseDir,
-            AnyChanges(baseDir),
-            emptyList(),
-            true
-        )
+        codeGenerator =
+            CodeGeneratorImpl(
+                classesDir,
+                { javaDir },
+                kotlinDir,
+                resourcesDir,
+                baseDir,
+                AnyChanges(baseDir),
+                emptyList(),
+                true,
+            )
     }
 
     @Test
@@ -101,7 +102,11 @@ class CodeGeneratorImplTest {
     fun testCreatingAFileWithPathAndDots() {
         codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "java")
         codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test")
-        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "class")
+        codeGenerator.createNewFileByPath(
+            Dependencies.ALL_FILES,
+            "a/b/c/dir.with.dot/Test",
+            "class",
+        )
         codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "a/b/c/dir.with.dot/Test", "")
 
         val files = codeGenerator.generatedFile.toList()
@@ -123,7 +128,10 @@ class CodeGeneratorImplTest {
             codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, "../../b/c/Test", "java")
             Assert.fail()
         } catch (e: java.lang.IllegalStateException) {
-            Assert.assertEquals(e.message, "requested path is outside the bounds of the required directory")
+            Assert.assertEquals(
+                e.message,
+                "requested path is outside the bounds of the required directory",
+            )
         }
     }
 }

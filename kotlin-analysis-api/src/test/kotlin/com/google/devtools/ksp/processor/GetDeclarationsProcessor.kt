@@ -31,7 +31,9 @@ class GetDeclarationsProcessor(val declarationNames: List<String>) : AbstractTes
             resolver.getClassDeclarationByName(declName)?.declarations?.forEach { decl ->
                 result.add("Declaration simpleName: ${decl.simpleName.asString()}")
                 decl.qualifiedName?.let {
-                    result.add("Declaration qualifiedName: ${it.asString()} (Origin: ${decl.origin})")
+                    result.add(
+                        "Declaration qualifiedName: ${it.asString()} (Origin: ${decl.origin})"
+                    )
                 }
             }
         }

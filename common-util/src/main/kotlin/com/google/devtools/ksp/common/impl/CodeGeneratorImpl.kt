@@ -37,7 +37,7 @@ class CodeGeneratorImpl(
     private val projectBase: File,
     private val anyChangesWildcard: KSFile,
     private val allSources: List<KSFile>,
-    private val isIncremental: Boolean
+    private val isIncremental: Boolean,
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
     private val fileOutputStreamMap = mutableMapOf<String, FileOutputStream>()
@@ -46,7 +46,8 @@ class CodeGeneratorImpl(
 
     val sourceToOutputs: MutableMap<File, MutableSet<File>> = mutableMapOf()
 
-    // This function will also clear `fileOutputStreamMap` which will change the result of `generatedFile`
+    // This function will also clear `fileOutputStreamMap` which will change the result of
+    // `generatedFile`
     fun closeFiles() {
         fileOutputStreamMap.keys.forEach {
             fileOutputStreamMap[it]!!.close()
@@ -55,7 +56,9 @@ class CodeGeneratorImpl(
     }
 
     fun pathOf(packageName: String, fileName: String, extensionName: String): String {
-        val packageDirs = if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator" else ""
+        val packageDirs =
+            if (packageName != "") "${packageName.split(".").joinToString(separator)}$separator"
+            else ""
         val extension = if (extensionName != "") ".$extensionName" else ""
         return "$packageDirs$fileName$extension"
     }
@@ -64,22 +67,35 @@ class CodeGeneratorImpl(
         dependencies: Dependencies,
         packageName: String,
         fileName: String,
-        extensionName: String
+        extensionName: String,
     ): OutputStream {
         return createNewFile(
             dependencies,
             pathOf(packageName, fileName, extensionName),
-            extensionToDirectory(extensionName)
+            extensionToDirectory(extensionName),
         )
     }
 
-    override fun createNewFileByPath(dependencies: Dependencies, path: String, extensionName: String): OutputStream {
+    override fun createNewFileByPath(
+        dependencies: Dependencies,
+        path: String,
+        extensionName: String,
+    ): OutputStream {
         val extension = if (extensionName != "") ".$extensionName" else ""
         return createNewFile(dependencies, path + extension, extensionToDirectory(extensionName))
     }
 
-    override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
-        associate(sources, pathOf(packageName, fileName, extensionName), extensionToDirectory(extensionName))
+    override fun associate(
+        sources: List<KSFile>,
+        packageName: String,
+        fileName: String,
+        extensionName: String,
+    ) {
+        associate(
+            sources,
+            pathOf(packageName, fileName, extensionName),
+            extensionToDirectory(extensionName),
+        )
     }
 
     override fun associateByPath(sources: List<KSFile>, path: String, extensionName: String) {
@@ -91,7 +107,7 @@ class CodeGeneratorImpl(
         classes: List<KSClassDeclaration>,
         packageName: String,
         fileName: String,
-        extensionName: String
+        extensionName: String,
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = classes.map {
@@ -101,15 +117,17 @@ class CodeGeneratorImpl(
     }
 
     // FIXME: associate with the containing FileKt.
-    // The containing FileKt is unfortunately a backend thing and is not available in Kotlin metadata.
-    // Therefore, the only way to get it seems to be traversing bytecode and find the functions of interest.
+    // The containing FileKt is unfortunately a backend thing and is not available in Kotlin
+    // metadata.
+    // Therefore, the only way to get it seems to be traversing bytecode and find the functions of
+    // interest.
     //
     // This implementation associates anyChangesWildcard, which is an overkill.
     override fun associateWithFunctions(
         functions: List<KSFunctionDeclaration>,
         packageName: String,
         fileName: String,
-        extensionName: String
+        extensionName: String,
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = functions.map {
@@ -119,15 +137,17 @@ class CodeGeneratorImpl(
     }
 
     // FIXME: associate with the containing FileKt.
-    // The containing FileKt is unfortunately a backend thing and is not available in Kotlin metadata.
-    // Therefore, the only way to get it seems to be traversing bytecode and find the functions of interest.
+    // The containing FileKt is unfortunately a backend thing and is not available in Kotlin
+    // metadata.
+    // Therefore, the only way to get it seems to be traversing bytecode and find the functions of
+    // interest.
     //
     // This implementation associates anyChangesWildcard, which is an overkill.
     override fun associateWithProperties(
         properties: List<KSPropertyDeclaration>,
         packageName: String,
         fileName: String,
-        extensionName: String
+        extensionName: String,
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = properties.map {
@@ -145,10 +165,16 @@ class CodeGeneratorImpl(
         }
     }
 
-    private fun createNewFile(dependencies: Dependencies, path: String, baseDir: File): OutputStream {
+    private fun createNewFile(
+        dependencies: Dependencies,
+        path: String,
+        baseDir: File,
+    ): OutputStream {
         val file = File(baseDir, path)
         if (!isWithinBaseDir(baseDir, file)) {
-            throw IllegalStateException("requested path is outside the bounds of the required directory")
+            throw IllegalStateException(
+                "requested path is outside the bounds of the required directory"
+            )
         }
         if (path in fileMap) {
             throw FileAlreadyExistsException(file)
@@ -159,15 +185,16 @@ class CodeGeneratorImpl(
         }
         file.writeText("")
         fileMap[path] = file
-        val sources = if (dependencies.isAllSources) {
-            allSources + anyChangesWildcard
-        } else {
-            if (dependencies.aggregating) {
-                dependencies.originatingFiles + anyChangesWildcard
+        val sources =
+            if (dependencies.isAllSources) {
+                allSources + anyChangesWildcard
             } else {
-                dependencies.originatingFiles
+                if (dependencies.aggregating) {
+                    dependencies.originatingFiles + anyChangesWildcard
+                } else {
+                    dependencies.originatingFiles
+                }
             }
-        }
         associate(sources, file)
         fileOutputStreamMap[path] = fileMap[path]!!.outputStream()
         return fileOutputStreamMap[path]!!
@@ -186,18 +213,21 @@ class CodeGeneratorImpl(
     private fun associate(sources: List<KSFile>, path: String, baseDir: File) {
         val file = File(baseDir, path)
         if (!isWithinBaseDir(baseDir, file)) {
-            throw IllegalStateException("requested path is outside the bounds of the required directory")
+            throw IllegalStateException(
+                "requested path is outside the bounds of the required directory"
+            )
         }
         associate(sources, file)
     }
 
     private fun associate(sources: List<KSFile>, outputPath: File) {
-        if (!isIncremental)
-            return
+        if (!isIncremental) return
 
         val output = outputPath.relativeTo(projectBase)
         sources.forEach { source ->
-            sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
+            sourceToOutputs
+                .getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }
+                .add(output)
         }
     }
 

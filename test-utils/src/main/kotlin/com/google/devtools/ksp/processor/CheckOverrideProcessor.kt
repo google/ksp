@@ -30,29 +30,47 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        fun checkOverride(overrider: KSDeclaration, overridee: KSDeclaration, containing: KSClassDeclaration? = null) {
+        fun checkOverride(
+            overrider: KSDeclaration,
+            overridee: KSDeclaration,
+            containing: KSClassDeclaration? = null,
+        ) {
             results.add(
                 "${overrider.qualifiedName?.asString()} overrides ${overridee.qualifiedName?.asString()}: " +
                     "${containing?.let { resolver.overrides(overrider, overridee, containing) }
                         ?: resolver.overrides(overrider, overridee)}"
             )
         }
-        val javaList = resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaList"))
-            as KSClassDeclaration
-        val kotlinList = resolver.getClassDeclarationByName(resolver.getKSNameFromString("KotlinList"))
-            as KSClassDeclaration
-        val getFunKt = resolver.getSymbolsWithAnnotation("GetAnno").single() as KSFunctionDeclaration
+        val javaList =
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString("JavaList"))
+                as KSClassDeclaration
+        val kotlinList =
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString("KotlinList"))
+                as KSClassDeclaration
+        val getFunKt =
+            resolver.getSymbolsWithAnnotation("GetAnno").single() as KSFunctionDeclaration
         val getFunJava = javaList.getAllFunctions().single { it.simpleName.asString() == "get" }
-        val fooFunJava = javaList.getDeclaredFunctions().single { it.simpleName.asString() == "foo" }
-        val fooFunKt = resolver.getSymbolsWithAnnotation("FooAnno").single() as KSFunctionDeclaration
-        val foooFunKt = resolver.getSymbolsWithAnnotation("BarAnno").single() as KSFunctionDeclaration
-        val equalFunKt = kotlinList.getDeclaredFunctions().single { it.simpleName.asString() == "equals" }
-        val equalFunJava = javaList.getAllFunctions().single { it.simpleName.asString() == "equals" }
-        val bazPropKt = resolver.getSymbolsWithAnnotation("BazAnno").single() as KSPropertyDeclaration
-        val baz2PropKt = resolver.getSymbolsWithAnnotation("Baz2Anno").single() as KSPropertyDeclaration
-        val bazzPropKt = resolver.getSymbolsWithAnnotation("BazzAnno")
-            .filterIsInstance<KSPropertyDeclaration>().single()
-        val bazz2PropKt = resolver.getSymbolsWithAnnotation("Bazz2Anno").single() as KSPropertyDeclaration
+        val fooFunJava =
+            javaList.getDeclaredFunctions().single { it.simpleName.asString() == "foo" }
+        val fooFunKt =
+            resolver.getSymbolsWithAnnotation("FooAnno").single() as KSFunctionDeclaration
+        val foooFunKt =
+            resolver.getSymbolsWithAnnotation("BarAnno").single() as KSFunctionDeclaration
+        val equalFunKt =
+            kotlinList.getDeclaredFunctions().single { it.simpleName.asString() == "equals" }
+        val equalFunJava =
+            javaList.getAllFunctions().single { it.simpleName.asString() == "equals" }
+        val bazPropKt =
+            resolver.getSymbolsWithAnnotation("BazAnno").single() as KSPropertyDeclaration
+        val baz2PropKt =
+            resolver.getSymbolsWithAnnotation("Baz2Anno").single() as KSPropertyDeclaration
+        val bazzPropKt =
+            resolver
+                .getSymbolsWithAnnotation("BazzAnno")
+                .filterIsInstance<KSPropertyDeclaration>()
+                .single()
+        val bazz2PropKt =
+            resolver.getSymbolsWithAnnotation("Bazz2Anno").single() as KSPropertyDeclaration
         checkOverride(getFunKt, getFunJava)
         checkOverride(fooFunKt, fooFunJava)
         checkOverride(foooFunKt, fooFunJava)
@@ -66,8 +84,10 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val JavaImpl = resolver.getClassDeclarationByName("JavaImpl")!!
         val MyInterface = resolver.getClassDeclarationByName("MyInterface")!!
         val MyInterface2 = resolver.getClassDeclarationByName("MyInterface2")!!
-        val MyInterface2ImplWithoutType = resolver.getClassDeclarationByName("MyInterface2ImplWithoutType")!!
-        val MyInterface2ImplWithType = resolver.getClassDeclarationByName("MyInterface2ImplWithType")!!
+        val MyInterface2ImplWithoutType =
+            resolver.getClassDeclarationByName("MyInterface2ImplWithoutType")!!
+        val MyInterface2ImplWithType =
+            resolver.getClassDeclarationByName("MyInterface2ImplWithType")!!
         val getX = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getX" }
         val getY = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "getY" }
         val setY = JavaImpl.getDeclaredFunctions().first { it.simpleName.asString() == "setY" }
@@ -75,7 +95,8 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         val myInterfaceX = MyInterface.declarations.first { it.simpleName.asString() == "x" }
         val myInterfaceY = MyInterface.declarations.first { it.simpleName.asString() == "y" }
         val myInterface2receiveList = MyInterface2.declarations.single()
-        val myInterface2ImplWithoutTypereceiveList = MyInterface2ImplWithoutType.declarations.single()
+        val myInterface2ImplWithoutTypereceiveList =
+            MyInterface2ImplWithoutType.declarations.single()
         val myInterface2ImplWithTypereceiveList = MyInterface2ImplWithType.declarations.single()
         checkOverride(getY, getX)
         checkOverride(getY, myInterfaceX)
@@ -94,15 +115,19 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
 
         val JavaDifferentReturnTypes =
             resolver.getClassDeclarationByName("JavaDifferentReturnType")!!
-        val diffGetX = JavaDifferentReturnTypes.getDeclaredFunctions()
-            .first { it.simpleName.asString() == "foo" }
+        val diffGetX =
+            JavaDifferentReturnTypes.getDeclaredFunctions().first {
+                it.simpleName.asString() == "foo"
+            }
         checkOverride(diffGetX, fooFunJava)
         val base = resolver.getClassDeclarationByName("Base")!!
         val baseF1 = base.declarations.filter { it.simpleName.asString() == "f1" }.single()
         val baseProp = base.declarations.filter { it.simpleName.asString() == "prop" }.single()
         val myInterface3 = resolver.getClassDeclarationByName("MyInterface3")!!
-        val myInterfaceF1 = myInterface3.declarations.filter { it.simpleName.asString() == "f1" }.single()
-        val myInterfaceProp = myInterface3.declarations.filter { it.simpleName.asString() == "prop" }.single()
+        val myInterfaceF1 =
+            myInterface3.declarations.filter { it.simpleName.asString() == "f1" }.single()
+        val myInterfaceProp =
+            myInterface3.declarations.filter { it.simpleName.asString() == "prop" }.single()
         val baseOverride = resolver.getClassDeclarationByName("BaseOverride")!!
         checkOverride(baseF1, myInterfaceF1, baseOverride)
         checkOverride(baseProp, myInterfaceProp, baseOverride)
@@ -112,11 +137,13 @@ class CheckOverrideProcessor : AbstractTestProcessor() {
         checkOverride(jbaseProp, myInterfaceProp, jBaseOverride)
 
         val packagePrivateBase = resolver.getClassDeclarationByName("pkg2.WithPackagePrivateBase")!!
-        val packagePrivateBaseFun = packagePrivateBase.declarations
-            .single { it.simpleName.asString() == "packagePrivateFun" }
+        val packagePrivateBaseFun =
+            packagePrivateBase.declarations.single {
+                it.simpleName.asString() == "packagePrivateFun"
+            }
         val packagePrivate = resolver.getClassDeclarationByName("pkg1.WithPackagePrivate")!!
-        val packagePrivateFun = packagePrivate.declarations
-            .single { it.simpleName.asString() == "packagePrivateFun" }
+        val packagePrivateFun =
+            packagePrivate.declarations.single { it.simpleName.asString() == "packagePrivateFun" }
         checkOverride(packagePrivateFun, packagePrivateBaseFun)
         return emptyList()
     }

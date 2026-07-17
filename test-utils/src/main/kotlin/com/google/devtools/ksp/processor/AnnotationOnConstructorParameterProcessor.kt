@@ -26,18 +26,24 @@ class AnnotationOnConstructorParameterProcessor : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getAllFiles().first().declarations.single { it.qualifiedName!!.asString() == "Sample" }.let { clz ->
-            clz as KSClassDeclaration
-            val prop1 = clz.getAllProperties().single { it.simpleName.asString() == "fullName" }
-            val prop2 = clz.getDeclaredProperties().single { it.simpleName.asString() == "fullName" }
-            prop1.annotations.forEach { anno ->
-                results.add(anno.shortName.asString())
+        resolver
+            .getAllFiles()
+            .first()
+            .declarations
+            .single { it.qualifiedName!!.asString() == "Sample" }
+            .let { clz ->
+                clz as KSClassDeclaration
+                val prop1 = clz.getAllProperties().single { it.simpleName.asString() == "fullName" }
+                val prop2 =
+                    clz.getDeclaredProperties().single { it.simpleName.asString() == "fullName" }
+                prop1.annotations.forEach { anno ->
+                    results.add(anno.shortName.asString())
+                }
+                results.add((prop1 === prop2).toString())
+                val fun1 = clz.getAllFunctions().single { it.simpleName.asString() == "foo" }
+                val fun2 = clz.getDeclaredFunctions().single { it.simpleName.asString() == "foo" }
+                results.add((fun1 === fun2).toString())
             }
-            results.add((prop1 === prop2).toString())
-            val fun1 = clz.getAllFunctions().single { it.simpleName.asString() == "foo" }
-            val fun2 = clz.getDeclaredFunctions().single { it.simpleName.asString() == "foo" }
-            results.add((fun1 === fun2).toString())
-        }
         return emptyList()
     }
 

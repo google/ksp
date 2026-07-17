@@ -20,9 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
 
-class KSErrorTypeClassDeclaration(
-    private val type: KSType,
-) : KSClassDeclaration {
+class KSErrorTypeClassDeclaration(private val type: KSType) : KSClassDeclaration {
     override val annotations: Sequence<KSAnnotation>
         get() = emptySequence()
 

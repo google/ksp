@@ -21,6 +21,7 @@ import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
+import java.util.*
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.signatures.KaFunctionSignature
 import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
@@ -29,9 +30,10 @@ import org.jetbrains.kotlin.analysis.api.types.KaSubstitutor
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
-import java.util.*
 
-class KSFunctionImpl @OptIn(KaExperimentalApi::class) constructor(
+class KSFunctionImpl
+@OptIn(KaExperimentalApi::class)
+constructor(
     val functionSignature: KaFunctionSignature<KaFunctionSymbol>,
     private val substitutor: KaSubstitutor,
 ) : KSFunction {
@@ -41,34 +43,37 @@ class KSFunctionImpl @OptIn(KaExperimentalApi::class) constructor(
     }
 
     override val parameterTypes: List<KSType?> by lazy {
-        functionSignature.valueParameters.map { it.returnType.abbreviationOrSelf.let { KSTypeImpl.getCached(it) } }
+        functionSignature.valueParameters.map {
+            it.returnType.abbreviationOrSelf.let { KSTypeImpl.getCached(it) }
+        }
     }
 
     @OptIn(KaExperimentalApi::class)
     override val typeParameters: List<KSTypeParameter> by lazy {
         functionSignature.symbol.typeParameters.map { typeParam ->
-            val bounds = typeParam.upperBounds.ifNotEmpty {
-                map { bound ->
-                    // Substitude to a fixed point.
-                    var prev = bound
-                    var curr = substitutor.substitute(bound)
-                    val seen = mutableSetOf<Pair<KaType, KaType>>()
-                    while (prev != curr) {
-                        val pair = Pair(prev, curr)
-                        if (pair in seen) {
-                            throw InternalKSPException(
-                                "Recurrent substitution of bounds of $typeParam: $bound by $substitutor",
-                                typeParam.psi.toLocation(),
-                                typeParam.javaClass
-                            )
+            val bounds =
+                typeParam.upperBounds.ifNotEmpty {
+                    map { bound ->
+                        // Substitude to a fixed point.
+                        var prev = bound
+                        var curr = substitutor.substitute(bound)
+                        val seen = mutableSetOf<Pair<KaType, KaType>>()
+                        while (prev != curr) {
+                            val pair = Pair(prev, curr)
+                            if (pair in seen) {
+                                throw InternalKSPException(
+                                    "Recurrent substitution of bounds of $typeParam: $bound by $substitutor",
+                                    typeParam.psi.toLocation(),
+                                    typeParam.javaClass,
+                                )
+                            }
+                            seen.add(pair)
+                            prev = curr
+                            curr = substitutor.substitute(curr)
                         }
-                        seen.add(pair)
-                        prev = curr
-                        curr = substitutor.substitute(curr)
+                        curr
                     }
-                    curr
                 }
-            }
             KSTypeParameterImpl.getCached(typeParam, bounds)
         }
     }
@@ -79,14 +84,15 @@ class KSFunctionImpl @OptIn(KaExperimentalApi::class) constructor(
 
     override val isError: Boolean = false
 
-    private val cachedHashCode by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        Objects.hash(
-            returnType ?: 0,
-            parameterTypes,
-            typeParameters,
-            extensionReceiverType ?: 0
-        )
-    }
+    private val cachedHashCode by
+        lazy(LazyThreadSafetyMode.PUBLICATION) {
+            Objects.hash(
+                returnType ?: 0,
+                parameterTypes,
+                typeParameters,
+                extensionReceiverType ?: 0,
+            )
+        }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

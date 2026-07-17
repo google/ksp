@@ -5,7 +5,8 @@ import com.google.devtools.ksp.symbol.*
 
 class KSDynamicReferenceImpl private constructor(override val parent: KSNode) : KSDynamicReference {
     companion object : KSObjectCache<KSTypeReference, KSDynamicReferenceImpl>() {
-        fun getCached(parent: KSTypeReference) = cache.getOrPut(parent) { KSDynamicReferenceImpl(parent) }
+        fun getCached(parent: KSTypeReference) =
+            cache.getOrPut(parent) { KSDynamicReferenceImpl(parent) }
     }
 
     override val origin = Origin.KOTLIN

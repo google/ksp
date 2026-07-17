@@ -42,7 +42,7 @@ open class EquivalentJavaWildcardProcessor : AbstractTestProcessor() {
 
     private class RefVisitor(
         val results: MutableList<String>,
-        val resolver: Resolver
+        val resolver: Resolver,
     ) : KSTopDownVisitor<String, Unit>() {
         override fun defaultHandler(node: KSNode, data: String) = Unit
 
@@ -54,9 +54,12 @@ open class EquivalentJavaWildcardProcessor : AbstractTestProcessor() {
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             val wildcard = resolver.getJavaWildcard(typeReference)
             results.add(
-                data + typeReference.parent.toString() +
-                    " : " + typeReference.pretty() +
-                    " -> " + wildcard.pretty()
+                data +
+                    typeReference.parent.toString() +
+                    " : " +
+                    typeReference.pretty() +
+                    " -> " +
+                    wildcard.pretty()
             )
             super.visitTypeReference(typeReference, data + "- ")
         }

@@ -15,7 +15,10 @@ class TypeParameterEqualsProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val foo = resolver.getClassDeclarationByName("Foo")!!
         val i = resolver.getClassDeclarationByName("I")!!
-        result.add(foo.typeParameters.first() == foo.getDeclaredProperties().first().type.resolve().declaration)
+        result.add(
+            foo.typeParameters.first() ==
+                foo.getDeclaredProperties().first().type.resolve().declaration
+        )
         result.add(i.typeParameters[0] == i.typeParameters[1].bounds.single().resolve().declaration)
         return emptyList()
     }

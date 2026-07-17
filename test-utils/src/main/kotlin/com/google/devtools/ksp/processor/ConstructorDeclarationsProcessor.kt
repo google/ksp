@@ -46,7 +46,9 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
 
     class ConstructorsVisitor : KSVisitorVoid() {
         private val declarationsByClass = LinkedHashMap<KSClassDeclaration, MutableList<String>>()
+
         fun classNames() = declarationsByClass.keys
+
         fun toResult(): List<String> {
             return declarationsByClass.entries
                 .sortedBy {
@@ -54,10 +56,12 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
                     // since we traverse the lib after main, lib will be the second one
                     // because sortedBy is stable sort
                     it.key.simpleName.asString()
-                }.flatMap {
+                }
+                .flatMap {
                     listOf("class: " + it.key.qualifiedName!!.asString()) + it.value
                 }
         }
+
         fun KSFunctionDeclaration.toSignature(): String {
             return this.simpleName.asString() +
                 "(${this.parameters.map {
@@ -75,9 +79,12 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             val declarations = mutableListOf<String>()
             declarations.addAll(
-                classDeclaration.getConstructors().map {
-                    it.toSignature()
-                }.sorted()
+                classDeclaration
+                    .getConstructors()
+                    .map {
+                        it.toSignature()
+                    }
+                    .sorted()
             )
             // TODO add some assertions that if we go through he path of getDeclarations
             //  we still find the same constructors

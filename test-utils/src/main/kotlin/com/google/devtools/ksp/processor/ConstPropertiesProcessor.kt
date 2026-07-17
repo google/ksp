@@ -27,8 +27,7 @@ class ConstPropertiesProcessor : AbstractTestProcessor() {
     private class Visitor : KSTopDownVisitor<Unit, Unit>() {
         val constPropertiesNames = arrayListOf<String>()
 
-        override fun defaultHandler(node: KSNode, data: Unit) {
-        }
+        override fun defaultHandler(node: KSNode, data: Unit) {}
 
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
             if (Modifier.CONST in property.modifiers) {

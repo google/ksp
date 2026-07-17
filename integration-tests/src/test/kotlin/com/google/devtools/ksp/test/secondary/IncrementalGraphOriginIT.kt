@@ -30,16 +30,15 @@ import org.junit.runners.Parameterized
 class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "incremental",
-        experimentalPsiResolution = experimentalPsiResolution,
-        incrementalLogging = null, // Setting to null means the property is not declared
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "incremental",
+            experimentalPsiResolution = experimentalPsiResolution,
+            incrementalLogging = null, // Setting to null means the property is not declared
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -52,10 +51,16 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         }
 
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
-        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to be generated", dotFiles.isNotEmpty())
+        Assert.assertTrue(
+            "Expected kspLookupGraphOrigin.dot to be generated",
+            dotFiles.isNotEmpty(),
+        )
         val content = dotFiles.first().readText()
         Assert.assertTrue("Expected digraph header in dot file", content.startsWith("digraph {"))
-        Assert.assertTrue("Expected p1.TestK2K origin in dot file", content.contains("\"p1.TestK2K\""))
+        Assert.assertTrue(
+            "Expected p1.TestK2K origin in dot file",
+            content.contains("\"p1.TestK2K\""),
+        )
     }
 
     @Test
@@ -68,7 +73,10 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         }
 
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
-        Assert.assertTrue("Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles", dotFiles.isEmpty())
+        Assert.assertTrue(
+            "Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles",
+            dotFiles.isEmpty(),
+        )
     }
 
     @Test
@@ -80,7 +88,10 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         }
 
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
-        Assert.assertTrue("Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles", dotFiles.isEmpty())
+        Assert.assertTrue(
+            "Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles",
+            dotFiles.isEmpty(),
+        )
     }
 
     @Test
@@ -94,14 +105,18 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         }
 
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
-        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to be generated", dotFiles.isNotEmpty())
+        Assert.assertTrue(
+            "Expected kspLookupGraphOrigin.dot to be generated",
+            dotFiles.isNotEmpty(),
+        )
         val content = dotFiles.first().readText().trim()
         val digraphContentForInvalidName =
             """
             digraph {
               "$invalidName";
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         Assert.assertEquals(digraphContentForInvalidName, content)
     }
 
@@ -116,7 +131,10 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         }
 
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
-        Assert.assertTrue("Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles", dotFiles.isEmpty())
+        Assert.assertTrue(
+            "Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles",
+            dotFiles.isEmpty(),
+        )
     }
 
     @Test
@@ -129,7 +147,10 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         }
 
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
-        Assert.assertTrue("Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles", dotFiles.isEmpty())
+        Assert.assertTrue(
+            "Expected kspLookupGraphOrigin.dot not to be generated: $dotFiles",
+            dotFiles.isEmpty(),
+        )
     }
 
     @Test
@@ -143,7 +164,7 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
         Assert.assertTrue(
             "Expected kspLookupGraphOrigin.dot NOT to be generated when option is unset $dotFiles",
-            dotFiles.isEmpty()
+            dotFiles.isEmpty(),
         )
     }
 
@@ -158,7 +179,7 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
         Assert.assertTrue(
             "Expected kspLookupGraphOrigin.dot NOT to be generated when option is unset $dotFiles",
-            dotFiles.isEmpty()
+            dotFiles.isEmpty(),
         )
     }
 
@@ -172,7 +193,7 @@ class IncrementalGraphOriginIT(experimentalPsiResolution: Boolean) {
         val dotFiles = project.root.walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
         Assert.assertTrue(
             "Expected kspLookupGraphOrigin.dot NOT to be generated when option is unset $dotFiles",
-            dotFiles.isEmpty()
+            dotFiles.isEmpty(),
         )
     }
 }

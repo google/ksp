@@ -34,7 +34,9 @@ class DocStringProcessor : AbstractTestProcessor() {
         override fun defaultHandler(node: KSNode, data: MutableCollection<String>) = Unit
 
         override fun visitDeclaration(declaration: KSDeclaration, data: MutableCollection<String>) {
-            data.add("${declaration.simpleName.asString()}: ${declaration.docString?.lines()?.joinToString("\\n")}")
+            data.add(
+                "${declaration.simpleName.asString()}: ${declaration.docString?.lines()?.joinToString("\\n")}"
+            )
         }
     }
 

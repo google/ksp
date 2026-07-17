@@ -26,7 +26,8 @@ class KspGradleLogger(val loglevel: Int) : KSPLogger {
     private fun decorateMessage(message: String, symbol: KSNode?): String =
         when (val location = symbol?.location) {
             is FileLocation -> "${location.filePath}:${location.lineNumber}: $message"
-            is NonExistLocation, null -> message
+            is NonExistLocation,
+            null -> message
         }
 
     override fun logging(message: String, symbol: KSNode?) {
@@ -50,8 +51,7 @@ class KspGradleLogger(val loglevel: Int) : KSPLogger {
     }
 
     override fun exception(e: Throwable) {
-        if (loglevel <= LOGGING_LEVEL_ERROR)
-            messager.println("e: [ksp] $e")
+        if (loglevel <= LOGGING_LEVEL_ERROR) messager.println("e: [ksp] $e")
     }
 
     companion object {

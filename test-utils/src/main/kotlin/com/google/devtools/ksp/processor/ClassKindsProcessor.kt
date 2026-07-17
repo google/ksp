@@ -33,12 +33,15 @@ open class ClassKindsProcessor : AbstractTestProcessor() {
                 object : KSTopDownVisitor<Unit, Unit>() {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+                    override fun visitClassDeclaration(
+                        classDeclaration: KSClassDeclaration,
+                        data: Unit,
+                    ) {
                         results.add(classDeclaration.pretty())
                         super.visitClassDeclaration(classDeclaration, data)
                     }
                 },
-                Unit
+                Unit,
             )
         }
 
@@ -47,7 +50,9 @@ open class ClassKindsProcessor : AbstractTestProcessor() {
         results.add(resolver.getClassDeclarationByName("kotlin.Deprecated")!!.pretty())
         results.add(resolver.getClassDeclarationByName("kotlin.Double.Companion")!!.pretty())
         results.add(resolver.getClassDeclarationByName("kotlin.DeprecationLevel")!!.pretty())
-        results.add(resolver.getClassDeclarationByName("kotlin.DeprecationLevel.WARNING")!!.pretty())
+        results.add(
+            resolver.getClassDeclarationByName("kotlin.DeprecationLevel.WARNING")!!.pretty()
+        )
 
         results.sort()
         return emptyList()

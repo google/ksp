@@ -48,8 +48,12 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         result.add(ITF.primaryConstructor?.simpleName?.asString() ?: "<null>")
         val JavaClass = resolver.getClassDeclarationByName("JavaClass")!!
         result.add(JavaClass.primaryConstructor?.simpleName?.asString() ?: "<null>")
-        result.add(JavaClass.getDeclaredFunctions().map { it.simpleName.asString() }.joinToString(","))
-        val readOnly = ClsClass.declarations.single { it.simpleName.asString() == "readOnly" } as KSPropertyDeclaration
+        result.add(
+            JavaClass.getDeclaredFunctions().map { it.simpleName.asString() }.joinToString(",")
+        )
+        val readOnly =
+            ClsClass.declarations.single { it.simpleName.asString() == "readOnly" }
+                as KSPropertyDeclaration
         readOnly.getter?.let {
             result.add(
                 "readOnly.get(): ${it.origin} annotations from property: ${
@@ -61,7 +65,8 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         readOnly.setter?.let { result.add("readOnly.set(): ${it.origin}") }
         readOnly.setter?.receiver?.let { result.add("readOnly.setter.owner: " + nameAndOrigin(it)) }
         val readWrite =
-            ClsClass.declarations.single { it.simpleName.asString() == "readWrite" } as KSPropertyDeclaration
+            ClsClass.declarations.single { it.simpleName.asString() == "readWrite" }
+                as KSPropertyDeclaration
         readWrite.getter?.let { result.add("readWrite.get(): ${it.origin}") }
         readWrite.setter?.let {
             result.add(
@@ -74,16 +79,23 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         }
         val dataClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Data"))!!
         result.add(dataClass.getConstructors().map { it.toString() }.joinToString(","))
-        val comp1 = dataClass.declarations.single { it.simpleName.asString() == "comp1" } as KSPropertyDeclaration
+        val comp1 =
+            dataClass.declarations.single { it.simpleName.asString() == "comp1" }
+                as KSPropertyDeclaration
         comp1.getter?.let { result.add("comp1.get(): ${it.origin}") }
         comp1.setter?.let { result.add("comp1.set(): ${it.origin}") }
-        val comp2 = dataClass.declarations.single { it.simpleName.asString() == "comp2" } as KSPropertyDeclaration
+        val comp2 =
+            dataClass.declarations.single { it.simpleName.asString() == "comp2" }
+                as KSPropertyDeclaration
         comp2.getter?.let { result.add("comp2.get(): ${it.origin}") }
         comp2.setter?.let { result.add("comp2.set(): ${it.origin}") }
         val classWithoutImplicitPrimaryConstructor =
             resolver.getClassDeclarationByName("ClassWithoutImplicitPrimaryConstructor")!!
         result.add(
-            classWithoutImplicitPrimaryConstructor.getConstructors().map { it.toString() }.joinToString(",")
+            classWithoutImplicitPrimaryConstructor
+                .getConstructors()
+                .map { it.toString() }
+                .joinToString(",")
         )
         val implictConstructorJava = resolver.getClassDeclarationByName("ImplictConstructorJava")!!
         result.add(implictConstructorJava.getConstructors().map { it.toString() }.joinToString(","))

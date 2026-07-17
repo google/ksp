@@ -21,14 +21,19 @@ class FunctionTypeAnnotationProcessor : AbstractTestProcessor() {
                 object : KSTopDownVisitor<Unit, Unit>() {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
-                    override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
+                    override fun visitPropertyDeclaration(
+                        property: KSPropertyDeclaration,
+                        data: Unit,
+                    ) {
                         val type = property.type.resolve()
                         val propertyName = property.simpleName.asString()
                         val typeName = type.declaration.simpleName.asString()
-                        results.add("$propertyName: $typeName ${type.annotations.joinToString { it.toString() }}")
+                        results.add(
+                            "$propertyName: $typeName ${type.annotations.joinToString { it.toString() }}"
+                        )
                     }
                 },
-                Unit
+                Unit,
             )
         }
         return emptyList()

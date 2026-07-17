@@ -27,9 +27,13 @@ class DeclarationInconsistencyProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val numberClass = resolver.getClassDeclarationByName("kotlin.Number")!!
-        val serializable = numberClass.superTypes.first {
-            it.resolve().declaration.qualifiedName?.asString() == "java.io.Serializable"
-        }.resolve().declaration as KSClassDeclaration
+        val serializable =
+            numberClass.superTypes
+                .first {
+                    it.resolve().declaration.qualifiedName?.asString() == "java.io.Serializable"
+                }
+                .resolve()
+                .declaration as KSClassDeclaration
         val serizableDirect = resolver.getClassDeclarationByName("java.io.Serializable")!!
         results.add("via type: ${serializable.qualifiedName?.asString()}")
         serializable.getAllFunctions().forEach {

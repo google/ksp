@@ -1,27 +1,26 @@
 package com.google.devtools.ksp.test.secondary
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
+import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class OnErrorIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
-    val project: TemporaryTestProject = TemporaryTestProject(
-        "on-error",
-        experimentalPsiResolution = experimentalPsiResolution
-    )
+    val project: TemporaryTestProject =
+        TemporaryTestProject(
+            "on-error",
+            experimentalPsiResolution = experimentalPsiResolution,
+        )
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Boolean> = listOf(true, false)
+        @JvmStatic @Parameterized.Parameters fun data(): Collection<Boolean> = listOf(true, false)
     }
 
     @Test
@@ -37,43 +36,56 @@ class OnErrorIT(experimentalPsiResolution: Boolean) {
 
     @Test
     fun testOnExceptionInInit() {
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"init\") }\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"init\") }\n")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in init", errors.first())
+            Assert.assertEquals(
+                "e: [ksp] java.lang.Exception: Test Exception in init",
+                errors.first(),
+            )
         }
         project.restore("workload/build.gradle.kts")
     }
 
     @Test
     fun testOnExceptionInProcess() {
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"process\") }\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"process\") }\n")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+            Assert.assertEquals(
+                "e: [ksp] java.lang.Exception: Test Exception in process",
+                errors.first(),
+            )
         }
         project.restore("workload/build.gradle.kts")
     }
 
     @Test
     fun testOnExceptionInFinish() {
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"finish\") }\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"finish\") }\n")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in finish", errors.first())
+            Assert.assertEquals(
+                "e: [ksp] java.lang.Exception: Test Exception in finish",
+                errors.first(),
+            )
         }
         project.restore("workload/build.gradle.kts")
     }
 
     @Test
     fun testOnExceptionInOnError() {
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"error\") }\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"error\") }\n")
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
@@ -89,7 +101,8 @@ class OnErrorIT(experimentalPsiResolution: Boolean) {
     fun testCreateTwice() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }
 
@@ -99,7 +112,9 @@ class OnErrorIT(experimentalPsiResolution: Boolean) {
                 }
             )
 
-            Assert.assertFalse(result.output.contains("e: java.lang.IllegalStateException: Should not be called!"))
+            Assert.assertFalse(
+                result.output.contains("e: java.lang.IllegalStateException: Should not be called!")
+            )
         }
         project.restore("workload/build.gradle.kts")
     }
@@ -108,7 +123,8 @@ class OnErrorIT(experimentalPsiResolution: Boolean) {
     fun testCreateTwiceNotOkOnError() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
-        File(project.root, "workload/build.gradle.kts").appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
+        File(project.root, "workload/build.gradle.kts")
+            .appendText("\nksp { arg(\"exception\", \"createTwice\") }\n")
         File(project.root, "gradle.properties").appendText("\nksp.return.ok.on.error=false")
         gradleRunner.withArguments("clean", "assemble").buildAndFail().let { result ->
             val errors = result.output.lines().filter { it.startsWith("e: [ksp]") }

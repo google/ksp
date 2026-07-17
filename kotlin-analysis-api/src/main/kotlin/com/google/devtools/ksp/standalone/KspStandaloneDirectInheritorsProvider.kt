@@ -23,11 +23,14 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.psiUtil.contains
 
-// TODO: copied from upstream as a workaround, remove after upstream fixes standalone session builder for KSP.
+// TODO: copied from upstream as a workaround, remove after upstream fixes standalone session
+// builder for KSP.
 @OptIn(KaPlatformInterface::class, LLFirInternals::class, SymbolInternals::class)
-class KspStandaloneDirectInheritorsProvider(private val project: Project) : KotlinDirectInheritorsProvider {
+class KspStandaloneDirectInheritorsProvider(private val project: Project) :
+    KotlinDirectInheritorsProvider {
     private val declarationProviderFactory by lazy {
-        (KotlinDeclarationProviderFactory.getInstance(project) as? IncrementalKotlinDeclarationProviderFactory)
+        (KotlinDeclarationProviderFactory.getInstance(project)
+            as? IncrementalKotlinDeclarationProviderFactory)
             ?: error(
                 "KotlinStandaloneDirectInheritorsProvider" +
                     "` expects the following declaration provider factory to be" +
@@ -46,29 +49,40 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
         val aliases = mutableSetOf(classId.shortClassName)
         calculateAliases(classId.shortClassName, aliases)
 
-        val possibleInheritors = aliases.flatMap { declarationProviderFactory.getDirectInheritorCandidates(it) }
+        val possibleInheritors = aliases.flatMap {
+            declarationProviderFactory.getDirectInheritorCandidates(it)
+        }
 
         if (possibleInheritors.isEmpty()) {
             return emptyList()
         }
 
-        // The index provides candidates from an original module, not dangling files. If we resolve the supertypes of a candidate in the
-        // context of its session, we will resolve to FIR classes from non-dangling, original modules. If `ktClass` is inside a dangling
-        // file, the FIR class for `ktClass` will come from the dangling module. So we'd compare the original FIR class for the supertype
-        // with the dangling FIR class for `ktClass`, resulting in a mismatch. To avoid such incompatible comparisons, we need to resolve
+        // The index provides candidates from an original module, not dangling files. If we resolve
+        // the supertypes of a candidate in the
+        // context of its session, we will resolve to FIR classes from non-dangling, original
+        // modules. If `ktClass` is inside a dangling
+        // file, the FIR class for `ktClass` will come from the dangling module. So we'd compare the
+        // original FIR class for the supertype
+        // with the dangling FIR class for `ktClass`, resulting in a mismatch. To avoid such
+        // incompatible comparisons, we need to resolve
         // `ktClass` to the original FIR class.
         //
-        // Note that this means we don't support providing inheritors based on the dangling file yet, for example if an inheritor was added
+        // Note that this means we don't support providing inheritors based on the dangling file
+        // yet, for example if an inheritor was added
         // or removed only in the dangling file.
-        val baseKtModule = when (
-            val ktModule = KaModuleProvider.getModule(project, ktClass, useSiteModule = null)
-        ) {
-            is KaDanglingFileModule -> ktModule.contextModule
-            else -> ktModule
-        }
+        val baseKtModule =
+            when (
+                val ktModule = KaModuleProvider.getModule(project, ktClass, useSiteModule = null)
+            ) {
+                is KaDanglingFileModule -> ktModule.contextModule
+                else -> ktModule
+            }
 
-        val baseFirClass = ktClass.toFirSymbol(classId, baseKtModule)?.fir as? FirClass ?: return emptyList()
-        return possibleInheritors.filter { isValidInheritor(it, baseFirClass, scope, includeLocalInheritors) }
+        val baseFirClass =
+            ktClass.toFirSymbol(classId, baseKtModule)?.fir as? FirClass ?: return emptyList()
+        return possibleInheritors.filter {
+            isValidInheritor(it, baseFirClass, scope, includeLocalInheritors)
+        }
     }
 
     private fun calculateAliases(aliasedName: Name, aliases: MutableSet<Name>) {
@@ -98,20 +112,25 @@ class KspStandaloneDirectInheritorsProvider(private val project: Project) : Kotl
 
         val candidateClassId = candidate.getClassId() ?: return false
         val candidateKtModule = KaModuleProvider.getModule(project, candidate, useSiteModule = null)
-        val candidateFirSymbol = candidate.toFirSymbol(candidateClassId, candidateKtModule) ?: return false
+        val candidateFirSymbol =
+            candidate.toFirSymbol(candidateClassId, candidateKtModule) ?: return false
         val candidateFirClass = candidateFirSymbol.fir as? FirClass ?: return false
 
         return isSubclassOf(
             candidateFirClass,
             baseFirClass,
             candidateFirClass.moduleData.session,
-            allowIndirectSubtyping = false
+            allowIndirectSubtyping = false,
         )
     }
 
     @OptIn(KaImplementationDetail::class)
-    private fun KtClassOrObject.toFirSymbol(classId: ClassId, ktModule: KaModule): FirClassLikeSymbol<*>? {
-        val session = LLFirSessionCache.getInstance(project).getSession(ktModule, preferBinary = true)
+    private fun KtClassOrObject.toFirSymbol(
+        classId: ClassId,
+        ktModule: KaModule,
+    ): FirClassLikeSymbol<*>? {
+        val session =
+            LLFirSessionCache.getInstance(project).getSession(ktModule, preferBinary = true)
         return session.symbolProvider.getClassLikeSymbolByClassId(classId)
     }
 }

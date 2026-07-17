@@ -33,7 +33,8 @@ open class FunctionTypeAliasProcessor : AbstractTestProcessor() {
             it.accept(typeRefCollector, refs)
         }
 
-        val types = refs.mapNotNull { it.resolve() }.sortedBy { it.toString() }.distinctBy { it.toString() }
+        val types =
+            refs.mapNotNull { it.resolve() }.sortedBy { it.toString() }.distinctBy { it.toString() }
 
         for (i in types) {
             for (j in types) {
@@ -51,7 +52,10 @@ open class FunctionTypeAliasProcessor : AbstractTestProcessor() {
 open class RefCollector : KSTopDownVisitor<MutableCollection<KSTypeReference>, Unit>() {
     override fun defaultHandler(node: KSNode, data: MutableCollection<KSTypeReference>) = Unit
 
-    override fun visitTypeReference(typeReference: KSTypeReference, data: MutableCollection<KSTypeReference>) {
+    override fun visitTypeReference(
+        typeReference: KSTypeReference,
+        data: MutableCollection<KSTypeReference>,
+    ) {
         super.visitTypeReference(typeReference, data)
         data.add(typeReference)
     }
