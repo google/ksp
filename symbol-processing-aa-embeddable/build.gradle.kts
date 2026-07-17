@@ -1,17 +1,16 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
 import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
+import java.io.InputStreamReader
+import java.util.zip.ZipFile
 import org.apache.tools.zip.ZipEntry
 import org.apache.tools.zip.ZipOutputStream
 import org.gradle.jvm.tasks.Jar
-import java.io.InputStreamReader
-import java.util.zip.ZipFile
 
 evaluationDependsOn(":kotlin-analysis-api")
 
 val signingKey: String? by project
 val signingPassword: String? by project
-
 
 val aaKotlinBaseVersion = libs.versions.aa.kotlin.base.get()
 
@@ -33,39 +32,41 @@ tasks.withType(Jar::class.java).configureEach {
     archiveClassifier.set("real")
 }
 
-val prefixesToRelocate = listOf(
-    "com.fasterxml.",
-    "org.codehaus.",
-    "com.github.benmanes.caffeine.",
-    "com.google.common.",
-    "com.google.devtools.ksp.common.",
-    "com.google.errorprone.",
-    "com.google.gwt.",
-    "com.google.j2objc.",
-    "com.google.thirdparty.",
-    "com.intellij.",
-    "com.sun.jna.",
-    "gnu.trove.",
-    "io.opentelemetry.api.",
-    "it.unimi.dsi.",
-    "javaslang.",
-    "kotlinx.collections.immutable.",
-    "kotlinx.serialization.",
-    "kotlinx.coroutines.",
-    "_COROUTINE.",
-    "org.apache.log4j.",
-    "org.checkerframework.",
-    "org.intellij.",
-    "org.jetbrains.",
-    "org.jdom.",
-    "org.picocontainer.",
-    "one.util.",
-    "net.jpountz.",
-    "net.rubygrapefruit.",
-    "FirNativeForwardDeclarationGetClassCallChecker",
-).map {
-    Pair(it, "ksp." + it)
-}
+val prefixesToRelocate =
+    listOf(
+            "com.fasterxml.",
+            "org.codehaus.",
+            "com.github.benmanes.caffeine.",
+            "com.google.common.",
+            "com.google.devtools.ksp.common.",
+            "com.google.errorprone.",
+            "com.google.gwt.",
+            "com.google.j2objc.",
+            "com.google.thirdparty.",
+            "com.intellij.",
+            "com.sun.jna.",
+            "gnu.trove.",
+            "io.opentelemetry.api.",
+            "it.unimi.dsi.",
+            "javaslang.",
+            "kotlinx.collections.immutable.",
+            "kotlinx.serialization.",
+            "kotlinx.coroutines.",
+            "_COROUTINE.",
+            "org.apache.log4j.",
+            "org.checkerframework.",
+            "org.intellij.",
+            "org.jetbrains.",
+            "org.jdom.",
+            "org.picocontainer.",
+            "one.util.",
+            "net.jpountz.",
+            "net.rubygrapefruit.",
+            "FirNativeForwardDeclarationGetClassCallChecker",
+        )
+        .map {
+            Pair(it, "ksp." + it)
+        }
 
 class AAServiceTransformer : Transformer {
     private val entries = HashMap<String, String>()
@@ -99,10 +100,11 @@ class AAServiceTransformer : Transformer {
             val patched = original.replace(regex, "\"ksp.$1\"")
             when {
                 path.startsWith("META-INF/analysis-api/") -> {
-                    val more = patched.replace(
-                        "\"/META-INF/extensions/compiler.xml\"",
-                        "\"/META-INF/extensions/ksp_compiler.xml\""
-                    )
+                    val more =
+                        patched.replace(
+                            "\"/META-INF/extensions/compiler.xml\"",
+                            "\"/META-INF/extensions/ksp_compiler.xml\"",
+                        )
                     putOneEntry(path, more)
                 }
 
@@ -134,8 +136,7 @@ tasks.withType(ShadowJar::class.java).configureEach {
     prefixesToRelocate.forEach { (f, t) ->
         relocate(f, t) {
             fun excludeEfficiently(pattern: String) {
-                if (pattern.startsWith(f))
-                    exclude(pattern)
+                if (pattern.startsWith(f)) exclude(pattern)
             }
             // Do not rename this hardcoded string in XmlReader.
             excludeEfficiently("com.intellij.projectService")
@@ -164,15 +165,19 @@ tasks.withType(ShadowJar::class.java).configureEach {
         val validationErrors = mutableListOf<String>()
         archiveFile.get().asFile.let { file ->
             ZipFile(file).use { zipFile ->
-                val unrelocatedClasses = zipFile.entries().asSequence()
-                    .map { it.name }
-                    .filter {
-                        it.endsWith(".class") &&
-                            // Explicitly blocked packages should never be included (takes precedence over allowed).
-                            // Not explicitly allowed packages should never be included.
-                            (blockedPackages.contains(it) || !allowedPackages.contains(it))
-                    }
-                    .toList()
+                val unrelocatedClasses =
+                    zipFile
+                        .entries()
+                        .asSequence()
+                        .map { it.name }
+                        .filter {
+                            it.endsWith(".class") &&
+                                // Explicitly blocked packages should never be included (takes
+                                // precedence over allowed).
+                                // Not explicitly allowed packages should never be included.
+                                (blockedPackages.contains(it) || !allowedPackages.contains(it))
+                        }
+                        .toList()
 
                 validationErrors.addAll(unrelocatedClasses)
             }
@@ -194,48 +199,50 @@ val prefixesToRelocateStripped = prefixesToRelocate.map {
 // TODO: match with Trie
 fun String.replaceWithKsp() =
     prefixesToRelocateStripped.fold(this) { acc, (f, t) ->
-        acc.replace("package $f", "package $t")
-            .replace("import $f", "import $t")
+        acc.replace("package $f", "package $t").replace("import $f", "import $t")
     }
 
 val depSourceDir: Provider<Directory> = layout.buildDirectory.dir("source-jar")
 
-val validPaths = prefixesToRelocate.map {
-    it.second.split('.').filter { it.isNotEmpty() }.joinToString("/")
-} + listOf(
-    "com/google/devtools/ksp",
-    "META-INF",
-    "ksp/FirNativeForwardDeclarationGetClassCallChecker.class",
-    "org/checkerframework/checker/nullness/compatqual/NonNullDecl.class",
-    "org/checkerframework/checker/nullness/compatqual/NullableDecl.class",
-    "org/checkerframework/checker/nullness/qual/NonNull.class",
-    "org/checkerframework/checker/nullness/qual/Nullable.class",
-    "org/jetbrains/annotations/NotNull.class",
-    "org/jetbrains/annotations/Nullable.class",
-)
+val validPaths =
+    prefixesToRelocate.map {
+        it.second.split('.').filter { it.isNotEmpty() }.joinToString("/")
+    } +
+        listOf(
+            "com/google/devtools/ksp",
+            "META-INF",
+            "ksp/FirNativeForwardDeclarationGetClassCallChecker.class",
+            "org/checkerframework/checker/nullness/compatqual/NonNullDecl.class",
+            "org/checkerframework/checker/nullness/compatqual/NullableDecl.class",
+            "org/checkerframework/checker/nullness/qual/NonNull.class",
+            "org/checkerframework/checker/nullness/qual/Nullable.class",
+            "org/jetbrains/annotations/NotNull.class",
+            "org/jetbrains/annotations/Nullable.class",
+        )
 
 class Trie(paths: List<String>) {
     class TrieNode(val key: String)
 
     private val terminals = mutableSetOf<TrieNode>()
 
-    private val m = mutableMapOf<Pair<TrieNode?, String>, TrieNode>().apply {
-        paths.forEach { path ->
-            var p: TrieNode? = null
-            for (d in path.split("/")) {
-                p = getOrPut(Pair(p, d)) { TrieNode(d) }
+    private val m =
+        mutableMapOf<Pair<TrieNode?, String>, TrieNode>().apply {
+            paths.forEach { path ->
+                var p: TrieNode? = null
+                for (d in path.split("/")) {
+                    p = getOrPut(Pair(p, d)) { TrieNode(d) }
+                }
+                terminals.add(p!!)
             }
-            terminals.add(p!!)
         }
-    }
 
     fun contains(s: String): Boolean {
         var p: TrieNode? = null
         for (d in s.split("/")) {
-            p = m.get(Pair(p, d))?.also {
-                if (it in terminals)
-                    return true
-            } ?: return false
+            p =
+                m.get(Pair(p, d))?.also {
+                    if (it in terminals) return true
+                } ?: return false
         }
         return true
     }
@@ -244,26 +251,33 @@ class Trie(paths: List<String>) {
 val allowedPackages = Trie(validPaths)
 val blockedPackages = Trie(listOf("ksp/org/apache/log4j/jdbc"))
 
-val copyDeps = tasks.register<Copy>("copyDeps") {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    project(":kotlin-analysis-api").configurations.getByName("depSourceJars").resolve().forEach {
-        from(zipTree(it))
+val copyDeps =
+    tasks.register<Copy>("copyDeps") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        project(":kotlin-analysis-api")
+            .configurations
+            .getByName("depSourceJars")
+            .resolve()
+            .forEach {
+                from(zipTree(it))
+            }
+        from(project(":common-util").sourceSets.main.get().allSource)
+        into(depSourceDir.map { it.dir("ksp") })
     }
-    from(project(":common-util").sourceSets.main.get().allSource)
-    into(depSourceDir.map { it.dir("ksp") })
-}
-val sourcesJar = tasks.register<Jar>("sourcesJar") {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set("sources")
-    from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
-    from(copyDeps)
-    filter { it.replaceWithKsp() }
-}
-val javadocJar = tasks.register<Jar>("javadocJar") {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set("javadoc")
-    from(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
-}
+val sourcesJar =
+    tasks.register<Jar>("sourcesJar") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveClassifier.set("sources")
+        from(project(":kotlin-analysis-api").sourceSets.main.get().allSource)
+        from(copyDeps)
+        filter { it.replaceWithKsp() }
+    }
+val javadocJar =
+    tasks.register<Jar>("javadocJar") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveClassifier.set("javadoc")
+        from(project(":kotlin-analysis-api").tasks["dokkaJavadocJar"])
+    }
 
 publishing {
     publications {
@@ -280,7 +294,7 @@ publishing {
                         groupId: String,
                         artifactId: String,
                         version: String,
-                        scope: String = "runtime"
+                        scope: String = "runtime",
                     ) {
                         appendNode("dependency").apply {
                             appendNode("groupId", groupId)
@@ -291,9 +305,17 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", libs.versions.kotlin.base.get())
+                        addDependency(
+                            "org.jetbrains.kotlin",
+                            "kotlin-stdlib",
+                            libs.versions.kotlin.base.get(),
+                        )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
-                        addDependency("com.google.devtools.ksp", "symbol-processing-common-deps", version)
+                        addDependency(
+                            "com.google.devtools.ksp",
+                            "symbol-processing-common-deps",
+                            version,
+                        )
                     }
                 }
             }
@@ -308,11 +330,9 @@ signing {
 }
 
 abstract class WriteVersionSrcTask : DefaultTask() {
-    @get:Input
-    abstract val kotlinVersion: Property<String>
+    @get:Input abstract val kotlinVersion: Property<String>
 
-    @get:OutputDirectory
-    abstract val outputResDir: DirectoryProperty
+    @get:OutputDirectory abstract val outputResDir: DirectoryProperty
 
     @TaskAction
     fun generate() {
@@ -322,12 +342,11 @@ abstract class WriteVersionSrcTask : DefaultTask() {
     }
 }
 
-val writeVersionSrcTask = tasks.register<WriteVersionSrcTask>(
-    "generateKSPVersions"
-) {
-    kotlinVersion = aaKotlinBaseVersion
-    outputResDir = layout.buildDirectory.dir("generated/ksp-versions/META-INF")
-}
+val writeVersionSrcTask =
+    tasks.register<WriteVersionSrcTask>("generateKSPVersions") {
+        kotlinVersion = aaKotlinBaseVersion
+        outputResDir = layout.buildDirectory.dir("generated/ksp-versions/META-INF")
+    }
 
 kotlin {
     sourceSets {
