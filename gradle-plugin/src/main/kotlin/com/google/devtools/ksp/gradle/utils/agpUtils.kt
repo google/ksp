@@ -3,19 +3,21 @@ package com.google.devtools.ksp.gradle.utils
 import com.android.build.api.AndroidPluginVersion
 import org.gradle.api.Project
 
-fun Project.getAgpVersion(): AndroidPluginVersion? = try {
-    this.extensions
-        .findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
-        ?.pluginVersion
-} catch (e: NoClassDefFoundError) {
-    // AGP not applied
-    null
-} catch (e: Exception) {
-    // Perhaps a version of AGP before pluginVersion API was added.
-    null
-}
+fun Project.getAgpVersion(): AndroidPluginVersion? =
+    try {
+        this.extensions
+            .findByType(com.android.build.api.variant.AndroidComponentsExtension::class.java)
+            ?.pluginVersion
+    } catch (e: NoClassDefFoundError) {
+        // AGP not applied
+        null
+    } catch (e: Exception) {
+        // Perhaps a version of AGP before pluginVersion API was added.
+        null
+    }
 
-fun Project.isAgpBuiltInKotlinUsed() = isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
+fun Project.isAgpBuiltInKotlinUsed() =
+    isKotlinBaseApiPluginApplied() && isKotlinAndroidPluginApplied().not()
 
 fun checkMinimumAgpVersion(pluginVersion: AndroidPluginVersion) {
     if (pluginVersion < MINIMUM_SUPPORTED_AGP_VERSION) {
@@ -27,8 +29,8 @@ fun checkMinimumAgpVersion(pluginVersion: AndroidPluginVersion) {
 }
 
 /**
- * Returns true for AGP version is 8.12.0-alpha06 or higher.
- * That is the version where addGeneratedSourceDirectories API was fixed
+ * Returns true for AGP version is 8.12.0-alpha06 or higher. That is the version where
+ * addGeneratedSourceDirectories API was fixed
  */
 fun Project.canUseAddGeneratedSourceDirectoriesApi(): Boolean {
     val agpVersion = project.getAgpVersion() ?: return false
@@ -43,7 +45,7 @@ fun Project.canUseInternalKspApis(): Boolean {
 /**
  * Defines the minimum supported Android Gradle Plugin (AGP) version.
  *
- * KSP aims to support AGP versions released approximately within the last year
- * from the current KSP release date.
+ * KSP aims to support AGP versions released approximately within the last year from the current KSP
+ * release date.
  */
 val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 10, 0)

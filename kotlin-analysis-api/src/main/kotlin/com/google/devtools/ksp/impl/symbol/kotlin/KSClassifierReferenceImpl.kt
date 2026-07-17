@@ -24,13 +24,16 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Location
 import org.jetbrains.kotlin.psi.KtUserType
 
-class KSClassifierReferenceImpl private constructor(
+class KSClassifierReferenceImpl
+private constructor(
     val ktUserType: KtUserType,
-    override val parent: KSNode
+    override val parent: KSNode,
 ) : KSClassifierReference {
     companion object : KSObjectCache<IdKeyPair<KtUserType, KSNode?>, KSClassifierReferenceImpl>() {
         fun getCached(ktUserType: KtUserType, parent: KSNode) =
-            cache.getOrPut(IdKeyPair(ktUserType, parent)) { KSClassifierReferenceImpl(ktUserType, parent) }
+            cache.getOrPut(IdKeyPair(ktUserType, parent)) {
+                KSClassifierReferenceImpl(ktUserType, parent)
+            }
     }
 
     override val origin = parent.origin
@@ -57,8 +60,11 @@ class KSClassifierReferenceImpl private constructor(
     }
 
     override fun toString(): String {
-        return ktUserType.referencedName + if (typeArguments.isNotEmpty()) "<${
+        return ktUserType.referencedName +
+            if (typeArguments.isNotEmpty())
+                "<${
         typeArguments.map { it.toString() }.joinToString(", ")
-        }>" else ""
+        }>"
+            else ""
     }
 }

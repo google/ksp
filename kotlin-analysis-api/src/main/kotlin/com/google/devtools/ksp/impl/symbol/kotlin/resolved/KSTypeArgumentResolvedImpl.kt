@@ -29,13 +29,17 @@ import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.KaTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.types.KaTypeProjection
 
-class KSTypeArgumentResolvedImpl private constructor(
+class KSTypeArgumentResolvedImpl
+private constructor(
     private val ktTypeProjection: KaTypeProjection,
-    override val parent: KSNode?
+    override val parent: KSNode?,
 ) : KSTypeArgument, Deferrable {
-    companion object : KSObjectCache<IdKeyPair<KaTypeProjection, KSNode?>, KSTypeArgumentResolvedImpl>() {
+    companion object :
+        KSObjectCache<IdKeyPair<KaTypeProjection, KSNode?>, KSTypeArgumentResolvedImpl>() {
         fun getCached(ktTypeProjection: KaTypeProjection, parent: KSNode? = null) =
-            cache.getOrPut(IdKeyPair(ktTypeProjection, parent)) { KSTypeArgumentResolvedImpl(ktTypeProjection, parent) }
+            cache.getOrPut(IdKeyPair(ktTypeProjection, parent)) {
+                KSTypeArgumentResolvedImpl(ktTypeProjection, parent)
+            }
     }
 
     override val variance: Variance by lazy {

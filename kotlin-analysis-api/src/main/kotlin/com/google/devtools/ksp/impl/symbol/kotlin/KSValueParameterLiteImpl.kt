@@ -10,12 +10,14 @@ import org.jetbrains.kotlin.analysis.api.types.KaType
 class KSValueParameterLiteImpl private constructor(ktType: KaType, override val parent: KSNode) :
     KSValueParameter {
     companion object : KSObjectCache<IdKeyPair<KaType, KSNode>, KSValueParameter>() {
-        fun getCached(ktType: KaType, parent: KSNode): KSValueParameter = cache.getOrPut(IdKeyPair(ktType, parent)) {
-            KSValueParameterLiteImpl(ktType, parent)
-        }
+        fun getCached(ktType: KaType, parent: KSNode): KSValueParameter =
+            cache.getOrPut(IdKeyPair(ktType, parent)) {
+                KSValueParameterLiteImpl(ktType, parent)
+            }
     }
 
-    // preferably maybe use empty name to match compiler, but use underscore to match FE1.0 implementation.
+    // preferably maybe use empty name to match compiler, but use underscore to match FE1.0
+    // implementation.
     override val name: KSName = KSNameImpl.getCached("_")
 
     override val type: KSTypeReference = KSTypeReferenceResolvedImpl.getCached(ktType)

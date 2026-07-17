@@ -12,10 +12,10 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.packages.KotlinStandalo
 import org.jetbrains.kotlin.psi.KtFile
 
 @OptIn(KaPlatformInterface::class)
-class IncrementalKotlinPackageProviderFactory(
-    private val project: Project,
-) : KotlinPackageProviderFactory, Disposable {
-    private val staticFactories: MutableList<KotlinStandalonePackageProviderFactory> = mutableListOf()
+class IncrementalKotlinPackageProviderFactory(private val project: Project) :
+    KotlinPackageProviderFactory, Disposable {
+    private val staticFactories: MutableList<KotlinStandalonePackageProviderFactory> =
+        mutableListOf()
 
     override fun createPackageProvider(searchScope: GlobalSearchScope): KotlinPackageProvider {
         val providers = staticFactories.map { it.createPackageProvider(searchScope) }
@@ -23,15 +23,15 @@ class IncrementalKotlinPackageProviderFactory(
     }
 
     fun update(files: Collection<KtFile>) {
-        val staticFactory = KotlinStandalonePackageProviderFactory(
-            project = project,
-            indexedFiles = files,
-            libraryRoots = emptyList()
-        )
+        val staticFactory =
+            KotlinStandalonePackageProviderFactory(
+                project = project,
+                indexedFiles = files,
+                libraryRoots = emptyList(),
+            )
         Disposer.register(this, staticFactory)
         staticFactories.add(staticFactory)
     }
 
-    override fun dispose() {
-    }
+    override fun dispose() {}
 }

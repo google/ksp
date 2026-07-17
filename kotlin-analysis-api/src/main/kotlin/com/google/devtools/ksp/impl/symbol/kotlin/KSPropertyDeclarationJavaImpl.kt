@@ -37,8 +37,10 @@ import org.jetbrains.kotlin.name.Name
 sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDeclarationImpl() {
     companion object {
         // Factory for PSI Fast Path
-        fun getCached(psi: PsiField, parent: KSClassDeclarationImpl): KSPropertyDeclarationJavaImpl =
-            KSPropertyDeclarationJavaPsiImpl.getCached(psi, parent)
+        fun getCached(
+            psi: PsiField,
+            parent: KSClassDeclarationImpl,
+        ): KSPropertyDeclarationJavaImpl = KSPropertyDeclarationJavaPsiImpl.getCached(psi, parent)
 
         // Factory for AA Slow Path
         fun getCached(symbol: KaJavaFieldSymbol): KSPropertyDeclarationJavaImpl =
@@ -52,9 +54,14 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
 
     // Manual delegation for KSExpectActual to avoid eager evaluation in the class header
     private val expectActualImpl by lazy { KSExpectActualImpl(ktJavaFieldSymbol) }
-    override val isActual: Boolean get() = expectActualImpl.isActual
-    override val isExpect: Boolean get() = expectActualImpl.isExpect
+    override val isActual: Boolean
+        get() = expectActualImpl.isActual
+
+    override val isExpect: Boolean
+        get() = expectActualImpl.isExpect
+
     override fun findActuals(): Sequence<KSDeclaration> = expectActualImpl.findActuals()
+
     override fun findExpects(): Sequence<KSDeclaration> = expectActualImpl.findExpects()
 
     override val getter: KSPropertyGetter?
@@ -67,7 +74,10 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
         get() = null
 
     override val type: KSTypeReference by lazy {
-        KSTypeReferenceResolvedImpl.getCached(ktJavaFieldSymbol.returnType, this@KSPropertyDeclarationJavaImpl)
+        KSTypeReferenceResolvedImpl.getCached(
+            ktJavaFieldSymbol.returnType,
+            this@KSPropertyDeclarationJavaImpl,
+        )
     }
 
     override val isMutable: Boolean
@@ -92,7 +102,9 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
         get() = emptyList()
 
     override val qualifiedName: KSName? by lazy {
-        KSNameImpl.getCached("${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}")
+        KSNameImpl.getCached(
+            "${this.parentDeclaration!!.qualifiedName!!.asString()}.${simpleName.asString()}"
+        )
     }
 
     override val packageName: KSName
@@ -110,13 +122,13 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
     }
 }
 
-private class KSPropertyDeclarationJavaAAImpl(
-    override val ktJavaFieldSymbol: KaJavaFieldSymbol
-) : KSPropertyDeclarationJavaImpl() {
+private class KSPropertyDeclarationJavaAAImpl(override val ktJavaFieldSymbol: KaJavaFieldSymbol) :
+    KSPropertyDeclarationJavaImpl() {
     companion object : KSObjectCache<KaJavaFieldSymbol, KSPropertyDeclarationJavaAAImpl>() {
-        fun getCached(symbol: KaJavaFieldSymbol) = cache.getOrPut(symbol) {
-            KSPropertyDeclarationJavaAAImpl(symbol)
-        }
+        fun getCached(symbol: KaJavaFieldSymbol) =
+            cache.getOrPut(symbol) {
+                KSPropertyDeclarationJavaAAImpl(symbol)
+            }
     }
 }
 
@@ -125,26 +137,32 @@ private class KSPropertyDeclarationJavaPsiImpl(
     override val parent: KSClassDeclarationImpl,
 ) : KSPropertyDeclarationJavaImpl() {
     companion object : KSObjectCache<PsiField, KSPropertyDeclarationJavaPsiImpl>() {
-        fun getCached(psiField: PsiField, parent: KSClassDeclarationImpl) = cache.getOrPut(psiField) {
-            KSPropertyDeclarationJavaPsiImpl(psiField, parent)
-        }
+        fun getCached(psiField: PsiField, parent: KSClassDeclarationImpl) =
+            cache.getOrPut(psiField) {
+                KSPropertyDeclarationJavaPsiImpl(psiField, parent)
+            }
     }
 
     override val ktJavaFieldSymbol: KaJavaFieldSymbol by lazy {
         analyze {
             val targetName = Name.identifier(psiField.name)
-            // Note: Technically, declaredMemberScope and staticDeclaredMemberScope could be used here since the psi
-            // field is declared in the parent. However, those scopes trigger the performance issue mentioned in
-            // https://youtrack.jetbrains.com/issue/KT-85692, so stick with memberScope/staticMemberScope instead.
+            // Note: Technically, declaredMemberScope and staticDeclaredMemberScope could be used
+            // here since the psi
+            // field is declared in the parent. However, those scopes trigger the performance issue
+            // mentioned in
+            // https://youtrack.jetbrains.com/issue/KT-85692, so stick with
+            // memberScope/staticMemberScope instead.
             val instanceSymbols = parent.ktClassOrObjectSymbol.memberScope.callables(targetName)
             val staticSymbols = parent.ktClassOrObjectSymbol.staticMemberScope.callables(targetName)
-            (instanceSymbols + staticSymbols)
-                .find { it.psi == psiField || it.psi?.isEquivalentTo(psiField) == true } as? KaJavaFieldSymbol
-        } ?: throw InternalKSPException(
-            "Failed to resolve KaJavaFieldSymbol for field ${psiField.name}",
-            psiField.toLocation(),
-            psiField.javaClass,
-        )
+            (instanceSymbols + staticSymbols).find {
+                it.psi == psiField || it.psi?.isEquivalentTo(psiField) == true
+            } as? KaJavaFieldSymbol
+        }
+            ?: throw InternalKSPException(
+                "Failed to resolve KaJavaFieldSymbol for field ${psiField.name}",
+                psiField.toLocation(),
+                psiField.javaClass,
+            )
     }
 
     override val simpleName: KSName by lazy {

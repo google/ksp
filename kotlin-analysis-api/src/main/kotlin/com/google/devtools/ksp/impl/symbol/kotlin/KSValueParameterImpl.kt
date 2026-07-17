@@ -32,13 +32,16 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 
-class KSValueParameterImpl private constructor(
+class KSValueParameterImpl
+private constructor(
     private val ktValueParameterSymbol: KaValueParameterSymbol,
-    override val parent: KSAnnotated
+    override val parent: KSAnnotated,
 ) : KSValueParameter, Deferrable {
     companion object : KSObjectCache<KaValueParameterSymbol, KSValueParameterImpl>() {
         fun getCached(ktValueParameterSymbol: KaValueParameterSymbol, parent: KSAnnotated) =
-            cache.getOrPut(ktValueParameterSymbol) { KSValueParameterImpl(ktValueParameterSymbol, parent) }
+            cache.getOrPut(ktValueParameterSymbol) {
+                KSValueParameterImpl(ktValueParameterSymbol, parent)
+            }
     }
 
     override val name: KSName? by lazy {
@@ -57,7 +60,7 @@ class KSValueParameterImpl private constructor(
         // analyze { KtTypeReference.type }.
         KSTypeReferenceResolvedImpl.getCached(
             ktValueParameterSymbol.returnType.abbreviationOrSelf,
-            this@KSValueParameterImpl
+            this@KSValueParameterImpl,
         )
     }
 
@@ -73,14 +76,19 @@ class KSValueParameterImpl private constructor(
 
     private val KaValueParameterSymbol.primaryConstructorProperty: KaPropertySymbol? by lazy {
         when (ktValueParameterSymbol.origin) {
-            // ktValueParameterSymbol.generatedPrimaryConstructorProperty is always null in libraries.
+            // ktValueParameterSymbol.generatedPrimaryConstructorProperty is always null in
+            // libraries.
             // TODO: fix in AA
-            KaSymbolOrigin.LIBRARY, KaSymbolOrigin.JAVA_LIBRARY -> analyze {
-                val cstr = ktValueParameterSymbol.containingDeclaration as? KaConstructorSymbol
-                val cls = cstr?.containingDeclaration as? KaClassSymbol
-                cls?.declaredMemberScope?.declarations?.filterIsInstance<KaPropertySymbol>()
-                    ?.firstOrNull { it.name == ktValueParameterSymbol.name }
-            }
+            KaSymbolOrigin.LIBRARY,
+            KaSymbolOrigin.JAVA_LIBRARY ->
+                analyze {
+                    val cstr = ktValueParameterSymbol.containingDeclaration as? KaConstructorSymbol
+                    val cls = cstr?.containingDeclaration as? KaClassSymbol
+                    cls?.declaredMemberScope
+                        ?.declarations
+                        ?.filterIsInstance<KaPropertySymbol>()
+                        ?.firstOrNull { it.name == ktValueParameterSymbol.name }
+                }
 
             else -> ktValueParameterSymbol.generatedPrimaryConstructorProperty
         }

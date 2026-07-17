@@ -34,8 +34,7 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVo
     val symbols = arrayListOf<KSAnnotated>()
 
     override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
-        if (annotated.annotations.any())
-            symbols.add(annotated)
+        if (annotated.annotations.any()) symbols.add(annotated)
     }
 
     override fun visitFile(file: KSFile, data: Unit) {

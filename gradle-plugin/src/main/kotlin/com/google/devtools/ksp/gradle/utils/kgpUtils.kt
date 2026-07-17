@@ -8,14 +8,16 @@ import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.utils.ObservableSet
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 
-// NOTE: for AGP with built in kotlin enabled and android.disallowKotlinSourceSets=true, this returns empty set
+// NOTE: for AGP with built in kotlin enabled and android.disallowKotlinSourceSets=true, this
+// returns empty set
 internal val KotlinCompilation<*>.allKotlinSourceSetsObservable
     get() = this.allKotlinSourceSets as ObservableSet<KotlinSourceSet>
 
 internal val KotlinCompilation<*>.kotlinSourceSetsObservable
     get() = this.kotlinSourceSets as ObservableSet<KotlinSourceSet>
 
-fun Project.isKotlinBaseApiPluginApplied() = plugins.withType(KotlinBaseApiPlugin::class.java).firstOrNull() != null
+fun Project.isKotlinBaseApiPluginApplied() =
+    plugins.withType(KotlinBaseApiPlugin::class.java).firstOrNull() != null
 
 fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
 

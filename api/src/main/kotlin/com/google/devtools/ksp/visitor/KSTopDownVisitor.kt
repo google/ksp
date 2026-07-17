@@ -27,6 +27,7 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     private fun Sequence<KSNode>.accept(data: D) {
         forEach { it.accept(this@KSTopDownVisitor, data) }
     }
+
     private fun List<KSNode>.accept(data: D) {
         forEach { it.accept(this@KSTopDownVisitor, data) }
     }
@@ -56,7 +57,10 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         return super.visitDeclaration(declaration, data)
     }
 
-    override fun visitDeclarationContainer(declarationContainer: KSDeclarationContainer, data: D): R {
+    override fun visitDeclarationContainer(
+        declarationContainer: KSDeclarationContainer,
+        data: D,
+    ): R {
         declarationContainer.declarations.accept(data)
         return super.visitDeclarationContainer(declarationContainer, data)
     }

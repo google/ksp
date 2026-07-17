@@ -16,6 +16,7 @@
  */
 
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package com.google.devtools.ksp.standalone
 
 import com.intellij.core.CoreApplicationEnvironment
@@ -23,6 +24,10 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
+import java.nio.file.Path
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
@@ -33,10 +38,6 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.KtBinaryModuleBui
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.analysis.project.structure.impl.KaLibraryModuleImpl
-import java.nio.file.Path
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 
 @KtModuleBuilderDsl
 open class KspLibraryModuleBuilder(
@@ -52,12 +53,13 @@ open class KspLibraryModuleBuilder(
     fun build(isSdk: Boolean): KaLibraryModule {
         val binaryRoots = getBinaryRoots()
         val binaryVirtualFiles = getBinaryVirtualFiles()
-        val contentScope = LibraryRootsSearchScope(
-            StandaloneProjectFactory.getVirtualFilesForLibraryRoots(
-                binaryRoots,
-                coreApplicationEnvironment,
-            ) + binaryVirtualFiles
-        )
+        val contentScope =
+            LibraryRootsSearchScope(
+                StandaloneProjectFactory.getVirtualFilesForLibraryRoots(
+                    binaryRoots,
+                    coreApplicationEnvironment,
+                ) + binaryVirtualFiles
+            )
         return KaLibraryModuleImpl(
             directRegularDependencies,
             directDependsOnDependencies,
@@ -69,13 +71,15 @@ open class KspLibraryModuleBuilder(
             binaryVirtualFiles,
             libraryName,
             librarySources,
-            isSdk
+            isSdk,
         )
     }
 }
 
 @OptIn(ExperimentalContracts::class)
-inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleBuilder.() -> Unit): KaLibraryModule {
+inline fun KtModuleProviderBuilder.buildKspLibraryModule(
+    init: KspLibraryModuleBuilder.() -> Unit
+): KaLibraryModule {
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }
@@ -89,23 +93,24 @@ internal class SimpleTrie(paths: List<String>) {
 
     val root = TrieNode()
 
-    private val m = mutableMapOf<Pair<TrieNode, String>, TrieNode>().apply {
-        paths.forEach { path ->
-            var p = root
-            for (d in path.trim('/').split('/')) {
-                p = getOrPut(Pair(p, d)) { TrieNode() }
+    private val m =
+        mutableMapOf<Pair<TrieNode, String>, TrieNode>().apply {
+            paths.forEach { path ->
+                var p = root
+                for (d in path.trim('/').split('/')) {
+                    p = getOrPut(Pair(p, d)) { TrieNode() }
+                }
+                p.isTerminal = true
             }
-            p.isTerminal = true
         }
-    }
 
     fun contains(s: String): Boolean {
         var p = root
         for (d in s.trim('/').split('/')) {
-            p = m.get(Pair(p, d))?.also {
-                if (it.isTerminal)
-                    return true
-            } ?: return false
+            p =
+                m.get(Pair(p, d))?.also {
+                    if (it.isTerminal) return true
+                } ?: return false
         }
         return false
     }
@@ -138,7 +143,9 @@ public class KspSdkModuleBuilder(
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun KtModuleProviderBuilder.buildKspSdkModule(init: KspSdkModuleBuilder.() -> Unit): KaLibraryModule {
+public inline fun KtModuleProviderBuilder.buildKspSdkModule(
+    init: KspSdkModuleBuilder.() -> Unit
+): KaLibraryModule {
     contract {
         callsInPlace(init, InvocationKind.EXACTLY_ONCE)
     }

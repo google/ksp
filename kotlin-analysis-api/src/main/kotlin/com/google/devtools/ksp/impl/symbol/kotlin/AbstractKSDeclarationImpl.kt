@@ -69,28 +69,32 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
         get() = originalAnnotations
 
     override val modifiers: Set<Modifier> by lazy {
-        if (origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC) {
+        if (
+            origin == Origin.JAVA_LIB || origin == Origin.KOTLIN_LIB || origin == Origin.SYNTHETIC
+        ) {
             when (val ktDeclarationSymbol = this.ktDeclarationSymbol) {
                 is KaPropertySymbol -> ktDeclarationSymbol.toModifiers()
                 is KaClassSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaFunctionSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaJavaFieldSymbol -> ktDeclarationSymbol.toModifiers()
                 is KaTypeAliasSymbol -> ktDeclarationSymbol.toModifiers()
-                else -> throw InternalKSPException(
-                    "Unexpected symbol type: $ktDeclarationSymbol",
-                    this.location,
-                    ktDeclarationSymbol.javaClass
-                )
+                else ->
+                    throw InternalKSPException(
+                        "Unexpected symbol type: $ktDeclarationSymbol",
+                        this.location,
+                        ktDeclarationSymbol.javaClass,
+                    )
             }
         } else {
             when (val psi = ktDeclarationSymbol.psi) {
                 is KtModifierListOwner -> psi.toKSModifiers()
                 is PsiModifierListOwner -> psi.toKSModifiers()
-                else -> throw InternalKSPException(
-                    "Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}",
-                    this.location,
-                    psi?.javaClass ?: this.javaClass
-                )
+                else ->
+                    throw InternalKSPException(
+                        "Unexpected symbol type ${ktDeclarationSymbol.psi?.javaClass}",
+                        this.location,
+                        psi?.javaClass ?: this.javaClass,
+                    )
             }
         }
     }
@@ -112,7 +116,7 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
             }?.let {
                 KSNameImpl.getCached(it)
             } //  null -> non top level declaration, find in parent
-                ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
+            ?: ktDeclarationSymbol.getContainingKSSymbol()?.packageName
                 ?: throw InternalKSPException(
                     "failed to find package name for $this",
                     this.location,
@@ -134,9 +138,13 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
         analyze {
             ktDeclarationSymbol.containingSymbol?.let {
                 ktDeclarationSymbol.getContainingKSSymbol()
-            } ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>(withSelf = false))?.namedClassSymbol?.let {
-                KSClassDeclarationImpl.getCached(it)
-            } ?: ktDeclarationSymbol.toContainingFile()
+            }
+                ?: (ktDeclarationSymbol.psi?.parentOfType<PsiClass>(withSelf = false))
+                    ?.namedClassSymbol
+                    ?.let {
+                        KSClassDeclarationImpl.getCached(it)
+                    }
+                ?: ktDeclarationSymbol.toContainingFile()
         }
     }
 
@@ -152,10 +160,12 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
             (ktDeclarationSymbol.psi as KtAnnotated).annotations(ktDeclarationSymbol, this)
         } else if (
             ktDeclarationSymbol.origin == KaSymbolOrigin.JAVA_SOURCE &&
-            ktDeclarationSymbol.psi is PsiJvmModifiersOwner
+                ktDeclarationSymbol.psi is PsiJvmModifiersOwner
         ) {
             (ktDeclarationSymbol.psi as PsiJvmModifiersOwner)
-                .annotations.map { KSAnnotationJavaImpl.getCached(it, this) }.asSequence()
+                .annotations
+                .map { KSAnnotationJavaImpl.getCached(it, this) }
+                .asSequence()
         } else {
             ktDeclarationSymbol.annotations(this)
         }

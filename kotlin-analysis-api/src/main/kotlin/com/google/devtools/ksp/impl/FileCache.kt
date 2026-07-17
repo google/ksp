@@ -23,55 +23,52 @@ import org.jetbrains.kotlin.psi.KtFile
 /**
  * A cache for information extracted from a [KtFile].
  *
- * This class pre-calculates and stores frequently accessed information from a Kotlin PSI file,
- * such as its package name, imports, and local declarations, to avoid redundant PSI traversals.
+ * This class pre-calculates and stores frequently accessed information from a Kotlin PSI file, such
+ * as its package name, imports, and local declarations, to avoid redundant PSI traversals.
  *
  * @param file The [KtFile] from which information is extracted.
  */
 class FileCache(file: KtFile) {
 
-    /**
-     * The fully qualified package name of the file.
-     */
+    /** The fully qualified package name of the file. */
     val packageName = file.packageFqName
 
     /**
      * A map of explicit (non-star) imports in the file.
      *
-     * The keys are the names by which the imported symbols are referred to in the code
-     * (either an alias or the short name), and the values are their fully qualified names.
+     * The keys are the names by which the imported symbols are referred to in the code (either an
+     * alias or the short name), and the values are their fully qualified names.
      */
-    val explicitImports = file.importDirectives
-        .filter { !it.isAllUnder && it.importedFqName != null }
-        .associate { (it.aliasName ?: it.importedFqName!!.shortName().asString()) to it.importedFqName!! }
+    val explicitImports =
+        file.importDirectives
+            .filter { !it.isAllUnder && it.importedFqName != null }
+            .associate {
+                (it.aliasName ?: it.importedFqName!!.shortName().asString()) to it.importedFqName!!
+            }
 
-    /**
-     * A list of fully qualified names of the star imports in the file.
-     */
-    val starImports = file.importDirectives
-        .filter { it.isAllUnder }
-        .mapNotNull { it.importedFqName }
+    /** A list of fully qualified names of the star imports in the file. */
+    val starImports =
+        file.importDirectives.filter { it.isAllUnder }.mapNotNull { it.importedFqName }
 
-    /**
-     * A collection of names for all local declarations within the file.
-     */
+    /** A collection of names for all local declarations within the file. */
     val localDeclarations = file.collectClassifierNames()
 
     companion object {
         // TODO: Figure out if there is a better way to obtain default imports than hard coded list
         // TODO: Move this list somewhere appropriate
         @JvmStatic
-        val DEFAULT_IMPORTS = listOf(
-            "kotlin",
-            "kotlin.annotation",
-            "kotlin.collections",
-            "kotlin.comparisons",
-            "kotlin.io",
-            "kotlin.ranges",
-            "kotlin.sequences",
-            "kotlin.text",
-            "kotlin.jvm",
-            "java.lang"
-        )
+        val DEFAULT_IMPORTS =
+            listOf(
+                "kotlin",
+                "kotlin.annotation",
+                "kotlin.collections",
+                "kotlin.comparisons",
+                "kotlin.io",
+                "kotlin.ranges",
+                "kotlin.sequences",
+                "kotlin.text",
+                "kotlin.jvm",
+                "java.lang",
+            )
     }
 }

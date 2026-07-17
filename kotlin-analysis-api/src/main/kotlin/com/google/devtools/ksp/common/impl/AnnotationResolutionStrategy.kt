@@ -22,29 +22,25 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 
-/**
- * Represents a strategy for resolving annotated symbols.
- */
+/** Represents a strategy for resolving annotated symbols. */
 interface AnnotationResolutionStrategy {
 
-    /**
-     * Files that are new in the current round of processing.
-     */
+    /** Files that are new in the current round of processing. */
     val newKSFiles: List<KSFile>
 
-    /**
-     * Symbols that were deferred by symbol processors in the previous round.
-     */
+    /** Symbols that were deferred by symbol processors in the previous round. */
     val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
 
     /**
-     * Get all symbols with specified annotation in the current compilation unit.
-     * Note that in multiple round processing, only symbols from deferred symbols of last round and symbols from newly generated files will be returned in this function.
+     * Get all symbols with specified annotation in the current compilation unit. Note that in
+     * multiple round processing, only symbols from deferred symbols of last round and symbols from
+     * newly generated files will be returned in this function.
      *
-     * @param annotationName is the fully qualified name of the fully expanded type (i.e. no type alias); using '.' as separator.
-     * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.
+     * @param annotationName is the fully qualified name of the fully expanded type (i.e. no type
+     *   alias); using '.' as separator.
+     * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations.
+     *   Operation can be expensive if true.
      * @return Elements annotated with the specified annotation.
-     *
      */
     fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated>
 }

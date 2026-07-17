@@ -41,13 +41,13 @@ import org.jetbrains.kotlin.psi.KtUserType
 class KSTypeReferenceImpl(
     private val ktTypeReference: KtTypeReference,
     override val parent: KSNode?,
-    private val additionalAnnotations: List<KaAnnotation>
+    private val additionalAnnotations: List<KaAnnotation>,
 ) : KSTypeReference {
     companion object : KSObjectCache<IdKeyPair<KtTypeReference, KSNode?>, KSTypeReference>() {
         fun getCached(
             ktTypeReference: KtTypeReference,
             parent: KSNode? = null,
-            additionalAnnotations: List<KaAnnotation> = emptyList()
+            additionalAnnotations: List<KaAnnotation> = emptyList(),
         ): KSTypeReference {
             return cache.getOrPut(IdKeyPair(ktTypeReference, parent)) {
                 KSTypeReferenceImpl(ktTypeReference, parent, additionalAnnotations)
@@ -63,8 +63,7 @@ class KSTypeReferenceImpl(
     }
     override val element: KSReferenceElement? by lazy {
         var typeElement = ktTypeReference.typeElement
-        while (typeElement is KtNullableType)
-            typeElement = typeElement.innerType
+        while (typeElement is KtNullableType) typeElement = typeElement.innerType
         when (typeElement) {
             is KtUserType -> KSClassifierReferenceImpl.getCached(typeElement, this)
             is KtDynamicType -> KSDynamicReferenceImpl.getCached(this)

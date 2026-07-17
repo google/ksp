@@ -41,18 +41,18 @@ object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>()
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {
         val name = declaration.simpleName.asString()
         val scope =
-            declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) }
-                ?: return
+            declaration.qualifiedName?.asString()?.let {
+                it.substring(0, Math.max(it.length - name.length - 1, 0))
+            } ?: return
         data(LookupSymbolWrapper(name, scope))
     }
 
     override fun visitDeclarationContainer(
         declarationContainer: KSDeclarationContainer,
-        data: (LookupSymbolWrapper) -> Unit
+        data: (LookupSymbolWrapper) -> Unit,
     ) {
         // Local declarations aren't visible to other files / classes.
-        if (declarationContainer is KSFunctionDeclaration)
-            return
+        if (declarationContainer is KSFunctionDeclaration) return
 
         declarationContainer.declarations.forEach {
             it.accept(this, data)
@@ -156,8 +156,7 @@ abstract class IncrementalContextBase(
     }
 
     private fun logSourceToOutputs(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
-        if (!loggingOptions.incrementalLoggingEnabled)
-            return
+        if (!loggingOptions.incrementalLoggingEnabled) return
 
         mkLogFile("kspSourceToOutputs.log").bufferedWriter().use { logFile ->
             logFile.write("Accumulated source to outputs map\n")
@@ -240,12 +239,14 @@ abstract class IncrementalContextBase(
         val newSyms = mutableSetOf<LookupSymbolWrapper>()
 
         // Parse and add newly defined symbols in modified files.
-        ksFiles.filter { it.relativeFile in modified }.forEach { file ->
-            file.accept(SymbolCollector) {
-                updatedSymbols.putValue(file.relativeFile, it)
-                newSyms.add(it)
+        ksFiles
+            .filter { it.relativeFile in modified }
+            .forEach { file ->
+                file.accept(SymbolCollector) {
+                    updatedSymbols.putValue(file.relativeFile, it)
+                    newSyms.add(it)
+                }
             }
-        }
 
         val dirtyFilesByNewSyms = newSyms.flatMap { newSym ->
             symbolLookupCache[newSym].map { it.toRelativeFile() }
@@ -253,18 +254,26 @@ abstract class IncrementalContextBase(
         val dirtyFilesBySealed = sealedMap.keys
 
         // Calculate dirty files by dirty classes in CP.
-        val dirtyFilesByCP = changedClasses.flatMap { fqn ->
-            val (scope, name) = separateQualifierAndName(fqn)
-            classLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() } +
-                symbolLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() }
-        }.toSet()
+        val dirtyFilesByCP =
+            changedClasses
+                .flatMap { fqn ->
+                    val (scope, name) = separateQualifierAndName(fqn)
+                    classLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() } +
+                        symbolLookupCache[LookupSymbolWrapper(name, scope)].map {
+                            it.toRelativeFile()
+                        }
+                }
+                .toSet()
 
         // output files that exist in CURR~2 but not in CURR~1
         val removedOutputs = sourceToOutputsMap[removedOutputsKey] ?: emptyList()
 
-        val noSourceFiles = changedClasses.map { fqn ->
-            NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
-        }.toSet()
+        val noSourceFiles =
+            changedClasses
+                .map { fqn ->
+                    NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
+                }
+                .toSet()
 
         val initialSet = mutableSetOf<File>()
         initialSet.addAll(modified)
@@ -277,13 +286,15 @@ abstract class IncrementalContextBase(
 
         initialSet.add(anyChangesWildcard)
 
-        val dirtyFiles = DirtinessPropagator(
-            symbolLookupCache,
-            symbolsMap,
-            sourceToOutputsMap,
-            anyChangesWildcard,
-            removedOutputsKey
-        ).propagate(initialSet)
+        val dirtyFiles =
+            DirtinessPropagator(
+                    symbolLookupCache,
+                    symbolsMap,
+                    sourceToOutputsMap,
+                    anyChangesWildcard,
+                    removedOutputsKey,
+                )
+                .propagate(initialSet)
 
         updateFromRemovedOutputs()
 
@@ -295,7 +306,7 @@ abstract class IncrementalContextBase(
             removedOutputs,
             dirtyFilesByCP,
             dirtyFilesByNewSyms,
-            dirtyFilesBySealed
+            dirtyFilesBySealed,
         )
         return@closeFilesOnException dirtyKSFiles
     }
@@ -319,9 +330,11 @@ abstract class IncrementalContextBase(
             sourceToOutputsMap.removeRecursively(it)
         }
 
-        dirtyFiles.filterNot { sourceToOutputs.containsKey(it) }.forEach {
-            sourceToOutputsMap.removeRecursively(it)
-        }
+        dirtyFiles
+            .filterNot { sourceToOutputs.containsKey(it) }
+            .forEach {
+                sourceToOutputsMap.removeRecursively(it)
+            }
 
         removedOutputs.forEach {
             sourceToOutputsMap.removeRecursively(it)
@@ -351,7 +364,8 @@ abstract class IncrementalContextBase(
         //    Untouched outputs need to be restore.
         //
         //    TODO: need a change in upstream to not clean files in gradle plugin.
-        //    Not cleaning files in gradle plugin has potentially fewer copies when processing succeeds.
+        //    Not cleaning files in gradle plugin has potentially fewer copies when processing
+        // succeeds.
         //
         // 2. Even if outputs are left from last compilation / processing, processors can still
         //    fail and the outputs will need to be restored.
@@ -372,7 +386,7 @@ abstract class IncrementalContextBase(
     private fun updateCaches(
         dirtyFiles: Collection<File>,
         outputs: Set<File>,
-        sourceToOutputs: Map<File, Set<File>>
+        sourceToOutputs: Map<File, Set<File>>,
     ) {
         // dirtyFiles may contain new files, which are unknown to sourceToOutputsMap.
         val oldOutputs = dirtyFiles.flatMap { sourceToOutputsMap[it] ?: emptyList() }.distinct()
@@ -388,7 +402,10 @@ abstract class IncrementalContextBase(
             }
         }
 
-        fun <K : Comparable<K>, V> remove(m: PersistentMap<K, List<V>>, removedKeys: Collection<K>) {
+        fun <K : Comparable<K>, V> remove(
+            m: PersistentMap<K, List<V>>,
+            removedKeys: Collection<K>,
+        ) {
             // Remove symbol caches from removed files.
             removedKeys.forEach {
                 m.remove(it)
@@ -413,8 +430,7 @@ abstract class IncrementalContextBase(
     }
 
     fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
-        if (!isIncremental)
-            return@closeFilesOnException
+        if (!isIncremental) return@closeFilesOnException
 
         collectDefinedSymbols(newFiles)
     }
@@ -444,8 +460,7 @@ abstract class IncrementalContextBase(
         outputs: Set<File>,
         sourceToOutputs: Map<File, Set<File>>,
     ) = closeFilesOnException {
-        if (!isIncremental)
-            return@closeFilesOnException
+        if (!isIncremental) return@closeFilesOnException
 
         cachesUpToDateFile.delete()
         assert(!cachesUpToDateFile.exists())
@@ -454,12 +469,16 @@ abstract class IncrementalContextBase(
 
         // Throw away results from clean inputs.
         //
-        // One common misuse of incremental APIs is associating a non-root source, instead of the ones obtained from
-        // root functions (e.g., getSymbolsWithAnnotation), to an output. This non-root source can be reached and
-        // reprocessed even when it is clean. Because it is clean, it is not available via root functions. As a result,
+        // One common misuse of incremental APIs is associating a non-root source, instead of the
+        // ones obtained from
+        // root functions (e.g., getSymbolsWithAnnotation), to an output. This non-root source can
+        // be reached and
+        // reprocessed even when it is clean. Because it is clean, it is not available via root
+        // functions. As a result,
         // other outputs that are solely based on it won't be re-generated and is deemed as removed.
         //
-        // Assuming that the processors are deterministic, we are throwing away outputs from clean inputs, and
+        // Assuming that the processors are deterministic, we are throwing away outputs from clean
+        // inputs, and
         // recovering them from the backup as a workaround for processors.
 
         val relativeOutputs = outputs.map { it.toRelativeFile() }.toSet()
@@ -496,8 +515,7 @@ abstract class IncrementalContextBase(
 
         val cleanOutputs = mutableSetOf<File>()
         sourceToOutputsMap.keys.forEach { source ->
-            if (!isDirty(source))
-                cleanOutputs.addAll(sourceToOutputsMap[source]!!)
+            if (!isDirty(source)) cleanOutputs.addAll(sourceToOutputsMap[source]!!)
         }
         sourceToOutputsMap.flush()
         updateOutputs(dirtyOutputs, cleanOutputs)
@@ -507,25 +525,23 @@ abstract class IncrementalContextBase(
     }
 
     /**
-     * Insert Java file -> names lookup records.
-     * In other words, it inserts the names of symbols that may invalidate the [psiFile].
-     * There are several cases where that may happen:
-     * - If `fqn` has been looked up in the file, then `fqn` may invalidate the file
-     * (`fqn` may come from the same file or out of file).
+     * Insert Java file -> names lookup records. In other words, it inserts the names of symbols
+     * that may invalidate the [psiFile]. There are several cases where that may happen:
+     * - If `fqn` has been looked up in the file, then `fqn` may invalidate the file (`fqn` may come
+     *   from the same file or out of file).
      * - If `sym` is a named import, then `sym` may invalidate the file.
      * - If `sym` is an on-demand import, then `sym` may invalidate the file.
-     * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the file.
+     * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the
+     *   file.
      */
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
-        if (!isIncremental)
-            return
+        if (!isIncremental) return
 
         val path = psiFile.virtualFile.path
         val (scope, name) = separateQualifierAndName(fqn)
 
         // Java types are classes. Therefore lookups only happen in packages.
-        fun record(scope: String, name: String) =
-            symbolLookupTracker.record(path, scope, name)
+        fun record(scope: String, name: String) = symbolLookupTracker.record(path, scope, name)
 
         record(scope, name)
 
@@ -533,9 +549,12 @@ abstract class IncrementalContextBase(
         // Therefore, the potential providers all need to be inserted. They are
         //   1. definition of the name in the same package
         //   2. other * imports
-        val onDemandImports = onDemandImportsCache.getOrPut(psiFile) {
-            psiFile.getOnDemandImports().mapNotNull { (it.importReference?.resolve() as? PsiPackage)?.qualifiedName }
-        }
+        val onDemandImports =
+            onDemandImportsCache.getOrPut(psiFile) {
+                psiFile.getOnDemandImports().mapNotNull {
+                    (it.importReference?.resolve() as? PsiPackage)?.qualifiedName
+                }
+            }
         if (scope in onDemandImports) {
             record(psiFile.packageName, name)
             onDemandImports.forEach {
@@ -544,38 +563,40 @@ abstract class IncrementalContextBase(
         }
     }
 
-    /**
-     * Returns all on-demand imports for `this`, i.e., `import X.*`.
-     */
+    /** Returns all on-demand imports for `this`, i.e., `import X.*`. */
     private fun PsiJavaFile.getOnDemandImports(): List<PsiImportStatement> =
-        this.importList?.importStatements
-            ?.filter { it.isOnDemand }
-            ?: emptyList()
+        this.importList?.importStatements?.filter { it.isOnDemand } ?: emptyList()
 
     fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
-        if (!isIncremental)
-            return
+        if (!isIncremental) return
 
         val name = classDeclaration.simpleName.asString()
-        val scope = classDeclaration.qualifiedName?.asString()
-            ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
-        updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
+        val scope =
+            classDeclaration.qualifiedName?.asString()?.let {
+                it.substring(0, (it.length - name.length - 1).coerceAtLeast(0))
+            } ?: return
+        updatedSealed.putValue(
+            classDeclaration.containingFile!!.relativeFile,
+            LookupSymbolWrapper(name, scope),
+        )
     }
 
-    protected open fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
+    protected open fun logBeforeCacheFlush(
+        outputs: Set<File>,
+        sourceToOutputs: Map<File, Set<File>>,
+    ) {
         logSourceToOutputs(outputs, sourceToOutputs)
     }
 
     protected fun mkFileInLogDir(fileName: String): File =
-        File(logsDir, fileName)
-            .also {
-                if (it.delete()) {
-                    it.createNewFile()
-                }
+        File(logsDir, fileName).also {
+            if (it.delete()) {
+                it.createNewFile()
             }
+        }
 
-    protected fun mkLogFile(fileName: String): File = mkFileInLogDir(fileName)
-        .also { it.appendText("=== Build $buildTime ===\n") }
+    protected fun mkLogFile(fileName: String): File =
+        mkFileInLogDir(fileName).also { it.appendText("=== Build $buildTime ===\n") }
 }
 
 internal class DirtinessPropagator(
@@ -583,24 +604,24 @@ internal class DirtinessPropagator(
     private val symbolsMap: FileToSymbolsMap,
     private val sourceToOutputs: FileToFilesMap,
     private val anyChangesWildcard: File,
-    private val removedOutputsKey: File
+    private val removedOutputsKey: File,
 ) {
     private val visitedFiles = mutableSetOf<File>()
     private val visitedSyms = mutableSetOf<LookupSymbolWrapper>()
 
-    private val outputToSources = mutableMapOf<File, MutableSet<File>>().apply {
-        sourceToOutputs.keys.forEach { source ->
-            if (source != anyChangesWildcard && source != removedOutputsKey) {
-                sourceToOutputs[source]!!.forEach { output ->
-                    getOrPut(output) { mutableSetOf() }.add(source)
+    private val outputToSources =
+        mutableMapOf<File, MutableSet<File>>().apply {
+            sourceToOutputs.keys.forEach { source ->
+                if (source != anyChangesWildcard && source != removedOutputsKey) {
+                    sourceToOutputs[source]!!.forEach { output ->
+                        getOrPut(output) { mutableSetOf() }.add(source)
+                    }
                 }
             }
         }
-    }
 
     private fun visit(sym: LookupSymbolWrapper) {
-        if (sym in visitedSyms)
-            return
+        if (sym in visitedSyms) return
         visitedSyms.add(sym)
 
         lookupCache[sym].forEach {
@@ -609,8 +630,7 @@ internal class DirtinessPropagator(
     }
 
     private fun visit(file: File) {
-        if (file in visitedFiles)
-            return
+        if (file in visitedFiles) return
         visitedFiles.add(file)
 
         // Propagate by dependencies
@@ -627,7 +647,8 @@ internal class DirtinessPropagator(
         // Propagate by input-output relations
         // Given (..., I, ...) -> O:
         // 1) if I is dirty, then O is dirty.
-        // 2) if O is dirty, then O must be regenerated, which requires all of its inputs to be reprocessed.
+        // 2) if O is dirty, then O must be regenerated, which requires all of its inputs to be
+        // reprocessed.
         sourceToOutputs[file]?.forEach {
             visit(it)
         }

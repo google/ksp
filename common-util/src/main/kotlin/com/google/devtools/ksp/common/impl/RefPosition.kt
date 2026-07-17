@@ -14,39 +14,42 @@ import com.google.devtools.ksp.symbol.KSTypeReference
 enum class RefPosition {
     PARAMETER_TYPE,
     RETURN_TYPE,
-    SUPER_TYPE
+    SUPER_TYPE,
 }
 
 // TODO: Strict mode for catching unhandled cases.
-fun findRefPosition(ref: KSTypeReference): RefPosition = when (val parent = ref.parent) {
-    is KSCallableReference -> when (ref) {
-        parent.returnType -> RefPosition.RETURN_TYPE
+fun findRefPosition(ref: KSTypeReference): RefPosition =
+    when (val parent = ref.parent) {
+        is KSCallableReference ->
+            when (ref) {
+                parent.returnType -> RefPosition.RETURN_TYPE
+                else -> RefPosition.PARAMETER_TYPE
+            }
+        is KSFunctionDeclaration ->
+            when (ref) {
+                parent.returnType -> RefPosition.RETURN_TYPE
+                else -> RefPosition.PARAMETER_TYPE
+            }
+        is KSPropertyGetter -> RefPosition.RETURN_TYPE
+        is KSPropertyDeclaration ->
+            when (ref) {
+                parent.type -> RefPosition.RETURN_TYPE
+                else -> RefPosition.PARAMETER_TYPE
+            }
+        is KSClassDeclaration -> RefPosition.SUPER_TYPE
+        // is KSTypeArgument -> RefPosition.PARAMETER_TYPE
+        // is KSAnnotation -> RefPosition.PARAMETER_TYPE
+        // is KSTypeAlias -> RefPosition.PARAMETER_TYPE
+        // is KSValueParameter -> RefPosition.PARAMETER_TYPE
+        // is KSTypeParameter -> RefPosition.PARAMETER_TYPE
         else -> RefPosition.PARAMETER_TYPE
     }
-    is KSFunctionDeclaration -> when (ref) {
-        parent.returnType -> RefPosition.RETURN_TYPE
-        else -> RefPosition.PARAMETER_TYPE
-    }
-    is KSPropertyGetter -> RefPosition.RETURN_TYPE
-    is KSPropertyDeclaration -> when (ref) {
-        parent.type -> RefPosition.RETURN_TYPE
-        else -> RefPosition.PARAMETER_TYPE
-    }
-    is KSClassDeclaration -> RefPosition.SUPER_TYPE
-    // is KSTypeArgument -> RefPosition.PARAMETER_TYPE
-    // is KSAnnotation -> RefPosition.PARAMETER_TYPE
-    // is KSTypeAlias -> RefPosition.PARAMETER_TYPE
-    // is KSValueParameter -> RefPosition.PARAMETER_TYPE
-    // is KSTypeParameter -> RefPosition.PARAMETER_TYPE
-    else -> RefPosition.PARAMETER_TYPE
-}
 
 // Search in self and parents for the first type reference that is not part of a type argument.
 fun KSTypeReference.findOuterMostRef(): Pair<KSTypeReference, List<Int>> {
     fun KSNode.findParentRef(): KSTypeReference? {
         var parent = parent
-        while (parent != null && parent !is KSTypeReference)
-            parent = parent.parent
+        while (parent != null && parent !is KSTypeReference) parent = parent.parent
         return parent
     }
 
@@ -67,7 +70,6 @@ fun KSTypeReference.findOuterMostRef(): Pair<KSTypeReference, List<Int>> {
 
 fun KSTypeReference.isReturnTypeOfAnnotationMethod(): Boolean {
     var candidate = this.parent
-    while (candidate !is KSClassDeclaration && candidate != null)
-        candidate = candidate.parent
+    while (candidate !is KSClassDeclaration && candidate != null) candidate = candidate.parent
     return candidate?.classKind == ClassKind.ANNOTATION_CLASS
 }

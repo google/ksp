@@ -26,7 +26,9 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KaTypeA
     KSTypeAlias,
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktTypeAliasSymbol) {
-    override val ktDeclarationSymbol get() = ktTypeAliasSymbol
+    override val ktDeclarationSymbol
+        get() = ktTypeAliasSymbol
+
     companion object : KSObjectCache<KaTypeAliasSymbol, KSTypeAliasImpl>() {
         fun getCached(ktTypeAliasSymbol: KaTypeAliasSymbol) =
             cache.getOrPut(ktTypeAliasSymbol) { KSTypeAliasImpl(ktTypeAliasSymbol) }
@@ -39,7 +41,7 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KaTypeA
     override val type: KSTypeReference by lazy {
         KSTypeReferenceResolvedImpl.getCached(
             ktTypeAliasSymbol.expandedType.let { it.abbreviation ?: it },
-            this
+            this,
         )
     }
 

@@ -1,5 +1,7 @@
 package com.google.devtools.ksp.common
 
+import java.io.BufferedInputStream
+import java.io.File
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -12,20 +14,23 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
-import java.io.BufferedInputStream
-import java.io.File
 
 private object FileSerializer : KSerializer<File> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("File", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("File", PrimitiveKind.STRING)
+
     override fun serialize(encoder: Encoder, value: File) = encoder.encodeString(value.path)
+
     override fun deserialize(decoder: Decoder): File = File(decoder.decodeString())
 }
 
 private object SymbolSerializer : KSerializer<LookupSymbolWrapper> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("LookupSymbolWrapper", PrimitiveKind.STRING)
+
     override fun serialize(encoder: Encoder, value: LookupSymbolWrapper) =
         encoder.encodeString("${value.name}:${value.scope}")
+
     override fun deserialize(decoder: Decoder): LookupSymbolWrapper {
         val (name, scope) = decoder.decodeString().split(':')
         return LookupSymbolWrapper(name, scope)
@@ -33,7 +38,8 @@ private object SymbolSerializer : KSerializer<LookupSymbolWrapper> {
 }
 
 private val fileToFilesMapSerializer = MapSerializer(FileSerializer, ListSerializer(FileSerializer))
-private val fileToSymbolsMapSerializer = MapSerializer(FileSerializer, ListSerializer(SymbolSerializer))
+private val fileToSymbolsMapSerializer =
+    MapSerializer(FileSerializer, ListSerializer(SymbolSerializer))
 
 abstract class PersistentMap<K, V>(
     private val serializer: KSerializer<Map<K, V>>,
@@ -47,12 +53,16 @@ abstract class PersistentMap<K, V>(
             Json.encodeToStream(serializer, m.toMap(), it)
         }
     }
+
     override fun toString() = m.toString()
 
     companion object {
         @JvmStatic
         @OptIn(ExperimentalSerializationApi::class)
-        protected fun <K, V> deserialize(serializer: KSerializer<Map<K, V>>, storage: File): MutableMap<K, V> {
+        protected fun <K, V> deserialize(
+            serializer: KSerializer<Map<K, V>>,
+            storage: File,
+        ): MutableMap<K, V> {
             return if (storage.exists()) {
                 BufferedInputStream(storage.inputStream()).use {
                     Json.decodeFromStream(serializer, it).toMutableMap()
@@ -64,14 +74,16 @@ abstract class PersistentMap<K, V>(
     }
 }
 
-class FileToFilesMap(
-    storage: File
-) : PersistentMap<File, List<File>>(fileToFilesMapSerializer, storage, deserialize(fileToFilesMapSerializer, storage))
+class FileToFilesMap(storage: File) :
+    PersistentMap<File, List<File>>(
+        fileToFilesMapSerializer,
+        storage,
+        deserialize(fileToFilesMapSerializer, storage),
+    )
 
-class FileToSymbolsMap(
-    storage: File
-) : PersistentMap<File, List<LookupSymbolWrapper>>(
-    fileToSymbolsMapSerializer,
-    storage,
-    deserialize(fileToSymbolsMapSerializer, storage)
-)
+class FileToSymbolsMap(storage: File) :
+    PersistentMap<File, List<LookupSymbolWrapper>>(
+        fileToSymbolsMapSerializer,
+        storage,
+        deserialize(fileToSymbolsMapSerializer, storage),
+    )
