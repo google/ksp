@@ -159,8 +159,8 @@ class SourceSetConfigurationsTest(isExperimentalPsiResolution: Boolean) {
                 require(kspKotlinJvm.outcome == TaskOutcome.SUCCESS)
                 // even though kspJs is not added, the task is created.
                 require(kspKotlinJs != null)
-                // kspKotlinJs has no dependencies, so task is skipped.
-                require(kspKotlinJs.outcome == TaskOutcome.SKIPPED)
+                // kspKotlinJs has no dependencies, so task executes no-op cleanup and succeeds.
+                require(kspKotlinJs.outcome == TaskOutcome.SUCCESS)
             }
     }
 

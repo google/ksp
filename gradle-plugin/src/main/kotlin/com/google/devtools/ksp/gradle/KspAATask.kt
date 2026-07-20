@@ -117,6 +117,12 @@ abstract class KspAATask @Inject constructor(
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
+        if (kspConfig.processorClasspath.isEmpty) {
+            kspConfig.outputBaseDir.get().asFile.deleteRecursively()
+            kspConfig.cachesDir.get().asFile.deleteRecursively()
+            return
+        }
+
         // FIXME: Create a class loader with clean classpath instead of shadowing existing ones. It'll require either:
         //  1. passing arguments by data structures in stdlib, or
         //  2. hoisting and publishing KspGradleConfig into another package.
@@ -215,9 +221,6 @@ abstract class KspAATask @Inject constructor(
             }
             val incomingProcessors = processorClasspath.incoming.artifactView { }.files
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
-                kspAATask.onlyIf {
-                    !incomingProcessors.isEmpty
-                }
                 kspAATask.usesService(isolatedClassLoaderCacheBuildServiceProvider)
                 kspAATask.isolatedClassLoaderCacheBuildService.set(isolatedClassLoaderCacheBuildServiceProvider)
                 kspAATask.kspClasspath.from(kspAADepCfg.incoming.artifactView { }.files)
