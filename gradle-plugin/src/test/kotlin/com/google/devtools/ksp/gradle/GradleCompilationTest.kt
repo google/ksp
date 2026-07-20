@@ -475,4 +475,54 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
 
         assertThat(generatedFile.exists()).isFalse()
     }
+
+    /**
+     * Regression test for https://github.com/google/ksp/issues/3050
+     */
+    @Test
+    fun testKspDebugAndroidTestKotlinExecution() {
+        testRule.setupAndroidLibraryModule(enableAgpBuiltInKotlinSupport = true)
+        testRule.appModule.buildFileAdditions.add(
+            """
+            configurations.matching { it.name == "kspAndroidTestDebug" }.all {
+                project.dependencies.add(name, project(":processor"))
+            }
+            """.trimIndent()
+        )
+        testRule.appModule.addAndroidTestSource(
+            "FooTest.kt",
+            """
+            class FooTest {
+                val x = ToBeGenerated()
+            }
+            """.trimIndent()
+        )
+        class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
+            var processed = false
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                if (!processed) {
+                    codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
+                        it.writer(Charsets.UTF_8).use {
+                            it.write("class ToBeGenerated")
+                        }
+                    }
+                    processed = true
+                }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> MyProcessor(env.codeGenerator) })
+
+        testRule.addProvider(Provider::class)
+
+        val result = testRule.runner().withArguments(":app:kspDebugAndroidTestKotlin", "--info").build()
+        val task = result.task(":app:kspDebugAndroidTestKotlin")
+        require(task != null)
+        require(task.outcome == TaskOutcome.SUCCESS)
+
+        val generatedFile = testRule.appModule.moduleRoot.resolve("build/generated/ksp/debugAndroidTest/kotlin/Generated.kt")
+        assertThat(generatedFile.exists()).isTrue()
+    }
 }
+
