@@ -135,6 +135,39 @@ class KspIntegrationTestRule(
     }
 
     /**
+     * Sets up the module as an Android library module.
+     */
+    fun setupAndroidLibraryModule(
+        enableAgpBuiltInKotlinSupport: Boolean = false,
+        applyKspPluginFirst: Boolean = false
+    ) {
+        testProject.appModule.plugins.addAll(
+            if (applyKspPluginFirst) {
+                listOf(
+                    PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion),
+                    PluginDeclaration.id("com.android.library", testConfig.androidBaseVersion)
+                )
+            } else {
+                listOf(
+                    PluginDeclaration.id("com.android.library", testConfig.androidBaseVersion),
+                    PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
+                )
+            }
+        )
+
+        if (!enableAgpBuiltInKotlinSupport) {
+            val contents = """
+            android.builtInKotlin=false
+            android.newDsl=false
+            
+            """.trimIndent()
+            testProject.rootDir.resolve("gradle.properties").appendText(contents)
+            testProject.appModule.plugins.add(PluginDeclaration.kotlin("android", testConfig.kotlinBaseVersion))
+        }
+        addAndroidBoilerplate()
+    }
+
+    /**
      * Sets up the app module as a multiplatform app with the specified [targets], wrapped in a kotlin { } block.
      */
     fun setupAppAsMultiplatformApp(targets: String) {
