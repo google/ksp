@@ -425,4 +425,54 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
             .withArguments("tasks", "-Pandroid.experimental.enableTestFixturesKotlinSupport=true")
             .build()
     }
+
+    /**
+     * Regression test for https://github.com/google/ksp/issues/3046
+     */
+    @Test
+    fun testStaleOutputCleanupWhenProcessorRemoved() {
+        testRule.setupAppAsJvmApp()
+        val processorDep = module(configuration = "ksp", testRule.processorModule)
+        testRule.appModule.dependencies.add(processorDep)
+        testRule.appModule.addSource(
+            "Foo.kt",
+            """
+            class Foo {
+                val x = ToBeGenerated()
+            }
+            """.trimIndent()
+        )
+        class MyProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
+            var count = 0
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                if (count == 0) {
+                    codeGenerator.createNewFile(Dependencies.ALL_FILES, "", "Generated").use {
+                        it.writer(Charsets.UTF_8).use {
+                            it.write("class ToBeGenerated")
+                        }
+                    }
+                    count += 1
+                }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> MyProcessor(env.codeGenerator) })
+
+        testRule.addProvider(Provider::class)
+
+        testRule.runner().withArguments("app:assemble").build()
+
+        val generatedFile = testRule.appModule.moduleRoot.resolve("build/generated/ksp/main/kotlin/Generated.kt")
+        assertThat(generatedFile.exists()).isTrue()
+
+        // Remove KSP dependency and update source so it compiles without generated code
+        testRule.appModule.dependencies.remove(processorDep)
+        testRule.appModule.addSource("Foo.kt", "class Foo")
+
+        // Run an incremental build without clean and verify stale output directory is cleaned up
+        testRule.runner().withArguments("app:assemble").build()
+
+        assertThat(generatedFile.exists()).isFalse()
+    }
 }
