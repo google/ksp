@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.common.visitor
 
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -82,6 +83,12 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVo
         property.typeParameters.forEach { it.accept(this, data) }
         property.getter?.accept(this, data)
         property.setter?.accept(this, data)
+        property.backingField?.accept(this, data)
+    }
+
+    override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+        visitAnnotated(backingField, data)
+        backingField.type.accept(this, data)
     }
 
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {
