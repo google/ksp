@@ -55,6 +55,16 @@ interface KSPropertyDeclaration : KSDeclaration {
      */
     val hasBackingField: Boolean
 
+    /**
+     * The property's backing field if it exists.
+     * Guaranteed to exist if [hasBackingField] holds.
+     *
+     * As with [hasBackingField], the backing field is specific to the current property,
+     * and does not check for overriding properties.
+     */
+    val backingField: KSBackingField?
+        get() = null
+
     /** Indicates whether this is a delegated property. */
     fun isDelegated(): Boolean
 
