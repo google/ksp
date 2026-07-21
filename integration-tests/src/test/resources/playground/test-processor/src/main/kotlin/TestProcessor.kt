@@ -65,7 +65,7 @@ class TestProcessor : SymbolProcessor {
         return emptyList()
     }
 
-    inner class TestVisitor : KSVisitor<String, Unit> {
+    inner class TestVisitor : KSVisitorNext<String, Unit> {
 
         override fun visitReferenceElement(element: KSReferenceElement, data: String) {
         }
@@ -236,6 +236,11 @@ class TestProcessor : SymbolProcessor {
             property.extensionReceiver?.accept(this, "$data extension:")
             property.setter?.accept(this, "$data  ")
             property.getter?.accept(this, "$data  ")
+            property.backingField?.accept(this, "$data ")
+        }
+
+        override fun visitBackingField(backingField: KSBackingField, data: String) {
+            // Empty impl for now
         }
 
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
