@@ -30,6 +30,7 @@ import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
+import com.google.devtools.ksp.symbol.KSVisitorNext
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSyntheticJavaPropertySymbol
 
@@ -85,6 +86,8 @@ class KSSyntheticJavaBackingFieldImpl private constructor(
     override fun defer(): Restorable =
         kaSyntheticJavaPropertySymbol.defer(::getCached)
 
-    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R =
-        visitor.visitBackingField(this, data)
+    override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R = when (visitor) {
+        is KSVisitorNext -> visitor.visitBackingField(this, data)
+        else -> visitor.visitDeclaration(this, data)
+    }
 }
