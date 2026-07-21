@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.secondary
+package com.google.devtools.ksp.test.android
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
@@ -9,12 +9,11 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class AndroidDataBindingIT(experimentalPsiResolution: Boolean) {
-
+class AndroidDataBindingBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
-        "android-data-binding",
+        "android-data-binding-builtinkotlin",
         experimentalPsiResolution = experimentalPsiResolution
     )
 
@@ -34,7 +33,7 @@ class AndroidDataBindingIT(experimentalPsiResolution: Boolean) {
             ":app:assemble",
             "--configuration-cache-problems=warn",
             "--info",
-            "--stacktrace"
+            "--stacktrace",
         )
             .build().let { result ->
                 val output = result.output.lines()
