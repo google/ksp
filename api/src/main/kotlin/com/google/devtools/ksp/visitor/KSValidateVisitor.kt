@@ -98,6 +98,13 @@ open class KSValidateVisitor(
         return true
     }
 
+    override fun visitBackingField(backingField: KSBackingField, data: KSNode?): Boolean {
+        if (predicate(backingField, backingField.type) && !backingField.type.accept(this, data)) {
+            return false
+        }
+        return this.visitDeclaration(backingField, data)
+    }
+
     override fun visitValueArgument(valueArgument: KSValueArgument, data: KSNode?): Boolean {
         fun visitValue(value: Any?): Boolean = when (value) {
             is KSType -> this.validateType(value)
