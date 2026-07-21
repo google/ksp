@@ -113,6 +113,19 @@ class IncrementalIT(experimentalPsiResolution: Boolean) {
     }
 
     @Test
+    fun testUpToDateWithDifferentLogLevels() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments("clean", "assemble", "--info").build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspKotlin")?.outcome)
+        }
+
+        gradleRunner.withArguments("assemble", "--warn").build().let { result ->
+            Assert.assertEquals(TaskOutcome.UP_TO_DATE, result.task(":workload:kspKotlin")?.outcome)
+        }
+    }
+
+    @Test
     fun testIsolating() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 

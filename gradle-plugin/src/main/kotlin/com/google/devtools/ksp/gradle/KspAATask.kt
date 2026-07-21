@@ -661,7 +661,7 @@ abstract class KspGradleConfig @Inject constructor() {
     abstract val apOptions: MapProperty<String, String>
 
     // Unfortunately, passing project.logger over is not possible.
-    @get:Input
+    @get:Internal
     abstract val logLevel: Property<LogLevel>
 
     @get:Input
