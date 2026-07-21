@@ -558,38 +558,43 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
   }
 
-  public interface KSVisitor<D, R> {
-    method public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, D data);
-    method public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, D data);
-    method public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, D data);
-    method public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, D data);
-    method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, D data);
-    method public R visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, D data);
-    method public R visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, D data);
-    method public R visitDefNonNullReference(@NonNull com.google.devtools.ksp.symbol.KSDefNonNullReference reference, D data);
-    method public R visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, D data);
-    method public R visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, D data);
-    method public R visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, D data);
-    method public R visitModifierListOwner(@NonNull com.google.devtools.ksp.symbol.KSModifierListOwner modifierListOwner, D data);
-    method public R visitNode(@NonNull com.google.devtools.ksp.symbol.KSNode node, D data);
-    method public R visitParenthesizedReference(@NonNull com.google.devtools.ksp.symbol.KSParenthesizedReference reference, D data);
-    method public R visitPropertyAccessor(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor, D data);
-    method public R visitPropertyDeclaration(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration property, D data);
-    method public R visitPropertyGetter(@NonNull com.google.devtools.ksp.symbol.KSPropertyGetter getter, D data);
-    method public R visitPropertySetter(@NonNull com.google.devtools.ksp.symbol.KSPropertySetter setter, D data);
-    method public R visitReferenceElement(@NonNull com.google.devtools.ksp.symbol.KSReferenceElement element, D data);
-    method public R visitTypeAlias(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias typeAlias, D data);
-    method public R visitTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeArgument typeArgument, D data);
-    method public R visitTypeParameter(@NonNull com.google.devtools.ksp.symbol.KSTypeParameter typeParameter, D data);
-    method public R visitTypeReference(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeReference, D data);
-    method public R visitValueArgument(@NonNull com.google.devtools.ksp.symbol.KSValueArgument valueArgument, D data);
-    method public R visitValueParameter(@NonNull com.google.devtools.ksp.symbol.KSValueParameter valueParameter, D data);
+  @Deprecated public interface KSVisitor<D, R> {
+    method @Deprecated public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, D data);
+    method @Deprecated public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, D data);
+    method @Deprecated public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, D data);
+    method @Deprecated public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, D data);
+    method @Deprecated public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, D data);
+    method @Deprecated public R visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, D data);
+    method @Deprecated public R visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, D data);
+    method @Deprecated public R visitDefNonNullReference(@NonNull com.google.devtools.ksp.symbol.KSDefNonNullReference reference, D data);
+    method @Deprecated public R visitDynamicReference(@NonNull com.google.devtools.ksp.symbol.KSDynamicReference reference, D data);
+    method @Deprecated public R visitFile(@NonNull com.google.devtools.ksp.symbol.KSFile file, D data);
+    method @Deprecated public R visitFunctionDeclaration(@NonNull com.google.devtools.ksp.symbol.KSFunctionDeclaration function, D data);
+    method @Deprecated public R visitModifierListOwner(@NonNull com.google.devtools.ksp.symbol.KSModifierListOwner modifierListOwner, D data);
+    method @Deprecated public R visitNode(@NonNull com.google.devtools.ksp.symbol.KSNode node, D data);
+    method @Deprecated public R visitParenthesizedReference(@NonNull com.google.devtools.ksp.symbol.KSParenthesizedReference reference, D data);
+    method @Deprecated public R visitPropertyAccessor(@NonNull com.google.devtools.ksp.symbol.KSPropertyAccessor accessor, D data);
+    method @Deprecated public R visitPropertyDeclaration(@NonNull com.google.devtools.ksp.symbol.KSPropertyDeclaration property, D data);
+    method @Deprecated public R visitPropertyGetter(@NonNull com.google.devtools.ksp.symbol.KSPropertyGetter getter, D data);
+    method @Deprecated public R visitPropertySetter(@NonNull com.google.devtools.ksp.symbol.KSPropertySetter setter, D data);
+    method @Deprecated public R visitReferenceElement(@NonNull com.google.devtools.ksp.symbol.KSReferenceElement element, D data);
+    method @Deprecated public R visitTypeAlias(@NonNull com.google.devtools.ksp.symbol.KSTypeAlias typeAlias, D data);
+    method @Deprecated public R visitTypeArgument(@NonNull com.google.devtools.ksp.symbol.KSTypeArgument typeArgument, D data);
+    method @Deprecated public R visitTypeParameter(@NonNull com.google.devtools.ksp.symbol.KSTypeParameter typeParameter, D data);
+    method @Deprecated public R visitTypeReference(@NonNull com.google.devtools.ksp.symbol.KSTypeReference typeReference, D data);
+    method @Deprecated public R visitValueArgument(@NonNull com.google.devtools.ksp.symbol.KSValueArgument valueArgument, D data);
+    method @Deprecated public R visitValueParameter(@NonNull com.google.devtools.ksp.symbol.KSValueParameter valueParameter, D data);
   }
 
-  public class KSVisitorVoid implements com.google.devtools.ksp.symbol.KSVisitor<kotlin.Unit,kotlin.Unit> {
+  public interface KSVisitorNext<D, R> extends com.google.devtools.ksp.symbol.KSVisitor<D,R> {
+    method public R visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, D data);
+  }
+
+  public class KSVisitorVoid implements com.google.devtools.ksp.symbol.KSVisitorNext<kotlin.Unit,kotlin.Unit> {
     ctor public KSVisitorVoid();
     method public void visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @NonNull kotlin.Unit data);
     method public void visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @NonNull kotlin.Unit data);
+    method public void visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, @NonNull kotlin.Unit data);
     method public void visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, @NonNull kotlin.Unit data);
     method public void visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @NonNull kotlin.Unit data);
     method public void visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, @NonNull kotlin.Unit data);
@@ -703,11 +708,12 @@ package com.google.devtools.ksp.visitor {
     ctor public KSDefaultVisitor();
   }
 
-  public abstract class KSEmptyVisitor<D, R> implements com.google.devtools.ksp.symbol.KSVisitor<D,R> {
+  public abstract class KSEmptyVisitor<D, R> implements com.google.devtools.ksp.symbol.KSVisitorNext<D,R> {
     ctor public KSEmptyVisitor();
     method public abstract R defaultHandler(@NonNull com.google.devtools.ksp.symbol.KSNode node, D data);
     method public R visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, D data);
     method public R visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, D data);
+    method public R visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, D data);
     method public R visitCallableReference(@NonNull com.google.devtools.ksp.symbol.KSCallableReference reference, D data);
     method public R visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, D data);
     method public R visitClassifierReference(@NonNull com.google.devtools.ksp.symbol.KSClassifierReference reference, D data);
@@ -742,6 +748,7 @@ package com.google.devtools.ksp.visitor {
     method @NonNull public Boolean defaultHandler(@NonNull com.google.devtools.ksp.symbol.KSNode node, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitAnnotated(@NonNull com.google.devtools.ksp.symbol.KSAnnotated annotated, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitAnnotation(@NonNull com.google.devtools.ksp.symbol.KSAnnotation annotation, @Nullable com.google.devtools.ksp.symbol.KSNode data);
+    method @NonNull public Boolean visitBackingField(@NonNull com.google.devtools.ksp.symbol.KSBackingField backingField, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitClassDeclaration(@NonNull com.google.devtools.ksp.symbol.KSClassDeclaration classDeclaration, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitDeclaration(@NonNull com.google.devtools.ksp.symbol.KSDeclaration declaration, @Nullable com.google.devtools.ksp.symbol.KSNode data);
     method @NonNull public Boolean visitDeclarationContainer(@NonNull com.google.devtools.ksp.symbol.KSDeclarationContainer declarationContainer, @Nullable com.google.devtools.ksp.symbol.KSNode data);
