@@ -27,7 +27,7 @@ class AGPVersionIT(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}")
+        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, experimentalPsiResolution: {3}")
         fun data(): Collection<Array<String?>> {
             return listOf<Array<String?>>(
                 // Latest
