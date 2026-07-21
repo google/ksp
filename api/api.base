@@ -290,6 +290,13 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.AnnotationUseSiteTarget useSiteTarget;
   }
 
+  public interface KSBackingField extends com.google.devtools.ksp.symbol.KSDeclaration {
+    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSPropertyDeclaration getProperty();
+    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSPropertyDeclaration property;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+  }
+
   public interface KSCallableReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
     method public default <D, R> R accept(@NonNull com.google.devtools.ksp.symbol.KSVisitor<D,R> visitor, D data);
     method @InaccessibleFromKotlin @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> getFunctionParameters();
@@ -434,6 +441,7 @@ package com.google.devtools.ksp.symbol {
   public interface KSPropertyDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration {
     method @NonNull public com.google.devtools.ksp.symbol.KSType asMemberOf(@NonNull com.google.devtools.ksp.symbol.KSType containing);
     method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration findOverridee();
+    method @InaccessibleFromKotlin @Nullable public default com.google.devtools.ksp.symbol.KSBackingField getBackingField();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getExtensionReceiver();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSPropertyGetter getGetter();
     method @InaccessibleFromKotlin public boolean getHasBackingField();
@@ -441,6 +449,7 @@ package com.google.devtools.ksp.symbol {
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
     method public boolean isDelegated();
     method @InaccessibleFromKotlin public boolean isMutable();
+    property @Nullable public default com.google.devtools.ksp.symbol.KSBackingField backingField;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference extensionReceiver;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSPropertyGetter getter;
     property public abstract boolean hasBackingField;
