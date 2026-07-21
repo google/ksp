@@ -27,7 +27,7 @@ class AGPVersionBuiltInKotlinIT(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, Experimental: {3}")
+        @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, experimentalPsiResolution: {3}")
         fun data(): Collection<Array<String>> {
             return listOf(
                 arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
