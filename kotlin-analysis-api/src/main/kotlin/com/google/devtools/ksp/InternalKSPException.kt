@@ -52,7 +52,7 @@ internal class InternalKSPException(
     override fun toString(): String {
         // N.B.: Override the toString method to prevent the big error message being printed in the stack trace.
         return buildString {
-            append(javaClass.name)
+            append(this@InternalKSPException.javaClass.name)
             append(": ")
             append("Internal KSP Error")
         }
