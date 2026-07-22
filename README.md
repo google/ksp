@@ -24,6 +24,8 @@ Most of the documentation of KSP can be found on [kotlinlang.org](https://kotlin
 
 For debugging and testing processors, as well as KSP itself, please check [DEVELOPMENT.md](DEVELOPMENT.md)
 
+---
+
 ## KSP Gradle Configurations Reference
 
 This section contains a reference of Gradle configurations for KSP.
@@ -53,6 +55,26 @@ When applying KSP in your Gradle project, place symbol processor dependencies in
 | `ksp<Target>Test` | Kotlin Multiplatform | KMP target test compilation | `add("kspJvmTest", "...")`<br>`add("kspJsTest", "...")` | Target-specific test configuration. |
 | `kspCommonMainMetadata` | Kotlin Multiplatform | Common Main metadata compilation | `add("kspCommonMainMetadata", "...")` | Target-specific configuration for KMP `commonMain` metadata processing. |
 
+## KSP Gradle Properties Reference
+
+This section provides a reference of Gradle properties for KSP.
+These properties can be set in your project's `gradle.properties` file or passed via command line
+options (`-Pproperty=value` or `-Dproperty=value`).
+
+### Reference Table
+
+| Property Key                                | Type      | Default | Description                                                                                                                                                                                                                                     | Documentation                                                                                                             |
+|:--------------------------------------------|:----------|:--------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------|
+| `ksp.incremental`                           | `Boolean` | `true`  | Enables or disables incremental symbol processing in KSP.                                                                                                                                                                                       | [Incremental Processing](https://kotlinlang.org/docs/ksp-incremental.html)                                                |
+| `ksp.incremental.log`                       | `Boolean` | `false` | Enables verbose log output detailing incremental processing decisions and symbol changes.                                                                                                                                                       | [Incremental Logging](https://kotlinlang.org/docs/ksp-incremental.html#reporting-bugs)                                    |
+| `ksp.incremental.log.graph.origin`          | `String?` | `null`  | Filters incremental log tracing to a specific symbol origin class/package. The value should be of the form `com.example.MyClass`.                                                                                                               | [Incremental Dependency Graph](https://kotlinlang.org/docs/ksp-incremental.html#visualizing-the-symbol-dependency-graph)  |
+| `ksp.allow.all.target.configuration`        | `Boolean` | `false` | Permits the legacy global `ksp` configuration in both single-platform and Kotlin Multiplatform (KMP) projects with a warning instead of an error.                                                                                               | [`ksp` Configuration](https://kotlinlang.org/docs/ksp-multiplatform.html#avoid-the-ksp-configuration-on-ksp-1-0-1)        |
+| `ksp.project.isolation.enabled`             | `Boolean` | `false` | Enables Gradle Project Isolation compatible codepaths for output directory registration. **NOTE:** KSP also enables this if you have `org.gradle.unsafe.isolated-projects=true` configured.                                                     | [Gradle Isolated Projects](https://docs.gradle.org/current/userguide/isolated_projects.html)                              |
+| `ksp.experimental.psi.resolution`           | `Boolean` | `false` | Enables experimental PSI-based resolution inside the KSP compiler engine. Enabling this may improve build times, but expect crashes. Feel free to open a bug report if you encounter a crash.                                                   | None                                                                                                                      |
+| `ksp.ksp2.profiling.mode`                   | `Boolean` | `false` | Enables performance profiling for KSP2 task execution. This is mostly for developing KSP itself.                                                                                                                                                | None                                                                                                                      |
+| `kotlin.native.enableKlibsCrossCompilation` | `Boolean` | `true`  | Enables running symbol processing tasks for other targets than the host machine in KMP projects, i.e., cross-compilation. This property is not created by the KSP Gradle plugin. It is owned by the Kotlin compiler but KSP uses this property. | [Kotlin Cross Compilation](https://kotlinlang.org/docs/whatsnew21.html#ability-to-publish-kotlin-libraries-from-any-host) |
+
+---
 
 ## Nightly Builds
 Nightly builds of KSP for the latest Kotlin stable releases are published here:
