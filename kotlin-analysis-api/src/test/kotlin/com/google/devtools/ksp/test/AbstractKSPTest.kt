@@ -59,6 +59,8 @@ import org.junit.jupiter.api.TestInfo
 import java.awt.EventQueue
 import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 abstract class DisposableTest {
     private var _disposable: Disposable? = null
@@ -240,16 +242,25 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     }
 
     /**
-     * Runs a negative test, asserting that the implementation throws an [InternalKSPException].
+     * Runs a negative test, asserting that the implementation throws a throwable
+     * that is a subtype of [expectedThrowableType].
+     *
      * The test fails if that particular exception is not thrown, e.g., by not throwing at all
      * or by throwing a different exception.
+     *
+     * @param path the path to the test file.
+     * @param expectedThrowableType the type of the expected throwable. Defaults to [InternalKSPException].
      */
-    fun runThrowingTest(@TestDataFile path: String) {
+    fun runThrowingTest(@TestDataFile path: String, expectedThrowableType: KClass<*> = InternalKSPException::class) {
         val (_, run) = loadTest(path)
         try {
             run()
-            Assertions.fail("Expected InternalKSPException, but the run was successful.")
-        } catch (_: InternalKSPException) {
+            Assertions.fail("Expected ${expectedThrowableType.simpleName ?: "null"} but the run was successful.")
+        } catch (e: Throwable) {
+            if (!e::class.isSubclassOf(expectedThrowableType)) {
+                // Fail be rethrowing to get better feedback
+                throw e
+            }
             // Succeed by returning
         }
     }
