@@ -613,6 +613,17 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/overridee/javaOverrideInSource.kt")
     }
 
+    @Bug(
+        "https://github.com/google/ksp/issues/2873",
+        BugState.OPEN,
+        "Java fields are considered properties that always have fields (accessors do not count)."
+    )
+    @TestMetadata("javaBackingFields.kt")
+    @Test
+    fun testJavaBackingFields() {
+        runFailingTest("$AA_PATH/javaBackingFields.kt")
+    }
+
     @TestMetadata("noOverride.kt")
     @Test
     fun testNoOverride() {
