@@ -60,7 +60,20 @@ val secondaryTest by
         configureCommonSettings()
     }
 
-// Create a new test task for the secondary package
+// Create a new test task for the android package
+val androidTest by
+    tasks.registering(Test::class) {
+        description = "Runs integration tests in the android package"
+        group = "verification"
+        include("com/google/devtools/ksp/test/android/*.class")
+        // Set maxParallelForks to 1 to avoid race conditions when downloading SDKs with old AGPs
+        maxParallelForks = 1
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+        configureCommonSettings()
+    }
+
+// Create a new test task for the agp package
 val agpTest by
     tasks.registering(Test::class) {
         description = "Runs integration tests in the agp package"
@@ -75,7 +88,7 @@ val agpTest by
 
 tasks.test {
     exclude("**/*")
-    dependsOn(primaryTest, secondaryTest, agpTest)
+    dependsOn(primaryTest, secondaryTest, androidTest, agpTest)
 }
 
 java {

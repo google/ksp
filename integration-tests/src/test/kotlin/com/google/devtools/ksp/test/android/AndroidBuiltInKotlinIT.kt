@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.test.secondary
+package com.google.devtools.ksp.test.android
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import com.google.devtools.ksp.test.utils.assertContainsNonNullEntry

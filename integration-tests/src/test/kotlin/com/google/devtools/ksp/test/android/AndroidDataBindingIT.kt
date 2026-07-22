@@ -1,4 +1,4 @@
-package com.google.devtools.ksp.test.secondary
+package com.google.devtools.ksp.test.android
 
 import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.GradleRunner
@@ -9,11 +9,12 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class AndroidViewBindingIT(experimentalPsiResolution: Boolean) {
+class AndroidDataBindingIT(experimentalPsiResolution: Boolean) {
+
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
-        "android-view-binding",
+        "android-data-binding",
         experimentalPsiResolution = experimentalPsiResolution
     )
 
