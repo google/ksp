@@ -50,7 +50,7 @@ interface KSValueArgument : KSAnnotated {
      * * [KSClassDeclaration] for annotation arguments of type [Enum] (in this
      *   case[KSClassDeclaration.classKind] equals to [ClassKind.ENUM_CLASS]);
      * * [KSAnnotation] for embedded annotation arguments;
-     * * [Array] of a possible type listed above.
+     * * [Array] or [List] of a possible type listed above.
      */
     val value: Any?
 }
