@@ -1,4 +1,4 @@
-# Introduction to KSP2 (Beta)
+# Introduction to KSP2
 
 KSP2 is a new implementation of the KSP API. Unlike KSP 1.x, it is no longer a compiler plugin and is built on the same
 set of Kotlin compiler APIs shared with IntelliJ IDEA, Android Lint, etc. Compared to the compiler-plugin approach, this
@@ -6,8 +6,9 @@ allows a finer control of the program life cycle, simplifies KSP’s implementat
 response to the compiler migration to K2, whose compiler plugin API is different from the one KSP1 uses.
 
 Not being a compiler plugin and having a better control of the program life cycles means that it’s straightforward to
-provide an entry point that can be called by other programs. This is especially convenient for processors in their test
-codes. KSP2 also provides a new command line tool that has its own main function, instead of being part of the compiler
+provide an entry point that can be called by other programs. This is especially convenient for testing processors 
+as a processor author.
+KSP2 also provides a new command line tool that has its own main function, instead of being part of the compiler
 invocation.
 
 With the new implementation, it is also a great opportunity to introduce some refinements in the API behavior so that
@@ -16,34 +17,16 @@ resolving `Map<String, NonExistentType>`, KSP1 simply returns an error type. In 
 returned instead.
 
 ## API Changes
+
 Please refer to [KSP2 API Changes](ksp2api.md) to see more details.
 
-## Using KSP 2 in Gradle
-With KSP 1.0.21 and above, KSP2 Beta can be enabled with a flag in gradle.properties:
-
-```
-ksp.useKSP2=true
-```
+## Debugging
 
 Unlike KSP1, which runs in `KotlinCompileDaemon`, KSP2 runs in Gradle daemon. This has 2 implications:
 1. Gradle daemon usually has a lower default heap limit. You may need to increase it by the following Gradle property,
 for example: `org.gradle.jvmargs=-Xmx4096M -XX:MaxMetaspaceSize=1024m`
 2. The debug flags now need to be passed to Gradle rather than `KotlinCompileDaemon`. To debug KSP2 and/or processors,
    pass the system property `-Dorg.gradle.debug=true` in the Gradle command line.
-
-## Transitioning from KSP1 to KSP2
-KSP1 and KSP2 are supported by a unified KSP Gradle plugin. The current versioning scheme,
-`<Kotlin Version>-<KSP Version>`, will remain at least until KSP1 is deprecated. This allows switching between KSP1 and
-KSP2 easily with a single `ksp.useKSP2=<true|false>` property in Gradle projects.
-
-### KSP1 Deprecation Schedule
-Because KSP1 is built on top of the old Kotlin compiler, theoretically it won’t be able to support language version
-2.0+. Fortunately, Kotlin language 2.0 is designed to be fully compatible with language version 1.9, so KSP1 will still
-be compatible with Kotlin 2.0. **KSP1 will not fully support Kotlin 2.2**. Please plan transitioning from KSP1 to KSP2 during
-Kotlin 2.0.
-
-Because KSP2 is no longer a compiler plugin, there is no strong dependency to the Kotlin compiler. After KSP1 is
-deprecated, it may get rid of the Kotlin prefix in its version, and become simply `KSP-2.1.0` for example.
 
 ## Using KSP 2 from command line and in program
 Please refer to [Using KSP2 command line](ksp2cmdline.md) and [Calling KSP2 in program](ksp2entrypoints.md).
@@ -64,4 +47,3 @@ lists of known issues.
 ## Feedback
 If you find any bugs that are not included in the above milestones, or if you have any concerns or ideas on API changes,
 [please let us know](https://github.com/google/ksp/issues)!
-
