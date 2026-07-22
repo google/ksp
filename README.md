@@ -24,7 +24,11 @@ Most of the documentation of KSP can be found on [kotlinlang.org](https://kotlin
 
 For debugging and testing processors, as well as KSP itself, please check [DEVELOPMENT.md](DEVELOPMENT.md)
 
-## KSP Dependency Configurations Reference
+## KSP Gradle Configurations Reference
+
+This section contains a reference of Gradle configurations for KSP.
+If you have not used KSP before, or this section seems unclear,
+please read the documentation on the Kotlin lang website which is linked above.
 
 When applying KSP in your Gradle project, place symbol processor dependencies into the appropriate configuration inside the `dependencies { ... }` block of your `build.gradle.kts` (or `build.gradle`) file based on your target platforms, source sets, and build variants.
 
