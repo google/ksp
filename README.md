@@ -66,11 +66,19 @@ Please refer to the [KSP2 introduction](docs/ksp2.md) for further details.
 
 When applying KSP in your Gradle project, place symbol processor dependencies into the appropriate configuration inside the `dependencies { ... }` block of your `build.gradle.kts` (or `build.gradle`) file based on your target platforms, source sets, and build variants.
 
+### Global (`ksp`) Configuration Behavior & `ksp.allow.all.target.configuration`
+
+The behavior of the `ksp` dependency configuration differs depending on whether your project is single-platform or multiplatform:
+
+- **Single-Platform Android (`com.android.application`, `com.android.library`)**: The global `ksp` configuration is **enabled by default** across all scopes and build variants. Declaring a dependency using `ksp("...")` automatically applies to all main build variants (`debug`, `release`, flavors), unit tests (`kspTest`), and instrumentation tests (`kspAndroidTest`). If you wish to disable inheritance into test scopes, set `ksp.allow.all.target.configuration=false` in `gradle.properties`.
+- **Single-Platform JVM (`kotlin("jvm")`)**: The global `ksp` configuration is **enabled by default** (`ksp.allow.all.target.configuration = true`), meaning `ksp("...")` applies to both the `main` (`src/main`) and `test` (`src/test`) source sets. If you wish to restrict `ksp` strictly to `main`, set `ksp.allow.all.target.configuration=false` in `gradle.properties`.
+- **Kotlin Multiplatform (`kotlin("multiplatform")`, including KMP Android libraries)**: To prevent unintentional cross-compilation contamination across diverse platforms (e.g., applying a JVM-only processor to iOS or JS targets), the global `ksp` configuration is **disallowed by default** (`ksp.allow.all.target.configuration = false`). Declaring `ksp("...")` in a KMP project will throw an exception (`InvalidUserCodeException`). You should instead use target-specific configurations (`kspJvm`, `kspAndroid`, `kspJs`, `kspIosArm64`, etc.). If you explicitly want to allow a global `ksp` configuration across all KMP targets and compilations, opt in by adding `-Pksp.allow.all.target.configuration=true` in your `gradle.properties`.
+
 ### Single-Platform (JVM & Android)
 
 | Configuration Name / Pattern | Project Type / Target | Source Set / Scope | Usage Example (`build.gradle.kts`) | Details & Behavior |
 | --- | --- | --- | --- | --- |
-| `ksp` | Single-target JVM / Android | Main source set (`src/main`) | `ksp("com.example:processor:1.0")` | Applied to default JVM compilation and single-platform Android main source set. Deprecated in KMP unless `ksp.allow.all.target.configuration=true`. |
+| `ksp` | Single-target JVM / Android | All scopes by default (`src/main`, `src/test`, variants) | `ksp("com.example:processor:1.0")` | Global catch-all configuration enabled by default across production and test scopes (`ksp.allow.all.target.configuration = true`). Disallowed by default in KMP. |
 | `kspTest` | Single-target JVM / Android | Unit tests (`src/test`) | `kspTest("com.example:test-processor:1.0")` | Runs symbol processing exclusively for unit test sources. |
 | `ksp<SourceSet>` | Single-target JVM | Custom JVM source set | `add("kspIntegrationTest", "...")` | Generates sources for custom source sets like `integrationTest`. |
 | `ksp<BuildType>` | Android (Single-platform) | Specific build type (e.g., debug, release) | `add("kspDebug", "...")` | Runs processor only when compiling the specified Android build variant. |
@@ -86,6 +94,7 @@ When applying KSP in your Gradle project, place symbol processor dependencies in
 | `ksp<Target>` | Kotlin Multiplatform | KMP target main compilation (JVM, JS, Native, Wasm) | `add("kspJvm", "...")`<br>`add("kspJs", "...")`<br>`add("kspIosArm64", "...")`<br>`add("kspAndroid", "...")`<br>`add("kspAndroidHostTest", "...")`<br>`add("kspAndroidDeviceTest", "...")` | Target-specific configuration. Omits the Main suffix (e.g., target `jvm` becomes `kspJvm`, not `kspJvmMain`). |
 | `ksp<Target>Test` | Kotlin Multiplatform | KMP target test compilation | `add("kspJvmTest", "...")`<br>`add("kspJsTest", "...")` | Target-specific test configuration. |
 | `kspCommonMainMetadata` | Kotlin Multiplatform | Common Main metadata compilation | `add("kspCommonMainMetadata", "...")` | Target-specific configuration for KMP `commonMain` metadata processing. |
+
 
 
 ## Nightly Builds

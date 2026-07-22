@@ -20,11 +20,11 @@ class KspConfigurations(private val project: Project) {
         private const val PREFIX = "ksp"
     }
 
-    internal val allowAllTargetConfiguration =
-        project.providers.gradleProperty("ksp.allow.all.target.configuration")
+    internal val allowAllTargetConfiguration: Boolean
+        get() = project.providers.gradleProperty("ksp.allow.all.target.configuration")
             .orNull
             ?.toBoolean()
-            ?: false
+            ?: !isMppProject()
 
     // The "ksp" configuration, applied to every compilation.
     private val configurationForAll = project.configurations.create(PREFIX).apply {
@@ -127,8 +127,7 @@ class KspConfigurations(private val project: Project) {
                     if (!reported) {
                         reported = true
                         val msg = "The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. " +
-                            "Please use target-specific configurations like 'kspJvm' instead."
-
+                            "Please use target-specific configurations like 'kspJvm' instead. "
                         if (allowAllTargetConfiguration) {
                             project.logger.warn(msg)
                         } else {
