@@ -15,18 +15,25 @@
  * limitations under the License.
  */
 
-// WITH_RUNTIME
-// TEST PROCESSOR: JavaWildcard2Processor
+// TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
+// PROCESSOR INPUT: kspjavax.Inject
 // EXPECTED:
-// ref : SelfRef<out Any?>
-// ref.getter() : SelfRef<out Any?>
-// ref.field : SelfRef<out Any?>
-// SelfRef : Any
-// A : SelfRef<A>
-// synthetic constructor for SelfRef : SelfRef<out Any?>
-// A : SelfRef<A>
+// kspjavax.Inject: MainActivity.a.field
 // END
 
-class SelfRef<A : SelfRef<A>>
+// FILE: Inject.java
+package kspjavax;
 
-val ref: SelfRef<*> = TODO()
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+
+@Target(ElementType.FIELD)
+public @interface Inject {
+}
+
+// FILE: MainActivity.kt
+import kspjavax.Inject;
+
+class MainActivity {
+    @Inject lateinit var a: A
+}

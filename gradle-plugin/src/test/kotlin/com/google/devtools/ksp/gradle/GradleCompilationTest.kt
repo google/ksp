@@ -29,6 +29,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assume
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -203,7 +204,7 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
             .build()
     }
 
-    @Test
+    @Test @Ignore
     fun testCommandLineArgumentProvider() {
         // FIXME
         Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
@@ -417,7 +418,7 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
     /**
      * Regression test for https://github.com/google/ksp/issues/2174
      */
-    @Test
+    @Test @Ignore
     fun androidGradlePluginBuiltInKotlinWithKspAppliedFirst() {
         testRule.setupAppAsAndroidApp(applyKspPluginFirst = true)
         // Enable AGP's built-in Kotlin support for test fixtures

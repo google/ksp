@@ -18,7 +18,6 @@
 package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
-import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.fullyExpand
@@ -71,7 +70,7 @@ class AAResolutionStrategy(
                 for (annotation in annotated.annotations) {
                     val kaType = (annotation.annotationType.resolve() as? KSTypeImpl)?.type ?: continue
                     val annotationFqN = kaType.fullyExpand().symbol?.classId?.asFqNameString() ?: continue
-                    val annotatedTarget = annotation.useSiteTarget.findTargetedSymbolFor(annotated)
+                    val annotatedTarget = annotation.useSiteTarget.tryResolveMissingUseSiteTarget(annotated)
                     getOrPut(annotationFqN, ::mutableSetOf).addAll(annotatedTarget)
                 }
             }
@@ -83,40 +82,36 @@ class AAResolutionStrategy(
     }
 
     /**
-     * Returns the symbol(s) in [annotated], targeted by the [AnnotationUseSiteTarget].
+     * Tries to resolve missing use-site targets.
+     * This is necessary as a fix because KSP does not yet perfectly handle annotation use-site targets.
      */
-    private fun AnnotationUseSiteTarget?.findTargetedSymbolFor(annotated: KSAnnotated): Collection<KSAnnotated> =
+    private fun AnnotationUseSiteTarget?.tryResolveMissingUseSiteTarget(
+        annotated: KSAnnotated
+    ): Collection<KSAnnotated> =
         buildList {
-            when (this@findTargetedSymbolFor) {
-                null -> add(annotated)
-                AnnotationUseSiteTarget.FILE -> when (annotated) {
-                    is KSFile -> add(annotated)
-                    else -> annotated.containingFile?.let { add(it) }
-                }
-
-                AnnotationUseSiteTarget.PROPERTY -> add(annotated)
-                AnnotationUseSiteTarget.FIELD -> add(annotated)
-                AnnotationUseSiteTarget.GET -> add(annotated)
-                AnnotationUseSiteTarget.SET -> add(annotated)
+            // TODO: Add proper support for receivers
+            when (this@tryResolveMissingUseSiteTarget) {
                 AnnotationUseSiteTarget.RECEIVER -> when (annotated) {
-                    is KSPropertyDeclaration -> annotated.extensionReceiver?.let { add(it) }
-                    is KSFunctionDeclaration -> annotated.extensionReceiver?.let { add(it) }
+                    is KSPropertyDeclaration -> add(annotated.extensionReceiver ?: annotated)
+                    is KSFunctionDeclaration -> add(annotated.extensionReceiver ?: annotated)
+                    else -> add(annotated)
                 }
 
-                AnnotationUseSiteTarget.PARAM -> (annotated as? KSValueParameter)?.let { add(it) }
-                AnnotationUseSiteTarget.SETPARAM -> add(annotated)
-                AnnotationUseSiteTarget.DELEGATE -> add(annotated) // TODO: Add proper support for backing fields.
-                AnnotationUseSiteTarget.ALL -> when (annotated) {
-                    is KSValueParameter -> add(annotated)
-                    is KSPropertyDeclaration -> {
-                        // TODO: Add proper support for backing fields, the ALL use site target also targets the field
-                        // TODO: Add support for JvmRecord annotation according to KEEP 402
-                        add(annotated)
-                        annotated.getter?.let { add(it) }
-                        annotated.setter?.let { add(it) }
-                        annotated.setter?.parameter?.let { add(it) }
-                    }
+                AnnotationUseSiteTarget.SET -> when (annotated) {
+                    is KSPropertyDeclaration -> add(annotated.setter ?: annotated)
+                    else -> add(annotated)
                 }
+
+                AnnotationUseSiteTarget.ALL -> when (annotated) {
+                    is KSPropertyDeclaration -> {
+                        add(annotated)
+                        annotated.setter?.let(::add)
+                    }
+
+                    is KSValueParameter -> add(annotated)
+                }
+
+                else -> add(annotated)
             }
         }
 }

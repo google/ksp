@@ -189,6 +189,17 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/backingFields.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    @Test
+    @Bug(
+        "https://github.com/google/ksp/issues/2873",
+        BugState.FIXED,
+        "Minimal reproduction of error observed in integration test AndroidDataBindingIT"
+    )
+    fun testBackingFieldsLateinit() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    }
+
     @TestMetadata("builtInTypes.kt")
     @Test
     fun testBuiltInTypes() {
@@ -323,12 +334,16 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/errorTypes.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/explicitBackingFields.kt")
+    @Test
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
-        "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
+        BugState.FIXED,
+        "KEEP 430: Explicit backing fields stable in Kotlin 2.4.0"
     )
-    abstract fun testExplicitBackingFields()
+    fun testExplicitBackingFields() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
+    }
 
     @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
@@ -344,11 +359,11 @@ abstract class KSPUnitTestSuite(
     @Test
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 430: Backing fields can be a subtype of the property."
     )
     fun testExplicitBackingFieldsSubtyping() {
-        runFailingTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
+        runTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
     }
 
     @TestMetadata("functionTypeAlias.kt")
@@ -626,13 +641,13 @@ abstract class KSPUnitTestSuite(
 
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "Java fields are considered properties that always have fields (accessors do not count)."
     )
     @TestMetadata("javaBackingFields.kt")
     @Test
     fun testJavaBackingFields() {
-        runFailingTest("$AA_PATH/javaBackingFields.kt")
+        runTest("$AA_PATH/javaBackingFields.kt")
     }
 
     @TestMetadata("noOverride.kt")
