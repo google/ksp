@@ -386,6 +386,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/functionKinds.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2496", BugState.OPEN)
+    abstract fun testFunctionKindsJavaInheritsKotlin()
+
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
     @Test
     fun testGetAnnotationByTypeWithInnerDefault() {
