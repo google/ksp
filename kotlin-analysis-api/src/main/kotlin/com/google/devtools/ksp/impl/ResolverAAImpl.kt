@@ -891,9 +891,28 @@ class ResolverAAImpl(
         }
     }
 
+    // Returns the class/interface that declares this member. For a fake or intersection override,
+    // closestClassDeclaration() resolves to the receiver's enclosing declaration rather than the real
+    // supertype that declares the member, which makes computeAsMemberOf()'s subtype precondition below
+    // fail spuriously. Unwrap to an overridden original whose containing class is a genuine supertype
+    // of the receiver so the precondition is checked against the actual declaring type.
+    @OptIn(KaExperimentalApi::class)
+    private fun KSDeclaration.declaringClassForAsMemberOf(): KSClassDeclaration? {
+        val symbol = when (this) {
+            is KSFunctionDeclarationImpl -> ktFunctionSymbol
+            is KSPropertyDeclarationImpl -> ktPropertySymbol
+            else -> null
+        } ?: return closestClassDeclaration()
+        val declarer = analyze {
+            val original = symbol.intersectionOverriddenSymbols.firstOrNull() ?: symbol.fakeOverrideOriginal
+            (original.containingSymbol as? KaNamedClassSymbol)?.let { KSClassDeclarationImpl.getCached(it) }
+        }
+        return declarer ?: closestClassDeclaration()
+    }
+
     @OptIn(KaExperimentalApi::class)
     internal fun computeAsMemberOf(property: KSPropertyDeclaration, containing: KSType): KSType {
-        val declaredIn = property.closestClassDeclaration()
+        val declaredIn = property.declaringClassForAsMemberOf()
             ?: throw IllegalArgumentException(
                 "Cannot call asMemberOf with a property that is not declared in a class or an interface"
             )
@@ -943,7 +962,7 @@ class ResolverAAImpl(
 
     @OptIn(KaExperimentalApi::class)
     internal fun computeAsMemberOf(function: KSFunctionDeclaration, containing: KSType): KSFunction {
-        val propertyDeclaredIn = function.closestClassDeclaration()
+        val declaredIn = function.declaringClassForAsMemberOf()
             ?: throw IllegalArgumentException(
                 "Cannot call asMemberOf with a function that is not declared in a class or an interface"
             )
@@ -953,14 +972,14 @@ class ResolverAAImpl(
                 recordLookupWithSupertypes(containing.type)
                 recordLookupForPropertyOrMethod(function)
                 val isSubTypeOf = analyze {
-                    (propertyDeclaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
+                    (declaredIn.asStarProjectedType() as? KSTypeImpl)?.type?.let {
                         containing.type.isSubtypeOf(it)
                     } ?: false
                 }
                 if (!isSubTypeOf) {
                     throw IllegalArgumentException(
                         "$containing is not a sub type of the class/interface that contains `$function` " +
-                            "($propertyDeclaredIn)"
+                            "($declaredIn)"
                     )
                 }
                 analyze {
