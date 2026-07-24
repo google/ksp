@@ -46,6 +46,12 @@ class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = 
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
+    @TestMetadata("functionKindsJavaInheritsKotlin.kt")
+    @Test
+    override fun testFunctionKindsJavaInheritsKotlin() {
+        runFailingTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
+    }
+
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {
