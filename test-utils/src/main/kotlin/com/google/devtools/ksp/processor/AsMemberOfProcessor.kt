@@ -119,6 +119,17 @@ class AsMemberOfProcessor : AbstractTestProcessor() {
                 results.add(f.asMemberOf(usage).returnType!!.toSignature())
             }
         }
+
+        // Intersection override: a member inherited with the same signature from two supertypes nested
+        // in different classes. asMemberOf() used to throw IllegalArgumentException for it because
+        // closestClassDeclaration() resolved the owner to the receiver's enclosing class.
+        resolver.getClassDeclarationByName("C.Both")?.let { both ->
+            val fn = both.getAllFunctions().single { it.simpleName.asString() == "provideString" }
+            results.add(
+                "C.Both.provideString: " +
+                    resolver.asMemberOfSignature(fn, both.asStarProjectedType())
+            )
+        }
         return emptyList()
     }
 
