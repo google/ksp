@@ -258,7 +258,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             Assertions.fail("Expected ${expectedThrowableType.simpleName ?: "null"} but the run was successful.")
         } catch (e: Throwable) {
             if (!e::class.isSubclassOf(expectedThrowableType)) {
-                // Fail be rethrowing to get better feedback
+                // Fail by rethrowing to get better feedback
                 throw e
             }
             // Succeed by returning
