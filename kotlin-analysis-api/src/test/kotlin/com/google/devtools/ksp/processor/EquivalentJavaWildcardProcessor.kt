@@ -20,6 +20,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
@@ -52,11 +53,16 @@ open class EquivalentJavaWildcardProcessor : AbstractTestProcessor() {
             return resolve().toString()
         }
 
+        private fun KSTypeReference.parentPretty(): String = when (val p = parent) {
+            is KSBackingField -> p.parent.toString() + ".field"
+            else -> p.toString()
+        }
+
         @OptIn(KspExperimental::class)
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             val wildcard = resolver.getJavaWildcard(typeReference)
             results.add(
-                data + typeReference.parent.toString() +
+                data + typeReference.parentPretty() +
                     " : " + typeReference.pretty() +
                     " -> " + wildcard.pretty()
             )
