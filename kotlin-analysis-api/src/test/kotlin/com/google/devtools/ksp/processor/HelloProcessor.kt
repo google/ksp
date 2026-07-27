@@ -47,5 +47,9 @@ class HelloProcessor : AbstractTestProcessor() {
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
             results.add(property.qualifiedName?.asString() ?: "<error>")
         }
+
+        override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+            results.add(backingField.qualifiedName?.asString() ?: "<error>")
+        }
     }
 }
