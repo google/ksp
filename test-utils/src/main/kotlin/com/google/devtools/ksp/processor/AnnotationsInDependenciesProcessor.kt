@@ -55,6 +55,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
             } ?: "no-name-value-parameter ${this.location.lineNumber}"
             is KSPropertyGetter -> "getter of ${receiver.toSignature()}" // lineNumber handled by recursive call
             is KSPropertySetter -> "setter of ${receiver.toSignature()}" // lineNumber handled by recursive call
+            is KSBackingField -> "field of ${property.toSignature()}" // lineNumber handled by recursive call
             else -> {
                 error("unexpected annotated")
             }
