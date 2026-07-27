@@ -40,6 +40,8 @@
 // kotlin.Array<out Base.T?>?
 // kotlin.Unit
 // Foo<Base.T?, Base.Inner.P?>?
+// Foo<Base.T?, Base.Inner.P?>?
+// Bar<Base.Inner.P?, Base.T?>?
 // Bar<Base.Inner.P?, Base.T?>?
 // kotlin.collections.MutableList<Base.T?>?
 // kotlin.Unit
@@ -50,6 +52,8 @@
 // kotlin.Array<out Base.T?>?
 // kotlin.Unit
 // Base<Another.T?, Another.T?>?
+// Base<Another.T?, Another.T?>?
+// kotlin.Int
 // kotlin.Int
 // kotlin.Unit
 // kotlin.Int

@@ -27,7 +27,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyGetterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySetterSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.kotlin.psi.KtProperty
@@ -41,7 +40,6 @@ abstract class KSPropertyAccessorImpl(
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         // (ktPropertyAccessorSymbol.psi as? KtPropertyAccessor)?.annotations(ktPropertyAccessorSymbol, this) ?:
         ktPropertyAccessorSymbol.annotations.asSequence()
-            .filter { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER }
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
     }
 

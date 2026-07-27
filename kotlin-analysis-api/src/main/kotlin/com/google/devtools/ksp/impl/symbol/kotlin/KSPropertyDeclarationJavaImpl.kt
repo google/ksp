@@ -76,6 +76,15 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
     override val hasBackingField: Boolean
         get() = true
 
+    override val backingField: KSBackingField? by lazy {
+        // N.B.: We cannot use `this` as the backing field
+        // since it is ambiguous which `visitor` method to call in the `this.accept` then.
+        // Since we are always calling `visitor.visitPropertyDeclaration`, we will get a stackoverflow
+        // if we try to recursively visit the backing field.
+        // Thus, we create a new object with a distinct type here to break the cycle.
+        KSBackingFieldJavaImpl.getCached(ktJavaFieldSymbol to this)
+    }
+
     override fun isDelegated(): Boolean {
         return false
     }

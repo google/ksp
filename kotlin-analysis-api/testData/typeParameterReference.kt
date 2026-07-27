@@ -21,9 +21,12 @@
 // kotlin.Int: false
 // kotlin.Int: false
 // LibFoo: false
+// LibFoo: false
 // SelfReferencing: false
 // kotlin.String: false
+// kotlin.String: false
 // SelfReferencing.T: false
+// Foo.T1: true
 // Foo.T1: true
 // Foo.bar.T2: false
 // foo.T3: false

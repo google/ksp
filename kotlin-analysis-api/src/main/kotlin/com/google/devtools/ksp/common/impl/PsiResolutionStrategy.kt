@@ -24,6 +24,7 @@ import com.google.devtools.ksp.impl.FileCache
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
@@ -33,14 +34,17 @@ import com.google.devtools.ksp.impl.symbol.kotlin.psi
 import com.google.devtools.ksp.impl.symbol.kotlin.setter
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSAnnotated
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSAnnotationUseSiteTarget
+import com.google.devtools.ksp.impl.symbol.kotlin.toKSBackingField
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSClassDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFile
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFunctionDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSPropertyDeclaration
+import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -57,13 +61,17 @@ import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.PsiTypeParameterList
 import com.intellij.util.containers.addIfNotNull
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.resolution.KaAnnotationCall
 import org.jetbrains.kotlin.analysis.api.resolution.successfulCallOrNull
 import org.jetbrains.kotlin.analysis.api.resolution.symbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.types.symbol
+import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -74,7 +82,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
-import kotlin.collections.mapValues
+import org.jetbrains.kotlin.utils.addToStdlib.getOrPut
 
 /**
  * An [AnnotationResolutionStrategy] that uses a combination of Psi and Kotlin's Analysis API to resolve
@@ -86,6 +94,8 @@ class PsiResolutionStrategy(
     override val newKSFiles: List<KSFile>,
     override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
 ) : AnnotationResolutionStrategy {
+
+    private val targetFieldFix = AnnotationDeclarationTargetFieldFix()
 
     /**
      * Returns all symbols annotated with [annotationName].
@@ -277,10 +287,11 @@ class PsiResolutionStrategy(
                     //  so we should only cache for known unique declarations in the file.
                     //  See test shadowingAnnotations.kt
                     val fileCache = fileCaches.getOrPut(file) { FileCache(file) }
-                    val classId = resolveAnnotationEntryClassId(annotationEntry, fileCache)
                     // N.B.: Skip nullable qualified names without error. This is what the AA-based implementation does.
                     //   For now, this is the intended behavior. If it is changed in the future, then it is an API change.
-                    val fqn = classId?.asFqNameString() ?: return@forEach
+                    val classId = resolveAnnotationEntryClassId(annotationEntry, fileCache) ?: return@forEach
+                    targetFieldFix.recordClassId(annotationEntry, classId)
+                    val fqn = classId.asFqNameString()
                     getOrPut(fqn, ::mutableListOf)
                         .add(annotated to annotationEntry)
                 }
@@ -403,8 +414,9 @@ class PsiResolutionStrategy(
             is PsiClass ->
                 listOf(element.resolve())
 
-            is PsiField ->
-                listOf(element.resolve())
+            is PsiField -> element.resolveToProperty().let {
+                listOf(it, element.resolveToField(it))
+            }
 
             is PsiMethod ->
                 listOf(element.resolve())
@@ -423,7 +435,14 @@ class PsiResolutionStrategy(
     private fun KtDeclaration.resolve(annotationEntry: KtAnnotationEntry): Collection<KSAnnotated> {
         // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
-        return ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget)
+        return when (ksSym) {
+            is KSPropertyDeclaration -> targetFieldFix.resolveKSPropertyDeclaration(
+                ksSym,
+                annotationEntry
+            )
+
+            else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget)
+        }
     }
 
     /**
@@ -479,8 +498,8 @@ class PsiResolutionStrategy(
     /**
      * Resolves the [KSPropertyDeclaration] corresponding to this [PsiField].
      */
-    private fun PsiField.resolve(): KSPropertyDeclaration {
-        val sym = analyze { this@resolve.callableSymbol }
+    private fun PsiField.resolveToProperty(): KSPropertyDeclarationJavaImpl {
+        val sym = analyze { this@resolveToProperty.callableSymbol }
             ?: throw InternalKSPException(
                 "Unexpected null callable symbol",
                 toLocation(),
@@ -489,6 +508,24 @@ class PsiResolutionStrategy(
         return sym.toKSPropertyDeclaration()
             ?: throw InternalKSPException(
                 "Unexpected null KSPropertyDeclaration",
+                toLocation(),
+                javaClass
+            )
+    }
+
+    /**
+     * Resolves the [KSBackingField] corresponding to this [PsiField].
+     */
+    private fun PsiField.resolveToField(property: KSPropertyDeclarationJavaImpl? = null): KSBackingField {
+        val sym = analyze { this@resolveToField.callableSymbol }
+            ?: throw InternalKSPException(
+                "Unexpected null callable symbol",
+                toLocation(),
+                javaClass
+            )
+        return sym.toKSBackingField(property)
+            ?: throw InternalKSPException(
+                "Unexpected null KSBackingField",
                 toLocation(),
                 javaClass
             )
@@ -573,8 +610,16 @@ class PsiResolutionStrategy(
 
             AnnotationUseSiteTarget.FIELD -> when (this) {
                 is KSValueParameter -> listOf(
-                    this.getGeneratedProperty() ?: throw InternalKSPException(
-                        "Unexpected missing property for parameter",
+                    this.getGeneratedProperty()?.backingField ?: throw InternalKSPException(
+                        "Unexpected missing backing field for parameter",
+                        location,
+                        javaClass
+                    )
+                )
+
+                is KSPropertyDeclaration -> listOf(
+                    this.backingField ?: throw InternalKSPException(
+                        "Unexpected missing backing field for property",
                         location,
                         javaClass
                     )
@@ -682,13 +727,13 @@ class PsiResolutionStrategy(
                 }
 
                 is KSPropertyDeclaration ->
-                    // TODO: Add proper support for backing fields, the ALL use site target also targets the field
                     // TODO: Add support for JvmRecord annotation according to KEEP 402
                     buildList {
                         add(this@findTargetedSymbol)
                         addIfNotNull(this@findTargetedSymbol.getter)
                         addIfNotNull(this@findTargetedSymbol.setter)
                         addIfNotNull(this@findTargetedSymbol.setter?.parameter)
+                        addIfNotNull(this@findTargetedSymbol.backingField)
                     }
 
                 else -> throw InternalKSPException(
@@ -809,4 +854,143 @@ class PsiResolutionStrategy(
      */
     private val KtAnnotationEntry.ksUseSiteTarget: AnnotationUseSiteTarget?
         get() = useSiteTarget?.getAnnotationUseSiteTarget()?.toKSAnnotationUseSiteTarget()
+
+
+    /**
+     * This object represents a temporary fix for https://github.com/google/ksp/issues/2987.
+     * It decides if an annotation is annotated with the FIELD annotation target,
+     * and if so, applies to the field instead of the property.
+     */
+    private inner class AnnotationDeclarationTargetFieldFix {
+
+        /**
+         * Stores the [ClassId]s for the [KtAnnotationEntry].
+         */
+        private val annotationClassIds: MutableMap<KtAnnotationEntry, ClassId> = mutableMapOf()
+
+        /**
+         * Stores the key-value pair [annotation] -> [classId]. This mapping is used by [resolveKSPropertyDeclaration].
+         */
+        fun recordClassId(annotation: KtAnnotationEntry, classId: ClassId) {
+            annotationClassIds.putIfAbsent(annotation, classId)
+        }
+
+        /**
+         * Resolves [ksPropDecl] with respect to the declaration-site target [annotation].
+         * The use-site target of [annotation] takes precedence over the declaration-site target.
+         */
+        fun resolveKSPropertyDeclaration(
+            ksPropDecl: KSPropertyDeclaration,
+            annotation: KtAnnotationEntry
+        ): Collection<KSAnnotated> =
+            when {
+                annotation.ksUseSiteTarget != null -> ksPropDecl.findTargetedSymbol(annotation.ksUseSiteTarget)
+
+                canBeAppliedTo(annotation, ANNOTATION_TARGET_PROPERTY_ENTRY) -> {
+                    listOfNotNull(ksPropDecl)
+                }
+
+                canBeAppliedTo(annotation, ANNOTATION_TARGET_FIELD_ENTRY) -> {
+                    listOfNotNull(ksPropDecl.backingField)
+                }
+
+                else -> emptyList()
+            }
+
+        /**
+         * Returns `true` if [annotation] can be applied to [entry], which is a [CallableId] for
+         * the FIELD or PROPERTY [AnnotationTarget].
+         * @see [ANNOTATION_TARGET_FIELD_ENTRY]
+         * @see [ANNOTATION_TARGET_PROPERTY_ENTRY]
+         */
+        private fun canBeAppliedTo(annotation: KtAnnotationEntry, entry: CallableId): Boolean =
+            applicationCache.getOrPut(annotation to entry) {
+                val targetAnnotation = findTargetAnnotation(getCachedClassId(annotation)) ?: return@getOrPut true
+                val args = targetAnnotationArguments(targetAnnotation)
+                args.contains(entry)
+            }
+
+        /**
+         * Private cache for [canBeAppliedTo]
+         */
+        private val applicationCache: MutableMap<Pair<KtAnnotationEntry, CallableId>, Boolean> = mutableMapOf()
+
+        private fun getCachedClassId(annotation: KtAnnotationEntry): ClassId =
+            annotationClassIds[annotation] ?: throw InternalKSPException(
+                "Unexpected null class id for annotation entry: $annotation",
+                annotation.psiOrParent.toLocation(),
+                annotation.javaClass
+            )
+
+        private val TARGET_ANNOTATION = ClassId(
+            FqName("kotlin.annotation"),
+            Name.identifier("Target")
+        )
+        private val ANNOTATION_TARGET_FIELD_ENTRY: CallableId = annotationTargetEntry("FIELD")
+        private val ANNOTATION_TARGET_PROPERTY_ENTRY: CallableId = annotationTargetEntry("PROPERTY")
+
+        private fun annotationTargetEntry(entry: String) = ClassId(
+            FqName("kotlin.annotation"),
+            Name.identifier("AnnotationTarget")
+        ).let {
+            CallableId(it, Name.identifier(entry))
+        }
+
+        private fun isAnnotationClass(kaClassSym: KaClassSymbol?): Boolean =
+            kaClassSym?.classKind == KaClassKind.ANNOTATION_CLASS
+
+        /**
+         * Returns the `@Target` annotation if it exists.
+         */
+        private fun findTargetAnnotation(kaClassSym: KaClassSymbol?): KaAnnotation? {
+            if (!isAnnotationClass(kaClassSym)) {
+                return null
+            }
+            return kaClassSym?.annotations?.find { it.classId == TARGET_ANNOTATION }
+        }
+
+        private fun findTargetAnnotation(classId: ClassId): KaAnnotation? =
+            findTargetAnnotation(classId.toKtClassSymbol())
+
+        /**
+         * Returns the arguments of the target annotation. Throws an error if the annotation
+         * has more than one non-null argument.
+         */
+        private fun targetAnnotationArguments(targetAnnotation: KaAnnotation): List<CallableId> {
+            val args = targetAnnotation.arguments
+            if (args.size != 1) {
+                throw InternalKSPException(
+                    "Unexpected number of arguments passed to @Target annotation",
+                    targetAnnotation.psi.toLocation(),
+                    targetAnnotation.javaClass
+                )
+            }
+            return args.firstOrNull()?.let { flattenAnnotationArgs(it.expression) } ?: emptyList()
+        }
+
+        /**
+         * Returns a list of [CallableId] where each member is the concrete type of the argument passed to
+         * the [Target] annotation.
+         * The [Target] annotation is defined as:
+         * ```kt
+         * annotation class Target(val allowedTarget: AnnotationTarget)
+         * ```
+         * However, you can pass an array of [AnnotationTarget] to [Target], so
+         * both of the following constructors are allowed, hence the flattening:
+         * ```kt
+         * @Target(AnnotationTarget.FIELD)
+         * @Target({AnnotationTarget.FIELD, AnnotationTarget.CLASS})
+         * ```
+         */
+        private fun flattenAnnotationArgs(annotationValue: KaAnnotationValue): List<CallableId> =
+            when (annotationValue) {
+                is KaAnnotationValue.EnumEntryValue -> listOfNotNull(annotationValue.callableId)
+                is KaAnnotationValue.ArrayValue -> annotationValue.values.flatMap(::flattenAnnotationArgs)
+                else -> throw InternalKSPException(
+                    "Unexpected argument type to @Target annotation",
+                    annotationValue.sourcePsi.toLocation(),
+                    annotationValue.javaClass,
+                )
+            }
+    }
 }
