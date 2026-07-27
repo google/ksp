@@ -107,3 +107,6 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
         else -> visitor.visitDeclaration(this, data)
     }
 }
+
+internal fun KaBackingFieldSymbol.toModifiers(): Set<Modifier> =
+    mutableSetOf(Modifier.PRIVATE, Modifier.FINAL)
