@@ -39,6 +39,9 @@ class NestedAnnotationProcessor : AbstractTestProcessor() {
         field.annotations.forEach { annotation ->
             result.add("@field $annotation: ${annotation.annotationType.resolve()}")
         }
+        field.backingField?.annotations?.forEach { annotation ->
+            result.add("@field $annotation: ${annotation.annotationType.resolve()}")
+        }
         val property = myClass.getDeclaredProperties().single { it.simpleName.asString() == "property" }
         property.annotations.forEach { annotation ->
             result.add("@property: $annotation: ${annotation.annotationType.resolve()}")
