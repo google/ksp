@@ -38,10 +38,9 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val ClsClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Cls"))!!
+        val ctorSimpleName = ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"
         result.add(
-            "${
-            ClsClass.primaryConstructor?.simpleName?.asString() ?: "<null>"
-            }; origin: ${ClsClass.primaryConstructor?.origin}"
+            "$ctorSimpleName; origin: ${ClsClass.primaryConstructor?.origin}"
         )
         result.add(ClsClass.getConstructors().map { it.toString() }.joinToString(","))
         val ITF = resolver.getClassDeclarationByName(resolver.getKSNameFromString("ITF"))!!
@@ -51,11 +50,8 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         result.add(JavaClass.getDeclaredFunctions().map { it.simpleName.asString() }.joinToString(","))
         val readOnly = ClsClass.declarations.single { it.simpleName.asString() == "readOnly" } as KSPropertyDeclaration
         readOnly.getter?.let {
-            result.add(
-                "readOnly.get(): ${it.origin} annotations from property: ${
-                it.annotations.map { it.shortName.asString() }.joinToString(",")
-                }"
-            )
+            val shortNameAnnotations = it.annotations.map { it.shortName.asString() }.joinToString(",")
+            result.add("readOnly.get(): ${it.origin} annotations from property: $shortNameAnnotations")
         }
         readOnly.getter?.receiver?.let { result.add("readOnly.getter.owner: " + nameAndOrigin(it)) }
         readOnly.setter?.let { result.add("readOnly.set(): ${it.origin}") }
@@ -64,13 +60,10 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
             ClsClass.declarations.single { it.simpleName.asString() == "readWrite" } as KSPropertyDeclaration
         readWrite.getter?.let { result.add("readWrite.get(): ${it.origin}") }
         readWrite.setter?.let {
-            result.add(
-                "readWrite.set(): ${it.origin} annotations from property: ${
-                it.annotations.map {
-                    it.shortName.asString()
-                }.joinToString(",")
-                }"
-            )
+            val shortNameAnnotations = it.annotations.map {
+                it.shortName.asString()
+            }.joinToString(",")
+            result.add("readWrite.set(): ${it.origin} annotations from property: $shortNameAnnotations")
         }
         val dataClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Data"))!!
         result.add(dataClass.getConstructors().map { it.toString() }.joinToString(","))
@@ -91,11 +84,16 @@ class ImplicitElementProcessor : AbstractTestProcessor() {
         listOf("Test", "lib.Test").forEach { clsName ->
             resolver.getClassDeclarationByName(clsName)!!.let { cls ->
                 cls.getDeclaredProperties().single().let { annotated ->
-                    result.add(
-                        "$clsName, $annotated: ${annotated.annotations.toList().map {
-                            "${it.shortName.asString()}: ${ it.useSiteTarget }"
-                        }}"
-                    )
+                    val shortNameAnnotationsWithTargets = annotated.annotations.toList().map {
+                        "${it.shortName.asString()}: ${it.useSiteTarget}"
+                    }
+                    result.add("$clsName, $annotated: $shortNameAnnotationsWithTargets")
+                    annotated.backingField?.let { field ->
+                        val fieldShortNameAnnotationsWithTargets = field.annotations.toList().map {
+                            "${it.shortName.asString()}: ${it.useSiteTarget}"
+                        }
+                        result.add("$clsName, $field: $fieldShortNameAnnotationsWithTargets")
+                    }
                 }
             }
         }
