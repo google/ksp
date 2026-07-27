@@ -228,11 +228,3 @@ internal fun KaPropertySymbol.toModifiers(): Set<Modifier> {
     }
     return result
 }
-
-internal fun KSAnnotation.isValidOnProperty(): Boolean =
-    annotationType.resolve().declaration.annotations.none { metaAnnotation ->
-        metaAnnotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.annotation.Target" &&
-            (metaAnnotation.arguments.singleOrNull()?.value as? ArrayList<*>)?.none {
-            (it as? KSClassDeclaration)?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.PROPERTY"
-        } ?: false
-    }
