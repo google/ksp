@@ -18,7 +18,7 @@
 // TEST PROCESSOR: NestedAnnotationProcessor
 // EXPECTED:
 // @param: @MyNestedAnnotation: MyNestedAnnotation
-// @field @MyNestedAnnotation: MyNestedAnnotation
+// @field: @MyNestedAnnotation: MyNestedAnnotation
 // @property: @MyNestedAnnotation: MyNestedAnnotation
 // @setparam: @MyNestedAnnotation: MyNestedAnnotation
 // END
@@ -32,4 +32,3 @@ class MyClass(@param:MyNestedAnnotation param: String) {
     var property: String = TODO()
     annotation class MyNestedAnnotation
 }
-
