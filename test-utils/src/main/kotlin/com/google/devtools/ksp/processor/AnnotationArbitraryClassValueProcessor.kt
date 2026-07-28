@@ -21,8 +21,12 @@ import com.google.devtools.ksp.KSTypeNotPresentException
 import com.google.devtools.ksp.KSTypesNotPresentException
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getKSAnnotationsByType
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSType
 import kotlin.reflect.KClass
 
 @KspExperimental
@@ -34,15 +38,47 @@ class AnnotationArbitraryClassValueProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation(
-            "com.google.devtools.ksp.processor.ClassValueAnnotation"
-        )
-        symbols.flatMap {
-            it.getAnnotationsByType(ClassValueAnnotation::class)
-        }.forEach {
-            logAnnotationValues(it)
+        val symbols =
+            resolver.getSymbolsWithAnnotation(
+                "com.google.devtools.ksp.processor.ClassValueAnnotation"
+            )
+        symbols.forEach {
+            it.getKSAnnotationsByType(ClassValueAnnotation::class).forEach(::logKSAnnotationValues)
+            result.add(it.isAnnotationPresent(ClassValueAnnotation::class).toString())
+            result.add(
+                it.getKSAnnotationsByType(OtherClassValueAnnotations.ClassValueAnnotation::class)
+                    .count()
+                    .toString()
+            )
+            result.add(
+                it.isAnnotationPresent(OtherClassValueAnnotations.ClassValueAnnotation::class)
+                    .toString()
+            )
+            it.getAnnotationsByType(ClassValueAnnotation::class).forEach(::logAnnotationValues)
         }
         return emptyList()
+    }
+
+    private fun logKSAnnotationValues(annotation: KSAnnotation) {
+        val classValue = annotation.argument("classValue") as KSType
+        result.add(classValue.renderQualifiedName())
+
+        val classValues = annotation.argument("classValues") as List<*>
+        result.add(classValues.joinToString { (it as KSType).renderQualifiedName() })
+    }
+
+    private fun KSAnnotation.argument(name: String): Any? =
+        arguments.single { it.name?.asString() == name }.value
+
+    private fun KSType.renderQualifiedName(): String {
+        val qualifiedName =
+            declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
+        if (arguments.isEmpty()) {
+            return qualifiedName
+        }
+        return arguments.joinToString(prefix = "$qualifiedName<", postfix = ">") {
+            it.type?.resolve()?.renderQualifiedName() ?: "*"
+        }
     }
 
     private fun logAnnotationValues(classValueAnnotation: ClassValueAnnotation) {
@@ -66,5 +102,9 @@ class AnnotationArbitraryClassValueProcessor : AbstractTestProcessor() {
 
 annotation class ClassValueAnnotation(
     val classValue: KClass<*>,
-    val classValues: Array<KClass<*>>
+    val classValues: Array<KClass<*>>,
 )
+
+private object OtherClassValueAnnotations {
+    annotation class ClassValueAnnotation
+}

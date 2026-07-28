@@ -362,19 +362,23 @@ fun Resolver.getJavaClassByName(name: String): KSClassDeclaration? =
     getJavaClassByName(getKSNameFromString(name))
 
 @KspExperimental
+fun <T : Annotation> KSAnnotated.getKSAnnotationsByType(
+    annotationKClass: KClass<T>
+): Sequence<KSAnnotation> {
+    return this.annotations.filter {
+        it.annotationType.resolve().declaration.qualifiedName?.asString() ==
+            annotationKClass.qualifiedName
+    }
+}
+
+@KspExperimental
 fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> {
-    return this.annotations
-        .filter {
-            it.shortName.getShortName() == annotationKClass.simpleName &&
-                it.annotationType.resolve().declaration.qualifiedName?.asString() ==
-                    annotationKClass.qualifiedName
-        }
-        .map { it.toAnnotation(annotationKClass.java) }
+    return getKSAnnotationsByType(annotationKClass).map { it.toAnnotation(annotationKClass.java) }
 }
 
 @KspExperimental
 fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean =
-    getAnnotationsByType(annotationKClass).firstOrNull() != null
+    getKSAnnotationsByType(annotationKClass).firstOrNull() != null
 
 @KspExperimental
 @Suppress("UNCHECKED_CAST")
