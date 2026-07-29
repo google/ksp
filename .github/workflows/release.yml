@@ -46,12 +46,9 @@ jobs:
         ./gradlew --info -PkspVersion=${REF:10} -PoutRepo=$(pwd)/build/repos/release publishAllPublicationsToMavenRepository
     - name: pack
       run: cd build/repos/release/ && zip -r ../../artifacts.zip .
+
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5
+      run: gh release upload $RELEASE_TAG ./build/artifacts.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./build/artifacts.zip
-        asset_name: artifacts.zip
-        asset_content_type: application/zip
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
