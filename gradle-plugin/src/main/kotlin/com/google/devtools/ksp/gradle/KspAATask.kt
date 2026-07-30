@@ -79,7 +79,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
-import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import java.io.ByteArrayOutputStream
@@ -456,7 +455,6 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinNativeCompilation) {
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
-                        cfg.konanHome.set(kotlinCompileProvider.flatMap { (it as KotlinNativeCompile).konanHome })
 
                         val isHostSupported = HostManager().enabled.any {
                             it.name == konanTargetName
@@ -714,10 +712,6 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Optional
     abstract val konanTargetName: Property<String>
 
-    @get:Input
-    @get:Optional
-    abstract val konanHome: Property<String>
-
     @get:Internal
     abstract val profilingMode: Property<Boolean>
 }
@@ -832,20 +826,6 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 KSPNativeConfig.Builder().apply {
                     this.setupSuper()
                     target = gradleCfg.konanTargetName.get()
-
-                    // Unlike other platforms, K/N sets up stdlib in the compiler, not KGP,
-                    // meaning that KotlinNativeCompile doesn't have stdlib.
-                    // FIXME: find a solution with KGP, K/N and AA owners
-                    val konanHome = File(gradleCfg.konanHome.get())
-                    val klib = File(konanHome, "klib")
-                    val common = File(klib, "common")
-                    val stdlib = File(common, "stdlib")
-                    libraries += stdlib
-                    val platform = File(klib, "platform")
-                    val targetLibDir = File(platform, target)
-                    targetLibDir.listFiles()?.let {
-                        libraries += it
-                    }
                 }.build()
             }
 
