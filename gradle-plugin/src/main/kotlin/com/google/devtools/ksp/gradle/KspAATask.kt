@@ -79,7 +79,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
-import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import java.io.ByteArrayOutputStream
@@ -204,26 +203,29 @@ abstract class KspAATask @Inject constructor(
             val target = kotlinCompilation.target.name
             val sourceSetName = kotlinCompilation.defaultSourceSet.name
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
-            val kspAADepCfg = project.configurations.detachedConfiguration(
-                project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-api:$KSP_VERSION"),
-                project.dependencies.create(
+            val kspAADepCfgProvider = project.configurations.register("${kspTaskName}AAClasspath") { cfg ->
+                cfg.markResolvable()
+                cfg.isTransitive = false
+                project.dependencies.add(cfg.name, "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-api:$KSP_VERSION")
+                project.dependencies.add(
+                    cfg.name,
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-common-deps:$KSP_VERSION"
-                ),
-                project.dependencies.create(
+                )
+                project.dependencies.add(
+                    cfg.name,
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
-                ),
-                project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.getKotlinPluginVersion()}"),
-                project.dependencies.create(
+                )
+                project.dependencies.add(cfg.name, "org.jetbrains.kotlin:kotlin-stdlib:${project.getKotlinPluginVersion()}")
+                project.dependencies.add(
+                    cfg.name,
                     "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
-                ),
-            ).apply {
-                isTransitive = false
+                )
             }
             val incomingProcessors = processorClasspath.incoming.artifactView { }.files
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
                 kspAATask.usesService(isolatedClassLoaderCacheBuildServiceProvider)
                 kspAATask.isolatedClassLoaderCacheBuildService.set(isolatedClassLoaderCacheBuildServiceProvider)
-                kspAATask.kspClasspath.from(kspAADepCfg.incoming.artifactView { }.files)
+                kspAATask.kspClasspath.from(kspAADepCfgProvider.map { it.incoming.artifactView { }.files })
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(incomingProcessors)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
@@ -456,7 +458,6 @@ abstract class KspAATask @Inject constructor(
                     if (kotlinCompilation is KotlinNativeCompilation) {
                         val konanTargetName = kotlinCompilation.target.konanTarget.name
                         cfg.konanTargetName.value(konanTargetName)
-                        cfg.konanHome.set(kotlinCompileProvider.flatMap { (it as KotlinNativeCompile).konanHome })
 
                         val isHostSupported = HostManager().enabled.any {
                             it.name == konanTargetName
@@ -714,10 +715,6 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Optional
     abstract val konanTargetName: Property<String>
 
-    @get:Input
-    @get:Optional
-    abstract val konanHome: Property<String>
-
     @get:Internal
     abstract val profilingMode: Property<Boolean>
 }
@@ -832,20 +829,6 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
                 KSPNativeConfig.Builder().apply {
                     this.setupSuper()
                     target = gradleCfg.konanTargetName.get()
-
-                    // Unlike other platforms, K/N sets up stdlib in the compiler, not KGP,
-                    // meaning that KotlinNativeCompile doesn't have stdlib.
-                    // FIXME: find a solution with KGP, K/N and AA owners
-                    val konanHome = File(gradleCfg.konanHome.get())
-                    val klib = File(konanHome, "klib")
-                    val common = File(klib, "common")
-                    val stdlib = File(common, "stdlib")
-                    libraries += stdlib
-                    val platform = File(klib, "platform")
-                    val targetLibDir = File(platform, target)
-                    targetLibDir.listFiles()?.let {
-                        libraries += it
-                    }
                 }.build()
             }
 
