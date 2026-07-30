@@ -177,8 +177,8 @@ dependencies {
     implementation("javax.inject:javax.inject:1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    compileOnly(libs.kotlinx.coroutines.core.jvm)
-    compileOnly(libs.kotlinx.coroutines.core.asProvider())
+    compileOnly(libs.kotlinx.coroutines.coreJvm)
+    compileOnly(libs.kotlinx.coroutines.core)
     implementation(
         libs.aa.fastutil
     ) {
@@ -206,8 +206,8 @@ dependencies {
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
     testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
-    testImplementation(libs.kotlinx.coroutines.core.jvm)
-    testImplementation(libs.kotlinx.coroutines.core.asProvider())
+    testImplementation(libs.kotlinx.coroutines.coreJvm)
+    testImplementation(libs.kotlinx.coroutines.core)
 
     // See AbstractKSPTest's init block if you change any of the `libsForTesting` or
     // `libsForTestingCommon` dependencies.
