@@ -19,7 +19,7 @@
         errorLine2="                                                                         ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="282"
+            line="285"
             column="74"/>
     </issue>
 
@@ -30,7 +30,7 @@
         errorLine2="                                                              ~~~">
         <location
             file="src/main/kotlin/com/google/devtools/ksp/gradle/KspAATask.kt"
-            line="291"
+            line="294"
             column="63"/>
     </issue>
 

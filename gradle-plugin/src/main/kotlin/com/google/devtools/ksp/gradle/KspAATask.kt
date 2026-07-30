@@ -203,26 +203,29 @@ abstract class KspAATask @Inject constructor(
             val target = kotlinCompilation.target.name
             val sourceSetName = kotlinCompilation.defaultSourceSet.name
             val kspTaskName = kotlinCompileProvider.name.replaceFirst("compile", "ksp")
-            val kspAADepCfg = project.configurations.detachedConfiguration(
-                project.dependencies.create("${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-api:$KSP_VERSION"),
-                project.dependencies.create(
+            val kspAADepCfgProvider = project.configurations.register("${kspTaskName}AAClasspath") { cfg ->
+                cfg.markResolvable()
+                cfg.isTransitive = false
+                project.dependencies.add(cfg.name, "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-api:$KSP_VERSION")
+                project.dependencies.add(
+                    cfg.name,
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-common-deps:$KSP_VERSION"
-                ),
-                project.dependencies.create(
+                )
+                project.dependencies.add(
+                    cfg.name,
                     "${KspGradleSubplugin.KSP_GROUP_ID}:symbol-processing-aa-embeddable:$KSP_VERSION"
-                ),
-                project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.getKotlinPluginVersion()}"),
-                project.dependencies.create(
+                )
+                project.dependencies.add(cfg.name, "org.jetbrains.kotlin:kotlin-stdlib:${project.getKotlinPluginVersion()}")
+                project.dependencies.add(
+                    cfg.name,
                     "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$KSP_COROUTINES_VERSION"
-                ),
-            ).apply {
-                isTransitive = false
+                )
             }
             val incomingProcessors = processorClasspath.incoming.artifactView { }.files
             val kspTaskProvider = project.tasks.register(kspTaskName, KspAATask::class.java) { kspAATask ->
                 kspAATask.usesService(isolatedClassLoaderCacheBuildServiceProvider)
                 kspAATask.isolatedClassLoaderCacheBuildService.set(isolatedClassLoaderCacheBuildServiceProvider)
-                kspAATask.kspClasspath.from(kspAADepCfg.incoming.artifactView { }.files)
+                kspAATask.kspClasspath.from(kspAADepCfgProvider.map { it.incoming.artifactView { }.files })
                 kspAATask.kspConfig.let { cfg ->
                     cfg.processorClasspath.from(incomingProcessors)
                     val kotlinOutputDir = KspGradleSubplugin.getKspKotlinOutputDir(project, sourceSetName, target)
