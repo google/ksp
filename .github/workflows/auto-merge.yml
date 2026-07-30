@@ -75,6 +75,10 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
+      - name: Check valid Gradle wrapper jar
+        run: sha256sum --check gradle-wrapper.jar.sha256sum
+        working-directory: ./gradle/wrapper
+
       # Build cache
       - name: Cache Gradle Cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -89,6 +93,10 @@ jobs:
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Check valid Gradle wrapper jar
+        run: sha256sum --check gradle-wrapper.jar.sha256sum
+        working-directory: ./gradle/wrapper
 
       # Check API compatibility
       - name: API compatibility check
