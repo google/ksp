@@ -21,6 +21,7 @@ import com.google.devtools.ksp.KSTypeNotPresentException
 import com.google.devtools.ksp.KSTypesNotPresentException
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import kotlin.reflect.KClass
@@ -37,10 +38,21 @@ class AnnotationArbitraryClassValueProcessor : AbstractTestProcessor() {
         val symbols = resolver.getSymbolsWithAnnotation(
             "com.google.devtools.ksp.processor.ClassValueAnnotation"
         )
-        symbols.flatMap {
-            it.getAnnotationsByType(ClassValueAnnotation::class)
-        }.forEach {
-            logAnnotationValues(it)
+        symbols.forEach {
+            it.getAnnotationsByType(ClassValueAnnotation::class).forEach(::logAnnotationValues)
+            // The annotation is present, but its class values cannot be loaded by the
+            // processor's classloader. Presence should be answerable without loading them.
+            result.add(it.isAnnotationPresent(ClassValueAnnotation::class).toString())
+            // A different annotation that shares the simple name but not the qualified name.
+            result.add(
+                it.getAnnotationsByType(OtherClassValueAnnotations.ClassValueAnnotation::class)
+                    .count()
+                    .toString()
+            )
+            result.add(
+                it.isAnnotationPresent(OtherClassValueAnnotations.ClassValueAnnotation::class)
+                    .toString()
+            )
         }
         return emptyList()
     }
@@ -68,3 +80,7 @@ annotation class ClassValueAnnotation(
     val classValue: KClass<*>,
     val classValues: Array<KClass<*>>
 )
+
+private object OtherClassValueAnnotations {
+    annotation class ClassValueAnnotation
+}

@@ -18,6 +18,9 @@
 // EXPECTED:
 // User
 // String, Company, IntArray, Array<User>
+// true
+// 0
+// false
 // END
 // FILE: a.kt
 package com.google.devtools.ksp.processor
