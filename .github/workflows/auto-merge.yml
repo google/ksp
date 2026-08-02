@@ -44,7 +44,7 @@ jobs:
           df -h
 
       # Checkout
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           ref: ${{ env.RELEASE_BRANCH }}
@@ -55,6 +55,8 @@ jobs:
           # A commit is a version bump IFF it touches third_party/prebuilt/repo
           DONT_PICK=$(cat <<EOF
           5c073ba9c1283190467937b4456be9174b9be86c
+          f88c6897c77ba87aef0b40b57c930a182c24ae19
+          a0924911c7f3b5bf4c87840a0ac63b95a19118e2
           EOF
           )
           git config --global user.email "kotlin-symbol-processing@google.com"
@@ -68,22 +70,22 @@ jobs:
           if [ -n "$TO_PICK" ]; then git cherry-pick -x --allow-empty $TO_PICK; fi
 
       - name: Setup Java 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           java-version: '17'
           distribution: 'zulu'
 
       # Build cache
       - name: Cache Gradle Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}-${{ hashFiles('**/libs.versions.toml') }}
           # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Cache gradle wrapper
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
@@ -119,7 +121,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: test-reports-${{ matrix.test-suite }}
           path: |
@@ -135,7 +137,7 @@ jobs:
       contents: write
     steps:
       # Checkout
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           ref: ${{ env.RELEASE_BRANCH }}
@@ -146,6 +148,8 @@ jobs:
           # A commit is a version bump IFF it touches third_party/prebuilt/repo
           DONT_PICK=$(cat <<EOF
           5c073ba9c1283190467937b4456be9174b9be86c
+          f88c6897c77ba87aef0b40b57c930a182c24ae19
+          a0924911c7f3b5bf4c87840a0ac63b95a19118e2
           EOF
           )
           git config --global user.email "kotlin-symbol-processing@google.com"
