@@ -3,8 +3,9 @@ package com.google.devtools.ksp.visitor
 import com.google.devtools.ksp.symbol.*
 
 open class KSValidateVisitor(
-    private val predicate: (KSNode?, KSNode) -> Boolean
-) : KSDefaultVisitor<KSNode?, Boolean>() {
+    private val predicate: (KSNode?, KSNode) -> Boolean,
+    enableNewFeatures: Boolean
+) : KSDefaultVisitor<KSNode?, Boolean>(enableNewFeatures) {
     private fun validateType(type: KSType): Boolean {
         return !type.isError && !type.arguments.any { it.type?.accept(this, null) == false }
     }

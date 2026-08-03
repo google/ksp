@@ -16,12 +16,14 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 /**
  * A visitor that delegates to super types for methods that are not overridden.
  */
-abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
+abstract class KSDefaultVisitor<D, R>(enableNewFeatures: Boolean) : KSEmptyVisitor<D, R>(enableNewFeatures) {
+
     override fun visitDynamicReference(reference: KSDynamicReference, data: D): R {
         this.visitReferenceElement(reference, data)
         return super.visitDynamicReference(reference, data)
@@ -71,6 +73,13 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${this.javaClass.simpleName} while enableNewFeatures = false",
+                backingField.location,
+                backingField.javaClass
+            )
+        }
         this.visitDeclaration(backingField, data)
         return super.visitBackingField(backingField, data)
     }
