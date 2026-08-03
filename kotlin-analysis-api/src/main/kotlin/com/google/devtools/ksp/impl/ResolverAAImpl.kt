@@ -628,7 +628,6 @@ class ResolverAAImpl(
         return KSNameImpl.getCached(name)
     }
 
-    // FIXME: correct implementation after incremental is ready.
     override fun getNewFiles(): Sequence<KSFile> {
         return resolutionStrategy.newKSFiles.asSequence()
     }
