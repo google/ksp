@@ -586,6 +586,7 @@ class KotlinSymbolProcessing(
                 ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
 
                 processors.forEach { processor ->
+                    resolver.currentProcessor = processor
                     incrementalContext.closeFilesOnException {
                         deferredSymbols[processor] =
                             processor.process(resolver)
