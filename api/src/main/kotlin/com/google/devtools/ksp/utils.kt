@@ -147,7 +147,21 @@ fun KSDeclaration.isLocal(): Boolean {
  */
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
-    enableNewFeatures: Boolean = false,
+): Boolean {
+    return this.accept(KSValidateVisitor(predicate), null)
+}
+
+/**
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
+ * are valid, i.e. resolvable.
+ *
+ * @param predicate A lambda for filtering interested symbols for performance purpose. Default
+ *   checks all.
+ *   @param enableNewFeatures A boolean flag toggling new features in [KSValidateVisitor].
+ */
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    enableNewFeatures: Boolean,
 ): Boolean {
     return this.accept(KSValidateVisitor(predicate, enableNewFeatures), null)
 }
