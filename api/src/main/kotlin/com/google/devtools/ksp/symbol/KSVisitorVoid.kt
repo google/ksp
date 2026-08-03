@@ -17,7 +17,7 @@
 package com.google.devtools.ksp.symbol
 
 /** A visitor that doesn't pass or return anything. */
-open class KSVisitorVoid : KSVisitorNext<Unit, Unit> {
+open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, Unit> {
     override fun visitNode(node: KSNode, data: Unit) {}
 
     override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {}

@@ -21,7 +21,7 @@ import com.google.devtools.ksp.symbol.*
 /**
  * A visitor that methods fall back to [defaultHandler] if not overridden.
  */
-abstract class KSEmptyVisitor<D, R> : KSVisitorNext<D, R> {
+abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorNext<D, R> {
     abstract fun defaultHandler(node: KSNode, data: D): R
 
     override fun visitNode(node: KSNode, data: D): R {

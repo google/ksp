@@ -145,8 +145,11 @@ fun KSDeclaration.isLocal(): Boolean {
  * @param predicate A lambda for filtering interested symbols for performance purpose. Default
  *   checks all.
  */
-fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }): Boolean {
-    return this.accept(KSValidateVisitor(predicate), null)
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    enableNewFeatures: Boolean = false,
+): Boolean {
+    return this.accept(KSValidateVisitor(predicate, enableNewFeatures), null)
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */
@@ -221,6 +224,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                         is KSTypeAlias -> it.findActualType().getAllSuperTypes()
                         is KSTypeParameter ->
                             it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
+
                         else ->
                             throw InternalKSPException(
                                 "Unhandled super type kind",
@@ -257,7 +261,7 @@ fun KSDeclaration.isOpen() =
             this.modifiers.contains(Modifier.SEALED) ||
             (this !is KSClassDeclaration &&
                 (this.parentDeclaration as? KSClassDeclaration)?.classKind ==
-                    ClassKind.INTERFACE) ||
+                ClassKind.INTERFACE) ||
             (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA))
 
 fun KSDeclaration.isPublic() = this.getVisibility() == Visibility.PUBLIC
@@ -367,7 +371,7 @@ fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T
         .filter {
             it.shortName.getShortName() == annotationKClass.simpleName &&
                 it.annotationType.resolve().declaration.qualifiedName?.asString() ==
-                    annotationKClass.qualifiedName
+                annotationKClass.qualifiedName
         }
         .map { it.toAnnotation(annotationKClass.java) }
 }
