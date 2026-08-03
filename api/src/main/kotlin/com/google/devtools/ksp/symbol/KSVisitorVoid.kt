@@ -16,8 +16,18 @@
  */
 package com.google.devtools.ksp.symbol
 
-/** A visitor that doesn't pass or return anything. */
+import com.google.devtools.ksp.errors.InternalKSPException
+
+/**
+ * A visitor that doesn't pass or return anything.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
+ */
 open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, Unit> {
+
+    // For binary compatibility
+    constructor() : this(enableNewFeatures = false)
+
     override fun visitNode(node: KSNode, data: Unit) {}
 
     override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {}
@@ -52,7 +62,15 @@ open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, U
 
     override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {}
 
-    override fun visitBackingField(backingField: KSBackingField, data: Unit) {}
+    override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
+    }
 
     override fun visitClassifierReference(reference: KSClassifierReference, data: Unit) {}
 

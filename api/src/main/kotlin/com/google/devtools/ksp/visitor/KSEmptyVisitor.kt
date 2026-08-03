@@ -16,12 +16,19 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 /**
  * A visitor that methods fall back to [defaultHandler] if not overridden.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
  */
 abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorNext<D, R> {
+
+    // For binary compatibility
+    constructor() : this(enableNewFeatures = false)
+
     abstract fun defaultHandler(node: KSNode, data: D): R
 
     override fun visitNode(node: KSNode, data: D): R {
@@ -85,6 +92,13 @@ abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorN
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
         return defaultHandler(backingField, data)
     }
 

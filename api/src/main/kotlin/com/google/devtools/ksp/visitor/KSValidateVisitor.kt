@@ -1,11 +1,16 @@
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 open class KSValidateVisitor(
     private val predicate: (KSNode?, KSNode) -> Boolean,
     enableNewFeatures: Boolean
 ) : KSDefaultVisitor<KSNode?, Boolean>(enableNewFeatures) {
+
+    // For binary compatibility
+    constructor(predicate: (KSNode?, KSNode) -> Boolean) : this(predicate, enableNewFeatures = false)
+
     private fun validateType(type: KSType): Boolean {
         return !type.isError && !type.arguments.any { it.type?.accept(this, null) == false }
     }
@@ -100,6 +105,13 @@ open class KSValidateVisitor(
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: KSNode?): Boolean {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
         if (predicate(backingField, backingField.type) && !backingField.type.accept(this, data)) {
             return false
         }
