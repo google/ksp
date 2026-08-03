@@ -40,8 +40,10 @@ import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.testConfiguration
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.LanguageSettingsDirectives
+import org.jetbrains.kotlin.test.directives.NativeEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.model.DependencyKind
 import org.jetbrains.kotlin.test.model.FrontendKind
 import org.jetbrains.kotlin.test.model.ResultingArtifact
@@ -155,6 +157,9 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         useDirectives(*AbstractKotlinCompilerTest.defaultDirectiveContainers.toTypedArray())
         useDirectives(JvmEnvironmentConfigurationDirectives)
         useDirectives(TargetPlatformDirectives)
+        useDirectives(ConfigurationDirectives)
+        useDirectives(NativeEnvironmentConfigurationDirectives)
+        useDirectives(JsEnvironmentConfigurationDirectives)
 
         defaultDirectives {
             +JvmEnvironmentConfigurationDirectives.FULL_JDK
