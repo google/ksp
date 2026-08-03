@@ -19,7 +19,10 @@ package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
+import com.google.devtools.ksp.processing.KSPConfig
+import com.google.devtools.ksp.processing.KSPJsConfig
 import com.google.devtools.ksp.processing.KSPJvmConfig
+import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
@@ -27,6 +30,13 @@ import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.languageVersionSettings
+import org.jetbrains.kotlin.platform.JsPlatform
+import org.jetbrains.kotlin.platform.konan.NativePlatform
+import org.jetbrains.kotlin.test.TargetBackend
+import org.jetbrains.kotlin.test.compileJavaFiles
+import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.NativeEnvironmentConfigurationDirectives
+import org.jetbrains.kotlin.test.services.targetPlatformProvider
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
@@ -173,27 +183,90 @@ abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : Abstr
 
         val testRoot = mainModule.testRoot
 
-        val kspConfig = KSPJvmConfig.Builder().apply {
-            moduleName = mainModule.findCompilerModuleName()
-            sourceRoots = listOf(mainModule.kotlinSrc)
-            javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
-            jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
-            jvmTarget = (compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET) ?: JvmTarget.DEFAULT).description
-            languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
-            apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
-            libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
-                compilerConfiguration.jvmModularRoots
-            friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
-            projectBaseDir = testRoot
-            classOutputDir = File(testRoot, "kspTest/classes/main")
-            javaOutputDir = File(testRoot, "kspTest/src/main/java")
-            kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
-            resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
-            cachesDir = File(testRoot, "kspTest/kspCaches")
-            outputBaseDir = File(testRoot, "kspTest")
-            incremental = true
-            experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
-        }.build()
+        val targetBackend = mainModule.directives[ConfigurationDirectives.TARGET_BACKEND].firstOrNull()
+        val fixedNativeTarget =
+            mainModule.directives[NativeEnvironmentConfigurationDirectives.WITH_FIXED_TARGET].firstOrNull()
+        val targetPlatform = testServices.targetPlatformProvider.getTargetPlatform(mainModule)
+
+        val isNative = targetBackend == TargetBackend.NATIVE ||
+            targetPlatform.componentPlatforms.any { it is NativePlatform } ||
+            fixedNativeTarget != null
+
+        val isJs = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
+            targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
+            targetPlatform.componentPlatforms.any { it is JsPlatform }
+
+        val kspConfig: KSPConfig = when {
+            isNative -> {
+                KSPNativeConfig.Builder().apply {
+                    target = fixedNativeTarget ?: "linux_x64"
+                    moduleName = mainModule.findCompilerModuleName()
+                    sourceRoots = listOf(mainModule.kotlinSrc)
+                    commonSourceRoots = emptyList()
+                    languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
+                    apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
+                    libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
+                        compilerConfiguration.jvmModularRoots
+                    friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
+                    projectBaseDir = testRoot
+                    classOutputDir = File(testRoot, "kspTest/classes/main")
+                    kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
+                    resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
+                    cachesDir = File(testRoot, "kspTest/kspCaches")
+                    outputBaseDir = File(testRoot, "kspTest")
+                    incremental = true
+                    experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
+                }.build()
+            }
+
+            isJs -> {
+                KSPJsConfig.Builder().apply {
+                    backend =
+                        if (targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true) "WASM" else "JS"
+                    moduleName = mainModule.findCompilerModuleName()
+                    sourceRoots = listOf(mainModule.kotlinSrc)
+                    commonSourceRoots = emptyList()
+                    languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
+                    apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
+                    libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
+                        compilerConfiguration.jvmModularRoots
+                    friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
+                    projectBaseDir = testRoot
+                    classOutputDir = File(testRoot, "kspTest/classes/main")
+                    kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
+                    resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
+                    cachesDir = File(testRoot, "kspTest/kspCaches")
+                    outputBaseDir = File(testRoot, "kspTest")
+                    incremental = true
+                    experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
+                }.build()
+            }
+
+            else -> {
+                KSPJvmConfig.Builder().apply {
+                    moduleName = mainModule.findCompilerModuleName()
+                    sourceRoots = listOf(mainModule.kotlinSrc)
+                    javaSourceRoots = compilerConfiguration.javaSourceRoots.map { File(it) }.toList()
+                    jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
+                    jvmTarget =
+                        (compilerConfiguration.get(JVMConfigurationKeys.JVM_TARGET) ?: JvmTarget.DEFAULT).description
+                    languageVersion = compilerConfiguration.languageVersionSettings.languageVersion.versionString
+                    apiVersion = compilerConfiguration.languageVersionSettings.apiVersion.versionString
+                    libraries = mainModule.regularDependencies.map { it.dependencyModule.outDir } +
+                        compilerConfiguration.jvmModularRoots
+                    friends = mainModule.friendDependencies.map { it.dependencyModule.outDir }
+                    projectBaseDir = testRoot
+                    classOutputDir = File(testRoot, "kspTest/classes/main")
+                    javaOutputDir = File(testRoot, "kspTest/src/main/java")
+                    kotlinOutputDir = File(testRoot, "kspTest/src/main/kotlin")
+                    resourceOutputDir = File(testRoot, "kspTest/src/main/resources")
+                    cachesDir = File(testRoot, "kspTest/kspCaches")
+                    outputBaseDir = File(testRoot, "kspTest")
+                    incremental = true
+                    experimentalPsiResolution = this@AbstractKSPAATest.experimentalPsiResolution
+                }.build()
+            }
+        }
         val exitCode = KotlinSymbolProcessing(kspConfig, listOf(testProcessor), CommandLineKSPLogger()).execute()
         if (exitCode != KotlinSymbolProcessing.ExitCode.OK) {
             return listOf("KSP FAILED WITH EXIT CODE: ${exitCode.name}") + testProcessor.toResult()
