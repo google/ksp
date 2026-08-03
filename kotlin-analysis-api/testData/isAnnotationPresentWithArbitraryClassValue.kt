@@ -1,6 +1,6 @@
 /*
- * Copyright 2020 Google LLC
- * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2026 Google LLC
+ * Copyright 2010-2026 JetBrains s.r.o. and Kotlin Programming Language contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// TEST PROCESSOR: AnnotationArbitraryClassValueProcessor
+// TEST PROCESSOR: IsAnnotationPresentWithArbitraryClassValueProcessor
 // EXPECTED:
-// User
-// String, Company, IntArray, Array<User>
+// true
+// 0
+// false
 // END
-// FILE: a.kt
 package com.google.devtools.ksp.processor
 
 import kotlin.reflect.KClass
 
-annotation class ClassValueAnnotation(
-    val classValue: KClass<*>,
-    val classValues: Array<KClass<*>>)
+annotation class ArbitraryClassValueAnnotation(val value: KClass<*>)
 
-data class User(val id: Long, val name: String)
-data class Company(val id: Long, val name: String, val location: String)
+@ArbitraryClassValueAnnotation(ArbitraryClassValue::class)
+class AnnotatedClass
 
-@ClassValueAnnotation(
-    classValue = User::class,
-    classValues = [String::class, Company::class, IntArray::class, Array<User>::class]
-)
-class ClassValueAnnotated
+class ArbitraryClassValue

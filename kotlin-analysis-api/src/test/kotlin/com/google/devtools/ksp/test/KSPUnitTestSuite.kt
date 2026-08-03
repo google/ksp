@@ -116,6 +116,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/annotationWithArbitraryClassValue.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/1038", BugState.OPEN)
+    @TestMetadata("isAnnotationPresentWithArbitraryClassValue.kt")
+    @Test
+    fun testIsAnnotationPresentWithArbitraryClassValue() {
+        runTest("$AA_PATH/isAnnotationPresentWithArbitraryClassValue.kt")
+    }
+
     @TestMetadata("annotationWithNestedClassValue.kt")
     @Test
     fun testAnnotationWithNestedClassValue() {
