@@ -160,6 +160,7 @@ class ResolverAAImpl(
     val project: Project,
     val incrementalContext: IncrementalContextAA,
     val resolutionStrategy: AnnotationResolutionStrategy,
+    val processorsRegisteredForNewFeatures: Set<SymbolProcessor>,
 ) : Resolver {
     companion object {
         private val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
