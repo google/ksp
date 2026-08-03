@@ -221,6 +221,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                         is KSTypeAlias -> it.findActualType().getAllSuperTypes()
                         is KSTypeParameter ->
                             it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
+
                         else ->
                             throw InternalKSPException(
                                 "Unhandled super type kind",
@@ -257,7 +258,7 @@ fun KSDeclaration.isOpen() =
             this.modifiers.contains(Modifier.SEALED) ||
             (this !is KSClassDeclaration &&
                 (this.parentDeclaration as? KSClassDeclaration)?.classKind ==
-                    ClassKind.INTERFACE) ||
+                ClassKind.INTERFACE) ||
             (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA))
 
 fun KSDeclaration.isPublic() = this.getVisibility() == Visibility.PUBLIC
@@ -367,7 +368,7 @@ fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T
         .filter {
             it.shortName.getShortName() == annotationKClass.simpleName &&
                 it.annotationType.resolve().declaration.qualifiedName?.asString() ==
-                    annotationKClass.qualifiedName
+                annotationKClass.qualifiedName
         }
         .map { it.toAnnotation(annotationKClass.java) }
 }
