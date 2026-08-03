@@ -526,6 +526,7 @@ class KotlinSymbolProcessing(
             var newKSFiles = allDirtyKSFiles
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
+            val processorsRegisteredForUpcomingFeatures = mutableSetOf<SymbolProcessor>()
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
                 kspConfig.processorOptions,
                 kspConfig.languageVersion.toKotlinVersion(),
@@ -534,7 +535,8 @@ class KotlinSymbolProcessing(
                 kspConfig.apiVersion.toKotlinVersion(),
                 KotlinCompilerVersion.getVersion().toKotlinVersion(),
                 targetPlatform.getPlatformInfo(kspConfig),
-                KotlinVersion(2, 0)
+                KotlinVersion(2, 0),
+                registerProcessorForNewFeatures = processorsRegisteredForUpcomingFeatures::add
             )
 
             // Load and instantiate processors
