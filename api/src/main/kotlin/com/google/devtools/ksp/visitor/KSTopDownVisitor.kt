@@ -16,14 +16,21 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 /**
  * Visit all elements recursively.
  *
  * For subclasses overriding a function, remember to call the corresponding super method.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
  */
 abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVisitor<D, R>(enableNewFeatures) {
+
+    // For binary compatibility
+    constructor() : this(enableNewFeatures = false)
+
     private fun Sequence<KSNode>.accept(data: D) {
         forEach { it.accept(this@KSTopDownVisitor, data) }
     }
@@ -39,7 +46,9 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         property.extensionReceiver?.accept(data)
         property.getter?.accept(data)
         property.setter?.accept(data)
-        property.backingField?.accept(data)
+        if (enableNewFeatures) {
+            property.backingField?.accept(data)
+        }
         return super.visitPropertyDeclaration(property, data)
     }
 
@@ -99,6 +108,13 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
         backingField.type.accept(data)
         return super.visitBackingField(backingField, data)
     }

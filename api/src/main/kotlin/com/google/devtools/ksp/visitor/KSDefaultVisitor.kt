@@ -21,8 +21,13 @@ import com.google.devtools.ksp.symbol.*
 
 /**
  * A visitor that delegates to super types for methods that are not overridden.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
  */
 abstract class KSDefaultVisitor<D, R>(enableNewFeatures: Boolean) : KSEmptyVisitor<D, R>(enableNewFeatures) {
+
+    // For binary compatibility
+    constructor() : this(enableNewFeatures = false)
 
     override fun visitDynamicReference(reference: KSDynamicReference, data: D): R {
         this.visitReferenceElement(reference, data)
@@ -75,9 +80,9 @@ abstract class KSDefaultVisitor<D, R>(enableNewFeatures: Boolean) : KSEmptyVisit
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
         if (!enableNewFeatures) {
             throw InternalKSPException(
-                "Unexpected call to visitBackingField in ${this.javaClass.simpleName} while enableNewFeatures = false",
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
                 backingField.location,
-                backingField.javaClass
+                javaClass
             )
         }
         this.visitDeclaration(backingField, data)
