@@ -579,7 +579,8 @@ class KotlinSymbolProcessing(
                     allDirtyKSFiles,
                     project,
                     incrementalContext,
-                    resolutionStrategy
+                    resolutionStrategy,
+                    processorsRegisteredForUpcomingFeatures
                 )
                 ResolverAAImpl.instance = resolver
                 ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
