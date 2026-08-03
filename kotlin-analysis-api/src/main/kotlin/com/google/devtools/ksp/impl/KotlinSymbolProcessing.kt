@@ -537,7 +537,7 @@ class KotlinSymbolProcessing(
                 KotlinVersion(2, 0)
             )
 
-            // Load and instantiate processsors
+            // Load and instantiate processors
             val deferredSymbols = mutableMapOf<SymbolProcessor, List<Restorable>>()
             val processors = providers.map { provider ->
                 provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
