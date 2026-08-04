@@ -387,11 +387,11 @@ class KotlinSymbolProcessing(
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
-        modules.filterIsInstance<KaSourceModule>().forEach {
-            it.psiRoots.forEach {
-                when (it) {
-                    is KtFile -> ktFiles.add(it)
-                    is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(it)
+        modules.filterIsInstance<KaSourceModule>().forEach { kaSourceModule ->
+            kaSourceModule.psiRoots.forEach { psiRoot ->
+                when (psiRoot) {
+                    is KtFile -> ktFiles.add(psiRoot)
+                    is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(psiRoot)
                 }
             }
         }
