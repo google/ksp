@@ -955,9 +955,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/typeAnnotationClassReference.kt")
     }
 
-    @TestMetadata("nativeTest.kt")
+    @TestMetadata("native/nativeTest.kt")
     @Test
     fun testNativeTest() {
-        runTest("$AA_PATH/nativeTest.kt")
+        runTest("$AA_PATH/native/nativeTest.kt")
     }
 }
