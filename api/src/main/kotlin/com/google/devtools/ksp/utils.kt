@@ -33,6 +33,7 @@ import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Visibility
@@ -425,7 +426,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
             when (val result = argument.value ?: method.defaultValue) {
                 is Proxy -> result
                 is List<*> -> {
-                    val value = { result.asArray(method, clazz) }
+                    val value = { result.asArray(method, clazz, location) }
                     cache.getOrPut(Pair(method.returnType, result), value)
                 }
 
@@ -435,7 +436,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                         // https://github.com/google/ksp/issues/1329
                         method.returnType.isArray -> {
                             if (result !is Array<*>) {
-                                val value = { result.asArray(method, clazz) }
+                                val value = { result.asArray(method, clazz, location) }
                                 cache.getOrPut(Pair(method.returnType, value), value)
                             } else {
                                 throw InternalKSPException(
@@ -519,7 +520,7 @@ private fun KSAnnotation.asAnnotation(annotationInterface: Class<*>): Any {
 
 @KspExperimental
 @Suppress("UNCHECKED_CAST")
-private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
+private fun List<*>.asArray(method: Method, proxyClass: Class<*>, location: Location) =
     when (method.returnType.componentType.name) {
         "boolean" -> (this as List<Boolean>).toBooleanArray()
         "byte" -> (this as List<Byte>).toByteArray()
@@ -546,8 +547,12 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
                 }
 
                 else ->
-                    throw IllegalStateException(
-                        "Unable to process type ${method.returnType.componentType.name}"
+                    throw InternalKSPException(
+                        "Unexpected method return type '${method.returnType}' with name " +
+                            "${method.returnType.componentType.name} in ${method.name} " +
+                            "(proxy class: $proxyClass)",
+                        location,
+                        method.javaClass
                     )
             }
         }
@@ -625,8 +630,8 @@ private fun List<KSType>.asClasses(proxyClass: Class<*>) =
 fun KSValueArgument.isDefault() = origin == Origin.SYNTHETIC
 
 @KspExperimental
-private fun Any.asArray(method: Method, proxyClass: Class<*>) =
-    listOf(this).asArray(method, proxyClass)
+private fun Any.asArray(method: Method, proxyClass: Class<*>, location: Location) =
+    listOf(this).asArray(method, proxyClass, location)
 
 private fun KSDeclaration.toJavaClassName(): String {
     val nameDelimiter = '.'
