@@ -656,3 +656,6 @@ private fun KSDeclaration.toJavaClassName(): String {
         qualifiedNameString
     }
 }
+
+@Deprecated("This exception message is only kept for binary compatibility. It should not be depended upon.")
+const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"
