@@ -347,8 +347,6 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
 /** Returns `true` if this is a constructor function. */
 fun KSFunctionDeclaration.isConstructor() = this.simpleName.asString() == "<init>"
 
-const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"
-
 val KSType.outerType: KSType?
     get() {
         if (Modifier.INNER !in declaration.modifiers) return null
@@ -440,8 +438,11 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                                 val value = { result.asArray(method, clazz) }
                                 cache.getOrPut(Pair(method.returnType, value), value)
                             } else {
-                                throw IllegalStateException(
-                                    "unhandled value type, $ExceptionMessage"
+                                throw InternalKSPException(
+                                    "Unexpected value type for ${result.javaClass} " +
+                                        "with respect to ${method.returnType.javaClass}",
+                                    location,
+                                    javaClass
                                 )
                             }
                         }
