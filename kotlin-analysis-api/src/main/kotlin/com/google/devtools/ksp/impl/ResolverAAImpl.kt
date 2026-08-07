@@ -90,6 +90,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -190,6 +191,8 @@ class ResolverAAImpl(
     }
 
     lateinit var currentProcessor: SymbolProcessor
+
+    private fun shouldEnableNewFeatures(): Boolean = currentProcessor in processorsRegisteredForNewFeatures
 
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
@@ -721,7 +724,11 @@ class ResolverAAImpl(
         }
         val realAnnotationName = expandedIfAlias ?: annotationName
 
-        return resolutionStrategy.getSymbolsWithAnnotation(realAnnotationName, inDepth)
+        return resolutionStrategy.getSymbolsWithAnnotation(
+            realAnnotationName,
+            inDepth,
+            shouldEnableNewFeatures(),
+        )
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -908,6 +915,8 @@ class ResolverAAImpl(
                     }
                 }
             }
+
+            is KSBackingField if shouldEnableNewFeatures() -> TODO("Backing fields are not yet supported in mapToJvmSignatureInternal")
 
             else -> null
         }

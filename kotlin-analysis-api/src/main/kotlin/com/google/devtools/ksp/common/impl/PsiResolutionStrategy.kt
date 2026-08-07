@@ -90,9 +90,13 @@ class PsiResolutionStrategy(
     /**
      * Returns all symbols annotated with [annotationName].
      */
-    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> =
+    override fun getSymbolsWithAnnotation(
+        annotationName: String,
+        inDepth: Boolean,
+        enableNewFeatures: Boolean
+    ): Sequence<KSAnnotated> =
         if (inDepth)
-            aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true)
+            aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true, enableNewFeatures)
         else
             getAnnotatedSymbols(annotationName)
 
