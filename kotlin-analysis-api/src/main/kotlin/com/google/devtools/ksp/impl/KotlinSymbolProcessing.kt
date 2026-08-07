@@ -526,6 +526,7 @@ class KotlinSymbolProcessing(
             var newKSFiles = allDirtyKSFiles
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
+            val processorsRegisteredForUpcomingFeatures = mutableSetOf<SymbolProcessor>()
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
                 kspConfig.processorOptions,
                 kspConfig.languageVersion.toKotlinVersion(),
@@ -534,7 +535,8 @@ class KotlinSymbolProcessing(
                 kspConfig.apiVersion.toKotlinVersion(),
                 KotlinCompilerVersion.getVersion().toKotlinVersion(),
                 targetPlatform.getPlatformInfo(kspConfig),
-                KotlinVersion(2, 0)
+                KotlinVersion(2, 0),
+                registerProcessorForNewFeatures = processorsRegisteredForUpcomingFeatures::add
             )
 
             // Load and instantiate processors
@@ -577,13 +579,15 @@ class KotlinSymbolProcessing(
                     allDirtyKSFiles,
                     project,
                     incrementalContext,
-                    resolutionStrategy
+                    resolutionStrategy,
+                    processorsRegisteredForUpcomingFeatures
                 )
                 ResolverAAImpl.instance = resolver
                 ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
                 ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
 
                 processors.forEach { processor ->
+                    resolver.currentProcessor = processor
                     incrementalContext.closeFilesOnException {
                         deferredSymbols[processor] =
                             processor.process(resolver)

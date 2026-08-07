@@ -89,9 +89,11 @@ import com.google.devtools.ksp.isVisibleFrom
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.KSPConfig
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -159,6 +161,7 @@ class ResolverAAImpl(
     val project: Project,
     val incrementalContext: IncrementalContextAA,
     val resolutionStrategy: AnnotationResolutionStrategy,
+    val processorsRegisteredForNewFeatures: Set<SymbolProcessor>,
 ) : Resolver {
     companion object {
         private val instance_prop: ThreadLocal<ResolverAAImpl> = ThreadLocal()
@@ -188,6 +191,10 @@ class ResolverAAImpl(
             kspConfig_prop.remove()
         }
     }
+
+    lateinit var currentProcessor: SymbolProcessor
+
+    private fun shouldEnableNewFeatures(): Boolean = currentProcessor in processorsRegisteredForNewFeatures
 
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
@@ -232,6 +239,7 @@ class ResolverAAImpl(
         return KSTypeReferenceSyntheticImpl.getCached(type, null)
     }
 
+    // TODO(https://github.com/google/ksp/pull/3122): Wait for PR to be merged until adding support for KSBackingField.
     override fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier> {
         val modifiers = HashSet<Modifier>(declaration.modifiers.filter { it in javaModifiers })
 
@@ -698,7 +706,11 @@ class ResolverAAImpl(
         }
         val realAnnotationName = expandedIfAlias ?: annotationName
 
-        return resolutionStrategy.getSymbolsWithAnnotation(realAnnotationName, inDepth)
+        return resolutionStrategy.getSymbolsWithAnnotation(
+            realAnnotationName,
+            inDepth,
+            shouldEnableNewFeatures(),
+        )
     }
 
     override fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument {
@@ -885,6 +897,8 @@ class ResolverAAImpl(
                     }
                 }
             }
+
+            is KSBackingField if shouldEnableNewFeatures() -> TODO("Backing fields are not yet supported in mapToJvmSignatureInternal")
 
             else -> null
         }
