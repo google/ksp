@@ -245,9 +245,28 @@ class ResolverAAImpl(
         else -> null
     }
 
+    private fun KSAnnotation.resolvesTo(fqn: String): Boolean =
+        fqn.endsWith(shortName.asString()) &&
+            annotationType.resolve().declaration.qualifiedName?.asString() == fqn
+
+    private fun toJavaModifier(annotation: KSAnnotation): Modifier? = when {
+        annotation.resolvesTo(JVM_DEFAULT_ANNOTATION_FQN) -> Modifier.JAVA_DEFAULT
+        annotation.resolvesTo(JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN) -> Modifier.JAVA_DEFAULT
+        annotation.resolvesTo(JVM_STRICTFP_ANNOTATION_FQN) -> Modifier.JAVA_STRICT
+        annotation.resolvesTo(JVM_SYNCHRONIZED_ANNOTATION_FQN) -> Modifier.JAVA_SYNCHRONIZED
+        annotation.resolvesTo(JVM_TRANSIENT_ANNOTATION_FQN) -> Modifier.JAVA_TRANSIENT
+        annotation.resolvesTo(JVM_VOLATILE_ANNOTATION_FQN) -> Modifier.JAVA_VOLATILE
+        else -> null
+    }
+
+    private fun annotationsToJavaModifiers(annotations: Sequence<KSAnnotation>): Set<Modifier> =
+        annotations.fold(emptySet()) { acc, annotation ->
+            toJavaModifier(annotation)?.let { acc + it } ?: acc
+        }
+
     override fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier> = when (declaration.origin) {
         Origin.JAVA -> {
-           toJavaModifiers(declaration) + setOfNotNull(
+            toJavaModifiers(declaration) + setOfNotNull(
                 toVisibilityModifier(declaration),
                 if (declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE)
                     Modifier.ABSTRACT
@@ -270,19 +289,8 @@ class ResolverAAImpl(
                         modifiers.add(Modifier.JAVA_STATIC)
                 }
             }
+            modifiers.addAll(annotationsToJavaModifiers(declaration.annotations))
 
-            if (declaration.hasAnnotation(JVM_DEFAULT_ANNOTATION_FQN))
-                modifiers.add(Modifier.JAVA_DEFAULT)
-            if (declaration.hasAnnotation(JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN))
-                modifiers.add(Modifier.JAVA_DEFAULT)
-            if (declaration.hasAnnotation(JVM_STRICTFP_ANNOTATION_FQN))
-                modifiers.add(Modifier.JAVA_STRICT)
-            if (declaration.hasAnnotation(JVM_SYNCHRONIZED_ANNOTATION_FQN))
-                modifiers.add(Modifier.JAVA_SYNCHRONIZED)
-            if (declaration.hasAnnotation(JVM_TRANSIENT_ANNOTATION_FQN))
-                modifiers.add(Modifier.JAVA_TRANSIENT)
-            if (declaration.hasAnnotation(JVM_VOLATILE_ANNOTATION_FQN))
-                modifiers.add(Modifier.JAVA_VOLATILE)
             when (declaration) {
                 is KSClassDeclaration -> {
                     if (declaration.isCompanionObject)
