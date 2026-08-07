@@ -86,10 +86,10 @@
 // OuterKotlinClass.Companion.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.Companion.companionField: CONST : FINAL PUBLIC
 // OuterKotlinClass.Companion.companionMethod: : FINAL PUBLIC
-// OuterKotlinClass.Companion.customJvmStaticCompanionField: : FINAL PUBLIC
+// OuterKotlinClass.Companion.customJvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.customJvmStaticCompanionMethod: : FINAL PUBLIC
-// OuterKotlinClass.Companion.jvmStaticCompanionField: : FINAL PUBLIC
-// OuterKotlinClass.Companion.jvmStaticCompanionMethod: : FINAL PUBLIC
+// OuterKotlinClass.Companion.jvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
+// OuterKotlinClass.Companion.jvmStaticCompanionMethod: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.privateCompanionField: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionMethod: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion: : FINAL JAVA_STATIC PUBLIC
