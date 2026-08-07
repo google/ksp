@@ -39,7 +39,11 @@ class AAResolutionStrategy(
     override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
 ) : AnnotationResolutionStrategy {
 
-    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> =
+    override fun getSymbolsWithAnnotation(
+        annotationName: String,
+        inDepth: Boolean,
+        enableNewFeatures: Boolean
+    ): Sequence<KSAnnotated> =
         if (inDepth)
             annotationToSymbolsWithLocalsCache[annotationName]?.asSequence() ?: emptySequence()
         else
