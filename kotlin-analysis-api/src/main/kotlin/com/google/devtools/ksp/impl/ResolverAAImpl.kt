@@ -256,6 +256,7 @@ class ResolverAAImpl(
         annotation.resolvesTo(JVM_SYNCHRONIZED_ANNOTATION_FQN) -> Modifier.JAVA_SYNCHRONIZED
         annotation.resolvesTo(JVM_TRANSIENT_ANNOTATION_FQN) -> Modifier.JAVA_TRANSIENT
         annotation.resolvesTo(JVM_VOLATILE_ANNOTATION_FQN) -> Modifier.JAVA_VOLATILE
+        annotation.resolvesTo(JVM_STATIC_ANNOTATION_FQN) -> Modifier.JAVA_STATIC
         else -> null
     }
 
@@ -315,9 +316,7 @@ class ResolverAAImpl(
         Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
             val modifiers = HashSet(toJavaModifiers(declaration))
             modifiers.addIfNotNull(toVisibilityModifier(declaration))
-            if (declaration.hasAnnotation(JVM_STATIC_ANNOTATION_FQN)) {
-                modifiers.add(Modifier.JAVA_STATIC)
-            }
+            modifiers.addAll(annotationsToJavaModifiers(declaration.annotations))
             when (declaration) {
                 is KSPropertyDeclaration -> {
                     if (declaration.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0)
