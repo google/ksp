@@ -78,7 +78,6 @@ import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
 import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
 import com.google.devtools.ksp.impl.symbol.util.getFileContent
 import com.google.devtools.ksp.impl.symbol.util.getVirtualFile
-import com.google.devtools.ksp.impl.symbol.util.hasAnnotation
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.isOpen
@@ -266,14 +265,12 @@ class ResolverAAImpl(
         }
 
     override fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier> = when (declaration.origin) {
-        Origin.JAVA -> {
-            toJavaModifiers(declaration) + setOfNotNull(
-                toVisibilityModifier(declaration),
-                if (declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE)
-                    Modifier.ABSTRACT
-                else
-                    null
-            )
+        Origin.JAVA -> when {
+            declaration is KSClassDeclaration && declaration.classKind == ClassKind.INTERFACE ->
+                toJavaModifiers(declaration) + setOfNotNull(toVisibilityModifier(declaration), Modifier.ABSTRACT)
+
+            else ->
+                toJavaModifiers(declaration) + setOfNotNull(toVisibilityModifier(declaration))
         }
 
         Origin.KOTLIN -> {
