@@ -1,5 +1,5 @@
 [versions]
-kotlin-base = "2.3.20"
+kotlin-base = "2.4.0"
 kotlinx-serialization = "1.6.3"
 agp-base = "9.3.0-alpha01"
 junit = "4.13.1"
