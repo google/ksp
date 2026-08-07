@@ -34,25 +34,25 @@ class AGPVersionIT(
                 arrayOf(null, null, null),
 
                 // Alpha/beta versions
-                arrayOf("8.12.0-alpha06", "2.2.10", "8.13"),
                 arrayOf("8.12.0-alpha06", "2.3.0-RC", "8.13"),
-                arrayOf("9.0.0-alpha12", "2.2.10", "9.1.0"),
+                arrayOf("8.12.0-alpha06", "2.4.0", "8.13"),
                 arrayOf("9.0.0-alpha12", "2.3.0-RC", "9.1.0"),
-                arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
+                arrayOf("9.0.0-alpha12", "2.4.0", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
+                arrayOf("9.0.0-alpha14", "2.4.0", "9.1.0"),
 
                 // AGP 8.10.0
                 arrayOf("8.10.0", "2.3.0-RC", "8.11.1"),
-                arrayOf("8.10.0", "2.2.10", "8.11.1"),
+                arrayOf("8.10.0", "2.4.0", "8.11.1"),
                 // AGP 8.11.0
                 arrayOf("8.11.0", "2.3.0-RC", "8.13"),
-                arrayOf("8.11.0", "2.2.10", "8.13"),
+                arrayOf("8.11.0", "2.4.0", "8.13"),
                 // AGP 8.12.0
                 arrayOf("8.12.0", "2.3.0-RC", "8.13"),
-                arrayOf("8.12.0", "2.2.10", "8.13"),
+                arrayOf("8.12.0", "2.4.0", "8.13"),
                 // AGP 9.0.0-beta01
                 arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
-                arrayOf("9.0.0-beta01", "2.2.10", "9.1.0"),
+                arrayOf("9.0.0-beta01", "2.4.0", "9.1.0"),
             ).flatMap {
                 listOf(it.plus("true"), it.plus("false"))
             }
