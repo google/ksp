@@ -34,8 +34,10 @@ class IsAnnotationPresentWithArbitraryClassValueProcessor : AbstractTestProcesso
         ).forEach {
             results.add(it.isAnnotationPresent(ArbitraryClassValueAnnotation::class).toString())
             results.add(
-                it.getAnnotationsByType(OtherAnnotations.ArbitraryClassValueAnnotation::class)
-                    .count()
+                it.getAnnotationsByType(ArbitraryClassValueAnnotation::class)
+                    .first()
+                    .value
+                    .qualifiedName
                     .toString()
             )
             results.add(

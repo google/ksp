@@ -17,7 +17,7 @@
 // TEST PROCESSOR: IsAnnotationPresentWithArbitraryClassValueProcessor
 // EXPECTED:
 // true
-// 0
+// com.google.devtools.ksp.processor.ArbitraryClassValue
 // false
 // END
 package com.google.devtools.ksp.processor
