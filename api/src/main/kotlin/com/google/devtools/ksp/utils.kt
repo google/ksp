@@ -438,6 +438,9 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                             if (result !is Array<*>) {
                                 val value = { result.asArray(method, clazz, location) }
                                 cache.getOrPut(Pair(method.returnType, value), value)
+                            } else if (method.returnType == result::class.java) {
+                                val value = { result }
+                                cache.getOrPut(Pair(method.returnType, value), value)
                             } else {
                                 throw InternalKSPException(
                                     "Unexpected value type for ${result.javaClass} " +
