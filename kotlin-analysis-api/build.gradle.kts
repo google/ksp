@@ -157,7 +157,7 @@ dependencies {
             depSourceJars("$it:$aaKotlinBaseVersion:sources") { isTransitive = false }
         }
 
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
+    implementation(libs.aa.collectionsImmutable)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
@@ -166,16 +166,16 @@ dependencies {
     implementation(libs.aa.asm)
     implementation(libs.aa.stax2) { isTransitive = false }
     implementation(libs.aa.aalto.xml) { isTransitive = false }
-    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
+    implementation(libs.aa.caffeine)
     implementation(libs.aa.jna) { isTransitive = false }
     implementation(libs.aa.jnaPlatform) { isTransitive = false }
     implementation(libs.aa.trove4j) { isTransitive = false }
     originalLog4j(libs.aa.log4j) { isTransitive = false }
     implementation(files(filteredLog4j))
     implementation(libs.aa.jdom) { isTransitive = false }
-    implementation("io.javaslang:javaslang:2.0.6")
-    implementation("javax.inject:javax.inject:1")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
+    implementation(libs.aa.javaslang)
+    implementation(libs.aa.javaxInject)
+    implementation(libs.aa.kotlinReflect)
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
     compileOnly(libs.kotlinx.coroutines.coreJvm)
     compileOnly(libs.kotlinx.coroutines.core)

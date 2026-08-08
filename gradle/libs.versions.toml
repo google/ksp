@@ -19,6 +19,11 @@ aa-trove4j = "1.0.20200330"
 aa-log4j = "1.2.17.2"
 aa-jdom = "2.0.6"
 aa-coroutines = "1.10.2"
+aa-collections-immutable = "0.3.4"
+aa-caffeine = "2.9.3"
+aa-javaslang = "2.0.6"
+aa-javax-inject = "1"
+aa-kotlin-reflect = "1.6.10"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-base" }
@@ -46,6 +51,11 @@ aa-jnaPlatform = { module = "org.jetbrains.intellij.deps.jna:jna-platform", vers
 aa-trove4j = { module = "org.jetbrains.intellij.deps:trove4j", version.ref = "aa-trove4j" }
 aa-log4j = { module = "org.jetbrains.intellij.deps:log4j", version.ref = "aa-log4j" }
 aa-jdom = { module = "org.jetbrains.intellij.deps:jdom", version.ref = "aa-jdom" }
+aa-collectionsImmutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm", version.ref = "aa-collections-immutable" }
+aa-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "aa-caffeine" }
+aa-javaslang = { module = "io.javaslang:javaslang", version.ref = "aa-javaslang" }
+aa-javaxInject = { module = "javax.inject:javax.inject", version.ref = "aa-javax-inject" }
+aa-kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "aa-kotlin-reflect" }
 
 [plugins]
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
