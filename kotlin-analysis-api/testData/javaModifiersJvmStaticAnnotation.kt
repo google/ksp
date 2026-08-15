@@ -18,8 +18,8 @@
 // TEST PROCESSOR: JavaModifierJvmStaticAnnotationProcessor
 // PROCESSOR INPUT: A
 // EXPECTED:
-// A.Companion.bar : PUBLIC, JAVA_STATIC, FINAL
-// A.Companion.foo : PUBLIC, JAVA_STATIC, FINAL
+// A.Companion.bar : PUBLIC, FINAL, JAVA_STATIC
+// A.Companion.foo : PUBLIC, FINAL, JAVA_STATIC
 // END
 
 // FILE: A.kt

@@ -278,10 +278,10 @@ class ResolverAAImpl(
                     modifiers.add(Modifier.JAVA_TRANSIENT)
                 if (declaration.hasAnnotation(JVM_VOLATILE_ANNOTATION_FQN))
                     modifiers.add(Modifier.JAVA_VOLATILE)
+                if (declaration.hasAnnotation(JVM_STATIC_ANNOTATION_FQN))
+                    modifiers.add(Modifier.JAVA_STATIC)
                 when (declaration) {
                     is KSClassDeclaration -> {
-                        if (declaration.isCompanionObject)
-                            modifiers.add(Modifier.JAVA_STATIC)
                         if (declaration.classKind == ClassKind.INTERFACE)
                             modifiers.add(Modifier.ABSTRACT)
                     }
