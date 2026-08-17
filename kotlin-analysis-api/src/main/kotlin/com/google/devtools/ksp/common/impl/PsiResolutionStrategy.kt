@@ -97,6 +97,8 @@ class PsiResolutionStrategy(
     ): Sequence<KSAnnotated> =
         if (inDepth)
             aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true, enableNewFeatures)
+        else if (enableNewFeatures)
+            psiResolutionNext.getSymbolsWithAnnotation(annotationName)
         else
             getAnnotatedSymbols(annotationName)
 
@@ -108,6 +110,13 @@ class PsiResolutionStrategy(
      */
     private val aaResolutionStrategy: AAResolutionStrategy by lazy {
         AAResolutionStrategy(newKSFiles, deferredSymbols)
+    }
+
+    /**
+     * A helper class for [PsiResolutionStrategy] that supports new language features.
+     */
+    private val psiResolutionNext: PsiResolutionNext by lazy {
+        PsiResolutionNext(newKSFiles, deferredSymbols)
     }
 
     /**
