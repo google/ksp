@@ -505,7 +505,7 @@ internal fun KaCallableSymbol.toKSFunctionDeclaration(): KSFunctionDeclarationIm
     else -> null
 }
 
-internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration? = when (this) {
+internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclarationJavaImpl? = when (this) {
     is KaJavaFieldSymbol -> this.toKSPropertyDeclaration()
     else -> null
 }
@@ -513,7 +513,7 @@ internal fun KaCallableSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration? 
 internal fun KaTypeAliasSymbol.toKSTypeAlias(): KSTypeAliasImpl =
     KSTypeAliasImpl.getCached(this)
 
-internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclaration =
+internal fun KaJavaFieldSymbol.toKSPropertyDeclaration(): KSPropertyDeclarationJavaImpl =
     KSPropertyDeclarationJavaImpl.getCached(this)
 
 internal fun KaFileSymbol.toKSFile(): KSFileImpl =
