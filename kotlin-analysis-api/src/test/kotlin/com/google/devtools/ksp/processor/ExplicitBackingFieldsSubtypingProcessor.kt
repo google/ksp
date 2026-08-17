@@ -23,7 +23,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 
-class ExplicitBackingFieldsSubtypingProcessor : AbstractTestProcessor() {
+class ExplicitBackingFieldsSubtypingProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {

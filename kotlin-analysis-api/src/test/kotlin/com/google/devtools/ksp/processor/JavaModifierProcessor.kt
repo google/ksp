@@ -26,7 +26,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class JavaModifierProcessor : AbstractTestProcessor() {
+class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -59,7 +59,7 @@ class JavaModifierProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    inner class ModifierVisitor(val resolver: Resolver) : KSTopDownVisitor<Unit, Unit>() {
+    inner class ModifierVisitor(val resolver: Resolver) : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: Unit) {
         }
 

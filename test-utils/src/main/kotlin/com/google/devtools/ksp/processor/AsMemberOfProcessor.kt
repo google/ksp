@@ -7,7 +7,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @Suppress("unused") // used by generated tests
-class AsMemberOfProcessor : AbstractTestProcessor() {
+class AsMemberOfProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     // keep a list of all signatures we generate and ensure equals work as expected
     private val functionsBySignature = mutableMapOf<String, MutableSet<KSFunction>>()

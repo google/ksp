@@ -23,7 +23,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
-class JvmNameRecordProcessor : AbstractTestProcessor() {
+class JvmNameRecordProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     override fun toResult(): List<String> {
         return results

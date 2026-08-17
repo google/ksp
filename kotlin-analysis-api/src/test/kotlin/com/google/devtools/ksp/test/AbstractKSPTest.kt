@@ -80,7 +80,7 @@ abstract class DisposableTest {
     }
 }
 
-abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
+abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures: Boolean) : DisposableTest() {
     companion object {
         const val TEST_PROCESSOR = "// TEST PROCESSOR:"
         const val PROCESSOR_INPUT = "// PROCESSOR INPUT:"
@@ -317,15 +317,15 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 
         val testProcessor: AbstractTestProcessor =
             if (testAnnotationNames == null) {
-                // Instantiate processor class without constructor params
+                // Instantiate processor class with enableNewFeatures param
                 processorClass
-                    .getDeclaredConstructor()
-                    .newInstance() as AbstractTestProcessor
+                    .getDeclaredConstructor(Boolean::class.java)
+                    .newInstance(this.enableNewFeatures) as AbstractTestProcessor
             } else {
                 // Instantiate parameterized processor class
                 processorClass
-                    .getDeclaredConstructor(List::class.java)
-                    .newInstance(testAnnotationNames) as AbstractTestProcessor
+                    .getDeclaredConstructor(List::class.java, Boolean::class.java)
+                    .newInstance(testAnnotationNames, this.enableNewFeatures) as AbstractTestProcessor
             }
 
         val expected = fileContents
