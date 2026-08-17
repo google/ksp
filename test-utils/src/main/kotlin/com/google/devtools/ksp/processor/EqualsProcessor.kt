@@ -20,7 +20,7 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-open class EqualsProcessor : AbstractTestProcessor() {
+open class EqualsProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

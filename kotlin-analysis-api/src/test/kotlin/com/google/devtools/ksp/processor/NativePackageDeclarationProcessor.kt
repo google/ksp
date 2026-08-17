@@ -21,7 +21,7 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class NativePackageDeclarationProcessor(val packageNames: List<String>) : AbstractTestProcessor() {
+class NativePackageDeclarationProcessor(val packageNames: List<String>, override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
