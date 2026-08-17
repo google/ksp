@@ -37,7 +37,8 @@ abstract class KSPUnitTestSuite(
         internal const val PATH_PREFIX: String = "../kotlin-analysis-api/testData"
     }
 
-    protected val AA_PATH: String = "$PATH_PREFIX/current"
+    protected val AA_PATH: String
+        get() = if (enableNewFeatures) "$PATH_PREFIX/next" else "$PATH_PREFIX/current"
 
     @Bug("https://github.com/google/ksp/issues/2997", BugState.OPEN)
     abstract fun testAliasedAnnotations()
