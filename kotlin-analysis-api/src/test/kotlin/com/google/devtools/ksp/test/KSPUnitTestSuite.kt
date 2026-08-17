@@ -485,11 +485,11 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/javaModifiers.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3124", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3124", BugState.FIXED)
     @TestMetadata("javaModifiersJvmStaticAnnotation.kt")
     @Test
     fun testJavaModifiersJvmStaticAnnotation() {
-        runFailingTest("$AA_PATH/javaModifiersJvmStaticAnnotation.kt")
+        runTest("$AA_PATH/javaModifiersJvmStaticAnnotation.kt")
     }
 
     @TestMetadata("javaNonNullTypes.kt")
