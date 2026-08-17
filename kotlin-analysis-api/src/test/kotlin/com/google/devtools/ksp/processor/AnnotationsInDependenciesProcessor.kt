@@ -35,7 +35,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
+class AnnotationsInDependenciesProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult() = results
 
@@ -69,7 +69,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
     private fun collectAnnotations(resolver: Resolver, qName: String): Map<KSAnnotated, List<KSAnnotation>> {
         val output = mutableMapOf<KSAnnotated, List<KSAnnotation>>()
         resolver.getClassDeclarationByName(qName)?.accept(
-            AnnotationVisitor(),
+            AnnotationVisitor(enableNewFeatures),
             output
         )
         return output
@@ -83,6 +83,7 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
             is KSValueParameter -> name?.let {
                 "parameter ${it.asString()} ${this.location.lineNumber}"
             } ?: "no-name-value-parameter ${this.location.lineNumber}"
+
             is KSPropertyGetter -> "getter of ${receiver.toSignature()}" // lineNumber handled by recursive call
             is KSPropertySetter -> "setter of ${receiver.toSignature()}" // lineNumber handled by recursive call
             is KSBackingField -> "field of ${property.toSignature()}" // lineNumber handled by recursive call
@@ -108,7 +109,8 @@ class AnnotationsInDependenciesProcessor : AbstractTestProcessor() {
             is NonExistLocation -> "<no line>"
         }
 
-    class AnnotationVisitor : KSTopDownVisitor<MutableMap<KSAnnotated, List<KSAnnotation>>, Unit>() {
+    class AnnotationVisitor(enableNewFeatures: Boolean) :
+        KSTopDownVisitor<MutableMap<KSAnnotated, List<KSAnnotation>>, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableMap<KSAnnotated, List<KSAnnotation>>) {
         }
 

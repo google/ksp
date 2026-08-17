@@ -20,7 +20,9 @@ package com.google.devtools.ksp.test
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
-class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = false) {
+abstract class AAConfiguredUnitTestSuiteBase(
+    enableNewFeatures: Boolean
+) : KSPUnitTestSuite(experimentalPsiResolution = false, enableNewFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
     @Test
@@ -58,3 +60,7 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
         runTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
     }
 }
+
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)

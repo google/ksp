@@ -27,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 @OptIn(KspExperimental::class)
-open class TopLevelMemberProcessor : AbstractTestProcessor() {
+open class TopLevelMemberProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     lateinit var results: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -35,7 +35,7 @@ open class TopLevelMemberProcessor : AbstractTestProcessor() {
             resolver.getDeclarationsFromPackage(pkg)
                 .flatMap { declaration ->
                     val declarations = mutableListOf<KSDeclaration>()
-                    declaration.accept(AllMembersVisitor(), declarations)
+                    declaration.accept(AllMembersVisitor(enableNewFeatures), declarations)
                     declarations
                 }.map {
                     "$pkg : ${it.simpleName.asString()} -> ${resolver.getSyntheticJvmClass(it)}"
@@ -52,7 +52,8 @@ open class TopLevelMemberProcessor : AbstractTestProcessor() {
         else -> error("unexpected declaration $declaration")
     }
 
-    private class AllMembersVisitor : KSTopDownVisitor<MutableList<KSDeclaration>, Unit>() {
+    private class AllMembersVisitor(enableNewFeatures: Boolean) :
+        KSTopDownVisitor<MutableList<KSDeclaration>, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableList<KSDeclaration>) {
         }
 

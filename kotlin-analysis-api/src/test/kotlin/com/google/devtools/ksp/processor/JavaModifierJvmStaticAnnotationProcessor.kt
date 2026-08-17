@@ -23,7 +23,8 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
-class JavaModifierJvmStaticAnnotationProcessor(val classNames: List<String>) : AbstractTestProcessor() {
+class JavaModifierJvmStaticAnnotationProcessor(val classNames: List<String>, override val enableNewFeatures: Boolean) :
+    AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {

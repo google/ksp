@@ -52,7 +52,10 @@ import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
 
-abstract class AbstractKSPAATest(val experimentalPsiResolution: Boolean) : AbstractKSPTest(FrontendKinds.FIR) {
+abstract class AbstractKSPAATest(
+    val experimentalPsiResolution: Boolean,
+    enableNewFeatures: Boolean,
+) : AbstractKSPTest(FrontendKinds.FIR, enableNewFeatures) {
 
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")
