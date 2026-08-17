@@ -44,21 +44,52 @@ class AAResolutionStrategy(
         inDepth: Boolean,
         enableNewFeatures: Boolean
     ): Sequence<KSAnnotated> =
-        if (inDepth)
-            annotationToSymbolsWithLocalsCache[annotationName]?.asSequence() ?: emptySequence()
-        else
-            annotationToSymbolsCache[annotationName]?.asSequence() ?: emptySequence()
+        when {
+            inDepth && enableNewFeatures ->
+                annotationToSymbolsWithLocalsCacheWithNewFeatures[annotationName]?.asSequence() ?: emptySequence()
+
+            inDepth && !enableNewFeatures ->
+                annotationToSymbolsWithLocalsCache[annotationName]?.asSequence() ?: emptySequence()
+
+            !inDepth && enableNewFeatures ->
+                annotationToSymbolsCacheWithNewFeatures[annotationName]?.asSequence() ?: emptySequence()
+
+            else -> // !inDepth && !enableNewFeatures
+                annotationToSymbolsCache[annotationName]?.asSequence() ?: emptySequence()
+        }
 
     private val annotationToSymbolsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        mapAnnotatedSymbols(false)
+        mapAnnotatedSymbols(inDepth = false, enableNewFeatures = false)
     }
 
     private val annotationToSymbolsWithLocalsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        mapAnnotatedSymbols(true)
+        mapAnnotatedSymbols(inDepth = true, enableNewFeatures = false)
     }
 
-    private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
-        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
+    /**
+     * This map is equivalent to [annotationToSymbolsCache], but also has new features enabled.
+     *
+     * Note that while it might be more efficient to only have single map and adapt the cached result on
+     * the fly based on the feature toggle, this copy / implementation makes it easily more correct but possibly
+     * trades performance for correctness.
+     */
+    private val annotationToSymbolsCacheWithNewFeatures: Map<String, Collection<KSAnnotated>> by lazy {
+        mapAnnotatedSymbols(inDepth = false, enableNewFeatures = true)
+    }
+
+    /**
+     * This map is equivalent to [annotationToSymbolsWithLocalsCache], but also has new features enabled.
+     *
+     * Note that while it might be more efficient to only have single map and adapt the cached result on
+     * the fly based on the feature toggle, this copy / implementation makes it easily more correct but possibly
+     * trades performance for correctness.
+     */
+    private val annotationToSymbolsWithLocalsCacheWithNewFeatures: Map<String, Collection<KSAnnotated>> by lazy {
+        mapAnnotatedSymbols(inDepth = true, enableNewFeatures = true)
+    }
+
+    private fun collectAnnotatedSymbols(inDepth: Boolean, enableNewFeatures: Boolean): Collection<KSAnnotated> {
+        val visitor = CollectAnnotatedSymbolsVisitor(inDepth, enableNewFeatures)
 
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
@@ -67,8 +98,11 @@ class AAResolutionStrategy(
         return visitor.symbols
     }
 
-    private fun mapAnnotatedSymbols(inDepth: Boolean): Map<String, Collection<KSAnnotated>> {
-        val newSymbols = collectAnnotatedSymbols(inDepth)
+    private fun mapAnnotatedSymbols(
+        inDepth: Boolean,
+        enableNewFeatures: Boolean
+    ): Map<String, Collection<KSAnnotated>> {
+        val newSymbols = collectAnnotatedSymbols(inDepth, enableNewFeatures)
         val withDeferred = newSymbols + deferredSymbolsRestored
         return mutableMapOf<String, MutableCollection<KSAnnotated>>().apply {
             withDeferred.forEach { annotated ->
