@@ -7,7 +7,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @KspExperimental
-class DeclarationOrderProcessor : AbstractTestProcessor() {
+class DeclarationOrderProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val result = mutableListOf<String>()
     override fun toResult() = result
 

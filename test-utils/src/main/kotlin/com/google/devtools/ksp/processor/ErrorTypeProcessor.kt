@@ -23,7 +23,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 
-class ErrorTypeProcessor : AbstractTestProcessor() {
+class ErrorTypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {

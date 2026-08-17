@@ -25,9 +25,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @KspExperimental
-open class JavaToKotlinMapProcessor : AbstractTestProcessor() {
+open class JavaToKotlinMapProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollectorNoAccessor()
+    val typeCollector = TypeCollectorNoAccessor(enableNewFeatures)
     val types = mutableSetOf<KSType>()
 
     val javaClasses = listOf(

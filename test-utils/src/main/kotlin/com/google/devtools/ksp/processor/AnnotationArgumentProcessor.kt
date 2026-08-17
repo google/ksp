@@ -21,9 +21,9 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class AnnotationArgumentProcessor : AbstractTestProcessor() {
+class AnnotationArgumentProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val visitor = ArgumentVisitor()
+    val visitor = ArgumentVisitor(enableNewFeatures)
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         listOf("MyClass", "MyClassInLib").forEach { clsName ->
@@ -135,7 +135,7 @@ class AnnotationArgumentProcessor : AbstractTestProcessor() {
         return results
     }
 
-    inner class ArgumentVisitor : KSVisitorVoid() {
+    inner class ArgumentVisitor(enableNewFeatures: Boolean)  : KSVisitorVoid(enableNewFeatures) {
         override fun visitValueArgument(valueArgument: KSValueArgument, data: Unit) {
             if (valueArgument.value is KSType) {
                 results.add((valueArgument.value as KSType).declaration.toString())

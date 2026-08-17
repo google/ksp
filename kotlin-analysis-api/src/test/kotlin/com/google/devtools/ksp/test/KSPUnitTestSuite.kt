@@ -30,8 +30,9 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Execution(ExecutionMode.SAME_THREAD)
 abstract class KSPUnitTestSuite(
-    experimentalPsiResolution: Boolean
-) : AbstractKSPAATest(experimentalPsiResolution) {
+    experimentalPsiResolution: Boolean,
+    enableNewFeatures: Boolean
+) : AbstractKSPAATest(experimentalPsiResolution, enableNewFeatures) {
 
     companion object {
         internal const val PATH_PREFIX: String = "../kotlin-analysis-api/testData"

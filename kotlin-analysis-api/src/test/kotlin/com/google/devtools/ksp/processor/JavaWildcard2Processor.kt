@@ -22,7 +22,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class JavaWildcard2Processor : AbstractTestProcessor() {
+open class JavaWildcard2Processor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     @OptIn(KspExperimental::class)
@@ -40,10 +40,7 @@ open class JavaWildcard2Processor : AbstractTestProcessor() {
         return results
     }
 
-    private class RefVisitor(
-        val results: MutableList<String>,
-        val resolver: Resolver
-    ) : KSTopDownVisitor<String, Unit>() {
+    private inner class RefVisitor(val results: MutableList<String>, val resolver: Resolver)  : KSTopDownVisitor<String, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: String) = Unit
 
         private fun KSTypeReference.pretty(): String {

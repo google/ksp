@@ -23,7 +23,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class LibOriginsProcessor : AbstractTestProcessor() {
+class LibOriginsProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val result = mutableListOf<String>()
     private val visited = mutableSetOf<KSNode>()
 
@@ -31,7 +31,7 @@ class LibOriginsProcessor : AbstractTestProcessor() {
         return result
     }
 
-    inner class MyCollector : KSTopDownVisitor<Origin, Unit>() {
+    inner class MyCollector(enableNewFeatures: Boolean)  : KSTopDownVisitor<Origin, Unit>(enableNewFeatures) {
         private fun KSNode.pretty(): String {
             val parents: MutableList<KSNode> = mutableListOf(this)
             var curr: KSNode = this
@@ -53,7 +53,7 @@ class LibOriginsProcessor : AbstractTestProcessor() {
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = MyCollector()
+        val visitor = MyCollector(enableNewFeatures)
 
         // FIXME: workaround for https://github.com/google/ksp/issues/418
         resolver.getDeclarationsFromPackage("foo.bar").sortedBy { it.simpleName.asString() }.forEach {

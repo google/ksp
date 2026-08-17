@@ -23,7 +23,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
+class CrossModuleTypeAliasTestProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult(): List<String> {
         return results
@@ -32,7 +32,7 @@ class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
-        val classCollector = object : BaseVisitor() {
+        val classCollector = object : BaseVisitor(enableNewFeatures) {
             override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
                 if (classes.add(classDeclaration)) {
                     super.visitClassDeclaration(classDeclaration, data)

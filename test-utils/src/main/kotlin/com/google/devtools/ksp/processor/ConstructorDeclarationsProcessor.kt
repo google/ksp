@@ -22,8 +22,8 @@ import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
-    val visitor = ConstructorsVisitor()
+class ConstructorDeclarationsProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+    val visitor = ConstructorsVisitor(enableNewFeatures)
     lateinit var result: List<String>
 
     override fun toResult(): List<String> {
@@ -44,7 +44,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    class ConstructorsVisitor : KSVisitorVoid() {
+    inner class ConstructorsVisitor(enableNewFeatures: Boolean)  : KSVisitorVoid(enableNewFeatures) {
         private val declarationsByClass = LinkedHashMap<KSClassDeclaration, MutableList<String>>()
         fun classNames() = declarationsByClass.keys
         fun toResult(): List<String> {

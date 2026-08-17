@@ -24,13 +24,13 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
-class ClassWithCompanionProcessor : AbstractTestProcessor() {
+class ClassWithCompanionProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val visitor = CompanionVisitor()
+    val visitor = CompanionVisitor(enableNewFeatures)
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getNewFiles().forEach { it.accept(CompanionVisitor(), Unit) }
-        resolver.getClassDeclarationByName("A")?.accept(CompanionVisitor(), Unit)
+        resolver.getNewFiles().forEach { it.accept(CompanionVisitor(enableNewFeatures), Unit) }
+        resolver.getClassDeclarationByName("A")?.accept(CompanionVisitor(enableNewFeatures), Unit)
         return emptyList()
     }
 
@@ -38,7 +38,7 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
         return results
     }
 
-    inner class CompanionVisitor : KSVisitorVoid() {
+    inner class CompanionVisitor(enableNewFeatures: Boolean)  : KSVisitorVoid(enableNewFeatures) {
         override fun visitFile(file: KSFile, data: Unit) {
             file.declarations.forEach { it.accept(this, Unit) }
         }

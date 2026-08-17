@@ -20,8 +20,8 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class AllFunctionsProcessor : AbstractTestProcessor() {
-    val visitor = AllFunctionsVisitor()
+class AllFunctionsProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+    val visitor = AllFunctionsVisitor(enableNewFeatures)
 
     override fun toResult(): List<String> {
         return visitor.toResult()
@@ -32,7 +32,7 @@ class AllFunctionsProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    class AllFunctionsVisitor : KSVisitorVoid() {
+    inner class AllFunctionsVisitor(enableNewFeatures: Boolean)  : KSVisitorVoid(enableNewFeatures) {
         private val declarationsByClass = mutableMapOf<String, MutableList<String>>()
         fun toResult(): List<String> {
             return declarationsByClass.entries

@@ -4,20 +4,20 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSEmptyVisitor
 
-class LocalDeclarationProcessor : AbstractTestProcessor() {
+class LocalDeclarationProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = LocalDeclarationVisitor()
+        val visitor = LocalDeclarationVisitor(enableNewFeatures)
         resolver.getAllFiles().forEach { it.accept(visitor, result) }
         return emptyList()
     }
 }
 
-class LocalDeclarationVisitor : KSEmptyVisitor<MutableList<String>, Unit>() {
+class LocalDeclarationVisitor(enableNewFeatures: Boolean) : KSEmptyVisitor<MutableList<String>, Unit>(enableNewFeatures) {
     override fun defaultHandler(node: KSNode, data: MutableList<String>) {
         data.add(node.toString())
     }
