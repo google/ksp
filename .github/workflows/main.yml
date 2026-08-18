@@ -57,7 +57,6 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
     - name: Check valid Gradle wrapper jar
-      if: matrix.os != 'windows-latest'
       run: sha256sum --check gradle-wrapper.jar.sha256sum
       working-directory: ./gradle/wrapper
 
@@ -78,7 +77,6 @@ jobs:
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
     - name: Check valid Gradle wrapper jar
-      if: matrix.os != 'windows-latest'
       run: sha256sum --check gradle-wrapper.jar.sha256sum
       working-directory: ./gradle/wrapper
 
