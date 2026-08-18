@@ -303,8 +303,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
         val fileContents = mainModule.files.first().originalFile.readLines()
 
         val processorArguments = parseProcessorArguments(fileContents)
-        val testProcessorName = parseTestProcessorName(fileContents)
-        val processorClass = mkTestProcessorClass(testProcessorName)
+        val processorClass = mkTestProcessorClass(parseTestProcessorName(fileContents))
         val testProcessor = mkProcessor(processorArguments, processorClass)
 
         val expected = parseExpectedOutput(fileContents)
