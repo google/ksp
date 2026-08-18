@@ -302,40 +302,12 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
 
         val fileContents = mainModule.files.first().originalFile.readLines()
 
-        val testProcessorName = fileContents
-            .single { it.startsWith(TEST_PROCESSOR) }
-            .substringAfter(TEST_PROCESSOR)
-            .trim()
+        val processorArguments = parseProcessorArguments(fileContents)
+        val testProcessorName = parseTestProcessorName(fileContents)
+        val processorClass = mkTestProcessorClass(testProcessorName)
+        val testProcessor = mkProcessor(processorArguments, processorClass)
 
-        val processorArguments = fileContents
-            .find { it.startsWith(PROCESSOR_INPUT) }
-            ?.substringAfter(PROCESSOR_INPUT)
-            ?.split(',')
-            ?.map { it.trim() }
-
-        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
-
-        val testProcessor: AbstractTestProcessor =
-            if (processorArguments == null) {
-                // Instantiate processor class with enableNewFeatures param
-                processorClass
-                    .getDeclaredConstructor(Boolean::class.java)
-                    .newInstance(this.enableNewFeatures) as AbstractTestProcessor
-            } else {
-                // Instantiate parameterized processor class
-                processorClass
-                    .getDeclaredConstructor(List::class.java, Boolean::class.java)
-                    .newInstance(processorArguments, this.enableNewFeatures) as AbstractTestProcessor
-            }
-
-        val expected = fileContents
-            .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
-            .drop(1)
-            .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
-            .joinToString("\n") {
-                // Remove '// ' prefix
-                it.substring(3).trim()
-            }
+        val expected = parseExpectedOutput(fileContents)
 
         val actual = {
             runTest(
@@ -346,7 +318,45 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
             ).joinToString("\n")
         }
 
-        return Pair(expected, actual)
+        return expected to actual
+    }
+
+    private fun mkTestProcessorClass(testProcessorName: String): Class<*> =
+        Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
+
+    private fun parseTestProcessorName(fileContents: List<String>): String = fileContents
+        .single { it.startsWith(TEST_PROCESSOR) }
+        .substringAfter(TEST_PROCESSOR)
+        .trim()
+
+    private fun parseProcessorArguments(fileContents: List<String>): List<String>? = fileContents
+        .find { it.startsWith(PROCESSOR_INPUT) }
+        ?.substringAfter(PROCESSOR_INPUT)
+        ?.split(',')
+        ?.map { it.trim() }
+
+    private fun parseExpectedOutput(fileContents: List<String>): String = fileContents
+        .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
+        .drop(1)
+        .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
+        .joinToString("\n") {
+            // Remove '// ' prefix
+            it.substring(3).trim()
+        }
+
+    private fun mkProcessor(
+        processorArguments: List<String>?,
+        processorClass: Class<*>
+    ): AbstractTestProcessor = if (processorArguments == null) {
+        // Instantiate processor class with enableNewFeatures param
+        processorClass
+            .getDeclaredConstructor(Boolean::class.java)
+            .newInstance(this.enableNewFeatures) as AbstractTestProcessor
+    } else {
+        // Instantiate parameterized processor class
+        processorClass
+            .getDeclaredConstructor(List::class.java, Boolean::class.java)
+            .newInstance(processorArguments, this.enableNewFeatures) as AbstractTestProcessor
     }
 }
 
