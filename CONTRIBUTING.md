@@ -55,14 +55,19 @@ The form of the test itself is flexible as long as the logic is covered.
 > [!NOTE]
 > The `test-utils` directory is deprecated. Unit tests should be placed in `kotlin-analysis-api`.
 
-Here are some [sample test processors](compiler-plugin/src/test/kotlin/com/google/devtools/ksp/processor) for your reference.
+Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/processor) for your reference.
 
 #### Steps for writing a test
 * KSP needs to be built with JDK 11+, because of test dependencies.
 * Create a test processor under the sample processor folder.
 * Write your logic by overriding corresponding functions. 
     * Test is performed by running test processor and getting a collection of test results in the form of `List<String>`.
-    * Make sure you override `toResult()` function to collect test results. 
+    * [required] Ensure your test processor is in the package `com.google.devtools.ksp.processor`.
+    * [required] The test processor must extend the `AbstractTestProcessor` class.
+    * [required] Make sure you override `toResult()` function to collect test results.
+    * [required] The test processor must have a constructor parameter of type boolean.
+      Specifically, it must override the `enableNewFeatures` property in `AbstractTestProcessor`.
+      In other words, the constructor parameter list must be as follows: `class MyProcessor(override val enableNewFeatures: Boolean)`.
     * Leverage visitors for easy traversal of the test case.
     * To help with easy testing, you can create an annotation for test, and annotate the specific part of the code to avoid doing excess filtering when traveling along the program.
 * Write your test case to work with the test processor.
@@ -74,6 +79,7 @@ Here are some [sample test processors](compiler-plugin/src/test/kotlin/com/googl
         * [optional] Add `// PROCESSOR INPUT: <input/predicate>` to specify inputs or predicates for the test processor (e.g. `// PROCESSOR INPUT: Anno` or `// PROCESSOR INPUT: kotlin.annotation.Retention, kotlin.annotation.Target`, as in [`aliasedAnnotation.kt`](kotlin-analysis-api/testData/getSymbolsWithAnnotation/aliasedAnnotation.kt)).
           Note: for a processor to accept input, its constructor must have a single `List<String>` parameter.
           This is a handy way of writing a parametric test processor.
+          The `List<String>` parameter list must come before the `enableNewFeatures` property.
         * Immediately after the test processor line(s), start your expected result lines. Every line should start with `// ` (with a space after `//`).
         * Add `// END` to indicate the end of expected test results.
         * Then follows the virtual files section till the end of the test file.
@@ -83,7 +89,9 @@ Here are some [sample test processors](compiler-plugin/src/test/kotlin/com/googl
     * Annotate the test with `@Bug` and `@BugState`.
     * The `@Bug` annotation requires a link to an open or existing GitHub issue (e.g., `@Bug("https://github.com/google/ksp/issues/<issue_number>", BugState.OPEN)`).
     * Use the `@Negative` marker annotation if applicable.
-* Run generated tests with `:compiler-plugin:test` and `:kotlin-analysis-api:test` gradle tasks.
+* Run generated tests with the `:kotlin-analysis-api:test` gradle task.
     * This will execute all tests in the KSP test suite. To run your test only, specify the test name with 
     `--tests "com.google.devtools.ksp.test.KSPUnitTestSuite.<name of your test>"`
     * Make sure your change is not breaking any existing test as well :).
+* [optional] You can run the `./gradlew check` task as well to run all tests.
+    * This task runs all integration tests as well, so it might take a while to complete.
