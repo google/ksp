@@ -207,6 +207,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             kspExtension,
         )
 
+        val isAndroidKmp = project.isAndroidKmpProject() &&
+            kotlinCompilation is KotlinMultiplatformAndroidCompilation
+
         val generatedSources = arrayOf(
             project.files(kotlinOutputDir).builtBy(kspTaskProvider),
             project.files(javaOutputDir).builtBy(kspTaskProvider),
@@ -216,8 +219,9 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
             // They will be observed by downstreams and violate current build scheme.
             kotlinCompileProvider.configure { it.source(*generatedSources) }
         } else {
-            val skipAddingSources = kotlinCompilation is KotlinJvmAndroidCompilation &&
-                project.isAgpBuiltInKotlinUsed() && project.canUseInternalKspApis()
+            val skipAddingSources = (kotlinCompilation is KotlinJvmAndroidCompilation &&
+                project.isAgpBuiltInKotlinUsed() && project.canUseInternalKspApis()) ||
+                isAndroidKmp
 
             if (!skipAddingSources) {
                 registerOutputWithKotlinSrcdirs(project, kotlinCompilation, kspTaskProvider, *generatedSources)
