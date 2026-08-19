@@ -993,4 +993,10 @@ abstract class KSPUnitTestSuite(
     fun testPluginProblemReporter() {
         runTest("$AA_PATH/pluginProblemReporter.kt")
     }
+
+    @TestMetadata("expectDifferentOutput.kt")
+    @Test
+    fun testExpectDifferentOutput() {
+        runTest("$AA_PATH/expectDifferentOutput.kt")
+    }
 }
