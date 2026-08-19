@@ -993,4 +993,10 @@ abstract class KSPUnitTestSuite(
     fun testPluginProblemReporter() {
         runThrowingTest("$AA_PATH/pluginProblemReporter.kt", expectedThrowableType = NullPointerException::class)
     }
+
+    @TestMetadata("expectDifferentOutput.kt")
+    @Test
+    fun testExpectDifferentOutput() {
+        runTest("$AA_PATH/expectDifferentOutput.kt")
+    }
 }
