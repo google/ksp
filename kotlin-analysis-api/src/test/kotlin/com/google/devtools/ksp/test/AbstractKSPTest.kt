@@ -352,6 +352,15 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
         ?.split(',')
         ?.map { it.trim() }
 
+    /**
+     * Given the test file content, [parseExpectedOutput] returns a map of expected test results/output based
+     * on the [enableNewFeatures] feature toggle. Thus, given the feature toggle, the caller may index into the
+     * returned map to obtain the expected test results.
+     *
+     * [parseExpectedOutput] removes directives such as [EXPECT_CURRENT] and [EXPECT_NEXT] and removes dangling
+     * whitespace and comments. In other words, if `// MyExpectedOutput` is declared in the test file,
+     * the value `"MyExpectedOutput"` is in the returned list (for both configurations).
+     */
     private fun parseExpectedOutput(fileContents: List<String>): Map<Boolean, List<String>> {
         val rawExpectedOutput =
             fileContents
