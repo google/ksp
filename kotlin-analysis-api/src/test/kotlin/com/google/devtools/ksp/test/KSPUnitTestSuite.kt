@@ -999,4 +999,17 @@ abstract class KSPUnitTestSuite(
     fun testExpectDifferentOutput() {
         runTest("$AA_PATH/expectDifferentOutput.kt")
     }
+
+    @TestMetadata("expectDifferentOutputFailingOnCurrent.kt")
+    @Test
+    fun testExpectDifferentOutputFailingOnCurrent() {
+        // N.B.: This test is supposed to fail on one configuration.
+        // It asserts that the test output actually varies depending on the configuration.
+        if (enableNewFeatures) {
+            runTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+        } else {
+            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+        }
+    }
+
 }
