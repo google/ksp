@@ -985,4 +985,11 @@ abstract class KSPUnitTestSuite(
     fun testPackageDeclarations() {
         runTest("$AA_PATH/packageDeclarations.kt")
     }
+
+    @Bug("https://github.com/google/ksp/issues/3140", BugState.OPEN)
+    @TestMetadata("pluginProblemReporter.kt")
+    @Test
+    fun testPluginProblemReporter() {
+        runThrowingTest("$AA_PATH/pluginProblemReporter.kt", expectedThrowableType = NullPointerException::class)
+    }
 }
