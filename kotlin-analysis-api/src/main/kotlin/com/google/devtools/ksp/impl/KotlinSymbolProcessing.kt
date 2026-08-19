@@ -46,6 +46,8 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.diagnostic.PluginException
+import com.intellij.diagnostic.PluginProblemReporter
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -275,6 +277,12 @@ class KotlinSymbolProcessing(
             KaResolutionActivityTracker::class.java,
             LLFirResolutionActivityTracker::class.java
         )
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            PluginProblemReporter::class.java,
+            PluginProblemReporter { errorMessage, cause, _ ->
+                PluginException(errorMessage, cause, null)
+            }
+        )
 
         registerProjectServices(
             kotlinCoreProjectEnvironment,
@@ -295,6 +303,20 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             modules
         )
+    }
+
+    private fun <T : Any> KotlinCoreProjectEnvironment.registerApplicationServices(
+        serviceInterface: Class<T>,
+        serviceImplementation: T
+    ) {
+        val application = environment.application
+        if (application.getServiceIfCreated(serviceInterface) == null) {
+            KotlinCoreEnvironment.underApplicationLock {
+                if (application.getServiceIfCreated(serviceInterface) == null) {
+                    application.registerService(serviceInterface, serviceImplementation)
+                }
+            }
+        }
     }
 
     private fun <T> KotlinCoreProjectEnvironment.registerApplicationServices(

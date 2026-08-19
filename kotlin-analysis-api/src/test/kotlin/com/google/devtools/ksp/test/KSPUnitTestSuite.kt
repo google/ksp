@@ -568,6 +568,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsWithAnnotation/localClasses.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/deprecatedEnum.kt")
+    @Test
+    fun testDeprecatedEnum() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/deprecatedEnum.kt")
+    }
+
     @TestMetadata("locations.kt")
     @Test
     fun testLocations() {
