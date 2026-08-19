@@ -21,7 +21,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.intellij.diagnostic.PluginException
 
-class PluginProblemReporterProcessor : AbstractTestProcessor() {
+class PluginProblemReporterProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun toResult(): List<String> = results
