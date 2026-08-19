@@ -46,6 +46,8 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.diagnostic.PluginException
+import com.intellij.diagnostic.PluginProblemReporter
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -274,6 +276,13 @@ class KotlinSymbolProcessing(
         kotlinCoreProjectEnvironment.registerApplicationServices(
             KaResolutionActivityTracker::class.java,
             LLFirResolutionActivityTracker::class.java
+        )
+
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            PluginProblemReporter::class.java,
+            PluginProblemReporter { message, cause, _ ->
+                PluginException(message, cause, null)
+            }::class.java
         )
 
         registerProjectServices(

@@ -17,6 +17,7 @@
 
 // TEST PROCESSOR: PluginProblemReporterProcessor
 // EXPECTED:
+// com.intellij.diagnostic.PluginException: Test error created by PluginException
 // END
 
 // FILE: MyClass.kt
