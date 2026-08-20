@@ -173,9 +173,7 @@ dependencies {
     originalLog4j(libs.aa.log4j) { isTransitive = false }
     implementation(files(filteredLog4j))
     implementation(libs.aa.jdom) { isTransitive = false }
-    implementation(libs.aa.javaslang)
     implementation(libs.aa.javaxInject)
-    implementation(libs.aa.kotlinReflect)
     implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
     compileOnly(libs.kotlinx.coroutines.coreJvm)
     compileOnly(libs.kotlinx.coroutines.core)
