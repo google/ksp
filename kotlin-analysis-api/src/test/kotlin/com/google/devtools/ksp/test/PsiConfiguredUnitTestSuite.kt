@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
 abstract class PsiConfiguredUnitTestSuiteBase(
-    enableNewFeatures: Boolean
+    enableNewFeatures: Boolean,
 ) : KSPUnitTestSuite(experimentalPsiResolution = true, enableNewFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
@@ -63,4 +63,23 @@ abstract class PsiConfiguredUnitTestSuiteBase(
 
 class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true)
+class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+
+    @TestMetadata("hello.kt")
+    @Test
+    override fun testHello() {
+        runThrowingTest("$AA_PATH/hello.kt")
+    }
+
+    @TestMetadata("getSymbolsWithAnnotation/useSiteTargets.kt")
+    @Test
+    override fun testUseSiteTargets() {
+        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/useSiteTargets.kt")
+    }
+
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    @Test
+    override fun testGroupedAnnotationsWithUseSiteTargets() {
+        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    }
+}
