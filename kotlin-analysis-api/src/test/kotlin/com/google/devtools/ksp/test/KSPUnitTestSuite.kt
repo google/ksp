@@ -31,7 +31,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @Execution(ExecutionMode.SAME_THREAD)
 abstract class KSPUnitTestSuite(
     experimentalPsiResolution: Boolean,
-    enableNewFeatures: Boolean
+    enableNewFeatures: Boolean,
 ) : AbstractKSPAATest(experimentalPsiResolution, enableNewFeatures) {
 
     companion object {
@@ -426,15 +426,15 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotations.kt")
     }
 
-    @TestMetadata("groupedAnnotationsWithUseSiteTargets.kt")
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
-    fun testGroupedAnnotationsWithUseSiteTargets() {
+    open fun testGroupedAnnotationsWithUseSiteTargets() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 
     @TestMetadata("hello.kt")
     @Test
-    fun testHello() {
+    open fun testHello() {
         runTest("$AA_PATH/hello.kt")
     }
 
@@ -878,9 +878,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/typeParameterVariance.kt")
     }
 
-    @TestMetadata("useSiteTargets.kt")
+    @TestMetadata("getSymbolsWithAnnotation/useSiteTargets.kt")
     @Test
-    fun testUseSiteTargets() {
+    open fun testUseSiteTargets() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/useSiteTargets.kt")
     }
 
