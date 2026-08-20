@@ -13,7 +13,6 @@ on [kotlinlang.org](https://kotlinlang.org/docs/ksp-overview.html). Here are som
 * [Overview](https://kotlinlang.org/docs/ksp-overview.html)
 * [Quickstart](https://kotlinlang.org/docs/ksp-quickstart.html)
 * [Libraries that support KSP](https://kotlinlang.org/docs/ksp-overview.html#supported-libraries)
-* [Why KSP?](https://kotlinlang.org/docs/ksp-why-ksp.html)
 * [Examples](https://kotlinlang.org/docs/ksp-examples.html)
 * [How KSP models Kotlin code](https://kotlinlang.org/docs/ksp-additional-details.html)
 * [Reference for Java annotation processor authors](https://kotlinlang.org/docs/ksp-reference.html)
