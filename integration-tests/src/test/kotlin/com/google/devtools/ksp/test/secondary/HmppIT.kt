@@ -35,6 +35,7 @@ class HmppIT(experimentalPsiResolution: Boolean) {
     @Test
     fun testTraditional() {
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        Assert.assertTrue(false)
 
         taskToFilesTraditional.forEach { (task, expected) ->
             gradleRunner.withArguments(
