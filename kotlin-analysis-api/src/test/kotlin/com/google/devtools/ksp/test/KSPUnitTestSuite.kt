@@ -17,6 +17,8 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.KSTypeNotPresentException
 import com.google.devtools.ksp.test.annotations.Bug
 import com.google.devtools.ksp.test.annotations.BugState
 import com.google.devtools.ksp.test.annotations.Negative
@@ -115,6 +117,17 @@ abstract class KSPUnitTestSuite(
     @Test
     fun testAnnotationWithArbitraryClassValue() {
         runTest("$AA_PATH/annotationWithArbitraryClassValue.kt")
+    }
+
+    @Bug("https://github.com/google/ksp/issues/1038", BugState.OPEN)
+    @TestMetadata("isAnnotationPresentWithArbitraryClassValue.kt")
+    @Test
+    @OptIn(KspExperimental::class)
+    fun testIsAnnotationPresentWithArbitraryClassValue() {
+        runThrowingTest(
+            "$AA_PATH/isAnnotationPresentWithArbitraryClassValue.kt",
+            KSTypeNotPresentException::class,
+        )
     }
 
     @TestMetadata("annotationWithNestedClassValue.kt")
