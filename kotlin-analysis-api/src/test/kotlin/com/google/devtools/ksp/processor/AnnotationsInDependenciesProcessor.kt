@@ -77,19 +77,17 @@ class AnnotationsInDependenciesProcessor(override val enableNewFeatures: Boolean
 
     private fun KSAnnotated.toSignature(): String {
         return when (this) {
-            is KSClassDeclaration -> "class ${(qualifiedName ?: simpleName).asString()} ${this.location.lineNumber}"
-            is KSPropertyDeclaration -> "property ${simpleName.asString()} ${this.location.lineNumber}"
-            is KSFunctionDeclaration -> "function ${simpleName.asString()} ${this.location.lineNumber}"
+            is KSClassDeclaration -> "class ${(qualifiedName ?: simpleName).asString()}"
+            is KSPropertyDeclaration -> "property ${simpleName.asString()}"
+            is KSFunctionDeclaration -> "function ${simpleName.asString()}"
             is KSValueParameter -> name?.let {
-                "parameter ${it.asString()} ${this.location.lineNumber}"
-            } ?: "no-name-value-parameter ${this.location.lineNumber}"
+                "parameter ${it.asString()}"
+            } ?: "no-name-value-parameter"
 
-            is KSPropertyGetter -> "getter of ${receiver.toSignature()}" // lineNumber handled by recursive call
-            is KSPropertySetter -> "setter of ${receiver.toSignature()}" // lineNumber handled by recursive call
-            is KSBackingField -> "field of ${property.toSignature()}" // lineNumber handled by recursive call
-            else -> {
-                error("unexpected annotated")
-            }
+            is KSPropertyGetter -> "getter of ${receiver.toSignature()}"
+            is KSPropertySetter -> "setter of ${receiver.toSignature()}"
+            is KSBackingField -> "field of ${property.toSignature()}"
+            else -> error("unexpected annotated")
         }
     }
 
@@ -98,16 +96,10 @@ class AnnotationsInDependenciesProcessor(override val enableNewFeatures: Boolean
             (it.qualifiedName ?: it.simpleName).asString()
         }
         val args = this.arguments.map {
-            "[${it.name?.asString()} = ${it.value} : ${it.location.lineNumber}]"
+            "[${it.name?.asString()} = ${it.value}]"
         }.joinToString(",")
-        return "$type{$args} : ${this.location.lineNumber}"
+        return "$type{$args}"
     }
-
-    private val Location.lineNumber: String
-        get() = when (this) {
-            is FileLocation -> this.lineNumber.toString()
-            is NonExistLocation -> "<no line>"
-        }
 
     class AnnotationVisitor(enableNewFeatures: Boolean) :
         KSTopDownVisitor<MutableMap<KSAnnotated, List<KSAnnotation>>, Unit>(enableNewFeatures) {
