@@ -44,6 +44,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("annotatedUtil.kt")
     @Test
     fun testAnnotatedUtil() {
+        error("Intentional error to make required test fail")
         runTest("$AA_PATH/annotatedUtil.kt")
     }
 
