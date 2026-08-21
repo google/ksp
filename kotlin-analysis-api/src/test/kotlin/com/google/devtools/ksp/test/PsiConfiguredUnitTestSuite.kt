@@ -42,6 +42,12 @@ abstract class PsiConfiguredUnitTestSuiteBase(
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    @Test
+    override fun testBackingFieldsLateinit() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    }
+
     @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
     @Test
     override fun testExplicitBackingFields() {
