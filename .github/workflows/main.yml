@@ -8,10 +8,10 @@ on:
   pull_request:
     branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   workflow_dispatch:
-    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   merge_group:
+    types: [ checks_requested ]
 
-permissions: {}
+permissions: { }
 
 jobs:
   test:
@@ -121,3 +121,19 @@ jobs:
           gradle-plugin/build/reports
           common-util/build/reports
           kotlin-analysis-api/build/reports
+
+  all-checks-passed:
+    name: all-checks-passed
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Verify test results
+      env:
+        TEST_RESULT: ${{ needs.test.result }}
+      run: |
+        if [ "$TEST_RESULT" != "success" ]; then
+          echo "One or more required test suites (api-check, unit-test, integration-test-primary, gradle-check) failed. Result: $TEST_RESULT"
+          exit 1
+        fi
+        echo "All required test suites (api-check, unit-test, integration-test-primary, gradle-check) passed successfully."
