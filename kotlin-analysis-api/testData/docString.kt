@@ -27,6 +27,14 @@
 // TopClass: \n top level class\n\n doc can have multiple lines\n\n third non-empty line\n
 // f1: \n top level function\n
 // f2: \n member function\n
+// EXPECT NEXT: field:  Irregular doc comment 1
+// EXPECT NEXT: field: Irregular doc comment 3 *\n
+// EXPECT NEXT: field: \n Irregular doc comment 2
+// EXPECT NEXT: field: \n member property\n
+// EXPECT NEXT: field: \n owned doc comment\n
+// EXPECT NEXT: field: \n\n top level property\n\n
+// EXPECT NEXT: field: null
+// EXPECT NEXT: field: null
 // foo: \n\n\n member function\n\n
 // j1: \n field\n
 // j2: null
