@@ -80,6 +80,12 @@
 // parent of List<INVARIANT Int>: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: topProp.getter()
 // parent of topProp.getter(): topProp
+// EXPECT NEXT: parent of Int: Int
+// EXPECT NEXT: parent of Int: INVARIANT Int
+// EXPECT NEXT: parent of INVARIANT Int: List<INVARIANT Int>
+// EXPECT NEXT: parent of List<INVARIANT Int>: List<Int>?
+// EXPECT NEXT: parent of List<Int>?: field
+// EXPECT NEXT: parent of field: topProp
 // parent of Anno: Anno
 // parent of Anno: @Anno
 // parent of @Anno: topProp
@@ -99,6 +105,9 @@
 // parent of String: param
 // parent of String: param.getter()
 // parent of param.getter(): param
+// EXPECT NEXT: parent of String: String
+// EXPECT NEXT: parent of String: field
+// EXPECT NEXT: parent of field: param
 // parent of param: Anno
 // parent of String: String
 // parent of String: param
@@ -136,6 +145,9 @@
 // parent of Int: Int
 // parent of Int: a.getter()
 // parent of a.getter(): a
+// EXPECT NEXT: parent of Int: Int
+// EXPECT NEXT: parent of Int: field
+// EXPECT NEXT: parent of field: a
 // parent of a: topClass
 // parent of String: String
 // parent of String: b
@@ -145,6 +157,9 @@
 // parent of String: value
 // parent of value: b.setter()
 // parent of b.setter(): b
+// EXPECT NEXT: parent of String: String
+// EXPECT NEXT: parent of String: field
+// EXPECT NEXT: parent of field: b
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass
 // parent of synthetic constructor for topClass: topClass
