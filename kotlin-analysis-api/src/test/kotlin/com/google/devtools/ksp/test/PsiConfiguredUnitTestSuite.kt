@@ -17,8 +17,6 @@
 
 package com.google.devtools.ksp.test
 
-import com.google.devtools.ksp.test.annotations.Bug
-import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
@@ -71,6 +69,12 @@ abstract class PsiConfiguredUnitTestSuiteBase(
 
 class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
 
+    @TestMetadata("docString.kt")
+    @Test
+    override fun testDocString() {
+        runTest("$AA_PATH/docString.kt")
+    }
+
     @TestMetadata("hello.kt")
     @Test
     override fun testHello() {
@@ -79,6 +83,12 @@ class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatu
 }
 
 class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+
+    @TestMetadata("docString.kt")
+    @Test
+    override fun testDocString() {
+        runFailingTest("$AA_PATH/docString.kt")
+    }
 
     @TestMetadata("hello.kt")
     @Test

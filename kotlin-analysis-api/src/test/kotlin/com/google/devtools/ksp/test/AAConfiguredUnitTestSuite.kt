@@ -17,8 +17,6 @@
 
 package com.google.devtools.ksp.test
 
-import com.google.devtools.ksp.test.annotations.Bug
-import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
@@ -75,6 +73,19 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
+    @TestMetadata("docString.kt")
+    @Test
+    override fun testDocString() {
+        runTest("$AA_PATH/docString.kt")
+    }
+}
+
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+    @TestMetadata("docString.kt")
+    @Test
+    override fun testDocString() {
+        runFailingTest("$AA_PATH/docString.kt")
+    }
+}
