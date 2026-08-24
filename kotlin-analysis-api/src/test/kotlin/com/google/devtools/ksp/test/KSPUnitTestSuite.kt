@@ -306,7 +306,9 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("docString.kt")
     @Test
-    abstract fun testDocString()
+    fun testDocString() {
+        runTest("$AA_PATH/docString.kt")
+    }
 
     @TestMetadata("equals.kt")
     @Test

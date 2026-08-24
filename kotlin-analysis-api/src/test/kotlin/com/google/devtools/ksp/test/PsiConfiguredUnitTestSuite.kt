@@ -62,13 +62,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
 }
 
 class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-
-    @TestMetadata("docString.kt")
-    @Test
-    override fun testDocString() {
-        runTest("$AA_PATH/docString.kt")
-    }
-
     @TestMetadata("hello.kt")
     @Test
     override fun testHello() {
@@ -77,13 +70,6 @@ class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatu
 }
 
 class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-
-    @TestMetadata("docString.kt")
-    @Test
-    override fun testDocString() {
-        runFailingTest("$AA_PATH/docString.kt")
-    }
-
     @TestMetadata("hello.kt")
     @Test
     override fun testHello() {
