@@ -17,26 +17,26 @@
 
 // TEST PROCESSOR: ExplicitBackingFieldsSubtypingProcessor
 // EXPECTED:
-// MyClass.prop1: List<String>
-// MyClass.prop1.field: MutableList<String>
-// MyClass.prop2: List<String>
-// MyClass.prop2.field: List<String>
-// MyClass.prop3: List<String>
-// MyClass.prop3.field: MutableList<String>
-// MyClass.prop4: List<Int>
-// MyClass.prop4.field: MutableList<Int>
-// MyClass.propA: A
-// MyClass.propA.field: B
-// Other.prop1: List<String>
-// Other.prop1.field: List<String>
-// Other.prop2: List<String>
-// Other.prop2.field: List<String>
-// Other.prop3: List<String>
-// Other.prop3.field: List<String>
-// Other.prop4: List<Int>
-// Other.prop4.field: List<Int>
-// Other.propA: A
-// Other.propA.field: A
+// EXPECT NEXT: MyClass.prop1: List<String>
+// EXPECT NEXT: MyClass.prop1.field: MutableList<String>
+// EXPECT NEXT: MyClass.prop2: List<String>
+// EXPECT NEXT: MyClass.prop2.field: List<String>
+// EXPECT NEXT: MyClass.prop3: List<String>
+// EXPECT NEXT: MyClass.prop3.field: MutableList<String>
+// EXPECT NEXT: MyClass.prop4: List<Int>
+// EXPECT NEXT: MyClass.prop4.field: MutableList<Int>
+// EXPECT NEXT: MyClass.propA: A
+// EXPECT NEXT: MyClass.propA.field: B
+// EXPECT NEXT: Other.prop1: List<String>
+// EXPECT NEXT: Other.prop1.field: List<String>
+// EXPECT NEXT: Other.prop2: List<String>
+// EXPECT NEXT: Other.prop2.field: List<String>
+// EXPECT NEXT: Other.prop3: List<String>
+// EXPECT NEXT: Other.prop3.field: List<String>
+// EXPECT NEXT: Other.prop4: List<Int>
+// EXPECT NEXT: Other.prop4.field: List<Int>
+// EXPECT NEXT: Other.propA: A
+// EXPECT NEXT: Other.propA.field: A
 // END
 
 // MODULE: lib
