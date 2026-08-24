@@ -335,7 +335,7 @@ abstract class KSPUnitTestSuite(
 
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
     )
     @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
@@ -645,13 +645,13 @@ abstract class KSPUnitTestSuite(
 
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "Java fields are considered properties that always have fields (accessors do not count)."
     )
     @TestMetadata("javaBackingFields.kt")
     @Test
     fun testJavaBackingFields() {
-        runFailingTest("$AA_PATH/javaBackingFields.kt")
+        runTest("$AA_PATH/javaBackingFields.kt")
     }
 
     @TestMetadata("noOverride.kt")
