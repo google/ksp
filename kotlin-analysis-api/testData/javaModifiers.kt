@@ -22,9 +22,12 @@
 // C.InnerC: PUBLIC : PUBLIC
 // C.NestedC.<init>: FINAL PUBLIC : FINAL PUBLIC
 // C.NestedC: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// EXPECT NEXT: C.i1.field: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
 // C.i1: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
 // C.intFun: JAVA_DEFAULT JAVA_SYNCHRONIZED : JAVA_DEFAULT JAVA_SYNCHRONIZED
+// EXPECT NEXT: C.s1.field: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
 // C.s1: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
+// EXPECT NEXT: C.staticStr.field: PRIVATE : PRIVATE
 // C.staticStr: PRIVATE : PRIVATE
 // C: ABSTRACT PUBLIC : ABSTRACT PUBLIC
 // DependencyOuterJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
@@ -32,16 +35,22 @@
 // DependencyOuterJavaClass.DependencyInnerJavaClass: INNER OPEN PUBLIC : PUBLIC
 // DependencyOuterJavaClass.DependencyNestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterJavaClass.DependencyNestedJavaClass: OPEN PUBLIC : PUBLIC
+// EXPECT NEXT: DependencyOuterJavaClass.staticPackageProtectedField.field: FINAL JAVA_STATIC : FINAL JAVA_STATIC
 // DependencyOuterJavaClass.staticPackageProtectedField: FINAL JAVA_STATIC : FINAL JAVA_STATIC
 // DependencyOuterJavaClass.staticPackageProtectedMethod: FINAL JAVA_STATIC : FINAL JAVA_STATIC
+// EXPECT NEXT: DependencyOuterJavaClass.staticPrivateField.field: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
 // DependencyOuterJavaClass.staticPrivateField: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
 // DependencyOuterJavaClass.staticPrivateMethod: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
+// EXPECT NEXT: DependencyOuterJavaClass.staticProtectedField.field: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticProtectedField: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticProtectedMethod: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
+// EXPECT NEXT: DependencyOuterJavaClass.staticPublicField.field: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicMethod: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.synchronizedFun: OPEN : JAVA_SYNCHRONIZED
+// EXPECT NEXT: DependencyOuterJavaClass.transientField.field: FINAL : FINAL
 // DependencyOuterJavaClass.transientField: FINAL : FINAL JAVA_TRANSIENT
+// EXPECT NEXT: DependencyOuterJavaClass.volatileField.field: FINAL : FINAL
 // DependencyOuterJavaClass.volatileField: FINAL : FINAL JAVA_VOLATILE
 // DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
@@ -79,12 +88,16 @@
 // OuterJavaClass.InnerJavaClass: PUBLIC : PUBLIC
 // OuterJavaClass.NestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterJavaClass.NestedJavaClass: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// EXPECT NEXT: OuterJavaClass.staticPackageProtectedField.field: JAVA_STATIC : JAVA_STATIC
 // OuterJavaClass.staticPackageProtectedField: JAVA_STATIC : JAVA_STATIC
 // OuterJavaClass.staticPackageProtectedMethod: JAVA_STATIC : JAVA_STATIC
+// EXPECT NEXT: OuterJavaClass.staticPrivateField.field: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
 // OuterJavaClass.staticPrivateField: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
 // OuterJavaClass.staticPrivateMethod: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
+// EXPECT NEXT: OuterJavaClass.staticProtectedField.field: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // OuterJavaClass.staticProtectedField: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // OuterJavaClass.staticProtectedMethod: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
+// EXPECT NEXT: OuterJavaClass.staticPublicField.field: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass.staticPublicField: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass: PUBLIC : PUBLIC
