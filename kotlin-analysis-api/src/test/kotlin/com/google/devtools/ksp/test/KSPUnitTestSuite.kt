@@ -888,7 +888,7 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("getSymbolsWithAnnotation/useSiteTargets.kt")
     @Test
-    open fun testUseSiteTargets() {
+    fun testUseSiteTargets() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/useSiteTargets.kt")
     }
 
