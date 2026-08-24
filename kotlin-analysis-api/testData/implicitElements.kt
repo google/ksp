@@ -37,7 +37,7 @@
 // EXPECT NEXT: Test, p: [MyKotlinAnnotation: null]
 // EXPECT NEXT: Test, field: [MyJavaAnnotation: null]
 // EXPECT NEXT: lib.Test, p: [MyKotlinAnnotation: null]
-// EXPECT NEXT: lib.Test, field: [MyJavaAnnotation: FIELD]
+// EXPECT NEXT: lib.Test, field: [MyJavaAnnotation: null]
 // END
 // MODULE: lib
 // FILE: lib/MyJavaAnnotation.java
