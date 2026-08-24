@@ -354,11 +354,11 @@ abstract class KSPUnitTestSuite(
     @Test
     @Bug(
         "https://github.com/google/ksp/issues/2873",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 430: Backing fields can be a subtype of the property."
     )
     fun testExplicitBackingFieldsSubtyping() {
-        runFailingTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
+        runTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
     }
 
     @TestMetadata("functionTypeAlias.kt")
