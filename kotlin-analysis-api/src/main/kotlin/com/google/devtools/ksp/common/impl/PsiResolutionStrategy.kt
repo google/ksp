@@ -37,6 +37,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.toKSClassDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFile
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFunctionDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.toKSBackingField
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSPropertyDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -579,11 +580,12 @@ class PsiResolutionStrategy(
                 toLocation(),
                 javaClass
             )
-        throw InternalKSPException(
-            "Unexpected unreachable function. PsiField.resolveToField is not implemented yet",
-            toLocation(),
-            javaClass
-        )
+        return sym.toKSBackingField(property)
+            ?: throw InternalKSPException(
+                "Unexpected null KSBackingField",
+                toLocation(),
+                javaClass
+            )
     }
 
     /**
