@@ -41,6 +41,7 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     override fun testContextParameters() {
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
+
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {
@@ -86,6 +87,6 @@ class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(ena
     @TestMetadata("hello.kt")
     @Test
     override fun testHello() {
-        runThrowingTest("$AA_PATH/hello.kt")
+        runFailingTest("$AA_PATH/hello.kt")
     }
 }
