@@ -426,17 +426,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotations.kt")
     }
 
-    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
-    @Test
-    open fun testGroupedAnnotationsWithUseSiteTargets() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
-    }
+    abstract fun testGroupedAnnotationsWithUseSiteTargets()
 
-    @TestMetadata("hello.kt")
-    @Test
-    open fun testHello() {
-        runTest("$AA_PATH/hello.kt")
-    }
+    abstract fun testHello()
 
     @TestMetadata("implicitElements.kt")
     @Test

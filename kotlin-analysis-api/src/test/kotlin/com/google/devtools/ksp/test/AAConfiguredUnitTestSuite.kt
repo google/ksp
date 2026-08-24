@@ -50,6 +50,18 @@ abstract class AAConfiguredUnitTestSuiteBase(
         runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    @Test
+    override fun testGroupedAnnotationsWithUseSiteTargets() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    }
+
+    @TestMetadata("hello.kt")
+    @Test
+    override fun testHello() {
+        runTest("$AA_PATH/hello.kt")
+    }
+
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {

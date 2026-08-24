@@ -61,9 +61,22 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     override fun testJavaSubtypeOfKotlinInterface() {
         runFailingTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
     }
+
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    @Test
+    override fun testGroupedAnnotationsWithUseSiteTargets() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+
+    @TestMetadata("hello.kt")
+    @Test
+    override fun testHello() {
+        runTest("$AA_PATH/hello.kt")
+    }
+}
 
 class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
 
@@ -71,11 +84,5 @@ class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(ena
     @Test
     override fun testHello() {
         runThrowingTest("$AA_PATH/hello.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
-    @Test
-    override fun testGroupedAnnotationsWithUseSiteTargets() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 }
