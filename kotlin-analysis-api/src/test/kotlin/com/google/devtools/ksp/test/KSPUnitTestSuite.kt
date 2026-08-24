@@ -432,7 +432,11 @@ abstract class KSPUnitTestSuite(
 
     abstract fun testGroupedAnnotationsWithUseSiteTargets()
 
-    abstract fun testHello()
+    @TestMetadata("hello.kt")
+    @Test
+    fun testHello() {
+        runTest("$AA_PATH/hello.kt")
+    }
 
     @TestMetadata("implicitElements.kt")
     @Test

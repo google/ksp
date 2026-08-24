@@ -18,12 +18,14 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: HelloProcessor
 // EXPECTED:
-// 8
+// EXPECT CURRENT: 8
+// EXPECT NEXT: 9
 // AClass
 // Bar.BBB
 // Bar.list
 // C
 // C.f
+// EXPECT NEXT: C.f.field
 // C.javaFun
 // test.Foo
 // test.ITF

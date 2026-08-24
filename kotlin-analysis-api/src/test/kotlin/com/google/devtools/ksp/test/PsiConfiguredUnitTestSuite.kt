@@ -61,18 +61,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-    @TestMetadata("hello.kt")
-    @Test
-    override fun testHello() {
-        runTest("$AA_PATH/hello.kt")
-    }
-}
+class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("hello.kt")
-    @Test
-    override fun testHello() {
-        runFailingTest("$AA_PATH/hello.kt")
-    }
-}
+class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true)
