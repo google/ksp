@@ -17,6 +17,8 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
