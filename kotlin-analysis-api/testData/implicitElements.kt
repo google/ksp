@@ -32,8 +32,12 @@
 // comp2.set(): SYNTHETIC
 // <init>
 // synthetic constructor for ImplictConstructorJava
-// Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
-// lib.Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// EXPECT CURRENT: Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// EXPECT CURRENT: lib.Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// EXPECT NEXT: Test, p: [MyKotlinAnnotation: null]
+// EXPECT NEXT: Test, field: [MyJavaAnnotation: null]
+// EXPECT NEXT: lib.Test, p: [MyKotlinAnnotation: null]
+// EXPECT NEXT: lib.Test, field: [MyJavaAnnotation: FIELD]
 // END
 // MODULE: lib
 // FILE: lib/MyJavaAnnotation.java
