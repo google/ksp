@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.KSVisitorNext
 import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
@@ -58,6 +59,9 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
             }
         }
     }
+
+    override val origin: Origin
+        get() = property.origin
 
     override val type: KSTypeReference by lazy {
         (kaBackingFieldSymbol.psiIfSource() as? KtBackingField)
