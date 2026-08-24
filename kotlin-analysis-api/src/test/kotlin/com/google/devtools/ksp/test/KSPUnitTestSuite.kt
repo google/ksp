@@ -197,7 +197,9 @@ abstract class KSPUnitTestSuite(
         BugState.OPEN,
         "Minimal reproduction of error observed in integration test AndroidDataBindingIT"
     )
-    abstract fun testBackingFieldsLateinit()
+    fun testBackingFieldsLateinit() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+    }
 
     @TestMetadata("builtInTypes.kt")
     @Test
