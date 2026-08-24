@@ -70,6 +70,10 @@ class KSBackingFieldJavaImpl private constructor(
         }
     }
 
+    override val docString: String? by lazy {
+        property.docString
+    }
+
     // Manual delegation for KSExpectActual to avoid eager evaluation in the class header
     private val expectActualImpl by lazy { KSExpectActualImpl(ktJavaFieldSymbol) }
     override val isActual: Boolean get() = expectActualImpl.isActual
