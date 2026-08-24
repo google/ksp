@@ -42,12 +42,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
 
-    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
-    @Test
-    override fun testExplicitBackingFields() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
-    }
-
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     override fun testGroupedAnnotationsWithUseSiteTargets() {
