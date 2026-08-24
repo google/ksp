@@ -46,12 +46,16 @@
 // DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.<init>: FINAL PRIVATE : FINAL PRIVATE
+// EXPECT NEXT: DependencyOuterKotlinClass.Companion.companionField.field: : FINAL
 // DependencyOuterKotlinClass.Companion.companionField: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.companionMethod: FINAL PUBLIC : FINAL PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.Companion.customJvmStaticCompanionField.field: : FINAL
 // DependencyOuterKotlinClass.Companion.customJvmStaticCompanionField: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterKotlinClass.Companion.customJvmStaticCompanionMethod: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.Companion.jvmStaticCompanionField.field: : FINAL
 // DependencyOuterKotlinClass.Companion.jvmStaticCompanionField: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterKotlinClass.Companion.jvmStaticCompanionMethod: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.Companion.privateCompanionField.field: : FINAL
 // DependencyOuterKotlinClass.Companion.privateCompanionField: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.privateCompanionMethod: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.Companion: FINAL PUBLIC : FINAL PUBLIC
@@ -60,7 +64,9 @@
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.synchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.transientProperty.field: : FINAL
 // DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.volatileProperty.field: : FINAL
 // DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL JAVA_VOLATILE PUBLIC
 // DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
 // HasTypeAliasFuns: Modifiers: []
@@ -84,12 +90,16 @@
 // OuterJavaClass: PUBLIC : PUBLIC
 // OuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.Companion.<init>: FINAL PUBLIC : FINAL PUBLIC
+// EXPECT NEXT: OuterKotlinClass.Companion.companionField.field: : FINAL
 // OuterKotlinClass.Companion.companionField: CONST : FINAL PUBLIC
 // OuterKotlinClass.Companion.companionMethod: : FINAL PUBLIC
+// EXPECT NEXT: OuterKotlinClass.Companion.customJvmStaticCompanionField.field: : FINAL
 // OuterKotlinClass.Companion.customJvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.customJvmStaticCompanionMethod: : FINAL PUBLIC
+// EXPECT NEXT: OuterKotlinClass.Companion.jvmStaticCompanionField.field: : FINAL
 // OuterKotlinClass.Companion.jvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.jvmStaticCompanionMethod: : FINAL JAVA_STATIC PUBLIC
+// EXPECT NEXT: OuterKotlinClass.Companion.privateCompanionField.field: : FINAL
 // OuterKotlinClass.Companion.privateCompanionField: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionMethod: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion: : FINAL JAVA_STATIC PUBLIC
@@ -98,8 +108,12 @@
 // OuterKotlinClass.NestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass: OPEN : PUBLIC
 // OuterKotlinClass.synchronizedFun: : FINAL JAVA_SYNCHRONIZED PUBLIC
-// OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
-// OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
+// EXPECT CURRENT: OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT CURRENT: OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
+// EXPECT NEXT: OuterKotlinClass.transientProperty.field: : FINAL JAVA_TRANSIENT
+// EXPECT NEXT: OuterKotlinClass.transientProperty: : FINAL PUBLIC
+// EXPECT NEXT: OuterKotlinClass.volatileProperty.field: : FINAL JAVA_VOLATILE
+// EXPECT NEXT: OuterKotlinClass.volatileProperty: : FINAL PUBLIC
 // OuterKotlinClass: OPEN : PUBLIC
 // TypeAliasInKt: Modifiers: [PRIVATE]
 // TypeAliasInKt: Visibility: PRIVATE
