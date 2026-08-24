@@ -76,7 +76,25 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
     override val originalAnnotations: Sequence<KSAnnotation>
         get() = annotations
 
-    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
+    /**
+     * Cache for [annotations] if backing fields are disabled.
+     */
+    private val annotationsCacheCurrent: Sequence<KSAnnotation> by lazyMemoizedSequence {
+        ktPropertySymbol.annotations.asSequence()
+            .filter { !it.isUseSiteTargetAnnotation() }
+            .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
+            .plus(
+                // TODO: optimize for psi
+                ktPropertySymbol.backingFieldSymbol?.annotations?.map {
+                    KSAnnotationResolvedImpl.getCached(it, this@KSPropertyDeclarationImpl, definitionOrigin)
+                } ?: emptyList()
+            )
+    }
+
+    /**
+     * Cache for [annotations] if backing fields are enabled.
+     */
+    private val annotationsCacheNext: Sequence<KSAnnotation> by lazyMemoizedSequence {
         ktPropertySymbol.annotations.asSequence()
             .plus(
                 // Handle delegate use-site target
@@ -87,6 +105,12 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             )
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
     }
+    override val annotations: Sequence<KSAnnotation>
+        get() =
+            if (ResolverAAImpl.instance.shouldEnableNewFeatures())
+                annotationsCacheNext
+            else
+                annotationsCacheCurrent
 
     override val getter: KSPropertyGetter? by lazy {
         if (ktPropertySymbol.psi is PsiClass) {
