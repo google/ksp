@@ -192,7 +192,7 @@ class ResolverAAImpl(
 
     lateinit var currentProcessor: SymbolProcessor
 
-    private fun shouldEnableNewFeatures(): Boolean = currentProcessor in processorsRegisteredForNewFeatures
+    internal fun shouldEnableNewFeatures(): Boolean = currentProcessor in processorsRegisteredForNewFeatures
 
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
