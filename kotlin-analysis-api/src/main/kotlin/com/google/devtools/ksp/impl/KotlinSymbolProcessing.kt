@@ -554,6 +554,19 @@ class KotlinSymbolProcessing(
                 provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
             }
 
+            // Emit warning for processors not opted in to new features
+            processors.filterNot(processorsRegisteredForUpcomingFeatures::contains)
+                .forEach { processor ->
+                    logger.info(
+                        "Processor '${processor::class.qualifiedName ?: processor::class.simpleName}' " +
+                            "has not opted in for upcoming features yet. " +
+                            "It might break in a future version of KSP. " +
+                            "To fix this, please update the processor to a version that is " +
+                            "compatible with upcoming features.",
+                        null
+                    )
+                }
+
             fun dropCaches() {
                 maybeRunInWriteAction {
                     project.publishGlobalModuleStateModificationEvent()
