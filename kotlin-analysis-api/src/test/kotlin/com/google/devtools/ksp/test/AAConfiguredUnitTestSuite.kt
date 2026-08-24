@@ -67,19 +67,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-    @TestMetadata("docString.kt")
-    @Test
-    override fun testDocString() {
-        runTest("$AA_PATH/docString.kt")
-    }
-}
-
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("docString.kt")
-    @Test
-    override fun testDocString() {
-        runFailingTest("$AA_PATH/docString.kt")
-    }
-}
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
