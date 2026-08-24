@@ -77,12 +77,6 @@ class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(ena
         runThrowingTest("$AA_PATH/hello.kt")
     }
 
-    @TestMetadata("getSymbolsWithAnnotation/useSiteTargets.kt")
-    @Test
-    override fun testUseSiteTargets() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/useSiteTargets.kt")
-    }
-
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     override fun testGroupedAnnotationsWithUseSiteTargets() {
