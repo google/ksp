@@ -767,12 +767,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("referenceElement.kt")
     @Test
     fun testReferenceElement() {
-        // TODO: Figure out what the correct expected output is
-        if (enableNewFeatures) {
-            runFailingTest("$AA_PATH/referenceElement.kt")
-        } else {
-            runTest("$AA_PATH/referenceElement.kt")
-        }
+        runTest("$AA_PATH/referenceElement.kt")
     }
 
     @TestMetadata("repeatedNonRepeatableAnnotations.kt")

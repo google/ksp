@@ -19,16 +19,21 @@
 // TEST PROCESSOR: ReferenceElementProcessor
 // EXPECTED:
 // KSClassifierReferenceImpl: Qualifier of B is A
+// EXPECT NEXT: KSClassifierReferenceImpl: Qualifier of B is A
 // KSClassifierReferenceImpl: Qualifier of C<INVARIANT Int> is A<INVARIANT String>
+// EXPECT NEXT: KSClassifierReferenceImpl: Qualifier of C<INVARIANT Int> is A<INVARIANT String>
 // KSClassifierReferenceImpl: Qualifier of ExampleAnnotation<INVARIANT ExampleParameter> is null
 // KSClassifierReferenceImpl: Qualifier of ExampleParameter is null
 // KSClassifierReferenceImpl: Qualifier of Int is null
+// EXPECT NEXT: KSClassifierReferenceImpl: Qualifier of Int is null
 // KSClassifierReferenceImpl: Qualifier of String is null
+// EXPECT NEXT: KSClassifierReferenceImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Int is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of String is null
 // KSClassifierReferenceDescriptorImpl: Qualifier of Y is X
 // KSClassifierReferenceDescriptorImpl: Qualifier of Z<INVARIANT Int> is X<INVARIANT String>
 // KSDefNonNullReferenceImpl: Enclosed type of T
+// EXPECT NEXT: KSDefNonNullReferenceImpl: Enclosed type of T
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
