@@ -30,10 +30,12 @@ import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSExpectActual
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyGetter
@@ -190,7 +192,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         }
     }
 
-    override val backingField: KSBackingField? by lazy {
+    private val backingFieldCache: KSBackingField? by lazy {
         if (hasBackingField) {
             when (ktPropertySymbol) {
                 is KaKotlinPropertySymbol ->
@@ -214,6 +216,13 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
             null
         }
     }
+
+    override val backingField: KSBackingField?
+        get() =
+            if (ResolverAAImpl.instance.shouldEnableNewFeatures())
+                backingFieldCache
+            else
+                null
 
     override fun isDelegated(): Boolean {
         return ktPropertySymbol.isDelegatedProperty
