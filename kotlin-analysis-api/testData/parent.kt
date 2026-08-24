@@ -33,6 +33,9 @@
 // parent of B: File: B.java
 // parent of T: (T..T?)
 // parent of (T..T?): t
+// EXPECT NEXT: parent of T: (T..T?)
+// EXPECT NEXT: parent of (T..T?): field
+// EXPECT NEXT: parent of field: B
 // parent of t: B
 // parent of T: (T..T?)
 // parent of (T..T?): t
