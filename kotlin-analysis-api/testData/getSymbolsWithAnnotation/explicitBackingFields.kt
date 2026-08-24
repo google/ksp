@@ -20,11 +20,13 @@
 // EXPECTED:
 // Anno: MyClass.annotatedProperty
 // Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets
-// Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets.field
-// Anno: MyClass.annotatedPropertyWithFieldTarget.field
-// Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated.field
+// EXPECT CURRENT: Anno: MyClass.annotatedPropertyWithFieldTarget
+// EXPECT CURRENT: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated
+// EXPECT NEXT: Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets.field
+// EXPECT NEXT: Anno: MyClass.annotatedPropertyWithFieldTarget.field
+// EXPECT NEXT: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated.field
 // Anno: MyClass.propertyWithAllTarget
-// Anno: MyClass.propertyWithAllTarget.field
+// EXPECT NEXT: Anno: MyClass.propertyWithAllTarget.field
 // Anno: MyClass.propertyWithAllTarget.propertyWithAllTarget.getter()
 // END
 

@@ -17,6 +17,8 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
@@ -51,7 +53,7 @@ abstract class AAConfiguredUnitTestSuiteBase(
     @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
     @Test
     override fun testExplicitBackingFields() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
+        runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
