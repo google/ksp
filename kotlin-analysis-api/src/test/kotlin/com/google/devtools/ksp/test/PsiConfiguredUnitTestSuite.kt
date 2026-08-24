@@ -41,13 +41,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     override fun testContextParameters() {
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
-
-    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
-    @Test
-    override fun testExplicitBackingFields() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
-    }
-
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {

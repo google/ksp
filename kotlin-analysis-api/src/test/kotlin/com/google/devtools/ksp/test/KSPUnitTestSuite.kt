@@ -338,7 +338,11 @@ abstract class KSPUnitTestSuite(
         BugState.OPEN,
         "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
     )
-    abstract fun testExplicitBackingFields()
+    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
+    @Test
+    fun testExplicitBackingFields() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
+    }
 
     @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
