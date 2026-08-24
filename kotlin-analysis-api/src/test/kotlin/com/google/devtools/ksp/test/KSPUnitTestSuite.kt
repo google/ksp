@@ -470,6 +470,9 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/isMutable.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3123", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3125", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3155", BugState.OPEN)
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
