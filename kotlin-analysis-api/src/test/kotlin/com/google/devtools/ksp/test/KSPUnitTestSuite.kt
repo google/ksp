@@ -544,12 +544,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("libOrigins.kt")
     @Test
     fun testLibOrigins() {
-        // TODO: Figure out what the expected result is here
-        if (enableNewFeatures) {
-            runFailingTest("$AA_PATH/libOrigins.kt")
-        } else {
-            runTest("$AA_PATH/libOrigins.kt")
-        }
+        runTest("$AA_PATH/libOrigins.kt")
     }
 
     @TestMetadata("localAnnotationClass")
