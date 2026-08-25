@@ -146,6 +146,13 @@ fun KSDeclaration.isLocal(): Boolean {
  * @param predicate A lambda for filtering interested symbols for performance purpose. Default
  *   checks all.
  */
+@Deprecated(
+    message = "KSNode.validate is deprecated in favor of KSNode.validate(predicate, enableNewFeatures).\n" +
+        "Please specify enableNewFeatures to indicate whether new language features (such as backing fields and context parameters) should be validated.",
+    replaceWith = ReplaceWith(
+        expression = "validate(predicate, enableNewFeatures = false)",
+    ),
+)
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
 ): Boolean {
