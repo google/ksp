@@ -30,13 +30,13 @@ abstract class PsiConfiguredUnitTestSuiteBase(
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
     }
 
-    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
+    @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
-    @TestMetadata("contextParameters.kt")
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     @Test
     override fun testContextParameters() {
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
