@@ -433,7 +433,7 @@ class PsiResolutionStrategy(
      */
     private fun PsiElement.resolveToKSAnnotated(
         annotation: KtAnnotationEntry? = null,
-        enableNewFeatures: Boolean = false,
+        enableNewFeatures: Boolean,
     ): Collection<KSAnnotated> =
         when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
