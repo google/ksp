@@ -77,6 +77,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtBackingField
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeReference
@@ -497,6 +498,9 @@ class PsiResolutionStrategy(
                 ksSym,
                 annotationEntry
             )
+
+            // N.B.: Mirror AA implementation: Return the owning property of the backing field if the feature is disabled.
+            ksSym is KSBackingField && !enableNewFeatures -> listOf(ksSym.property)
 
             else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget, enableNewFeatures)
         }
