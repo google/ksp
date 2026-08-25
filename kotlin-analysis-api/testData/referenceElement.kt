@@ -41,8 +41,11 @@
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of Any is null
 // KSClassifierReferenceJavaImpl: Qualifier of H is J<INVARIANT (String..String?)>
+// EXPECT NEXT: KSClassifierReferenceJavaImpl: Qualifier of H is J<INVARIANT (String..String?)>
 // KSClassifierReferenceJavaImpl: Qualifier of I is J
+// EXPECT NEXT: KSClassifierReferenceJavaImpl: Qualifier of I is J
 // KSClassifierReferenceJavaImpl: Qualifier of String is null
+// EXPECT NEXT: KSClassifierReferenceJavaImpl: Qualifier of String is null
 // END
 
 // MODULE: lib
