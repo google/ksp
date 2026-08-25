@@ -30,13 +30,13 @@ abstract class AAConfiguredUnitTestSuiteBase(
         runTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
     }
 
-    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
+    @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
-    @TestMetadata("contextParameters.kt")
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     @Test
     override fun testContextParameters() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
