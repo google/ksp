@@ -20,6 +20,7 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.test.annotations.Bug
 import com.google.devtools.ksp.test.annotations.BugState
 import com.google.devtools.ksp.test.annotations.Negative
+import com.intellij.testFramework.TestDataPath
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Execution(ExecutionMode.SAME_THREAD)
+@TestDataPath("\$CONTENT_ROOT/testData")
 abstract class KSPUnitTestSuite(
     experimentalPsiResolution: Boolean,
     enableNewFeatures: Boolean,
@@ -39,6 +41,7 @@ abstract class KSPUnitTestSuite(
     }
 
     @Bug("https://github.com/google/ksp/issues/2997", BugState.OPEN)
+    @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
     abstract fun testAliasedAnnotations()
 
     @TestMetadata("annotatedUtil.kt")
@@ -79,6 +82,7 @@ abstract class KSPUnitTestSuite(
 
     @Bug("https://github.com/google/ksp/issues/2912", BugState.OPEN)
     @Negative("KEEP-402 specifies that the :all meta-target cannot be applied to annotation groups.")
+    @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     abstract fun testAllUseSiteTargetAppliedToAnnotationList()
 
     @TestMetadata("annotationsInDependencies.kt")
@@ -123,25 +127,25 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/annotationWithNestedClassValue.kt")
     }
 
-    @TestMetadata("defaultKClassValue.kt")
+    @TestMetadata("annotationValue/defaultKClassValue.kt")
     @Test
     fun testAnnotationValue_defaultKClassValue() {
         runTest("$AA_PATH/annotationValue/defaultKClassValue.kt")
     }
 
-    @TestMetadata("annotationValue_java.kt")
+    @TestMetadata("annotationValue/annotationValue_java.kt")
     @Test
     fun testAnnotationValue_java() {
         runTest("$AA_PATH/annotationValue/annotationValue_java.kt")
     }
 
-    @TestMetadata("annotationValue_java2.kt")
+    @TestMetadata("annotationValue/annotationValue_java2.kt")
     @Test
     fun testAnnotationValue_java2() {
         runTest("$AA_PATH/annotationValue/annotationValue_java2.kt")
     }
 
-    @TestMetadata("annotationValue_kt.kt")
+    @TestMetadata("annotationValue/annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
         runTest("$AA_PATH/annotationValue/annotationValue_kt.kt")
@@ -260,6 +264,7 @@ abstract class KSPUnitTestSuite(
         BugState.OPEN,
         "KEEP 367: Context parameters are stable in Kotlin 2.4.0"
     )
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     abstract fun testContextParameters()
 
     @TestMetadata("declarationInconsistency.kt")
@@ -340,13 +345,13 @@ abstract class KSPUnitTestSuite(
         BugState.FIXED,
         "KEEP 430: Explicit backing fields added in Kotlin 2.4.0"
     )
-    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
+    @TestMetadata("getSymbolsWithAnnotation/explicitBackingFields.kt")
     @Test
     fun testExplicitBackingFields() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
-    @TestMetadata("fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
+    @TestMetadata("getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2913", BugState.FIXED)
     @Negative("Constructor params not declared with val do not have generated properties or backing fields.")
@@ -392,6 +397,7 @@ abstract class KSPUnitTestSuite(
     }
 
     @Bug("https://github.com/google/ksp/issues/2496", BugState.OPEN)
+    @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     abstract fun testFunctionKindsJavaInheritsKotlin()
 
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
@@ -424,12 +430,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsFromAnnotationInLib.kt")
     }
 
-    @TestMetadata("groupedAnnotations.kt")
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotations.kt")
     @Test
     fun testGroupedAnnotations() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotations.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     abstract fun testGroupedAnnotationsWithUseSiteTargets()
 
     @TestMetadata("hello.kt")
@@ -509,6 +516,7 @@ abstract class KSPUnitTestSuite(
     }
 
     @Bug("https://github.com/google/ksp/issues/2925", BugState.OPEN)
+    @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     abstract fun testJavaSubtypeOfKotlinInterface()
 
     @TestMetadata("javaToKotlinMapper.kt")
@@ -560,13 +568,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/libOrigins.kt")
     }
 
-    @TestMetadata("localAnnotationClass")
+    @TestMetadata("getSymbolsWithAnnotation/localAnnotationClass.kt")
     @Test
     fun testLocalAnnotationClass() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/localAnnotationClass.kt")
     }
 
-    @TestMetadata("localClasses")
+    @TestMetadata("getSymbolsWithAnnotation/localClasses.kt")
     @Test
     fun testLocalClasses() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/localClasses.kt")
@@ -595,7 +603,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/mangledNames.kt")
     }
 
-    @TestMetadata("metaAnnotations")
+    @TestMetadata("getSymbolsWithAnnotation/metaAnnotations.kt")
     @Test
     fun testMetaAnnotations() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/metaAnnotations.kt")
@@ -625,25 +633,25 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/nullableTypes.kt")
     }
 
-    @TestMetadata("conflictingOverride.kt")
+    @TestMetadata("overridee/conflictingOverride.kt")
     @Test
     fun testConflictingOverride() {
         runTest("$AA_PATH/overridee/conflictingOverride.kt")
     }
 
-    @TestMetadata("javaAccessor.kt")
+    @TestMetadata("overridee/javaAccessor.kt")
     @Test
     fun testJavaAccessor() {
         runTest("$AA_PATH/overridee/javaAccessor.kt")
     }
 
-    @TestMetadata("javaAnno.kt")
+    @TestMetadata("overridee/javaAnno.kt")
     @Test
     fun testJavaAnno() {
         runTest("$AA_PATH/overridee/javaAnno.kt")
     }
 
-    @TestMetadata("javaOverrideInSource.kt")
+    @TestMetadata("overridee/javaOverrideInSource.kt")
     @Test
     fun testJavaOverrideInSource() {
         runTest("$AA_PATH/overridee/javaOverrideInSource.kt")
@@ -660,25 +668,25 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/javaBackingFields.kt")
     }
 
-    @TestMetadata("noOverride.kt")
+    @TestMetadata("overridee/noOverride.kt")
     @Test
     fun testNoOverride() {
         runTest("$AA_PATH/overridee/noOverride.kt")
     }
 
-    @TestMetadata("overrideInLib.kt")
+    @TestMetadata("overridee/overrideInLib.kt")
     @Test
     fun testOverrideInLib() {
         runTest("$AA_PATH/overridee/overrideInLib.kt")
     }
 
-    @TestMetadata("overrideInSource.kt")
+    @TestMetadata("overridee/overrideInSource.kt")
     @Test
     fun testOverrideInSource() {
         runTest("$AA_PATH/overridee/overrideInSource.kt")
     }
 
-    @TestMetadata("overrideOrder.kt")
+    @TestMetadata("overridee/overrideOrder.kt")
     @Test
     fun testOverrideOrder() {
         runTest("$AA_PATH/overridee/overrideOrder.kt")
@@ -690,7 +698,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/packageAnnotations.kt")
     }
 
-    @TestMetadata("primaryConstructorOverride.kt")
+    @TestMetadata("overridee/primaryConstructorOverride.kt")
     @Test
     fun testPrimaryConstructorOverride() {
         runTest("$AA_PATH/overridee/primaryConstructorOverride.kt")
@@ -776,7 +784,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/referenceElement.kt")
     }
 
-    @TestMetadata("repeatedNonRepeatableAnnotations.kt")
+    @TestMetadata("getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2919", BugState.FIXED)
     fun testRepeatedNonRepeatableAnnotations() {
@@ -809,7 +817,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/javaWildcardsSelfReferencing.kt")
     }
 
-    @TestMetadata("shadowingAnnotations.kt")
+    @TestMetadata("getSymbolsWithAnnotation/shadowingAnnotations.kt")
     @Test
     fun testShadowingAnnotations() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/shadowingAnnotations.kt")
