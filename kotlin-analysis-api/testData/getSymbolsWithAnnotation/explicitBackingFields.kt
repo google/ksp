@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+// WITH_STDLIB
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
 // PROCESSOR INPUT: Anno
 // EXPECTED:
@@ -37,21 +38,21 @@ annotation class Anno
 class MyClass {
     @Anno // Should just pick the property
     val annotatedProperty: List<String>
-        field = MutableList<String>
+        field = mutableListOf<String>()
 
     val propertyWhereFieldIsDirectlyAnnotated: List<String>
-        @Anno field = MutableList<String>
+        @Anno field = mutableListOf<String>()
 
     @field:Anno
     val annotatedPropertyWithFieldTarget: List<String>
-        field = MutableList<String>
+        field = mutableListOf<String>()
 
     @field:Anno
     @property:Anno
     val annotatedPropertyAndFieldViaUseSiteTargets: List<String>
-        field = MutableList<String>
+        field = mutableListOf<String>()
 
     @all:Anno
     val propertyWithAllTarget: List<Int>
-        field = MutableList<Int>
+        field = mutableListOf<Int>()
 }
