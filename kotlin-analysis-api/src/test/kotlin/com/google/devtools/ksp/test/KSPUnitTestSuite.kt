@@ -30,7 +30,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 
 @Execution(ExecutionMode.SAME_THREAD)
-@TestDataPath("\$CONTENT_ROOT/testData")
+@TestDataPath($$"$CONTENT_ROOT/testData")
 abstract class KSPUnitTestSuite(
     experimentalPsiResolution: Boolean,
     enableNewFeatures: Boolean,
