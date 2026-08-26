@@ -61,6 +61,18 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+    @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+    @Test
+    override fun testBackingFieldsPackageName() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+    }
+}
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+    @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+    @Test
+    override fun testBackingFieldsPackageName() {
+        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+    }
+}
