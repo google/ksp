@@ -61,18 +61,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-    @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
-    @Test
-    override fun testBackingFieldsPackageName() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
-    }
-}
+class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
-    @Test
-    override fun testBackingFieldsPackageName() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
-    }
-}
+class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true)
