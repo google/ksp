@@ -25,7 +25,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSExpectActual
-import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
@@ -84,9 +83,8 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
         }
     }
 
-    override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
-        originalAnnotations
-    }
+    override val annotations: Sequence<KSAnnotation>
+        get() = originalAnnotations
 
     override val originalAnnotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
         kaBackingFieldSymbol.annotations.asSequence()
@@ -99,9 +97,8 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
         kaBackingFieldSymbol.psi?.toLocation() ?: property.location
     }
 
-    override val docString: String? by lazy {
-        property.docString
-    }
+    override val docString: String?
+        get() = property.docString
 
     override fun defer(): Restorable =
         kaBackingFieldSymbol.defer(::getCached)
