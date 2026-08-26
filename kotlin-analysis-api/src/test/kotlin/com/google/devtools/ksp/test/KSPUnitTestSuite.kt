@@ -351,6 +351,17 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
+    @Bug(
+        "https://github.com/google/ksp/issues/3165",
+        BugState.OPEN,
+        "Obtaining package name of implicit backing field could throw exception."
+    )
+    @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+    @Test
+    fun testBackingFieldsPackageName() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+    }
+
     @TestMetadata("getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2913", BugState.FIXED)
