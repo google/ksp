@@ -105,7 +105,12 @@ abstract class AbstractKSDeclarationImpl : KSDeclaration, Deferrable {
     override val packageName: KSName by lazy {
         // source
         if (origin == Origin.KOTLIN || origin == Origin.JAVA) {
-            containingFile!!.packageName
+            containingFile?.packageName
+                ?: throw InternalKSPException(
+                    "Unexpected null containing file for '${qualifiedName?.asString() ?: simpleName.asString()}'",
+                    location,
+                    this@AbstractKSDeclarationImpl.javaClass
+                )
         } else {
             // top level declaration
             when (val ktDeclarationSymbol = this.ktDeclarationSymbol) {
