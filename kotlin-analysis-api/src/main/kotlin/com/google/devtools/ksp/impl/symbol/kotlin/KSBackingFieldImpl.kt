@@ -25,6 +25,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSExpectActual
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
@@ -90,6 +91,9 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
         kaBackingFieldSymbol.annotations.asSequence()
             .map { KSAnnotationResolvedImpl.getCached(it, this, definitionOrigin) }
     }
+
+    override val containingFile: KSFile?
+        get() = property.containingFile
 
     override val location by lazy {
         // N.B.: Use psi?.toLocation() instead of psi.toLocation() even though toLocation handles a nullable receiver.
