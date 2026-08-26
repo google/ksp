@@ -358,9 +358,7 @@ abstract class KSPUnitTestSuite(
     )
     @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
     @Test
-    fun testBackingFieldsPackageName() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
-    }
+    abstract fun testBackingFieldsPackageName()
 
     @TestMetadata("getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
