@@ -174,7 +174,7 @@ dependencies {
     implementation(files(filteredLog4j))
     implementation(libs.aa.jdom) { isTransitive = false }
     implementation(libs.aa.javaxInject)
-    implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
+    implementation(libs.aa.lz4) { isTransitive = false }
     compileOnly(libs.kotlinx.coroutines.coreJvm)
     compileOnly(libs.kotlinx.coroutines.core)
     implementation(
@@ -182,9 +182,9 @@ dependencies {
     ) {
         isTransitive = false
     }
-    implementation("org.jetbrains:annotations:24.1.0")
+    implementation(libs.aa.annotations)
 
-    implementation("io.opentelemetry:opentelemetry-api:1.34.1") { isTransitive = false }
+    implementation(libs.aa.opentelemetry) { isTransitive = false }
 
     compileOnly(project(":common-deps"))
 
