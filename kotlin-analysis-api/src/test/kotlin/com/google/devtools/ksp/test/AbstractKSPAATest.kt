@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.platform.JsPlatform
+import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.konan.NativePlatform
 import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.compileJavaFiles
@@ -52,7 +53,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
-import kotlin.reflect.jvm.jvmName
 
 abstract class AbstractKSPAATest(
     val experimentalPsiResolution: Boolean,
@@ -181,7 +181,7 @@ abstract class AbstractKSPAATest(
         runMetadataCompiler(args)
     }
 
-    override fun compileModule(module: TestModule, testServices: TestServices) {
+    override fun compileLibraryModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
@@ -190,44 +190,49 @@ abstract class AbstractKSPAATest(
             module.directives[NativeEnvironmentConfigurationDirectives.WITH_FIXED_TARGET].firstOrNull()
         val targetPlatform = testServices.targetPlatformProvider.getTargetPlatform(module)
 
-        val isNative = targetBackend == TargetBackend.NATIVE ||
-            targetPlatform.componentPlatforms.any { it is NativePlatform } ||
-            fixedNativeTarget != null
-
-        val isJs = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
-            targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
-            targetPlatform.componentPlatforms.any { it is JsPlatform }
+        val isNative = isNativeCompilation(targetBackend, targetPlatform, fixedNativeTarget)
+        val isJs = isJsCompilation(targetBackend, targetPlatform)
 
         // Non-JVM targets (Native, JS, Wasm) consume dependencies as KLIBs rather than JVM bytecode.
-        if (isNative || isJs) {
-            compileMetadata(
+        when {
+            isNative || isJs -> compileMetadata(
                 dependencies,
                 module.kotlinSrc.path,
                 module.outDir,
                 module.findCompilerModuleName()
             )
-        } else {
-            val jvmTarget = testServices.compilerConfigurationProvider
-                .getCompilerConfiguration(module, CompilationStage.FIRST)
-                .get(JVMConfigurationKeys.JVM_TARGET)
-            compileKotlin(
-                dependencies,
-                module.kotlinSrc.path,
-                module.javaDir.path,
-                module.outDir,
-                module.findCompilerModuleName(),
-                jvmTarget
-            )
-            val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
-                .joinToString(File.pathSeparator) { it.absolutePath }
-            val options = listOf(
-                "-classpath", classpath,
-                "-d", module.outDir.path
-            )
-            if (javaFiles.isNotEmpty()) {
-                compileJavaFiles(javaFiles, options)
+
+            else -> {
+                val jvmTarget = testServices.compilerConfigurationProvider
+                    .getCompilerConfiguration(module, CompilationStage.FIRST)[JVMConfigurationKeys.JVM_TARGET]
+                compileKotlin(
+                    dependencies,
+                    module.kotlinSrc.path,
+                    module.javaDir.path,
+                    module.outDir,
+                    module.findCompilerModuleName(),
+                    jvmTarget
+                )
+                compileJavaFilesInModule(module, dependencies, javaFiles)
             }
         }
+    }
+
+    private fun compileJavaFilesInModule(
+        module: TestModule,
+        dependencies: List<File>,
+        javaFiles: List<File>
+    ) {
+        if (javaFiles.isEmpty()) {
+            return
+        }
+        val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
+            .joinToString(File.pathSeparator) { it.absolutePath }
+        val options = listOf(
+            "-classpath", classpath,
+            "-d", module.outDir.path
+        )
+        compileJavaFiles(javaFiles, options)
     }
 
     override fun runTest(
@@ -254,16 +259,8 @@ abstract class AbstractKSPAATest(
             mainModule.directives[NativeEnvironmentConfigurationDirectives.WITH_FIXED_TARGET].firstOrNull()
         val targetPlatform = testServices.targetPlatformProvider.getTargetPlatform(mainModule)
 
-        val isNative = targetBackend == TargetBackend.NATIVE ||
-            targetPlatform.componentPlatforms.any { it is NativePlatform } ||
-            fixedNativeTarget != null
-
-        val isJs = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
-            targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
-            targetPlatform.componentPlatforms.any { it is JsPlatform }
-
         val kspConfig: KSPConfig = when {
-            isNative -> {
+            isNativeCompilation(targetBackend, targetPlatform, fixedNativeTarget) -> {
                 KSPNativeConfig.Builder().apply {
                     target = fixedNativeTarget ?: "linux_x64"
                     moduleName = mainModule.findCompilerModuleName()
@@ -285,7 +282,7 @@ abstract class AbstractKSPAATest(
                 }.build()
             }
 
-            isJs -> {
+            isJsCompilation(targetBackend, targetPlatform) -> {
                 KSPJsConfig.Builder().apply {
                     backend =
                         if (targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true) "WASM" else "JS"
@@ -345,4 +342,25 @@ abstract class AbstractKSPAATest(
      */
     private fun File.containsKotlinFile(): Boolean =
         this.isDirectory && this.walkTopDown().any { it.isFile && it.extension == "kt" }
+
+    /**
+     * Returns `true` if the current compilation targets the native backend.
+     */
+    private fun isNativeCompilation(
+        targetBackend: TargetBackend?,
+        targetPlatform: TargetPlatform,
+        fixedNativeTarget: String?
+    ): Boolean = targetBackend == TargetBackend.NATIVE ||
+        targetPlatform.componentPlatforms.any { it is NativePlatform } ||
+        fixedNativeTarget != null
+
+    /**
+     * Returns `true` if the current compilation targets the JS backend.
+     */
+    private fun isJsCompilation(
+        targetBackend: TargetBackend?,
+        targetPlatform: TargetPlatform
+    ): Boolean = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
+        targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
+        targetPlatform.componentPlatforms.any { it is JsPlatform }
 }
