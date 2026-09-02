@@ -23,7 +23,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.TestDataFile
-import com.intellij.util.containers.toMultiMap
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformDirectives
 import org.jetbrains.kotlin.analysis.test.framework.services.TargetPlatformProviderForAnalysisApiTests
 import org.jetbrains.kotlin.cli.common.disposeRootInWriteAction
@@ -55,8 +54,6 @@ import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigu
 import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.impl.TemporaryDirectoryManagerImpl
 import org.jetbrains.kotlin.test.util.KtTestUtil
-import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
-import org.jetbrains.kotlin.utils.addToStdlib.getOrPut
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -211,7 +208,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
     // dist/kotlinc/lib/*
     //
     // No, sourceFileProvider doesn't group files by module unfortunately. Let's do it by ourselves.
-    open fun compileModule(module: TestModule, testServices: TestServices) {
+    open fun compileLibraryModule(module: TestModule, testServices: TestServices) {
         val javaFiles = module.writeJavaFiles()
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
             module,
@@ -308,7 +305,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
         val libModules = moduleStructure.modules.dropLast(1)
 
         for (lib in libModules) {
-            compileModule(lib, testServices)
+            compileLibraryModule(lib, testServices)
         }
         val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
             mainModule,
