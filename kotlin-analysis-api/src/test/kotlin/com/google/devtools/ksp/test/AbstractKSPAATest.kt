@@ -24,6 +24,7 @@ import com.google.devtools.ksp.processing.KSPJsConfig
 import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
+import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
@@ -138,7 +139,10 @@ abstract class AbstractKSPAATest(
         val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
         val compiler = compilerClass.getDeclaredConstructor().newInstance()
         val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
-        execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
+        val exitCode = execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray()) as ExitCode
+        if (exitCode != ExitCode.OK) {
+            throw IllegalStateException("Compilation failed with exit code $exitCode:\n$outStream")
+        }
     }
 
     override fun compileModule(module: TestModule, testServices: TestServices) {
