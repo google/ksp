@@ -38,7 +38,6 @@ import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.NativeEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.services.targetPlatformProvider
-import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
@@ -112,9 +111,13 @@ abstract class AbstractKSPAATest(
         moduleName: String,
         jvmTarget: JvmTarget?
     ) {
+        val sourcesPathAsFile = File(sourcesPath)
+        if (!sourcesPathAsFile.containsKotlinFile()) {
+            return
+        }
         val classpath = mutableListOf<String>()
         classpath.addAll(dependencies.map { it.canonicalPath })
-        if (File(sourcesPath).isDirectory) {
+        if (sourcesPathAsFile.isDirectory) {
             classpath += sourcesPath
         }
         classpath += PathUtil.kotlinPathsForDistDirectoryForTests.stdlibPath.path
@@ -280,4 +283,10 @@ abstract class AbstractKSPAATest(
         }
         return testProcessor.toResult()
     }
+
+    /**
+     * Returns `true` if `this` is a directory and there is at least one Kotlin file in it
+     */
+    private fun File.containsKotlinFile(): Boolean =
+        this.isDirectory && this.walkTopDown().any { it.isFile && it.extension == "kt" }
 }
