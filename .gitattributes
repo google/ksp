@@ -30,6 +30,9 @@
 *.sh text eol=lf
 gradlew text eol=lf
 
+# Checksum files (LF required for sha256sum --check)
+*.sha256sum text eol=lf
+
 # Windows batch files (Windows CRLF line endings required)
 *.bat text eol=crlf
 *.cmd text eol=crlf
