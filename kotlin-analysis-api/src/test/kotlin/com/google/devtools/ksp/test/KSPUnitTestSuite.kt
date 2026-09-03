@@ -996,16 +996,16 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/native/nativeTest.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2396", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2396", BugState.FIXED)
     @TestMetadata("native/packageDeclarations.kt")
     @Test
     fun testNativePackageDeclarations() {
-        runFailingTest("$AA_PATH/native/packageDeclarations.kt")
+        runTest("$AA_PATH/native/packageDeclarations.kt")
     }
 
     @Bug(
         "https://github.com/google/ksp/issues/2396",
-        BugState.OPEN,
+        BugState.FIXED,
         "This test is a copy of native/packageDeclarations.kt but this test asserts that it works on JVM"
     )
     @TestMetadata("packageDeclarations.kt")

@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
+import org.jetbrains.kotlin.cli.metadata.KotlinMetadataCompiler
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.languageVersionSettings
@@ -51,6 +52,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
+import kotlin.reflect.jvm.jvmName
 
 abstract class AbstractKSPAATest(
     val experimentalPsiResolution: Boolean,
@@ -138,8 +140,16 @@ abstract class AbstractKSPAATest(
     }
 
     private fun runJvmCompiler(args: List<String>) {
+        runCompiler(K2JVMCompiler::class.java.name, args)
+    }
+
+    private fun runMetadataCompiler(args: List<String>) {
+        runCompiler(KotlinMetadataCompiler::class.java.name, args)
+    }
+
+    private fun runCompiler(compilerClassName: String, args: List<String>) {
         val outStream = ByteArrayOutputStream()
-        val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
+        val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(compilerClassName)
         val compiler = compilerClass.getDeclaredConstructor().newInstance()
         val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
         val exitCode = execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray()) as ExitCode
@@ -148,29 +158,75 @@ abstract class AbstractKSPAATest(
         }
     }
 
+    /**
+     * Precompile dependent modules into metadata KLIBs for Native/JS targets,
+     * so downstream test modules can resolve declarations from KLIB dependencies.
+     */
+    private fun compileMetadata(
+        dependencies: List<File>,
+        sourcesPath: String,
+        outDir: File,
+        moduleName: String
+    ) {
+        val classpath = mutableListOf<String>()
+        classpath.addAll(dependencies.map { it.canonicalPath })
+        classpath += PathUtil.kotlinPathsForDistDirectoryForTests.stdlibPath.path
+
+        val ktFiles = File(sourcesPath).walk().filter { it.extension == "kt" }.map { it.absolutePath }.toList()
+        val args = mutableListOf(
+            "-d", outDir.absolutePath,
+            "-module-name", moduleName,
+            "-classpath", classpath.joinToString(File.pathSeparator),
+        ) + ktFiles
+        runMetadataCompiler(args)
+    }
+
     override fun compileModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
-        val jvmTarget = testServices.compilerConfigurationProvider
-            .getCompilerConfiguration(module, CompilationStage.FIRST)
-            .get(JVMConfigurationKeys.JVM_TARGET)
-        compileKotlin(
-            dependencies,
-            module.kotlinSrc.path,
-            module.javaDir.path,
-            module.outDir,
-            module.findCompilerModuleName(),
-            jvmTarget
-        )
-        val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
-            .joinToString(File.pathSeparator) { it.absolutePath }
-        val options = listOf(
-            "-classpath", classpath,
-            "-d", module.outDir.path
-        )
-        if (javaFiles.isNotEmpty()) {
-            compileJavaFiles(javaFiles, options)
+        val targetBackend = module.directives[ConfigurationDirectives.TARGET_BACKEND].firstOrNull()
+        val fixedNativeTarget =
+            module.directives[NativeEnvironmentConfigurationDirectives.WITH_FIXED_TARGET].firstOrNull()
+        val targetPlatform = testServices.targetPlatformProvider.getTargetPlatform(module)
+
+        val isNative = targetBackend == TargetBackend.NATIVE ||
+            targetPlatform.componentPlatforms.any { it is NativePlatform } ||
+            fixedNativeTarget != null
+
+        val isJs = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
+            targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
+            targetPlatform.componentPlatforms.any { it is JsPlatform }
+
+        // Non-JVM targets (Native, JS, Wasm) consume dependencies as KLIBs rather than JVM bytecode.
+        if (isNative || isJs) {
+            compileMetadata(
+                dependencies,
+                module.kotlinSrc.path,
+                module.outDir,
+                module.findCompilerModuleName()
+            )
+        } else {
+            val jvmTarget = testServices.compilerConfigurationProvider
+                .getCompilerConfiguration(module, CompilationStage.FIRST)
+                .get(JVMConfigurationKeys.JVM_TARGET)
+            compileKotlin(
+                dependencies,
+                module.kotlinSrc.path,
+                module.javaDir.path,
+                module.outDir,
+                module.findCompilerModuleName(),
+                jvmTarget
+            )
+            val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
+                .joinToString(File.pathSeparator) { it.absolutePath }
+            val options = listOf(
+                "-classpath", classpath,
+                "-d", module.outDir.path
+            )
+            if (javaFiles.isNotEmpty()) {
+                compileJavaFiles(javaFiles, options)
+            }
         }
     }
 
