@@ -309,8 +309,6 @@ class ResolverAAImpl(
     }
 
     private fun staticModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
-        // TODO: Remove this case, see https://github.com/google/ksp/issues/3125
-        is KSClassDeclaration if declaration.isCompanionObject -> Modifier.JAVA_STATIC
         is KSClassDeclarationImpl -> analyze {
             val isInStaticMemberScope = declaration.ktClassOrObjectSymbol.staticMemberScope
                 .declarations.contains(declaration.ktDeclarationSymbol)
