@@ -572,6 +572,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/jvmNameRecord.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3125", BugState.OPEN)
+    @TestMetadata("jvmModifiersCompanionObject.kt")
+    @Test
+    fun testJvmModifiersCompanionObject() {
+        runFailingTest("$AA_PATH/jvmModifiersCompanionObject.kt")
+    }
+
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
