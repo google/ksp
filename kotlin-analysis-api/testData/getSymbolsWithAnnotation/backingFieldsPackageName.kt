@@ -22,7 +22,7 @@
 // EXPECT CURRENT: annotations.Select: MyJavaClass.x: com.example.jcl
 // EXPECT CURRENT: annotations.Select: Other.myOtherProp: my.other.test
 // EXPECT NEXT: annotations.Select: MyClass.myProp.field: test
-// EXPECT NEXT: annotations.Select: MyJavaClass.field: com.example.jcl
+// EXPECT NEXT: annotations.Select: MyJavaClass.x.field: com.example.jcl
 // EXPECT NEXT: annotations.Select: MyJavaClass.x: com.example.jcl
 // EXPECT NEXT: annotations.Select: Other.myOtherProp.field: my.other.test
 // END
