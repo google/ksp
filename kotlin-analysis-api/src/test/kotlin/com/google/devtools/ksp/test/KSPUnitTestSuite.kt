@@ -520,10 +520,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/javaNonNullTypes.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3166", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3166", BugState.FIXED)
     @TestMetadata("getSymbolsWithAnnotation/javaBackingFieldsParents.kt")
     @Test
-    abstract fun testJavaBackingFieldsParents()
+    fun testJavaBackingFieldsParents() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/javaBackingFieldsParents.kt")
+    }
 
     @TestMetadata("javaSubtype.kt")
     @Test
