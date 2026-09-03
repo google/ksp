@@ -24,6 +24,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
@@ -59,6 +60,12 @@ class KSBackingFieldJavaImpl private constructor(
     override val type: KSTypeReference by lazy {
         KSTypeReferenceResolvedImpl.getCached(ktJavaFieldSymbol.returnType, this)
     }
+
+    override val parentDeclaration: KSDeclaration
+        get() = property
+
+    override val parent: KSNode
+        get() = property
 
     override val simpleName: KSName by lazy {
         KSNameImpl.getCached("field")
