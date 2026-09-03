@@ -1,3 +1,6 @@
+@file:OptIn(KspExperimental::class)
+
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -26,6 +29,30 @@ class TestProcessor(
         logger.warn("platforms: $platforms")
         val list = resolver.getClassDeclarationByName("kotlin.collections.List")
         logger.warn("List has superTypes: ${list!!.superTypes.count() > 0}")
+
+        val someDepDecls = resolver.getDeclarationsFromPackage("com.somedependency")
+            .mapNotNull { it.qualifiedName?.asString() }
+            .sorted()
+            .toList()
+        if (someDepDecls.isNotEmpty()) {
+            logger.warn("com.somedependency package declarations: $someDepDecls")
+        }
+
+        val myAppDecls = resolver.getDeclarationsFromPackage("com.myapp")
+            .mapNotNull { it.qualifiedName?.asString() }
+            .sorted()
+            .toList()
+        if (myAppDecls.isNotEmpty()) {
+            logger.warn("com.myapp package declarations: $myAppDecls")
+        }
+
+        val exampleDecls = resolver.getDeclarationsFromPackage("com.example")
+            .mapNotNull { it.qualifiedName?.asString() }
+            .sorted()
+            .toList()
+        if (exampleDecls.isNotEmpty()) {
+            logger.warn("com.example package declarations: $exampleDecls")
+        }
 
         codeGenerator.createNewFile(
             Dependencies(true, *resolver.getAllFiles().toList().toTypedArray()),
