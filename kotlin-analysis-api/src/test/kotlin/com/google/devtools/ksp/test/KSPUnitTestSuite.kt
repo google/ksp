@@ -499,7 +499,7 @@ abstract class KSPUnitTestSuite(
     }
 
     @Bug("https://github.com/google/ksp/issues/3123", BugState.OPEN)
-    @Bug("https://github.com/google/ksp/issues/3125", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3125", BugState.FIXED)
     @Bug("https://github.com/google/ksp/issues/3155", BugState.OPEN)
     @TestMetadata("javaModifiers.kt")
     @Test
@@ -574,11 +574,11 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/jvmNameRecord.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3125", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3125", BugState.FIXED)
     @TestMetadata("jvmModifiersCompanionObject.kt")
     @Test
     fun testJvmModifiersCompanionObject() {
-        runFailingTest("$AA_PATH/jvmModifiersCompanionObject.kt")
+        runTest("$AA_PATH/jvmModifiersCompanionObject.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")
