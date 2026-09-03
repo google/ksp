@@ -55,6 +55,7 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
@@ -289,6 +290,7 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             ktFiles,
             createPackagePartProvider,
+            libraryRoots.map { it.file }.distinct(),
         )
 
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -325,6 +327,7 @@ class KotlinSymbolProcessing(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         ktFiles: List<KtFile>,
         packagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
+        libraryRoots: List<VirtualFile> = emptyList(),
     ) {
         val project = kotlinCoreProjectEnvironment.project
         project.apply {
@@ -365,7 +368,12 @@ class KotlinSymbolProcessing(
                 KotlinDeclarationProviderMerger::class.java,
                 KotlinStandaloneDeclarationProviderMerger(this)
             )
-            registerService(KotlinPackageProviderFactory::class.java, IncrementalKotlinPackageProviderFactory(project))
+            // Package provider factory requires binary library roots to discover packages
+            // declared in precompiled KLIBs (e.g. for Kotlin/Native and JS/Wasm targets).
+            registerService(
+                KotlinPackageProviderFactory::class.java,
+                IncrementalKotlinPackageProviderFactory(project, libraryRoots)
+            )
 
             registerService(
                 SealedClassInheritorsProvider::class.java,
