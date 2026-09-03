@@ -62,6 +62,8 @@ internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSP
         val exitCode = KotlinSymbolProcessing(config, processorProviders, logger).execute()
         exitProcess(exitCode.code)
     } catch (t: Throwable) {
+        // Manually print stack trace and log the exception if error occurred.
+        // Then call exitProcess to ensure the process is halted.
         logger.exception(t)
         t.printStackTrace()
         exitProcess(KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR.code)
