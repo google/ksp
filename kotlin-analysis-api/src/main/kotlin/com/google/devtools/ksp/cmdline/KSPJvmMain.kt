@@ -47,17 +47,23 @@ internal fun runWithArgs(args: Array<String>, parse: (Array<String>) -> Pair<KSP
 
     val logger = KspGradleLogger(loggingLevel)
 
-    val (config, classpath) = parse(args)
-    val processorClassloader = URLClassLoader(classpath.map { File(it).toURI().toURL() }.toTypedArray())
+    try {
+        val (config, classpath) = parse(args)
+        val processorClassloader = URLClassLoader(classpath.map { File(it).toURI().toURL() }.toTypedArray())
 
-    @Suppress("UNCHECKED_CAST")
-    val processorProviders = ServiceLoader
-        .load(
-            processorClassloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
-            processorClassloader
-        )
-        .toList() as List<SymbolProcessorProvider>
+        @Suppress("UNCHECKED_CAST")
+        val processorProviders = ServiceLoader
+            .load(
+                processorClassloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
+                processorClassloader
+            )
+            .toList() as List<SymbolProcessorProvider>
 
-    val exitCode = KotlinSymbolProcessing(config, processorProviders, logger).execute()
-    exitProcess(exitCode.code)
+        val exitCode = KotlinSymbolProcessing(config, processorProviders, logger).execute()
+        exitProcess(exitCode.code)
+    } catch (t: Throwable) {
+        logger.exception(t)
+        t.printStackTrace()
+        exitProcess(KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR.code)
+    }
 }
