@@ -35,7 +35,7 @@
 // parent of (T..T?): t
 // EXPECT NEXT: parent of T: (T..T?)
 // EXPECT NEXT: parent of (T..T?): field
-// EXPECT NEXT: parent of field: B
+// EXPECT NEXT: parent of field: t
 // parent of t: B
 // parent of T: (T..T?)
 // parent of (T..T?): t
