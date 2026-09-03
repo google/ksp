@@ -431,6 +431,30 @@ class AnnoOnProperty {
         }
     }
 
+    @Test
+    fun testNativeKlibDeclarations() {
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows", ignoreCase = true))
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(
+            "--configuration-cache-problems=warn",
+            "clean",
+            ":workload-klib:kspKotlinLinuxX64"
+        ).build().let {
+            Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-klib:kspKotlinLinuxX64")?.outcome)
+            Assert.assertTrue(
+                it.output.contains(
+                    "w: [ksp] com.somedependency package declarations: [com.somedependency.AnotherDepClass, com.somedependency.SomeDepClass]"
+                )
+            )
+            Assert.assertTrue(
+                it.output.contains(
+                    "w: [ksp] com.myapp package declarations: [com.myapp.AnotherAppClass, com.myapp.MyAppClass, com.myapp.anotherAppFunction, com.myapp.myAppFunction]"
+                )
+            )
+        }
+    }
+
     @Ignore
     @Test
     fun testNonEmbeddableArtifact() {
