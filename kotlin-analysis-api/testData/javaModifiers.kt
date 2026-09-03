@@ -115,7 +115,7 @@
 // EXPECT NEXT: OuterKotlinClass.Companion.privateCompanionField.field: : FINAL
 // OuterKotlinClass.Companion.privateCompanionField: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionMethod: PRIVATE : FINAL PRIVATE
-// OuterKotlinClass.Companion: : FINAL JAVA_STATIC PUBLIC
+// OuterKotlinClass.Companion: : FINAL PUBLIC
 // OuterKotlinClass.InnerKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.InnerKotlinClass: INNER : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
