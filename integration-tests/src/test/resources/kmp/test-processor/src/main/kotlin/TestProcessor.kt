@@ -12,29 +12,18 @@ class TestProcessor(
     val logger: KSPLogger,
     val env: SymbolProcessorEnvironment
 ) : SymbolProcessor {
-    var invoked = false
+    var round = 0
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val allFiles = resolver.getAllFiles().map { it.fileName }
         logger.warn(allFiles.toList().toString())
-        if (invoked) {
-            return emptyList()
-        }
-        invoked = true
-
-        logger.warn("language version: ${env.kotlinVersion}")
-        logger.warn("api version: ${env.apiVersion}")
-        logger.warn("compiler version: ${env.compilerVersion}")
-        val platforms = env.platforms.map { it.toString() }
-        logger.warn("platforms: $platforms")
-        val list = resolver.getClassDeclarationByName("kotlin.collections.List")
-        logger.warn("List has superTypes: ${list!!.superTypes.count() > 0}")
 
         val someDepDecls = resolver.getDeclarationsFromPackage("com.somedependency")
             .mapNotNull { it.qualifiedName?.asString() }
             .sorted()
             .toList()
         if (someDepDecls.isNotEmpty()) {
+            logger.warn("round $round com.somedependency package declarations: $someDepDecls")
             logger.warn("com.somedependency package declarations: $someDepDecls")
         }
 
@@ -43,6 +32,7 @@ class TestProcessor(
             .sorted()
             .toList()
         if (myAppDecls.isNotEmpty()) {
+            logger.warn("round $round com.myapp package declarations: $myAppDecls")
             logger.warn("com.myapp package declarations: $myAppDecls")
         }
 
@@ -51,8 +41,22 @@ class TestProcessor(
             .sorted()
             .toList()
         if (exampleDecls.isNotEmpty()) {
+            logger.warn("round $round com.example package declarations: $exampleDecls")
             logger.warn("com.example package declarations: $exampleDecls")
         }
+
+        if (round > 0) {
+            return emptyList()
+        }
+        round++
+
+        logger.warn("language version: ${env.kotlinVersion}")
+        logger.warn("api version: ${env.apiVersion}")
+        logger.warn("compiler version: ${env.compilerVersion}")
+        val platforms = env.platforms.map { it.toString() }
+        logger.warn("platforms: $platforms")
+        val list = resolver.getClassDeclarationByName("kotlin.collections.List")
+        logger.warn("List has superTypes: ${list!!.superTypes.count() > 0}")
 
         codeGenerator.createNewFile(
             Dependencies(true, *resolver.getAllFiles().toList().toTypedArray()),
