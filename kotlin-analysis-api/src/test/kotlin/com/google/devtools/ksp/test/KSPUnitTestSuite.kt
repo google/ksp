@@ -417,6 +417,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getAnnotationByTypeWithInnerDefault.kt")
     }
 
+    @TestMetadata("native/getAnnotationByTypeWithDefault.kt")
+    @Test
+    @Bug("https://github.com/google/ksp/issues/2356", BugState.FIXED)
+    fun testGetAnnotationByTypeWithKmpDefault() {
+        runTest("$AA_PATH/native/getAnnotationByTypeWithDefault.kt")
+    }
+
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
