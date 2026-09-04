@@ -223,6 +223,18 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/objCacheB.kt")
     }
 
+    @Bug(
+        "https://github.com/google/ksp/issues/3154",
+        BugState.FIXED,
+        "This test asserts that resolver behavior change (when calling the enableNewFeatures lambda) is observable and not just a property of KSP's test framework."
+    )
+    @Bug("https://github.com/google/ksp/issues/3185", BugState.FIXED)
+    @TestMetadata("changingBehavior.kt")
+    @Test
+    fun testChangingBehavior() {
+        runTest("$AA_PATH/changingBehavior.kt")
+    }
+
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
@@ -501,6 +513,7 @@ abstract class KSPUnitTestSuite(
     @Bug("https://github.com/google/ksp/issues/3123", BugState.OPEN)
     @Bug("https://github.com/google/ksp/issues/3125", BugState.OPEN)
     @Bug("https://github.com/google/ksp/issues/3155", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3185", BugState.FIXED)
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
