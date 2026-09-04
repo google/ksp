@@ -135,9 +135,7 @@ fun KSClassDeclaration.getConstructors(): Sequence<KSFunctionDeclaration> {
 }
 
 /** Check whether this is a local declaration, or namely, declared in a function. */
-fun KSDeclaration.isLocal(): Boolean {
-    return this.parentDeclaration != null && this.parentDeclaration !is KSClassDeclaration
-}
+fun KSDeclaration.isLocal(): Boolean = parentDeclaration is KSFunctionDeclaration
 
 /**
  * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
