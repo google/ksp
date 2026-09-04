@@ -21,6 +21,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -196,6 +197,7 @@ fun KSDeclaration.getVisibility(): Visibility {
             } ?: Visibility.PUBLIC
         }
 
+        this.isKotlinBackingField() -> Visibility.PRIVATE
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) ->
@@ -213,6 +215,11 @@ fun KSDeclaration.getVisibility(): Visibility {
             else Visibility.JAVA_PACKAGE
     }
 }
+
+internal fun KSDeclaration.isKotlinBackingField(): Boolean =
+    this is KSBackingField && (
+        origin == Origin.KOTLIN || origin == Origin.KOTLIN_LIB
+        )
 
 /**
  * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution
