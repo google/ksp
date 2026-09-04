@@ -1012,6 +1012,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/native/packageDeclarations.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2396", BugState.FIXED)
+    @TestMetadata("native/packageDeclarationsMultiRound.kt")
+    @Test
+    fun testNativePackageDeclarationsMultiRound() {
+        runTest("$AA_PATH/native/packageDeclarationsMultiRound.kt")
+    }
+
     @Bug(
         "https://github.com/google/ksp/issues/2396",
         BugState.FIXED,
