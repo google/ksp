@@ -49,6 +49,10 @@ class SymbolProcessorEnvironment(
     /**
      * Processors may call this lambda to opt in to upcoming features:
      * backing fields and context parameters.
+     *
+     * NOTE: This lambda should only be called ONCE and immediately upon creation, i.e., in the
+     * [SymbolProcessorProvider] immediately after creating the processor.
+     * Once a processor has called this lambda, it cannot unregister again.
      */
     val registerProcessorForNewFeatures: (SymbolProcessor) -> Unit
 ) {
