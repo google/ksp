@@ -444,12 +444,27 @@ class AnnoOnProperty {
             Assert.assertEquals(TaskOutcome.SUCCESS, it.task(":workload-klib:kspKotlinLinuxX64")?.outcome)
             Assert.assertTrue(
                 it.output.contains(
-                    "w: [ksp] com.somedependency package declarations: [com.somedependency.AnotherDepClass, com.somedependency.SomeDepClass]"
+                    "w: [ksp] round 0 com.somedependency package declarations: [com.somedependency.AnotherDepClass, com.somedependency.SomeDepClass]"
                 )
             )
             Assert.assertTrue(
                 it.output.contains(
-                    "w: [ksp] com.myapp package declarations: [com.myapp.AnotherAppClass, com.myapp.MyAppClass, com.myapp.anotherAppFunction, com.myapp.myAppFunction]"
+                    "w: [ksp] round 1 com.somedependency package declarations: [com.somedependency.AnotherDepClass, com.somedependency.SomeDepClass]"
+                )
+            )
+            Assert.assertTrue(
+                it.output.contains(
+                    "w: [ksp] round 0 com.myapp package declarations: [com.myapp.AnotherAppClass, com.myapp.MyAppClass, com.myapp.anotherAppFunction, com.myapp.myAppFunction]"
+                )
+            )
+            Assert.assertTrue(
+                it.output.contains(
+                    "w: [ksp] round 1 com.myapp package declarations: [com.myapp.AnotherAppClass, com.myapp.MyAppClass, com.myapp.anotherAppFunction, com.myapp.myAppFunction]"
+                )
+            )
+            Assert.assertTrue(
+                it.output.contains(
+                    "w: [ksp] round 1 com.example package declarations: [com.example.Foo]"
                 )
             )
         }
