@@ -31,7 +31,7 @@
 // MyClass.x.annotations = Anno, PropAnno
 // MyClass.x.modifiers = FINAL, PUBLIC
 // MyClass.x.field.annotations = FieldAnno
-// MyClass.x.field.modifiers = FINAL
+// MyClass.x.field.modifiers = FINAL, PRIVATE
 // END
 
 // FILE: Anno.kt
