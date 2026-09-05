@@ -1,6 +1,9 @@
 package com.google.devtools.ksp.gradle.utils
 
+import javax.inject.Inject
 import org.gradle.api.Project
+import org.gradle.api.configuration.BuildFeatures
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
@@ -8,14 +11,16 @@ import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.utils.ObservableSet
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 
-// NOTE: for AGP with built in kotlin enabled and android.disallowKotlinSourceSets=true, this returns empty set
+// NOTE: for AGP with built in kotlin enabled and android.disallowKotlinSourceSets=true, this
+// returns empty set
 internal val KotlinCompilation<*>.allKotlinSourceSetsObservable
     get() = this.allKotlinSourceSets as ObservableSet<KotlinSourceSet>
 
 internal val KotlinCompilation<*>.kotlinSourceSetsObservable
     get() = this.kotlinSourceSets as ObservableSet<KotlinSourceSet>
 
-fun Project.isKotlinBaseApiPluginApplied() = plugins.withType(KotlinBaseApiPlugin::class.java).firstOrNull() != null
+fun Project.isKotlinBaseApiPluginApplied() =
+    plugins.withType(KotlinBaseApiPlugin::class.java).firstOrNull() != null
 
 fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbrains.kotlin.android")
 
@@ -27,9 +32,23 @@ fun Project.canUseGeneratedKotlinApi(): Boolean {
 }
 
 fun Project.enableProjectIsolationCompatibleCodepath(): Boolean {
-    return providers.gradleProperty("ksp.project.isolation.enabled").orNull == "true" ||
-        providers.gradleProperty("org.gradle.unsafe.isolated-projects").orNull == "true" ||
+    if (providers.gradleProperty("ksp.project.isolation.enabled").orNull == "true") {
+        return true
+    }
+    if (GradleVersion.current() >= GradleVersion.version("8.5")) {
+        return objects
+            .newInstance(ProjectIsolationBuildFeatures::class.java)
+            .buildFeatures
+            .isolatedProjects
+            .active
+            .get()
+    }
+    return providers.gradleProperty("org.gradle.unsafe.isolated-projects").orNull == "true" ||
         providers.systemProperty("org.gradle.unsafe.isolated-projects").orNull == "true" ||
         providers.gradleProperty("org.gradle.isolated-projects").orNull == "true" ||
         providers.systemProperty("org.gradle.isolated-projects").orNull == "true"
+}
+
+internal abstract class ProjectIsolationBuildFeatures {
+    @get:Inject abstract val buildFeatures: BuildFeatures
 }
