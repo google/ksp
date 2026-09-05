@@ -30,10 +30,10 @@ class AGPVersionBuiltInKotlinIT(
         @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, experimentalPsiResolution: {3}")
         fun data(): Collection<Array<String>> {
             return listOf(
-                arrayOf("9.0.0-alpha14", "2.2.10", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
+                arrayOf("9.0.0-alpha14", "2.4.0", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
-                arrayOf("9.0.0-beta01", "2.2.10", "9.1.0"),
+                arrayOf("9.0.0-beta01", "2.4.0", "9.1.0"),
             ).flatMap {
                 listOf(it.plus("true"), it.plus("false"))
             }
