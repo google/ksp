@@ -4,6 +4,9 @@ import com.google.devtools.ksp.test.fixtures.TemporaryTestProject
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.CoreMatchers.hasItem
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert
 import org.junit.Assume
 import org.junit.Ignore
@@ -117,7 +120,9 @@ class KMPImplementedIT(experimentalPsiResolution: Boolean) {
             ":workload-jvm:build"
         ).buildAndFail().let {
             val errors = it.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+
+            assertThat(errors, hasItem(containsString("Baz.kt:4: Unresolved reference 'Foo'.")))
+            assertThat(errors, hasItem("e: [ksp] java.lang.Exception: Test Exception in process"))
         }
         project.restore("workload-jvm/build.gradle.kts")
     }
@@ -239,7 +244,9 @@ class AnnoOnProperty {
             ":workload-js:build"
         ).buildAndFail().let {
             val errors = it.output.lines().filter { it.startsWith("e: [ksp]") }
-            Assert.assertEquals("e: [ksp] java.lang.Exception: Test Exception in process", errors.first())
+
+            assertThat(errors, hasItem(containsString("Baz.kt:4: Unresolved reference 'Foo'.")))
+            assertThat(errors, hasItem("e: [ksp] java.lang.Exception: Test Exception in process"))
         }
         project.restore("workload-js/build.gradle.kts")
     }
