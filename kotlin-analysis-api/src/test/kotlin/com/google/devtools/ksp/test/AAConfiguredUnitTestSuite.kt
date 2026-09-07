@@ -17,6 +17,8 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
@@ -61,6 +63,18 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
+    @Test
+    override fun testJavaBackingFieldUsedInKotlin() {
+        runTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
+    }
+}
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
+    @Test
+    override fun testJavaBackingFieldUsedInKotlin() {
+        runFailingTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
+    }
+}

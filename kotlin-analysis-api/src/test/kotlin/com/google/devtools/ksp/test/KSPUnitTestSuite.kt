@@ -510,6 +510,11 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/isMutable.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3191", BugState.OPEN)
+    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
+    @Test
+    abstract fun testJavaBackingFieldUsedInKotlin()
+
     @Bug("https://github.com/google/ksp/issues/3123", BugState.OPEN)
     @Bug("https://github.com/google/ksp/issues/3125", BugState.FIXED)
     @Bug("https://github.com/google/ksp/issues/3155", BugState.OPEN)
