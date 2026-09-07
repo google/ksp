@@ -82,6 +82,157 @@ class GradleCompilationTest(isExperimentalPsiResolution: Boolean) {
     }
 
     @Test
+    fun missingTypeReportedOnFailure() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.dependencies.add(
+            module(configuration = "ksp", testRule.processorModule)
+        )
+        testRule.appModule.addSource(
+            "TestFailure.kt",
+            """
+            package com.example
+
+            class TestFailure {
+                val field: UnresolvedClass = UnresolvedClass()
+            }
+            """.trimIndent()
+        )
+        class ErrorReporting(private val logger: KSPLogger) : SymbolProcessor {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                logger.error("Fatal KSP processor error!")
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> ErrorReporting(env.logger) })
+
+        testRule.addProvider(Provider::class)
+        val failure = testRule.runner()
+            .withArguments("app:assemble")
+            .buildAndFail()
+        assertThat(failure.output).contains("Fatal KSP processor error!")
+        assertThat(failure.output).contains("TestFailure.kt:4: Unresolved reference \'UnresolvedClass\'")
+    }
+
+    @Test
+    fun onlyLastRoundFilesAreCheckedOnFailure() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.dependencies.add(
+            module(configuration = "ksp", testRule.processorModule)
+        )
+        testRule.appModule.addSource(
+            "Round0File.kt",
+            """
+            package com.example
+
+            class Round0File {
+                val round0Field: UnresolvedInRound0 = UnresolvedInRound0()
+            }
+            """.trimIndent()
+        )
+        class MultiRoundProcessor(
+            private val codeGenerator: CodeGenerator,
+            private val logger: KSPLogger,
+        ) : SymbolProcessor {
+            private var round = 0
+
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                if (round == 0) {
+                    round++
+                    codeGenerator.createNewFile(
+                        Dependencies.ALL_FILES,
+                        "com.example",
+                        "GeneratedInRound0"
+                    ).use { stream ->
+                        stream.writer(Charsets.UTF_8).use {
+                            it.write(
+                                """
+                                package com.example
+
+                                class GeneratedInRound0 {
+                                    val round1Field: UnresolvedInRound1 = UnresolvedInRound1()
+                                }
+                                """.trimIndent()
+                            )
+                        }
+                    }
+                } else {
+                    logger.error("Fatal KSP processor error in round 1!")
+                }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env ->
+            MultiRoundProcessor(env.codeGenerator, env.logger)
+        })
+
+        testRule.addProvider(Provider::class)
+        val failure = testRule.runner()
+            .withArguments("app:assemble")
+            .buildAndFail()
+
+        assertThat(failure.output).contains("Fatal KSP processor error in round 1!")
+        assertThat(failure.output).contains("GeneratedInRound0.kt:4: Unresolved reference 'UnresolvedInRound1'.")
+        assertThat(failure.output).doesNotContain("UnresolvedInRound0")
+    }
+
+    @Test
+    fun missingTypeInJavaSourceReportedOnFailure() {
+        testRule.setupAppAsJvmApp()
+        testRule.appModule.dependencies.add(
+            module(configuration = "ksp", testRule.processorModule)
+        )
+        testRule.appModule.addSource(
+            "JavaTestFailure.java",
+            """
+            package com.example;
+
+            public class JavaTestFailure {
+                private final UnresolvedClass field = new UnresolvedClass();
+            }
+            """.trimIndent()
+        )
+        // Java sources resolve Kotlin declarations through light classes, they must not be
+        // reported as unresolved.
+        testRule.appModule.addSource(
+            "KotlinType.kt",
+            """
+            package com.example
+
+            class KotlinType
+            """.trimIndent()
+        )
+        testRule.appModule.addSource(
+            "JavaUsingKotlin.java",
+            """
+            package com.example;
+
+            public class JavaUsingKotlin {
+                private final KotlinType field = new KotlinType();
+            }
+            """.trimIndent()
+        )
+        class ErrorReporting(private val logger: KSPLogger) : SymbolProcessor {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                logger.error("Fatal KSP processor error!")
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> ErrorReporting(env.logger) })
+
+        testRule.addProvider(Provider::class)
+        val failure = testRule.runner()
+            .withArguments("app:assemble")
+            .buildAndFail()
+
+        assertThat(failure.output).contains("Fatal KSP processor error!")
+        assertThat(failure.output).contains("e: [ksp] JavaTestFailure.java:4: Unresolved reference 'UnresolvedClass'")
+        assertThat(failure.output).doesNotContain("KotlinType")
+    }
+
+    @Test
     fun applicationCanAccessGeneratedCode_multiplatform_withConfigCache() {
         testRule.setupAppAsMultiplatformApp(
             """
