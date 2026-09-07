@@ -63,18 +63,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
-    @Test
-    override fun testJavaBackingFieldUsedInKotlin() {
-        runTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
-    }
-}
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
-    @Test
-    override fun testJavaBackingFieldUsedInKotlin() {
-        runFailingTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
-    }
-}
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
