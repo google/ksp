@@ -29,6 +29,7 @@ import com.google.devtools.ksp.impl.recordLookupForPropertyOrMethod
 import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.KSSyntheticJavaBackingFieldImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -209,7 +210,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
 
                 is KaSyntheticJavaPropertySymbol -> {
                     // Kotlin calling into a synthetic Java method.
-                    null
+                    KSSyntheticJavaBackingFieldImpl.getCached(ktPropertySymbol)
                 }
             }
         } else {
