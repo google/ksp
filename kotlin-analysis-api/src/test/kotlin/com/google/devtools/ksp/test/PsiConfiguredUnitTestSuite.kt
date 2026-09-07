@@ -61,6 +61,18 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
+    @Test
+    override fun testJavaBackingFieldUsedInKotlin() {
+        runTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
+    }
+}
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true)
+class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+    @TestMetadata("javaBackingFieldUsedInKotlin.kt")
+    @Test
+    override fun testJavaBackingFieldUsedInKotlin() {
+        runFailingTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
+    }
+}
