@@ -1049,11 +1049,11 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/native/packageDeclarationsMultiRound.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2356", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2356", BugState.FIXED)
     @TestMetadata("native/annotationDefaultValue.kt")
     @Test
     fun testNativeAnnotationDefaultValue() {
-        runThrowingTest("$AA_PATH/native/annotationDefaultValue.kt", java.util.NoSuchElementException::class)
+        runTest("$AA_PATH/native/annotationDefaultValue.kt")
     }
 
     @Bug(
