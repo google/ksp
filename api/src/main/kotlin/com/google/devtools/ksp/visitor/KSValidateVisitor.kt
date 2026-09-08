@@ -9,6 +9,15 @@ open class KSValidateVisitor(
 ) : KSDefaultVisitor<KSNode?, Boolean>(enableNewFeatures) {
 
     // For binary compatibility
+    @Deprecated(
+        message = "KSValidateVisitor is deprecated in favor of KSValidateVisitor(predicate, enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSValidateVisitor(predicate, enableNewFeatures = true)",
+        ),
+    )
     constructor(predicate: (KSNode?, KSNode) -> Boolean) : this(predicate, enableNewFeatures = false)
 
     private fun validateType(type: KSType): Boolean {
