@@ -40,9 +40,12 @@ abstract class KSPUnitTestSuite(
         internal const val AA_PATH: String = "../kotlin-analysis-api/testData"
     }
 
-    @Bug("https://github.com/google/ksp/issues/2997", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2997", BugState.FIXED)
     @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
-    abstract fun testAliasedAnnotations()
+    @Test
+    fun testAliasedAnnotations() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
+    }
 
     @TestMetadata("annotatedUtil.kt")
     @Test
