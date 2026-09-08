@@ -33,7 +33,6 @@ import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -121,6 +120,7 @@ import org.jetbrains.kotlin.analysis.api.types.KaUsualClassType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap.mapKotlinToJava
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.codegen.state.InfoForMangling
 import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
 import org.jetbrains.kotlin.codegen.state.md5base64
@@ -792,56 +792,63 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     is KaAnnotationValue.UnsupportedValue -> null
 }
 
-@OptIn(SymbolInternals::class, KaImplementationDetail::class, KaExperimentalApi::class)
-internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
-    return this.psi.let { psiElement ->
-        when (psiElement) {
-            is KtParameter -> analyze {
-                psiElement.defaultValue?.evaluateAsAnnotationValue()
-            }
-            // ClsMethodImpl means the psi is decompiled psi.
-            null, is ClsMemberImpl<*> -> {
-                if (!ResolverAAImpl.instance.isJvm) {
-                    return@let (this as? KaFirValueParameterSymbol)?.let {
-                        val symbolBuilder = it.builder
-                        it.firSymbol.fir.defaultValue?.let { defaultValue ->
-                            FirAnnotationValueConverter.toConstantValue(defaultValue, symbolBuilder)
-                        }
-                    }
-                }
-                val fileManager = ResolverAAImpl.instance.javaFileManager
-                val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-                    ?: return@let null
+@OptIn(SymbolInternals::class)
+internal fun getDefaultValueOnJvm(
+    fileManager: KotlinCliJavaFileManagerImpl,
+    kaFirValueParameterSymbol: KaFirValueParameterSymbol
+): KaAnnotationValue? {
+    // The containing declaration of an annotation parameter is the annotation's constructor.
+    val classId = kaFirValueParameterSymbol.firSymbol.containingDeclarationSymbol
+        .getContainingClassSymbol()?.classId
+        ?: return null
 
-                val defaultValue: JavaAnnotationArgument? = analyze {
-                    val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
-                    jc.methods.firstOrNull { it.name == name }?.annotationParameterDefaultValue
-                }
+    val defaultValue: JavaAnnotationArgument? = analyze {
+        val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
+        jc.methods.firstOrNull { it.name == kaFirValueParameterSymbol.name }?.annotationParameterDefaultValue
+    }
 
-                (this as? KaFirValueParameterSymbol)?.let {
-                    val firSession = it.firSymbol.fir.moduleData.session
-                    val symbolBuilder = it.builder
-                    val expectedTypeRef = it.firSymbol.fir.returnTypeRef
-                    // when no default value is declared in the class file, ideally users should
-                    // apply a value for such property at use site, therefore value obtained here should not be
-                    // returned. In case of a user failed to do so, we try our best to return values
-                    // to ensure no annotation argument is missing from KSP side.
-                    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
-                    // will produce empty array for array type values and `null` for the rest of value types.
-                    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
-                        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
-                    FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
-                }
-            }
+    val firSession = kaFirValueParameterSymbol.firSymbol.fir.moduleData.session
+    val expectedTypeRef = kaFirValueParameterSymbol.firSymbol.fir.returnTypeRef
+    // when no default value is declared in the class file, ideally users should
+    // apply a value for such property at use site, therefore value obtained here should not be
+    // returned. In case of a user failed to do so, we try our best to return values
+    // to ensure no annotation argument is missing from KSP side.
+    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
+    // will produce empty array for array type values and `null` for the rest of value types.
+    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
+        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+    return FirAnnotationValueConverter.toConstantValue(expression, kaFirValueParameterSymbol.builder)
+}
 
-            else -> throw InternalKSPException(
-                "Unhandled default value type",
-                psiElement.toLocation(),
-                psiElement.javaClass,
-            )
+@OptIn(SymbolInternals::class, KaExperimentalApi::class)
+internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? = when (val psi = this.psi) {
+    is KtParameter -> return analyze {
+        psi.defaultValue?.evaluateAsAnnotationValue()
+    }
+
+    // A null psi or a decompiled psi (ClsMemberImpl) means the declaration comes from a binary dependency.
+    null, is ClsMemberImpl<*> -> {
+        // Early return in case this is KaFir version of a ValueParameterSymbol.
+        val symbol = this as? KaFirValueParameterSymbol ?: return null
+
+        // On JVM the default value is read from the `AnnotationDefault` attribute of the class file.
+        if (ResolverAAImpl.instance.isJvm) {
+            return getDefaultValueOnJvm(ResolverAAImpl.instance.javaFileManager, symbol)
+        }
+
+        // Other platforms have no class files to read from, so rely on what the KLib metadata provided.
+        // Note that annotation parameter default values are only stored in metadata version >= 2.2 (KT-59526);
+        // for older libraries FIR stores an expression stub instead, which does not convert to a value.
+        return symbol.firSymbol.fir.defaultValue?.let { defaultValue ->
+            FirAnnotationValueConverter.toConstantValue(defaultValue, symbol.builder)
         }
     }
+
+    else -> throw InternalKSPException(
+        "Unhandled default value type",
+        psi.toLocation(),
+        psi.javaClass,
+    )
 }
 
 @OptIn(KaExperimentalApi::class)

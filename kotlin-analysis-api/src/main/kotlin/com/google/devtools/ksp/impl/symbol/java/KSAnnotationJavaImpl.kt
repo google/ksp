@@ -149,10 +149,6 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
                                     valueParameterSymbol.name,
-                                    // null will be returned as the `constantValue` for non array annotation values.
-                                    // fallback to unsupported annotation value to indicate such use cases.
-                                    // when seeing unsupported annotation value we return `null` for the value.
-                                    // which might still be incorrect but there might not be a perfect way.
                                     constantValue
                                 ),
                                 this@KSAnnotationJavaImpl,
