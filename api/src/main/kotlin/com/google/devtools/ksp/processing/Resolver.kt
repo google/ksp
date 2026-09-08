@@ -19,32 +19,32 @@ package com.google.devtools.ksp.processing
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.symbol.*
 
-/** [Resolver] provides [SymbolProcessor] with access to compiler details such as Symbols. */
+/** [Resolver] provides [SymbolProcessor] with access to compiler details such as symbols. */
 interface Resolver {
     /**
      * Get all new files in the module / compilation unit.
      *
-     * @return new files generated from last last round of processing in the module.
+     * @return new files generated from the last round of processing in the module.
      */
     fun getNewFiles(): Sequence<KSFile>
 
     /**
      * Get all files in the module / compilation unit.
      *
-     * @return all input files including generated files from previous rounds, note when incremental
-     *   is enabled, only dirty files up for processing will be returned.
+     * @return all input files including generated files from previous rounds. Note that when
+     *   incremental processing is enabled, only dirty files up for processing will be returned.
      */
     fun getAllFiles(): Sequence<KSFile>
 
     /**
-     * Get all symbols with specified annotation in the current compilation unit. Note that in
-     * multiple round processing, only symbols from deferred symbols of last round and symbols from
-     * newly generated files will be returned in this function.
+     * Get all symbols with the specified annotation in the current compilation unit. Note that in
+     * multi-round processing, only deferred symbols from the last round and symbols from newly
+     * generated files will be returned by this function.
      *
-     * @param annotationName is the fully qualified name of the annotation; using '.' as separator.
-     * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations.
-     *   Operation can be expensive if true.
-     * @return Elements annotated with the specified annotation.
+     * @param annotationName the fully qualified name of the annotation, using '.' as a separator.
+     * @param inDepth whether to check symbols in depth, i.e., check symbols from local
+     *   declarations. This operation can be expensive if true.
+     * @return elements annotated with the specified annotation.
      * @see getDeclarationsFromPackage to get declarations outside the current compilation unit.
      */
     fun getSymbolsWithAnnotation(
@@ -61,11 +61,11 @@ interface Resolver {
      * names before calling getClassDeclarationByName if type checking is needed for the classes
      * loaded by this.
      *
-     * This behavior is limited to getClassDeclarationByName; When processors get a class or type
+     * This behavior is limited to getClassDeclarationByName; when processors get a class or type
      * from a Java source file, the conversion is done automatically. E.g., a java.lang.String in a
      * Java source file is loaded as kotlin.String in KSP.
      *
-     * @param name fully qualified name of the class to be loaded; using '.' as separator.
+     * @param name fully qualified name of the class to be loaded, using '.' as a separator.
      * @return a KSClassDeclaration, or null if not found.
      */
     fun getClassDeclarationByName(name: KSName): KSClassDeclaration?
@@ -73,10 +73,11 @@ interface Resolver {
     /**
      * Find functions in the compilation classpath for the given name.
      *
-     * @param name fully qualified name of the function to be loaded; using '.' as separator.
-     * @param includeTopLevel a boolean value indicate if top level functions should be searched.
-     *   Default false. Note if top level functions are included, this operation can be expensive.
-     * @return a Sequence of KSFunctionDeclaration
+     * @param name fully qualified name of the function to be loaded, using '.' as a separator.
+     * @param includeTopLevel a boolean value indicating whether top-level functions should be
+     *   searched. Default is false. Note that if top-level functions are included, this operation
+     *   can be expensive.
+     * @return a Sequence of KSFunctionDeclaration.
      */
     fun getFunctionDeclarationsByName(
         name: KSName,
@@ -86,9 +87,10 @@ interface Resolver {
     /**
      * Find a property in the compilation classpath for the given name.
      *
-     * @param name fully qualified name of the property to be loaded; using '.' as separator.
-     * @param includeTopLevel a boolean value indicate if top level properties should be searched.
-     *   Default false. Note if top level properties are included, this operation can be expensive.
+     * @param name fully qualified name of the property to be loaded, using '.' as a separator.
+     * @param includeTopLevel a boolean value indicating whether top-level properties should be
+     *   searched. Default is false. Note that if top-level properties are included, this operation
+     *   can be expensive.
      * @return a KSPropertyDeclaration, or null if not found.
      */
     fun getPropertyDeclarationByName(
@@ -97,38 +99,38 @@ interface Resolver {
     ): KSPropertyDeclaration?
 
     /**
-     * Compose a type argument out of a type reference and a variance
+     * Compose a type argument out of a type reference and a variance.
      *
-     * @param typeRef a type reference to be used in type argument
-     * @param variance specifies a use-site variance
-     * @return a type argument with use-site variance
+     * @param typeRef a type reference to be used in the type argument.
+     * @param variance specifies a use-site variance.
+     * @return a type argument with use-site variance.
      */
     fun getTypeArgument(typeRef: KSTypeReference, variance: Variance): KSTypeArgument
 
     /** Get a [KSName] from a String. */
     fun getKSNameFromString(name: String): KSName
 
-    /** Create a [KSTypeReference] from a [KSType] */
+    /** Create a [KSTypeReference] from a [KSType]. */
     fun createKSTypeReferenceFromKSType(type: KSType): KSTypeReference
 
     /**
-     * Provides built in types for convenience. For example, [KSBuiltins.anyType] is the KSType
+     * Provides built-in types for convenience. For example, [KSBuiltIns.anyType] is the KSType
      * instance for class 'kotlin.Any'.
      */
     val builtIns: KSBuiltIns
 
     /**
-     * map a declaration to jvm signature. This function might fail due to resolution error, in case
-     * of error, null is returned. Resolution error could be caused by bad code that could not be
-     * resolved by compiler, or KSP bugs. If you believe your code is correct, please file a bug at
-     * https://github.com/google/ksp/issues/new
+     * Maps a declaration to its JVM signature. This function might fail due to a resolution error;
+     * in case of an error, null is returned. Resolution errors could be caused by bad code that
+     * could not be resolved by the compiler, or KSP bugs. If you believe your code is correct,
+     * please file a bug at https://github.com/google/ksp/issues/new
      */
     @KspExperimental fun mapToJvmSignature(declaration: KSDeclaration): String?
 
     /**
      * @param overrider the candidate overriding declaration being checked.
      * @param overridee the candidate overridden declaration being checked.
-     * @return boolean value indicating whether [overrider] overrides [overridee] Calling
+     * @return a boolean value indicating whether [overrider] overrides [overridee]. Calling
      *   [overrides] is expensive and should be avoided if possible.
      */
     fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean
@@ -136,9 +138,9 @@ interface Resolver {
     /**
      * @param overrider the candidate overriding declaration being checked.
      * @param overridee the candidate overridden declaration being checked.
-     * @param containingClass the containing class of candidate overriding and overridden
-     *   declaration being checked.
-     * @return boolean value indicating whether [overrider] overrides [overridee] Calling
+     * @param containingClass the containing class of the candidate overriding and overridden
+     *   declarations being checked.
+     * @return a boolean value indicating whether [overrider] overrides [overridee]. Calling
      *   [overrides] is expensive and should be avoided if possible.
      */
     fun overrides(
@@ -148,12 +150,12 @@ interface Resolver {
     ): Boolean
 
     /**
-     * Returns the jvm name of the given function. This function might fail due to resolution error,
-     * in case of error, null is returned. Resolution error could be caused by bad code that could
-     * not be resolved by compiler, or KSP bugs. If you believe your code is correct, please file a
-     * bug at https://github.com/google/ksp/issues/new
+     * Returns the JVM name of the given function. This function might fail due to a resolution
+     * error; in case of an error, null is returned. Resolution errors could be caused by bad code
+     * that could not be resolved by the compiler, or KSP bugs. If you believe your code is
+     * correct, please file a bug at https://github.com/google/ksp/issues/new
      *
-     * The jvm name of a function might depend on the Kotlin Compiler version hence it is not
+     * The JVM name of a function might depend on the Kotlin compiler version; hence, it is not
      * guaranteed to be compatible between different compiler versions except for the rules outlined
      * in the Java interoperability documentation:
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
@@ -167,17 +169,17 @@ interface Resolver {
      * function is declared as internal, it will include a suffix with the module name.
      *
      * NOTE: As inline classes are an experimental feature, the result of this function might change
-     * based on the kotlin version used in the project.
+     * based on the Kotlin version used in the project.
      */
     @KspExperimental fun getJvmName(declaration: KSFunctionDeclaration): String?
 
     /**
-     * Returns the jvm name of the given property accessor. This function might fail due to
-     * resolution error, in case of error, null is returned. Resolution error could be caused by bad
-     * code that could not be resolved by compiler, or KSP bugs. If you believe your code is
+     * Returns the JVM name of the given property accessor. This function might fail due to a
+     * resolution error; in case of an error, null is returned. Resolution errors could be caused by
+     * bad code that could not be resolved by the compiler, or KSP bugs. If you believe your code is
      * correct, please file a bug at https://github.com/google/ksp/issues/new
      *
-     * The jvm name of an accessor might depend on the Kotlin Compiler version hence it is not
+     * The JVM name of an accessor might depend on the Kotlin compiler version; hence, it is not
      * guaranteed to be compatible between different compiler versions except for the rules outlined
      * in the Java interoperability documentation:
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html.
@@ -187,12 +189,12 @@ interface Resolver {
      * By default, this name will match the name calculated according to
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties. Note that the
      * result of this function might be different from that name in two cases: a) If the property's
-     * type is an internal class, accessor's name will be mangled according to
-     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling. b) If the function is
+     * type is an inline class, the accessor's name will be mangled according to
+     * https://kotlinlang.org/docs/reference/inline-classes.html#mangling. b) If the property is
      * declared as internal, it will include a suffix with the module name.
      *
      * NOTE: As inline classes are an experimental feature, the result of this function might change
-     * based on the kotlin version used in the project. see:
+     * based on the Kotlin version used in the project. See:
      * https://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#properties
      */
     @KspExperimental fun getJvmName(accessor: KSPropertyAccessor): String?
@@ -200,86 +202,86 @@ interface Resolver {
     /**
      * Returns the
      * [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) of
-     * the owner class in JVM for the given [KSPropertyDeclaration].
+     * the owner class in the JVM for the given [KSPropertyDeclaration].
      *
-     * For properties declared in classes / interfaces; this value is the binary class name of the
+     * For properties declared in classes / interfaces, this value is the binary class name of the
      * declaring class.
      *
-     * For top level properties, this is the binary class name of the synthetic class that is
-     * generated for the Kotlin file. see:
+     * For top-level properties, this is the binary class name of the synthetic class that is
+     * generated for the Kotlin file. See:
      * https://kotlinlang.org/docs/java-to-kotlin-interop.html#package-level-functions
      *
      * Note that, for properties declared in companion objects, the returned owner class will be the
-     * Companion class. see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
+     * companion class. See: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
      */
     @KspExperimental fun getOwnerJvmClassName(declaration: KSPropertyDeclaration): String?
 
     /**
      * Returns the
      * [binary class name](https://asm.ow2.io/javadoc/org/objectweb/asm/Type.html#getClassName()) of
-     * the owner class in JVM for the given [KSFunctionDeclaration].
+     * the owner class in the JVM for the given [KSFunctionDeclaration].
      *
-     * For functions declared in classes / interfaces; this value is the binary class name of the
+     * For functions declared in classes / interfaces, this value is the binary class name of the
      * declaring class.
      *
-     * For top level functions, this is the binary class name of the synthetic class that is
-     * generated for the Kotlin file. see:
+     * For top-level functions, this is the binary class name of the synthetic class that is
+     * generated for the Kotlin file. See:
      * https://kotlinlang.org/docs/java-to-kotlin-interop.html#package-level-functions
      *
      * Note that, for functions declared in companion objects, the returned owner class will be the
-     * Companion class. see: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
+     * companion class. See: https://kotlinlang.org/docs/java-to-kotlin-interop.html#static-methods
      */
     @KspExperimental fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String?
 
     /**
      * Returns checked exceptions declared in a function's header.
      *
-     * @return A sequence of [KSType] declared in `throws` statement for a Java method or in @Throws
-     *   annotation for a Kotlin function. Checked exceptions from class files are not supported
-     *   yet, an empty sequence will be returned instead.
+     * @return A sequence of [KSType] declared in a `throws` statement for a Java method or in a
+     *   `@Throws` annotation for a Kotlin function. Checked exceptions from class files are not
+     *   supported yet; an empty sequence will be returned instead.
      */
     @KspExperimental fun getJvmCheckedException(function: KSFunctionDeclaration): Sequence<KSType>
 
     /**
      * Returns checked exceptions declared in a property accessor's header.
      *
-     * @return A sequence of [KSType] declared @Throws annotation for a Kotlin property accessor.
-     *   Checked exceptions from class files are not supported yet, an empty sequence will be
-     *   returned instead.
+     * @return A sequence of [KSType] declared in a `@Throws` annotation for a Kotlin property
+     *   accessor. Checked exceptions from class files are not supported yet; an empty sequence will
+     *   be returned instead.
      */
     @KspExperimental fun getJvmCheckedException(accessor: KSPropertyAccessor): Sequence<KSType>
 
     /**
      * Returns declarations with the given package name.
      *
-     * getDeclarationsFromPackage looks for declaration in the whole classpath, including
+     * [getDeclarationsFromPackage] looks for declarations in the whole classpath, including
      * dependencies.
      *
      * @param packageName the package name to look up.
-     * @return A sequence of [KSDeclaration] with matching package name. This will return
-     *   declarations from both dependencies and source.
+     * @return A sequence of [KSDeclaration] with the matching package name. This will return
+     *   declarations from both dependencies and sources.
      */
     @KspExperimental fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration>
 
     /**
-     * Returns the corresponding Kotlin class with the given Java class.
+     * Returns the corresponding Kotlin class for the given Java class.
      *
      * E.g. java.lang.String -> kotlin.String java.lang.Integer -> kotlin.Int java.util.List ->
      * kotlin.List java.util.Map.Entry -> kotlin.Map.Entry java.lang.Void -> null
      *
-     * @param javaName a Java class name
-     * @return corresponding Kotlin class name or null
+     * @param javaName a Java class name.
+     * @return corresponding Kotlin class name, or null.
      */
     @KspExperimental fun mapJavaNameToKotlin(javaName: KSName): KSName?
 
     /**
-     * Returns the corresponding Java class with the given Kotlin class.
+     * Returns the corresponding Java class for the given Kotlin class.
      *
      * E.g. kotlin.Throwable -> java.lang.Throwable kotlin.Int -> java.lang.Integer kotlin.Nothing
      * -> java.lang.Void kotlin.IntArray -> null
      *
-     * @param kotlinName a Java class name
-     * @return corresponding Java class name or null
+     * @param kotlinName a Kotlin class name.
+     * @return corresponding Java class name, or null.
      */
     @KspExperimental fun mapKotlinNameToJava(kotlinName: KSName): KSName?
 
@@ -292,21 +294,21 @@ interface Resolver {
     fun getDeclarationsInSourceOrder(container: KSDeclarationContainer): Sequence<KSDeclaration>
 
     /**
-     * Returns a set of effective Java modifiers, if declaration is being / was generated to Java
-     * bytecode.
+     * Returns a set of effective Java modifiers, if the declaration is being / was generated to
+     * Java bytecode.
      */
     @KspExperimental fun effectiveJavaModifiers(declaration: KSDeclaration): Set<Modifier>
 
     /**
-     * Compute the corresponding Java wildcard, from the given reference.
+     * Compute the corresponding Java wildcard from the given reference.
      *
-     * @param reference the reference to the type usage
-     * @return an equivalent type reference from the Java wildcard's point of view
+     * @param reference the reference to the type usage.
+     * @return an equivalent type reference from the Java wildcard's point of view.
      */
     @KspExperimental fun getJavaWildcard(reference: KSTypeReference): KSTypeReference
 
     /**
-     * Tests a type if it was declared as legacy "raw" type in Java - a type with its type arguments
+     * Tests if a type was declared as a legacy "raw" type in Java - a type with its type arguments
      * fully omitted.
      *
      * @param type a type to check.
@@ -315,21 +317,21 @@ interface Resolver {
     @KspExperimental fun isJavaRawType(type: KSType): Boolean
 
     /**
-     * Returns annotations applied in package-info.java (if applicable) for given package name.
+     * Returns annotations applied in package-info.java (if applicable) for the given package name.
      *
-     * @param packageName package name to check.
-     * @return a sequence of KSAnnotations applied in corresponding package-info.java file.
+     * @param packageName the package name to check.
+     * @return a sequence of [KSAnnotation]s applied in the corresponding package-info.java file.
      */
     @KspExperimental fun getPackageAnnotations(packageName: String): Sequence<KSAnnotation>
 
     /**
-     * Returns name of packages with given annotation.
+     * Returns names of packages with the given annotation.
      *
-     * @param annotationName name of the annotation to be queried.
-     * @return a sequence of package names with corresponding annotation name.
+     * @param annotationName the name of the annotation to be queried.
+     * @return a sequence of package names with the corresponding annotation name.
      */
     @KspExperimental fun getPackagesWithAnnotation(annotationName: String): Sequence<String>
 
-    /** @return the name of the kotlin module this resolver is running on. */
+    /** @return the name of the Kotlin module this resolver is running on. */
     @KspExperimental fun getModuleName(): KSName
 }
