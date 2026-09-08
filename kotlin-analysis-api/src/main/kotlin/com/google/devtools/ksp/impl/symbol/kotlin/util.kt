@@ -801,9 +801,14 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
             }
             // ClsMethodImpl means the psi is decompiled psi.
             null, is ClsMemberImpl<*> -> {
-                // TODO: multiplatform
-                if (!ResolverAAImpl.instance.isJvm)
-                    return@let null
+                if (!ResolverAAImpl.instance.isJvm) {
+                    return@let (this as? KaFirValueParameterSymbol)?.let {
+                        val symbolBuilder = it.builder
+                        it.firSymbol.fir.defaultValue?.let { defaultValue ->
+                            FirAnnotationValueConverter.toConstantValue(defaultValue, symbolBuilder)
+                        }
+                    }
+                }
                 val fileManager = ResolverAAImpl.instance.javaFileManager
                 val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
                 val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
