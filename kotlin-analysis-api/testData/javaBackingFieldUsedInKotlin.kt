@@ -20,9 +20,8 @@
 // EXPECTED:
 // MyClass
 // com.example.MyAnnotation
-// EXPECT CURRENT: com.example.MyAnnotation.myValue
 // EXPECT NEXT: com.example.MyAnnotation.myValue.field
-// EXPECT NEXT: com.example.MyAnnotation.myValue
+// com.example.MyAnnotation.myValue
 // <init>
 // END
 
