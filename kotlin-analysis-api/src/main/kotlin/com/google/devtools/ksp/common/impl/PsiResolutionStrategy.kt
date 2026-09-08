@@ -405,7 +405,7 @@ class PsiResolutionStrategy(
 
                     is KaTypeAliasSymbol -> {
                         // The symbol is a type alias. Fall back to expensive resolution
-                        symbol.expandedType.fullyExpandedType.symbol?.classId
+                        symbol.classId?.let(::expandTypeAlias)
                     }
                 }
             }
@@ -423,7 +423,18 @@ class PsiResolutionStrategy(
      *
      * This is used as a fallback when [fastResolveClassId] cannot determine the class ID.
      */
-    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? = annotationEntry.classId
+    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? {
+        val classId = annotationEntry.classId ?: return null
+        return expandTypeAlias(classId)
+    }
+
+    /**
+     * Expands [classId] if it represents a type alias, returning the [ClassId] of the fully expanded
+     * type. If [classId] is not a type alias, returns [classId] unchanged.
+     */
+    private fun expandTypeAlias(classId: ClassId): ClassId = analyze {
+        findTypeAlias(classId)?.expandedType?.fullyExpandedType?.symbol?.classId ?: classId
+    }
 
     /**
      * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotation].
@@ -921,7 +932,7 @@ class PsiResolutionStrategy(
         }
 
     /**
-     * The fully expanded [ClassId] of the annotation entry.
+     * The [ClassId] of the annotation entry as resolved at the call site (may be a type alias).
      * This member is expensive to compute.
      */
     private val KtAnnotationEntry.classId: ClassId?
