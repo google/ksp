@@ -27,6 +27,15 @@ import com.google.devtools.ksp.symbol.*
 abstract class KSDefaultVisitor<D, R>(enableNewFeatures: Boolean) : KSEmptyVisitor<D, R>(enableNewFeatures) {
 
     // For binary compatibility
+    @Deprecated(
+        message = "KSDefaultVisitor is deprecated in favor of KSDefaultVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSDefaultVisitor(enableNewFeatures = true)",
+        ),
+    )
     constructor() : this(enableNewFeatures = false)
 
     override fun visitDynamicReference(reference: KSDynamicReference, data: D): R {
