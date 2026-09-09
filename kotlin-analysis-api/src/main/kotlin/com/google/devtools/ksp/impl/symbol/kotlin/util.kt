@@ -127,6 +127,7 @@ import org.jetbrains.kotlin.codegen.state.md5base64
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.utils.moduleName
+import org.jetbrains.kotlin.fir.expressions.impl.FirExpressionStub
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.resolve.getContainingClassSymbol
@@ -801,33 +802,39 @@ internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
             }
             // ClsMethodImpl means the psi is decompiled psi.
             null, is ClsMemberImpl<*> -> {
-                // TODO: multiplatform
-                if (!ResolverAAImpl.instance.isJvm)
-                    return@let null
-                val fileManager = ResolverAAImpl.instance.javaFileManager
-                val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-                    ?: return@let null
+                val firValueParameter = this as? KaFirValueParameterSymbol ?: return@let null
+                firValueParameter.firSymbol.fir.defaultValue
+                    ?.takeUnless { it is FirExpressionStub }
+                    ?.let { defaultValue ->
+                        return@let FirAnnotationValueConverter.toConstantValue(defaultValue, firValueParameter.builder)
+                    }
 
-                val defaultValue: JavaAnnotationArgument? = analyze {
-                    val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
-                    jc.methods.firstOrNull { it.name == name }?.annotationParameterDefaultValue
+                val defaultValue: JavaAnnotationArgument? = if (ResolverAAImpl.instance.isJvm) {
+                    val fileManager = ResolverAAImpl.instance.javaFileManager
+                    val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
+                    val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
+                        ?: return@let null
+                    analyze {
+                        val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
+                        jc.methods.firstOrNull { it.name == name }?.annotationParameterDefaultValue
+                    }
+                } else {
+                    if (!firValueParameter.isVararg) return@let null
+                    null
                 }
 
-                (this as? KaFirValueParameterSymbol)?.let {
-                    val firSession = it.firSymbol.fir.moduleData.session
-                    val symbolBuilder = it.builder
-                    val expectedTypeRef = it.firSymbol.fir.returnTypeRef
-                    // when no default value is declared in the class file, ideally users should
-                    // apply a value for such property at use site, therefore value obtained here should not be
-                    // returned. In case of a user failed to do so, we try our best to return values
-                    // to ensure no annotation argument is missing from KSP side.
-                    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
-                    // will produce empty array for array type values and `null` for the rest of value types.
-                    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
-                        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
-                    FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
-                }
+                val firSession = firValueParameter.firSymbol.fir.moduleData.session
+                val symbolBuilder = firValueParameter.builder
+                val expectedTypeRef = firValueParameter.firSymbol.fir.returnTypeRef
+                // when no default value is declared in the class file, ideally users should
+                // apply a value for such property at use site, therefore value obtained here should not be
+                // returned. In case of a user failed to do so, we try our best to return values
+                // to ensure no annotation argument is missing from KSP side.
+                // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
+                // will produce empty array for array type values and `null` for the rest of value types.
+                val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
+                    .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+                FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
             }
 
             else -> throw InternalKSPException(
