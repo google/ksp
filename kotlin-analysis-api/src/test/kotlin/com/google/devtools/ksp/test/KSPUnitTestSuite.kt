@@ -519,7 +519,7 @@ abstract class KSPUnitTestSuite(
 
     @Bug("https://github.com/google/ksp/issues/3123", BugState.OPEN)
     @Bug("https://github.com/google/ksp/issues/3125", BugState.FIXED)
-    @Bug("https://github.com/google/ksp/issues/3155", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3155", BugState.FIXED)
     @Bug("https://github.com/google/ksp/issues/3185", BugState.FIXED)
     @TestMetadata("javaModifiers.kt")
     @Test
