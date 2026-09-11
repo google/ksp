@@ -121,6 +121,7 @@ import org.jetbrains.kotlin.analysis.api.types.KaUsualClassType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap.mapKotlinToJava
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.codegen.state.InfoForMangling
 import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
 import org.jetbrains.kotlin.codegen.state.md5base64
@@ -792,51 +793,59 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     is KaAnnotationValue.UnsupportedValue -> null
 }
 
-@OptIn(SymbolInternals::class, KaImplementationDetail::class, KaExperimentalApi::class)
-internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? {
-    return this.psi.let { psiElement ->
-        when (psiElement) {
-            is KtParameter -> analyze {
-                psiElement.defaultValue?.evaluateAsAnnotationValue()
-            }
-            // ClsMethodImpl means the psi is decompiled psi.
-            null, is ClsMemberImpl<*> -> {
-                // TODO: multiplatform
-                if (!ResolverAAImpl.instance.isJvm)
-                    return@let null
-                val fileManager = ResolverAAImpl.instance.javaFileManager
-                val parentClass = this.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId
-                    ?: return@let null
+@OptIn(SymbolInternals::class)
+internal fun getDefaultValueOnJvm(
+    fileManager: KotlinCliJavaFileManagerImpl,
+    kaFirValueParameterSymbol: KaFirValueParameterSymbol
+): KaAnnotationValue? {
+    val parentClass = kaFirValueParameterSymbol.getContainingKSSymbol()!!.findParentOfType<KSClassDeclaration>()
+    val classId = (parentClass as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classId
+        ?: return null
 
-                val defaultValue: JavaAnnotationArgument? = analyze {
-                    val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
-                    jc.methods.firstOrNull { it.name == name }?.annotationParameterDefaultValue
-                }
+    val defaultValue: JavaAnnotationArgument? = analyze {
+        val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
+        jc.methods.firstOrNull { it.name == kaFirValueParameterSymbol.name }?.annotationParameterDefaultValue
+    }
 
-                (this as? KaFirValueParameterSymbol)?.let {
-                    val firSession = it.firSymbol.fir.moduleData.session
-                    val symbolBuilder = it.builder
-                    val expectedTypeRef = it.firSymbol.fir.returnTypeRef
-                    // when no default value is declared in the class file, ideally users should
-                    // apply a value for such property at use site, therefore value obtained here should not be
-                    // returned. In case of a user failed to do so, we try our best to return values
-                    // to ensure no annotation argument is missing from KSP side.
-                    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
-                    // will produce empty array for array type values and `null` for the rest of value types.
-                    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
-                        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
-                    FirAnnotationValueConverter.toConstantValue(expression, symbolBuilder)
-                }
-            }
+    val firSession = kaFirValueParameterSymbol.firSymbol.fir.moduleData.session
+    val expectedTypeRef = kaFirValueParameterSymbol.firSymbol.fir.returnTypeRef
+    // when no default value is declared in the class file, ideally users should
+    // apply a value for such property at use site, therefore value obtained here should not be
+    // returned. In case of a user failed to do so, we try our best to return values
+    // to ensure no annotation argument is missing from KSP side.
+    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
+    // will produce empty array for array type values and `null` for the rest of value types.
+    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
+        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+    return FirAnnotationValueConverter.toConstantValue(expression, kaFirValueParameterSymbol.builder)
+}
 
-            else -> throw InternalKSPException(
-                "Unhandled default value type",
-                psiElement.toLocation(),
-                psiElement.javaClass,
-            )
+@OptIn(SymbolInternals::class, KaExperimentalApi::class)
+internal fun KaValueParameterSymbol.getDefaultValue(): KaAnnotationValue? = when (val psi = this.psi) {
+    is KtParameter -> analyze {
+        psi.defaultValue?.evaluateAsAnnotationValue()
+    }
+
+    // ClsMethodImpl means the psi is decompiled psi.
+    is ClsMemberImpl<*> if this is KaFirValueParameterSymbol && ResolverAAImpl.instance.isJvm ->
+        getDefaultValueOnJvm(ResolverAAImpl.instance.javaFileManager, this)
+
+    null if this is KaFirValueParameterSymbol && ResolverAAImpl.instance.isJvm ->
+        getDefaultValueOnJvm(ResolverAAImpl.instance.javaFileManager, this)
+
+    // Use trivially true equality check, since this case doesn't care about the shape of `psi`, but only cares
+    // that `this` is `KaFirValueParameterSymbol`.
+    psi if this is KaFirValueParameterSymbol -> {
+        this.firSymbol.fir.defaultValue?.let { defaultValue ->
+            FirAnnotationValueConverter.toConstantValue(defaultValue, this.builder)
         }
     }
+
+    else -> throw InternalKSPException(
+        "Unhandled default value type",
+        psi.toLocation(),
+        psi?.javaClass ?: this.javaClass
+    )
 }
 
 @OptIn(KaExperimentalApi::class)
