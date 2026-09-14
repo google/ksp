@@ -31,7 +31,9 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
 // TODO: Make visitor a generator
-class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVoid() {
+class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeatures: Boolean) :
+    KSVisitorVoid(enableNewFeatures) {
+
     val symbols = arrayListOf<KSAnnotated>()
 
     override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {
@@ -83,10 +85,15 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean) : KSVisitorVo
         property.typeParameters.forEach { it.accept(this, data) }
         property.getter?.accept(this, data)
         property.setter?.accept(this, data)
-        property.backingField?.accept(this, data)
+        if (enableNewFeatures) {
+            property.backingField?.accept(this, data)
+        }
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+        if (!enableNewFeatures) {
+            throw IllegalStateException("enableNewFeatures = false, but visitBackingField was reached")
+        }
         visitAnnotated(backingField, data)
         backingField.type.accept(this, data)
     }

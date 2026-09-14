@@ -20,7 +20,9 @@ package com.google.devtools.ksp.test
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
-class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = true) {
+abstract class PsiConfiguredUnitTestSuiteBase(
+    enableNewFeatures: Boolean,
+) : KSPUnitTestSuite(experimentalPsiResolution = true, enableNewFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
     @Test
@@ -28,22 +30,16 @@ class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = 
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
     }
 
-    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
+    @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
-    @TestMetadata("contextParameters.kt")
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     @Test
     override fun testContextParameters() {
         runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
-    @Test
-    override fun testExplicitBackingFields() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
@@ -57,4 +53,14 @@ class PsiConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = 
     override fun testJavaSubtypeOfKotlinInterface() {
         runFailingTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
     }
+
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    @Test
+    override fun testGroupedAnnotationsWithUseSiteTargets() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+    }
 }
+
+class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+
+class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true)

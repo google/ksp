@@ -35,7 +35,7 @@ import java.io.File
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
-object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>() {
+object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>(enableNewFeatures = true) {
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {

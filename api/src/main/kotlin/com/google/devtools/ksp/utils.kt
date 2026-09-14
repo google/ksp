@@ -21,6 +21,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -33,6 +34,7 @@ import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Visibility
@@ -145,8 +147,32 @@ fun KSDeclaration.isLocal(): Boolean {
  * @param predicate A lambda for filtering interested symbols for performance purpose. Default
  *   checks all.
  */
-fun KSNode.validate(predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }): Boolean {
+@Deprecated(
+    message = "KSNode.validate is deprecated in favor of KSNode.validate(predicate, enableNewFeatures).\n" +
+        "Please specify enableNewFeatures to indicate whether new language features (such as backing fields and context parameters) should be validated.",
+    replaceWith = ReplaceWith(
+        expression = "validate(predicate, enableNewFeatures = false)",
+    ),
+)
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+): Boolean {
     return this.accept(KSValidateVisitor(predicate), null)
+}
+
+/**
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
+ * are valid, i.e. resolvable.
+ *
+ * @param predicate A lambda for filtering interested symbols for performance purpose. Default
+ *   checks all.
+ *   @param enableNewFeatures A boolean flag toggling new features in [KSValidateVisitor].
+ */
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    enableNewFeatures: Boolean,
+): Boolean {
+    return this.accept(KSValidateVisitor(predicate, enableNewFeatures), null)
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */
@@ -171,6 +197,7 @@ fun KSDeclaration.getVisibility(): Visibility {
             } ?: Visibility.PUBLIC
         }
 
+        this.isKotlinBackingField() -> Visibility.PRIVATE
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) ->
@@ -188,6 +215,11 @@ fun KSDeclaration.getVisibility(): Visibility {
             else Visibility.JAVA_PACKAGE
     }
 }
+
+internal fun KSDeclaration.isKotlinBackingField(): Boolean =
+    this is KSBackingField && (
+        origin == Origin.KOTLIN || origin == Origin.KOTLIN_LIB
+        )
 
 /**
  * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution
@@ -221,6 +253,7 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                         is KSTypeAlias -> it.findActualType().getAllSuperTypes()
                         is KSTypeParameter ->
                             it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
+
                         else ->
                             throw InternalKSPException(
                                 "Unhandled super type kind",
@@ -257,7 +290,7 @@ fun KSDeclaration.isOpen() =
             this.modifiers.contains(Modifier.SEALED) ||
             (this !is KSClassDeclaration &&
                 (this.parentDeclaration as? KSClassDeclaration)?.classKind ==
-                    ClassKind.INTERFACE) ||
+                ClassKind.INTERFACE) ||
             (!this.modifiers.contains(Modifier.FINAL) && this.origin == Origin.JAVA))
 
 fun KSDeclaration.isPublic() = this.getVisibility() == Visibility.PUBLIC
@@ -329,8 +362,6 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
 /** Returns `true` if this is a constructor function. */
 fun KSFunctionDeclaration.isConstructor() = this.simpleName.asString() == "<init>"
 
-const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"
-
 val KSType.outerType: KSType?
     get() {
         if (Modifier.INNER !in declaration.modifiers) return null
@@ -367,7 +398,7 @@ fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T
         .filter {
             it.shortName.getShortName() == annotationKClass.simpleName &&
                 it.annotationType.resolve().declaration.qualifiedName?.asString() ==
-                    annotationKClass.qualifiedName
+                annotationKClass.qualifiedName
         }
         .map { it.toAnnotation(annotationKClass.java) }
 }
@@ -409,7 +440,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
             when (val result = argument.value ?: method.defaultValue) {
                 is Proxy -> result
                 is List<*> -> {
-                    val value = { result.asArray(method, clazz) }
+                    val value = { result.asArray(method, clazz, location) }
                     cache.getOrPut(Pair(method.returnType, result), value)
                 }
 
@@ -419,11 +450,14 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                         // https://github.com/google/ksp/issues/1329
                         method.returnType.isArray -> {
                             if (result !is Array<*>) {
-                                val value = { result.asArray(method, clazz) }
+                                val value = { result.asArray(method, clazz, location) }
                                 cache.getOrPut(Pair(method.returnType, value), value)
                             } else {
-                                throw IllegalStateException(
-                                    "unhandled value type, $ExceptionMessage"
+                                throw InternalKSPException(
+                                    "Unexpected value type for ${result.javaClass} " +
+                                        "with respect to ${method.returnType.javaClass}",
+                                    location,
+                                    javaClass
                                 )
                             }
                         }
@@ -500,7 +534,7 @@ private fun KSAnnotation.asAnnotation(annotationInterface: Class<*>): Any {
 
 @KspExperimental
 @Suppress("UNCHECKED_CAST")
-private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
+private fun List<*>.asArray(method: Method, proxyClass: Class<*>, location: Location) =
     when (method.returnType.componentType.name) {
         "boolean" -> (this as List<Boolean>).toBooleanArray()
         "byte" -> (this as List<Byte>).toByteArray()
@@ -527,8 +561,12 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
                 }
 
                 else ->
-                    throw IllegalStateException(
-                        "Unable to process type ${method.returnType.componentType.name}"
+                    throw InternalKSPException(
+                        "Unexpected method return type '${method.returnType}' with name " +
+                            "${method.returnType.componentType.name} in ${method.name} " +
+                            "(proxy class: $proxyClass)",
+                        location,
+                        method.javaClass
                     )
             }
         }
@@ -606,8 +644,8 @@ private fun List<KSType>.asClasses(proxyClass: Class<*>) =
 fun KSValueArgument.isDefault() = origin == Origin.SYNTHETIC
 
 @KspExperimental
-private fun Any.asArray(method: Method, proxyClass: Class<*>) =
-    listOf(this).asArray(method, proxyClass)
+private fun Any.asArray(method: Method, proxyClass: Class<*>, location: Location) =
+    listOf(this).asArray(method, proxyClass, location)
 
 private fun KSDeclaration.toJavaClassName(): String {
     val nameDelimiter = '.'
@@ -632,3 +670,6 @@ private fun KSDeclaration.toJavaClassName(): String {
         qualifiedNameString
     }
 }
+
+@Deprecated("This exception message is only kept for binary compatibility. It should not be depended upon.")
+const val ExceptionMessage = "please file a bug at https://github.com/google/ksp/issues/new"

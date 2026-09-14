@@ -28,7 +28,6 @@ import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.SourceKind
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.google.devtools.ksp.gradle.utils.canUseAddGeneratedSourceDirectoriesApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.isLegacyKaptPluginApplied
@@ -159,7 +158,6 @@ object AndroidPluginIntegration {
         androidComponent: Component?,
     ) {
         if (androidComponent != null &&
-            project.canUseAddGeneratedSourceDirectoriesApi() &&
             project.isAgpBuiltInKotlinUsed()
         ) {
             if (project.canUseInternalKspApis()) {

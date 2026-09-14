@@ -20,6 +20,7 @@
 // EXPECTED:
 // ref : SelfRef<out Any?>
 // ref.getter() : SelfRef<out Any?>
+// EXPECT NEXT: ref.field : SelfRef<out Any?>
 // SelfRef : Any
 // A : SelfRef<A>
 // synthetic constructor for SelfRef : SelfRef<out Any?>

@@ -26,7 +26,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class DefaultFunctionProcessor : AbstractTestProcessor() {
+class DefaultFunctionProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
 
     private val result = mutableListOf<String>()
 

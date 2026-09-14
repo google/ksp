@@ -22,7 +22,7 @@ import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class ParentOfJavaMethodOverridingKotlinPropertyProcessor : AbstractTestProcessor() {
+class ParentOfJavaMethodOverridingKotlinPropertyProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val result = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

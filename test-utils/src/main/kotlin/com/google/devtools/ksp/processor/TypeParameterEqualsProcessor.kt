@@ -5,7 +5,7 @@ import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class TypeParameterEqualsProcessor : AbstractTestProcessor() {
+class TypeParameterEqualsProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<Boolean>()
 
     override fun toResult(): List<String> {

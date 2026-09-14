@@ -23,7 +23,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class TypeAnnotationClassReferenceProcessor : AbstractTestProcessor() {
+class TypeAnnotationClassReferenceProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

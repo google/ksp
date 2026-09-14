@@ -23,7 +23,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @Suppress("unused") // used by tests
-class OverrideeProcessor : AbstractTestProcessor() {
+class OverrideeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun toResult() = results

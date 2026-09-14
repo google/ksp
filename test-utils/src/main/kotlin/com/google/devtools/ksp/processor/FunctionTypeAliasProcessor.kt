@@ -21,9 +21,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class FunctionTypeAliasProcessor : AbstractTestProcessor() {
+open class FunctionTypeAliasProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeRefCollector = RefCollector()
+    val typeRefCollector = RefCollector(enableNewFeatures)
     val refs = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -48,7 +48,7 @@ open class FunctionTypeAliasProcessor : AbstractTestProcessor() {
     }
 }
 
-open class RefCollector : KSTopDownVisitor<MutableCollection<KSTypeReference>, Unit>() {
+open class RefCollector(enableNewFeatures: Boolean) : KSTopDownVisitor<MutableCollection<KSTypeReference>, Unit>(enableNewFeatures) {
     override fun defaultHandler(node: KSNode, data: MutableCollection<KSTypeReference>) = Unit
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: MutableCollection<KSTypeReference>) {

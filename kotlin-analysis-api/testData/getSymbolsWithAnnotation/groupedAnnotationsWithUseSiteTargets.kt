@@ -23,7 +23,8 @@
 // Anno1: MyClass
 // Anno1: MyClass.<init>.paramAndPropertyWithOnlyAnno1
 // Anno1: MyClass.<init>.paramWithAnno1AndAnno3
-// Anno1: MyClass.fieldUseSiteWithAnno1AndAnno3
+// EXPECT CURRENT: Anno1: MyClass.fieldUseSiteWithAnno1AndAnno3
+// EXPECT NEXT: Anno1: MyClass.fieldUseSiteWithAnno1AndAnno3.field
 // Anno1: MyClass.paramAndPropertyWithOnlyAnno1
 // Anno1: MyClass.propertyUseSiteWithAnno1AndAnno2
 // Anno1: MyClass.setParamUseSiteWithAnno1AndAnno3.setParamUseSiteWithAnno1AndAnno3.setter().value
@@ -45,7 +46,8 @@
 // Anno3: MyClass
 // Anno3: MyClass.<init>.paramWithAnno1AndAnno3
 // Anno3: MyClass.delegateUseSiteWithAnno2AndAnno3
-// Anno3: MyClass.fieldUseSiteWithAnno1AndAnno3
+// EXPECT CURRENT: Anno3: MyClass.fieldUseSiteWithAnno1AndAnno3
+// EXPECT NEXT: Anno3: MyClass.fieldUseSiteWithAnno1AndAnno3.field
 // Anno3: MyClass.getterUseSiteWithAnno2AndAnno3.getterUseSiteWithAnno2AndAnno3.getter()
 // Anno3: MyClass.setParamUseSiteWithAnno1AndAnno3.setParamUseSiteWithAnno1AndAnno3.setter().value
 // Anno3: extPropWithAnno3.ReceiverClass

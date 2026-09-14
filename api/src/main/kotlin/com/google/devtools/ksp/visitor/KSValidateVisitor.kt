@@ -1,10 +1,25 @@
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 open class KSValidateVisitor(
-    private val predicate: (KSNode?, KSNode) -> Boolean
-) : KSDefaultVisitor<KSNode?, Boolean>() {
+    private val predicate: (KSNode?, KSNode) -> Boolean,
+    enableNewFeatures: Boolean
+) : KSDefaultVisitor<KSNode?, Boolean>(enableNewFeatures) {
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSValidateVisitor is deprecated in favor of KSValidateVisitor(predicate, enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSValidateVisitor(predicate, enableNewFeatures = true)",
+        ),
+    )
+    constructor(predicate: (KSNode?, KSNode) -> Boolean) : this(predicate, enableNewFeatures = false)
+
     private fun validateType(type: KSType): Boolean {
         return !type.isError && !type.arguments.any { it.type?.accept(this, null) == false }
     }
@@ -99,6 +114,13 @@ open class KSValidateVisitor(
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: KSNode?): Boolean {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
         if (predicate(backingField, backingField.type) && !backingField.type.accept(this, data)) {
             return false
         }

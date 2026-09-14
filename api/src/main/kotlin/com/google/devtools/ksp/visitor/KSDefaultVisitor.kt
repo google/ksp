@@ -16,12 +16,28 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 /**
  * A visitor that delegates to super types for methods that are not overridden.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
  */
-abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
+abstract class KSDefaultVisitor<D, R>(enableNewFeatures: Boolean) : KSEmptyVisitor<D, R>(enableNewFeatures) {
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSDefaultVisitor is deprecated in favor of KSDefaultVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSDefaultVisitor(enableNewFeatures = true)",
+        ),
+    )
+    constructor() : this(enableNewFeatures = false)
+
     override fun visitDynamicReference(reference: KSDynamicReference, data: D): R {
         this.visitReferenceElement(reference, data)
         return super.visitDynamicReference(reference, data)
@@ -71,6 +87,13 @@ abstract class KSDefaultVisitor<D, R> : KSEmptyVisitor<D, R>() {
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
         this.visitDeclaration(backingField, data)
         return super.visitBackingField(backingField, data)
     }

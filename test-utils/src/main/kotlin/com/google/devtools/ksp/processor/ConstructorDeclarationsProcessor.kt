@@ -22,8 +22,8 @@ import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
-    val visitor = ConstructorsVisitor()
+class ConstructorDeclarationsProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+    val visitor = ConstructorsVisitor(enableNewFeatures)
     lateinit var result: List<String>
 
     override fun toResult(): List<String> {
@@ -44,7 +44,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    class ConstructorsVisitor : KSVisitorVoid() {
+    class ConstructorsVisitor(enableNewFeatures: Boolean) : KSVisitorVoid(enableNewFeatures) {
         private val declarationsByClass = LinkedHashMap<KSClassDeclaration, MutableList<String>>()
         fun classNames() = declarationsByClass.keys
         fun toResult(): List<String> {
@@ -58,18 +58,23 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
                     listOf("class: " + it.key.qualifiedName!!.asString()) + it.value
                 }
         }
+
         fun KSFunctionDeclaration.toSignature(): String {
             return this.simpleName.asString() +
-                "(${this.parameters.map {
-                    buildString {
-                        append(it.type.resolve().declaration.qualifiedName?.asString())
-                        if (it.hasDefault) {
-                            append("(hasDefault)")
+                "(${
+                    this.parameters.map {
+                        buildString {
+                            append(it.type.resolve().declaration.qualifiedName?.asString())
+                            if (it.hasDefault) {
+                                append("(hasDefault)")
+                            }
                         }
-                    }
-                }.joinToString(",")})" +
-                ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString()
-                    ?: "<no-return>"}"
+                    }.joinToString(",")
+                })" +
+                ": ${
+                    this.returnType?.resolve()?.declaration?.qualifiedName?.asString()
+                        ?: "<no-return>"
+                }"
         }
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {

@@ -1,3 +1,6 @@
+@file:OptIn(KspExperimental::class)
+
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -9,15 +12,43 @@ class TestProcessor(
     val logger: KSPLogger,
     val env: SymbolProcessorEnvironment
 ) : SymbolProcessor {
-    var invoked = false
+    var round = 0
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val allFiles = resolver.getAllFiles().map { it.fileName }
         logger.warn(allFiles.toList().toString())
-        if (invoked) {
+
+        val someDepDecls = resolver.getDeclarationsFromPackage("com.somedependency")
+            .mapNotNull { it.qualifiedName?.asString() }
+            .sorted()
+            .toList()
+        if (someDepDecls.isNotEmpty()) {
+            logger.warn("round $round com.somedependency package declarations: $someDepDecls")
+            logger.warn("com.somedependency package declarations: $someDepDecls")
+        }
+
+        val myAppDecls = resolver.getDeclarationsFromPackage("com.myapp")
+            .mapNotNull { it.qualifiedName?.asString() }
+            .sorted()
+            .toList()
+        if (myAppDecls.isNotEmpty()) {
+            logger.warn("round $round com.myapp package declarations: $myAppDecls")
+            logger.warn("com.myapp package declarations: $myAppDecls")
+        }
+
+        val exampleDecls = resolver.getDeclarationsFromPackage("com.example")
+            .mapNotNull { it.qualifiedName?.asString() }
+            .sorted()
+            .toList()
+        if (exampleDecls.isNotEmpty()) {
+            logger.warn("round $round com.example package declarations: $exampleDecls")
+            logger.warn("com.example package declarations: $exampleDecls")
+        }
+
+        if (round > 0) {
             return emptyList()
         }
-        invoked = true
+        round++
 
         logger.warn("language version: ${env.kotlinVersion}")
         logger.warn("api version: ${env.apiVersion}")

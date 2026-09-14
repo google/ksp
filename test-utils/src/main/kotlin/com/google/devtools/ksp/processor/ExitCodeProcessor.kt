@@ -5,7 +5,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class ExitCodeProcessor : AbstractTestProcessor() {
+class ExitCodeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     override fun toResult(): List<String> = emptyList()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

@@ -26,7 +26,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class ImplicitElementProcessor : AbstractTestProcessor() {
+class ImplicitElementProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result: MutableList<String> = mutableListOf()
 
     override fun toResult(): List<String> {

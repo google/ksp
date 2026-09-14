@@ -26,7 +26,7 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class JavaNonNullProcessor : AbstractTestProcessor() {
+class JavaNonNullProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -36,7 +36,7 @@ class JavaNonNullProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getNewFiles().forEach {
             it.accept(
-                object : KSTopDownVisitor<Unit, Unit>() {
+                object : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
                     override fun defaultHandler(node: KSNode, data: Unit) {
                     }
 

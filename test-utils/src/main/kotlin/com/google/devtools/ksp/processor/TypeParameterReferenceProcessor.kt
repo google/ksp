@@ -22,9 +22,9 @@ import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-open class TypeParameterReferenceProcessor : AbstractTestProcessor() {
+open class TypeParameterReferenceProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val collector = ReferenceCollector()
+    val collector = ReferenceCollector(enableNewFeatures)
     val references = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

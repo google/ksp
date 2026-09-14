@@ -16,8 +16,27 @@
  */
 package com.google.devtools.ksp.symbol
 
-/** A visitor that doesn't pass or return anything. */
-open class KSVisitorVoid : KSVisitorNext<Unit, Unit> {
+import com.google.devtools.ksp.errors.InternalKSPException
+
+/**
+ * A visitor that doesn't pass or return anything.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
+ */
+open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, Unit> {
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSVisitorVoid is deprecated in favor of KSVisitorVoid(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSVisitorVoid(enableNewFeatures = true)",
+        ),
+    )
+    constructor() : this(enableNewFeatures = false)
+
     override fun visitNode(node: KSNode, data: Unit) {}
 
     override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {}
@@ -52,7 +71,15 @@ open class KSVisitorVoid : KSVisitorNext<Unit, Unit> {
 
     override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {}
 
-    override fun visitBackingField(backingField: KSBackingField, data: Unit) {}
+    override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
+    }
 
     override fun visitClassifierReference(reference: KSClassifierReference, data: Unit) {}
 

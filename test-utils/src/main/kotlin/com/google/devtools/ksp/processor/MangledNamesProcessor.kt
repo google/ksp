@@ -8,25 +8,25 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 @KspExperimental
 @Suppress("unused") // used by the test code
-class MangledNamesProcessor : AbstractTestProcessor() {
+class MangledNamesProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult() = results
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val mangleSourceNames = mutableMapOf<String, String?>()
         resolver.getAllFiles().sortedBy { it.fileName }.forEach {
-            it.accept(MangledNamesVisitor(resolver), mangleSourceNames)
+            it.accept(MangledNamesVisitor(resolver, enableNewFeatures), mangleSourceNames)
         }
         val mangledDependencyNames = LinkedHashMap<String, String?>()
         // also collect results from library dependencies to ensure we resolve module name property
         resolver.getClassDeclarationByName("libPackage.Foo")?.accept(
-            MangledNamesVisitor(resolver), mangledDependencyNames
+            MangledNamesVisitor(resolver, enableNewFeatures), mangledDependencyNames
         )
         resolver.getClassDeclarationByName("libPackage.AbstractKotlinClass")?.accept(
-            MangledNamesVisitor(resolver), mangledDependencyNames
+            MangledNamesVisitor(resolver, enableNewFeatures), mangledDependencyNames
         )
         resolver.getClassDeclarationByName("libPackage.MyInterface")?.accept(
-            MangledNamesVisitor(resolver), mangledDependencyNames
+            MangledNamesVisitor(resolver, enableNewFeatures), mangledDependencyNames
         )
         results.addAll(
             mangleSourceNames.entries.map { (decl, name) ->
@@ -41,9 +41,7 @@ class MangledNamesProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    private class MangledNamesVisitor(
-        val resolver: Resolver
-    ) : KSTopDownVisitor<MutableMap<String, String?>, Unit>() {
+    private class MangledNamesVisitor(val resolver: Resolver, enableNewFeatures: Boolean) : KSTopDownVisitor<MutableMap<String, String?>, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableMap<String, String?>) {
         }
 

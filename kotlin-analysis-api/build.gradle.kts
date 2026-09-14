@@ -157,7 +157,7 @@ dependencies {
             depSourceJars("$it:$aaKotlinBaseVersion:sources") { isTransitive = false }
         }
 
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
+    implementation(libs.aa.collectionsImmutable)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
@@ -166,17 +166,15 @@ dependencies {
     implementation(libs.aa.asm)
     implementation(libs.aa.stax2) { isTransitive = false }
     implementation(libs.aa.aalto.xml) { isTransitive = false }
-    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
-    implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps:trove4j:1.0.20200330") { isTransitive = false }
-    originalLog4j("org.jetbrains.intellij.deps:log4j:1.2.17.2") { isTransitive = false }
+    implementation(libs.aa.caffeine)
+    implementation(libs.aa.jna) { isTransitive = false }
+    implementation(libs.aa.jnaPlatform) { isTransitive = false }
+    implementation(libs.aa.trove4j) { isTransitive = false }
+    originalLog4j(libs.aa.log4j) { isTransitive = false }
     implementation(files(filteredLog4j))
-    implementation("org.jetbrains.intellij.deps:jdom:2.0.6") { isTransitive = false }
-    implementation("io.javaslang:javaslang:2.0.6")
-    implementation("javax.inject:javax.inject:1")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
-    implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
+    implementation(libs.aa.jdom) { isTransitive = false }
+    implementation(libs.aa.javaxInject)
+    implementation(libs.aa.lz4) { isTransitive = false }
     compileOnly(libs.kotlinx.coroutines.coreJvm)
     compileOnly(libs.kotlinx.coroutines.core)
     implementation(
@@ -184,9 +182,9 @@ dependencies {
     ) {
         isTransitive = false
     }
-    implementation("org.jetbrains:annotations:24.1.0")
+    implementation(libs.aa.annotations)
 
-    implementation("io.opentelemetry:opentelemetry-api:1.34.1") { isTransitive = false }
+    implementation(libs.aa.opentelemetry) { isTransitive = false }
 
     compileOnly(project(":common-deps"))
 

@@ -23,9 +23,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class PlatformDeclarationProcessor : AbstractTestProcessor() {
+open class PlatformDeclarationProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val collector = EverythingVisitor()
+    val collector = EverythingVisitor(enableNewFeatures)
     val declarations = mutableListOf<KSDeclaration>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -59,7 +59,7 @@ open class PlatformDeclarationProcessor : AbstractTestProcessor() {
     }
 }
 
-class EverythingVisitor : KSTopDownVisitor<MutableList<KSDeclaration>, Unit>() {
+class EverythingVisitor(enableNewFeatures: Boolean) : KSTopDownVisitor<MutableList<KSDeclaration>, Unit>(enableNewFeatures) {
     override fun defaultHandler(node: KSNode, data: MutableList<KSDeclaration>) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: MutableList<KSDeclaration>) {

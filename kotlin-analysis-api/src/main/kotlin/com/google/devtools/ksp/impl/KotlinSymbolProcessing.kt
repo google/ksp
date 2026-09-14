@@ -46,6 +46,8 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.diagnostic.PluginException
+import com.intellij.diagnostic.PluginProblemReporter
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -53,6 +55,7 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
@@ -276,10 +279,18 @@ class KotlinSymbolProcessing(
             LLFirResolutionActivityTracker::class.java
         )
 
+        kotlinCoreProjectEnvironment.registerApplicationServices(
+            PluginProblemReporter::class.java,
+            PluginProblemReporter { message, cause, _ ->
+                PluginException(message, cause, null)
+            }::class.java
+        )
+
         registerProjectServices(
             kotlinCoreProjectEnvironment,
             ktFiles,
             createPackagePartProvider,
+            libraryRoots.map { it.file }.distinct(),
         )
 
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -316,6 +327,7 @@ class KotlinSymbolProcessing(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         ktFiles: List<KtFile>,
         packagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
+        libraryRoots: List<VirtualFile> = emptyList(),
     ) {
         val project = kotlinCoreProjectEnvironment.project
         project.apply {
@@ -356,7 +368,12 @@ class KotlinSymbolProcessing(
                 KotlinDeclarationProviderMerger::class.java,
                 KotlinStandaloneDeclarationProviderMerger(this)
             )
-            registerService(KotlinPackageProviderFactory::class.java, IncrementalKotlinPackageProviderFactory(project))
+            // Package provider factory requires binary library roots to discover packages
+            // declared in precompiled KLIBs (e.g. for Kotlin/Native and JS/Wasm targets).
+            registerService(
+                KotlinPackageProviderFactory::class.java,
+                IncrementalKotlinPackageProviderFactory(project, libraryRoots)
+            )
 
             registerService(
                 SealedClassInheritorsProvider::class.java,
@@ -387,11 +404,11 @@ class KotlinSymbolProcessing(
         val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
-        modules.filterIsInstance<KaSourceModule>().forEach {
-            it.psiRoots.forEach {
-                when (it) {
-                    is KtFile -> ktFiles.add(it)
-                    is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(it)
+        modules.filterIsInstance<KaSourceModule>().forEach { kaSourceModule ->
+            kaSourceModule.psiRoots.forEach { psiRoot ->
+                when (psiRoot) {
+                    is KtFile -> ktFiles.add(psiRoot)
+                    is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(psiRoot)
                 }
             }
         }
@@ -526,6 +543,7 @@ class KotlinSymbolProcessing(
             var newKSFiles = allDirtyKSFiles
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
+            val processorsRegisteredForUpcomingFeatures = mutableSetOf<SymbolProcessor>()
             val symbolProcessorEnvironment = SymbolProcessorEnvironment(
                 kspConfig.processorOptions,
                 kspConfig.languageVersion.toKotlinVersion(),
@@ -534,14 +552,28 @@ class KotlinSymbolProcessing(
                 kspConfig.apiVersion.toKotlinVersion(),
                 KotlinCompilerVersion.getVersion().toKotlinVersion(),
                 targetPlatform.getPlatformInfo(kspConfig),
-                KotlinVersion(2, 0)
+                KotlinVersion(2, 0),
+                registerProcessorForNewFeatures = processorsRegisteredForUpcomingFeatures::add
             )
 
-            // Load and instantiate processsors
+            // Load and instantiate processors
             val deferredSymbols = mutableMapOf<SymbolProcessor, List<Restorable>>()
             val processors = providers.map { provider ->
                 provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
             }
+
+            // Emit warning for processors not opted in to new features
+            processors.filterNot(processorsRegisteredForUpcomingFeatures::contains)
+                .forEach { processor ->
+                    logger.info(
+                        "Processor '${processor::class.qualifiedName ?: processor::class.simpleName}' " +
+                            "has not opted in for upcoming features yet. " +
+                            "It might break in a future version of KSP. " +
+                            "To fix this, please update the processor to a version that is " +
+                            "compatible with upcoming features.",
+                        null
+                    )
+                }
 
             fun dropCaches() {
                 maybeRunInWriteAction {
@@ -577,13 +609,15 @@ class KotlinSymbolProcessing(
                     allDirtyKSFiles,
                     project,
                     incrementalContext,
-                    resolutionStrategy
+                    resolutionStrategy,
+                    processorsRegisteredForUpcomingFeatures
                 )
                 ResolverAAImpl.instance = resolver
                 ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
                 ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
 
                 processors.forEach { processor ->
+                    resolver.currentProcessor = processor
                     incrementalContext.closeFilesOnException {
                         deferredSymbols[processor] =
                             processor.process(resolver)

@@ -26,15 +26,6 @@ fun checkMinimumAgpVersion(pluginVersion: AndroidPluginVersion) {
     }
 }
 
-/**
- * Returns true for AGP version is 8.12.0-alpha06 or higher.
- * That is the version where addGeneratedSourceDirectories API was fixed
- */
-fun Project.canUseAddGeneratedSourceDirectoriesApi(): Boolean {
-    val agpVersion = project.getAgpVersion() ?: return false
-    return agpVersion >= AndroidPluginVersion(8, 12, 0).alpha(6)
-}
-
 fun Project.canUseInternalKspApis(): Boolean {
     val agpVersion = project.getAgpVersion() ?: return false
     return agpVersion >= AndroidPluginVersion(9, 0, 0).alpha(14)
@@ -46,4 +37,4 @@ fun Project.canUseInternalKspApis(): Boolean {
  * KSP aims to support AGP versions released approximately within the last year
  * from the current KSP release date.
  */
-val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 10, 0)
+val MINIMUM_SUPPORTED_AGP_VERSION = AndroidPluginVersion(8, 12, 0)

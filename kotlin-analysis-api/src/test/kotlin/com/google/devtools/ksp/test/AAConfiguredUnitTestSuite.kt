@@ -17,10 +17,14 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
-class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = false) {
+abstract class AAConfiguredUnitTestSuiteBase(
+    enableNewFeatures: Boolean
+) : KSPUnitTestSuite(experimentalPsiResolution = false, enableNewFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
     @Test
@@ -28,22 +32,22 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
         runTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
     }
 
-    @TestMetadata("allUseSiteTargetAppliedToAnnotationList.kt")
+    @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
-    @TestMetadata("contextParameters.kt")
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     @Test
     override fun testContextParameters() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
 
-    @TestMetadata("getSymbolsWithAnnotation/explicitBackFields.kt")
+    @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
-    override fun testExplicitBackingFields() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
+    override fun testGroupedAnnotationsWithUseSiteTargets() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
@@ -58,3 +62,7 @@ class AAConfiguredUnitTestSuite : KSPUnitTestSuite(experimentalPsiResolution = f
         runTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
     }
 }
+
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)

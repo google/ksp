@@ -40,8 +40,10 @@ import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.testConfiguration
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.LanguageSettingsDirectives
+import org.jetbrains.kotlin.test.directives.NativeEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.model.DependencyKind
 import org.jetbrains.kotlin.test.model.FrontendKind
 import org.jetbrains.kotlin.test.model.ResultingArtifact
@@ -78,14 +80,27 @@ abstract class DisposableTest {
     }
 }
 
-abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
+abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures: Boolean) : DisposableTest() {
     companion object {
-        const val TEST_PROCESSOR = "// TEST PROCESSOR:"
-        const val PROCESSOR_INPUT = "// PROCESSOR INPUT:"
-        const val EXPECTED_RESULTS = "// EXPECTED:"
-        const val EXPECTED_RESULTS_END = "// END"
-        const val MODULE = "// MODULE:"
-        const val COMPILER_MODULE_NAME = "// COMPILER MODULE NAME:"
+        const val COMMENT_TOKEN = "//"
+        const val TEST_PROCESSOR = "$COMMENT_TOKEN TEST PROCESSOR:"
+        const val PROCESSOR_INPUT = "$COMMENT_TOKEN PROCESSOR INPUT:"
+        const val EXPECTED_RESULTS = "$COMMENT_TOKEN EXPECTED:"
+
+        /**
+         * A directive controlling the expected test output when [enableNewFeatures] is `false`. The test output is
+         * expected to include the content on this line (modulo the directive).
+         */
+        const val EXPECT_CURRENT = "$COMMENT_TOKEN EXPECT CURRENT:"
+
+        /**
+         * A directive controlling the expected test output when [enableNewFeatures] is `true`. The test output is
+         * expected to include the content on this line (modulo the directive).
+         */
+        const val EXPECT_NEXT = "$COMMENT_TOKEN EXPECT NEXT:"
+        const val EXPECTED_RESULTS_END = "$COMMENT_TOKEN END"
+        const val MODULE = "$COMMENT_TOKEN MODULE:"
+        const val COMPILER_MODULE_NAME = "$COMMENT_TOKEN COMPILER MODULE NAME:"
     }
 
     init {
@@ -155,6 +170,9 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         useDirectives(*AbstractKotlinCompilerTest.defaultDirectiveContainers.toTypedArray())
         useDirectives(JvmEnvironmentConfigurationDirectives)
         useDirectives(TargetPlatformDirectives)
+        useDirectives(ConfigurationDirectives)
+        useDirectives(NativeEnvironmentConfigurationDirectives)
+        useDirectives(JsEnvironmentConfigurationDirectives)
 
         defaultDirectives {
             +JvmEnvironmentConfigurationDirectives.FULL_JDK
@@ -190,7 +208,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
     // dist/kotlinc/lib/*
     //
     // No, sourceFileProvider doesn't group files by module unfortunately. Let's do it by ourselves.
-    open fun compileModule(module: TestModule, testServices: TestServices) {
+    open fun compileLibraryModule(module: TestModule, testServices: TestServices) {
         val javaFiles = module.writeJavaFiles()
         val compilerConfiguration = testServices.compilerConfigurationProvider.getCompilerConfiguration(
             module,
@@ -287,7 +305,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
         val libModules = moduleStructure.modules.dropLast(1)
 
         for (lib in libModules) {
-            compileModule(lib, testServices)
+            compileLibraryModule(lib, testServices)
         }
         val compilerConfigurationMain = testServices.compilerConfigurationProvider.getCompilerConfiguration(
             mainModule,
@@ -297,40 +315,13 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
 
         val fileContents = mainModule.files.first().originalFile.readLines()
 
-        val testProcessorName = fileContents
-            .single { it.startsWith(TEST_PROCESSOR) }
-            .substringAfter(TEST_PROCESSOR)
-            .trim()
+        val processorArguments = parseProcessorArguments(fileContents)
+        val processorClass = mkTestProcessorClass(parseTestProcessorName(fileContents))
+        val testProcessor = mkProcessor(processorArguments, processorClass)
 
-        val testAnnotationNames = fileContents
-            .find { it.startsWith(PROCESSOR_INPUT) }
-            ?.substringAfter(PROCESSOR_INPUT)
-            ?.split(',')
-            ?.map { it.trim() }
-
-        val processorClass = Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
-
-        val testProcessor: AbstractTestProcessor =
-            if (testAnnotationNames == null) {
-                // Instantiate processor class without constructor params
-                processorClass
-                    .getDeclaredConstructor()
-                    .newInstance() as AbstractTestProcessor
-            } else {
-                // Instantiate parameterized processor class
-                processorClass
-                    .getDeclaredConstructor(List::class.java)
-                    .newInstance(testAnnotationNames) as AbstractTestProcessor
-            }
-
-        val expected = fileContents
-            .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
-            .drop(1)
-            .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
-            .joinToString("\n") {
-                // Remove '// ' prefix
-                it.substring(3).trim()
-            }
+        val expected = parseExpectedOutput(fileContents)[enableNewFeatures]
+            ?.joinToString("\n")
+            ?: ""
 
         val actual = {
             runTest(
@@ -341,7 +332,79 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>) : DisposableTest() {
             ).joinToString("\n")
         }
 
-        return Pair(expected, actual)
+        return expected to actual
+    }
+
+    private fun mkTestProcessorClass(testProcessorName: String): Class<*> =
+        Class.forName("com.google.devtools.ksp.processor.$testProcessorName")
+
+    private fun parseTestProcessorName(fileContents: List<String>): String = fileContents
+        .single { it.startsWith(TEST_PROCESSOR) }
+        .substringAfter(TEST_PROCESSOR)
+        .trim()
+
+    private fun parseProcessorArguments(fileContents: List<String>): List<String>? = fileContents
+        .find { it.startsWith(PROCESSOR_INPUT) }
+        ?.substringAfter(PROCESSOR_INPUT)
+        ?.split(',')
+        ?.map { it.trim() }
+
+    /**
+     * Given the test file content, [parseExpectedOutput] returns a map of expected test results/output based
+     * on the [enableNewFeatures] feature toggle. Thus, given the feature toggle, the caller may index into the
+     * returned map to obtain the expected test results.
+     *
+     * [parseExpectedOutput] removes directives such as [EXPECT_CURRENT] and [EXPECT_NEXT] and removes dangling
+     * whitespace and comments. In other words, if `// MyExpectedOutput` is declared in the test file,
+     * the value `"MyExpectedOutput"` is in the returned list (for both configurations).
+     */
+    private fun parseExpectedOutput(fileContents: List<String>): Map<Boolean, List<String>> {
+        val rawExpectedOutput =
+            fileContents
+                .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
+                .drop(1)
+                .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
+
+        // Define simple aliases for readability
+        val newFeaturesDisabledConfiguration = false
+        val newFeaturesEnabledConfiguration = true
+
+        return buildMap<Boolean, MutableList<String>> {
+            rawExpectedOutput.forEach { line ->
+                when {
+                    line.startsWith(EXPECT_CURRENT) ->
+                        getOrPut(newFeaturesDisabledConfiguration, ::mutableListOf)
+                            .add(line.drop(EXPECT_CURRENT.length).trim())
+
+                    line.startsWith(EXPECT_NEXT) ->
+                        getOrPut(newFeaturesEnabledConfiguration, ::mutableListOf)
+                            .add(line.drop(EXPECT_NEXT.length).trim())
+
+                    else ->
+                        line.drop(COMMENT_TOKEN.length).trim().let {
+                            getOrPut(newFeaturesDisabledConfiguration, ::mutableListOf)
+                                .add(it)
+                            getOrPut(newFeaturesEnabledConfiguration, ::mutableListOf)
+                                .add(it)
+                        }
+                }
+            }
+        }
+    }
+
+    private fun mkProcessor(
+        processorArguments: List<String>?,
+        processorClass: Class<*>
+    ): AbstractTestProcessor = if (processorArguments == null) {
+        // Instantiate processor class with enableNewFeatures param
+        processorClass
+            .getDeclaredConstructor(Boolean::class.java)
+            .newInstance(this.enableNewFeatures) as AbstractTestProcessor
+    } else {
+        // Instantiate parameterized processor class
+        processorClass
+            .getDeclaredConstructor(List::class.java, Boolean::class.java)
+            .newInstance(processorArguments, this.enableNewFeatures) as AbstractTestProcessor
     }
 }
 

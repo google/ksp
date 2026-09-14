@@ -28,7 +28,7 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class ResolveJavaTypeProcessor : AbstractTestProcessor() {
+class ResolveJavaTypeProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = ResolveJavaTypeVisitor()
 
@@ -49,7 +49,7 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>() {
+    inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: Unit) {
         }
 
@@ -75,14 +75,16 @@ class ResolveJavaTypeProcessor : AbstractTestProcessor() {
         val sb = StringBuilder(this.resolve().declaration.qualifiedName?.asString() ?: "<ERROR>")
         if (this.resolve().arguments.toList().isNotEmpty()) {
             sb.append(
-                "<${this.resolve().arguments.map {
-                    when (it.variance) {
-                        Variance.STAR -> "*"
-                        Variance.INVARIANT -> ""
-                        Variance.CONTRAVARIANT -> "in "
-                        Variance.COVARIANT -> "out "
-                    } + (it.type?.render() ?: "")
-                }.joinToString(", ")}>"
+                "<${
+                    this.resolve().arguments.map {
+                        when (it.variance) {
+                            Variance.STAR -> "*"
+                            Variance.INVARIANT -> ""
+                            Variance.CONTRAVARIANT -> "in "
+                            Variance.COVARIANT -> "out "
+                        } + (it.type?.render() ?: "")
+                    }.joinToString(", ")
+                }>"
             )
         }
         if (this.resolve().nullability != Nullability.NOT_NULL) {

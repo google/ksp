@@ -6,7 +6,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class ParentProcessor : AbstractTestProcessor() {
+class ParentProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -14,7 +14,7 @@ class ParentProcessor : AbstractTestProcessor() {
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val collector = AllSymbolProcessor()
+        val collector = AllSymbolProcessor(enableNewFeatures)
         val nodes = mutableSetOf<KSNode>()
         resolver.getAllFiles().sortedBy { it.fileName }.forEach { it.accept(collector, nodes) }
         for (e in listOf("YUV", "HSV")) {
@@ -26,7 +26,8 @@ class ParentProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    class AllSymbolProcessor : KSTopDownVisitor<MutableSet<KSNode>, Unit>() {
+    class AllSymbolProcessor(enableNewFeatures: Boolean) :
+        KSTopDownVisitor<MutableSet<KSNode>, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableSet<KSNode>) {
             data.add(node)
         }

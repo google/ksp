@@ -5,7 +5,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class RawTypesProcessor : AbstractTestProcessor() {
+class RawTypesProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     private val rawTypedEntityNames = arrayListOf<String>()
 
     override fun toResult(): List<String> {
@@ -14,7 +14,7 @@ class RawTypesProcessor : AbstractTestProcessor() {
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = object : KSTopDownVisitor<Unit, Unit>() {
+        val visitor = object : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
             private val KSType.isRawType
                 get() = resolver.isJavaRawType(this)
 
