@@ -24,4 +24,5 @@ package com.google.devtools.ksp.symbol
  */
 interface KSVisitorNext<D, R> : KSVisitor<D, R> {
     fun visitBackingField(backingField: KSBackingField, data: D): R
+    fun visitContextParameter(contextParameter: KSContextParameter, data: D): R
 }

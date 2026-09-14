@@ -98,6 +98,18 @@ abstract class KSDefaultVisitor<D, R>(enableNewFeatures: Boolean) : KSEmptyVisit
         return super.visitBackingField(backingField, data)
     }
 
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        this.visitAnnotated(contextParameter, data)
+        return super.visitContextParameter(contextParameter, data)
+    }
+
     override fun visitTypeAlias(typeAlias: KSTypeAlias, data: D): R {
         this.visitDeclaration(typeAlias, data)
         return super.visitTypeAlias(typeAlias, data)

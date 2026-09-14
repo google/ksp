@@ -111,6 +111,17 @@ abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorN
         return defaultHandler(backingField, data)
     }
 
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        return defaultHandler(contextParameter, data)
+    }
+
     override fun visitClassifierReference(reference: KSClassifierReference, data: D): R {
         return defaultHandler(reference, data)
     }
