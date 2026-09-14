@@ -22,7 +22,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
 
-class RecordJavaProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class RecordJavaProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -34,7 +34,7 @@ class RecordJavaProcessor(override val enableNewFeatures: Boolean): AbstractTest
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().forEach {
             it.declarations.forEach {
-                it.validate()
+                it.validate(enableNewFeatures = false)
             }
         }
         val m = when (resolver) {
