@@ -18,6 +18,7 @@
 .editorconfig text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf
+*.sha256sum text eol=lf
 
 # Documentation and text files
 *.md text eol=lf
