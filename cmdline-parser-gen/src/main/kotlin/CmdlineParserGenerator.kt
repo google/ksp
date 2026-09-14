@@ -85,6 +85,7 @@ class CmdlineParserGenerator(
                                     "$propName = parse$typeName(arg.substring(${optionNameLen + 1}))"
                             )
                         }
+
                         "List", "Map" -> {
                             val elementTypeName =
                                 type.arguments.last().type!!.resolve().declaration.simpleName.asString()
@@ -98,6 +99,7 @@ class CmdlineParserGenerator(
                                     "::parse$elementTypeName)"
                             )
                         }
+
                         else -> {
                             throw IllegalArgumentException("Unknown type of option `$propName: ${prop.type}`")
                         }
@@ -144,6 +146,9 @@ class CmdlineParserGeneratorProvider : SymbolProcessorProvider {
     override fun create(
         environment: SymbolProcessorEnvironment
     ): SymbolProcessor {
-        return CmdlineParserGenerator(environment.codeGenerator, environment.logger, environment.options)
+        val parserGenerator =
+            CmdlineParserGenerator(environment.codeGenerator, environment.logger, environment.options)
+        environment.registerProcessorForNewFeatures(parserGenerator)
+        return parserGenerator
     }
 }
