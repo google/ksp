@@ -9,11 +9,11 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 
-class ValidateProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class ValidateProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     private fun validate(symbol: KSDeclaration, predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }) {
-        if (symbol.validate(predicate)) {
+        if (symbol.validate(predicate, enableNewFeatures = false)) {
             results.add("${symbol.simpleName.asString()} valid")
         } else {
             results.add("${symbol.simpleName.asString()} invalid")
