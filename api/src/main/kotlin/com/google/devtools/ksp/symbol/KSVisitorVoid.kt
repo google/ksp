@@ -95,6 +95,16 @@ open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, U
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {}
 
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: Unit) {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+    }
+
     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {}
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: Unit) {}

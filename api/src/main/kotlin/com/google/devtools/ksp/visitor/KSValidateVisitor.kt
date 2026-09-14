@@ -127,6 +127,17 @@ open class KSValidateVisitor(
         return this.visitDeclaration(backingField, data)
     }
 
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: KSNode?): Boolean {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        return contextParameter.type.accept(this, data)
+    }
+
     override fun visitValueArgument(valueArgument: KSValueArgument, data: KSNode?): Boolean {
         fun visitValue(value: Any?): Boolean = when (value) {
             is KSType -> this.validateType(value)

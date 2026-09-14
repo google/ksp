@@ -128,6 +128,18 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         return super.visitBackingField(backingField, data)
     }
 
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        contextParameter.type.accept(data)
+        return super.visitContextParameter(contextParameter, data)
+    }
+
     override fun visitReferenceElement(element: KSReferenceElement, data: D): R {
         element.typeArguments.accept(data)
         return super.visitReferenceElement(element, data)
