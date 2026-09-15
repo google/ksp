@@ -470,6 +470,14 @@ abstract class KspAATask @Inject constructor(
                             .map { it.toBoolean() }
                             .orElse(false)
                     )
+                    // Opt-in: reuse processor classloaders across modules in the same build.
+                    // Off by default because it extends the lifetime of processor static state.
+                    cfg.cacheProcessorClassloader.value(
+                        project.providers
+                            .gradleProperty("ksp.classloader.cache.processors")
+                            .map { it.toBoolean() }
+                            .orElse(false)
+                    )
                     // TODO: pass targets of common
                 }
             }
@@ -714,6 +722,14 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Internal
     abstract val profilingMode: Property<Boolean>
+
+    /**
+     * Whether processor classloaders may be reused across modules within a build.
+     *
+     * Purely a performance knob; it must not affect task outputs, hence [Internal].
+     */
+    @get:Internal
+    abstract val cacheProcessorClassloader: Property<Boolean>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -743,13 +759,11 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         // TODO: support incremental processing.
         gradleCfg.outputBaseDir.get().asFile.deleteRecursively()
 
-        val processorClassloader = URLClassLoader(
-            gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
-            isolatedClassLoader
-        )
+        val cacheProcessorLoader = gradleCfg.cacheProcessorClassloader.get()
+        val processorClassloader = getProcessorClassLoader(gradleCfg, isolatedClassLoader, key, cacheProcessorLoader)
         if (gradleCfg.profilingMode.get()) {
             doNotGC.add(processorClassloader)
-        } else {
+        } else if (!cacheProcessorLoader) {
             doNotGC.clear()
         }
 
@@ -860,11 +874,53 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             kspGradleLogger.exception(e.targetException)
             throw e.targetException
         } finally {
-            processorClassloader.close()
+            // Cached loaders are shared across modules for the lifetime of the build service,
+            // so closing here would break every subsequent module that reuses them.
+            if (!cacheProcessorLoader) {
+                processorClassloader.close()
+            }
         }
 
         if (exitCode != ExitCode.OK) {
             throw Exception("KSP failed with exit code: $exitCode")
+        }
+    }
+
+    /**
+     * Creates a classloader over the processor classpath, delegating to [isolatedClassLoader] so
+     * that processors resolve KSP's own API classes from the shared, already-cached parent.
+     */
+    private fun createProcessorClassLoader(
+        gradleCfg: KspGradleConfig,
+        isolatedClassLoader: ClassLoader,
+    ): URLClassLoader = URLClassLoader(
+        gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
+        isolatedClassLoader
+    )
+
+    /**
+     * Returns the classloader to load symbol processors from, reusing a cached one when
+     * [cacheProcessorLoader] is set.
+     *
+     * The cache key combines [kspClasspathKey] with the processor classpath, because a child
+     * classloader delegates to its parent: two modules may resolve the same processor jars while
+     * resolving different KSP jars, and those must not share a loader.
+     */
+    private fun getProcessorClassLoader(
+        gradleCfg: KspGradleConfig,
+        isolatedClassLoader: ClassLoader,
+        kspClasspathKey: String,
+        cacheProcessorLoader: Boolean,
+    ): URLClassLoader {
+        if (!cacheProcessorLoader) {
+            return createProcessorClassLoader(gradleCfg, isolatedClassLoader)
+        }
+        // "|processors|" is only a separator between the two classpath lists, so that differing
+        // splits of the same overall set of paths cannot produce the same key.
+        val processorKey = kspClasspathKey + "|processors|" +
+            gradleCfg.processorClasspath.files.joinToString(separator = ":") { it.path }
+        return IsolatedClassLoaderCache.processorCache.computeIfAbsent(processorKey) {
+            createProcessorClassLoader(gradleCfg, isolatedClassLoader)
         }
     }
 }
