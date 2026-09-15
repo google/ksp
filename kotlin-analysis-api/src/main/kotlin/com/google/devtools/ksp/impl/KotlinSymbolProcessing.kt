@@ -493,6 +493,9 @@ class KotlinSymbolProcessing(
 
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
+        var newKSFiles = emptyList<KSFile>()
+        var codeGenerator: CodeGenerator? = null
+
         try {
             val (analysisAPISession, env, modules) =
                 createAASession(projectDisposable)
@@ -515,7 +518,7 @@ class KotlinSymbolProcessing(
             val allKSFiles =
                 prepareAllKSFiles(env, modules, javaFileManager)
             val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
-            val codeGenerator = CodeGeneratorImpl(
+            codeGenerator = CodeGeneratorImpl(
                 kspConfig.classOutputDir,
                 { if (kspConfig is KSPJvmConfig) kspConfig.javaOutputDir else kspConfig.kotlinOutputDir },
                 kspConfig.kotlinOutputDir,
@@ -540,7 +543,7 @@ class KotlinSymbolProcessing(
                 kspConfig.changedClasses,
             )
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
-            var newKSFiles = allDirtyKSFiles
+            newKSFiles = allDirtyKSFiles
 
             val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
             val processorsRegisteredForUpcomingFeatures = mutableSetOf<SymbolProcessor>()
@@ -654,6 +657,7 @@ class KotlinSymbolProcessing(
 
             // Call onError() or finish()
             if (logger.hasError) {
+                runTypeCheck(newKSFiles, project, logger)
                 processors.forEach(SymbolProcessor::onError)
             } else {
                 processors.forEach(SymbolProcessor::finish)
@@ -671,6 +675,10 @@ class KotlinSymbolProcessing(
 
             dropCaches()
             codeGenerator.closeFiles()
+        } catch (t: Throwable) {
+            val ktFiles = getFilesOnCrash(newKSFiles, kotlinCoreProjectEnvironment?.project)
+            runTypeCheck(ktFiles, logger)
+            throw t
         } finally {
             maybeRunInWriteAction {
                 (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
@@ -681,6 +689,49 @@ class KotlinSymbolProcessing(
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
+    }
+
+    companion object {
+        fun List<KSFile>.toKtFiles(project: Project): List<KtFile> {
+            val paths: Set<Path> = this.filter { it.origin == Origin.KOTLIN }.map { File(it.filePath).toPath() }.toSet()
+           return getPsiFilesFromPaths<KtFile>(project, paths)
+        }
+
+        /**
+         * Get Last Round files on execution crash
+         *
+         * Initially trys to return the latest newKSFiles (codeGenerated files)
+         * if it doesn't find any fallback into project files from ktModule. If project is null
+         * return an emptyList
+         *
+         * @param newKSFiles Last round KSFile list
+         * @param project The current project execution
+         */
+        @OptIn(KaExperimentalApi::class, KaPlatformInterface::class)
+        fun getFilesOnCrash(newKSFiles: List<KSFile>, project: Project?): List<KtFile> {
+            if (!newKSFiles.isEmpty()) return newKSFiles.toKtFiles(project!!)
+
+            if (project == null) return emptyList()
+
+            val ktModule = try {
+                ResolverAAImpl.ktModule
+            } catch (_: Throwable) {
+                return emptyList()
+            }
+
+            return ktModule.psiRoots.filterIsInstance<KtFile>()
+        }
+
+        fun runTypeCheck(ktFiles: List<KtFile>, logger: KSPLogger) {
+            try {
+                KspDiagnostics.runTypeCheck(ktFiles, logger)
+            } catch (_: Throwable) {
+                // ignore if type check cannot proceed to avoid masking original failure
+            }
+        }
+
+        fun runTypeCheck(newKSFiles: List<KSFile>, project: Project, logger: KSPLogger) =
+            runTypeCheck(newKSFiles.toKtFiles(project), logger)
     }
 }
 
