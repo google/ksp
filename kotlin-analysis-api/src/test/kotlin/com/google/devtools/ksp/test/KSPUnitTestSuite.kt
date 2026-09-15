@@ -374,6 +374,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2420", BugState.OPEN)
+    @TestMetadata("fakeOverrideProperties.kt")
+    @Test
+    fun testFakeOverrideProperties() {
+        runFailingTest("$AA_PATH/fakeOverrideProperties.kt")
+    }
+
     @TestMetadata("getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2913", BugState.FIXED)
