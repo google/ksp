@@ -16,13 +16,11 @@
  */
 package com.google.devtools.ksp.symbol
 
-/**
- *  A visitor for program elements.
- *
- *  This is similar to [KSVisitor], except that this interface
- *  also contains methods for visiting backing fields.
- */
-interface KSVisitorNext<D, R> : KSVisitor<D, R> {
-    fun visitBackingField(backingField: KSBackingField, data: D): R
-    fun visitContextParameter(contextParameter: KSContextParameter, data: D): R
+/** A context parameter */
+interface KSContextParameter : KSAnnotated {
+    /** Name of the parameter */
+    val name: KSName?
+
+    /** The reference to the type of the parameter. */
+    val type: KSTypeReference
 }
