@@ -227,6 +227,9 @@ class TestProcessor : SymbolProcessor {
             // Empty impl for now
         }
 
+        override fun visitContextParameter(contextParameter: KSContextParameter, data: String) {
+            // Empty impl for now
+        }
         override fun visitTypeReference(typeReference: KSTypeReference, data: String) {
             if (checkVisited(typeReference)) return
             typeReference.annotations.forEach { it.accept(this, "$data  ") }
