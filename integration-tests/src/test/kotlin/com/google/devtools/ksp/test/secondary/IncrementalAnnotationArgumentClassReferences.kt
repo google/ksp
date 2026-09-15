@@ -48,6 +48,7 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         private const val ASSEMBLE: String = "assemble"
         private const val CLEAN: String = "clean"
         private const val PROCESSOR_LABEL: String = "[TestProcessor]"
+        private const val LOADER_LABEL: String = "[KSPLoaderId]"
     }
 
     @Test
@@ -90,5 +91,44 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
                 actual
             )
         }
+    }
+
+    /**
+     * Both `:upstream` and `:downstream` apply the same processor, so they resolve an identical
+     * processor classpath. Without the cache each gets its own processor classloader; with the
+     * cache enabled they must share one.
+     *
+     * Also asserts that enabling the cache does not change what the processor does.
+     */
+    @Test
+    fun testProcessorClassloaderCaching() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        fun build(cacheEnabled: Boolean) = gradleRunner
+            .withArguments(CLEAN, ASSEMBLE, "-Pksp.classloader.cache.processors=$cacheEnabled")
+            .build()
+
+        val off = build(false)
+        val offLoaders = off.output.lines().filter { it.startsWith(LOADER_LABEL) }.toSet()
+        val offProcessed = off.output.lines().filter { it.startsWith(PROCESSOR_LABEL) }
+        Assert.assertEquals(TaskOutcome.SUCCESS, off.task(KSP_KOTLIN)?.outcome)
+        Assert.assertEquals(
+            "expected one processor classloader per module, got $offLoaders",
+            2,
+            offLoaders.size
+        )
+
+        val on = build(true)
+        val onLoaders = on.output.lines().filter { it.startsWith(LOADER_LABEL) }.toSet()
+        val onProcessed = on.output.lines().filter { it.startsWith(PROCESSOR_LABEL) }
+        Assert.assertEquals(TaskOutcome.SUCCESS, on.task(KSP_KOTLIN)?.outcome)
+        Assert.assertEquals(
+            "expected a single shared processor classloader, got $onLoaders",
+            1,
+            onLoaders.size
+        )
+
+        // Caching the classloader must not change processing behaviour.
+        Assert.assertEquals(offProcessed, onProcessed)
     }
 }
