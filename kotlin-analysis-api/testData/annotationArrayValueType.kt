@@ -18,12 +18,19 @@
 // EXPECTED:
 // JavaAnnotated JavaAnnotation args is Array<*> or Collection<*>: true
 // JavaAnnotated JavaAnnotation args size: 2
+// JavaAnnotated JavaAnnotation args typedValue: ArrayValue of two AnnotationClass values
 // JavaAnnotated KotlinAnnotation args is Array<*> or Collection<*>: true
 // JavaAnnotated KotlinAnnotation args size: 2
+// JavaAnnotated KotlinAnnotation args typedValue: ArrayValue of two AnnotationClass values
 // KotlinAnnotated JavaAnnotation args is Array<*> or Collection<*>: true
 // KotlinAnnotated JavaAnnotation args size: 2
+// KotlinAnnotated JavaAnnotation args typedValue: ArrayValue of two AnnotationClass values
 // KotlinAnnotated KotlinAnnotation args is Array<*> or Collection<*>: true
 // KotlinAnnotated KotlinAnnotation args size: 2
+// KotlinAnnotated KotlinAnnotation args typedValue: ArrayValue of two AnnotationClass values
+// KotlinAnnotated TypedAnnotation number: Primitive(KSInt(7))
+// KotlinAnnotated TypedAnnotation mode: EnumClass(FIRST)
+// KotlinAnnotated TypedAnnotation klass: ReflectionClassReference(String)
 // END
 // FILE: JavaAnnotation.java
 public @interface JavaAnnotation {
@@ -45,6 +52,15 @@ annotation class KotlinAnnotation(val args: Array<KotlinNestedAnnotation>)
 
 annotation class KotlinNestedAnnotation(val value: String)
 
+enum class TestMode { FIRST }
+
+annotation class TypedAnnotation(
+    val number: Int,
+    val mode: TestMode,
+    val klass: kotlin.reflect.KClass<*>,
+)
+
 @JavaAnnotation(args = [NestedAnnotation(value = "one"), NestedAnnotation(value = "two")])
 @KotlinAnnotation(args = [KotlinNestedAnnotation(value = "one"), KotlinNestedAnnotation(value = "two")])
+@TypedAnnotation(number = 7, mode = TestMode.FIRST, klass = String::class)
 class KotlinAnnotated
