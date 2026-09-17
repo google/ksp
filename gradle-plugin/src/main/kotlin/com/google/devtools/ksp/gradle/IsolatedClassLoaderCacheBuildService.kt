@@ -22,6 +22,21 @@ import java.net.URLClassLoader
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Identifies a processor classloader.
+ *
+ * Both classpaths take part in the identity: a processor classloader delegates to a parent loader
+ * built from the KSP classpath, so two modules may resolve the same processor jars while resolving
+ * different KSP jars, and those must not share a loader.
+ *
+ * Modelled as a data class rather than a concatenated string so that the two classpaths cannot be
+ * confused with one another, and so no separator has to be reserved.
+ */
+internal data class ProcessorClassLoaderKey(
+    val kspClasspath: List<String>,
+    val processorClasspath: List<String>,
+)
+
 object IsolatedClassLoaderCache {
     val cache = ConcurrentHashMap<String, URLClassLoader>()
 
@@ -36,7 +51,7 @@ object IsolatedClassLoaderCache {
      * This is opt-in via the `ksp.classloader.cache.processors` Gradle property, because reusing a
      * loader also extends the lifetime of any static state held by processors.
      */
-    val processorCache = ConcurrentHashMap<String, URLClassLoader>()
+    internal val processorCache = ConcurrentHashMap<ProcessorClassLoaderKey, URLClassLoader>()
 
     fun clear() {
         val classLoaders = cache.values + processorCache.values
