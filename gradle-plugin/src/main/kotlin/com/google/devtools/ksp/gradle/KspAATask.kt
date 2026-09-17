@@ -760,7 +760,8 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         gradleCfg.outputBaseDir.get().asFile.deleteRecursively()
 
         val cacheProcessorLoader = gradleCfg.cacheProcessorClassloader.get()
-        val processorClassloader = getProcessorClassLoader(gradleCfg, isolatedClassLoader, key, cacheProcessorLoader)
+        val processorClassloader =
+            getProcessorClassLoader(gradleCfg, isolatedClassLoader, kspClasspath, cacheProcessorLoader)
         if (gradleCfg.profilingMode.get()) {
             doNotGC.add(processorClassloader)
         } else if (!cacheProcessorLoader) {
@@ -902,23 +903,21 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
      * Returns the classloader to load symbol processors from, reusing a cached one when
      * [cacheProcessorLoader] is set.
      *
-     * The cache key combines [kspClasspathKey] with the processor classpath, because a child
-     * classloader delegates to its parent: two modules may resolve the same processor jars while
-     * resolving different KSP jars, and those must not share a loader.
+     * See [ProcessorClassLoaderKey] for why both classpaths take part in the cache key.
      */
     private fun getProcessorClassLoader(
         gradleCfg: KspGradleConfig,
         isolatedClassLoader: ClassLoader,
-        kspClasspathKey: String,
+        kspClasspath: ConfigurableFileCollection,
         cacheProcessorLoader: Boolean,
     ): URLClassLoader {
         if (!cacheProcessorLoader) {
             return createProcessorClassLoader(gradleCfg, isolatedClassLoader)
         }
-        // "|processors|" is only a separator between the two classpath lists, so that differing
-        // splits of the same overall set of paths cannot produce the same key.
-        val processorKey = kspClasspathKey + "|processors|" +
-            gradleCfg.processorClasspath.files.joinToString(separator = ":") { it.path }
+        val processorKey = ProcessorClassLoaderKey(
+            kspClasspath = kspClasspath.files.map { it.path },
+            processorClasspath = gradleCfg.processorClasspath.files.map { it.path },
+        )
         return IsolatedClassLoaderCache.processorCache.computeIfAbsent(processorKey) {
             createProcessorClassLoader(gradleCfg, isolatedClassLoader)
         }
