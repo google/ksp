@@ -176,12 +176,25 @@ fun KSNode.validate(
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */
-fun KSTypeAlias.findActualType(): KSClassDeclaration {
-    val resolvedType = this.type.resolve().declaration
-    return if (resolvedType is KSTypeAlias) {
-        resolvedType.findActualType()
-    } else {
-        resolvedType as KSClassDeclaration
+fun KSTypeAlias.findActualType(): KSClassDeclaration = expandTypeAlias(mutableSetOf())
+
+private fun KSTypeAlias.expandTypeAlias(visited: MutableSet<KSDeclaration>): KSClassDeclaration {
+    if (!visited.add(this)) {
+        throw InternalKSPException(
+            "Circular type alias declaration: '${qualifiedName?.asString()}'",
+            this.location,
+            this.javaClass
+        )
+    }
+
+    return when (val resolved = type.resolve().declaration) {
+        is KSTypeAlias -> resolved.expandTypeAlias(visited)
+        is KSClassDeclaration -> resolved
+        else -> throw InternalKSPException(
+            "Type alias expanded to unknown declaration: '$resolved'",
+            resolved.location,
+            resolved.javaClass
+        )
     }
 }
 
@@ -225,10 +238,22 @@ internal fun KSDeclaration.isKotlinBackingField(): Boolean =
  * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution
  * therefore is expensive and should be avoided if possible.
  */
-fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
+fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> =
+    getAllSuperTypes(mutableSetOf(), mutableSetOf())
 
-    fun KSTypeParameter.getTypesUpperBound(): Sequence<KSClassDeclaration> =
-        this.bounds.flatMap {
+private fun KSClassDeclaration.getAllSuperTypes(
+    visitedClasses: MutableSet<KSClassDeclaration>,
+    visitedParams: MutableSet<KSTypeParameter>,
+): Sequence<KSType> {
+    if (!visitedClasses.add(this)) {
+        return emptySequence()
+    }
+
+    fun KSTypeParameter.getTypesUpperBound(): Sequence<KSClassDeclaration> {
+        if (!visitedParams.add(this)) {
+            return emptySequence()
+        }
+        return bounds.flatMap {
             when (val resolvedDeclaration = it.resolve().declaration) {
                 is KSClassDeclaration -> sequenceOf(resolvedDeclaration)
                 is KSTypeAlias -> sequenceOf(resolvedDeclaration.findActualType())
@@ -241,29 +266,29 @@ fun KSClassDeclaration.getAllSuperTypes(): Sequence<KSType> {
                     )
             }
         }
+    }
 
-    return this.superTypes
-        .map { it.resolve() }
-        .plus(
-            this.superTypes
-                .map { it.resolve().declaration }
-                .flatMap {
-                    when (it) {
-                        is KSClassDeclaration -> it.getAllSuperTypes()
-                        is KSTypeAlias -> it.findActualType().getAllSuperTypes()
-                        is KSTypeParameter ->
-                            it.getTypesUpperBound().flatMap { it.getAllSuperTypes() }
-
-                        else ->
-                            throw InternalKSPException(
-                                "Unhandled super type kind",
-                                it.location,
-                                it.javaClass,
-                            )
-                    }
-                }
+    fun findClassDeclarations(declaration: KSDeclaration): Sequence<KSClassDeclaration> = when (declaration) {
+        is KSClassDeclaration -> sequenceOf(declaration)
+        is KSTypeAlias -> sequenceOf(declaration.findActualType())
+        is KSTypeParameter -> declaration.getTypesUpperBound()
+        else -> throw InternalKSPException(
+            "Unhandled super type kind",
+            declaration.location,
+            declaration.javaClass,
         )
-        .distinct()
+    }
+
+    val immediateSuperTypes = superTypes.map { it.resolve() }
+    val transitiveSuperTypes = immediateSuperTypes
+        .flatMap { type ->
+            findClassDeclarations(type.declaration)
+                .flatMap {
+                    it.getAllSuperTypes(visitedClasses, visitedParams)
+                }
+        }
+
+    return (immediateSuperTypes + transitiveSuperTypes).distinct()
 }
 
 fun KSClassDeclaration.isAbstract() =
