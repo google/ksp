@@ -39,6 +39,10 @@ interface KSPropertyDeclaration : KSDeclaration {
      */
     val extensionReceiver: KSTypeReference?
 
+    /** [Context parameters][KSContextParameter] for the property. */
+    val contextParameters: List<KSContextParameter>
+        get() = emptyList()
+
     /** The type of this declaration. */
     val type: KSTypeReference
 
