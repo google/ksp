@@ -330,6 +330,13 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSClassifierReference qualifier;
   }
 
+  public interface KSContextParameter extends com.google.devtools.ksp.symbol.KSAnnotated {
+    method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSName getName();
+    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
+    property @Nullable public abstract com.google.devtools.ksp.symbol.KSName name;
+    property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
+  }
+
   public interface KSDeclaration extends com.google.devtools.ksp.symbol.KSModifierListOwner com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSExpectActual {
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSFile getContainingFile();
     method @InaccessibleFromKotlin @Nullable public String getDocString();
@@ -395,11 +402,13 @@ package com.google.devtools.ksp.symbol {
   public interface KSFunctionDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration com.google.devtools.ksp.symbol.KSDeclarationContainer {
     method @NonNull public com.google.devtools.ksp.symbol.KSFunction asMemberOf(@NonNull com.google.devtools.ksp.symbol.KSType containing);
     method @Nullable public com.google.devtools.ksp.symbol.KSDeclaration findOverridee();
+    method @InaccessibleFromKotlin @NonNull public default java.util.List<com.google.devtools.ksp.symbol.KSContextParameter> getContextParameters();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getExtensionReceiver();
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.FunctionKind getFunctionKind();
     method @InaccessibleFromKotlin @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> getParameters();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getReturnType();
     method @InaccessibleFromKotlin public boolean isAbstract();
+    property @NonNull public default java.util.List<com.google.devtools.ksp.symbol.KSContextParameter> contextParameters;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference extensionReceiver;
     property @NonNull public abstract com.google.devtools.ksp.symbol.FunctionKind functionKind;
     property public abstract boolean isAbstract;
