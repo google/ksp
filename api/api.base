@@ -451,6 +451,7 @@ package com.google.devtools.ksp.symbol {
     method @NonNull public com.google.devtools.ksp.symbol.KSType asMemberOf(@NonNull com.google.devtools.ksp.symbol.KSType containing);
     method @Nullable public com.google.devtools.ksp.symbol.KSPropertyDeclaration findOverridee();
     method @InaccessibleFromKotlin @Nullable public default com.google.devtools.ksp.symbol.KSBackingField getBackingField();
+    method @InaccessibleFromKotlin @NonNull public default java.util.List<com.google.devtools.ksp.symbol.KSContextParameter> getContextParameters();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSTypeReference getExtensionReceiver();
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSPropertyGetter getGetter();
     method @InaccessibleFromKotlin public boolean getHasBackingField();
@@ -459,6 +460,7 @@ package com.google.devtools.ksp.symbol {
     method public boolean isDelegated();
     method @InaccessibleFromKotlin public boolean isMutable();
     property @Nullable public default com.google.devtools.ksp.symbol.KSBackingField backingField;
+    property @NonNull public default java.util.List<com.google.devtools.ksp.symbol.KSContextParameter> contextParameters;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference extensionReceiver;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSPropertyGetter getter;
     property public abstract boolean hasBackingField;
