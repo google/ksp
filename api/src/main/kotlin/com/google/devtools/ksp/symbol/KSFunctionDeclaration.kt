@@ -48,6 +48,10 @@ interface KSFunctionDeclaration : KSDeclaration, KSDeclarationContainer {
     /** [value parameters][KSValueParameter] of this function. */
     val parameters: List<KSValueParameter>
 
+    /** The [context parameters][KSContextParameter] of this function. */
+    val contextParameters: List<KSContextParameter>
+        get() = emptyList()
+
     /**
      * Find the closest overridee of this function, if overriding.
      *
