@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
@@ -30,11 +28,10 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
-import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 
 class KSValueParameterImpl private constructor(
     private val ktValueParameterSymbol: KaValueParameterSymbol,
-    override val parent: KSAnnotated
+    override val parent: KSAnnotated,
 ) : KSValueParameter, Deferrable {
     companion object : KSObjectCache<KaValueParameterSymbol, KSValueParameterImpl>() {
         fun getCached(ktValueParameterSymbol: KaValueParameterSymbol, parent: KSAnnotated) =
@@ -49,7 +46,6 @@ class KSValueParameterImpl private constructor(
         }
     }
 
-    @OptIn(SymbolInternals::class)
     override val type: KSTypeReference by lazy {
         // TODO: avoid eager resolution by using PSI.
         // KaFirValueParameterSymbol extracts and returns the element type of a vararg.
@@ -97,7 +93,7 @@ class KSValueParameterImpl private constructor(
     }
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {
-        ktValueParameterSymbol.annotations(this)
+        ktValueParameterSymbol.annotations(parent = this)
     }
 
     override val origin: Origin by lazy {
