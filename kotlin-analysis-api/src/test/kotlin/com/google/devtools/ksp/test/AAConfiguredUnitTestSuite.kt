@@ -17,8 +17,6 @@
 
 package com.google.devtools.ksp.test
 
-import com.google.devtools.ksp.test.annotations.Bug
-import com.google.devtools.ksp.test.annotations.BugState
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
@@ -30,12 +28,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
         runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
@@ -57,6 +49,18 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
+    @Test
+    override fun testContextParameters() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
+}
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
+    @Test
+    override fun testContextParameters() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
+}
