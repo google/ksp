@@ -73,7 +73,7 @@ class KSTypeReferenceImpl(
     }
 
     override fun resolve(): KSType {
-        analyze { recordLookup(ktType, parent) }
+        recordLookup(ktType, parent)
         return KSTypeImpl.getCached(ktType)
     }
 

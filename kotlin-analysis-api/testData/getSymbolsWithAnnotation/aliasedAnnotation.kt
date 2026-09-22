@@ -18,7 +18,11 @@
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
 // PROCESSOR INPUT: Anno
 // EXPECTED:
+// Anno: ChainedClass
+// Anno: ExplicitImportClass
 // Anno: MyClass
+// Anno: OtherFileClass
+// Anno: StarImportClass
 // END
 
 // FILE: Anno.kt
@@ -31,3 +35,41 @@ typealias A = Anno
 
 @A
 class MyClass
+
+// FILE: OtherFileAlias.kt
+
+typealias OtherFileAlias = Anno
+
+// FILE: OtherFileClass.kt
+
+@OtherFileAlias
+class OtherFileClass
+
+// FILE: pkg/PkgAlias.kt
+package pkg
+
+import Anno
+
+typealias PkgAlias = Anno
+
+// FILE: ExplicitImportClass.kt
+
+import pkg.PkgAlias
+
+@PkgAlias
+class ExplicitImportClass
+
+// FILE: StarImportClass.kt
+
+import pkg.*
+
+@PkgAlias
+class StarImportClass
+
+// FILE: ChainedAlias.kt
+
+typealias Chained1 = Anno
+typealias Chained2 = Chained1
+
+@Chained2
+class ChainedClass

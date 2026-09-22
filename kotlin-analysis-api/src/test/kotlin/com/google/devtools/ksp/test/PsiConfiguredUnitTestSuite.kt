@@ -24,12 +24,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     enableNewFeatures: Boolean,
 ) : KSPUnitTestSuite(experimentalPsiResolution = true, enableNewFeatures) {
 
-    @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
-    @Test
-    override fun testAliasedAnnotations() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
-    }
-
     @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {

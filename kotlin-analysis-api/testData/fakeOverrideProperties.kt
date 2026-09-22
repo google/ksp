@@ -14,15 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.ksp.symbol
 
-/**
- *  A visitor for program elements.
- *
- *  This is similar to [KSVisitor], except that this interface
- *  also contains methods for visiting backing fields.
- */
-interface KSVisitorNext<D, R> : KSVisitor<D, R> {
-    fun visitBackingField(backingField: KSBackingField, data: D): R
-    fun visitContextParameter(contextParameter: KSContextParameter, data: D): R
+// TEST PROCESSOR: FakeOverrideProcessor
+// PROCESSOR INPUT: A, B, C, D
+// EXPECTED:
+// A
+// <init>
+// B
+// B.x : A
+// B.x.getter() : A
+// C
+// C.x : A
+// C.x.getter() : A
+// C.y : B
+// C.y.getter() : B
+// C.y.setter()
+// D
+// D.x : A
+// D.x.getter() : A
+// D.y : B
+// D.y.getter() : B
+// D.y.setter()
+// END
+
+// FILE: Main.kt
+class A
+
+interface B {
+    val x: A
 }
+
+interface C {
+    val x: A
+    var y: B
+}
+
+interface D : B, C
