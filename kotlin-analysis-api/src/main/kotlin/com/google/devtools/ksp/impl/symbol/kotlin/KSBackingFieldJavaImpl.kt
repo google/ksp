@@ -17,8 +17,10 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.toKSModifiers
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl.Companion.getCached
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.KSBackingField
@@ -29,6 +31,8 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.KSVisitorNext
+import com.google.devtools.ksp.symbol.Modifier
+import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaJavaFieldSymbol
 
@@ -56,6 +60,29 @@ class KSBackingFieldJavaImpl private constructor(
 
     override val ktDeclarationSymbol: KaDeclarationSymbol
         get() = ktJavaFieldSymbol
+
+    /**
+     * The modifiers of the underlying Java field.
+     *
+     * N.B.: Unlike [AbstractKSDeclarationImpl.modifiers], this deliberately does not go through
+     * [KaJavaFieldSymbol.toModifiers] for compiled fields. That function describes the property that KSP models on
+     * top of a Java field, which is always a final `val`, and therefore reports [Modifier.FINAL] for fields that are
+     * not final while dropping [Modifier.JAVA_TRANSIENT] and [Modifier.JAVA_VOLATILE]. A backing field is the field
+     * itself, so its modifiers are read from the field, which also makes them independent of whether the field was
+     * read from source or from a compiled artifact.
+     */
+    override val modifiers: Set<Modifier> by lazy {
+        val psi = ktJavaFieldSymbol.psi
+        if (psi is PsiModifierListOwner) {
+            psi.toKSModifiers()
+        } else {
+            throw InternalKSPException(
+                "Expected PsiModifierListOwner for Java backing field $this",
+                location,
+                psi?.javaClass ?: javaClass
+            )
+        }
+    }
 
     override val type: KSTypeReference by lazy {
         KSTypeReferenceResolvedImpl.getCached(ktJavaFieldSymbol.returnType, this)

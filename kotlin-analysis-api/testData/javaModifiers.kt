@@ -35,22 +35,22 @@
 // DependencyOuterJavaClass.DependencyInnerJavaClass: INNER OPEN PUBLIC : PUBLIC
 // DependencyOuterJavaClass.DependencyNestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterJavaClass.DependencyNestedJavaClass: OPEN PUBLIC : PUBLIC
-// EXPECT NEXT: DependencyOuterJavaClass.staticPackageProtectedField.field: FINAL JAVA_STATIC : FINAL JAVA_STATIC
+// EXPECT NEXT: DependencyOuterJavaClass.staticPackageProtectedField.field: JAVA_STATIC : JAVA_STATIC
 // DependencyOuterJavaClass.staticPackageProtectedField: FINAL JAVA_STATIC : FINAL JAVA_STATIC
 // DependencyOuterJavaClass.staticPackageProtectedMethod: FINAL JAVA_STATIC : FINAL JAVA_STATIC
-// EXPECT NEXT: DependencyOuterJavaClass.staticPrivateField.field: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
+// EXPECT NEXT: DependencyOuterJavaClass.staticPrivateField.field: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
 // DependencyOuterJavaClass.staticPrivateField: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
 // DependencyOuterJavaClass.staticPrivateMethod: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
-// EXPECT NEXT: DependencyOuterJavaClass.staticProtectedField.field: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
+// EXPECT NEXT: DependencyOuterJavaClass.staticProtectedField.field: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticProtectedField: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticProtectedMethod: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
-// EXPECT NEXT: DependencyOuterJavaClass.staticPublicField.field: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
+// EXPECT NEXT: DependencyOuterJavaClass.staticPublicField.field: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicMethod: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.synchronizedFun: OPEN : JAVA_SYNCHRONIZED
-// EXPECT NEXT: DependencyOuterJavaClass.transientField.field: FINAL : FINAL
+// EXPECT NEXT: DependencyOuterJavaClass.transientField.field: JAVA_TRANSIENT : JAVA_TRANSIENT
 // DependencyOuterJavaClass.transientField: FINAL : FINAL JAVA_TRANSIENT
-// EXPECT NEXT: DependencyOuterJavaClass.volatileField.field: FINAL : FINAL
+// EXPECT NEXT: DependencyOuterJavaClass.volatileField.field: JAVA_VOLATILE : JAVA_VOLATILE
 // DependencyOuterJavaClass.volatileField: FINAL : FINAL JAVA_VOLATILE
 // DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
