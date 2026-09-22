@@ -72,10 +72,12 @@
 // DependencyOuterKotlinClass.DependencyInnerKotlinClass: FINAL INNER PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass: OPEN PUBLIC : PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.mutableProperty.field: PRIVATE : PRIVATE
+// DependencyOuterKotlinClass.mutableProperty: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.synchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
 // EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.transientProperty.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.volatileProperty.field: FINAL PRIVATE : FINAL PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.volatileProperty.field: PRIVATE : PRIVATE
 // DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL JAVA_VOLATILE PUBLIC
 // DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
 // HasTypeAliasFuns: Modifiers: []
@@ -103,16 +105,16 @@
 // OuterJavaClass: PUBLIC : PUBLIC
 // OuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.Companion.<init>: FINAL PUBLIC : FINAL PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.companionField.field: : FINAL PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.companionField.field: FINAL PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.companionField: CONST : FINAL PUBLIC
 // OuterKotlinClass.Companion.companionMethod: : FINAL PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.customJvmStaticCompanionField.field: : FINAL PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.customJvmStaticCompanionField.field: FINAL PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.customJvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.customJvmStaticCompanionMethod: : FINAL PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.jvmStaticCompanionField.field: : FINAL PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.jvmStaticCompanionField.field: FINAL PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.jvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.jvmStaticCompanionMethod: : FINAL JAVA_STATIC PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.privateCompanionField.field: : FINAL PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.privateCompanionField.field: FINAL PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionField: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionMethod: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion: : FINAL PUBLIC
@@ -120,12 +122,14 @@
 // OuterKotlinClass.InnerKotlinClass: INNER : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass: OPEN : PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.mutableProperty.field: PRIVATE : PRIVATE
+// OuterKotlinClass.mutableProperty: : FINAL PUBLIC
 // OuterKotlinClass.synchronizedFun: : FINAL JAVA_SYNCHRONIZED PUBLIC
 // EXPECT ENABLE_BACKING_FIELDS = FALSE: OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
 // EXPECT ENABLE_BACKING_FIELDS = FALSE: OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.transientProperty.field: : FINAL JAVA_TRANSIENT PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.transientProperty.field: FINAL PRIVATE : FINAL JAVA_TRANSIENT PRIVATE
 // EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.transientProperty: : FINAL PUBLIC
-// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.volatileProperty.field: : FINAL JAVA_VOLATILE PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.volatileProperty.field: PRIVATE : JAVA_VOLATILE PRIVATE
 // EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.volatileProperty: : FINAL PUBLIC
 // OuterKotlinClass: OPEN : PUBLIC
 // TypeAliasInKt: Modifiers: [PRIVATE]
@@ -176,6 +180,8 @@ open class DependencyOuterKotlinClass {
         @DependencyCustomJvmStatic
         val customJvmStaticCompanionField:String = ""
     }
+
+    var mutableProperty: String = ""
 
     @Transient
     val transientProperty: String = ""
@@ -276,6 +282,8 @@ open class OuterKotlinClass {
         @CustomJvmStatic
         val customJvmStaticCompanionField:String = ""
     }
+
+    var mutableProperty: String = ""
 
     @Transient
     val transientProperty: String = ""
