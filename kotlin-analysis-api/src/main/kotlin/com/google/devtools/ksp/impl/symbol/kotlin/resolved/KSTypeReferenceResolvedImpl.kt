@@ -26,7 +26,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
-import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
 import com.google.devtools.ksp.impl.symbol.kotlin.render
 import com.google.devtools.ksp.impl.symbol.kotlin.toClassifierReference
@@ -40,13 +39,36 @@ import org.jetbrains.kotlin.analysis.api.types.*
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtTypeParameter
 
+/**
+ * A resolved [KSTypeReference] backed directly by an already resolved Analysis API [KaType],
+ * rather than an unresolved syntax tree node ([KtTypeReference][org.jetbrains.kotlin.psi.KtTypeReference]).
+ *
+ * @param ktType The underlying resolved Analysis API type representing this reference.
+ * @param parent The parent AST node enclosing this type reference (e.g., class, function, property, type parameter, or type argument).
+ * @param index The 0-based positional index of this type reference within a list of references on the [parent]
+ * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location. Defaults to -1 when not applicable.
+ * @param additionalAnnotations Additional annotations to include on this type reference beyond what is
+ * directly attached to [ktType] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
+ */
 class KSTypeReferenceResolvedImpl private constructor(
     private val ktType: KaType,
     override val parent: KSNode?,
     private val index: Int,
     private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
+
     companion object : KSObjectCache<IdKeyTriple<KaType, KSNode?, Int>, KSTypeReference>() {
+
+        /**
+         * Returns a cached [KSTypeReference] for the given resolved [KaType].
+         *
+         * @param type The underlying resolved Analysis API type representing this reference.
+         * @param parent The parent AST node enclosing this type reference (e.g., class, function, property, type parameter, or type argument).
+         * @param index The 0-based positional index of this type reference within a list of references on the [parent]
+         * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location. Defaults to -1 when not applicable.
+         * @param additionalAnnotations Additional annotations to include on this type reference beyond what is
+         * directly attached to [type] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
+         */
         fun getCached(
             type: KaType,
             parent: KSNode? = null,
@@ -91,14 +113,17 @@ class KSTypeReferenceResolvedImpl private constructor(
                         else -> NonExistLocation
                     }
                 }
+
                 is KSTypeParameterImpl -> {
                     when (val psi = parent.ktTypeParameterSymbol.psi) {
                         is KtTypeParameter -> parent.location
                         is PsiTypeParameter -> (psi.extendsListTypes[index] as? PsiClassReferenceType)
                             ?.reference?.toLocation() ?: NonExistLocation
+
                         else -> NonExistLocation
                     }
                 }
+
                 else -> NonExistLocation
             }
         }
