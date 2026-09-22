@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.lazyMemoizedSequence
@@ -33,13 +34,41 @@ import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.symbols.KaContextParameterSymbol
 import org.jetbrains.kotlin.psi.KtContextReceiver
 
+/**
+ * Implementation of [KSContextParameter] backed by Analysis API's [KaContextParameterSymbol].
+ *
+ * The [parent] property is implemented as a constructor parameter because there is no easy way
+ * to obtain the parent from the [KaContextParameterSymbol], but it always originates from a
+ * function or property declaration which serves as the parent.
+ *
+ * @param kaContextParameterSymbol The underlying Analysis API [KaContextParameterSymbol].
+ * @param parent The parent declaration (such as a function or property declaration) where this
+ * context parameter is declared.
+ */
 @OptIn(KaExperimentalApi::class)
-class KSContextParameterImpl private constructor(val kaContextParameterSymbol: KaContextParameterSymbol) :
-    KSContextParameter {
+class KSContextParameterImpl private constructor(
+    val kaContextParameterSymbol: KaContextParameterSymbol,
+    override val parent: KSNode,
+) : KSContextParameter, Deferrable {
 
-    companion object : KSObjectCache<KaContextParameterSymbol, KSContextParameterImpl>() {
-        fun getCached(kaContextParameterSymbol: KaContextParameterSymbol) =
-            cache.getOrPut(kaContextParameterSymbol) { KSContextParameterImpl(kaContextParameterSymbol) }
+    companion object : KSObjectCache<IdKeyPair<KaContextParameterSymbol, KSNode>, KSContextParameterImpl>() {
+
+        /**
+         * Returns a cached instance of [KSContextParameterImpl] for the given [KaContextParameterSymbol]
+         * and [parent] node, creating one if it does not already exist in the cache.
+         *
+         * @param kaContextParameterSymbol The Analysis API [KaContextParameterSymbol].
+         * @param parent The parent declaration (such as a function or property declaration) where this
+         * context parameter is declared.
+         * @return The cached or newly created [KSContextParameterImpl] instance.
+         */
+        fun getCached(kaContextParameterSymbol: KaContextParameterSymbol, parent: KSNode) =
+            cache.getOrPut(IdKeyPair(kaContextParameterSymbol, parent)) {
+                KSContextParameterImpl(
+                    kaContextParameterSymbol,
+                    parent
+                )
+            }
     }
 
     override val name: KSName? by lazy {
@@ -68,8 +97,15 @@ class KSContextParameterImpl private constructor(val kaContextParameterSymbol: K
         kaContextParameterSymbol.psi.toLocation()
     }
 
-    override val parent: KSNode?
-        get() = TODO("Not yet implemented")
+    override fun toString(): String =
+        name?.asString() ?: ""
+
+    override fun defer(): Restorable? {
+        val other = (parent as? Deferrable)?.defer() ?: return null
+        return kaContextParameterSymbol.defer inner@{
+            getCached(it, other.restore() ?: return@inner null)
+        }
+    }
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R = when (visitor) {
         is KSVisitorNext -> visitor.visitContextParameter(this, data)
