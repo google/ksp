@@ -16,21 +16,28 @@
  */
 package com.google.devtools.ksp.symbol
 
+/** A typed representation of an annotation argument's value. */
 sealed interface KSAnnotationValue
 
+/** A primitive or string value wrapped in its corresponding [KSPrimitiveType]. */
 @JvmInline
 value class Primitive(val type: KSPrimitiveType) : KSAnnotationValue
 
+/** A class reference represented by its [KSType]. */
 @JvmInline
 value class ReflectionClassReference(val type: KSType) : KSAnnotationValue
 
+/** An enum entry represented by its [KSClassDeclaration]. */
 @JvmInline
 value class EnumClass(val clazz: KSClassDeclaration) : KSAnnotationValue
 
+/** A nested annotation represented by its [KSAnnotation]. */
 @JvmInline
 value class AnnotationClass(val anno: KSAnnotation) : KSAnnotationValue
 
+/** An array or collection whose elements are recursively represented as [KSAnnotationValue]s. */
 @JvmInline
 value class ArrayValue(val values: Array<KSAnnotationValue>) : KSAnnotationValue
 
+/** A value that could not be converted, with a diagnostic [message] and the original [v]. */
 class ErrorValue(val message: String, val v: Any?) : KSAnnotationValue

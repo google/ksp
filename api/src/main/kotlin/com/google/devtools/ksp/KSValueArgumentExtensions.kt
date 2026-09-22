@@ -41,8 +41,19 @@ import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.Primitive
 import com.google.devtools.ksp.symbol.ReflectionClassReference
 
+/**
+ * Returns this annotation argument as a [KSAnnotationValue]. Prefer this over [KSValueArgument.value]
+ * when the value's kind matters; the `value` property remains available for existing callers.
+ */
 fun KSValueArgument.typedValue(): KSAnnotationValue = value.toKSAnnotationValue()
 
+/**
+ * Wraps Boolean, numeric, character, and string values in [Primitive] with the matching
+ * [com.google.devtools.ksp.symbol.KSPrimitiveType]. Class references become [ReflectionClassReference],
+ * enum entries become [EnumClass], and nested annotations become [AnnotationClass]. Arrays and collections
+ * become [ArrayValue], recursively converting their elements. Any other value, including null, becomes
+ * [ErrorValue].
+ */
 private fun Any?.toKSAnnotationValue(): KSAnnotationValue =
     when (this) {
         is Boolean -> Primitive(KSBool(this))

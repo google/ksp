@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.symbol
 
+/** A primitive or string annotation value, preserving its underlying Kotlin type. */
 sealed interface KSPrimitiveType
 
 @JvmInline

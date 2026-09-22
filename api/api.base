@@ -13,10 +13,6 @@ package com.google.devtools.ksp {
     property @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSType> ksTypes;
   }
 
-  public final class KSValueArgumentExtensionsKt {
-    method @NonNull public static com.google.devtools.ksp.symbol.KSAnnotationValue typedValue(@NonNull com.google.devtools.ksp.symbol.KSValueArgument);
-  }
-
   @kotlin.RequiresOptIn(message="This API is experimental.It may be changed in the future without notice or might be removed.") @kotlin.annotation.Retention(kotlin.annotation.AnnotationRetention.BINARY) public @interface KspExperimental {
   }
 
@@ -233,12 +229,6 @@ package com.google.devtools.ksp.processing {
 
 package com.google.devtools.ksp.symbol {
 
-  @kotlin.jvm.JvmInline public final value class AnnotationClass implements com.google.devtools.ksp.symbol.KSAnnotationValue {
-    ctor @KotlinOnly public AnnotationClass(com.google.devtools.ksp.symbol.KSAnnotation anno);
-    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSAnnotation getAnno();
-    property @NonNull public com.google.devtools.ksp.symbol.KSAnnotation anno;
-  }
-
   public enum AnnotationUseSiteTarget {
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget ALL;
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget DELEGATE;
@@ -252,12 +242,6 @@ package com.google.devtools.ksp.symbol {
     enum_constant public static final com.google.devtools.ksp.symbol.AnnotationUseSiteTarget SETPARAM;
   }
 
-  @kotlin.jvm.JvmInline public final value class ArrayValue implements com.google.devtools.ksp.symbol.KSAnnotationValue {
-    ctor @KotlinOnly public ArrayValue(com.google.devtools.ksp.symbol.KSAnnotationValue[] values);
-    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSAnnotationValue[] getValues();
-    property @NonNull public com.google.devtools.ksp.symbol.KSAnnotationValue[] values;
-  }
-
   public enum ClassKind {
     method @InaccessibleFromKotlin @NonNull public String getType();
     property @NonNull public String type;
@@ -267,20 +251,6 @@ package com.google.devtools.ksp.symbol {
     enum_constant public static final com.google.devtools.ksp.symbol.ClassKind ENUM_ENTRY;
     enum_constant public static final com.google.devtools.ksp.symbol.ClassKind INTERFACE;
     enum_constant public static final com.google.devtools.ksp.symbol.ClassKind OBJECT;
-  }
-
-  @kotlin.jvm.JvmInline public final value class EnumClass implements com.google.devtools.ksp.symbol.KSAnnotationValue {
-    ctor @KotlinOnly public EnumClass(com.google.devtools.ksp.symbol.KSClassDeclaration clazz);
-    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSClassDeclaration getClazz();
-    property @NonNull public com.google.devtools.ksp.symbol.KSClassDeclaration clazz;
-  }
-
-  public final class ErrorValue implements com.google.devtools.ksp.symbol.KSAnnotationValue {
-    ctor public ErrorValue(@NonNull String message, @Nullable Object v);
-    method @InaccessibleFromKotlin @NonNull public String getMessage();
-    method @InaccessibleFromKotlin @Nullable public Object getV();
-    property @NonNull public String message;
-    property @Nullable public Object v;
   }
 
   public final class FileLocation extends com.google.devtools.ksp.symbol.Location {
@@ -320,26 +290,11 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.AnnotationUseSiteTarget useSiteTarget;
   }
 
-  public sealed exhaustive interface KSAnnotationValue {
-  }
-
   public interface KSBackingField extends com.google.devtools.ksp.symbol.KSDeclaration {
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSPropertyDeclaration getProperty();
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSTypeReference getType();
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSPropertyDeclaration property;
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference type;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSBool implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSBool(boolean v);
-    method @InaccessibleFromKotlin public boolean getV();
-    property public boolean v;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSByte implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSByte(byte v);
-    method @InaccessibleFromKotlin public byte getV();
-    property public byte v;
   }
 
   public interface KSCallableReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
@@ -350,12 +305,6 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSValueParameter> functionParameters;
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference receiverType;
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSTypeReference returnType;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSChar implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSChar(char v);
-    method @InaccessibleFromKotlin public char getV();
-    property public char v;
   }
 
   public interface KSClassDeclaration extends com.google.devtools.ksp.symbol.KSDeclaration com.google.devtools.ksp.symbol.KSDeclarationContainer {
@@ -409,12 +358,6 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSClassifierReference enclosedType;
   }
 
-  @kotlin.jvm.JvmInline public final value class KSDouble implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSDouble(double v);
-    method @InaccessibleFromKotlin public double getV();
-    property public double v;
-  }
-
   public interface KSDynamicReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
   }
 
@@ -434,12 +377,6 @@ package com.google.devtools.ksp.symbol {
     property @NonNull public abstract String fileName;
     property @NonNull public abstract String filePath;
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSName packageName;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSFloat implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSFloat(float v);
-    method @InaccessibleFromKotlin public float getV();
-    property public float v;
   }
 
   public interface KSFunction {
@@ -470,18 +407,6 @@ package com.google.devtools.ksp.symbol {
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSTypeReference returnType;
   }
 
-  @kotlin.jvm.JvmInline public final value class KSInt implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSInt(int v);
-    method @InaccessibleFromKotlin public int getV();
-    property public int v;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSLong implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSLong(long v);
-    method @InaccessibleFromKotlin public long getV();
-    property public long v;
-  }
-
   public interface KSModifierListOwner extends com.google.devtools.ksp.symbol.KSNode {
     method @InaccessibleFromKotlin @NonNull public java.util.Set<com.google.devtools.ksp.symbol.Modifier> getModifiers();
     property @NonNull public abstract java.util.Set<com.google.devtools.ksp.symbol.Modifier> modifiers;
@@ -506,9 +431,6 @@ package com.google.devtools.ksp.symbol {
   public interface KSParenthesizedReference extends com.google.devtools.ksp.symbol.KSReferenceElement {
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSReferenceElement getElement();
     property @NonNull public abstract com.google.devtools.ksp.symbol.KSReferenceElement element;
-  }
-
-  public sealed exhaustive interface KSPrimitiveType {
   }
 
   public interface KSPropertyAccessor extends com.google.devtools.ksp.symbol.KSDeclarationContainer com.google.devtools.ksp.symbol.KSAnnotated com.google.devtools.ksp.symbol.KSModifierListOwner {
@@ -549,18 +471,6 @@ package com.google.devtools.ksp.symbol {
   public interface KSReferenceElement extends com.google.devtools.ksp.symbol.KSNode {
     method @InaccessibleFromKotlin @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> getTypeArguments();
     property @NonNull public abstract java.util.List<com.google.devtools.ksp.symbol.KSTypeArgument> typeArguments;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSShort implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSShort(short v);
-    method @InaccessibleFromKotlin public short getV();
-    property public short v;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSString implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSString(String v);
-    method @InaccessibleFromKotlin @NonNull public String getV();
-    property @NonNull public String v;
   }
 
   public interface KSType {
@@ -618,26 +528,6 @@ package com.google.devtools.ksp.symbol {
     method @InaccessibleFromKotlin @Nullable public com.google.devtools.ksp.symbol.KSReferenceElement getElement();
     method @NonNull public com.google.devtools.ksp.symbol.KSType resolve();
     property @Nullable public abstract com.google.devtools.ksp.symbol.KSReferenceElement element;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSUByte implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSUByte(kotlin.UByte v);
-    property public kotlin.UByte v;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSUInt implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSUInt(kotlin.UInt v);
-    property public kotlin.UInt v;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSULong implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSULong(kotlin.ULong v);
-    property public kotlin.ULong v;
-  }
-
-  @kotlin.jvm.JvmInline public final value class KSUShort implements com.google.devtools.ksp.symbol.KSPrimitiveType {
-    ctor @KotlinOnly public KSUShort(kotlin.UShort v);
-    property public kotlin.UShort v;
   }
 
   public interface KSValueArgument extends com.google.devtools.ksp.symbol.KSAnnotated {
@@ -785,18 +675,6 @@ package com.google.devtools.ksp.symbol {
     enum_constant public static final com.google.devtools.ksp.symbol.Origin KOTLIN;
     enum_constant public static final com.google.devtools.ksp.symbol.Origin KOTLIN_LIB;
     enum_constant public static final com.google.devtools.ksp.symbol.Origin SYNTHETIC;
-  }
-
-  @kotlin.jvm.JvmInline public final value class Primitive implements com.google.devtools.ksp.symbol.KSAnnotationValue {
-    ctor @KotlinOnly public Primitive(com.google.devtools.ksp.symbol.KSPrimitiveType type);
-    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSPrimitiveType getType();
-    property @NonNull public com.google.devtools.ksp.symbol.KSPrimitiveType type;
-  }
-
-  @kotlin.jvm.JvmInline public final value class ReflectionClassReference implements com.google.devtools.ksp.symbol.KSAnnotationValue {
-    ctor @KotlinOnly public ReflectionClassReference(com.google.devtools.ksp.symbol.KSType type);
-    method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSType getType();
-    property @NonNull public com.google.devtools.ksp.symbol.KSType type;
   }
 
   public enum Variance {
