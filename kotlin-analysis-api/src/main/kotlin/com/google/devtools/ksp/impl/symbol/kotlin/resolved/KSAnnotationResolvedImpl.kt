@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Google LLC
+ * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 
 import com.google.devtools.ksp.common.IdKeyPair
@@ -43,13 +59,41 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.RECE
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER
 import org.jetbrains.kotlin.psi.KtFile
 
+/**
+ * A resolved [KSAnnotation] backed directly by an Analysis API [KaAnnotation],
+ * rather than a source PSI node ([KtAnnotationEntry][org.jetbrains.kotlin.psi.KtAnnotationEntry] or
+ * [PsiAnnotation][com.intellij.psi.PsiAnnotation]).
+ *
+ * This implementation is used when annotations are resolved semantically or lack direct source PSI,
+ * such as:
+ * - Annotations loaded from compiled bytecode/libraries (binary symbols).
+ * - Annotations on resolved types or type references.
+ * - Nested annotations passed as arguments inside another annotation.
+ * - Synthesized annotations (such as `@ExtensionFunctionType`).
+ * - Annotations mapped via use-site targets on accessors or backing fields.
+ *
+ * Because there is no direct source PSI annotation entry, [location] is always [NonExistLocation].
+ *
+ * @param annotationApplication The underlying resolved Analysis API [KaAnnotation] representation.
+ * @param parent The parent AST node on which this annotation is applied (e.g., declaration, type reference, or value argument).
+ * @param origin The source or binary origin of this annotation (e.g., [Origin.KOTLIN], [Origin.JAVA], [Origin.KOTLIN_LIB], [Origin.JAVA_LIB], or [Origin.SYNTHETIC]).
+ */
 class KSAnnotationResolvedImpl private constructor(
     private val annotationApplication: KaAnnotation,
     override val parent: KSNode?,
     override val origin: Origin,
 ) : KSAnnotation {
+
     companion object :
         KSObjectCache<IdKeyPair<KaAnnotation, KSNode?>, KSAnnotationResolvedImpl>() {
+
+        /**
+         * Returns a cached [KSAnnotationResolvedImpl] for the given [KaAnnotation].
+         *
+         * @param annotationApplication The underlying resolved Analysis API [KaAnnotation] representation.
+         * @param parent The parent AST node on which this annotation is applied. Defaults to `null`.
+         * @param origin The origin of this annotation. If not specified, defaults to `parent?.origin` or [Origin.SYNTHETIC].
+         */
         fun getCached(annotationApplication: KaAnnotation, parent: KSNode? = null, origin: Origin? = parent?.origin) =
             cache.getOrPut(IdKeyPair(annotationApplication, parent)) {
                 KSAnnotationResolvedImpl(annotationApplication, parent, origin ?: Origin.SYNTHETIC)
