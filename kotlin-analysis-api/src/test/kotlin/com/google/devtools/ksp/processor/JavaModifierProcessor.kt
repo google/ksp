@@ -90,7 +90,7 @@ class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractT
                 ?: "${parentDeclaration?.qualifiedName?.asString()}.${simpleName.asString()}"
             val modifiersSignature = modifiers.map { it.toString() }.sorted().joinToString(" ")
             val extras = resolver.effectiveJavaModifiers(this).map { it.toString() }.sorted().joinToString(" ").trim()
-            return "$id: $modifiersSignature".trim() + " : " + extras
+            return ("$id: $modifiersSignature".trim() + " : " + extras).trim()
         }
     }
 }
