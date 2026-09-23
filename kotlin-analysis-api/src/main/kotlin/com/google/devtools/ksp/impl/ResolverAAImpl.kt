@@ -263,8 +263,11 @@ class ResolverAAImpl(
         Origin.SYNTHETIC -> existingJavaModifiers(declaration)
     }
 
-    private fun existingJavaModifiers(declaration: KSDeclaration): Set<Modifier> =
-        declaration.modifiers.filter { it in javaModifiers }.toSet()
+    private fun existingJavaModifiers(declaration: KSDeclaration): Set<Modifier> {
+        val modifiers = declaration.modifiers.filter { it in javaModifiers }.toSet()
+        // According to the JVM specification, ACC_VOLATILE and ACC_FINAL are mutually exclusive, so we defer to ACC_VOLATILE
+        return if (isVolatile(declaration)) modifiers - Modifier.FINAL else modifiers
+    }
 
     private fun visibilityModifier(declaration: KSDeclaration): Modifier? = when (declaration.getVisibility()) {
         // TODO: getVisibility might be inlined here or simplified here.
@@ -303,8 +306,17 @@ class ResolverAAImpl(
         else -> null
     }
 
+    private fun isVolatile(declaration: KSDeclaration): Boolean = when (declaration.origin) {
+        Origin.KOTLIN -> declaration.annotations.any { it.resolvesTo(JVM_VOLATILE_ANNOTATION_FQN) }
+        Origin.KOTLIN_LIB, Origin.JAVA_LIB -> volatileModifierIfApplicableTo(declaration) != null
+        Origin.JAVA -> declaration.modifiers.contains(Modifier.JAVA_VOLATILE)
+        Origin.SYNTHETIC -> false
+    }
+
     private fun finalModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration.origin) {
-        Origin.KOTLIN if !declaration.isOpen() -> Modifier.FINAL
+        // According to the JVM specification, ACC_VOLATILE and ACC_FINAL are mutually exclusive, so we defer to ACC_VOLATILE
+        Origin.KOTLIN if declaration !is KSBackingField && !declaration.isOpen() && !isVolatile(declaration) ->
+            Modifier.FINAL
         else -> null
     }
 
