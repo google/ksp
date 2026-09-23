@@ -56,6 +56,18 @@ class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractT
             results.add("$declName: Visibility: $visibility")
             results.add("$declName: Modifiers: $modifiers")
         }
+
+        listOf(
+            "topLevelTransientProperty",
+            "topLevelVolatileProperty"
+        ).forEach { propName ->
+            resolver.getPropertyDeclarationByName(resolver.getKSNameFromString(propName), includeTopLevel = true)?.let { prop ->
+                prop.accept(ModifierVisitor(resolver), Unit)
+            }
+        }
+        resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString("topLevelSynchronizedFun"), includeTopLevel = true).forEach { func ->
+            func.accept(ModifierVisitor(resolver), Unit)
+        }
         return emptyList()
     }
 
