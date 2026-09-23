@@ -169,6 +169,8 @@ class ResolverAAImpl(
             set(value) {
                 instance_prop.set(value)
             }
+        val instanceOrNull: ResolverAAImpl?
+            get() = instance_prop.get()
 
         private val ktModule_prop: ThreadLocal<KaSourceModule> = ThreadLocal()
         var ktModule: KaSourceModule
@@ -334,24 +336,22 @@ class ResolverAAImpl(
         else -> null
     }
 
-    private fun transientModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
-        is KSPropertyDeclaration ->
-            if (declaration.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0)
-                Modifier.JAVA_TRANSIENT
-            else
-                null
-
-        else -> null
+    private fun transientModifierIfApplicableTo(declaration: KSDeclaration): Modifier? {
+        val property = when (declaration) {
+            is KSBackingField -> declaration.property
+            is KSPropertyDeclaration if !shouldEnableNewFeatures() -> declaration
+            else -> return null
+        }
+        return if (property.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0) Modifier.JAVA_TRANSIENT else null
     }
 
-    private fun volatileModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
-        is KSPropertyDeclaration ->
-            if (declaration.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0)
-                Modifier.JAVA_VOLATILE
-            else
-                null
-
-        else -> null
+    private fun volatileModifierIfApplicableTo(declaration: KSDeclaration): Modifier? {
+        val property = when (declaration) {
+            is KSBackingField -> declaration.property
+            is KSPropertyDeclaration if !shouldEnableNewFeatures() -> declaration
+            else -> return null
+        }
+        return if (property.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0) Modifier.JAVA_VOLATILE else null
     }
 
     private fun strictModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
