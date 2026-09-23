@@ -141,6 +141,11 @@
 // TypeAliasInKt: Visibility: PRIVATE
 // TypeAliasInLib: Modifiers: [FINAL, PUBLIC]
 // TypeAliasInLib: Visibility: PUBLIC
+// topLevelSynchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
+// EXPECT NEXT: topLevelTransientProperty.field: FINAL PRIVATE : FINAL PRIVATE
+// topLevelTransientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT NEXT: topLevelVolatileProperty.field: PRIVATE : PRIVATE
+// topLevelVolatileProperty: FINAL PUBLIC : JAVA_VOLATILE PUBLIC
 // END
 // MODULE: module1
 // FILE: ALib.kt
@@ -197,6 +202,15 @@ open class DependencyOuterKotlinClass {
     @Synchronized
     fun synchronizedFun(): String = ""
 }
+
+@Transient
+val topLevelTransientProperty: String = ""
+
+@Volatile
+var topLevelVolatileProperty: String = ""
+
+@Synchronized
+fun topLevelSynchronizedFun(): String = ""
 // MODULE: main(module1)
 // FILE: ASrc.kt
 private typealias TypeAliasInKt = Int
