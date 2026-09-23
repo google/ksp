@@ -94,7 +94,10 @@ open class KSValidateVisitor(
         ) {
             return false
         }
-        if (!function.parameters.all { it.accept(this, function) }) {
+        if (
+            !function.parameters.all { it.accept(this, function) } ||
+            !function.contextParameters.all { it.accept(this, function) }
+        ) {
             return false
         }
         if (!this.visitDeclaration(function, data)) {
@@ -135,6 +138,7 @@ open class KSValidateVisitor(
                 javaClass
             )
         }
+        // N.B.: Mirrors visitValueParameter
         return contextParameter.type.accept(this, data)
     }
 
