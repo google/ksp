@@ -22,11 +22,13 @@
 // C.InnerC: PUBLIC : PUBLIC
 // C.NestedC.<init>: FINAL PUBLIC : FINAL PUBLIC
 // C.NestedC: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// EXPECT CURRENT: C.i1: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
 // EXPECT NEXT: C.i1.field: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
-// C.i1: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
+// EXPECT NEXT: C.i1: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // C.intFun: JAVA_DEFAULT JAVA_SYNCHRONIZED : JAVA_DEFAULT JAVA_SYNCHRONIZED
+// EXPECT CURRENT: C.s1: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
 // EXPECT NEXT: C.s1.field: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
-// C.s1: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
+// EXPECT NEXT: C.s1: FINAL : FINAL
 // EXPECT NEXT: C.staticStr.field: PRIVATE : PRIVATE
 // C.staticStr: PRIVATE : PRIVATE
 // C: ABSTRACT PUBLIC : ABSTRACT PUBLIC
@@ -48,10 +50,12 @@
 // DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicMethod: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.synchronizedFun: OPEN : JAVA_SYNCHRONIZED
+// EXPECT CURRENT: DependencyOuterJavaClass.transientField: FINAL : FINAL JAVA_TRANSIENT
 // EXPECT NEXT: DependencyOuterJavaClass.transientField.field: JAVA_TRANSIENT : JAVA_TRANSIENT
-// DependencyOuterJavaClass.transientField: FINAL : FINAL JAVA_TRANSIENT
+// EXPECT NEXT: DependencyOuterJavaClass.transientField: FINAL : FINAL
+// EXPECT CURRENT: DependencyOuterJavaClass.volatileField: FINAL : JAVA_VOLATILE
 // EXPECT NEXT: DependencyOuterJavaClass.volatileField.field: JAVA_VOLATILE : JAVA_VOLATILE
-// DependencyOuterJavaClass.volatileField: FINAL : JAVA_VOLATILE
+// EXPECT NEXT: DependencyOuterJavaClass.volatileField: FINAL : FINAL
 // DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.<init>: FINAL PRIVATE : FINAL PRIVATE
@@ -75,10 +79,12 @@
 // EXPECT NEXT: DependencyOuterKotlinClass.mutableProperty.field: PRIVATE : PRIVATE
 // DependencyOuterKotlinClass.mutableProperty: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.synchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
-// EXPECT NEXT: DependencyOuterKotlinClass.transientProperty.field: FINAL PRIVATE : FINAL PRIVATE
-// DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
-// EXPECT NEXT: DependencyOuterKotlinClass.volatileProperty.field: PRIVATE : PRIVATE
-// DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : JAVA_VOLATILE PUBLIC
+// EXPECT CURRENT: DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.transientProperty.field: FINAL PRIVATE : FINAL JAVA_TRANSIENT PRIVATE
+// EXPECT NEXT: DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL PUBLIC
+// EXPECT CURRENT: DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : JAVA_VOLATILE PUBLIC
+// EXPECT NEXT: DependencyOuterKotlinClass.volatileProperty.field: PRIVATE : JAVA_VOLATILE PRIVATE
+// EXPECT NEXT: DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
 // HasTypeAliasFuns: Modifiers: []
 // HasTypeAliasFuns: Visibility: PUBLIC
@@ -103,10 +109,12 @@
 // OuterJavaClass.staticPublicField: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass.synchronizedFun: JAVA_SYNCHRONIZED : JAVA_SYNCHRONIZED
+// EXPECT CURRENT: OuterJavaClass.transientField: JAVA_TRANSIENT : JAVA_TRANSIENT
 // EXPECT NEXT: OuterJavaClass.transientField.field: JAVA_TRANSIENT : JAVA_TRANSIENT
-// OuterJavaClass.transientField: JAVA_TRANSIENT : JAVA_TRANSIENT
+// EXPECT NEXT: OuterJavaClass.transientField: :
+// EXPECT CURRENT: OuterJavaClass.volatileField: JAVA_VOLATILE : JAVA_VOLATILE
 // EXPECT NEXT: OuterJavaClass.volatileField.field: JAVA_VOLATILE : JAVA_VOLATILE
-// OuterJavaClass.volatileField: JAVA_VOLATILE : JAVA_VOLATILE
+// EXPECT NEXT: OuterJavaClass.volatileField: :
 // OuterJavaClass: PUBLIC : PUBLIC
 // OuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.Companion.<init>: FINAL PUBLIC : FINAL PUBLIC
@@ -142,10 +150,12 @@
 // TypeAliasInLib: Modifiers: [FINAL, PUBLIC]
 // TypeAliasInLib: Visibility: PUBLIC
 // topLevelSynchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
-// EXPECT NEXT: topLevelTransientProperty.field: FINAL PRIVATE : FINAL PRIVATE
-// topLevelTransientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
-// EXPECT NEXT: topLevelVolatileProperty.field: PRIVATE : PRIVATE
-// topLevelVolatileProperty: FINAL PUBLIC : JAVA_VOLATILE PUBLIC
+// EXPECT CURRENT: topLevelTransientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT NEXT: topLevelTransientProperty.field: FINAL PRIVATE : FINAL JAVA_TRANSIENT PRIVATE
+// EXPECT NEXT: topLevelTransientProperty: FINAL PUBLIC : FINAL PUBLIC
+// EXPECT CURRENT: topLevelVolatileProperty: FINAL PUBLIC : JAVA_VOLATILE PUBLIC
+// EXPECT NEXT: topLevelVolatileProperty.field: PRIVATE : JAVA_VOLATILE PRIVATE
+// EXPECT NEXT: topLevelVolatileProperty: FINAL PUBLIC : FINAL PUBLIC
 // END
 // MODULE: module1
 // FILE: ALib.kt
