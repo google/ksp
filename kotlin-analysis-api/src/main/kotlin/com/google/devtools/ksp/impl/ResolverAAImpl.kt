@@ -141,6 +141,7 @@ import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
@@ -168,6 +169,8 @@ class ResolverAAImpl(
             set(value) {
                 instance_prop.set(value)
             }
+        val instanceOrNull: ResolverAAImpl?
+            get() = instance_prop.get()
 
         private val ktModule_prop: ThreadLocal<KaSourceModule> = ThreadLocal()
         var ktModule: KaSourceModule
@@ -263,8 +266,11 @@ class ResolverAAImpl(
         Origin.SYNTHETIC -> existingJavaModifiers(declaration)
     }
 
-    private fun existingJavaModifiers(declaration: KSDeclaration): Set<Modifier> =
-        declaration.modifiers.filter { it in javaModifiers }.toSet()
+    private fun existingJavaModifiers(declaration: KSDeclaration): Set<Modifier> {
+        val modifiers = declaration.modifiers.filter { it in javaModifiers }.toSet()
+        // According to the JVM specification, ACC_VOLATILE and ACC_FINAL are mutually exclusive, so we defer to ACC_VOLATILE
+        return if (isVolatile(declaration)) modifiers - Modifier.FINAL else modifiers
+    }
 
     private fun visibilityModifier(declaration: KSDeclaration): Modifier? = when (declaration.getVisibility()) {
         // TODO: getVisibility might be inlined here or simplified here.
@@ -303,8 +309,17 @@ class ResolverAAImpl(
         else -> null
     }
 
+    private fun isVolatile(declaration: KSDeclaration): Boolean = when (declaration.origin) {
+        Origin.KOTLIN -> declaration.annotations.any { it.resolvesTo(JVM_VOLATILE_ANNOTATION_FQN) }
+        Origin.KOTLIN_LIB, Origin.JAVA_LIB -> volatileModifierIfApplicableTo(declaration) != null
+        Origin.JAVA -> declaration.modifiers.contains(Modifier.JAVA_VOLATILE)
+        Origin.SYNTHETIC -> false
+    }
+
     private fun finalModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration.origin) {
-        Origin.KOTLIN if !declaration.isOpen() -> Modifier.FINAL
+        // According to the JVM specification, ACC_VOLATILE and ACC_FINAL are mutually exclusive, so we defer to ACC_VOLATILE
+        Origin.KOTLIN if declaration !is KSBackingField && !declaration.isOpen() && !isVolatile(declaration) ->
+            Modifier.FINAL
         else -> null
     }
 
@@ -321,14 +336,22 @@ class ResolverAAImpl(
         else -> null
     }
 
-    private fun transientModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
-        is KSPropertyDeclaration if declaration.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0 -> Modifier.JAVA_TRANSIENT
-        else -> null
+    private fun transientModifierIfApplicableTo(declaration: KSDeclaration): Modifier? {
+        val property = when (declaration) {
+            is KSBackingField -> declaration.property
+            is KSPropertyDeclaration if !shouldEnableNewFeatures() -> declaration
+            else -> return null
+        }
+        return if (property.jvmAccessFlag and Opcodes.ACC_TRANSIENT != 0) Modifier.JAVA_TRANSIENT else null
     }
 
-    private fun volatileModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
-        is KSPropertyDeclaration if declaration.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0 -> Modifier.JAVA_VOLATILE
-        else -> null
+    private fun volatileModifierIfApplicableTo(declaration: KSDeclaration): Modifier? {
+        val property = when (declaration) {
+            is KSBackingField -> declaration.property
+            is KSPropertyDeclaration if !shouldEnableNewFeatures() -> declaration
+            else -> return null
+        }
+        return if (property.jvmAccessFlag and Opcodes.ACC_VOLATILE != 0) Modifier.JAVA_VOLATILE else null
     }
 
     private fun strictModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration) {
@@ -347,13 +370,21 @@ class ResolverAAImpl(
             else -> emptySet()
         }
 
+    private fun KSDeclaration.containingClassId(): ClassId? {
+        val firSymbol = ((this as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol as? KaFirSymbol<*>)?.firSymbol
+        return when (val containerSource = (firSymbol as? FirCallableSymbol<*>)?.containerSource) {
+            is JvmPackagePartSource -> containerSource.classId
+            is KotlinJvmBinarySourceElement -> containerSource.binaryClass.classId
+            else -> (findParentOfType<KSClassDeclaration>() as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classId
+        }
+    }
+
     internal val KSPropertyDeclaration.jvmAccessFlag: Int
         // TODO: Might be a good idea to cache this result? Let's hold off until we can measure it.
         get() = when (origin) {
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val fileManager = instance.javaFileManager
-                val parentClass = this.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
+                val classId = containingClassId() ?: return 0
                 BinaryClassInfoCache.getCached(classId, fileManager)
                     ?.fieldAccFlags?.get(this.simpleName.asString()) ?: 0
             }
@@ -371,8 +402,7 @@ class ResolverAAImpl(
             Origin.KOTLIN_LIB, Origin.JAVA_LIB -> {
                 val jvmDesc = mapToJvmSignatureInternal(this)
                 val fileManager = instance.javaFileManager
-                val parentClass = this.findParentOfType<KSClassDeclaration>()
-                val classId = (parentClass as KSClassDeclarationImpl).ktClassOrObjectSymbol.classId!!
+                val classId = containingClassId() ?: return 0
                 BinaryClassInfoCache.getCached(classId, fileManager)
                     ?.methodAccFlags?.get(this.simpleName.asString() + jvmDesc) ?: 0
             }
