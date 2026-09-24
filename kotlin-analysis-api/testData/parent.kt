@@ -139,6 +139,9 @@
 // parent of topClass: File: a.kt
 // parent of Int: Int
 // parent of Int: i
+// parent of Anno: Anno
+// parent of Anno: @Anno
+// parent of @Anno: i
 // parent of i: memberFun
 // parent of Int: Int
 // parent of Int: memberFun
@@ -294,7 +297,7 @@ interface ITF
 
 @Anno
 class topClass: ITF {
-    fun memberFun(i: Int) = 1
+    fun memberFun(@Anno i: Int) = 1
     class InnerClass<P> {
         fun innerFun(p: P) = 1
     }
