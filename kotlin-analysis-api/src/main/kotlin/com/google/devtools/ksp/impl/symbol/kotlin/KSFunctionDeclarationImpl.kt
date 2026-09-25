@@ -34,6 +34,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunction
@@ -49,6 +50,7 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDestructuringDeclarationSymbol
@@ -63,6 +65,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolLocation
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.symbols.name
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
@@ -172,6 +175,21 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
     override val parameters: List<KSValueParameter> by lazy {
         ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it, this) }
     }
+
+    /**
+     * Cache for [contextParameters] if new features are enabled.
+     */
+    @OptIn(KaExperimentalApi::class)
+    private val contextParametersCache: List<KSContextParameter> by lazy {
+        ktFunctionSymbol.contextParameters.map { KSContextParameterImpl.getCached(it, this) }
+    }
+
+    override val contextParameters: List<KSContextParameter>
+        get() =
+            if (ResolverAAImpl.instance.shouldEnableNewFeatures())
+                contextParametersCache
+            else
+                emptyList()
 
     override fun findOverridee(): KSDeclaration? {
         closestClassDeclaration()?.asStarProjectedType()?.let {
@@ -381,10 +399,12 @@ private class KSFunctionDeclarationPsiImpl(
                 // Constructors are always final
                 psiModifiers.add(Modifier.FINAL)
             }
+
             psiMethod.hasModifierProperty(PsiModifier.STATIC) -> {
                 // Emulate AA: Static methods in compiled Java libraries are treated as final in Kotlin
                 psiModifiers.add(Modifier.FINAL)
             }
+
             !psiMethod.hasModifierProperty(PsiModifier.FINAL) &&
                 !psiMethod.hasModifierProperty(PsiModifier.PRIVATE) -> {
                 // Non-final, non-static, non-private Java instance methods are open in Kotlin
@@ -427,6 +447,7 @@ fun KaSession.findKaFunctionSymbol(psiMethod: PsiMethod, parentClass: KSClassDec
     fun Sequence<KaSymbol>.firstMatchingPsiMethod(psi: PsiMethod): KaFunctionSymbol? {
         return filterIsInstance<KaFunctionSymbol>().find { it.psi == psi || it.psi?.isEquivalentTo(psi) == true }
     }
+
     val parentSymbol = parentClass.ktClassOrObjectSymbol
     return if (psiMethod.isConstructor) {
         parentSymbol.declaredMemberScope.constructors.firstMatchingPsiMethod(psiMethod)
@@ -469,6 +490,7 @@ private fun KaSession.findKaPropertyAccessorSymbols(
             val propertyName = accessorBase.replaceFirstChar { it.lowercaseChar() }
             sequenceOf(propertyName, accessorBase, "is$accessorBase")
         }
+
         else -> return emptySequence()
     }
     return namesToSearch

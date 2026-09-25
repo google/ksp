@@ -45,6 +45,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSBackingField
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -504,15 +505,16 @@ class PsiResolutionStrategy(
     ): Collection<KSAnnotated> {
         // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
-        return when {
-            ksSym is KSPropertyDeclaration && enableNewFeatures -> targetFieldFix.resolveKSPropertyDeclaration(
+        return when (ksSym) {
+            is KSPropertyDeclaration if enableNewFeatures -> targetFieldFix.resolveKSPropertyDeclaration(
                 ksSym,
                 annotationEntry
             )
 
             // N.B.: Mirror AA implementation: Return the owning property of the backing field if the feature is disabled.
-            ksSym is KSBackingField && !enableNewFeatures -> listOf(ksSym.property)
-
+            is KSBackingField if !enableNewFeatures -> listOf(ksSym.property)
+            is KSContextParameter if enableNewFeatures -> listOf(ksSym)
+            is KSContextParameter -> emptyList()
             else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget, enableNewFeatures)
         }
     }
