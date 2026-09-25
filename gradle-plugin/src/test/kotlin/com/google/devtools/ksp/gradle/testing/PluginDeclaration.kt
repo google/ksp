@@ -29,9 +29,15 @@ package com.google.devtools.ksp.gradle.testing
 @ConsistentCopyVisibility
 data class PluginDeclaration private constructor(
     val text: String,
-    val version: String
+    val version: String,
+    val apply: Boolean = true
 ) {
-    fun toCode() = text
+    fun toCode() = if (apply) text else "$text apply false"
+
+    /**
+     * Returns this declaration with `apply false`, so the build script can apply the plugin later.
+     */
+    fun notApplied() = copy(apply = false)
 
     companion object {
         /**
