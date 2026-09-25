@@ -120,6 +120,13 @@ class KspConfigurations(private val project: Project) {
         when (kotlin) {
             is KotlinSingleTargetExtension<*> -> decorateKotlinTarget(kotlin.target, isKotlinMultiplatform = false)
             is KotlinMultiplatformExtension -> {
+                // Created directly, not via KGP's legacy metadata/main compilation, which KGP plans to remove
+                // (KT-62332). Otherwise it would only appear once KGP creates metadata/commonMain after the
+                // build script, too late for dependencies {}.
+                createConfiguration(
+                    name = configurationNameOf(PREFIX, KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME, "metadata"),
+                    readableSetName = KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME
+                )
                 kotlin.targets.configureEach { decorateKotlinTarget(it, isKotlinMultiplatform = true) }
 
                 var reported = false
