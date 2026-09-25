@@ -26,6 +26,8 @@
 // @MyAnnotation LibFoo arguments: noDefaultValue = libFoo, noDefaultArrayValue = [libFoo array], withDefaultValue = the default value, intValue = 42, enumValue = MyEnum.A, classValue = Nested, nestedValue = @Nested, intArrayValue = [1, 2, 3], stringArrayValue = [a, b]
 // END
 
+// NOTE: This test is a duplicate of the native annotationDefaultValueTypes to assert that both JVM and native return the same results.
+
 // MODULE: lib
 // FILE: Lib.kt
 package lib
