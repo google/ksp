@@ -169,19 +169,21 @@ class KspIntegrationTestRule(
 
     /**
      * Sets up the app module as a multiplatform app with the specified [targets], wrapped in a kotlin { } block.
+     * If [applyKspPlugin] is false, KSP is declared with `apply false` and the test applies it in the build script.
      */
-    fun setupAppAsMultiplatformApp(targets: String) {
+    fun setupAppAsMultiplatformApp(targets: String, applyKspPlugin: Boolean = true) {
         val contents = """
             android.builtInKotlin=false
             android.newDsl=false
             
         """.trimIndent()
         testProject.rootDir.resolve("gradle.properties").appendText(contents)
+        val kspPlugin = PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
         testProject.appModule.plugins.addAll(
             listOf(
                 PluginDeclaration.id("com.android.application", testConfig.androidBaseVersion),
                 PluginDeclaration.kotlin("multiplatform", testConfig.kotlinBaseVersion),
-                PluginDeclaration.id("com.google.devtools.ksp", testConfig.kspVersion)
+                if (applyKspPlugin) kspPlugin else kspPlugin.notApplied()
             )
         )
         testProject.appModule.buildFileAdditions.add(targets)
