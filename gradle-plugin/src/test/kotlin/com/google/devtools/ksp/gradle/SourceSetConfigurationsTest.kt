@@ -519,4 +519,56 @@ class SourceSetConfigurationsTest(isExperimentalPsiResolution: Boolean) {
         // Must not also contain InCommon_Generated.kt.
         assertThat(generatedIn("sharedMain")).containsExactly("InShared_Generated.kt")
     }
+
+    /**
+     * KGP plans to stop creating the legacy metadata/main compilation (KT-62332), which currently
+     * creates kspCommonMainMetadata early. Removing it before KSP is applied simulates that.
+     */
+    @Test
+    fun commonMainMetadataConfigurationWithoutLegacyMetadataCompilation() {
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin.targets.getByName("metadata").compilations.run {
+                    findByName("main")?.let { remove(it) }
+                }
+                apply(plugin = "com.google.devtools.ksp")
+
+                kotlin {
+                    jvm { }
+                    js(IR) { browser() }
+                }
+
+                dependencies {
+                    add("kspCommonMainMetadata", project(":processor"))
+                }
+            """.trimIndent(),
+            applyKspPlugin = false
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+
+        class Processor(val codeGenerator: CodeGenerator) : SymbolProcessor {
+            private var generated = false
+
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                if (!generated) {
+                    generated = true
+                    codeGenerator.createNewFile(Dependencies(false), "", "Generated").use { out ->
+                        out.writer().use { writer -> writer.write("class Generated") }
+                    }
+                }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> Processor(env.codeGenerator) })
+
+        testRule.addProvider(Provider::class)
+
+        testRule.runner()
+            .withArguments(":app:kspCommonMainKotlinMetadata")
+            .build()
+
+        val generated = testRule.appModule.moduleRoot.resolve("build/generated/ksp/metadata/commonMain/kotlin")
+        assertThat(generated.resolve("Generated.kt").exists()).isTrue()
+    }
 }
