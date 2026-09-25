@@ -1099,6 +1099,18 @@ abstract class KSPUnitTestSuite(
     }
 
     @Bug(
+        "https://github.com/google/ksp/issues/3233",
+        BugState.FIXED,
+        "Asserts that on JVM, parameters without default values (including array parameters) are absent " +
+            "from defaultArguments, matching Native behavior."
+    )
+    @TestMetadata("annotationDefaultValueTypes.kt")
+    @Test
+    fun testAnnotationDefaultValueTypes() {
+        runTest("$AA_PATH/annotationDefaultValueTypes.kt")
+    }
+
+    @Bug(
         "https://github.com/google/ksp/issues/2396",
         BugState.FIXED,
         "This test is a copy of native/packageDeclarations.kt but this test asserts that it works on JVM"
