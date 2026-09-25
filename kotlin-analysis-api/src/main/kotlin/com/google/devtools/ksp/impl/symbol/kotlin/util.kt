@@ -135,7 +135,6 @@ import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.abbreviatedType
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
-import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
@@ -802,21 +801,14 @@ internal fun getDefaultValueOnJvm(
         .getContainingClassSymbol()?.classId
         ?: return null
 
-    val defaultValue: JavaAnnotationArgument? = analyze {
+    val defaultValue: JavaAnnotationArgument = analyze {
         val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
         jc.methods.firstOrNull { it.name == kaFirValueParameterSymbol.name }?.annotationParameterDefaultValue
-    }
+    } ?: return null
 
     val firSession = kaFirValueParameterSymbol.firSymbol.fir.moduleData.session
     val expectedTypeRef = kaFirValueParameterSymbol.firSymbol.fir.returnTypeRef
-    // when no default value is declared in the class file, ideally users should
-    // apply a value for such property at use site, therefore value obtained here should not be
-    // returned. In case of a user failed to do so, we try our best to return values
-    // to ensure no annotation argument is missing from KSP side.
-    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
-    // will produce empty array for array type values and `null` for the rest of value types.
-    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
-        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+    val expression = defaultValue.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
     return FirAnnotationValueConverter.toConstantValue(expression, kaFirValueParameterSymbol.builder)
 }
 
