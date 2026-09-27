@@ -137,7 +137,9 @@ fun KSClassDeclaration.getConstructors(): Sequence<KSFunctionDeclaration> {
 
 /** Check whether this is a local declaration, or namely, declared in a function. */
 fun KSDeclaration.isLocal(): Boolean {
-    return this.parentDeclaration != null && this.parentDeclaration !is KSClassDeclaration
+    return this !is KSBackingField &&
+        this.parentDeclaration != null &&
+        this.parentDeclaration !is KSClassDeclaration
 }
 
 /**
@@ -197,7 +199,6 @@ fun KSDeclaration.getVisibility(): Visibility {
             } ?: Visibility.PUBLIC
         }
 
-        this.isKotlinBackingField() -> Visibility.PRIVATE
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) ->
@@ -215,11 +216,6 @@ fun KSDeclaration.getVisibility(): Visibility {
             else Visibility.JAVA_PACKAGE
     }
 }
-
-internal fun KSDeclaration.isKotlinBackingField(): Boolean =
-    this is KSBackingField && (
-        origin == Origin.KOTLIN || origin == Origin.KOTLIN_LIB
-        )
 
 /**
  * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution
@@ -281,7 +277,8 @@ fun KSPropertyDeclaration.isAbstract(): Boolean {
 }
 
 fun KSDeclaration.isOpen() =
-    !this.isLocal() &&
+    this !is KSBackingField &&
+        !this.isLocal() &&
         !this.modifiers.contains(Modifier.FINAL) &&
         ((this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
             this.modifiers.contains(Modifier.OVERRIDE) ||

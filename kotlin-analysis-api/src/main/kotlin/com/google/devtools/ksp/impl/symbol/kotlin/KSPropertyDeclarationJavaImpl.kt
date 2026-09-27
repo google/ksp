@@ -50,6 +50,20 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
     override val ktDeclarationSymbol: KaDeclarationSymbol
         get() = ktJavaFieldSymbol
 
+    /**
+     * The modifiers of this property as declared, including the [fieldOnlyModifiers].
+     *
+     * N.B.: This is cached separately from [modifiers] because whether the latter reports the [fieldOnlyModifiers]
+     * depends on the processor that is currently running. Declarations are cached and shared by all processors of a
+     * round, so the decision cannot be cached along with them.
+     */
+    protected open val allModifiers: Set<Modifier> by lazy {
+        super<AbstractKSDeclarationImpl>.modifiers
+    }
+
+    override val modifiers: Set<Modifier>
+        get() = allModifiers.withoutFieldOnlyModifiers()
+
     // Manual delegation for KSExpectActual to avoid eager evaluation in the class header
     private val expectActualImpl by lazy { KSExpectActualImpl(ktJavaFieldSymbol) }
     override val isActual: Boolean get() = expectActualImpl.isActual
@@ -127,7 +141,7 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
 }
 
 private class KSPropertyDeclarationJavaAAImpl(
-    override val ktJavaFieldSymbol: KaJavaFieldSymbol
+    override val ktJavaFieldSymbol: KaJavaFieldSymbol,
 ) : KSPropertyDeclarationJavaImpl() {
     companion object : KSObjectCache<KaJavaFieldSymbol, KSPropertyDeclarationJavaAAImpl>() {
         fun getCached(symbol: KaJavaFieldSymbol) = cache.getOrPut(symbol) {
@@ -179,7 +193,7 @@ private class KSPropertyDeclarationJavaPsiImpl(
     override val isMutable: Boolean
         get() = !psiField.hasModifierProperty(PsiModifier.FINAL)
 
-    override val modifiers: Set<Modifier> by lazy {
+    override val allModifiers: Set<Modifier> by lazy {
         if (origin == Origin.JAVA) {
             return@lazy psiField.toKSModifiers()
         }
@@ -216,4 +230,33 @@ internal fun KaJavaFieldSymbol.toModifiers(): Set<Modifier> {
         result.add(modality.toModifier())
     }
     return result
+}
+
+/**
+ * JVM modifiers that apply to a field rather than to the property that owns it.
+ *
+ * Kotlin models both of them as annotations (`kotlin.jvm.Transient` and `kotlin.jvm.Volatile`) with a field use-site
+ * target, and Java declares them on the field itself. Neither of them can be applied to anything but a field.
+ */
+internal val fieldOnlyModifiers = setOf(Modifier.JAVA_TRANSIENT, Modifier.JAVA_VOLATILE)
+
+/**
+ * Removes the [fieldOnlyModifiers] if backing fields are enabled, in which case they are reported on the
+ * [KSBackingField] of a property instead of on the [KSPropertyDeclaration] itself.
+ *
+ * This keeps [KSPropertyDeclaration.modifiers], and therefore also `Resolver.effectiveJavaModifiers`, consistent
+ * across all origins: for [Origin.KOTLIN] the corresponding annotations are already moved to the backing field, and
+ * for [Origin.KOTLIN_LIB] and [Origin.JAVA_LIB] the access flags are only resolved for backing fields.
+ *
+ * Declarations are also read outside a processing round, e.g. while KSP computes the dirty files for incremental
+ * processing. There is no processor to opt in to backing fields in that case, so nothing is removed.
+ */
+internal fun Set<Modifier>.withoutFieldOnlyModifiers(): Set<Modifier> {
+    // Checked first to avoid both the thread local lookup and the allocation below for the common case.
+    val setsDoNotOverlap = fieldOnlyModifiers.none { modifier -> modifier in this }
+    if (setsDoNotOverlap) {
+        return this
+    }
+
+    return if (ResolverAAImpl.instanceOrNull?.shouldEnableNewFeatures() == true) this - fieldOnlyModifiers else this
 }
