@@ -77,6 +77,20 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
         KSPropertyDeclarationImpl.getCached(kaBackingFieldSymbol.owningProperty)
     }
 
+    /**
+     * The modifiers of this backing field.
+     *
+     * N.B.: Unlike [AbstractKSDeclarationImpl.modifiers], these are always derived from the symbol instead of from
+     * the PSI for sources. A backing field is usually implicit and therefore has no PSI to read modifiers from, which
+     * would make them differ depending on whether the property was read from source or from a compiled artifact.
+     *
+     * [Modifier.FINAL] is included only when the backing field is immutable (`val`), matching [KSBackingFieldJavaImpl]
+     * and the underlying JVM field's `ACC_FINAL` flag.
+     */
+    override val modifiers: Set<Modifier> by lazy {
+        kaBackingFieldSymbol.toModifiers()
+    }
+
     override val qualifiedName: KSName? by lazy {
         // N.B.: kaBackingFieldSymbol.callableId is always null so we use the fqn of the property instead
         kaBackingFieldSymbol.owningProperty.callableId?.asSingleFqName()?.asString()?.let { propName ->
@@ -114,4 +128,4 @@ class KSBackingFieldImpl private constructor(val kaBackingFieldSymbol: KaBacking
 }
 
 internal fun KaBackingFieldSymbol.toModifiers(): Set<Modifier> =
-    mutableSetOf(Modifier.PRIVATE, Modifier.FINAL)
+    if (isVal) setOf(Modifier.PRIVATE, Modifier.FINAL) else setOf(Modifier.PRIVATE)
