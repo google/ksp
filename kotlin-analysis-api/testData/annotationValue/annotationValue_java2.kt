@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // MyClass: MyAnnotation
 // MyClass: MyAnnotation: stringParam = 2
 // MyClass: MyAnnotation: stringParam2 = 1

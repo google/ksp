@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: JavaNonNullProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // javaNotNullFieldRef: NOT_NULL
 // javaNullableFieldRef: NULLABLE
 // javaBothFieldRef: PLATFORM

@@ -18,6 +18,7 @@
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
 // PROCESSOR INPUT: Anno
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // END
 
 // FILE: Anno.kt
