@@ -654,8 +654,8 @@ class KotlinSymbolProcessing(
             }
 
             // Call onError() or finish()
+            KspDiagnostics.reportUnresolvedErrors(logger)
             if (logger.hasError) {
-                runTypeCheck(newKSFiles, project, logger)
                 processors.forEach(SymbolProcessor::onError)
             } else {
                 processors.forEach(SymbolProcessor::finish)
@@ -674,6 +674,7 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
+            KspDiagnostics.clear()
             maybeRunInWriteAction {
                 (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
@@ -683,20 +684,6 @@ class KotlinSymbolProcessing(
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
-    }
-
-    companion object {
-        fun List<KSFile>.toKtFiles(project: Project): List<KtFile> = getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
-
-        fun List<KSFile>.toPsiJavaFiles(project: Project): List<PsiJavaFile> = getPsiFilesFromPaths<PsiJavaFile>(project, this.toPathSet())
-
-        fun List<KSFile>.toPathSet(): Set<Path> = this.map {File(it.filePath).toPath() }.toSet()
-
-        fun runTypeCheck(newKSFiles: List<KSFile>, project: Project, logger: KSPLogger) {
-            val (kotlinKSFiles, javaKSFiles) = newKSFiles
-                .partition { it.origin == Origin.KOTLIN }
-            KspDiagnostics.runTypeCheck(javaKSFiles.toPsiJavaFiles(project), kotlinKSFiles.toKtFiles(project), logger)
-        }
     }
 }
 

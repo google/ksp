@@ -53,6 +53,12 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     override fun testGroupedAnnotationsWithUseSiteTargets() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
+
+    @TestMetadata("getSymbolsWithAnnotation/localAnnotationClass.kt")
+    @Test
+    override fun testLocalAnnotationClass() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/localAnnotationClass.kt")
+    }
 }
 
 class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
