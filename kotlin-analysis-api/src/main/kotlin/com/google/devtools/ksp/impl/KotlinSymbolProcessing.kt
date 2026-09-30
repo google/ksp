@@ -76,7 +76,7 @@ import org.jetbrains.kotlin.analysis.api.platform.declarations.*
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinLifetimeTokenFactory
 import org.jetbrains.kotlin.analysis.api.platform.modification.KotlinModificationTrackerFactory
-import org.jetbrains.kotlin.analysis.api.platform.modification.publishGlobalModuleStateModificationEvent
+import org.jetbrains.kotlin.analysis.api.platform.modification.publishGlobalSourceModuleStateModificationEvent
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.packages.KotlinPackageProviderFactory
 import org.jetbrains.kotlin.analysis.api.platform.permissions.KotlinAnalysisPermissionOptions
@@ -84,7 +84,6 @@ import org.jetbrains.kotlin.analysis.api.platform.resolution.KaResolutionActivit
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KaResolveExtensionProvider
-import org.jetbrains.kotlin.analysis.api.session.KaSessionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
 import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.KotlinStandalonePlatformSettings
@@ -578,9 +577,7 @@ class KotlinSymbolProcessing(
 
             fun dropCaches() {
                 maybeRunInWriteAction {
-                    project.publishGlobalModuleStateModificationEvent()
-                    KaSessionProvider.getInstance(project).clearCaches()
-                    psiManager.dropResolveCaches()
+                    project.publishGlobalSourceModuleStateModificationEvent()
                     psiManager.dropPsiCaches()
 
                     KSObjectCacheManager.clear()
