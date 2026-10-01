@@ -30,7 +30,6 @@ class KspConfigurations(private val project: Project) {
     private val configurationForAll = project.configurations.create(PREFIX).apply {
         isCanBeConsumed = false
         isCanBeResolved = false
-        isVisible = false
     }
 
     private fun configurationNameOf(vararg parts: String): String {
@@ -50,7 +49,6 @@ class KspConfigurations(private val project: Project) {
             description = "KSP dependencies for the '$readableSetName' source set."
             isCanBeResolved = false // we'll resolve the processor classpath config
             isCanBeConsumed = false
-            isVisible = false
         }
     }
 
