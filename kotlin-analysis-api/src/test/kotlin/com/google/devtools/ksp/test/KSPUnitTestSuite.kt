@@ -276,11 +276,14 @@ abstract class KSPUnitTestSuite(
 
     @Bug(
         "https://github.com/google/ksp/issues/2472",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 367: Context parameters are stable in Kotlin 2.4.0"
     )
     @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    abstract fun testContextParameters()
+    @Test
+    fun testContextParameters() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
 
     @TestMetadata("declarationInconsistency.kt")
     @Test

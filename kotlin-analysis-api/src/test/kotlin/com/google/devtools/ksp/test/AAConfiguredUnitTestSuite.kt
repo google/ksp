@@ -49,18 +49,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
-    }
-}
+class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
-    }
-}
+class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true)
