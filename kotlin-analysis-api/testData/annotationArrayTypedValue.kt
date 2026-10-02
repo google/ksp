@@ -14,16 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// TEST PROCESSOR: AnnotationArrayValueTypeProcessor
+// This is a copy of annotationArrayValueType.kt with a different expected output.
+// Keep the source fixtures in both files in sync.
+// TEST PROCESSOR: AnnotationArrayTypedValueProcessor
 // EXPECTED:
-// JavaAnnotated JavaAnnotation args is Array<*> or Collection<*>: true
-// JavaAnnotated JavaAnnotation args size: 2
-// JavaAnnotated KotlinAnnotation args is Array<*> or Collection<*>: true
-// JavaAnnotated KotlinAnnotation args size: 2
-// KotlinAnnotated JavaAnnotation args is Array<*> or Collection<*>: true
-// KotlinAnnotated JavaAnnotation args size: 2
-// KotlinAnnotated KotlinAnnotation args is Array<*> or Collection<*>: true
-// KotlinAnnotated KotlinAnnotation args size: 2
+// JavaAnnotated JavaAnnotation args typedValue: ArrayValue of two AnnotationClass values
+// JavaAnnotated KotlinAnnotation args typedValue: ArrayValue of two AnnotationClass values
+// KotlinAnnotated JavaAnnotation args typedValue: ArrayValue of two AnnotationClass values
+// KotlinAnnotated KotlinAnnotation args typedValue: ArrayValue of two AnnotationClass values
+// KotlinAnnotated TypedAnnotation number: Primitive(KSInt(7))
+// KotlinAnnotated TypedAnnotation mode: EnumClass(FIRST)
+// KotlinAnnotated TypedAnnotation klass: ReflectionClassReference(String)
 // END
 // FILE: JavaAnnotation.java
 public @interface JavaAnnotation {
