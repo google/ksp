@@ -110,6 +110,7 @@ subprojects {
                 jvmTarget = JvmTarget.JVM_1_8
                 languageVersion.set(KotlinVersion.KOTLIN_2_3)
                 apiVersion.set(languageVersion)
+                progressiveMode.set(true)
             }
             jvmToolchain {
                 languageVersion = compileJavaVersion
