@@ -7,19 +7,74 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.google.common.util.concurrent.AtomicDouble     -> com.google.j2objc.annotations.ReflectionSupport$Level not found
    com.google.common.util.concurrent.InterruptibleTask -> com.google.j2objc.annotations.ReflectionSupport    not found
    com.google.common.util.concurrent.InterruptibleTask -> com.google.j2objc.annotations.ReflectionSupport$Level not found
+   com.intellij.AbstractBundle                        -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.DynamicBundle                         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.UtilBundle                            -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.codeWithMe.ClientId                   -> org.jetbrains.annotations.CheckReturnValue         not found
+   com.intellij.codeWithMe.ClientId$Companion         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.codeWithMe.ClientId$Companion         -> org.jetbrains.annotations.CheckReturnValue         not found
+   com.intellij.concurrency.SensitiveProgressWrapper  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.diagnostic.CoroutineDumperKt          -> kotlinx.coroutines.debug.DebugProbes               not found
+   com.intellij.openapi.application.ActionsKt         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.application.Application       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.application.ApplicationListener -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.openapi.application.ClassPathUtil     -> org.apache.oro.text.regex.PatternMatcher           not found
+   com.intellij.openapi.application.CoroutinesKt      -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.application.PathManager       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.application.SuspendingWriteActionListener -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.application.ex.ApplicationEx  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.application.ex.ApplicationUtil -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.client.ClientSessionsManager  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.components.ComponentManagerEx -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.openapi.editor.impl.PersistentRangeMarker -> com.intellij.util.diff.FilesTooBigForDiffException not found
    com.intellij.openapi.editor.impl.RangeMarkerImpl   -> com.intellij.util.diff.FilesTooBigForDiffException not found
    com.intellij.openapi.editor.impl.event.DocumentEventImpl -> com.intellij.util.diff.Diff                        not found
    com.intellij.openapi.editor.impl.event.DocumentEventImpl -> com.intellij.util.diff.Diff$Change                 not found
    com.intellij.openapi.editor.impl.event.DocumentEventImpl -> com.intellij.util.diff.FilesTooBigForDiffException not found
+   com.intellij.openapi.extensions.ExtensionPointName -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.Cancellation         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.openapi.progress.CoroutinesKt         -> com.intellij.platform.util.progress.ContextKt      not found
    com.intellij.openapi.progress.CoroutinesKt         -> com.intellij.platform.util.progress.RawProgressReporter not found
    com.intellij.openapi.progress.CoroutinesKt         -> com.intellij.platform.util.progress.RawProgressReporterHandle not found
+   com.intellij.openapi.progress.DumbProgressIndicator -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.EmptyProgressIndicator -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.EmptyProgressIndicatorBase -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.openapi.progress.IndicatorRawProgressReporter -> com.intellij.platform.util.progress.RawProgressReporter not found
+   com.intellij.openapi.progress.ProgressIndicatorProvider -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.ProgressManager      -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.openapi.progress.ProgressReporterKt   -> com.intellij.platform.util.progress.StepsKt        not found
+   com.intellij.openapi.progress.Progressive          -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.openapi.progress.RawProgressReporterIndicator -> com.intellij.platform.util.progress.RawProgressReporter not found
+   com.intellij.openapi.progress.Task                 -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.Task$Backgroundable  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.Task$ConditionalModal -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.Task$Modal           -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.Task$WithResult      -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.TaskInfo             -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.WrappedProgressIndicator -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.impl.ProgressResult  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.impl.ProgressRunner  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.util.AbstractProgressIndicatorBase -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.util.AbstractProgressIndicatorExBase -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.util.ProgressWrapper -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.util.RelayUiToDelegateIndicator -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.progress.util.StandardProgressIndicatorBase -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.project.DumbService           -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.startup.StartupActivity       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.startup.StartupActivity$DumbAware -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.Comparing                -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.Factory                  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.Getter                   -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.NotNullComputable        -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.NotNullFactory           -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.NullableComputable       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.NullableFactory          -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.Pass                     -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.SystemInfo               -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.Trinity                  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.ValueKey                 -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.util.io.FileSystemUtil        -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.openapi.vfs.VirtualFileManager        -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.Automaton                       not found
    com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.AutomatonProvider               not found
    com.intellij.patterns.StringPatternUtil            -> dk.brics.automaton.DatatypesAutomatonProvider      not found
@@ -55,6 +110,31 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.context.ImplicitContextKeyed      not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.context.Scope                     not found
    com.intellij.platform.diagnostic.telemetry.helpers.TraceKt -> io.opentelemetry.extension.kotlin.ContextExtensionsKt not found
+   com.intellij.pom.java.LanguageLevel                -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.psi.stubs.ILightStubElementType       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.psi.tree.ILightStubFileElementType    -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.psi.tree.IStubFileElementType         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.psi.tree.StubFileElementType          -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.CatchingConsumer                 -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.Chunk                            -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.ConcurrencyUtil                  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.Consumer                         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.Function                         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.Function$Mono                    -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.FunctionUtil                     -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.Functions                        -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.NotNullFunction                  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.NotNullProducer                  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.NullableConstantFunction         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.NullableConsumer                 -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.NullableFunction                 -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.PairConsumer                     -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.PairFunction                     -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.ParameterizedRunnable            -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.Producer                         -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.concurrency.ThreadingAssertions  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.containers.Convertor             -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.containers.Stack                 -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarArchiveEntry not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.archivers.tar.TarArchiveOutputStream not found
    com.intellij.util.io.Compressor$Tar                -> org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream not found
@@ -66,6 +146,10 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    com.intellij.util.io.Decompressor$Tar              -> org.apache.commons.compress.compressors.CompressorStreamFactory not found
    com.intellij.util.io.Decompressor$Zip$ExtZip       -> org.apache.commons.compress.archivers.zip.ZipArchiveEntry not found
    com.intellij.util.io.Decompressor$Zip$ExtZip       -> org.apache.commons.compress.archivers.zip.ZipFile  not found
+   com.intellij.util.io.pagecache.PageUnsafe          -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.io.pagecache.impl.PageImpl       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.io.storage.VFSContentStorage     -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   com.intellij.util.xmlb.XmlSerializer               -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    io.opentelemetry.api.DefaultOpenTelemetry          -> io.opentelemetry.context.propagation.ContextPropagators not found
    io.opentelemetry.api.GlobalOpenTelemetry           -> io.opentelemetry.context.propagation.ContextPropagators not found
    io.opentelemetry.api.GlobalOpenTelemetry$ObfuscatedOpenTelemetry -> io.opentelemetry.context.propagation.ContextPropagators not found
@@ -131,6 +215,8 @@ kotlin-analysis-api-255.255.255-SNAPSHOT.jar -> not found
    org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.UnresolvableException                    not found
    org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.VariableContext                          not found
    org.jdom.xpath.jaxen.JaxenCompiled                 -> org.jaxen.XPath                                    not found
+   org.jetbrains.concurrency.CancellablePromise       -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
+   org.jetbrains.concurrency.Promise                  -> org.jetbrains.annotations.ApiStatus$Obsolete       not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.full.KClasses                       not found
    org.jetbrains.kotlin.analysis.api.symbols.KaDebugRenderer -> kotlin.reflect.jvm.KCallablesJvm                   not found
    org.jetbrains.kotlin.analysis.api.utils.ApiUtilsKt -> kotlin.reflect.full.KClasses                       not found
