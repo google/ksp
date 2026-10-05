@@ -25,6 +25,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeParameterSymbol
 import org.jetbrains.kotlin.analysis.api.types.KaType
+import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 
 class KSTypeParameterImpl private constructor(
     internal val ktTypeParameterSymbol: KaTypeParameterSymbol,
@@ -56,10 +57,14 @@ class KSTypeParameterImpl private constructor(
     override val isReified: Boolean = ktTypeParameterSymbol.isReified
 
     override val bounds: Sequence<KSTypeReference> by lazy {
+        // N.B.: pass the abbreviated type, as every other type reference producer does.
+        // `KSType.arguments` reads the arguments of the type it is given, so the expanded type would
+        // report the alias's expansion, e.g. `[String, Int]` for `StrMap<Int>` with
+        // `typealias StrMap<V> = Map<String, V>`.
         boundsSubstitued?.mapIndexed { index, type ->
-            KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
+            KSTypeReferenceResolvedImpl.getCached(type.abbreviationOrSelf, this@KSTypeParameterImpl, index)
         }?.asSequence() ?: ktTypeParameterSymbol.upperBounds.asSequence().mapIndexed { index, type ->
-            KSTypeReferenceResolvedImpl.getCached(type, this@KSTypeParameterImpl, index)
+            KSTypeReferenceResolvedImpl.getCached(type.abbreviationOrSelf, this@KSTypeParameterImpl, index)
         }.ifEmpty {
             sequenceOf(
                 KSTypeReferenceSyntheticImpl.getCached(ResolverAAImpl.instance.builtIns.anyType.makeNullable(), this)
