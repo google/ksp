@@ -80,6 +80,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassifierSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaContextParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaFileSymbol
@@ -474,6 +475,7 @@ internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
 internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KSDeclaration
 
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
+@OptIn(KaExperimentalApi::class)
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaPropertySymbol -> toKSPropertyDeclaration()
     is KaBackingFieldSymbol -> toKSBackingField()
@@ -486,6 +488,7 @@ internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaTypeParameterSymbol -> toKSTypeParameter()
     is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
     is KaValueParameterSymbol -> toKSValueParameter()
+    is KaContextParameterSymbol -> toKSContextParameter()
     else -> throw InternalKSPException(
         "Unexpected class for KtSymbol",
         this.psi.toLocation(),
@@ -552,6 +555,18 @@ internal fun KaLocalVariableSymbol.toKSPropertyDeclarationLocalVariable(): KSPro
 
 internal fun KaValueParameterSymbol.toKSValueParameter(): KSValueParameterImpl =
     KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+
+@OptIn(KaExperimentalApi::class)
+internal fun KaContextParameterSymbol.toKSContextParameter(): KSContextParameterImpl =
+    KSContextParameterImpl.getCached(
+        kaContextParameterSymbol = this,
+        parent = this.getContainingKSSymbol()
+            ?: throw InternalKSPException(
+                message = "Unexpected null containingKSSymbol for context parameter ${name.asString()}",
+                location = psi.toLocation(),
+                originatingClass = javaClass
+            )
+    )
 
 internal fun AnnotationUseSiteTargetAA.toKSAnnotationUseSiteTarget(): AnnotationUseSiteTarget = when (this) {
     AnnotationUseSiteTargetAA.ALL -> AnnotationUseSiteTarget.ALL
