@@ -309,6 +309,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/contextParameterNames.kt")
     }
 
+    @TestMetadata("native/contextParameterNames.kt")
+    @Test
+    fun testNativeContextParameterNames() {
+        runTest("$AA_PATH/native/contextParameterNames.kt")
+    }
+
     @TestMetadata("declarationInconsistency.kt")
     @Test
     fun testDeclarationInconsistency() {
