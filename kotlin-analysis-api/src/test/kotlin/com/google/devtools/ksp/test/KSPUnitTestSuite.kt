@@ -1029,11 +1029,11 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/typeAnnotationClassReference.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3242", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3242", BugState.FIXED)
     @TestMetadata("typeParameterBoundTypeAlias.kt")
     @Test
     fun testTypeParameterBoundTypeAlias() {
-        runFailingTest("$AA_PATH/typeParameterBoundTypeAlias.kt")
+        runTest("$AA_PATH/typeParameterBoundTypeAlias.kt")
     }
 
     @TestMetadata("native/nativeTest.kt")
