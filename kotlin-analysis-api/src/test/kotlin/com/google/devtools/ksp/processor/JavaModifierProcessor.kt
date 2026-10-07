@@ -56,6 +56,18 @@ class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractT
             results.add("$declName: Visibility: $visibility")
             results.add("$declName: Modifiers: $modifiers")
         }
+
+        listOf(
+            "topLevelTransientProperty",
+            "topLevelVolatileProperty"
+        ).forEach { propName ->
+            resolver.getPropertyDeclarationByName(resolver.getKSNameFromString(propName), includeTopLevel = true)?.let { prop ->
+                prop.accept(ModifierVisitor(resolver), Unit)
+            }
+        }
+        resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString("topLevelSynchronizedFun"), includeTopLevel = true).forEach { func ->
+            func.accept(ModifierVisitor(resolver), Unit)
+        }
         return emptyList()
     }
 
@@ -90,7 +102,7 @@ class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractT
                 ?: "${parentDeclaration?.qualifiedName?.asString()}.${simpleName.asString()}"
             val modifiersSignature = modifiers.map { it.toString() }.sorted().joinToString(" ")
             val extras = resolver.effectiveJavaModifiers(this).map { it.toString() }.sorted().joinToString(" ").trim()
-            return "$id: $modifiersSignature".trim() + " : " + extras
+            return ("$id: $modifiersSignature".trim() + " : " + extras).trim()
         }
     }
 }
