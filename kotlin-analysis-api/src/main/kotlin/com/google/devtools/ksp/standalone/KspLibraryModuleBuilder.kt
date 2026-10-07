@@ -82,40 +82,18 @@ inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleB
     return KspLibraryModuleBuilder(coreApplicationEnvironment, project).apply(init).build()
 }
 
-internal class SimpleTrie(paths: List<String>) {
-    class TrieNode {
-        var isTerminal: Boolean = false
-    }
-
-    val root = TrieNode()
-
-    private val m = mutableMapOf<Pair<TrieNode, String>, TrieNode>().apply {
-        paths.forEach { path ->
-            var p = root
-            for (d in path.trim('/').split('/')) {
-                p = getOrPut(Pair(p, d)) { TrieNode() }
-            }
-            p.isTerminal = true
-        }
-    }
-
-    fun contains(s: String): Boolean {
-        var p = root
-        for (d in s.trim('/').split('/')) {
-            p = m.get(Pair(p, d))?.also {
-                if (it.isTerminal)
-                    return true
-            } ?: return false
-        }
-        return false
-    }
-}
-
 internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchScope() {
-    val trie: SimpleTrie = SimpleTrie(roots.map { it.path })
+    private val rootFiles: Set<VirtualFile> = roots.toSet()
 
     override fun contains(file: VirtualFile): Boolean {
-        return trie.contains(file.path)
+        var current: VirtualFile? = file
+        while (current != null) {
+            if (rootFiles.contains(current)) {
+                return true
+            }
+            current = current.parent
+        }
+        return false
     }
 
     override fun isSearchInModuleContent(aModule: Module): Boolean = false
