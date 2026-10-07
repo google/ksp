@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: AsMemberOfProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // main.Test: MutableIterator<(String..String?)>
 // main.Test: Iterator<(String..String?)>
 // main.Test: MutableIterator<(String..String?)>

@@ -17,6 +17,7 @@
 
 // TEST PROCESSOR: ParameterTypeProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // a: Int
 // b: <ERROR TYPE: NonExist>
 // c: <ERROR TYPE>
