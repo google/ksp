@@ -276,11 +276,51 @@ abstract class KSPUnitTestSuite(
 
     @Bug(
         "https://github.com/google/ksp/issues/2472",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 367: Context parameters are stable in Kotlin 2.4.0"
     )
     @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    abstract fun testContextParameters()
+    @Test
+    fun testContextParameters() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
+
+    @TestMetadata("contextParameterIdentity.kt")
+    @Test
+    fun testContextParameterIdentity() {
+        runTest("$AA_PATH/contextParameterIdentity.kt")
+    }
+
+    @TestMetadata("contextParameterTypes.kt")
+    @Test
+    fun testContextParameterTypes() {
+        runTest("$AA_PATH/contextParameterTypes.kt")
+    }
+
+    @TestMetadata("contextParameterTypeAlias.kt")
+    @Test
+    fun testContextParameterTypeAlias() {
+        runTest("$AA_PATH/contextParameterTypeAlias.kt")
+    }
+
+    @TestMetadata("contextParameterNames.kt")
+    @Test
+    fun testContextParameterNames() {
+        runTest("$AA_PATH/contextParameterNames.kt")
+    }
+
+    @TestMetadata("native/contextParameterNames.kt")
+    @Test
+    fun testNativeContextParameterNames() {
+        runTest("$AA_PATH/native/contextParameterNames.kt")
+    }
+
+    @TestMetadata("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+    @Test
+    @Negative("A dangling context(...) modifier list with no following declaration is a syntax error.")
+    fun testContextParameterDangling() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+    }
 
     @TestMetadata("declarationInconsistency.kt")
     @Test

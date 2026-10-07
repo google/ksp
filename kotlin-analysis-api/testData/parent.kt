@@ -101,6 +101,27 @@
 // parent of Anno: @Anno
 // parent of @Anno: topFun
 // parent of topFun: File: a.kt
+// parent of Int: Int
+// parent of Int: ctxFun
+// EXPECT NEXT: parent of ITF: ITF
+// EXPECT NEXT: parent of ITF: ctxFunParam
+// EXPECT NEXT: parent of Anno: Anno
+// EXPECT NEXT: parent of Anno: @Anno
+// EXPECT NEXT: parent of @Anno: ctxFunParam
+// EXPECT NEXT: parent of ctxFunParam: ctxFun
+// parent of ctxFun: File: a.kt
+// parent of Int: Int
+// parent of Int: ctxProp
+// parent of Int: Int
+// parent of Int: ctxProp.getter()
+// parent of ctxProp.getter(): ctxProp
+// EXPECT NEXT: parent of ITF: ITF
+// EXPECT NEXT: parent of ITF: ctxPropParam
+// EXPECT NEXT: parent of Anno: Anno
+// EXPECT NEXT: parent of Anno: @Anno
+// EXPECT NEXT: parent of @Anno: ctxPropParam
+// EXPECT NEXT: parent of ctxPropParam: ctxProp
+// parent of ctxProp: File: a.kt
 // parent of Annotation: Annotation
 // parent of Annotation: Anno
 // parent of Anno: File: a.kt
@@ -310,6 +331,12 @@ class topClass: ITF {
 enum class CMYK {
     C, M, Y, K
 }
+
+context(@Anno ctxFunParam: ITF)
+fun ctxFun(): Int = 1
+
+context(@Anno ctxPropParam: ITF)
+val ctxProp: Int get() = 1
 
 // FILE: Bnno.kt
 package p
