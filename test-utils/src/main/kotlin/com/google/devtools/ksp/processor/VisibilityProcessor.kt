@@ -86,6 +86,15 @@ class VisibilityProcessor(override val enableNewFeatures: Boolean): AbstractTest
         intersectionClass.getAllProperties().map {
             "${intersectionClass.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
         }.forEach { results.add(it) }
+        javaClass.getAllProperties().mapNotNull { it.backingField }.map {
+            "${it.qualifiedName?.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+        }.forEach { results.add(it) }
+        kotlinSubClass.declarations.filterIsInstance<KSPropertyDeclaration>().mapNotNull { it.backingField }.map {
+            "${it.qualifiedName?.asString()}: ${it.getVisibility()},visible in A, B, D, KotlinSubClass: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, " +
+                "${it.isVisibleFrom(symbolD)}, ${it.isVisibleFrom(kotlinSubClass)}"
+        }.forEach { results.add(it) }
         return emptyList()
     }
 }
