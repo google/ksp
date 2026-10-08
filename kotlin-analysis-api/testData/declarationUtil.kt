@@ -18,14 +18,14 @@
 // TEST PROCESSOR: DeclarationUtilProcessor
 // EXPECTED:
 // Cls: internal
-// EXPECT NEXT: Cls.b.field: local
+// EXPECT NEXT: Cls.b.field: private
 // Cls.b: public open
-// EXPECT NEXT: Cls.prop.field: local
+// EXPECT NEXT: Cls.prop.field: private
 // Cls.prop: public open
-// EXPECT NEXT: Cls.protectedProp.field: local
+// EXPECT NEXT: Cls.protectedProp.field: private
 // Cls.protectedProp: protected open
 // Cls.abstractITFFun: public open
-// EXPECT NEXT: Cls.pri.field: local
+// EXPECT NEXT: Cls.pri.field: private
 // Cls.pri: private
 // Cls / <init>: public
 // Cls / <init>: public
@@ -39,17 +39,17 @@
 // ITF.nonAbstractITFFun / aa: local
 // NestedClassSubjects: public open
 // NestedClassSubjects.NestedDataClass: public
-// EXPECT NEXT: NestedClassSubjects.NestedDataClass.field.field: local
+// EXPECT NEXT: NestedClassSubjects.NestedDataClass.field.field: private
 // NestedClassSubjects.NestedDataClass.field: public
 // NestedClassSubjects.NestedDataClass.component1: public
 // NestedClassSubjects.NestedDataClass.copy: public
 // NestedClassSubjects.NestedDataClass / <init>: public
 // NestedClassSubjects.NestedFinalClass: public
-// EXPECT NEXT: NestedClassSubjects.NestedFinalClass.field.field: local
+// EXPECT NEXT: NestedClassSubjects.NestedFinalClass.field.field: private
 // NestedClassSubjects.NestedFinalClass.field: public
 // NestedClassSubjects.NestedFinalClass / <init>: public
 // NestedClassSubjects.NestedOpenClass: public open
-// EXPECT NEXT: NestedClassSubjects.NestedOpenClass.field.field: local
+// EXPECT NEXT: NestedClassSubjects.NestedOpenClass.field.field: private
 // NestedClassSubjects.NestedOpenClass.field: public
 // NestedClassSubjects.NestedOpenClass / <init>: public
 // NestedClassSubjects.NestedInterface: public open

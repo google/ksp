@@ -304,7 +304,7 @@ class ResolverAAImpl(
     }
 
     private fun finalModifierIfApplicableTo(declaration: KSDeclaration): Modifier? = when (declaration.origin) {
-        Origin.KOTLIN if !declaration.isOpen() -> Modifier.FINAL
+        Origin.KOTLIN if declaration !is KSBackingField && !declaration.isOpen() -> Modifier.FINAL
         else -> null
     }
 
