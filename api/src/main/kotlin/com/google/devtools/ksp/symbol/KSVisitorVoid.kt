@@ -17,13 +17,35 @@
 package com.google.devtools.ksp.symbol
 
 import com.google.devtools.ksp.errors.InternalKSPException
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 
 /**
  * A visitor that doesn't pass or return anything.
  *
- * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
+ * @param apiFeatures An API feature configuration.
  */
-open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, Unit> {
+open class KSVisitorVoid(val apiFeatures: ApiFeatures) : KSVisitorNext<Unit, Unit> {
+
+    /**
+     * A visitor that doesn't pass or return anything.
+     *
+     * @param enableNewFeatures A boolean flag toggling on or off backing fields. To enable context parameters,
+     * please use the primary constructor.
+     */
+    @Deprecated(
+        message = "", // TODO
+        replaceWith = ReplaceWith(
+            expression = "", // TODO
+            imports = [""], // TODO
+        )
+    )
+    constructor(enableNewFeatures: Boolean) : this(
+        buildApiFeatures {
+            enableBackingFields = enableNewFeatures
+            enableContextParameters = false
+        }
+    )
 
     // For binary compatibility
     @Deprecated(
@@ -72,7 +94,7 @@ open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, U
     override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {}
 
     override fun visitBackingField(backingField: KSBackingField, data: Unit) {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableBackingFields) {
             throw InternalKSPException(
                 "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
                 backingField.location,
@@ -96,7 +118,7 @@ open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, U
     override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {}
 
     override fun visitContextParameter(contextParameter: KSContextParameter, data: Unit) {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableContextParameters) {
             throw InternalKSPException(
                 "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
                 contextParameter.location,
