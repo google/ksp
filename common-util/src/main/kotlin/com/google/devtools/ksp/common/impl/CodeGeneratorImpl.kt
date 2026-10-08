@@ -20,6 +20,7 @@ package com.google.devtools.ksp.common.impl
 import com.google.devtools.ksp.common.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -37,7 +38,8 @@ class CodeGeneratorImpl(
     private val projectBase: File,
     private val anyChangesWildcard: KSFile,
     private val allSources: List<KSFile>,
-    private val isIncremental: Boolean
+    private val isIncremental: Boolean,
+    private val logger: KSPLogger? = null
 ) : CodeGenerator {
     private val fileMap = mutableMapOf<String, File>()
     private val fileOutputStreamMap = mutableMapOf<String, FileOutputStream>()
@@ -165,6 +167,12 @@ class CodeGeneratorImpl(
             if (dependencies.aggregating) {
                 dependencies.originatingFiles + anyChangesWildcard
             } else {
+                if (dependencies.originatingFiles.isEmpty()) {
+                    logger?.warn(
+                        "File '$path' was generated with aggregating = false and empty originating files in Dependencies. " +
+                            "This means changes in sources won't trigger re-generation of this file under incremental compilation."
+                    )
+                }
                 dependencies.originatingFiles
             }
         }
