@@ -22,4 +22,8 @@ package com.google.devtools.ksp
 data class KSApiFeatures(
     override val enableBackingFields: Boolean,
     override val enableContextParameters: Boolean
-): ApiFeatures
+) : ApiFeatures {
+    companion object {
+        val DEFAULT = KSApiFeatures(enableBackingFields = false, enableContextParameters = false)
+    }
+}
