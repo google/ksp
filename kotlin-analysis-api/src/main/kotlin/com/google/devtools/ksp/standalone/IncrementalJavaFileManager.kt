@@ -26,8 +26,10 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 
-class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) {
-    lateinit var rootsIndex: JvmDependenciesDynamicCompoundIndex
+class IncrementalJavaFileManager(
+    val environment: KotlinCoreProjectEnvironment,
+    val rootsIndex: JvmDependenciesDynamicCompoundIndex,
+) {
     lateinit var packagePartProviders: List<JvmPackagePartProvider>
     val singleJavaFileRoots = mutableListOf<JavaRoot>()
 
@@ -56,7 +58,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
-        rootsIndex = JvmDependenciesDynamicCompoundIndex(true).apply {
+        rootsIndex.apply {
             addIndex(KotlinStandaloneJvmDependenciesIndex(roots))
         }
 
