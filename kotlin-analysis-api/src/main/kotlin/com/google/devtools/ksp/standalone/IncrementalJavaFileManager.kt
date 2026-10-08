@@ -1,3 +1,4 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.standalone
 
 import com.intellij.core.CorePackageIndex
@@ -7,6 +8,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.ProjectScope
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
+import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneJvmDependenciesIndex
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.cli.create
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
@@ -16,7 +18,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.computeDefaultRootModules
 import org.jetbrains.kotlin.cli.jvm.compiler.getJavaModuleRoots
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
-import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
 import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
 import org.jetbrains.kotlin.cli.jvm.modules.JavaModuleGraph
@@ -56,7 +57,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
         rootsIndex = JvmDependenciesDynamicCompoundIndex(true).apply {
-            addIndex(JvmDependenciesIndexImpl(roots))
+            addIndex(KotlinStandaloneJvmDependenciesIndex(roots))
         }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
@@ -106,7 +107,7 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         singleJavaFileRoots.addAll(newSingleJavaFileRoots)
 
         rootsIndex.apply {
-            addIndex(JvmDependenciesIndexImpl(roots))
+            addIndex(KotlinStandaloneJvmDependenciesIndex(roots))
         }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
