@@ -1,6 +1,17 @@
 // Signature format: 2.0
 package com.google.devtools.ksp {
 
+  public interface ApiFeatures {
+    method @InaccessibleFromKotlin public default boolean getEnableBackingFields();
+    method @InaccessibleFromKotlin public default boolean getEnableContextParameters();
+    property public default boolean enableBackingFields;
+    property public default boolean enableContextParameters;
+  }
+
+  public final class ApiFeaturesBuilderKt {
+    method @NonNull public static com.google.devtools.ksp.ApiFeatures buildApiFeatures(@NonNull kotlin.jvm.functions.Function1<? super com.google.devtools.ksp.MutableApiFeatures,kotlin.Unit> builderAction);
+  }
+
   @com.google.devtools.ksp.KspExperimental public final class KSTypeNotPresentException extends java.lang.RuntimeException {
     ctor public KSTypeNotPresentException(@NonNull com.google.devtools.ksp.symbol.KSType ksType, @NonNull Throwable cause);
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSType getKsType();
@@ -14,6 +25,17 @@ package com.google.devtools.ksp {
   }
 
   @kotlin.RequiresOptIn(message="This API is experimental.It may be changed in the future without notice or might be removed.") @kotlin.annotation.Retention(kotlin.annotation.AnnotationRetention.BINARY) public @interface KspExperimental {
+  }
+
+  public final class MutableApiFeatures {
+    ctor public MutableApiFeatures();
+    ctor public MutableApiFeatures(boolean enableBackingFields, boolean enableContextParameters);
+    method @InaccessibleFromKotlin public boolean getEnableBackingFields();
+    method @InaccessibleFromKotlin public boolean getEnableContextParameters();
+    method @InaccessibleFromKotlin public void setEnableBackingFields(boolean);
+    method @InaccessibleFromKotlin public void setEnableContextParameters(boolean);
+    property public boolean enableBackingFields;
+    property public boolean enableContextParameters;
   }
 
   public final class UtilsKt {
@@ -192,8 +214,10 @@ package com.google.devtools.ksp.processing {
 
   public interface SymbolProcessor {
     method public default void finish();
+    method @InaccessibleFromKotlin @NonNull public default com.google.devtools.ksp.ApiFeatures getApiFeatures();
     method public default void onError();
     method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSAnnotated> process(@NonNull com.google.devtools.ksp.processing.Resolver resolver);
+    property @NonNull public default com.google.devtools.ksp.ApiFeatures apiFeatures;
   }
 
   public final class SymbolProcessorEnvironment {

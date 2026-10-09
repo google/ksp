@@ -17,6 +17,8 @@
 package com.google.devtools.ksp.processing
 
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.DefaultApiFeatures
 
 /**
  * [SymbolProcessor] is the interface used by plugins to integrate into Kotlin Symbol Processing.
@@ -44,4 +46,8 @@ interface SymbolProcessor {
 
     /** Called by Kotlin Symbol Processing to handle errors after a round of processing. */
     fun onError() {}
+
+    /** Called by Kotlin Symbol Processing to configure which API features to enable for the processor. */
+    val apiFeatures: ApiFeatures
+        get() = DefaultApiFeatures
 }
