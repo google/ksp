@@ -38,6 +38,7 @@ import com.google.devtools.ksp.standalone.IncrementalGlobalSearchScope
 import com.google.devtools.ksp.standalone.IncrementalJavaFileManager
 import com.google.devtools.ksp.standalone.IncrementalKotlinDeclarationProviderFactory
 import com.google.devtools.ksp.standalone.IncrementalKotlinPackageProviderFactory
+import com.google.devtools.ksp.standalone.JvmDependenciesPackageIndex
 import com.google.devtools.ksp.standalone.KspStandaloneDirectInheritorsProvider
 import com.google.devtools.ksp.standalone.buildKspLibraryModule
 import com.google.devtools.ksp.standalone.buildKspSdkModule
@@ -53,6 +54,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
@@ -400,16 +402,17 @@ class KotlinSymbolProcessing(
             if (kspConfig is KSPJvmConfig) {
                 val rootsIndex = JvmDependenciesDynamicCompoundIndex(true)
                 val fileFinderFactory = CliVirtualFileFinderFactory(rootsIndex, false, null)
-                // VirtualFileFinderFactory and MetadataFinderFactory are already registered by
-                // StandaloneProjectFactory.registerServicesForProjectEnvironment with a separate
-                // static index, so we use replaceService to point them at our own custom
-                // rootsIndex. Replacing them here is safe because nothing queries or caches these
-                // services until analysis begins in execute().
+                // VirtualFileFinderFactory, MetadataFinderFactory, and PackageIndex are already
+                // registered during project environment creation with separate indices, so we use
+                // replaceService to point them at our own custom rootsIndex. Replacing them here is
+                // safe because consumers look up these services lazily when analysis begins in
+                // execute(), and all classpath/source roots are indexed in rootsIndex.
                 replaceService(VirtualFileFinderFactory::class.java, fileFinderFactory)
                 replaceService(
                     MetadataFinderFactory::class.java,
                     CliMetadataFinderFactory(fileFinderFactory)
                 )
+                replaceService(PackageIndex::class.java, JvmDependenciesPackageIndex(rootsIndex))
                 registerService(
                     IncrementalJavaFileManager::class.java,
                     IncrementalJavaFileManager(kotlinCoreProjectEnvironment, rootsIndex)
