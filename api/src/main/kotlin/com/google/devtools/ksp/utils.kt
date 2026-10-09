@@ -157,7 +157,7 @@ fun KSDeclaration.isLocal(): Boolean {
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
 ): Boolean {
-    return this.accept(KSValidateVisitor(predicate), null)
+    return this.accept(KSValidateVisitor(predicate, buildApiFeatures {  }), null)
 }
 
 /**
@@ -168,11 +168,42 @@ fun KSNode.validate(
  *   checks all.
  *   @param enableNewFeatures A boolean flag toggling new features in [KSValidateVisitor].
  */
+@Deprecated(
+    message = "", // TODO
+    replaceWith = ReplaceWith(
+        expression = "", // TODO
+        imports = [""], // TODO
+    )
+)
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
     enableNewFeatures: Boolean,
 ): Boolean {
-    return this.accept(KSValidateVisitor(predicate, enableNewFeatures), null)
+    return this.accept(
+        KSValidateVisitor(
+            predicate,
+            buildApiFeatures {
+                enableBackingFields = enableNewFeatures
+                enableContextParameters = false
+            }
+        ),
+        null
+    )
+}
+
+/**
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
+ * are valid, i.e. resolvable.
+ *
+ * @param predicate A lambda for filtering interested symbols for performance purpose. Default
+ *   checks all.
+ *    @param apiFeatures An API feature configuration.
+ */
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    apiFeatures: ApiFeatures,
+): Boolean {
+    return this.accept(KSValidateVisitor(predicate, apiFeatures), null)
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */
