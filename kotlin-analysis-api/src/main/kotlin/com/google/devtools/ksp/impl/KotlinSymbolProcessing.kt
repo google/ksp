@@ -490,6 +490,31 @@ class KotlinSymbolProcessing(
             }
         }
 
+        val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
+        val dualLookupTracker = DualLookupTracker()
+        val incrementalContext = IncrementalContextAA(
+            kspConfig.incremental,
+            dualLookupTracker,
+            File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
+            kspConfig.incrementalContextLoggingOptions,
+            kspConfig.projectBaseDir,
+            kspConfig.cachesDir,
+            kspConfig.outputBaseDir,
+            kspConfig.modifiedSources,
+            kspConfig.removedSources,
+            kspConfig.changedClasses,
+        )
+        val allSourceRoots = buildList {
+            addAll(kspConfig.sourceRoots)
+            addAll(kspConfig.commonSourceRoots)
+            if (kspConfig is KSPJvmConfig) {
+                addAll(kspConfig.javaSourceRoots)
+            }
+        }
+        if (incrementalContext.tryEarlyExitIfClean(allSourceRoots)) {
+            return ExitCode.OK
+        }
+
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
 
@@ -514,7 +539,6 @@ class KotlinSymbolProcessing(
 
             val allKSFiles =
                 prepareAllKSFiles(env, modules, javaFileManager)
-            val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
             val codeGenerator = CodeGeneratorImpl(
                 kspConfig.classOutputDir,
                 { if (kspConfig is KSPJvmConfig) kspConfig.javaOutputDir else kspConfig.kotlinOutputDir },
@@ -526,19 +550,6 @@ class KotlinSymbolProcessing(
                 kspConfig.incremental
             )
 
-            val dualLookupTracker = DualLookupTracker()
-            val incrementalContext = IncrementalContextAA(
-                kspConfig.incremental,
-                dualLookupTracker,
-                File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
-                kspConfig.incrementalContextLoggingOptions,
-                kspConfig.projectBaseDir,
-                kspConfig.cachesDir,
-                kspConfig.outputBaseDir,
-                kspConfig.modifiedSources,
-                kspConfig.removedSources,
-                kspConfig.changedClasses,
-            )
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
             var newKSFiles = allDirtyKSFiles
 
@@ -671,6 +682,7 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
+            incrementalContext.closeReadOnlyCaches()
             maybeRunInWriteAction {
                 (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
