@@ -434,52 +434,32 @@ class KotlinSymbolProcessing(
 
     @OptIn(KaExperimentalApi::class)
     private fun prepareAllKSFiles(
-        kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
+        project: Project,
         modules: List<KaModule>,
-        javaFileManager: IncrementalJavaFileManager?,
     ): List<KSFile> {
-        val project = kotlinCoreProjectEnvironment.project
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
         modules.filterIsInstance<KaSourceModule>().forEach { kaSourceModule ->
             kaSourceModule.psiRoots.forEach { psiRoot ->
                 when (psiRoot) {
                     is KtFile -> ktFiles.add(psiRoot)
-                    is PsiJavaFile -> if (javaFileManager != null) javaFiles.add(psiRoot)
+                    is PsiJavaFile -> if (kspConfig is KSPJvmConfig) javaFiles.add(psiRoot)
                 }
             }
         }
-
-        // Update Kotlin providers for newly generated source files.
-        (
-            project.getService(
-                KotlinDeclarationProviderFactory::class.java
-            ) as IncrementalKotlinDeclarationProviderFactory
-            ).update(ktFiles)
-        (
-            project.getService(
-                KotlinPackageProviderFactory::class.java
-            ) as IncrementalKotlinPackageProviderFactory
-            ).update(ktFiles)
-
-        javaFileManager?.add(javaFiles)
-
-        return ktFiles.map { analyze { KSFileImpl.getCached(it.symbol) } } +
-            javaFiles.map { KSFileJavaImpl.getCached(it) }
+        return prepareKSFiles(project, ktFiles, javaFiles)
     }
 
     private fun prepareNewKSFiles(
-        kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
-        javaFileManager: IncrementalJavaFileManager?,
+        project: Project,
         newKotlinFiles: List<File>,
         newJavaFiles: List<File>,
     ): List<KSFile> {
-        val project = kotlinCoreProjectEnvironment.project
         val ktFiles = getPsiFilesFromPaths<KtFile>(
             project,
             newKotlinFiles.map { it.toPath() }.toSet()
         ).toSet()
-        val javaFiles = if (javaFileManager != null) {
+        val javaFiles = if (kspConfig is KSPJvmConfig) {
             getPsiFilesFromPaths<PsiJavaFile>(
                 project,
                 newJavaFiles.map { it.toPath() }.toSet()
@@ -491,7 +471,15 @@ class KotlinSymbolProcessing(
         contentScope.addAll(ktFiles.map { it.virtualFile })
         contentScope.addAll(javaFiles.map { it.virtualFile })
 
-        // Update Kotlin providers for newly generated source files.
+        return prepareKSFiles(project, ktFiles, javaFiles)
+    }
+
+    private fun prepareKSFiles(
+        project: Project,
+        ktFiles: Set<KtFile>,
+        javaFiles: Set<PsiJavaFile>,
+    ): List<KSFile> {
+        // Update Kotlin providers for source files.
         (
             project.getService(
                 KotlinDeclarationProviderFactory::class.java
@@ -503,8 +491,8 @@ class KotlinSymbolProcessing(
             ) as IncrementalKotlinPackageProviderFactory
             ).update(ktFiles)
 
-        // Update Java providers for newly generated source files.
-        javaFileManager?.add(javaFiles)
+        // Update Java providers for source files.
+        project.getService(IncrementalJavaFileManager::class.java)?.add(javaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.symbol) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
@@ -545,15 +533,7 @@ class KotlinSymbolProcessing(
             ResolverAAImpl.ktModule = modules.single() as KaSourceModule
             ResolverAAImpl.kspConfig = kspConfig
 
-            // Initializing environments
-            val javaFileManager = if (kspConfig is KSPJvmConfig) {
-                project.getService(IncrementalJavaFileManager::class.java)
-            } else {
-                null
-            }
-
-            val allKSFiles =
-                prepareAllKSFiles(env, modules, javaFileManager)
+            val allKSFiles = prepareAllKSFiles(project, modules)
             val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
             val codeGenerator = CodeGeneratorImpl(
                 kspConfig.classOutputDir,
@@ -677,8 +657,7 @@ class KotlinSymbolProcessing(
                 dropCaches()
 
                 newKSFiles = prepareNewKSFiles(
-                    env,
-                    javaFileManager,
+                    project,
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
                 )
