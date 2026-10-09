@@ -16,6 +16,8 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
@@ -24,18 +26,51 @@ import com.google.devtools.ksp.symbol.*
  *
  * For subclasses overriding a function, remember to call the corresponding super method.
  *
- * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
+ * @param apiFeatures An API feature configuration.
  */
-abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVisitor<D, R>(enableNewFeatures) {
+abstract class KSTopDownVisitor<D, R>(apiFeatures: ApiFeatures) : KSDefaultVisitor<D, R>(apiFeatures) {
 
-    // For binary compatibility
+    /**
+     * Visit all elements recursively.
+     *
+     * For subclasses overriding a function, remember to call the corresponding super method.
+     *
+     * @param enableNewFeatures A boolean flag toggling on or off backing fields. To enable context parameters,
+     * please use the primary constructor.
+     */
     @Deprecated(
-        message = "KSTopDownVisitor is deprecated in favor of KSTopDownVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+        message = "KSTopDownVisitor(enableNewFeatures) is deprecated in favor of KSTopDownVisitor(apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
             "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
             "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
             "while giving library / processor authors time to support the new features.",
         replaceWith = ReplaceWith(
-            expression = "KSTopDownVisitor(enableNewFeatures = true)",
+            expression = "KSTopDownVisitor(buildApiFeatures { enableBackingFields = enableNewFeatures; enableContextParameters = false })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
+        ),
+    )
+    // For binary compatibility
+    constructor(enableNewFeatures: Boolean) : this(
+        buildApiFeatures {
+            enableBackingFields = enableNewFeatures
+            enableContextParameters = false
+        }
+    )
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSTopDownVisitor() is deprecated in favor of KSTopDownVisitor(apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSTopDownVisitor(buildApiFeatures { enableBackingFields = true; enableContextParameters = true })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
         ),
     )
     constructor() : this(enableNewFeatures = false)
@@ -55,8 +90,10 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         property.extensionReceiver?.accept(data)
         property.getter?.accept(data)
         property.setter?.accept(data)
-        if (enableNewFeatures) {
+        if (apiFeatures.enableContextParameters) {
             property.contextParameters.accept(data)
+        }
+        if (apiFeatures.enableBackingFields) {
             property.backingField?.accept(data)
         }
         return super.visitPropertyDeclaration(property, data)
@@ -92,7 +129,7 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         function.extensionReceiver?.accept(data)
         function.parameters.accept(data)
         function.returnType?.accept(data)
-        if (enableNewFeatures) {
+        if (apiFeatures.enableContextParameters) {
             function.contextParameters.accept(data)
         }
         return super.visitFunctionDeclaration(function, data)
@@ -121,7 +158,7 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableBackingFields) {
             throw InternalKSPException(
                 "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
                 backingField.location,
@@ -133,7 +170,7 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
     }
 
     override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableContextParameters) {
             throw InternalKSPException(
                 "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
                 contextParameter.location,

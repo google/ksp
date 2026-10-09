@@ -16,24 +16,57 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 /**
  * A visitor that methods fall back to [defaultHandler] if not overridden.
  *
- * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
+ * @param apiFeatures An API feature configuration.
  */
-abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorNext<D, R> {
+abstract class KSEmptyVisitor<D, R>(val apiFeatures: ApiFeatures) : KSVisitorNext<D, R> {
 
-    // For binary compatibility
+    /**
+     * A visitor that doesn't pass or return anything.
+     *
+     * @param enableNewFeatures A boolean flag toggling on or off backing fields. To enable context parameters,
+     * please use the primary constructor.
+     */
     @Deprecated(
-        message = "KSEmptyVisitor is deprecated in favor of KSEmptyVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+        message = "KSEmptyVisitor(enableNewFeatures) is deprecated in favor of KSEmptyVisitor(apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
             "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
             "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
             "while giving library / processor authors time to support the new features.",
         replaceWith = ReplaceWith(
-            expression = "KSEmptyVisitor(enableNewFeatures = true)",
+            expression = "KSEmptyVisitor(buildApiFeatures { enableBackingFields = enableNewFeatures; enableContextParameters = false })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
+        ),
+    )
+    // For binary compatibility
+    constructor(enableNewFeatures: Boolean) : this(
+        buildApiFeatures {
+            enableBackingFields = enableNewFeatures
+            enableContextParameters = false
+        }
+    )
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSEmptyVisitor() is deprecated in favor of KSEmptyVisitor(apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSEmptyVisitor(buildApiFeatures { enableBackingFields = true; enableContextParameters = true })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
         ),
     )
     constructor() : this(enableNewFeatures = false)
@@ -101,7 +134,7 @@ abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorN
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableBackingFields) {
             throw InternalKSPException(
                 "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
                 backingField.location,
@@ -112,7 +145,7 @@ abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorN
     }
 
     override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableContextParameters) {
             throw InternalKSPException(
                 "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
                 contextParameter.location,
