@@ -148,16 +148,19 @@ fun KSDeclaration.isLocal(): Boolean {
  *   checks all.
  */
 @Deprecated(
-    message = "KSNode.validate is deprecated in favor of KSNode.validate(predicate, enableNewFeatures).\n" +
-        "Please specify enableNewFeatures to indicate whether new language features (such as backing fields and context parameters) should be validated.",
+    message = "KSNode.validate(predicate) is deprecated in favor of KSNode.validate(predicate, apiFeatures).\n" +
+        "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+        "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+        "with a reference to that shared apiFeatures property/object.",
     replaceWith = ReplaceWith(
-        expression = "validate(predicate, enableNewFeatures = false)",
+        expression = "validate(predicate, buildApiFeatures { enableBackingFields = false; enableContextParameters = false })",
+        imports = ["com.google.devtools.ksp.buildApiFeatures"],
     ),
 )
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
 ): Boolean {
-    return this.accept(KSValidateVisitor(predicate), null)
+    return this.accept(KSValidateVisitor(predicate, KSApiFeatures.DEFAULT), null)
 }
 
 /**
@@ -168,11 +171,45 @@ fun KSNode.validate(
  *   checks all.
  *   @param enableNewFeatures A boolean flag toggling new features in [KSValidateVisitor].
  */
+@Deprecated(
+    message = "KSNode.validate(predicate, enableNewFeatures) is deprecated in favor of KSNode.validate(predicate, apiFeatures).\n" +
+        "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+        "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+        "with a reference to that shared apiFeatures property/object.",
+    replaceWith = ReplaceWith(
+        expression = "validate(predicate, buildApiFeatures { enableBackingFields = enableNewFeatures; enableContextParameters = false })",
+        imports = ["com.google.devtools.ksp.buildApiFeatures"],
+    ),
+)
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
     enableNewFeatures: Boolean,
 ): Boolean {
-    return this.accept(KSValidateVisitor(predicate, enableNewFeatures), null)
+    return this.accept(
+        KSValidateVisitor(
+            predicate,
+            buildApiFeatures {
+                enableBackingFields = enableNewFeatures
+                enableContextParameters = false
+            }
+        ),
+        null
+    )
+}
+
+/**
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
+ * are valid, i.e. resolvable.
+ *
+ * @param predicate A lambda for filtering interested symbols for performance purpose. Default
+ *   checks all.
+ *    @param apiFeatures An API feature configuration.
+ */
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    apiFeatures: ApiFeatures,
+): Boolean {
+    return this.accept(KSValidateVisitor(predicate, apiFeatures), null)
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */

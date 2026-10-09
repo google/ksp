@@ -1,21 +1,49 @@
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 open class KSValidateVisitor(
     private val predicate: (KSNode?, KSNode) -> Boolean,
-    enableNewFeatures: Boolean
-) : KSDefaultVisitor<KSNode?, Boolean>(enableNewFeatures) {
+    apiFeatures: ApiFeatures
+) : KSDefaultVisitor<KSNode?, Boolean>(apiFeatures) {
 
-    // For binary compatibility
     @Deprecated(
-        message = "KSValidateVisitor is deprecated in favor of KSValidateVisitor(predicate, enableNewFeatures = true) which supports backing fields.\n" +
+        message = "KSValidateVisitor(predicate, enableNewFeatures) is deprecated in favor of KSValidateVisitor(predicate, apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
             "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
             "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
             "while giving library / processor authors time to support the new features.",
         replaceWith = ReplaceWith(
-            expression = "KSValidateVisitor(predicate, enableNewFeatures = true)",
+            expression = "KSValidateVisitor(predicate, buildApiFeatures { enableBackingFields = enableNewFeatures; enableContextParameters = false })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
+        ),
+    )
+    // For binary compatibility
+    constructor(predicate: (KSNode?, KSNode) -> Boolean, enableNewFeatures: Boolean) : this(
+        predicate = predicate,
+        apiFeatures = buildApiFeatures {
+            enableBackingFields = enableNewFeatures
+            enableContextParameters = false
+        }
+    )
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSValidateVisitor(predicate) is deprecated in favor of KSValidateVisitor(predicate, apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSValidateVisitor(predicate, buildApiFeatures { enableBackingFields = true; enableContextParameters = true })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
         ),
     )
     constructor(predicate: (KSNode?, KSNode) -> Boolean) : this(predicate, enableNewFeatures = false)
@@ -98,7 +126,7 @@ open class KSValidateVisitor(
             !function.parameters.all { it.accept(this, function) } ||
             // N.B.: Short-circuit AND with enableNewFeatures to only evaluate contextParameters
             // if the feature toggle is enabled.
-            (enableNewFeatures &&
+            (apiFeatures.enableContextParameters &&
                 !function.contextParameters.all { it.accept(this, function) })
         ) {
             return false
@@ -120,7 +148,7 @@ open class KSValidateVisitor(
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: KSNode?): Boolean {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableBackingFields) {
             throw InternalKSPException(
                 "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
                 backingField.location,
@@ -134,7 +162,7 @@ open class KSValidateVisitor(
     }
 
     override fun visitContextParameter(contextParameter: KSContextParameter, data: KSNode?): Boolean {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableContextParameters) {
             throw InternalKSPException(
                 "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
                 contextParameter.location,
