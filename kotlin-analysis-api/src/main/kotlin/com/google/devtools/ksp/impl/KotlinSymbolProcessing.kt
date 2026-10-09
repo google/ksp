@@ -493,197 +493,51 @@ class KotlinSymbolProcessing(
             javaFiles.map { KSFileJavaImpl.getCached(it) }
     }
 
-    // TODO: performance
     @OptIn(KaImplementationDetail::class)
     fun execute(): ExitCode {
-        val logger = object : KSPLogger by logger {
-            var hasError: Boolean = false
-
-            override fun error(message: String, symbol: KSNode?) {
-                hasError = true
-                logger.error(message, symbol)
-            }
-
-            override fun warn(message: String, symbol: KSNode?) {
-                if (kspConfig.allWarningsAsErrors)
-                    hasError = true
-                logger.warn(message, symbol)
-            }
-        }
-
+        val logger = ErrorTrackingLogger(logger, kspConfig.allWarningsAsErrors)
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
 
         try {
-            val (analysisAPISession, env, modules) =
-                createAASession(projectDisposable)
+            val (analysisAPISession, env, modules) = createAASession(projectDisposable)
             kotlinCoreProjectEnvironment = env
             val project = analysisAPISession.project
             // Initializes it
             KSPCoreEnvironment(project as MockProject)
 
-            val psiManager = PsiManager.getInstance(project)
-            val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
             // KspModuleBuilder ensures this is always a KtSourceModule
             ResolverAAImpl.ktModule = modules.single() as KaSourceModule
             ResolverAAImpl.kspConfig = kspConfig
 
             val allKSFiles = prepareAllKSFiles(project, modules)
             val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
-            val codeGenerator = CodeGeneratorImpl(
-                kspConfig.classOutputDir,
-                { if (kspConfig is KSPJvmConfig) kspConfig.javaOutputDir else kspConfig.kotlinOutputDir },
-                kspConfig.kotlinOutputDir,
-                kspConfig.resourceOutputDir,
-                kspConfig.projectBaseDir,
-                anyChangesWildcard,
-                allKSFiles,
-                kspConfig.incremental
-            )
-
             val dualLookupTracker = DualLookupTracker()
-            val incrementalContext = IncrementalContextAA(
-                kspConfig.incremental,
-                dualLookupTracker,
-                File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
-                kspConfig.incrementalContextLoggingOptions,
-                kspConfig.projectBaseDir,
-                kspConfig.cachesDir,
-                kspConfig.outputBaseDir,
-                kspConfig.modifiedSources,
-                kspConfig.removedSources,
-                kspConfig.changedClasses,
-            )
-            var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
-            var newKSFiles = allDirtyKSFiles
+            val codeGenerator = initializeCodeGenerator(allKSFiles, anyChangesWildcard)
+            val incrementalContext = initializeIncrementalContextAA(anyChangesWildcard, dualLookupTracker)
+            val (processors, processorsRegisteredForUpcomingFeatures) =
+                instantiateProcessors(codeGenerator, logger)
 
-            val targetPlatform = ResolverAAImpl.ktModule.targetPlatform
-            val processorsRegisteredForUpcomingFeatures = mutableSetOf<SymbolProcessor>()
-            val symbolProcessorEnvironment = SymbolProcessorEnvironment(
-                kspConfig.processorOptions,
-                kspConfig.languageVersion.toKotlinVersion(),
+            val (allDirtyKSFiles, newKSFiles) = runProcessingRounds(
+                project,
+                allKSFiles,
+                processors,
+                processorsRegisteredForUpcomingFeatures,
                 codeGenerator,
+                incrementalContext,
+                dualLookupTracker,
                 logger,
-                kspConfig.apiVersion.toKotlinVersion(),
-                KotlinCompilerVersion.getVersion().toKotlinVersion(),
-                targetPlatform.getPlatformInfo(kspConfig),
-                KotlinVersion(2, 0),
-                registerProcessorForNewFeatures = processorsRegisteredForUpcomingFeatures::add
             )
 
-            // Load and instantiate processors
-            val deferredSymbols = mutableMapOf<SymbolProcessor, List<Restorable>>()
-            val processors = providers.map { provider ->
-                provider.create(symbolProcessorEnvironment).also { deferredSymbols[it] = mutableListOf() }
-            }
-
-            // Emit warning for processors not opted in to new features
-            processors.filterNot(processorsRegisteredForUpcomingFeatures::contains)
-                .forEach { processor ->
-                    logger.info(
-                        "Processor '${processor::class.qualifiedName ?: processor::class.simpleName}' " +
-                            "has not opted in for upcoming features yet. " +
-                            "It might break in a future version of KSP. " +
-                            "To fix this, please update the processor to a version that is " +
-                            "compatible with upcoming features.",
-                        null
-                    )
-                }
-
-            fun dropCaches() {
-                maybeRunInWriteAction {
-                    project.publishGlobalSourceModuleStateModificationEvent()
-                    psiManager.dropPsiCaches()
-
-                    KSObjectCacheManager.clear()
-                }
-            }
-
-            // Run processors until either
-            // 1) there is an error
-            // 2) there is no more new files.
-            while (!logger.hasError) {
-                // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots
-                // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
-                // are created.
-                val firSession = ResolverAAImpl.ktModule.getResolutionFacade(project)
-                firSession.useSiteFirSession.registerResolveComponents(
-                    KtRegisteredDiagnosticFactoriesStorage(),
-                    dualLookupTracker
-                )
-
-                val resolutionStrategy =
-                    if (kspConfig.experimentalPsiResolution)
-                        PsiResolutionStrategy(newKSFiles, deferredSymbols)
-                    else
-                        AAResolutionStrategy(newKSFiles, deferredSymbols)
-
-                val resolver = ResolverAAImpl(
-                    allDirtyKSFiles,
-                    project,
-                    incrementalContext,
-                    resolutionStrategy,
-                    processorsRegisteredForUpcomingFeatures
-                )
-                ResolverAAImpl.instance = resolver
-                ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
-                ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
-
-                processors.forEach { processor ->
-                    resolver.currentProcessor = processor
-                    incrementalContext.closeFilesOnException {
-                        deferredSymbols[processor] =
-                            processor.process(resolver)
-                                .filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
-                                .filterIsInstance<Deferrable>()
-                                .mapNotNull(Deferrable::defer)
-                    }
-                    if (!deferredSymbols.containsKey(processor) || deferredSymbols[processor]!!.isEmpty()) {
-                        deferredSymbols.remove(processor)
-                    }
-                }
-
-                val allKSFilesPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
-
-                if (logger.hasError || codeGenerator.generatedFile.isEmpty()) {
-                    break
-                }
-
-                dropCaches()
-
-                newKSFiles = prepareNewKSFiles(
-                    project,
-                    codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
-                    codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
-                )
-                // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be restored from deferred.
-                // Do not replace `!!` with `?.`. Implementations of KSFile in KSP2 must implement Deferrable and
-                // return non-null.
-                allDirtyKSFiles = allKSFilesPointers.map { it!!.restore() as KSFile } + newKSFiles
-                incrementalContext.registerGeneratedFiles(newKSFiles)
-                codeGenerator.closeFiles()
-            }
-
-            // Call onError() or finish()
-            if (logger.hasError) {
-                runTypeCheck(newKSFiles, project, logger)
-                processors.forEach(SymbolProcessor::onError)
-            } else {
-                processors.forEach(SymbolProcessor::finish)
-            }
-
-            if (!logger.hasError) {
-                incrementalContext.updateCachesAndOutputs(
-                    allDirtyKSFiles,
-                    codeGenerator.outputs,
-                    codeGenerator.sourceToOutputs
-                )
-            } else {
-                incrementalContext.closeFiles()
-            }
-
-            dropCaches()
-            codeGenerator.closeFiles()
+            finishProcessing(
+                project,
+                processors,
+                allDirtyKSFiles,
+                newKSFiles,
+                codeGenerator,
+                incrementalContext,
+                logger,
+            )
         } finally {
             maybeRunInWriteAction {
                 (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
@@ -694,6 +548,200 @@ class KotlinSymbolProcessing(
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
+    }
+
+    private fun initializeCodeGenerator(
+        allKSFiles: List<KSFile>,
+        anyChangesWildcard: AnyChanges,
+    ): CodeGeneratorImpl =
+        CodeGeneratorImpl(
+            kspConfig.classOutputDir,
+            { if (kspConfig is KSPJvmConfig) kspConfig.javaOutputDir else kspConfig.kotlinOutputDir },
+            kspConfig.kotlinOutputDir,
+            kspConfig.resourceOutputDir,
+            kspConfig.projectBaseDir,
+            anyChangesWildcard,
+            allKSFiles,
+            kspConfig.incremental
+        )
+
+    private fun initializeIncrementalContextAA(
+        anyChangesWildcard: AnyChanges,
+        dualLookupTracker: DualLookupTracker,
+    ): IncrementalContextAA =
+        IncrementalContextAA(
+            kspConfig.incremental,
+            dualLookupTracker,
+            File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
+            kspConfig.incrementalContextLoggingOptions,
+            kspConfig.projectBaseDir,
+            kspConfig.cachesDir,
+            kspConfig.outputBaseDir,
+            kspConfig.modifiedSources,
+            kspConfig.removedSources,
+            kspConfig.changedClasses,
+        )
+
+    private fun instantiateProcessors(
+        codeGenerator: CodeGeneratorImpl,
+        logger: KSPLogger,
+    ): Pair<List<SymbolProcessor>, Set<SymbolProcessor>> {
+        val processorsRegisteredForUpcomingFeatures = mutableSetOf<SymbolProcessor>()
+        val symbolProcessorEnvironment = SymbolProcessorEnvironment(
+            kspConfig.processorOptions,
+            kspConfig.languageVersion.toKotlinVersion(),
+            codeGenerator,
+            logger,
+            kspConfig.apiVersion.toKotlinVersion(),
+            KotlinCompilerVersion.getVersion().toKotlinVersion(),
+            ResolverAAImpl.ktModule.targetPlatform.getPlatformInfo(kspConfig),
+            KotlinVersion(2, 0),
+            registerProcessorForNewFeatures = processorsRegisteredForUpcomingFeatures::add
+        )
+
+        val processors = symbolProcessorProviders.map { provider ->
+            provider.create(symbolProcessorEnvironment)
+        }
+
+        processors.filterNot(processorsRegisteredForUpcomingFeatures::contains)
+            .forEach { processor ->
+                logger.info(
+                    "Processor '${processor::class.qualifiedName ?: processor::class.simpleName}' " +
+                        "has not opted in for upcoming features yet. " +
+                        "It might break in a future version of KSP. " +
+                        "To fix this, please update the processor to a version that is " +
+                        "compatible with upcoming features.",
+                    null
+                )
+            }
+
+        return processors to processorsRegisteredForUpcomingFeatures
+    }
+
+    @OptIn(KaImplementationDetail::class)
+    private fun runProcessingRounds(
+        project: Project,
+        allKSFiles: List<KSFile>,
+        processors: List<SymbolProcessor>,
+        processorsRegisteredForUpcomingFeatures: Set<SymbolProcessor>,
+        codeGenerator: CodeGeneratorImpl,
+        incrementalContext: IncrementalContextAA,
+        dualLookupTracker: DualLookupTracker,
+        logger: ErrorTrackingLogger,
+    ): Pair<List<KSFile>, List<KSFile>> {
+        var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
+        var newKSFiles = allDirtyKSFiles
+        val deferredSymbols = processors.associateWithTo(mutableMapOf<SymbolProcessor, List<Restorable>>()) {
+            mutableListOf()
+        }
+
+        // Run processors until either
+        // 1) there is an error
+        // 2) there is no more new files.
+        while (!logger.hasError) {
+            // FirSession in AA is created lazily. Getting it instantiates module providers, which requires source roots
+            // to be resolved. Therefore, due to the implementation, it has to be registered repeatedly after the files
+            // are created.
+            val firSession = ResolverAAImpl.ktModule.getResolutionFacade(project)
+            firSession.useSiteFirSession.registerResolveComponents(
+                KtRegisteredDiagnosticFactoriesStorage(),
+                dualLookupTracker
+            )
+
+            val resolutionStrategy =
+                if (kspConfig.experimentalPsiResolution)
+                    PsiResolutionStrategy(newKSFiles, deferredSymbols)
+                else
+                    AAResolutionStrategy(newKSFiles, deferredSymbols)
+
+            val resolver = ResolverAAImpl(
+                allDirtyKSFiles,
+                project,
+                incrementalContext,
+                resolutionStrategy,
+                processorsRegisteredForUpcomingFeatures
+            )
+            ResolverAAImpl.instance = resolver
+            ResolverAAImpl.instance.functionAsMemberOfCache = mutableMapOf()
+            ResolverAAImpl.instance.propertyAsMemberOfCache = mutableMapOf()
+
+            processors.forEach { processor ->
+                resolver.currentProcessor = processor
+                incrementalContext.closeFilesOnException {
+                    deferredSymbols[processor] =
+                        processor.process(resolver)
+                            .filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
+                            .filterIsInstance<Deferrable>()
+                            .mapNotNull(Deferrable::defer)
+                }
+                if (deferredSymbols[processor].isNullOrEmpty()) {
+                    deferredSymbols.remove(processor)
+                }
+            }
+
+            val allKSFilesPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
+
+            if (logger.hasError || codeGenerator.generatedFile.isEmpty()) {
+                break
+            }
+
+            dropCaches(project)
+
+            newKSFiles = prepareNewKSFiles(
+                project,
+                codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
+                codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
+            )
+            // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be restored from deferred.
+            // Do not replace `!!` with `?.`. Implementations of KSFile in KSP2 must implement Deferrable and
+            // return non-null.
+            allDirtyKSFiles = allKSFilesPointers.map { it!!.restore() as KSFile } + newKSFiles
+            incrementalContext.registerGeneratedFiles(newKSFiles)
+            codeGenerator.closeFiles()
+        }
+
+        return allDirtyKSFiles to newKSFiles
+    }
+
+    private fun finishProcessing(
+        project: Project,
+        processors: List<SymbolProcessor>,
+        allDirtyKSFiles: List<KSFile>,
+        newKSFiles: List<KSFile>,
+        codeGenerator: CodeGeneratorImpl,
+        incrementalContext: IncrementalContextAA,
+        logger: ErrorTrackingLogger,
+    ) {
+        // Call onError() or finish()
+        if (logger.hasError) {
+            runTypeCheck(newKSFiles, project, logger)
+            processors.forEach(SymbolProcessor::onError)
+        } else {
+            processors.forEach(SymbolProcessor::finish)
+        }
+
+        if (!logger.hasError) {
+            incrementalContext.updateCachesAndOutputs(
+                allDirtyKSFiles,
+                codeGenerator.outputs,
+                codeGenerator.sourceToOutputs
+            )
+        } else {
+            incrementalContext.closeFiles()
+        }
+
+        dropCaches(project)
+        codeGenerator.closeFiles()
+    }
+
+    @OptIn(KaImplementationDetail::class)
+    private fun dropCaches(project: Project) {
+        maybeRunInWriteAction {
+            project.publishGlobalSourceModuleStateModificationEvent()
+            PsiManager.getInstance(project).dropPsiCaches()
+
+            KSObjectCacheManager.clear()
+        }
     }
 
     companion object {
@@ -830,3 +878,23 @@ private fun <T : Any> MockProject.replaceService(
     picoContainer.unregisterComponent(serviceInterface.name)
     registerService(serviceInterface, serviceImplementation)
 }
+
+private class ErrorTrackingLogger(
+    private val delegate: KSPLogger,
+    private val allWarningsAsErrors: Boolean,
+) : KSPLogger by delegate {
+    var hasError: Boolean = false
+
+    override fun error(message: String, symbol: KSNode?) {
+        hasError = true
+        delegate.error(message, symbol)
+    }
+
+    override fun warn(message: String, symbol: KSNode?) {
+        if (allWarningsAsErrors) {
+            hasError = true
+        }
+        delegate.warn(message, symbol)
+    }
+}
+
