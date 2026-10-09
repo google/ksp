@@ -46,6 +46,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.core.CorePackageIndex
 import com.intellij.diagnostic.PluginException
 import com.intellij.diagnostic.PluginProblemReporter
 import com.intellij.mock.MockProject
@@ -53,6 +54,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
@@ -63,6 +65,8 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.CollectionQuery
+import com.intellij.util.Query
 import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaIdeApi
@@ -98,10 +102,14 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolut
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
+import org.jetbrains.kotlin.cli.jvm.compiler.CliMetadataFinderFactory
+import org.jetbrains.kotlin.cli.jvm.compiler.CliVirtualFileFinderFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
@@ -111,7 +119,10 @@ import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
+import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
+import org.jetbrains.kotlin.load.kotlin.VirtualFileFinderFactory
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.platform.JsPlatform
 import org.jetbrains.kotlin.platform.TargetPlatform
@@ -391,6 +402,21 @@ class KotlinSymbolProcessing(
             // replace KaFirStopWorldCacheCleaner with no op implementation
             @OptIn(KaImplementationDetail::class)
             registerService(KaFirCacheCleaner::class.java, NoOpCacheCleaner::class.java)
+
+            if (kspConfig is KSPJvmConfig) {
+                val rootsIndex = JvmDependenciesDynamicCompoundIndex(true)
+                val fileFinderFactory = CliVirtualFileFinderFactory(rootsIndex, false, null)
+                replaceService(VirtualFileFinderFactory::class.java, fileFinderFactory)
+                replaceService(
+                    MetadataFinderFactory::class.java,
+                    CliMetadataFinderFactory(fileFinderFactory)
+                )
+                replaceService(PackageIndex::class.java, JvmDependenciesPackageIndex(rootsIndex))
+                registerService(
+                    IncrementalJavaFileManager::class.java,
+                    IncrementalJavaFileManager(kotlinCoreProjectEnvironment, rootsIndex)
+                )
+            }
         }
     }
 
@@ -398,9 +424,9 @@ class KotlinSymbolProcessing(
     private fun prepareAllKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         modules: List<KaModule>,
-        javaFileManager: IncrementalJavaFileManager?,
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
+        val javaFileManager = project.getService(IncrementalJavaFileManager::class.java)
         val ktFiles = mutableSetOf<KtFile>()
         val javaFiles = mutableSetOf<PsiJavaFile>()
         modules.filterIsInstance<KaSourceModule>().forEach { kaSourceModule ->
@@ -432,11 +458,11 @@ class KotlinSymbolProcessing(
 
     private fun prepareNewKSFiles(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
-        javaFileManager: IncrementalJavaFileManager?,
         newKotlinFiles: List<File>,
         newJavaFiles: List<File>,
     ): List<KSFile> {
         val project = kotlinCoreProjectEnvironment.project
+        val javaFileManager = project.getService(IncrementalJavaFileManager::class.java)
         val ktFiles = getPsiFilesFromPaths<KtFile>(
             project,
             newKotlinFiles.map { it.toPath() }.toSet()
@@ -507,13 +533,7 @@ class KotlinSymbolProcessing(
             ResolverAAImpl.ktModule = modules.single() as KaSourceModule
             ResolverAAImpl.kspConfig = kspConfig
 
-            // Initializing environments
-            val javaFileManager = if (kspConfig is KSPJvmConfig) {
-                IncrementalJavaFileManager(env)
-            } else null
-
-            val allKSFiles =
-                prepareAllKSFiles(env, modules, javaFileManager)
+            val allKSFiles = prepareAllKSFiles(env, modules)
             val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
             val codeGenerator = CodeGeneratorImpl(
                 kspConfig.classOutputDir,
@@ -638,7 +658,6 @@ class KotlinSymbolProcessing(
 
                 newKSFiles = prepareNewKSFiles(
                     env,
-                    javaFileManager,
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
                     codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
                 )
@@ -777,4 +796,42 @@ class NoOpCacheCleaner : KaFirCacheCleaner {
     override fun enterAnalysis() {}
     override fun exitAnalysis() {}
     override fun scheduleCleanup() {}
+}
+
+/**
+ * A [CorePackageIndex] implementation that delegates package directory lookups to
+ * [JvmDependenciesIndex].
+ *
+ * By default, [CorePackageIndex] linearly scans all classpath roots on every package lookup.
+ * Delegating to [index] avoids duplicate directory traversal and reuses the package caches already
+ * maintained by [IncrementalJavaFileManager]'s dependencies index.
+ */
+private class JvmDependenciesPackageIndex(
+    private val index: JvmDependenciesIndex,
+) : CorePackageIndex() {
+    override fun getDirectoriesByPackageName(
+        packageName: String,
+        includeLibrarySources: Boolean,
+    ): Array<VirtualFile> = findDirectoriesByPackageName(packageName).toTypedArray()
+
+    override fun getDirsByPackageName(
+        packageName: String,
+        includeLibrarySources: Boolean,
+    ): Query<VirtualFile> = CollectionQuery(findDirectoriesByPackageName(packageName))
+
+    private fun findDirectoriesByPackageName(packageName: String): List<VirtualFile> =
+        buildList {
+            index.traverseDirectoriesInPackage(FqName(packageName)) { dir, _ ->
+                add(dir)
+                true
+            }
+        }
+}
+
+private fun <T : Any> MockProject.replaceService(
+    serviceInterface: Class<T>,
+    serviceImplementation: T,
+) {
+    picoContainer.unregisterComponent(serviceInterface.name)
+    registerService(serviceInterface, serviceImplementation)
 }
