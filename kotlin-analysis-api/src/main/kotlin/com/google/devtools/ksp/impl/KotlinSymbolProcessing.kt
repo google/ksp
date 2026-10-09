@@ -46,6 +46,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.core.CorePackageIndex
 import com.intellij.diagnostic.PluginException
 import com.intellij.diagnostic.PluginProblemReporter
 import com.intellij.mock.MockProject
@@ -53,6 +54,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
@@ -63,6 +65,8 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.CollectionQuery
+import com.intellij.util.Query
 import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaIdeApi
@@ -105,6 +109,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
@@ -117,6 +122,7 @@ import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.load.kotlin.VirtualFileFinderFactory
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.platform.JsPlatform
 import org.jetbrains.kotlin.platform.TargetPlatform
@@ -405,6 +411,7 @@ class KotlinSymbolProcessing(
                     MetadataFinderFactory::class.java,
                     CliMetadataFinderFactory(fileFinderFactory)
                 )
+                replaceService(PackageIndex::class.java, JvmDependenciesPackageIndex(rootsIndex))
                 registerService(
                     IncrementalJavaFileManager::class.java,
                     IncrementalJavaFileManager(kotlinCoreProjectEnvironment, rootsIndex)
@@ -789,6 +796,36 @@ class NoOpCacheCleaner : KaFirCacheCleaner {
     override fun enterAnalysis() {}
     override fun exitAnalysis() {}
     override fun scheduleCleanup() {}
+}
+
+/**
+ * A [CorePackageIndex] implementation that delegates package directory lookups to
+ * [JvmDependenciesIndex].
+ *
+ * By default, [CorePackageIndex] linearly scans all classpath roots on every package lookup.
+ * Delegating to [index] avoids duplicate directory traversal and reuses the package caches already
+ * maintained by [IncrementalJavaFileManager]'s dependencies index.
+ */
+private class JvmDependenciesPackageIndex(
+    private val index: JvmDependenciesIndex,
+) : CorePackageIndex() {
+    override fun getDirectoriesByPackageName(
+        packageName: String,
+        includeLibrarySources: Boolean,
+    ): Array<VirtualFile> = findDirectoriesByPackageName(packageName).toTypedArray()
+
+    override fun getDirsByPackageName(
+        packageName: String,
+        includeLibrarySources: Boolean,
+    ): Query<VirtualFile> = CollectionQuery(findDirectoriesByPackageName(packageName))
+
+    private fun findDirectoriesByPackageName(packageName: String): List<VirtualFile> =
+        buildList {
+            index.traverseDirectoriesInPackage(FqName(packageName)) { dir, _ ->
+                add(dir)
+                true
+            }
+        }
 }
 
 private fun <T : Any> MockProject.replaceService(
