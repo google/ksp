@@ -21,7 +21,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.AnnotationClass
 import com.google.devtools.ksp.symbol.ArrayValue
-import com.google.devtools.ksp.symbol.EnumClass
+import com.google.devtools.ksp.symbol.EnumEntry
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSInt
 import com.google.devtools.ksp.symbol.KSString
@@ -69,9 +69,9 @@ class AnnotationArrayTypedValueProcessor(override val enableNewFeatures: Boolean
         check(number?.v == 7) { "Unexpected typed number: $number" }
         results.add("KotlinAnnotated TypedAnnotation number: Primitive(KSInt(7))")
 
-        val mode = arguments.getValue("mode").typedValue() as? EnumClass
+        val mode = arguments.getValue("mode").typedValue() as? EnumEntry
         check(mode?.clazz?.simpleName?.asString() == "FIRST") { "Unexpected typed enum: $mode" }
-        results.add("KotlinAnnotated TypedAnnotation mode: EnumClass(FIRST)")
+        results.add("KotlinAnnotated TypedAnnotation mode: EnumEntry(FIRST)")
 
         val klass = arguments.getValue("klass").typedValue() as? ReflectionClassReference
         check(klass?.type?.declaration?.simpleName?.asString() == "String") {

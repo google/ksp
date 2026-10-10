@@ -18,7 +18,7 @@ package com.google.devtools.ksp
 
 import com.google.devtools.ksp.symbol.AnnotationClass
 import com.google.devtools.ksp.symbol.ArrayValue
-import com.google.devtools.ksp.symbol.EnumClass
+import com.google.devtools.ksp.symbol.EnumEntry
 import com.google.devtools.ksp.symbol.ErrorValue
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSAnnotationValue
@@ -50,7 +50,7 @@ fun KSValueArgument.typedValue(): KSAnnotationValue = value.toKSAnnotationValue(
 /**
  * Wraps Boolean, numeric, character, and string values in [Primitive] with the matching
  * [com.google.devtools.ksp.symbol.KSPrimitiveType]. Class references become [ReflectionClassReference],
- * enum entries become [EnumClass], and nested annotations become [AnnotationClass]. Arrays and collections
+ * enum entries become [EnumEntry], and nested annotations become [AnnotationClass]. Arrays and collections
  * become [ArrayValue], recursively converting their elements. Any other value, including null, becomes
  * [ErrorValue].
  */
@@ -70,7 +70,7 @@ private fun Any?.toKSAnnotationValue(): KSAnnotationValue =
         is UInt -> Primitive(KSUInt(this))
         is ULong -> Primitive(KSULong(this))
         is KSType -> ReflectionClassReference(this)
-        is KSClassDeclaration -> EnumClass(this)
+        is KSClassDeclaration -> EnumEntry(this)
         is KSAnnotation -> AnnotationClass(this)
         is Array<*> -> ArrayValue(map { it.toKSAnnotationValue() }.toTypedArray())
         is Collection<*> -> ArrayValue(map { it.toKSAnnotationValue() }.toTypedArray())

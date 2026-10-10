@@ -29,7 +29,7 @@ value class ReflectionClassReference(val type: KSType) : KSAnnotationValue
 
 /** An enum entry represented by its [KSClassDeclaration]. */
 @JvmInline
-value class EnumClass(val clazz: KSClassDeclaration) : KSAnnotationValue
+value class EnumEntry(val clazz: KSClassDeclaration) : KSAnnotationValue
 
 /** A nested annotation represented by its [KSAnnotation]. */
 @JvmInline

@@ -23,7 +23,7 @@
 // KotlinAnnotated JavaAnnotation args typedValue: ArrayValue of two AnnotationClass values
 // KotlinAnnotated KotlinAnnotation args typedValue: ArrayValue of two AnnotationClass values
 // KotlinAnnotated TypedAnnotation number: Primitive(KSInt(7))
-// KotlinAnnotated TypedAnnotation mode: EnumClass(FIRST)
+// KotlinAnnotated TypedAnnotation mode: EnumEntry(FIRST)
 // KotlinAnnotated TypedAnnotation klass: ReflectionClassReference(String)
 // END
 // FILE: JavaAnnotation.java
