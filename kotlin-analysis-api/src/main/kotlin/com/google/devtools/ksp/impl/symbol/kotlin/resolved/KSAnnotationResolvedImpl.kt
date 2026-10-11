@@ -19,15 +19,10 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.impl.recordClassReferenceLookup
-import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
-import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
-import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
-import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultValue
-import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
-import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
+import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentDefaultArguments
+import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultArguments
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
@@ -38,15 +33,7 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
-import com.intellij.psi.PsiAnnotationMethod
-import com.intellij.psi.PsiArrayInitializerMemberValue
-import com.intellij.psi.PsiClass
-import com.intellij.psi.impl.compiled.ClsClassImpl
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
-import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
-import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
-import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.ALL
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FIELD
@@ -117,70 +104,11 @@ class KSAnnotationResolvedImpl private constructor(
             } else origin
             KSValueArgumentImpl.getCached(arg, this, argOrigin)
         }
-        val presentNames = presentArgs.mapNotNull { it.name?.asString() }
-        val absentArgs = analyze {
-            val annotationClass = annotationApplication.classId?.toKtClassSymbol()
-            val annotationConstructor = annotationClass?.memberScope?.constructors?.singleOrNull()
-            val params = annotationConstructor?.valueParameters
-            defaultArguments.filter { arg ->
-                val name = arg.name?.asString() ?: return@filter false
-                if (name in presentNames)
-                    return@filter false
-                params?.any { it.name.asString() == name && it.hasDefaultValue } == true
-            }
-        }
-        presentArgs + absentArgs
+        presentArgs + getAbsentDefaultArguments(presentArgs)
     }
 
-    @OptIn(KaImplementationDetail::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
-        analyze {
-            annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
-                if (
-                    symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
-                    symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
-                ) {
-                    (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
-                        .mapNotNull { annoMethod ->
-                            annoMethod.defaultValue?.let { value ->
-                                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                                    value.initializers.map {
-                                        calcValue(it, this@KSAnnotationResolvedImpl)
-                                    }
-                                } else {
-                                    calcValue(value, this@KSAnnotationResolvedImpl)
-                                }
-                                KSValueArgumentLiteImpl(
-                                    KSNameImpl.getCached(annoMethod.name),
-                                    calculatedValue,
-                                    this@KSAnnotationResolvedImpl,
-                                    Origin.SYNTHETIC,
-                                    value.toLocation()
-                                )
-                            }
-                        }
-                } else {
-                    symbol.memberScope.constructors.singleOrNull()?.let {
-                        it.valueParameters.mapNotNull { valueParameterSymbol ->
-                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
-                            if (constantValue is KaAnnotationValue.ClassLiteralValue) {
-                                this@KSAnnotationResolvedImpl.findParentDeclaration()?.let { decl ->
-                                    recordClassReferenceLookup(constantValue.type, decl)
-                                }
-                            }
-                            KSValueArgumentImpl.getCached(
-                                KaBaseNamedAnnotationValue(
-                                    valueParameterSymbol.name,
-                                    constantValue
-                                ),
-                                this@KSAnnotationResolvedImpl,
-                                Origin.SYNTHETIC
-                            )
-                        }
-                    }
-                }
-            } ?: emptyList()
-        }
+        getDefaultArguments(annotationApplication.classId)
     }
 
     override val shortName: KSName by lazy {
