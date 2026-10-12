@@ -19,6 +19,7 @@
 
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.common.AnyChanges
 import com.google.devtools.ksp.common.KSObjectCacheManager
 import com.google.devtools.ksp.common.impl.AAResolutionStrategy
@@ -563,17 +564,8 @@ class KotlinSymbolProcessing(
             }
 
             // Emit warning for processors not opted in to new features
-            processors.filterNot(processorsRegisteredForUpcomingFeatures::contains)
-                .forEach { processor ->
-                    logger.info(
-                        "Processor '${processor::class.qualifiedName ?: processor::class.simpleName}' " +
-                            "has not opted in for upcoming features yet. " +
-                            "It might break in a future version of KSP. " +
-                            "To fix this, please update the processor to a version that is " +
-                            "compatible with upcoming features.",
-                        null
-                    )
-                }
+            computeFeatureOptInWarnings(processors, processorsRegisteredForUpcomingFeatures)
+                .forEach { warning -> logger.info(warning, null) }
 
             fun dropCaches() {
                 maybeRunInWriteAction {
@@ -680,6 +672,55 @@ class KotlinSymbolProcessing(
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
+    }
+
+    private fun computeDisabledApiFeatures(apiFeatures: ApiFeatures): List<String> = buildList {
+        if (!apiFeatures.enableBackingFields) {
+            add(ApiFeatures::enableBackingFields.name)
+        }
+        if (!apiFeatures.enableContextParameters) {
+            add(ApiFeatures::enableContextParameters.name)
+        }
+    }
+
+    private fun computeFeatureOptInWarnings(
+        processors: List<SymbolProcessor>,
+        processorsRegisteredForUpcomingFeatures: Set<SymbolProcessor>
+    ): List<String> = buildList {
+        for (processor in processors) {
+            val processorName = processor::class.qualifiedName ?: processor::class.simpleName
+            val disabledFeatures = computeDisabledApiFeatures(processor.apiFeatures)
+            if (processor in processorsRegisteredForUpcomingFeatures) {
+                add(
+                    "Processor '$processorName' " +
+                        "opted in for upcoming features via 'SymbolProcessorEnvironment.registerProcessorForNewFeatures'. " +
+                        "Note that 'SymbolProcessorEnvironment.registerProcessorForNewFeatures' is deprecated; " +
+                        "processors should instead migrate to configuring 'SymbolProcessor.apiFeatures'."
+                )
+            } else if (!processor.apiFeatures.enableBackingFields && !processor.apiFeatures.enableContextParameters) {
+                add(
+                    "Processor '$processorName' " +
+                        "has not opted in for upcoming features yet. " +
+                        "It might break in a future version of KSP. " +
+                        "To fix this, please update the processor to a version that is " +
+                        "compatible with upcoming features."
+                )
+                add(
+                    "Note that 'SymbolProcessorEnvironment.registerProcessorForNewFeatures' is deprecated; " +
+                        "processors should instead migrate to configuring 'SymbolProcessor.apiFeatures'."
+                )
+            }
+            if (disabledFeatures.isNotEmpty()) {
+                add(
+                    "Processor '$processorName' " +
+                        "has not enabled the following API features: ${disabledFeatures.joinToString(", ")}. " +
+                        "It might break in a future version of KSP. " +
+                        "To fix this, please configure the set of 'apiFeatures' in 'SymbolProcessorProvider' " +
+                        "when creating the 'SymbolProcessor' (e.g., using 'buildApiFeatures'). " +
+                        "Processors should eventually enable all features in 'ApiFeatures'."
+                )
+            }
+        }
     }
 
     companion object {
