@@ -18,12 +18,12 @@
 // TEST PROCESSOR: JavaBackingFieldsParentsProcessor
 // PROCESSOR INPUT: annotations.Select
 // EXPECTED:
-// EXPECT CURRENT: annotations.Select: Parents as fqn: MyJavaClass.myJavaProperty
-// EXPECT CURRENT: annotations.Select: Property qualifiedName: com.example.test.MyJavaClass.myJavaProperty
-// EXPECT NEXT: annotations.Select: Parents as fqn: MyJavaClass.myJavaProperty
-// EXPECT NEXT: annotations.Select: Parents as fqn: MyJavaClass.myJavaProperty.field
-// EXPECT NEXT: annotations.Select: Property qualifiedName: com.example.test.MyJavaClass.myJavaProperty
-// EXPECT NEXT: annotations.Select: Property qualifiedName: com.example.test.MyJavaClass.myJavaProperty.field
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: annotations.Select: Parents as fqn: MyJavaClass.myJavaProperty
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: annotations.Select: Property qualifiedName: com.example.test.MyJavaClass.myJavaProperty
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: Parents as fqn: MyJavaClass.myJavaProperty
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: Parents as fqn: MyJavaClass.myJavaProperty.field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: Property qualifiedName: com.example.test.MyJavaClass.myJavaProperty
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: Property qualifiedName: com.example.test.MyJavaClass.myJavaProperty.field
 // END
 
 // FILE: Anno.kt
