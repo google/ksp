@@ -1,6 +1,13 @@
 // Signature format: 2.0
 package com.google.devtools.ksp {
 
+  public interface ApiFeatures {
+    method @InaccessibleFromKotlin public default boolean getEnableBackingFields();
+    method @InaccessibleFromKotlin public default boolean getEnableContextParameters();
+    property public default boolean enableBackingFields;
+    property public default boolean enableContextParameters;
+  }
+
   @com.google.devtools.ksp.KspExperimental public final class KSTypeNotPresentException extends java.lang.RuntimeException {
     ctor public KSTypeNotPresentException(@NonNull com.google.devtools.ksp.symbol.KSType ksType, @NonNull Throwable cause);
     method @InaccessibleFromKotlin @NonNull public com.google.devtools.ksp.symbol.KSType getKsType();
@@ -192,8 +199,10 @@ package com.google.devtools.ksp.processing {
 
   public interface SymbolProcessor {
     method public default void finish();
+    method @InaccessibleFromKotlin @NonNull public default com.google.devtools.ksp.ApiFeatures getApiFeatures();
     method public default void onError();
     method @NonNull public java.util.List<com.google.devtools.ksp.symbol.KSAnnotated> process(@NonNull com.google.devtools.ksp.processing.Resolver resolver);
+    property @NonNull public default com.google.devtools.ksp.ApiFeatures apiFeatures;
   }
 
   public final class SymbolProcessorEnvironment {
