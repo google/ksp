@@ -21,13 +21,13 @@
 // kotlin.Int: false
 // kotlin.Int: false
 // LibFoo: false
-// EXPECT NEXT: LibFoo: false
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: LibFoo: false
 // SelfReferencing: false
 // kotlin.String: false
-// EXPECT NEXT: kotlin.String: false
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: kotlin.String: false
 // SelfReferencing.T: false
 // Foo.T1: true
-// EXPECT NEXT: Foo.T1: true
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Foo.T1: true
 // Foo.bar.T2: false
 // foo.T3: false
 // T

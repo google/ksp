@@ -30,31 +30,31 @@
 // propWithFinalType : String
 // propWithFinalType.getter() : String
 // value : String
-// EXPECT NEXT: propWithFinalType.field : String
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithFinalType.field : String
 // propWithOpenType : Number
 // propWithOpenType.getter() : Number
 // value : Number
-// EXPECT NEXT: propWithOpenType.field : Number
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithOpenType.field : Number
 // propWithFinalGeneric : List<String>
 // propWithFinalGeneric.getter() : List<String>
 // value : List<String>
-// EXPECT NEXT: propWithFinalGeneric.field : List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithFinalGeneric.field : List<String>
 // propWithOpenGeneric : List<Number>
 // propWithOpenGeneric.getter() : List<Number>
 // value : List<Number>
-// EXPECT NEXT: propWithOpenGeneric.field : List<Number>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithOpenGeneric.field : List<Number>
 // propWithTypeArg : R
 // propWithTypeArg.getter() : R
 // value : R
-// EXPECT NEXT: propWithTypeArg.field : R
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithTypeArg.field : R
 // propWithTypeArgGeneric : List<R>
 // propWithTypeArgGeneric.getter() : List<R>
 // value : List<R>
-// EXPECT NEXT: propWithTypeArgGeneric.field : List<R>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithTypeArgGeneric.field : List<R>
 // propWithOpenTypeButSuppressAnnotation : Number
 // propWithOpenTypeButSuppressAnnotation.getter() : Number
 // value : Number
-// EXPECT NEXT: propWithOpenTypeButSuppressAnnotation.field : Number
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: propWithOpenTypeButSuppressAnnotation.field : Number
 // list2 : List<Any?>
 // list1 : List<Any?>
 // list3 : List<R>

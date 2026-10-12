@@ -1090,8 +1090,30 @@ abstract class KSPUnitTestSuite(
             runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
         } else {
             runTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+        }
+    }
+
+    @TestMetadata("expectDifferentOutputFailingOnBackingFields.kt")
+    @Test
+    fun testExpectDifferentOutputFailingOnBackingFields() {
+        // N.B.: This test is supposed to fail on one configuration.
+        // It asserts that the test output actually varies depending on the configuration.
+        if (apiFeatures.enableBackingFields && !apiFeatures.enableContextParameters) {
+            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnBackingFields.kt")
         } else {
-            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+            runTest("$AA_PATH/expectDifferentOutputFailingOnBackingFields.kt")
+        }
+    }
+
+    @TestMetadata("expectDifferentOutputFailingOnContextParameters.kt")
+    @Test
+    fun testExpectDifferentOutputFailingOnContextParameters() {
+        // N.B.: This test is supposed to fail on one configuration.
+        // It asserts that the test output actually varies depending on the configuration.
+        if (!apiFeatures.enableBackingFields && apiFeatures.enableContextParameters) {
+            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnContextParameters.kt")
+        } else {
+            runTest("$AA_PATH/expectDifferentOutputFailingOnContextParameters.kt")
         }
     }
 

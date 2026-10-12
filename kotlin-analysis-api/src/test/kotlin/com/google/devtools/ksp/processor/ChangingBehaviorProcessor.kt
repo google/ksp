@@ -19,41 +19,38 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
-import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 
-class ChangingBehaviorProcessor(val annotationNames: List<String>, override val apiFeatures: ApiFeatures) :
+class ChangingBehaviorProcessor(val annotationNames: List<String>, override var apiFeatures: ApiFeatures) :
     AbstractTestProcessor() {
-    val results = mutableListOf<String>()
-
-    var registerForNewFeatures: ((SymbolProcessor) -> Unit)? = null
+    private val results = mutableListOf<String>()
 
     override fun toResult(): List<String> = results
 
-    /**
-     * The [create] function has been overridden here to ensure this class
-     * always decides when to opt in to new features.
-     */
-    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        registerForNewFeatures = environment.registerProcessorForNewFeatures
-        return this
-    }
-
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        // Call Resolver functions before calling registerForNewFeatures
-        results.add("enableNewFeatures = false")
+        // Initialize api features to disable everything
+        apiFeatures = buildApiFeatures {
+            enableBackingFields = false
+            enableContextParameters = false
+        }
+
+        // Call Resolver functions before changing api features
+        results.add("apiFeatures = $apiFeatures")
         results.addAll(queryChangePoints(resolver))
 
-        // Unsafely assert not null to ensure crash if lambda was not assigned
-        registerForNewFeatures!!(this)
+        // Unsafely update apiFeatures
+        apiFeatures = buildApiFeatures {
+            enableBackingFields = true
+            enableContextParameters = true
+        }
 
         // Call same functions as before in Resolver to ensure it returns new symbols
-        results.add("enableNewFeatures = true")
+        results.add("apiFeatures = $apiFeatures")
         results.addAll(queryChangePoints(resolver))
 
         return emptyList()
@@ -63,8 +60,7 @@ class ChangingBehaviorProcessor(val annotationNames: List<String>, override val 
      * Helper function that queries the resolver instance
      * and symbols where changes can occur.
      * This helper function ensures the call site remains
-     * exactly the same, so the only change is calling
-     * [registerForNewFeatures].
+     * exactly the same, so the only change is the new [apiFeatures] value.
      *
      * Importantly, it only uses local mutability, such that the function is pure
      * given a resolver configuration. In other words, as it only depends on the
