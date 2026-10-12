@@ -29,10 +29,10 @@
 // delegateProp:K2.kt:113
 // f1:J.java:88
 // f1:K.kt:70
-// EXPECT CURRENT: fieldProp:K2.kt:108
-// EXPECT NEXT: field:J.java:85
-// EXPECT NEXT: field:J.java:97
-// EXPECT NEXT: field:K2.kt:108
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: fieldProp:K2.kt:108
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field:J.java:85
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field:J.java:97
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field:K2.kt:108
 // p1:K.kt:64
 // p2:J.java:88
 // p2:K.kt:70
