@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -27,7 +28,7 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 @OptIn(KspExperimental::class)
-open class TopLevelMemberProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+open class TopLevelMemberProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     lateinit var results: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -35,7 +36,7 @@ open class TopLevelMemberProcessor(override val enableNewFeatures: Boolean) : Ab
             resolver.getDeclarationsFromPackage(pkg)
                 .flatMap { declaration ->
                     val declarations = mutableListOf<KSDeclaration>()
-                    declaration.accept(AllMembersVisitor(enableNewFeatures), declarations)
+                    declaration.accept(AllMembersVisitor(apiFeatures), declarations)
                     declarations
                 }.map {
                     "$pkg : ${it.simpleName.asString()} -> ${resolver.getSyntheticJvmClass(it)}"
@@ -52,8 +53,8 @@ open class TopLevelMemberProcessor(override val enableNewFeatures: Boolean) : Ab
         else -> error("unexpected declaration $declaration")
     }
 
-    private class AllMembersVisitor(enableNewFeatures: Boolean) :
-        KSTopDownVisitor<MutableList<KSDeclaration>, Unit>(enableNewFeatures) {
+    private class AllMembersVisitor(apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<MutableList<KSDeclaration>, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableList<KSDeclaration>) {
         }
 

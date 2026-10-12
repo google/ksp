@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSBackingField
@@ -24,15 +25,15 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class DocStringProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class DocStringProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     private val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
         return result
     }
 
-    private class DeclarationCollector(enableNewFeatures: Boolean) :
-        KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
+    private class DeclarationCollector(apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<MutableCollection<String>, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableCollection<String>) = Unit
 
         override fun visitDeclaration(declaration: KSDeclaration, data: MutableCollection<String>) {
@@ -51,7 +52,7 @@ class DocStringProcessor(override val enableNewFeatures: Boolean) : AbstractTest
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = DeclarationCollector(enableNewFeatures)
+        val visitor = DeclarationCollector(apiFeatures)
         resolver.getNewFiles().forEach { it.accept(visitor, result) }
         result.sort()
         return emptyList()

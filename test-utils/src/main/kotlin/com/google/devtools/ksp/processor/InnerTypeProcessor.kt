@@ -17,14 +17,15 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.innerArguments
 import com.google.devtools.ksp.outerType
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-open class InnerTypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+open class InnerTypeProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollector(enableNewFeatures)
+    val typeCollector = TypeCollector(apiFeatures)
     val types = mutableSetOf<KSType>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

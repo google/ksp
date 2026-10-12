@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class AllFunctionsProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
-    val visitor = AllFunctionsVisitor(enableNewFeatures)
+class AllFunctionsProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
+    val visitor = AllFunctionsVisitor(apiFeatures)
 
     override fun toResult(): List<String> {
         return visitor.toResult()
@@ -32,7 +33,7 @@ class AllFunctionsProcessor(override val enableNewFeatures: Boolean) : AbstractT
         return emptyList()
     }
 
-    class AllFunctionsVisitor(enableNewFeatures: Boolean) : KSVisitorVoid(enableNewFeatures) {
+    class AllFunctionsVisitor(apiFeatures: ApiFeatures) : KSVisitorVoid(apiFeatures) {
         private val declarationsByClass = mutableMapOf<String, MutableList<String>>()
         fun toResult(): List<String> {
             return declarationsByClass.entries

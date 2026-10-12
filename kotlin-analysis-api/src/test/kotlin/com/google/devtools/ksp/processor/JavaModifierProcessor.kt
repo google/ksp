@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class JavaModifierProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -59,7 +60,7 @@ class JavaModifierProcessor(override val enableNewFeatures: Boolean) : AbstractT
         return emptyList()
     }
 
-    inner class ModifierVisitor(val resolver: Resolver) : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
+    inner class ModifierVisitor(val resolver: Resolver) : KSTopDownVisitor<Unit, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: Unit) {
         }
 

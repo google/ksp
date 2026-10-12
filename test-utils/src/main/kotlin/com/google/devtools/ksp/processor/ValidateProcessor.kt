@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -9,11 +10,11 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 
-class ValidateProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class ValidateProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     private fun validate(symbol: KSDeclaration, predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true }) {
-        if (symbol.validate(predicate, enableNewFeatures = false)) {
+        if (symbol.validate(predicate, apiFeatures)) {
             results.add("${symbol.simpleName.asString()} valid")
         } else {
             results.add("${symbol.simpleName.asString()} invalid")

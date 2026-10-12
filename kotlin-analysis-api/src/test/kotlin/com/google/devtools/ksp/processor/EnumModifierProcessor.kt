@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class EnumModifierProcessor(val declarationNames: List<String>, override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class EnumModifierProcessor(val declarationNames: List<String>, override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     private val result: MutableList<String> = mutableListOf()
 
     override fun toResult(): List<String> = result.sorted()

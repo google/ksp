@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 
 class MultiRoundPackageDeclarationProcessor(
     val packageNames: List<String>,
-    override val enableNewFeatures: Boolean
+    override val apiFeatures: ApiFeatures
 ) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     private lateinit var env: SymbolProcessorEnvironment

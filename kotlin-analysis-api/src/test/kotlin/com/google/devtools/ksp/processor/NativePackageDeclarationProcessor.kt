@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class NativePackageDeclarationProcessor(val packageNames: List<String>, override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class NativePackageDeclarationProcessor(val packageNames: List<String>, override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {

@@ -17,12 +17,13 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class LibOriginsProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class LibOriginsProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     private val result = mutableListOf<String>()
     private val visited = mutableSetOf<KSNode>()
 
@@ -30,7 +31,7 @@ class LibOriginsProcessor(override val enableNewFeatures: Boolean) : AbstractTes
         return result
     }
 
-    inner class MyCollector : KSTopDownVisitor<Origin, Unit>(enableNewFeatures) {
+    inner class MyCollector : KSTopDownVisitor<Origin, Unit>(apiFeatures) {
         private fun KSNode.pretty(): String {
             val parents: MutableList<KSNode> = mutableListOf(this)
             var curr: KSNode = this
