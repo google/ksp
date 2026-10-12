@@ -17,13 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class ConstructorDeclarationsProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
-    val visitor = ConstructorsVisitor(enableNewFeatures)
+class ConstructorDeclarationsProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
+    val visitor = ConstructorsVisitor(apiFeatures)
     lateinit var result: List<String>
 
     override fun toResult(): List<String> {
@@ -44,7 +45,7 @@ class ConstructorDeclarationsProcessor(override val enableNewFeatures: Boolean) 
         return emptyList()
     }
 
-    class ConstructorsVisitor(enableNewFeatures: Boolean) : KSVisitorVoid(enableNewFeatures) {
+    class ConstructorsVisitor(apiFeatures: ApiFeatures) : KSVisitorVoid(apiFeatures) {
         private val declarationsByClass = LinkedHashMap<KSClassDeclaration, MutableList<String>>()
         fun classNames() = declarationsByClass.keys
         fun toResult(): List<String> {

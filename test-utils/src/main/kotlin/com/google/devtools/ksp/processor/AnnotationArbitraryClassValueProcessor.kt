@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KSTypeNotPresentException
 import com.google.devtools.ksp.KSTypesNotPresentException
 import com.google.devtools.ksp.KspExperimental
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import kotlin.reflect.KClass
 
 @KspExperimental
-class AnnotationArbitraryClassValueProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class AnnotationArbitraryClassValueProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {

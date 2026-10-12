@@ -18,13 +18,13 @@
 // TEST PROCESSOR: ChangingBehaviorProcessor
 // PROCESSOR INPUT: Anno, FieldAnno, PropAnno
 // EXPECTED:
-// enableNewFeatures = false
+// apiFeatures = KSApiFeatures(enableBackingFields=false, enableContextParameters=false)
 // Resolver.getSymbolsWithAnnotation("Anno") = MyClass.x
 // Resolver.getSymbolsWithAnnotation("FieldAnno") = MyClass.x
 // Resolver.getSymbolsWithAnnotation("PropAnno") = MyClass.x
 // MyClass.x.annotations = Anno, FieldAnno, PropAnno
 // MyClass.x.modifiers = FINAL, PUBLIC
-// enableNewFeatures = true
+// apiFeatures = KSApiFeatures(enableBackingFields=true, enableContextParameters=true)
 // Resolver.getSymbolsWithAnnotation("Anno") = MyClass.x
 // Resolver.getSymbolsWithAnnotation("FieldAnno") = MyClass.x.field
 // Resolver.getSymbolsWithAnnotation("PropAnno") = MyClass.x

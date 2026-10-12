@@ -1,23 +1,24 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSEmptyVisitor
 
-class LocalDeclarationProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class LocalDeclarationProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = LocalDeclarationVisitor(enableNewFeatures)
+        val visitor = LocalDeclarationVisitor(apiFeatures)
         resolver.getAllFiles().forEach { it.accept(visitor, result) }
         return emptyList()
     }
 }
 
-class LocalDeclarationVisitor(enableNewFeatures: Boolean) : KSEmptyVisitor<MutableList<String>, Unit>(enableNewFeatures) {
+class LocalDeclarationVisitor(apiFeatures: ApiFeatures) : KSEmptyVisitor<MutableList<String>, Unit>(apiFeatures) {
     override fun defaultHandler(node: KSNode, data: MutableList<String>) {
         data.add(node.toString())
     }

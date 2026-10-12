@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class RecordJavaSupertypesProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class RecordJavaSupertypesProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -33,7 +34,7 @@ class RecordJavaSupertypesProcessor(override val enableNewFeatures: Boolean): Ab
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val types = mutableSetOf<KSType>()
         resolver.getAllFiles().forEach {
-            it.accept(TypeCollectorNoAccessor(enableNewFeatures), types)
+            it.accept(TypeCollectorNoAccessor(apiFeatures), types)
         }
         types.forEach {
             resolver.builtIns.anyType.isAssignableFrom(it)

@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.getDeclaredFunctions
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class ImplicitElementProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class ImplicitElementProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val result: MutableList<String> = mutableListOf()
 
     override fun toResult(): List<String> {

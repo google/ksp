@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class AnnotationArrayValueTypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class AnnotationArrayValueTypeProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

@@ -17,12 +17,14 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
 abstract class PsiConfiguredUnitTestSuiteBase(
-    enableNewFeatures: Boolean,
-) : KSPUnitTestSuite(experimentalPsiResolution = true, enableNewFeatures) {
+    apiFeatures: ApiFeatures,
+) : KSPUnitTestSuite(experimentalPsiResolution = true, apiFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
@@ -55,7 +57,13 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+
+class PsiConfiguredDefaultFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = false
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
@@ -63,7 +71,38 @@ class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatu
     }
 }
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+class PsiConfiguredBackingFieldsUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = false
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
+    }
+}
+
+class PsiConfiguredContextParametersUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = true
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
+    }
+}
+
+class PsiConfiguredAllFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = true
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {

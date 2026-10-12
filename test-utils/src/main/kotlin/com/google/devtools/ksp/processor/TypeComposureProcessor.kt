@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class TypeComposureProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+open class TypeComposureProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -31,7 +32,7 @@ open class TypeComposureProcessor(override val enableNewFeatures: Boolean): Abst
 
         files.forEach {
             it.accept(
-                object : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
+                object : KSTopDownVisitor<Unit, Unit>(apiFeatures) {
                     override fun defaultHandler(node: KSNode, data: Unit) = Unit
 
                     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
