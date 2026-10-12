@@ -87,7 +87,7 @@ sealed class KSPropertyDeclarationJavaImpl : KSPropertyDeclaration, AbstractKSDe
 
     override val backingField: KSBackingField?
         get() =
-            if (ResolverAAImpl.instance.shouldEnableNewFeatures())
+            if (ResolverAAImpl.instance.currentApiFeatures.enableBackingFields)
                 backingFieldCache
             else
                 null
