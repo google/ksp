@@ -1,12 +1,13 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class ParentProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class ParentProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -14,7 +15,7 @@ class ParentProcessor(override val enableNewFeatures: Boolean) : AbstractTestPro
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val collector = AllSymbolProcessor(enableNewFeatures)
+        val collector = AllSymbolProcessor(apiFeatures)
         val nodes = mutableSetOf<KSNode>()
         resolver.getAllFiles().sortedBy { it.fileName }.forEach { it.accept(collector, nodes) }
         for (e in listOf("YUV", "HSV")) {
@@ -26,8 +27,8 @@ class ParentProcessor(override val enableNewFeatures: Boolean) : AbstractTestPro
         return emptyList()
     }
 
-    class AllSymbolProcessor(enableNewFeatures: Boolean) :
-        KSTopDownVisitor<MutableSet<KSNode>, Unit>(enableNewFeatures) {
+    class AllSymbolProcessor(apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<MutableSet<KSNode>, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableSet<KSNode>) {
             data.add(node)
         }

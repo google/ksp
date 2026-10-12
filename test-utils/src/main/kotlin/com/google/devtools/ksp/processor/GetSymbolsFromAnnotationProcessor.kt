@@ -1,9 +1,10 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class GetSymbolsFromAnnotationProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class GetSymbolsFromAnnotationProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<List<String>>()
     override fun toResult(): List<String> = result.flatten()
 

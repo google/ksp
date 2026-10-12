@@ -17,13 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
 class VarArgAnnotationApplicationProcessor(
     val classNames: List<String>,
-    override val enableNewFeatures: Boolean
+    override val apiFeatures: ApiFeatures
 ) : AbstractTestProcessor() {
 
     private val results = mutableListOf<String>()

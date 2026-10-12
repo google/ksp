@@ -1,11 +1,12 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
-open class BaseVisitor(enableNewFeatures: Boolean) : KSVisitorVoid(enableNewFeatures) {
+open class BaseVisitor(apiFeatures: ApiFeatures) : KSVisitorVoid(apiFeatures) {
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
         for (declaration in classDeclaration.declarations) {
             declaration.accept(this, Unit)

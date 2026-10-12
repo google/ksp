@@ -1,11 +1,12 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 
-class TypeParameterVarianceProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class TypeParameterVarianceProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     override fun toResult(): List<String> {
         return results

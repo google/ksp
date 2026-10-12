@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.getFunctionDeclarationsByName
@@ -37,7 +38,7 @@ import com.google.devtools.ksp.symbol.KSTypeParameter
  * Bounds are built in two ways, both covered here: from the declared upper bounds (source, library,
  * and class type parameters), and from substituted upper bounds via `asMemberOf`.
  */
-class TypeParameterBoundTypeAliasProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class TypeParameterBoundTypeAliasProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
 
     private val results = mutableListOf<String>()
 

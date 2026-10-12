@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredProperties
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 @OptIn(KspExperimental::class)
 class BackingFieldsSignatureMapperProcessor(
     val classNames: List<String>,
-    override val enableNewFeatures: Boolean,
+    override val apiFeatures: ApiFeatures
 ) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
