@@ -82,17 +82,9 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                 (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
             val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
                 val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
-                val value = it.value
-                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                    value.initializers.map {
-                        calcValue(it, this@KSAnnotationJavaImpl)
-                    }
-                } else {
-                    calcValue(it.value, this@KSAnnotationJavaImpl)
-                }
                 KSValueArgumentLiteImpl(
                     name?.let { KSNameImpl.getCached(it) },
-                    calculatedValue,
+                    calcValue(it.value, this@KSAnnotationJavaImpl),
                     this@KSAnnotationJavaImpl,
                     Origin.JAVA,
                     it.toLocation()
@@ -127,6 +119,11 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
 }
 
 fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
+    if (value is PsiArrayInitializerMemberValue) {
+        return value.initializers.map {
+            calcValue(it, parent)
+        }
+    }
     if (value is PsiAnnotation) {
         value.qualifiedName?.let { fqn ->
             parent?.findParentDeclaration()?.let { decl ->

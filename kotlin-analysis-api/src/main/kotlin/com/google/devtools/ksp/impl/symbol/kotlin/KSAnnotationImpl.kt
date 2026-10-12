@@ -25,7 +25,6 @@ import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiAnnotationMethod
-import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
@@ -136,16 +135,9 @@ internal fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueAr
                 (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                     .mapNotNull { annoMethod ->
                         annoMethod.defaultValue?.let { value ->
-                            val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                                value.initializers.map {
-                                    calcValue(it, this@getDefaultArguments)
-                                }
-                            } else {
-                                calcValue(value, this@getDefaultArguments)
-                            }
                             KSValueArgumentLiteImpl(
                                 KSNameImpl.getCached(annoMethod.name),
-                                calculatedValue,
+                                calcValue(value, this@getDefaultArguments),
                                 this@getDefaultArguments,
                                 Origin.SYNTHETIC,
                                 value.toLocation()
