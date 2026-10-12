@@ -20,22 +20,22 @@
 // PROCESSOR INPUT: MyClass, MyJavaClass, lib.Other
 // EXPECTED:
 // MyClass.implicitInt: I
-// EXPECT NEXT: MyClass.implicitInt.field: I
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.implicitInt.field: I
 // MyClass.explicitList: Ljava/util/List;
-// EXPECT NEXT: MyClass.explicitList.field: Ljava/util/ArrayList;
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.explicitList.field: Ljava/util/ArrayList;
 // MyClass.propA: LA;
-// EXPECT NEXT: MyClass.propA.field: LB;
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.propA.field: LB;
 // MyClass.noBackingField: I
 // MyJavaClass.javaInt: I
-// EXPECT NEXT: MyJavaClass.javaInt.field: I
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyJavaClass.javaInt.field: I
 // MyJavaClass.javaString: Ljava/lang/String;
-// EXPECT NEXT: MyJavaClass.javaString.field: Ljava/lang/String;
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyJavaClass.javaString.field: Ljava/lang/String;
 // lib.Other.implicitInt: I
-// EXPECT NEXT: lib.Other.implicitInt.field: I
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: lib.Other.implicitInt.field: I
 // lib.Other.explicitList: Ljava/util/List;
-// EXPECT NEXT: lib.Other.explicitList.field: Ljava/util/List;
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: lib.Other.explicitList.field: Ljava/util/List;
 // lib.Other.propA: Llib/A;
-// EXPECT NEXT: lib.Other.propA.field: Llib/A;
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: lib.Other.propA.field: Llib/A;
 // END
 
 // MODULE: lib

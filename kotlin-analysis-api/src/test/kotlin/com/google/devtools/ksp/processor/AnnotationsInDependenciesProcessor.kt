@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.FileLocation
@@ -35,7 +36,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class AnnotationsInDependenciesProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class AnnotationsInDependenciesProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult() = results
 
@@ -69,7 +70,7 @@ class AnnotationsInDependenciesProcessor(override val enableNewFeatures: Boolean
     private fun collectAnnotations(resolver: Resolver, qName: String): Map<KSAnnotated, List<KSAnnotation>> {
         val output = mutableMapOf<KSAnnotated, List<KSAnnotation>>()
         resolver.getClassDeclarationByName(qName)?.accept(
-            AnnotationVisitor(enableNewFeatures),
+            AnnotationVisitor(apiFeatures),
             output
         )
         return output
@@ -101,8 +102,8 @@ class AnnotationsInDependenciesProcessor(override val enableNewFeatures: Boolean
         return "$type{$args}"
     }
 
-    class AnnotationVisitor(enableNewFeatures: Boolean) :
-        KSTopDownVisitor<MutableMap<KSAnnotated, List<KSAnnotation>>, Unit>(enableNewFeatures) {
+    class AnnotationVisitor(apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<MutableMap<KSAnnotated, List<KSAnnotation>>, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableMap<KSAnnotated, List<KSAnnotation>>) {
         }
 

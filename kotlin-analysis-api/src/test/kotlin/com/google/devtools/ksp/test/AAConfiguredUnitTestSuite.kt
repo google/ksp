@@ -17,12 +17,14 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
 abstract class AAConfiguredUnitTestSuiteBase(
-    enableNewFeatures: Boolean
-) : KSPUnitTestSuite(experimentalPsiResolution = false, enableNewFeatures) {
+    apiFeatures: ApiFeatures
+) : KSPUnitTestSuite(experimentalPsiResolution = false, apiFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
@@ -49,7 +51,12 @@ abstract class AAConfiguredUnitTestSuiteBase(
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+class AAConfiguredDefaultFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = false
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
@@ -63,7 +70,50 @@ class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeature
     }
 }
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+class AAConfiguredBackingFieldsUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = false
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
+    }
+
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
+    @Test
+    override fun testContextParameters() {
+        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
+}
+
+class AAConfiguredContextParametersUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = true
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
+    }
+
+    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
+    @Test
+    override fun testContextParameters() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+    }
+}
+
+class AAConfiguredAllFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = true
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
