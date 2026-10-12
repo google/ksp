@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.KSPConfig
@@ -56,8 +57,8 @@ import java.net.URLClassLoader
 
 abstract class AbstractKSPAATest(
     val experimentalPsiResolution: Boolean,
-    enableNewFeatures: Boolean,
-) : AbstractKSPTest(FrontendKinds.FIR, enableNewFeatures) {
+    apiFeatures: ApiFeatures,
+) : AbstractKSPTest(FrontendKinds.FIR, apiFeatures) {
 
     val TestModule.kotlinSrc
         get() = File(testRoot, "kotlinSrc")

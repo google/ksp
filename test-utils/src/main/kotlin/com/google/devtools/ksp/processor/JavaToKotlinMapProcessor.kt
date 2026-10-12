@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getJavaClassByName
@@ -25,9 +26,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @KspExperimental
-open class JavaToKotlinMapProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+open class JavaToKotlinMapProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollectorNoAccessor(enableNewFeatures)
+    val typeCollector = TypeCollectorNoAccessor(apiFeatures)
     val types = mutableSetOf<KSType>()
 
     val javaClasses = listOf(

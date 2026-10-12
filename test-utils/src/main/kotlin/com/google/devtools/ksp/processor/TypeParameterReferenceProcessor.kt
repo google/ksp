@@ -17,14 +17,15 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-open class TypeParameterReferenceProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+open class TypeParameterReferenceProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val collector = ReferenceCollector(enableNewFeatures)
+    val collector = ReferenceCollector(apiFeatures)
     val references = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

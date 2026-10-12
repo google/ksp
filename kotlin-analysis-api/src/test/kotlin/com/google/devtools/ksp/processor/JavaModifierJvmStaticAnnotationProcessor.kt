@@ -17,13 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
-class JavaModifierJvmStaticAnnotationProcessor(val classNames: List<String>, override val enableNewFeatures: Boolean) :
+class JavaModifierJvmStaticAnnotationProcessor(val classNames: List<String>, override val apiFeatures: ApiFeatures) :
     AbstractTestProcessor() {
     val results = mutableListOf<String>()
 

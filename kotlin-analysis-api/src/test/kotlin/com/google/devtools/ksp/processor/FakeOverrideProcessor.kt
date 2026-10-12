@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -25,11 +26,10 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyAccessor
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyGetter
-import com.google.devtools.ksp.symbol.KSPropertySetter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.intellij.util.containers.addIfNotNull
 
-class FakeOverrideProcessor(val declarationNames: List<String>, override val enableNewFeatures: Boolean) :
+class FakeOverrideProcessor(val declarationNames: List<String>, override val apiFeatures: ApiFeatures) :
     AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 

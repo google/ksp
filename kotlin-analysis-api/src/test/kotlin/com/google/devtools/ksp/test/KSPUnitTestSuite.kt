@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.test.annotations.Bug
 import com.google.devtools.ksp.test.annotations.BugState
 import com.google.devtools.ksp.test.annotations.Negative
@@ -33,8 +34,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @TestDataPath($$"$CONTENT_ROOT/testData")
 abstract class KSPUnitTestSuite(
     experimentalPsiResolution: Boolean,
-    enableNewFeatures: Boolean,
-) : AbstractKSPAATest(experimentalPsiResolution, enableNewFeatures) {
+    apiFeatures: ApiFeatures,
+) : AbstractKSPAATest(experimentalPsiResolution, apiFeatures) {
 
     companion object {
         internal const val AA_PATH: String = "../kotlin-analysis-api/testData"
@@ -1085,7 +1086,9 @@ abstract class KSPUnitTestSuite(
     fun testExpectDifferentOutputFailingOnCurrent() {
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
-        if (enableNewFeatures) {
+        if (!apiFeatures.enableBackingFields && !apiFeatures.enableContextParameters) {
+            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+        } else {
             runTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
         } else {
             runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
@@ -1097,7 +1100,7 @@ abstract class KSPUnitTestSuite(
     fun testExpectDifferentOutputFailingOnNext() {
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
-        if (enableNewFeatures) {
+        if (apiFeatures.enableBackingFields && apiFeatures.enableContextParameters) {
             runFailingTest("$AA_PATH/expectDifferentOutputFailingOnNext.kt")
         } else {
             runTest("$AA_PATH/expectDifferentOutputFailingOnNext.kt")
