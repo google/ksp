@@ -40,9 +40,9 @@
 // kotlin.Array<out Base.T?>?
 // kotlin.Unit
 // Foo<Base.T?, Base.Inner.P?>?
-// EXPECT NEXT: Foo<Base.T?, Base.Inner.P?>?
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Foo<Base.T?, Base.Inner.P?>?
 // Bar<Base.Inner.P?, Base.T?>?
-// EXPECT NEXT: Bar<Base.Inner.P?, Base.T?>?
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Bar<Base.Inner.P?, Base.T?>?
 // kotlin.collections.MutableList<Base.T?>?
 // kotlin.Unit
 // Base.T?
@@ -52,9 +52,9 @@
 // kotlin.Array<out Base.T?>?
 // kotlin.Unit
 // Base<Another.T?, Another.T?>?
-// EXPECT NEXT: Base<Another.T?, Another.T?>?
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Base<Another.T?, Another.T?>?
 // kotlin.Int
-// EXPECT NEXT: kotlin.Int
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: kotlin.Int
 // kotlin.Unit
 // kotlin.Int
 // JavaEnum
