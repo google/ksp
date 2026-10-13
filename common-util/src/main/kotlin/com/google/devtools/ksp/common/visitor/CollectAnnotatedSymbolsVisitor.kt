@@ -20,6 +20,7 @@ package com.google.devtools.ksp.common.visitor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -75,6 +76,9 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeat
         visitAnnotated(function, data)
         function.typeParameters.forEach { it.accept(this, data) }
         function.parameters.forEach { it.accept(this, data) }
+        if (enableNewFeatures) {
+            function.contextParameters.forEach { it.accept(this, data) }
+        }
         if (inDepth) {
             function.declarations.forEach { it.accept(this, data) }
         }
@@ -87,6 +91,7 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeat
         property.setter?.accept(this, data)
         if (enableNewFeatures) {
             property.backingField?.accept(this, data)
+            property.contextParameters.forEach { it.accept(this, data) }
         }
     }
 
@@ -96,6 +101,14 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeat
         }
         visitAnnotated(backingField, data)
         backingField.type.accept(this, data)
+    }
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: Unit) {
+        if (!enableNewFeatures) {
+            throw IllegalStateException("enableNewFeatures = false, but visitContextParameter was reached")
+        }
+        visitAnnotated(contextParameter, data)
+        contextParameter.type.accept(this, data)
     }
 
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {
