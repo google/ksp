@@ -239,6 +239,17 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/changingBehavior.kt")
     }
 
+    @Bug(
+        "https://github.com/google/ksp/issues/3250",
+        BugState.FIXED,
+        "Regression test to ensure the old `registerProcessorForNewFeatures` opt-in mechanism is maintained thus ensuring binary compatibility."
+    )
+    @TestMetadata("registerProcessorForNewFeatures.kt")
+    @Test
+    fun testRegisterProcessorForNewFeatures() {
+        runTest("$AA_PATH/registerProcessorForNewFeatures.kt")
+    }
+
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
